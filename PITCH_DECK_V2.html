@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXIA - Pitch Deck Série A</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 60px;
+            page-break-after: always;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            border-bottom: 3px solid #3b82f6;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .slide h1 {
+            font-size: 4.5em;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+        }
+
+        .slide h2 {
+            font-size: 3.2em;
+            margin-bottom: 45px;
+            color: #06b6d4;
+            font-weight: 800;
+        }
+
+        .slide h3 {
+            font-size: 1.8em;
+            margin-top: 35px;
+            margin-bottom: 25px;
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .slide p {
+            font-size: 1.25em;
+            margin-bottom: 18px;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        .subtitle {
+            font-size: 1.6em;
+            color: #94a3b8;
+            margin-top: 35px;
+            font-weight: 500;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            color: #06b6d4;
+            margin-top: 25px;
+            font-weight: 600;
+        }
+
+        .centered {
+            text-align: center;
+        }
+
+        .left-align {
+            text-align: left;
+        }
+
+        .highlight {
+            color: #06b6d4;
+            font-weight: 700;
+        }
+
+        .highlight-green {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        .highlight-gold {
+            color: #fbbf24;
+            font-weight: 700;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 25px 0;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(6, 182, 212, 0.6);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 35px;
+            margin: 20px 0;
+            font-size: 1.4em;
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .grid-item {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 35px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .grid-item h4 {
+            color: #06b6d4;
+            font-size: 1.5em;
+            margin-bottom: 18px;
+            font-weight: 700;
+        }
+
+        .grid-item p {
+            font-size: 1.1em;
+            color: #cbd5e1;
+        }
+
+        .price-tag {
+            font-size: 2.8em;
+            color: #06b6d4;
+            font-weight: 900;
+            margin: 15px 0;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            font-size: 1.1em;
+            margin: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            color: #cbd5e1;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #22c55e;
+            font-weight: 900;
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 40px 0;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: rgba(59, 130, 246, 0.2);
+            color: #06b6d4;
+            padding: 20px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 1.05em;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+            color: #cbd5e1;
+            font-size: 1.05em;
+        }
+
+        tr:hover {
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .list-item {
+            font-size: 1.15em;
+            margin: 16px 0;
+            padding-left: 40px;
+            position: relative;
+            color: #cbd5e1;
+        }
+
+        .list-item:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #06b6d4;
+            font-weight: 900;
+            font-size: 1.3em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 450px;
+            margin: 40px 0;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .emoji {
+            font-size: 1.4em;
+            margin-right: 12px;
+        }
+
+        .name-option {
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .name-option.selected {
+            border: 3px solid #06b6d4;
+            background: rgba(6, 182, 212, 0.15);
+        }
+
+        .name-option h4 {
+            color: #06b6d4;
+            font-size: 1.8em;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .name-option p {
+            color: #cbd5e1;
+            font-size: 1.1em;
+        }
+
+        .window-alert {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 35px;
+            margin: 30px 0;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .slide {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SLIDE 1: COUVERTURE AVEC NOMS PROPOSÉS -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h1>NEXIA</h1>
+        <p class="tagline">L'IA qui transforme le courtage d'assurance en France et en Europe</p>
+        
+        <div style="margin-top: 80px; text-align: center;">
+            <p style="font-size: 1.1em; color: #94a3b8; margin-bottom: 40px;"><strong>Trois noms proposés :</strong></p>
+            
+            <div class="name-option selected">
+                <h4>★ NEXIA</h4>
+                <p style="margin-bottom: 8px;">Combinaison de "Next" (innovation) et "Axia" (confiance, assurance)</p>
+                <p style="color: #22c55e; font-size: 1em;"><strong>✓ SÉLECTIONNÉ</strong> - Moderne, mémorable, européen, SaaS-friendly</p>
+            </div>
+
+            <div class="name-option">
+                <h4>SYNDEX</h4>
+                <p style="margin-bottom: 8px;">Évoque "Syndicat" (courtage) + "Index" (données, IA)</p>
+                <p style="color: #94a3b8; font-size: 1em;">Fort pour le marché français, moins international</p>
+            </div>
+
+            <div class="name-option">
+                <h4>VELIA</h4>
+                <p style="margin-bottom: 8px;">Dérivé de "Velum" (protection) + "IA"</p>
+                <p style="color: #94a3b8; font-size: 1em;">Premium mais moins tech</p>
+            </div>
+        </div>
+
+        <p class="subtitle" style="margin-top: 80px;">Fondé par Dalil Rhasrhass</p>
+        <p class="subtitle">Pitch Deck - Série A | Mars 2026</p>
+    </div>
+</div>
+
+<!-- SLIDE 2: LE MARCHÉ GLOBAL -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Un marché qui explose</h2>
+        
+        <div class="stat-box">
+            <p><span class="emoji">📊</span><strong>Marché logiciels courtage assurance :</strong> 1,69 milliards USD en 2024</p>
+        </div>
+
+        <div class="stat-box">
+            <p><span class="emoji">📈</span><strong>Projection 2033 :</strong> 3,34 milliards USD (croissance +7,9% par an)</p>
+        </div>
+
+        <div class="stat-box">
+            <p><span class="emoji">🇫🇷</span><strong>Marché CRM France 2025 :</strong> 2,1 milliards d'euros</p>
+        </div>
+
+        <h3 style="margin-top: 50px;">Adoption rapide de l'IA</h3>
+
+        <div class="card">
+            <p><span class="emoji">🤖</span><strong>62% des courtiers</strong> priorisent les outils d'automatisation IA</p>
+        </div>
+
+        <div class="card">
+            <p><span class="emoji">☁️</span><strong>87% des entreprises CRM</strong> en France préfèrent le modèle SaaS</p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 1.3em; color: #cbd5e1;">
+            <strong>Conclusion :</strong> Le marché cherche une solution CRM + IA pour courtiers. Nous arrivons au moment parfait.
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 3: MARCHÉ FRANCE ET EUROPE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Opportunité France + Europe</h2>
+        
+        <h3>France</h3>
+        <div class="grid-2">
+            <div class="grid-item">
+                <h4>32 000</h4>
+                <p>Courtiers immatriculés ORIAS</p>
+            </div>
+            <div class="grid-item">
+                <h4>3 500-5 000</h4>
+                <p>Courtiers cibles (3-50 personnes)</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 50px;">Europe (Expansion années 4-5)</h3>
+        <div class="grid-3">
+            <div class="grid-item">
+                <h4>Italie</h4>
+                <p>12 000 courtiers</p>
+            </div>
+            <div class="grid-item">
+                <h4>Espagne</h4>
+                <p>14 000 courtiers</p>
+            </div>
+            <div class="grid-item">
+                <h4>Allemagne</h4>
+                <p>18 000 courtiers</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 50px;">Budget informatique cible</h3>
+        <div class="stat-box">
+            <p><span class="emoji">💰</span><strong>150€ à 800€/mois</strong> par courtier pour informatique</p>
+        </div>
+
+        <p style="margin-top: 30px; font-size: 1.3em; color: #22c55e;">
+            <strong>TAM (Total Addressable Market) France :</strong> 3 500 courtiers × 200€ moyenne = 700k€/mois de marché accessible
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 4: CONCURRENCE DIRECTE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Paysage concurrentiel</h2>
+        
+        <table>
+            <tr>
+                <th>Solution</th>
+                <th>Tarif</th>
+                <th>CRM</th>
+                <th>IA native</th>
+                <th>Comparateur</th>
+                <th>Conformité auto</th>
+            </tr>
+            <tr>
+                <td><strong>OGGO Data</strong></td>
+                <td>69-149€</td>
+                <td>✓</td>
+                <td>✗</td>
+                <td>Limité</td>
+                <td>✗</td>
+            </tr>
+            <tr>
+                <td><strong>ASSUR3D</strong></td>
+                <td>100-250€</td>
+                <td>✓</td>
+                <td>✗</td>
+                <td>✗</td>
+                <td>Manuel</td>
+            </tr>
+            <tr>
+                <td><strong>CourtiGo</strong></td>
+                <td>Dégressif</td>
+                <td>✓</td>
+                <td>✗</td>
+                <td>Limité</td>
+                <td>Manuel</td>
+            </tr>
+            <tr>
+                <td><strong>SKY CRM</strong></td>
+                <td>Sur devis</td>
+                <td>✓</td>
+                <td>✗</td>
+                <td>✗</td>
+                <td>✗</td>
+            </tr>
+            <tr>
+                <td><strong>Kase</strong></td>
+                <td>Gratuit/Freemium</td>
+                <td>✓ Basic</td>
+                <td>✗</td>
+                <td>✗</td>
+                <td>✗</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>NEXIA (nous)</strong></td>
+                <td><strong>99-399€</strong></td>
+                <td><strong>✓✓✓</strong></td>
+                <td><strong>✓ ARK</strong></td>
+                <td><strong>✓ Complet</strong></td>
+                <td><strong>✓ Auto</strong></td>
+            </tr>
+        </table>
+
+        <p style="margin-top: 40px; font-size: 1.3em; color: #06b6d4;">
+            <strong>Conclusion :</strong> Seul concurrent avec IA native + conformité auto + comparateur complet à ce prix.
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 5: TARIFICATION -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Les trois formules NEXIA</h2>
+        
+        <div class="grid-3">
+            <div class="grid-item" style="border: 2px solid #94a3b8;">
+                <h4>Starter</h4>
+                <p class="price-tag">99€/mois</p>
+                <ul class="feature-list">
+                    <li>CRM complet</li>
+                    <li>Fiches clients</li>
+                    <li>Relances auto</li>
+                    <li>Calendrier RDV</li>
+                    <li>ARK IA basique</li>
+                </ul>
+            </div>
+
+            <div class="grid-item" style="border: 3px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
+                <p style="text-align: center; color: #06b6d4; font-weight: 700; margin-bottom: 10px;">★ BESTSELLER</p>
+                <h4>Pro</h4>
+                <p class="price-tag">199€/mois</p>
+                <ul class="feature-list">
+                    <li>Tout le Starter +</li>
+                    <li>Comparateur tarifs</li>
+                    <li>OCR + e-signature</li>
+                    <li>Détection échéances</li>
+                    <li>Pipeline Kanban</li>
+                    <li>ARK IA complète</li>
+                </ul>
+            </div>
+
+            <div class="grid-item" style="border: 2px solid #22c55e;">
+                <h4>Premium</h4>
+                <p class="price-tag">399€/mois</p>
+                <ul class="feature-list">
+                    <li>Tout le Pro +</li>
+                    <li>Multi-users illimités</li>
+                    <li>Commissions temps réel</li>
+                    <li>DDA/RGPD auto</li>
+                    <li>Briefs pre-RDV</li>
+                    <li>Support 24h</li>
+                    <li>API personnalisée</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="stat-box" style="margin-top: 40px;">
+            <p><span class="emoji">💰</span><strong>Stratégie prix :</strong> 1er mois gratuit, puis full price. Mix des 3 = 250€ moyenne</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: PRÉVISIONS ANNÉE 1 MENSUELLE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Année 1 : progression mensuelle</h2>
+        
+        <table>
+            <tr>
+                <th>Période</th>
+                <th>Clients cumulés</th>
+                <th>ARR (€/mois)</th>
+                <th>Événement clé</th>
+            </tr>
+            <tr>
+                <td>Mois 1-3</td>
+                <td>5 clients</td>
+                <td class="highlight-green">495€</td>
+                <td>Lancement, premiers contacts</td>
+            </tr>
+            <tr>
+                <td>Mois 4-6</td>
+                <td>15 clients</td>
+                <td class="highlight-green">1 485€</td>
+                <td>Effet bouche-à-oreille commence</td>
+            </tr>
+            <tr>
+                <td>Mois 7-9</td>
+                <td>35 clients</td>
+                <td class="highlight-green">3 465€</td>
+                <td>Croissance s'accélère</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td>Mois 10-12</td>
+                <td><strong>60 clients</strong></td>
+                <td class="highlight-green"><strong>5 940€</strong></td>
+                <td>Momentum établi</td>
+            </tr>
+        </table>
+
+        <div class="stat-box" style="margin-top: 40px;">
+            <p><span class="emoji">📊</span><strong>Total année 1 :</strong> ~42 000€ de revenus cumulés</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart-year1"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 7: PRÉVISIONS 3 ANS SEMESTRIEL -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Croissance 3 ans (semestriel)</h2>
+        
+        <table>
+            <tr>
+                <th>Mois</th>
+                <th>Clients</th>
+                <th>ARR (€/mois)</th>
+                <th>Jalon</th>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>60</td>
+                <td class="highlight-green">5 940€</td>
+                <td>Modèle prouvé</td>
+            </tr>
+            <tr>
+                <td>12</td>
+                <td>110</td>
+                <td class="highlight-green">10 890€</td>
+                <td>2ème commercial</td>
+            </tr>
+            <tr>
+                <td>18</td>
+                <td>180</td>
+                <td class="highlight-green">17 820€</td>
+                <td>Expansion régionale</td>
+            </tr>
+            <tr>
+                <td>24</td>
+                <td>260</td>
+                <td class="highlight-green">25 740€</td>
+                <td>Traction claire</td>
+            </tr>
+            <tr>
+                <td>30</td>
+                <td>350</td>
+                <td class="highlight-green">34 650€</td>
+                <td>Croissance rapide</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>36</strong></td>
+                <td><strong>450</strong></td>
+                <td class="highlight-green"><strong>44 550€</strong></td>
+                <td><strong>Leader marché</strong></td>
+            </tr>
+        </table>
+
+        <div class="chart-container">
+            <canvas id="chart-3ans"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: PRÉVISIONS 5 ANS -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Prévisions 5 ans</h2>
+        
+        <table>
+            <tr>
+                <th>Année</th>
+                <th>Clients</th>
+                <th>Revenus annuels</th>
+                <th>Étape</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>110</td>
+                <td class="highlight-green">130 000€</td>
+                <td>Validation</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>260</td>
+                <td class="highlight-green">310 000€</td>
+                <td>Croissance x2.4</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>450</td>
+                <td class="highlight-green">540 000€</td>
+                <td>Croissance x1.7</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>4</strong></td>
+                <td><strong>700</strong></td>
+                <td class="highlight-green"><strong>840 000€</strong></td>
+                <td><strong>📊 RENTABILITÉ</strong></td>
+            </tr>
+            <tr style="background: rgba(6, 182, 212, 0.15);">
+                <td><strong>5</strong></td>
+                <td><strong>1 200</strong></td>
+                <td class="highlight-green"><strong>1 440 000€</strong></td>
+                <td><strong>💎 VALUATION 5.76M€</strong></td>
+            </tr>
+        </table>
+
+        <div class="stat-box" style="margin-top: 40px;">
+            <p><span class="emoji">💎</span><strong>Valuation année 5 :</strong> 1,44M€ × 4 = <span class="highlight-gold">5,76 millions d'euros</span></p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart-5ans"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 9: PRÉVISIONS 7 ANS -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Vision long terme : années 6-7</h2>
+        
+        <table>
+            <tr>
+                <th>Année</th>
+                <th>Clients</th>
+                <th>Revenus annuels</th>
+                <th>Progression</th>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>700</td>
+                <td class="highlight-green">840 000€</td>
+                <td>Rentabilité atteinte</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>1 200</td>
+                <td class="highlight-green">1 440 000€</td>
+                <td>Leader France</td>
+            </tr>
+            <tr style="background: rgba(59, 130, 246, 0.15);">
+                <td><strong>6</strong></td>
+                <td><strong>1 400</strong></td>
+                <td class="highlight-green"><strong>2 000 000€</strong></td>
+                <td><strong>Expansion Europe</strong></td>
+            </tr>
+            <tr style="background: rgba(59, 130, 246, 0.15);">
+                <td><strong>7</strong></td>
+                <td><strong>1 800</strong></td>
+                <td class="highlight-green"><strong>2 600 000€</strong></td>
+                <td><strong>Leader européen</strong></td>
+            </tr>
+        </table>
+
+        <div class="stat-box" style="margin-top: 40px;">
+            <p><span class="emoji">💎</span><strong>Valuation année 7 :</strong> 2,6M€ × 4 = <span class="highlight-gold">10,4 millions d'euros</span></p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart-7ans"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 10: PRÉVISIONS 10 ANS -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Scénario 10 ans (avec rentabilité)</h2>
+        
+        <table>
+            <tr>
+                <th>Année</th>
+                <th>Clients</th>
+                <th>Revenus annuels</th>
+                <th>Bénéfice opérationnel</th>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>1 800</td>
+                <td class="highlight-green">2 600 000€</td>
+                <td>+800k€</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>8</strong></td>
+                <td><strong>2 200</strong></td>
+                <td class="highlight-green"><strong>3 200 000€</strong></td>
+                <td><strong>+1 200k€</strong></td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>9</strong></td>
+                <td><strong>2 600</strong></td>
+                <td class="highlight-green"><strong>3 800 000€</strong></td>
+                <td><strong>+1 600k€</strong></td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>10</strong></td>
+                <td><strong>3 000</strong></td>
+                <td class="highlight-green"><strong>4 300 000€</strong></td>
+                <td><strong>+1 800k€</strong></td>
+            </tr>
+        </table>
+
+        <div class="stat-box" style="margin-top: 40px;">
+            <p><span class="emoji">💎</span><strong>Valuation année 10 :</strong> 4,3M€ × 4 = <span class="highlight-gold">17 millions d'euros</span></p>
+        </div>
+
+        <div class="stat-box">
+            <p><span class="emoji">💰</span><strong>Profit cumulé années 4-10 :</strong> ~10 millions d'euros</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart-10ans"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 11: LA FENÊTRE DE VENTE CRITIQUE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>La fenêtre d'opportunité : années 3-5</h2>
+        
+        <div class="window-alert">
+            <p><span class="emoji">⏰</span><strong>CRITIQUE :</strong> L'IA va se généraliser dans 3 à 5 ans</p>
+            <p style="margin-top: 15px;">Salesforce, HubSpot, AXA Tech vont proposer des solutions similaires avec budgets colossaux. La fenêtre optimale pour vendre est entre l'année 3 et l'année 5.</p>
+        </div>
+
+        <h3 style="margin-top: 50px;">Scénario de vente réaliste</h3>
+
+        <div class="grid-2">
+            <div class="grid-item" style="border: 2px solid #fbbf24;">
+                <h4>❌ Attendre l'année 10</h4>
+                <p style="margin-top: 15px;"><strong>Risque :</strong> Les géants écrasent le marché</p>
+                <p style="margin-top: 10px;"><strong>Valuation :</strong> Chute de 17M€ à 5-8M€</p>
+                <p style="margin-top: 10px;"><strong>Verdict :</strong> Mauvais timing</p>
+            </div>
+
+            <div class="grid-item" style="border: 3px solid #22c55e;">
+                <h4>✓ Vendre années 4-5</h4>
+                <p style="margin-top: 15px;"><strong>Acquéreurs :</strong> AXA, Allianz, Groupama, April</p>
+                <p style="margin-top: 10px;"><strong>Valuation :</strong> 5-10M€ (optimal)</p>
+                <p style="margin-top: 10px;"><strong>Verdict :</strong> Meilleur ratio risque/reward</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 50px;">Acquéreurs probables</h3>
+
+        <div class="card">
+            <p><span class="emoji">🏢</span> <strong>AXA :</strong> Cherche à consolider le marché courtage français</p>
+            <p style="margin-top: 12px;"><span class="emoji">🏢</span> <strong>Allianz :</strong> Besoin d'une plateforme courtage B2B2C</p>
+            <p style="margin-top: 12px;"><span class="emoji">🏢</span> <strong>Groupama :</strong> Renforcement distribution indirecte</p>
+            <p style="margin-top: 12px;"><span class="emoji">🏢</span> <strong>April :</strong> Modernisation urgente de la plateforme</p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 1.3em; color: #fbbf24;">
+            <strong>Offre probable année 4-5 :</strong> 4-8M€ + retenue 10-20% sur 2 ans (performance)
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 12: STRATÉGIE DE SORTIE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Trajectoire optimale de sortie</h2>
+        
+        <div style="margin: 30px 0;">
+            <p style="font-size: 1.4em; color: #cbd5e1;">📅 <strong>Année 1-2 :</strong> Validation produit-marché, atteindre 100-200 clients</p>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <p style="font-size: 1.4em; color: #cbd5e1;">📅 <strong>Année 2-3 :</strong> Scaling, 300-400 clients, premiers approches</p>
+        </div>
+
+        <div style="margin: 30px 0; background: rgba(59, 130, 246, 0.15); border-left: 5px solid #3b82f6; padding: 20px; border-radius: 8px;">
+            <p style="font-size: 1.4em; color: #06b6d4; font-weight: 700;">⭐ <strong>Année 3-4 :</strong> Négociations sérieuses commencent (600+ clients, 1M€ ARR)</p>
+        </div>
+
+        <div style="margin: 30px 0; background: rgba(34, 197, 94, 0.15); border-left: 5px solid #22c55e; padding: 20px; border-radius: 8px;">
+            <p style="font-size: 1.4em; color: #22c55e; font-weight: 700;">💎 <strong>Année 4-5 :</strong> Exit optimal (800-1200 clients, 1.4-2M€ ARR, 5-8M€ valuation)</p>
+        </div>
+
+        <h3 style="margin-top: 50px;">Trois scénarios finaux</h3>
+
+        <div class="grid-3">
+            <div class="grid-item" style="border: 2px solid #ef4444;">
+                <h4>Scénario pessimiste</h4>
+                <p>Pas d'acheteur, continue indépendant</p>
+                <p style="margin-top: 15px; font-size: 0.95em; color: #94a3b8;">Risque : géants écrasent le marché</p>
+            </div>
+
+            <div class="grid-item" style="border: 3px solid #fbbf24; background: rgba(251, 191, 36, 0.1);">
+                <h4>Scénario réaliste</h4>
+                <p><strong>Année 5 :</strong> Exit à 5-8M€</p>
+                <p style="margin-top: 15px; font-size: 0.95em; color: #fbbf24;">Meilleur timing avant concurrence massive</p>
+            </div>
+
+            <div class="grid-item" style="border: 2px solid #22c55e;">
+                <h4>Scénario optimiste</h4>
+                <p><strong>Année 7+ :</strong> 10M€+ ou IPO</p>
+                <p style="margin-top: 15px; font-size: 0.95em; color: #94a3b8;">Risque élevé si géants arrivent</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 13: RÉSUMÉ INVESTISSEUR -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h2>NEXIA : Les chiffres clés</h2>
+        
+        <div class="stat-box" style="margin: 25px 0;">
+            <p>💰 Levée requise : <span class="highlight">350k€ - 400k€</span></p>
+        </div>
+
+        <div class="stat-box" style="margin: 25px 0;">
+            <p>📈 Année 5 ARR : <span class="highlight-green">1.44M€</span></p>
+        </div>
+
+        <div class="stat-box" style="margin: 25px 0;">
+            <p>💎 Valuation année 5 : <span class="highlight-gold">5.76M€</span></p>
+        </div>
+
+        <div class="stat-box" style="margin: 25px 0;">
+            <p>🎯 Clients année 5 : <span class="highlight">1 200</span> (France + Europe)</p>
+        </div>
+
+        <div class="stat-box" style="margin: 25px 0; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);">
+            <p style="color: #22c55e; font-size: 1.5em;"><strong>💪 ROI : 1 400% sur 5 ans</strong></p>
+        </div>
+
+        <div class="stat-box" style="margin: 25px 0;">
+            <p>⏰ Exit optimal : <span class="highlight">Année 4-5</span> (5-8M€)</p>
+        </div>
+
+        <p style="margin-top: 60px; font-size: 1.3em; color: #fbbf24;">
+            <strong>⚠️ Fenêtre critique :</strong> Les 18 prochains mois décident de tout.<br>
+            Agir maintenant ou être écrasé par les géants.
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 14: CALL TO ACTION -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h2 style="color: #f1f5f9;">On lance NEXIA?</h2>
+        
+        <div class="founder-info" style="background: rgba(6, 182, 212, 0.15); border: 2px solid #06b6d4; border-radius: 12px; padding: 40px; margin: 40px 0;">
+            <p style="text-align: center; font-size: 1.4em; color: #f1f5f9;"><strong>Dalil Rhasrhass</strong></p>
+            <p style="text-align: center; font-size: 1.2em; color: #cbd5e1; margin-top: 12px;">Fondateur & CEO, NEXIA</p>
+            <p style="text-align: center; font-size: 1.15em; color: #06b6d4; margin-top: 30px;">📧 dalil@nexia.fr</p>
+            <p style="text-align: center; font-size: 1.15em; color: #cbd5e1;">📱 Disponible pour démo, levée, ou partenariats</p>
+        </div>
+
+        <p style="font-size: 1.2em; color: #cbd5e1; margin-top: 50px;">
+            <strong>Prochaines étapes :</strong><br>
+            Week 1: Validation commerciale + détails financiers<br>
+            Week 2: Dataroom + legal<br>
+            Week 3: Roadshow investisseurs<br>
+            Week 4: Closing
+        </p>
+    </div>
+</div>
+
+<script>
+    // Chart.js initialization
+    const chartConfig = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#cbd5e1', font: { size: 12, weight: 'bold' } }
+            }
+        },
+        scales: {
+            y: {
+                ticks: { color: '#94a3b8' },
+                grid: { color: '#334155' },
+                beginAtZero: true
+            },
+            x: {
+                ticks: { color: '#94a3b8' },
+                grid: { color: '#334155' }
+            }
+        }
+    };
+
+    // Year 1 Chart
+    new Chart(document.getElementById('chart-year1'), {
+        type: 'line',
+        data: {
+            labels: ['M1-3', 'M4-6', 'M7-9', 'M10-12'],
+            datasets: [{
+                label: 'Revenus (€/mois)',
+                data: [495, 1485, 3465, 5940],
+                borderColor: '#06b6d4',
+                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#3b82f6'
+            }]
+        },
+        options: chartConfig
+    });
+
+    // 3 Years Chart
+    new Chart(document.getElementById('chart-3ans'), {
+        type: 'line',
+        data: {
+            labels: ['6m', '12m', '18m', '24m', '30m', '36m'],
+            datasets: [{
+                label: 'Clients',
+                data: [60, 110, 180, 260, 350, 450],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                yAxisID: 'y'
+            }, {
+                label: 'ARR (€/mois × 100)',
+                data: [59, 109, 178, 257, 347, 446],
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                yAxisID: 'y'
+            }]
+        },
+        options: {
+            ...chartConfig,
+            scales: {
+                ...chartConfig.scales,
+                y: { ...chartConfig.scales.y, title: { display: true, text: 'Clients' } }
+            }
+        }
+    });
+
+    // 5 Years Chart
+    new Chart(document.getElementById('chart-5ans'), {
+        type: 'bar',
+        data: {
+            labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+            datasets: [{
+                label: 'Revenus (k€)',
+                data: [130, 310, 540, 840, 1440],
+                backgroundColor: ['#3b82f6', '#3b82f6', '#3b82f6', '#22c55e', '#06b6d4'],
+                borderColor: '#cbd5e1',
+                borderWidth: 1
+            }]
+        },
+        options: chartConfig
+    });
+
+    // 7 Years Chart
+    new Chart(document.getElementById('chart-7ans'), {
+        type: 'line',
+        data: {
+            labels: ['Y4', 'Y5', 'Y6', 'Y7'],
+            datasets: [{
+                label: 'Revenus annuels (k€)',
+                data: [840, 1440, 2000, 2600],
+                borderColor: '#fbbf24',
+                backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#f59e0b'
+            }]
+        },
+        options: chartConfig
+    });
+
+    // 10 Years Chart
+    new Chart(document.getElementById('chart-10ans'), {
+        type: 'line',
+        data: {
+            labels: ['Y7', 'Y8', 'Y9', 'Y10'],
+            datasets: [{
+                label: 'Revenus annuels (k€)',
+                data: [2600, 3200, 3800, 4300],
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#16a34a'
+            }]
+        },
+        options: chartConfig
+    });
+</script>
+
+</body>
+</html>
