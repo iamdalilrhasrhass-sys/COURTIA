@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.app/schema.json",
+  "build": {
+    "builder": "dockerfile",
+    "context": "backend"
+  },
+  "deploy": {
+    "startCommand": "node server.js",
+    "restartPolicyMaxRetries": 5
+  }
+}

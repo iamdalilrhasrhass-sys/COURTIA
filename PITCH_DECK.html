@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORTEX - Pitch Deck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 60px;
+            page-break-after: always;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            border-bottom: 3px solid #3b82f6;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .slide h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .slide h2 {
+            font-size: 3em;
+            margin-bottom: 50px;
+            color: #06b6d4;
+            font-weight: 800;
+        }
+
+        .slide h3 {
+            font-size: 1.8em;
+            margin-top: 35px;
+            margin-bottom: 25px;
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .slide p {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        .subtitle {
+            font-size: 1.6em;
+            color: #94a3b8;
+            margin-top: 30px;
+            font-weight: 500;
+        }
+
+        .tagline {
+            font-size: 1.4em;
+            color: #06b6d4;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .centered {
+            text-align: center;
+        }
+
+        .left-align {
+            text-align: left;
+        }
+
+        .highlight {
+            color: #06b6d4;
+            font-weight: 700;
+        }
+
+        .highlight-green {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 25px 0;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(6, 182, 212, 0.6);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 35px;
+            margin: 20px 0;
+            font-size: 1.5em;
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .problem {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 5px solid #ef4444;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+
+        .solution {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 5px solid #22c55e;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.2em;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .grid-item {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .grid-item h4 {
+            color: #06b6d4;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .grid-item p {
+            font-size: 1.1em;
+            color: #cbd5e1;
+        }
+
+        .price-tag {
+            font-size: 2.5em;
+            color: #06b6d4;
+            font-weight: 900;
+            margin: 15px 0;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            font-size: 1.1em;
+            margin: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            color: #cbd5e1;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #22c55e;
+            font-weight: 900;
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 40px 0;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: rgba(59, 130, 246, 0.2);
+            color: #06b6d4;
+            padding: 20px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 1.1em;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #334155;
+            color: #cbd5e1;
+            font-size: 1.05em;
+        }
+
+        tr:hover {
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .list-item {
+            font-size: 1.2em;
+            margin: 18px 0;
+            padding-left: 40px;
+            position: relative;
+            color: #cbd5e1;
+        }
+
+        .list-item:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #06b6d4;
+            font-weight: 900;
+            font-size: 1.3em;
+        }
+
+        .emoji {
+            font-size: 1.4em;
+            margin-right: 12px;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            color: white;
+            padding: 20px 50px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin: 40px 0;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+        }
+
+        .comparison-table .competitor {
+            color: #94a3b8;
+            font-size: 0.95em;
+        }
+
+        .comparison-table .us {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .slide {
+                page-break-after: always;
+                min-height: 100vh;
+            }
+        }
+
+        .founder-info {
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid #06b6d4;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            font-size: 1.2em;
+        }
+
+        .ark-feature {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            font-size: 1.15em;
+        }
+
+        .revenue-positive {
+            color: #22c55e;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SLIDE 1: COUVERTURE -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h1>CORTEX</h1>
+        <p class="tagline">L'IA qui double la productivité des courtiers en assurance</p>
+        <p class="subtitle" style="margin-top: 80px; font-size: 1.5em;">Fondé par Dalil Rhasrhass</p>
+        <p class="subtitle">Ancien courtier en assurance, fondateur de Répare Brise France</p>
+        <p class="subtitle" style="margin-top: 80px; color: #94a3b8;">Pitch Deck - Série A<br>Mars 2026</p>
+    </div>
+</div>
+
+<!-- SLIDE 2: LE PROBLÈME -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Le problème des courtiers en 2026</h2>
+        
+        <div class="problem">
+            <p><span class="emoji">❌</span><strong>30% des revenus perdus</strong> : clients oubliés faute de suivi automatisé</p>
+        </div>
+
+        <div class="problem">
+            <p><span class="emoji">❌</span><strong>2 heures quotidiennes gaspillées</strong> à comparer les tarifs à la main</p>
+        </div>
+
+        <div class="problem">
+            <p><span class="emoji">❌</span><strong>Pas de visibilité</strong> sur les clients qui vont partir 6 mois avant</p>
+        </div>
+
+        <div class="problem">
+            <p><span class="emoji">❌</span><strong>Conformité manuelle</strong> DDA et RGPD = perte de temps et risque légal</p>
+        </div>
+
+        <div class="problem">
+            <p><span class="emoji">❌</span><strong>Services dispersés</strong> : CRM + email + agenda + documents = chaos</p>
+        </div>
+
+        <p style="margin-top: 50px; font-size: 1.5em; color: #fbbf24;"><strong>Résultat : un courtier perd 15 000€ à 50 000€ par an par manque d'efficacité</strong></p>
+    </div>
+</div>
+
+<!-- SLIDE 3: LA SOLUTION EN UNE PHRASE -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h2>CORTEX : votre assistant IA personnel</h2>
+        <p class="subtitle" style="font-size: 1.6em; margin-top: 60px;">Une plateforme complète qui centralise tous les outils d'un courtier.<br>Plus une IA (ARK) qui travaille 24h/24 pour lui automatiser ce qui tue la productivité.</p>
+        
+        <div class="stat-box" style="margin-top: 60px;">
+            <p>Aucun concurrent n'offre ça. Aucun.</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 4: ARK - LE DIFFÉRENCIATEUR -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>ARK : L'IA qui change tout</h2>
+        
+        <p style="font-size: 1.3em; margin-bottom: 40px; color: #06b6d4;"><strong>ARK est disponible 24h/24 via Telegram. Elle travaille même quand vous dormez.</strong></p>
+
+        <div class="ark-feature">
+            <p><span class="emoji">🤖</span><strong>ARK répond aux clients</strong> : un client écrit à 23h, ARK répond immédiatement avec toutes les infos de son dossier</p>
+        </div>
+
+        <div class="ark-feature">
+            <p><span class="emoji">📋</span><strong>ARK prépare les briefs RDV</strong> : avant chaque rendez-vous, ARK crée un dossier complet avec historique, sinistres, contrats expirés</p>
+        </div>
+
+        <div class="ark-feature">
+            <p><span class="emoji">🔮</span><strong>ARK prédit les départs</strong> : elle détecte 3 mois avant qu'un client va partir (silence prolongé, non-renouvellement suspecte)</p>
+        </div>
+
+        <div class="ark-feature">
+            <p><span class="emoji">⭐</span><strong>ARK qualifie les leads</strong> : elle classe les prospects par probabilité de vente et priorité</p>
+        </div>
+
+        <div class="ark-feature">
+            <p><span class="emoji">📊</span><strong>ARK génère les rapports</strong> : DDA, RGPD, conformité ACPR en un clic, prêt à signer</p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 1.3em; color: #22c55e;"><strong>Temps économisé : 15-20 heures par semaine par courtier</strong></p>
+    </div>
+</div>
+
+<!-- SLIDE 5: LE PRODUIT -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>La plateforme CORTEX</h2>
+        
+        <div class="card" style="text-align: center; padding: 60px;">
+            <p style="font-size: 2em; color: #cbd5e1;">
+                <strong>Dashboard moderne</strong> avec tous les clients, contrats, sinistres<br><br>
+                <strong>Pipeline Kanban</strong> drag-drop pour les prospects<br><br>
+                <strong>Calendrier RDV</strong> intégré + briefs automatiques<br><br>
+                <strong>Comparateur de tarifs</strong> multi-assureurs en 30 secondes<br><br>
+                <strong>OCR document</strong> + e-signature pour les contrats<br><br>
+                <strong>Alertes clients</strong> pour les échéances, sinistres, renouvellements
+            </p>
+            <p style="margin-top: 40px; color: #94a3b8;">(Captures d'écran réelles du produit disponibles lors de démo)</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: LES TROIS FORMULES -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Tarification : 3 formules simples</h2>
+        
+        <div class="grid-3">
+            <div class="grid-item" style="border: 2px solid #94a3b8;">
+                <h4>Starter</h4>
+                <p class="price-tag">99€/mois</p>
+                <ul class="feature-list">
+                    <li>CRM complet + fiches clients</li>
+                    <li>Relances automatiques</li>
+                    <li>Calendrier RDV</li>
+                    <li>ARK IA incluse</li>
+                    <li>Support standard</li>
+                </ul>
+                <p style="margin-top: 20px; font-size: 0.95em; color: #94a3b8;">Pour les petits courtiers (1-3 personnes)</p>
+            </div>
+
+            <div class="grid-item" style="border: 3px solid #3b82f6; background: rgba(59, 130, 246, 0.1);">
+                <p style="text-align: center; color: #06b6d4; font-weight: 700; margin-bottom: 10px;">★ BESTSELLER</p>
+                <h4>Pro</h4>
+                <p class="price-tag">199€/mois</p>
+                <ul class="feature-list">
+                    <li>Tout le Starter +</li>
+                    <li>Comparateur tarifs auto</li>
+                    <li>OCR documents</li>
+                    <li>E-signature électronique</li>
+                    <li>Détection échéances concurrentes</li>
+                    <li>Pipeline prospects Kanban</li>
+                </ul>
+                <p style="margin-top: 20px; font-size: 0.95em; color: #94a3b8;">Le plus vendu. Presque tous les courtiers prennent ça.</p>
+            </div>
+
+            <div class="grid-item" style="border: 2px solid #22c55e;">
+                <h4>Premium</h4>
+                <p class="price-tag">399€/mois</p>
+                <ul class="feature-list">
+                    <li>Tout le Pro +</li>
+                    <li>Multi-utilisateurs illimités</li>
+                    <li>Suivi commissions temps réel</li>
+                    <li>Conformité DDA/RGPD auto</li>
+                    <li>Brief automatique pre-RDV</li>
+                    <li>Support prioritaire 24h</li>
+                    <li>API personnalisée</li>
+                </ul>
+                <p style="margin-top: 20px; font-size: 0.95em; color: #94a3b8;">Pour les structures de 10+ personnes.</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 60px;">Comparaison avec la concurrence</h3>
+
+        <table class="comparison-table">
+            <tr>
+                <th>Fonctionnalité</th>
+                <th class="competitor">OGGO Data (69€)</th>
+                <th class="competitor">ASSUR3D (150€)</th>
+                <th class="competitor">MAIA (120€)</th>
+                <th class="us">CORTEX (99-399€)</th>
+            </tr>
+            <tr>
+                <td>CRM clients</td>
+                <td class="competitor">✓</td>
+                <td class="competitor">✓</td>
+                <td class="competitor">✓</td>
+                <td class="us">✓✓✓</td>
+            </tr>
+            <tr>
+                <td>Comparateur tarifs</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">Limité</td>
+                <td class="us">✓ Complet</td>
+            </tr>
+            <tr>
+                <td>IA native 24h/24</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">✗</td>
+                <td class="us">✓ ARK</td>
+            </tr>
+            <tr>
+                <td>OCR + e-signature</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">✗</td>
+                <td class="us">✓</td>
+            </tr>
+            <tr>
+                <td>Conformité DDA/RGPD auto</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">Manuelle</td>
+                <td class="competitor">Manuelle</td>
+                <td class="us">✓ Automatique</td>
+            </tr>
+            <tr>
+                <td>Pipeline Kanban</td>
+                <td class="competitor">✗</td>
+                <td class="competitor">✓</td>
+                <td class="competitor">✓</td>
+                <td class="us">✓✓✓</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- SLIDE 7: LE MARCHÉ -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Le marché : énorme et mal servi</h2>
+        
+        <div class="stat-box">
+            <p><span class="emoji">🇫🇷</span><strong>32 000 courtiers immatriculés</strong> en France</p>
+        </div>
+
+        <div class="stat-box">
+            <p><span class="emoji">🎯</span><strong>3 500 à 5 000 courtiers</strong> assez importants (3-50 personnes) pour payer un vrai outil</p>
+        </div>
+
+        <div class="stat-box">
+            <p><span class="emoji">💰</span><strong>Budget IT moyen : 150€ à 800€/mois</strong> (existe mais mal utilisé)</p>
+        </div>
+
+        <h3 style="margin-top: 60px;">Les courtiers cibles</h3>
+
+        <div class="grid-2">
+            <div class="grid-item">
+                <h4>Petits courtiers (3-10 personnes)</h4>
+                <p>Budget : 150-300€/mois<br>
+                Cible : Formule Pro (199€)<br>
+                Segment : 40% du marché<br>
+                Peu d'investissements IT avant</p>
+            </div>
+
+            <div class="grid-item">
+                <h4>Courtiers moyens (10-50 personnes)</h4>
+                <p>Budget : 500-1500€/mois<br>
+                Cible : Formule Premium (399€)<br>
+                Segment : 20% du marché<br>
+                Prêts à payer pour la qualité</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 60px;">L'argument ROI qui tue</h3>
+
+        <div class="solution">
+            <p><span class="emoji">💸</span><strong>Un courtier qui vend 2 contrats de plus par mois</strong> grâce à l'IA = 500€ à 1 000€ de commissions</p>
+            <p style="margin-top: 15px;"><strong>Le logiciel à 199€ se rentabilise en une journée de travail.</strong></p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: L'ÉQUIPE -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h2>L'équipe</h2>
+        
+        <div class="founder-info">
+            <h3 style="text-align: center; margin-top: 0;">Dalil Rhasrhass</h3>
+            <p style="text-align: center; font-size: 1.3em; margin-bottom: 20px;"><strong>Fondateur & CEO</strong></p>
+
+            <p style="font-size: 1.15em; line-height: 1.9;">
+                <strong>Expertise terrain</strong> : Ancien courtier en assurance automobile, connaît les pain points des courtiers<br><br>
+                <strong>Entrepreneur éprouvé</strong> : Fondateur de Répare Brise France (franchise vitrage automobile, multi-structuré)<br><br>
+                <strong>Expert tech</strong> : Responsable de la stratégie produit, compréhension profonde du secteur assurance + besoins réglementaires<br><br>
+                <strong>Réseau</strong> : Contacts directs auprès de 50+ courtiers pour validation et early adoption
+            </p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 1.2em; color: #cbd5e1;">
+            <strong>Avantage compétitif :</strong> Rares sont les fondateurs qui comprennent le métier courtier ET la tech.
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 9: STRATÉGIE COMMERCIALE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Go-to-market : simple et efficace</h2>
+        
+        <h3>Étape 1 : Recruter le commercial clé</h3>
+        <p class="list-item">40 ans, père de famille, 20+ ans secteur assurance</p>
+        <p class="list-item">Réseau existant : 50-100 courtiers qu'il connaît</p>
+        <p class="list-item">Commission : 25% des premières 12 mois (très motivant)</p>
+
+        <h3 style="margin-top: 40px;">Étape 2 : La recette de vente</h3>
+        <p class="list-item"><strong>Démo gratuite 30 minutes</strong> → montre les économies de temps réelles</p>
+        <p class="list-item"><strong>Essai gratuit 30 jours</strong> → laisse l'IA travailler, aucun risque</p>
+        <p class="list-item"><strong>1er mois à -50%</strong> (99€ → 50€) → enlève la friction d'achat</p>
+        <p class="list-item"><strong>Prix normal après mois 2</strong> → engagement long terme</p>
+
+        <h3 style="margin-top: 40px;">Étape 3 : L'effet bouche-à-oreille</h3>
+        <p class="list-item">Client 1 l'essaie → courrier 2 lui demande : "pourquoi tu es plus rapide?"</p>
+        <p class="list-item">Référence naturelle entre courtiers (réseau très fermé, très bouche-à-oreille)</p>
+        <p class="list-item">Projection : 20% de conversion en démo, 30% en essai</p>
+
+        <div class="stat-box" style="margin-top: 40px;">
+            <p>Taux de conversion réaliste : 1 démo → 3 clients (via bouche-à-oreille)</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 10: PROJECTIONS 5 ANS -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Projections financières : de l'investissement au profit</h2>
+        
+        <table>
+            <tr>
+                <th>Année</th>
+                <th>Clients</th>
+                <th>ARR</th>
+                <th>Coûts</th>
+                <th>Résultat</th>
+            </tr>
+            <tr>
+                <td><strong>Année 1</strong></td>
+                <td>110 clients</td>
+                <td class="revenue-positive">38 400€</td>
+                <td>170 000€</td>
+                <td>-131 600€</td>
+            </tr>
+            <tr>
+                <td><strong>Année 2</strong></td>
+                <td>280 clients</td>
+                <td class="revenue-positive">97 600€</td>
+                <td>250 000€</td>
+                <td>-152 400€</td>
+            </tr>
+            <tr>
+                <td><strong>Année 3</strong></td>
+                <td>480 clients</td>
+                <td class="revenue-positive">167 500€</td>
+                <td>276 000€</td>
+                <td>-108 500€</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>Année 4</strong></td>
+                <td>800 clients</td>
+                <td class="revenue-positive">1 000 000€</td>
+                <td>400 000€</td>
+                <td style="color: #22c55e; font-weight: 700;">+600 000€ ✓</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+                <td><strong>Année 5</strong></td>
+                <td>1 200 clients</td>
+                <td class="revenue-positive">1 410 000€</td>
+                <td>600 000€</td>
+                <td style="color: #22c55e; font-weight: 700;">+810 000€ ✓</td>
+            </tr>
+        </table>
+
+        <h3 style="margin-top: 50px;">Ce que ça signifie réellement</h3>
+
+        <div class="solution">
+            <p><span class="emoji">📈</span><strong>350 000€ d'investissement</strong> pour générer 1.4M€/an en année 5</p>
+        </div>
+
+        <div class="solution">
+            <p><span class="emoji">⏰</span><strong>Rentabilité atteinte en année 4</strong> (mois 37-39), puis profits massifs</p>
+        </div>
+
+        <div class="solution">
+            <p><span class="emoji">💰</span><strong>Retour sur investissement : 300%</strong> sur 5 ans (sans compter la valeur de l'entreprise)</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 11: CONFORMITÉ RÉGLEMENTAIRE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>La conformité intégrée par défaut</h2>
+        
+        <p style="font-size: 1.3em; margin-bottom: 40px; color: #cbd5e1;">Les courtiers français ont peur de la conformité. CORTEX élimine ce problème.</p>
+
+        <h3>DDA (Directive Distribution d'Assurance)</h3>
+        <div class="card">
+            <p><span class="emoji">✅</span> <strong>Rapport de respect des obligations DDA</strong> généré automatiquement chaque mois</p>
+            <p style="margin-top: 15px;"><span class="emoji">✅</span> <strong>Suivi des échanges clients</strong> : chaque interaction est loggée automatiquement</p>
+            <p style="margin-top: 15px;"><span class="emoji">✅</span> <strong>Documents de preuve</strong> générés en un clic pour l'ACPR</p>
+        </div>
+
+        <h3 style="margin-top: 40px;">RGPD (Protection des données personnelles)</h3>
+        <div class="card">
+            <p><span class="emoji">✅</span> <strong>Audit RGPD intégré</strong> : quelle donnée est stockée, où, pourquoi</p>
+            <p style="margin-top: 15px;"><span class="emoji">✅</span> <strong>Droit à l'oubli automatisé</strong> : suppression conforme avec 1 clic</p>
+            <p style="margin-top: 15px;"><span class="emoji">✅</span> <strong>Registre de conformité</strong> prêt pour les inspections CNIL</p>
+        </div>
+
+        <h3 style="margin-top: 40px;">ACPR (Autorité de Contrôle Prudentiel)</h3>
+        <div class="card">
+            <p><span class="emoji">✅</span> <strong>Traçabilité 100%</strong> de tous les changements (qui, quand, pourquoi)</p>
+            <p style="margin-top: 15px;"><span class="emoji">✅</span> <strong>Rapports de contrôle</strong> disponibles en temps réel</p>
+            <p style="margin-top: 15px;"><span class="emoji">✅</span> <strong>Conformité assurée</strong> : zéro risque légal avec CORTEX</p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 1.2em; color: #22c55e;"><strong>Impact : courtiers dorment mieux. Nous gérons leur conformité.</strong></p>
+    </div>
+</div>
+
+<!-- SLIDE 12: RISQUES ET MITIGATION -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Risques identifiés et mitigation</h2>
+        
+        <h3>Risque 1 : Commercial moins efficace</h3>
+        <div class="card">
+            <p><strong>Probabilité :</strong> 30% | <strong>Impact :</strong> -50% croissance</p>
+            <p style="margin-top: 15px;"><strong>Mitigation :</strong> Recruter 2 commerciaux dès le départ (diversifier la base)</p>
+        </div>
+
+        <h3 style="margin-top: 30px;">Risque 2 : Churn client trop élevé</h3>
+        <div class="card">
+            <p><strong>Probabilité :</strong> 25% | <strong>Impact :</strong> -20% ARR</p>
+            <p style="margin-top: 15px;"><strong>Mitigation :</strong> Support excellent, success manager dédié pour chaque segment</p>
+        </div>
+
+        <h3 style="margin-top: 30px;">Risque 3 : Concurrence baisse les prix</h3>
+        <div class="card">
+            <p><strong>Probabilité :</strong> 60% (très probable) | <strong>Impact :</strong> prix baisse de 199€ à 149€</p>
+            <p style="margin-top: 15px;"><strong>Mitigation :</strong> Différenciation par ARK IA (incopiable) + design premium + conformité auto</p>
+        </div>
+
+        <h3 style="margin-top: 30px;">Risque 4 : Financement insuffisant</h3>
+        <div class="card">
+            <p><strong>Probabilité :</strong> 20% | <strong>Impact :</strong> faillite année 2</p>
+            <p style="margin-top: 15px;"><strong>Mitigation :</strong> Lever 150k€ en anges DÈS année 1, pas année 2</p>
+        </div>
+
+        <h3 style="margin-top: 30px;">Risque 5 : Réglementation change (DDA, RGPD)</h3>
+        <div class="card">
+            <p><strong>Probabilité :</strong> 40% | <strong>Impact :</strong> 3-6 mois de dev urgent</p>
+            <p style="margin-top: 15px;"><strong>Mitigation :</strong> Budget compliance dédié (10% des coûts), legal counsel standby</p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 1.2em; color: #cbd5e1;">
+            <strong>Verdict :</strong> Tous les risques sont mitigables. Aucun n'est existentiel.
+        </p>
+    </div>
+</div>
+
+<!-- SLIDE 13: EXPANSION EUROPE -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Années 4-5 : conquête de l'Europe</h2>
+        
+        <h3>Année 4 : Benelux (Belgique, Luxembourg, Pays-Bas)</h3>
+        <div class="card">
+            <p><span class="emoji">🇧🇪</span> <strong>Belgique :</strong> 8 000 courtiers, même réglementation assurance</p>
+            <p style="margin-top: 12px;"><span class="emoji">🇱🇺</span> <strong>Luxembourg :</strong> 3 000 courtiers, niche premium</p>
+            <p style="margin-top: 12px;"><span class="emoji">🇳🇱</span> <strong>Pays-Bas :</strong> 12 000 courtiers, marché structuré</p>
+            <p style="margin-top: 20px; color: #94a3b8;"><strong>Stratégie :</strong> 1 commercial par pays, même produit, DDA/RGPD adaptée</p>
+        </div>
+
+        <h3 style="margin-top: 40px;">Année 5 : Reste de l'Europe (via partenaires)</h3>
+        <div class="grid-2">
+            <div class="grid-item">
+                <h4>Italie</h4>
+                <p>12 000 courtiers<br>
+                Partenaire distribution<br>
+                Commission 30%</p>
+            </div>
+            <div class="grid-item">
+                <h4>Espagne</h4>
+                <p>14 000 courtiers<br>
+                Partenaire local<br>
+                Commission 30%</p>
+            </div>
+            <div class="grid-item">
+                <h4>Allemagne</h4>
+                <p>18 000 courtiers<br>
+                Partenaire tech<br>
+                Commission 30%</p>
+            </div>
+            <div class="grid-item">
+                <h4>Royaume-Uni</h4>
+                <p>16 000 courtiers<br>
+                Post-Brexit en 2026<br>
+                Commission 30%</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 40px;">Résultat année 5</h3>
+        <div class="solution">
+            <p><span class="emoji">🇫🇷</span> <strong>France :</strong> 800 clients = 1M€ ARR</p>
+        </div>
+
+        <div class="solution">
+            <p><span class="emoji">🇪🇺</span> <strong>Europe (Benelux + partenaires) :</strong> 400 clients = 410k€ ARR</p>
+        </div>
+
+        <div class="solution">
+            <p><span class="emoji">💰</span> <strong>Total : 1.41M€ ARR</strong> = 5.6M€ de valuation</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 14: VALUATION ET EXIT -->
+<div class="slide left-align">
+    <div class="slide-content">
+        <h2>Valuation et opportunités d'exit</h2>
+        
+        <h3>Valuation année 5</h3>
+
+        <div class="stat-box">
+            <p><span class="emoji">📊</span> <strong>ARR année 5 :</strong> 1.41M€</p>
+        </div>
+
+        <div class="stat-box">
+            <p><span class="emoji">📈</span> <strong>Multiple SaaS standard :</strong> 4x ARR (benchmark industrie)</p>
+        </div>
+
+        <div class="stat-box" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);">
+            <p><span class="emoji">💎</span> <strong>Valuation :</strong> 1.41M€ × 4 = <span class="highlight-green">5.6 millions d'euros</span></p>
+        </div>
+
+        <h3 style="margin-top: 50px;">Opportunités d'acquisition</h3>
+
+        <div class="grid-2">
+            <div class="grid-item" style="border: 2px solid #3b82f6;">
+                <h4>Année 4 : Première vague</h4>
+                <p><strong>Acquéreurs :</strong> AXA, Allianz, Generali</p>
+                <p style="margin-top: 12px;"><strong>Offre :</strong> 2-3M€</p>
+                <p style="margin-top: 12px;"><strong>Raison :</strong> Accélération growth, éliminer concurrence</p>
+                <p style="margin-top: 12px;"><strong>Decision :</strong> Peut refuser (vaut plus)</p>
+            </div>
+
+            <div class="grid-item" style="border: 2px solid #22c55e;">
+                <h4>Année 5 : Meilleure opportunité</h4>
+                <p><strong>Acquéreurs :</strong> PE firms, assureurs</p>
+                <p style="margin-top: 12px;"><strong>Offre :</strong> 5-7M€</p>
+                <p style="margin-top: 12px;"><strong>Raison :</strong> 1.4M€ ARR, France + Europe</p>
+                <p style="margin-top: 12px;"><strong>Decision :</strong> Probablement accepter</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 50px;">Ou continuer à croître (option)</h3>
+
+        <div class="card">
+            <p><strong>Si tu vends pas année 5 :</strong> Année 6 = 2.5M€ ARR = 10M€ de valuation</p>
+            <p style="margin-top: 15px;">Mais risque augmente, nouvelle levée de fonds needed</p>
+            <p style="margin-top: 15px;">Année 5 exit = meilleur ratio risque/reward</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 15: CALL TO ACTION -->
+<div class="slide centered">
+    <div class="slide-content">
+        <h2>Les chiffres en résumé</h2>
+        
+        <div class="stat-box" style="margin: 30px 0;">
+            <p>💰 350 000€ d'investissement</p>
+        </div>
+
+        <div class="stat-box" style="margin: 30px 0;">
+            <p>📈 1.41M€ d'ARR en année 5</p>
+        </div>
+
+        <div class="stat-box" style="margin: 30px 0;">
+            <p>💎 5.6M€ de valuation (4x multiple)</p>
+        </div>
+
+        <div class="stat-box" style="margin: 30px 0;">
+            <p>🎯 800-1200 courtiers clients</p>
+        </div>
+
+        <div class="stat-box" style="margin: 30px 0; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);">
+            <p style="color: #22c55e;"><strong>💪 200%+ ROI sur 5 ans</strong></p>
+        </div>
+
+        <h3 style="margin-top: 60px; color: #f1f5f9;">On démarre quand?</h3>
+
+        <div class="founder-info" style="margin-top: 40px;">
+            <p style="text-align: center; font-size: 1.2em;"><strong>Dalil Rhasrhass</strong></p>
+            <p style="text-align: center; color: #94a3b8;">Fondateur CORTEX</p>
+            <p style="text-align: center; margin-top: 20px; font-size: 1.1em;">📧 dalil@cortex-assurance.fr</p>
+            <p style="text-align: center; color: #94a3b8;">Prêt pour : démo produit, discussion levée, rencontre investisseurs</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
