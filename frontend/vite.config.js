@@ -3,14 +3,17 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify('https://courtia.onrender.com')
+  },
   server: {
-    port: 5173,
+    port: 3000,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
+      '/api': 'https://courtia.onrender.com'
     }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false
   }
 })
