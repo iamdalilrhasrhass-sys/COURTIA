@@ -1,43 +1,62 @@
-import { create } from 'zustand'
-import axios from 'axios'
+import create from 'zustand';
 
-const API_URL = 'http://localhost:3000'
+const API_URL = 'https://courtia.onrender.com';
 
-export const useAuthStore = create((set) => ({
-  user: null,
+const authStore = create((set) => ({
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token') || null,
-  loading: false,
-
+  isAuthenticated: !!localStorage.getItem('token'),
+  
   login: async (email, password) => {
-    set({ loading: true })
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password })
-      const { token, user } = response.data
-      localStorage.setItem('token', token)
-      set({ user, token, loading: false })
-      return true
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (!response.ok) throw new Error('Login failed');
+      
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, token: data.token, isAuthenticated: true });
+      return data;
     } catch (error) {
-      set({ loading: false })
-      return false
+      console.error('Login error:', error);
+      throw error;
     }
   },
-
-  register: async (email, password, name) => {
-    set({ loading: true })
+  
+  register: async (email, password, firstName, lastName) => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/register`, { email, password, name })
-      const { token, user } = response.data
-      localStorage.setItem('token', token)
-      set({ user, token, loading: false })
-      return true
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, firstName, lastName }),
+      });
+      
+      if (!response.ok) throw new Error('Registration failed');
+      
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, token: data.token, isAuthenticated: true });
+      return data;
     } catch (error) {
-      set({ loading: false })
-      return false
+      console.error('Register error:', error);
+      throw error;
     }
   },
-
+  
   logout: () => {
-    localStorage.removeItem('token')
-    set({ user: null, token: null })
-  }
-}))
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    set({ user: null, token: null, isAuthenticated: false });
+  },
+  
+  setUser: (user) => set({ user }),
+  setToken: (token) => set({ token, isAuthenticated: !!token }),
+}));
+
+export default authStore;
