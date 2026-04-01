@@ -175,6 +175,12 @@ app.post('/api/auth/register', async (req, res) => {
     const User = require('./src/models/User');
     const user = await User.create(email, password, firstName, lastName, 'broker');
 
+    if (!user) {
+      return res.status(500).json({
+        error: 'Database connection failed - user creation returned null. Check DATABASE_URL environment variable.'
+      });
+    }
+
     const jwt = require('jsonwebtoken');
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
@@ -194,8 +200,16 @@ app.post('/api/auth/register', async (req, res) => {
       token
     });
   } catch (err) {
-    console.error('Register error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('Register error - Full details:', {
+      message: err.message,
+      code: err.code,
+      detail: err.detail,
+      stack: err.stack
+    });
+    res.status(500).json({ 
+      error: err.message || 'Registration failed - database connection error',
+      detail: err.detail || 'Check DATABASE_URL is properly configured'
+    });
   }
 });
 
