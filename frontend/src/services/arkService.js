@@ -1,6 +1,6 @@
 export async function callArkAI(clientData, userMessage, token) {
   try {
-    const response = await fetch('http://localhost:3000/api/ark/chat', {
+    const response = await fetch('https://courtia.onrender.com/api/ark/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

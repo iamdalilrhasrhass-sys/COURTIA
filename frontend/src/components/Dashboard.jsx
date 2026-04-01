@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useClientStore } from '../store/clientStore'
 import { useAuthStore } from '../store/authStore'
 
-const API_URL = 'http://localhost:3000'
+const API_URL = 'https://courtia.onrender.com'
 
 const mockChartData = [
   { month: 'Jan', revenue: 4000, clients: 24 },
