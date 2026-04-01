@@ -1,24 +1,9 @@
 const bcrypt = require('bcryptjs');
-const { Pool } = require('pg');
-
-let globalPool = null;
-
-function getPool() {
-  if (!globalPool) {
-    globalPool = new Pool({
-      user: process.env.DB_USER || 'dalilrhasrhass',
-      password: process.env.DB_PASSWORD || '',
-      host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || 5432,
-      database: process.env.DB_NAME || 'crm_assurance'
-    });
-  }
-  return globalPool;
-}
+const { pool } = require('../../server');
 
 class User {
   static async create(email, password, firstName, lastName, role = 'broker') {
-    const pool = getPool();
+    
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, first_name, last_name, role, created_at)
@@ -30,13 +15,13 @@ class User {
   }
 
   static async findByEmail(email) {
-    const pool = getPool();
+    
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     return result.rows[0];
   }
 
   static async findById(id) {
-    const pool = getPool();
+    
     const result = await pool.query(
       'SELECT id, email, first_name, last_name, role, created_at FROM users WHERE id = $1',
       [id]

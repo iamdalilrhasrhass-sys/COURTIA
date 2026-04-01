@@ -1455,4 +1455,5 @@ process.on('SIGTERM', () => {
   });
 });
 
-module.exports = app;
+// Export pool for use in models
+module.exports = { app, pool };
