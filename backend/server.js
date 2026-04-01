@@ -15,6 +15,19 @@ const cron = require('node-cron');
 // Load environment variables
 dotenv.config();
 
+// ==================== DATABASE ====================
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+pool.on('error', (err) => {
+  console.error('PostgreSQL pool error:', err);
+});
+
+// ==================== SERVICES ====================
+
 // Import services
 const telegramService = require('./src/services/telegramService');
 const reminderService = require('./src/services/reminderService');
@@ -53,24 +66,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ==================== DATABASE (Lazy initialization) ====================
 
-let pool = null;
-
-function getPool() {
-  if (!pool) {
-    const { Pool } = require('pg');
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    pool.on('error', (err) => {
-      console.error('⚠️  Database error:', err.message);
-    });
-  }
-  return pool;
-}
 
 // ==================== ROUTES ====================
 
@@ -96,7 +92,7 @@ app.get('/api/health', (req, res) => {
 // Status with DB check
 app.get('/api/status', async (req, res) => {
   try {
-    const pool = getPool();
+    const pool = pool;
     const result = await pool.query('SELECT NOW()');
     res.json({
       status: 'running',
@@ -116,7 +112,7 @@ app.get('/api/status', async (req, res) => {
 // Dashboard stats (public - no auth required for now)
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
-    const pool = getPool();
+    const pool = pool;
     
     // Total clients
     const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients');
@@ -396,7 +392,7 @@ app.delete('/api/clients/:id', verifyToken, async (req, res) => {
 app.get('/api/appointments', verifyToken, async (req, res) => {
   try {
     const { date } = req.query;
-    const pool = getPool();
+    const pool = pool;
     const userId = req.user.id;
     
     let query = `
@@ -432,7 +428,7 @@ app.post('/api/appointments', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const pool = getPool();
+    const pool = pool;
     const result = await pool.query(
       `INSERT INTO appointments (client_id, organizer_id, title, description, start_time, end_time, timezone, status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, 'planifié', NOW(), NOW())
@@ -453,7 +449,7 @@ app.put('/api/appointments/:id', verifyToken, async (req, res) => {
     const { title, description, start_time, end_time, status } = req.body;
     const userId = req.user.id;
     
-    const pool = getPool();
+    const pool = pool;
     const result = await pool.query(
       `UPDATE appointments SET title=$1, description=$2, start_time=$3, end_time=$4, status=$5, updated_at=NOW()
        WHERE id=$6 AND organizer_id=$7 RETURNING *`,
@@ -475,7 +471,7 @@ app.delete('/api/appointments/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const pool = getPool();
+    const pool = pool;
     
     const result = await pool.query(
       `UPDATE appointments SET status='annulé' WHERE id=$1 AND organizer_id=$2 RETURNING *`,
@@ -537,7 +533,7 @@ app.post('/api/onboarding/:clientId/responses', verifyToken, async (req, res) =>
       completed_at: new Date()
     };
     
-    const pool = getPool();
+    const pool = pool;
     await pool.query(
       `UPDATE clients SET personal_profile=$1, onboarding_completed=true, onboarding_date=NOW() WHERE id=$2`,
       [JSON.stringify(personalProfile), clientId]
@@ -565,7 +561,7 @@ app.post('/api/reminders/weekly', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'telegram_chat_id required' });
     }
     
-    const pool = getPool();
+    const pool = pool;
     const inactiveClients = await reminderService.getInactiveClients(pool);
     
     if (inactiveClients.length === 0) {
@@ -588,7 +584,7 @@ app.post('/api/reminders/weekly', verifyToken, async (req, res) => {
 // Get inactive clients
 app.get('/api/reminders/inactive-clients', verifyToken, async (req, res) => {
   try {
-    const pool = getPool();
+    const pool = pool;
     const inactiveClients = await reminderService.getInactiveClients(pool);
     
     res.json({ 
@@ -611,7 +607,7 @@ app.post('/api/reminders/test-brief/:appointmentId', verifyToken, async (req, re
       return res.status(400).json({ error: 'telegram_chat_id required' });
     }
     
-    const pool = getPool();
+    const pool = pool;
     const result = await pool.query(
       `SELECT a.*, c.first_name, c.last_name, c.phone FROM appointments a
        JOIN clients c ON a.client_id = c.id
@@ -968,7 +964,7 @@ QUESTION: ${userMessage}`;
     const arkResponse = message.content[0].text;
 
     // Sauvegarde en DB
-    const pool = getPool();
+    const pool = pool;
     await pool.query(
       `INSERT INTO ark_conversations (client_id, user_id, user_message, ark_response, created_at)
        VALUES ($1, $2, $3, $4, NOW())`,
@@ -1052,7 +1048,7 @@ RÉPONSE ARK:`;
 app.get('/api/ark/history/:clientId', verifyToken, async (req, res) => {
   try {
     const { clientId } = req.params;
-    const pool = getPool();
+    const pool = pool;
     
     const result = await pool.query(
       `SELECT id, user_message, ark_response, created_at FROM ark_conversations
@@ -1079,7 +1075,7 @@ app.post('/api/ark/save-conversation', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const pool = getPool();
+    const pool = pool;
     const result = await pool.query(
       `INSERT INTO ark_conversations (client_id, user_id, user_message, ark_response)
        VALUES ($1, $2, $3, $4)
@@ -1099,7 +1095,7 @@ app.post('/api/ark/save-conversation', verifyToken, async (req, res) => {
 // Export clients to Excel
 app.get('/api/exports/clients-excel', verifyToken, async (req, res) => {
   try {
-    const pool = getPool();
+    const pool = pool;
     
     // Get all clients
     const clientsResult = await pool.query(
@@ -1137,7 +1133,7 @@ app.get('/api/exports/clients-excel', verifyToken, async (req, res) => {
 app.get('/api/reports/dda/:clientId', verifyToken, async (req, res) => {
   try {
     const { clientId } = req.params;
-    const pool = getPool();
+    const pool = pool;
     
     // Get client data
     const clientResult = await pool.query('SELECT * FROM clients WHERE id = $1', [clientId]);
@@ -1169,7 +1165,7 @@ app.get('/api/reports/dda/:clientId', verifyToken, async (req, res) => {
 // Generate RGPD PDF
 app.get('/api/reports/rgpd', verifyToken, async (req, res) => {
   try {
-    const pool = getPool();
+    const pool = pool;
     
     // Get all clients
     const result = await pool.query('SELECT id, first_name, last_name, email, phone, status FROM clients ORDER BY created_at DESC');
@@ -1189,7 +1185,7 @@ app.get('/api/reports/rgpd', verifyToken, async (req, res) => {
 // Generate ACPR PDF
 app.get('/api/reports/acpr', verifyToken, async (req, res) => {
   try {
-    const pool = getPool();
+    const pool = pool;
     
     // Get statistics
     const clientCount = await pool.query('SELECT COUNT(*) FROM clients WHERE status = $1', ['active']);
@@ -1320,7 +1316,7 @@ app.post('/api/notifications/test/conversion-drop', verifyToken, async (req, res
 cron.schedule('0 9 * * 1', async () => {
   console.log('⏰ [CRON] Running weekly reminder job...');
   try {
-    const pool = getPool();
+    const pool = pool;
     const inactiveClients = await reminderService.getInactiveClients(pool);
     
     if (inactiveClients.length > 0) {
@@ -1341,7 +1337,7 @@ cron.schedule('0 9 * * 1', async () => {
 cron.schedule('0 20 * * *', async () => {
   console.log('⏰ [CRON] Running daily brief job...');
   try {
-    const pool = getPool();
+    const pool = pool;
     
     // Get appointments for tomorrow
     const tomorrow = new Date();
