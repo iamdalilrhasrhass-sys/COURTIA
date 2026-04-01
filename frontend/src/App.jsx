@@ -42,7 +42,7 @@ export default function App() {
   }
 
   if (!token) {
-    return <Auth onAuthSuccess={() => window.location.reload()} />
+    return <Auth onAuthSuccess={() => {}} />
   }
 
   return (
