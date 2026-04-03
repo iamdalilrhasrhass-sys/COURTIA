@@ -68,6 +68,26 @@ let dbReady = false;
 
 // ==================== ROUTES ====================
 
+// Debug: Inspect clients table columns
+app.get('/api/debug/clients-columns', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'clients' ORDER BY ordinal_position`
+    );
+    res.json({
+      table: 'clients',
+      columns: result.rows.map(r => r.column_name),
+      columnDetails: result.rows,
+      count: result.rows.length
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to inspect table',
+      details: err.message
+    });
+  }
+});
+
 // Health check (public - no DB required)
 app.get('/health', (req, res) => {
   res.json({
@@ -116,25 +136,36 @@ app.get('/api/dashboard/stats', async (req, res) => {
       });
     }
 
+    console.log('📊 Fetching dashboard stats...');
+
     // Total clients
+    console.log('  - Counting clients...');
     const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients');
     const totalClients = parseInt(clientsRes.rows[0].count);
+    console.log(`    ✓ Total clients: ${totalClients}`);
     
     // Active quotes (accepted contracts)
+    console.log('  - Counting accepted quotes...');
     const quotesRes = await pool.query("SELECT COUNT(*) as count FROM quotes WHERE status = 'accepted'");
     const activeContracts = parseInt(quotesRes.rows[0].count);
+    console.log(`    ✓ Active contracts: ${activeContracts}`);
     
-    // Monthly commissions (placeholder - quote_data is JSONB, needs extraction logic)
+    // Monthly commissions (placeholder)
     const monthlyCommissions = 0;
     
-    // Conversion rate (placeholder - needs proper client status logic)
+    // Conversion rate
     const conversionRate = totalClients > 0 ? Math.round((activeContracts / totalClients) * 100) : 0;
+    console.log(`    ✓ Conversion rate: ${conversionRate}%`);
     
-    // Recent clients (fallback to basic info)
+    // Recent clients
+    console.log('  - Fetching recent clients...');
     const recentClientsRes = await pool.query(
       "SELECT id FROM clients ORDER BY created_at DESC LIMIT 3"
     );
     const recentClients = recentClientsRes.rows;
+    console.log(`    ✓ Recent clients: ${recentClients.length}`);
+    
+    console.log('✅ Dashboard stats complete\n');
     
     res.json({
       totalClients,
@@ -144,10 +175,13 @@ app.get('/api/dashboard/stats', async (req, res) => {
       recentClients
     });
   } catch (err) {
-    console.error('Stats error:', err.message);
+    console.error('❌ Stats error:', err);
+    console.error('   Message:', err.message);
+    console.error('   Code:', err.code);
     res.status(500).json({
       error: 'Failed to fetch stats',
-      details: err.message
+      details: err.message,
+      code: err.code
     });
   }
 });
