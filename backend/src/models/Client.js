@@ -2,7 +2,6 @@ const pool = require('../db');
 
 class Client {
   static async create(data) {
-    const pool = pool;
     const { first_name, last_name, email, phone, company_name, type, status } = data;
     const result = await pool.query(
       `INSERT INTO clients (first_name, last_name, email, phone, company_name, type, status, created_at)
@@ -14,7 +13,6 @@ class Client {
   }
 
   static async findAll(limit = 50, offset = 0) {
-    const pool = pool;
     const result = await pool.query(
       `SELECT id, civility, first_name, last_name, email, phone, company_name, status, risk_score, loyalty_score, created_at
        FROM clients
@@ -26,19 +24,16 @@ class Client {
   }
 
   static async count() {
-    const pool = pool;
     const result = await pool.query('SELECT COUNT(*) as count FROM clients');
     return parseInt(result.rows[0].count, 10);
   }
 
   static async findById(id) {
-    const pool = pool;
     const result = await pool.query('SELECT * FROM clients WHERE id = $1', [id]);
     return result.rows[0];
   }
 
   static async update(id, data) {
-    const pool = pool;
     const { first_name, last_name, email, phone, company_name, type, status, risk_score } = data;
     const result = await pool.query(
       `UPDATE clients
@@ -59,7 +54,6 @@ class Client {
   }
 
   static async delete(id) {
-    const pool = pool;
     const result = await pool.query('DELETE FROM clients WHERE id = $1 RETURNING id', [id]);
     return result.rows[0];
   }
