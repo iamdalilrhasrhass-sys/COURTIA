@@ -1,21 +1,56 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useClientStore } from '../stores/clientStore';
 import { useAuthStore } from '../stores/authStore';
 
 const API_URL = 'https://courtia.onrender.com';
 
 export default function ClientDetail() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const selectedClient = useClientStore((state) => state.selectedClient);
   const token = useAuthStore((state) => state.token);
+  
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const client = selectedClient;
+  // Load client from API using URL param
+  useEffect(() => {
+    const loadClient = async () => {
+      if (!id || !token) {
+        setError('ID ou token manquant');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_URL}/api/clients/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Client non trouvé (${res.status})`);
+        }
+        
+        const data = await res.json();
+        setClient(data);
+        setError(null);
+      } catch (err) {
+        console.error('Erreur chargement client:', err);
+        setError(err.message);
+        setClient(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadClient();
+  }, [id, token]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -28,8 +63,9 @@ export default function ClientDetail() {
     setInput('');
     setThinking(true);
 
+    const clientName = client ? `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Client' : 'Client';
     const systemPrompt = `Tu es ARK, l'IA native de COURTIA, un CRM pour courtiers d'assurance français.
-Client: ${client?.name || 'Inconnu'}
+Client: ${clientName}
 Email: ${client?.email || 'N/A'}
 Statut: ${client?.status || 'Prospect'}
 
@@ -103,6 +139,32 @@ Réponds en français, concis et professionnel.`;
     { label: 'Opportunités cross-sell', prompt: 'Quelles opportunités cross-sell pour ce client ?' }
   ];
 
+  if (loading) {
+    return (
+      <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
+        <button onClick={() => navigate('/dashboard')} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 16px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'13px',fontWeight:600,marginBottom:'20px'}}>
+          <ArrowLeft size={16} />
+          Retour
+        </button>
+        <p style={{color:'#999',fontSize:'14px'}}>Chargement du client...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
+        <button onClick={() => navigate('/dashboard')} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 16px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'13px',fontWeight:600,marginBottom:'20px'}}>
+          <ArrowLeft size={16} />
+          Retour
+        </button>
+        <div style={{padding:'16px',background:'#fee2e2',border:'0.5px solid #fca5a5',borderRadius:'8px',color:'#dc2626',fontSize:'13px'}}>
+          ❌ Erreur: {error}
+        </div>
+      </div>
+    );
+  }
+
   if (!client) {
     return (
       <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
@@ -110,10 +172,12 @@ Réponds en français, concis et professionnel.`;
           <ArrowLeft size={16} />
           Retour
         </button>
-        <p style={{color:'#999',fontSize:'14px'}}>Sélectionnez un client</p>
+        <p style={{color:'#999',fontSize:'14px'}}>Client non trouvé</p>
       </div>
     );
   }
+
+  const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
 
   return (
     <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff',minHeight:'100vh'}}>
@@ -125,12 +189,12 @@ Réponds en français, concis et professionnel.`;
       <div style={{display:'grid',gridTemplateColumns:'1fr 400px',gap:'40px'}}>
         {/* Client Info */}
         <div>
-          <h1 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a',marginBottom:'20px'}}>{client.name}</h1>
+          <h1 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a',marginBottom:'20px'}}>{clientName || 'Client'}</h1>
           <div style={{background:'#fff',padding:'20px',border:'0.5px solid #f0f0f0',borderRadius:'10px',marginBottom:'20px'}}>
-            <div style={{marginBottom:'10px'}}><strong>Email:</strong> {client.email}</div>
-            <div style={{marginBottom:'10px'}}><strong>Téléphone:</strong> {client.phone}</div>
-            <div style={{marginBottom:'10px'}}><strong>Statut:</strong> {client.status}</div>
-            <div><strong>Contrats:</strong> {client.contracts?.length || 0}</div>
+            <div style={{marginBottom:'10px'}}><strong>Email:</strong> {client.email || 'N/A'}</div>
+            <div style={{marginBottom:'10px'}}><strong>Téléphone:</strong> {client.phone || 'N/A'}</div>
+            <div style={{marginBottom:'10px'}}><strong>Statut:</strong> {client.status || 'Prospect'}</div>
+            <div><strong>Societe:</strong> {client.company_name || 'N/A'}</div>
           </div>
         </div>
 

@@ -119,7 +119,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             {(dashboardStats.recentClients && dashboardStats.recentClients.length > 0 ? dashboardStats.recentClients : clients.slice(0, 3)).map((client, idx) => (
               <div key={idx} className="flex justify-between items-center p-2 bg-dark-3 rounded">
-                <span>{`${client.first_name} ${client.last_name}`}</span>
+                <span>{`${client.first_name || client.name || 'Client'} ${client.last_name || ''}`}</span>
                 <span className="text-xs text-slate-500">{client.status === 'actif' ? 'Actif' : client.status}</span>
               </div>
             ))}
