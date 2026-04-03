@@ -55,6 +55,12 @@ app.use((req, res, next) => {
 
 // ==================== DATABASE ====================
 const pool = require('./src/db');
+const { initializeDatabase } = require('./src/seed');
+
+// Initialize database schema on startup
+(async () => {
+  await initializeDatabase();
+})();
 
 // ==================== ROUTES ====================
 
