@@ -123,17 +123,13 @@ async function initializeDatabase() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS broker_profiles (
         id SERIAL PRIMARY KEY,
-        user_id INT UNIQUE REFERENCES users(id),
-        firm_name VARCHAR(255),
-        owner_name VARCHAR(255),
-        email VARCHAR(255),
-        phone VARCHAR(20),
-        address VARCHAR(500),
-        city VARCHAR(100),
-        postal_code VARCHAR(10),
-        website VARCHAR(255),
-        siret VARCHAR(20),
-        naf VARCHAR(10),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        cabinet VARCHAR(255),
+        orias VARCHAR(50),
+        telephone VARCHAR(20),
+        adresse TEXT,
+        ville VARCHAR(100),
+        code_postal VARCHAR(10),
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
