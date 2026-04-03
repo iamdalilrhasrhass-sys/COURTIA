@@ -957,7 +957,7 @@ app.get('/api/settings/profile', verifyToken, async (req, res) => {
 app.post('/api/settings/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf } = req.body;
+    const { cabinet, orias, telephone, adresse, ville, code_postal } = req.body;
     
     // Check if profile exists
     const existingResult = await pool.query(
@@ -969,12 +969,11 @@ app.post('/api/settings/profile', verifyToken, async (req, res) => {
       // Update
       const result = await pool.query(
         `UPDATE broker_profiles SET 
-          firm_name = $1, owner_name = $2, email = $3, phone = $4, 
-          address = $5, city = $6, postal_code = $7, website = $8, 
-          siret = $9, naf = $10, updated_at = NOW()
-         WHERE user_id = $11
+          cabinet = $1, orias = $2, telephone = $3, 
+          adresse = $4, ville = $5, code_postal = $6, updated_at = NOW()
+         WHERE user_id = $7
          RETURNING *`,
-        [firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf, userId]
+        [cabinet, orias, telephone, adresse, ville, code_postal, userId]
       );
       res.json({
         message: 'Profile updated',
@@ -983,10 +982,10 @@ app.post('/api/settings/profile', verifyToken, async (req, res) => {
     } else {
       // Create
       const result = await pool.query(
-        `INSERT INTO broker_profiles (user_id, firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `INSERT INTO broker_profiles (user_id, cabinet, orias, telephone, adresse, ville, code_postal)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [userId, firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf]
+        [userId, cabinet, orias, telephone, adresse, ville, code_postal]
       );
       res.status(201).json({
         message: 'Profile created',
