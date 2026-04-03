@@ -19,60 +19,99 @@ export default function Landing() {
       </nav>
 
       {/* HERO */}
-      <section style={{ minHeight: '90vh', paddingTop: '100px', paddingBottom: '80px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ position: 'absolute', top: '20%', right: '10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <section style={{ minHeight: '95vh', paddingTop: '120px', paddingBottom: '100px', backgroundColor: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '10%', right: '5%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-200px', left: '10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 40px', width: '100%', position: 'relative', zIndex: 1 }}>
-          <h1 style={{ fontSize: '48px', fontWeight: 'bold', lineHeight: '1.2', marginBottom: '24px', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 40px', width: '100%', position: 'relative', zIndex: 1 }}>
+          <h1 style={{ fontSize: '52px', fontWeight: '900', lineHeight: '1.15', marginBottom: '28px', margin: 0, fontFamily: 'Arial, sans-serif', letterSpacing: '-0.8px' }}>
             Le premier CRM où l'IA<br/>travaille vraiment avec le courtier
           </h1>
 
-          <p style={{ fontSize: '18px', color: '#64748b', lineHeight: '1.8', maxWidth: '680px', marginBottom: '40px', fontFamily: 'Arial, sans-serif' }}>
+          <p style={{ fontSize: '19px', color: '#475569', lineHeight: '1.85', maxWidth: '720px', marginBottom: '50px', fontFamily: 'Arial, sans-serif', fontWeight: '400' }}>
             ARK analyse vos données, détecte les opportunités et vous propose les bonnes actions. Vous gardez la main. Vous allez plus vite.
           </p>
 
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '100px', fontFamily: 'Arial, sans-serif' }}>
-            <button onClick={() => navigate('/register')} style={{ padding: '14px 40px', backgroundColor: '#0a0a0a', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Arial, sans-serif' }}>
+          <div style={{ display: 'flex', gap: '18px', marginBottom: '120px', fontFamily: 'Arial, sans-serif' }}>
+            <button onClick={() => navigate('/register')} style={{ padding: '16px 48px', backgroundColor: '#0a0a0a', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '9px', fontFamily: 'Arial, sans-serif', boxShadow: '0 12px 32px rgba(10, 10, 10, 0.18)', transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.target.style.boxShadow = '0 18px 48px rgba(10, 10, 10, 0.25)'; e.target.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.target.style.boxShadow = '0 12px 32px rgba(10, 10, 10, 0.18)'; e.target.style.transform = 'translateY(0)'; }}>
               Rejoindre maintenant
-              <ArrowRight size={16} />
+              <ArrowRight size={17} />
             </button>
-            <button style={{ padding: '14px 40px', backgroundColor: '#ffffff', color: '#0a0a0a', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+            <button style={{ padding: '16px 48px', backgroundColor: '#ffffff', color: '#0a0a0a', border: '1.5px solid #d1d5db', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', fontFamily: 'Arial, sans-serif', transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.target.style.borderColor = '#0a0a0a'; e.target.style.backgroundColor = '#f8f9fa'; e.target.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.target.style.borderColor = '#d1d5db'; e.target.style.backgroundColor = '#ffffff'; e.target.style.transform = 'translateY(0)'; }}>
               Voir la démo
             </button>
           </div>
 
-          {/* MOCKUP HERO */}
-          <div style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #ffffff 100%)', border: '0.5px solid #e5e7eb', borderRadius: '12px', padding: '20px', boxShadow: '0 40px 80px rgba(0, 0, 0, 0.1), 0 0 30px rgba(37, 99, 235, 0.08)', fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '12px', borderBottom: '0.5px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', gap: '6px' }}>
+          {/* MOCKUP HERO - PREMIUM */}
+          <div style={{ background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 50%, #f8f9fa 100%)', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 50px 100px rgba(0, 0, 0, 0.12), 0 0 40px rgba(37, 99, 235, 0.1), inset 0 1px 0 rgba(255,255,255,0.6)', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
+            {/* Browser Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', gap: '7px' }}>
                 {['#ff5f57', '#ffbd2e', '#28c940'].map(color => (
-                  <div key={color} style={{ width: '10px', height: '10px', backgroundColor: color, borderRadius: '50%' }} />
+                  <div key={color} style={{ width: '12px', height: '12px', backgroundColor: color, borderRadius: '50%', boxShadow: `0 1px 3px ${color}40` }} />
                 ))}
               </div>
-              <div style={{ fontSize: '10px', color: '#999999', flex: 1, textAlign: 'center' }}>courtia.app</div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', flex: 1, textAlign: 'center', fontWeight: '500' }}>courtia.app</div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ backgroundColor: '#0a0a0a', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {['Dashboard', 'Clients', 'Pipeline', 'ARK'].map((item, i) => (
-                  <div key={item} style={{ fontSize: '10px', padding: '8px 12px', backgroundColor: i === 0 ? '#2563eb' : 'rgba(255,255,255,0.08)', color: i === 0 ? '#ffffff' : '#999999', borderRadius: '5px' }}>
-                    {item}
+            {/* Main Content */}
+            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '16px' }}>
+              {/* SIDEBAR */}
+              <div style={{ backgroundColor: '#0f172a', borderRadius: '10px', padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.3)' }}>
+                {[
+                  { label: 'Dashboard', icon: '📊', active: true },
+                  { label: 'Clients', icon: '👥', active: false },
+                  { label: 'Pipeline', icon: '🎯', active: false },
+                  { label: 'ARK IA', icon: '⚡', active: false }
+                ].map((item, i) => (
+                  <div key={item.label} style={{ fontSize: '10px', padding: '10px 11px', backgroundColor: item.active ? '#2563eb' : 'rgba(255,255,255,0.04)', color: item.active ? '#ffffff' : '#94a3b8', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', border: item.active ? '1px solid rgba(37,99,235,0.4)' : '1px solid transparent' }}>
+                    <span>{item.icon}</span> {item.label}
                   </div>
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                {[
-                  { label: 'Clients', value: '2,847' },
-                  { label: 'Contrats', value: '1,204' },
-                  { label: 'Opps', value: '342' },
-                  { label: 'Semaine', value: '94' }
-                ].map((kpi, i) => (
-                  <div key={i} style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '6px', border: '0.5px solid #e5e7eb', textAlign: 'center' }}>
-                    <div style={{ fontSize: '9px', color: '#999999', marginBottom: '3px' }}>{kpi.label}</div>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0a0a0a' }}>{kpi.value}</div>
+              {/* MAIN AREA */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* TOPBAR */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>Tableau de bord</div>
+                  <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '500' }}>Mis à jour il y a 2m</div>
+                </div>
+
+                {/* KPI CARDS */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                  {[
+                    { label: 'Clients', value: '2,847', trend: '+12%', color: '#3b82f6' },
+                    { label: 'Contrats', value: '1,204', trend: '+8%', color: '#8b5cf6' },
+                    { label: 'Opps', value: '342', trend: '+24%', color: '#ec4899' },
+                    { label: 'Revenus', value: '€248K', trend: '+18%', color: '#10b981' }
+                  ].map((kpi, i) => (
+                    <div key={i} style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                      <div style={{ fontSize: '9px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>{kpi.label}</div>
+                      <div style={{ fontSize: '14px', fontWeight: '700', color: '#0a0a0a', marginBottom: '3px' }}>{kpi.value}</div>
+                      <div style={{ fontSize: '8px', color: kpi.color, fontWeight: '600' }}>{kpi.trend}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CLIENT TABLE SNIPPET */}
+                <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '10px', fontSize: '9px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr', gap: '8px', marginBottom: '6px', color: '#94a3b8', fontWeight: '600', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb' }}>
+                    <div>Client</div>
+                    <div>Statut</div>
+                    <div>Valeur</div>
                   </div>
-                ))}
+                  {[
+                    { name: 'ABC Corp', status: 'Actif', value: '€18K' },
+                    { name: 'XYZ Inc', status: 'En révision', value: '€12K' }
+                  ].map((row, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr', gap: '8px', color: '#475569', paddingBottom: '6px', borderBottom: i === 0 ? '1px solid #e5e7eb' : 'none' }}>
+                      <div style={{ fontWeight: '500' }}>{row.name}</div>
+                      <div style={{ padding: '3px 8px', backgroundColor: row.status === 'Actif' ? '#dcfce7' : '#fef3c7', borderRadius: '4px', color: row.status === 'Actif' ? '#166534' : '#b45309', fontSize: '8px', fontWeight: '600', width: 'fit-content' }}>{row.status}</div>
+                      <div style={{ fontWeight: '600' }}>{row.value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -135,92 +174,96 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ARK - SIMPLE ET ROBUSTE */}
-      <section style={{ backgroundColor: '#f5f5f5', padding: '80px 40px', fontFamily: 'Arial, sans-serif' }}>
+      {/* ARK - FORTE PRÉSENCE */}
+      <section style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)', padding: '100px 40px', fontFamily: 'Arial, sans-serif', position: 'relative', borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '80px' }}>
-            <p style={{ fontSize: '12px', color: '#999999', letterSpacing: '2px', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>ARK EN ACTION</p>
-            <h2 style={{ fontSize: '40px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>Comment ça marche vraiment</h2>
+          <div style={{ marginBottom: '100px', textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', color: '#475569', letterSpacing: '2.5px', marginBottom: '16px', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>⚡ ARK EN ACTION</p>
+            <h2 style={{ fontSize: '44px', fontWeight: '900', margin: 0, fontFamily: 'Arial, sans-serif', letterSpacing: '-0.5px', color: '#0a0a0a', marginBottom: '12px' }}>Comment ça marche vraiment</h2>
+            <p style={{ fontSize: '16px', color: '#64748b', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>De la détection d'opportunité à la fermeture en quelques clics. ARK pense. Vous décidez.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '60px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '38% 62%', gap: '80px', alignItems: 'start' }}>
             {/* TIMELINE */}
-            <div style={{ fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ fontFamily: 'Arial, sans-serif', paddingRight: '20px' }}>
               {[
-                { num: 1, icon: '📥', title: 'La fiche arrive', desc: 'ABC Corp demande devis auto' },
-                { num: 2, icon: '🔍', title: 'ARK analyse', desc: 'Historique + données réel-time' },
-                { num: 3, icon: '💡', title: 'Opportunité détectée', desc: 'Renouvellement proche + besoin identifié' },
-                { num: 4, icon: '✉️', title: 'Action prête', desc: 'Email suggestion + timing optimal' },
-                { num: 5, icon: '✓', title: 'Vous agissez', desc: 'Fermeture gagnée. Vous avez décidé.' }
+                { num: 1, icon: '📥', title: 'La fiche arrive', desc: 'ABC Corp demande devis auto', color: '#3b82f6' },
+                { num: 2, icon: '🔍', title: 'ARK analyse', desc: 'Historique + données réel-time', color: '#8b5cf6' },
+                { num: 3, icon: '💡', title: 'Opportunité détectée', desc: 'Renouvellement proche + besoin identifié', color: '#ec4899' },
+                { num: 4, icon: '✉️', title: 'Action prête', desc: 'Email suggestion + timing optimal', color: '#f59e0b' },
+                { num: 5, icon: '✓', title: 'Vous agissez', desc: 'Fermeture gagnée. Vous avez décidé.', color: '#10b981' }
               ].map((step, i) => (
-                <div key={i} style={{ display: 'flex', gap: '16px', marginBottom: '32px', paddingBottom: '32px', borderBottom: i < 4 ? '1px solid #e5e7eb' : 'none', fontFamily: 'Arial, sans-serif' }}>
-                  <div style={{ fontSize: '24px', minWidth: '30px' }}>{step.icon}</div>
+                <div key={i} style={{ display: 'flex', gap: '18px', marginBottom: '36px', paddingBottom: '36px', borderBottom: i < 4 ? '2px solid #e5e7eb' : 'none', fontFamily: 'Arial, sans-serif', position: 'relative' }}>
+                  <div style={{ fontSize: '28px', minWidth: '40px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', backgroundColor: `${step.color}15`, borderRadius: '10px' }}>{step.icon}</div>
                   <div style={{ flex: 1, fontFamily: 'Arial, sans-serif' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px', fontFamily: 'Arial, sans-serif' }}>{step.title}</div>
-                    <div style={{ fontSize: '13px', color: '#666666', fontFamily: 'Arial, sans-serif' }}>{step.desc}</div>
+                    <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px', fontFamily: 'Arial, sans-serif', color: '#0a0a0a' }}>{step.title}</div>
+                    <div style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', lineHeight: '1.5' }}>{step.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* SCREENSHOTS */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontFamily: 'Arial, sans-serif' }}>
+            {/* SCREENSHOTS - PREMIUM */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px', fontFamily: 'Arial, sans-serif' }}>
               {[
                 {
                   title: 'Fiche client',
+                  color: '#3b82f6',
                   content: (
                     <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '8px', fontFamily: 'Arial, sans-serif' }}>ABC Corp</div>
-                      <div style={{ color: '#666666', lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}>
-                        Type: Entreprise<br/>
-                        Secteur: Transport<br/>
-                        Contrat auto: 2024<br/>
-                        Dernier RDV: 14 oct
+                      <div style={{ fontWeight: '700', marginBottom: '10px', fontFamily: 'Arial, sans-serif', color: '#0a0a0a', fontSize: '13px' }}>ABC Corp</div>
+                      <div style={{ color: '#64748b', lineHeight: '1.8', fontFamily: 'Arial, sans-serif', fontSize: '11px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>Type</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>Entreprise</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>Secteur</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>Transport</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>Auto</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>2024</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>RDV</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>14 oct</span></div>
                       </div>
                     </div>
                   )
                 },
                 {
                   title: 'Détection ARK',
+                  color: '#ec4899',
                   content: (
-                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#2563eb', fontFamily: 'Arial, sans-serif' }}>💡 Opportunité détectée</div>
-                      <div style={{ color: '#666666', lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}>
-                        Renouvellement auto proche<br/>
-                        + Opportunité:<br/>
-                        Complémentaire?
+                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', backgroundColor: '#ec489915', padding: '12px', borderRadius: '8px', border: '1px solid #ec489930' }}>
+                      <div style={{ fontWeight: '700', marginBottom: '8px', color: '#ec4899', fontFamily: 'Arial, sans-serif', display: 'flex', alignItems: 'center', gap: '6px' }}>💡 Opportunité détectée</div>
+                      <div style={{ color: '#475569', lineHeight: '1.7', fontFamily: 'Arial, sans-serif', fontSize: '11px', fontWeight: '500' }}>
+                        Renouvellement auto<br/>
+                        <strong>45 jours</strong><br/>
+                        + Complémentaire?
                       </div>
                     </div>
                   )
                 },
                 {
                   title: 'Email suggéré',
+                  color: '#f59e0b',
                   content: (
-                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '8px', fontFamily: 'Arial, sans-serif' }}>✉️ Par ARK</div>
-                      <div style={{ color: '#666666', lineHeight: '1.6', fontFamily: 'Arial, sans-serif', fontStyle: 'italic' }}>
-                        Objet: Renouvellement auto<br/>
-                        "Bonjour, je vous relance car votre contrat arrive à terme..."
+                    <div style={{ fontSize: '11px', fontFamily: 'Arial, sans-serif' }}>
+                      <div style={{ fontWeight: '700', marginBottom: '8px', fontFamily: 'Arial, sans-serif', color: '#0a0a0a' }}>✉️ Par ARK</div>
+                      <div style={{ color: '#64748b', lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}>
+                        <strong style={{ color: '#0a0a0a' }}>Objet:</strong> Renouvellement auto - Renforcer couverture<br/>
+                        <span style={{ fontStyle: 'italic', fontSize: '10px' }}>"Bonjour, votre contrat arrive à terme..."</span>
                       </div>
                     </div>
                   )
                 },
                 {
                   title: 'Résultat',
+                  color: '#10b981',
                   content: (
-                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '8px', fontFamily: 'Arial, sans-serif' }}>✓ Fermeture gagnée</div>
-                      <div style={{ color: '#666666', lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}>
-                        Valeur potentielle: €1,200-2K<br/>
-                        Temps gagné: 30-45 min<br/>
-                        ARK propose. Vous agissez.
+                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', backgroundColor: '#10b98115', padding: '12px', borderRadius: '8px', border: '1px solid #10b98130' }}>
+                      <div style={{ fontWeight: '700', marginBottom: '10px', fontFamily: 'Arial, sans-serif', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>✓ Fermeture gagnée</div>
+                      <div style={{ color: '#475569', lineHeight: '1.7', fontFamily: 'Arial, sans-serif', fontSize: '11px', fontWeight: '500' }}>
+                        Valeur: <strong style={{ color: '#0a0a0a' }}>€1,200-2K</strong><br/>
+                        Temps: <strong style={{ color: '#0a0a0a' }}>30-45 min</strong>
                       </div>
                     </div>
                   )
                 }
               ].map((ss, i) => (
-                <div key={i} style={{ padding: '24px', backgroundColor: '#ffffff', border: '0.5px solid #d1d5db', borderRadius: '10px', fontFamily: 'Arial, sans-serif' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#999999', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Arial, sans-serif' }}>
+                <div key={i} style={{ padding: '20px', backgroundColor: '#ffffff', border: `1.5px solid ${ss.color}30`, borderRadius: '12px', fontFamily: 'Arial, sans-serif', boxShadow: `0 4px 12px ${ss.color}08`, transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.target.style.borderColor = `${ss.color}50`; e.target.style.boxShadow = `0 8px 20px ${ss.color}15`; e.target.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.target.style.borderColor = `${ss.color}30`; e.target.style.boxShadow = `0 4px 12px ${ss.color}08`; e.target.style.transform = 'translateY(0)'; }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: ss.color, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1.2px', fontFamily: 'Arial, sans-serif' }}>
                     {ss.title}
                   </div>
                   {ss.content}
