@@ -842,7 +842,12 @@ export default function Landing() {
           <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Confidentialité</a>
           <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Contact</a>
         </div>
-        <p style={{ fontSize: '12px', color: '#999999', margin: 0 }}>© 2026 COURTIA. Tous droits réservés.</p>
+        <div style={{ borderTop: '0.5px solid #e5e7eb', paddingTop: '28px', marginTop: '28px' }}>
+          <p style={{ fontSize: '12px', color: '#999999', marginBottom: '8px' }}>© 2026 COURTIA. Tous droits réservés.</p>
+          <p style={{ fontSize: '11px', color: '#999999', fontWeight: '500', letterSpacing: '0.5px', margin: 0 }}>
+            Créé par <span style={{ fontWeight: '700', color: '#0a0a0a' }}>RHASRHASS Dalil</span> <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '13px', display: 'inline-block', marginLeft: '4px', marginRight: '4px', transform: 'scaleX(-1)', display: 'inline-block' }}>⊗</span> <span style={{ fontWeight: '700', color: '#0a0a0a', letterSpacing: '2px' }}>ARK</span>
+          </p>
+        </div>
       </footer>
     </div>
   )
