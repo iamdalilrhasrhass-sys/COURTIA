@@ -62,6 +62,28 @@ let dbReady = false;
 // Initialize database schema on startup
 (async () => {
   await initializeDatabase();
+  
+  // Ensure broker_profiles table exists
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS broker_profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        cabinet VARCHAR(255),
+        orias VARCHAR(50),
+        telephone VARCHAR(20),
+        adresse TEXT,
+        ville VARCHAR(100),
+        code_postal VARCHAR(10),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('✅ broker_profiles table ensured');
+  } catch (err) {
+    console.error('❌ Error ensuring broker_profiles table:', err.message);
+  }
+  
   dbReady = true;
   console.log('✅ Database ready');
 })();
@@ -937,18 +959,22 @@ app.delete('/api/prospects/:id', verifyToken, async (req, res) => {
 app.get('/api/settings/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(`📋 Getting profile for user ${userId}`);
+    
     const result = await pool.query(
       'SELECT * FROM broker_profiles WHERE user_id = $1',
       [userId]
     );
     
     if (result.rows.length === 0) {
+      console.log(`   ℹ️  No profile found for user ${userId}`);
       return res.status(404).json({ error: 'Profile not found' });
     }
     
+    console.log(`   ✓ Profile found: ${result.rows[0].id}`);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Get profile error:', err.message);
+    console.error('❌ Get profile error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -958,6 +984,8 @@ app.post('/api/settings/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const { cabinet, orias, telephone, adresse, ville, code_postal } = req.body;
+    
+    console.log(`💾 Saving profile for user ${userId}`, { cabinet, orias, telephone, adresse, ville, code_postal });
     
     // Check if profile exists
     const existingResult = await pool.query(
