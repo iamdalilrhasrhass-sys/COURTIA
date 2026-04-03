@@ -68,25 +68,6 @@ let dbReady = false;
 
 // ==================== ROUTES ====================
 
-// Debug: Inspect table structure
-app.get('/api/debug/quotes-columns', async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'quotes' ORDER BY ordinal_position`
-    );
-    res.json({
-      table: 'quotes',
-      columns: result.rows,
-      count: result.rows.length
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: 'Failed to inspect table',
-      details: err.message
-    });
-  }
-});
-
 // Health check (public - no DB required)
 app.get('/health', (req, res) => {
   res.json({
@@ -125,7 +106,7 @@ app.get('/api/status', async (req, res) => {
   }
 });
 
-// Dashboard stats (public - no auth required for now)
+// Dashboard stats
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
     if (!dbReady) {
@@ -139,24 +120,19 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients');
     const totalClients = parseInt(clientsRes.rows[0].count);
     
-    // Active quotes (contracts/devis accepted)
+    // Active quotes (accepted contracts)
     const quotesRes = await pool.query("SELECT COUNT(*) as count FROM quotes WHERE status = 'accepted'");
     const activeContracts = parseInt(quotesRes.rows[0].count);
     
-    // Monthly commissions (sum of quote amounts / 12 for monthly estimate)
-    const commissionsRes = await pool.query(
-      "SELECT COALESCE(SUM(amount) / 12, 0) as total FROM quotes WHERE status = 'accepted'"
-    );
-    const monthlyCommissions = Math.round(parseFloat(commissionsRes.rows[0].total));
+    // Monthly commissions (placeholder - quote_data is JSONB, needs extraction logic)
+    const monthlyCommissions = 0;
     
-    // Conversion rate (actif clients / total clients)
-    const activeClientsRes = await pool.query("SELECT COUNT(*) as count FROM clients WHERE status = 'actif'");
-    const activeClientsCount = parseInt(activeClientsRes.rows[0].count);
-    const conversionRate = totalClients > 0 ? Math.round((activeClientsCount / totalClients) * 100) : 0;
+    // Conversion rate (placeholder - needs proper client status logic)
+    const conversionRate = totalClients > 0 ? Math.round((activeContracts / totalClients) * 100) : 0;
     
-    // Recent clients
+    // Recent clients (fallback to basic info)
     const recentClientsRes = await pool.query(
-      "SELECT id, first_name, last_name, status FROM clients ORDER BY created_at DESC LIMIT 3"
+      "SELECT id FROM clients ORDER BY created_at DESC LIMIT 3"
     );
     const recentClients = recentClientsRes.rows;
     
