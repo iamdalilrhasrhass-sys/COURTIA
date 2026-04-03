@@ -92,6 +92,7 @@ async function initializeDatabase() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS appointments (
         id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id),
         client_id INT REFERENCES clients(id),
         organizer_id INT REFERENCES users(id),
         title VARCHAR(255),
@@ -99,7 +100,7 @@ async function initializeDatabase() {
         start_time TIMESTAMP,
         end_time TIMESTAMP,
         timezone VARCHAR(100),
-        status VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'planifié',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
