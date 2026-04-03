@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthStore } from './stores/authStore'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
+import ClientDetail from './pages/ClientDetail'
 import Auth from './components/AuthPremium'
 
 export default function App() {
@@ -27,6 +28,10 @@ export default function App() {
         <Route 
           path="/dashboard" 
           element={token ? <Dashboard /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/client/:id" 
+          element={token ? <ClientDetail /> : <Navigate to="/login" />} 
         />
         
         {/* Fallback - redirect unknown routes to landing */}
