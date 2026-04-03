@@ -57,9 +57,13 @@ app.use((req, res, next) => {
 const pool = require('./src/db');
 const { initializeDatabase } = require('./src/seed');
 
+let dbReady = false;
+
 // Initialize database schema on startup
 (async () => {
   await initializeDatabase();
+  dbReady = true;
+  console.log('✅ Database ready');
 })();
 
 // ==================== ROUTES ====================
@@ -105,6 +109,13 @@ app.get('/api/status', async (req, res) => {
 // Dashboard stats (public - no auth required for now)
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
+    if (!dbReady) {
+      return res.status(503).json({
+        error: 'Database not ready',
+        details: 'Database initialization in progress'
+      });
+    }
+
     // Total clients
     const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients');
     const totalClients = parseInt(clientsRes.rows[0].count);

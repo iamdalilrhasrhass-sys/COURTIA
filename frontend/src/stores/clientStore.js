@@ -5,13 +5,13 @@ const API_URL = 'https://courtia.onrender.com'
 
 export const useClientStore = create((set) => ({
   clients: [],
+  selectedClient: null,
   loading: false,
   error: null,
 
-  fetchClients: async () => {
+  fetchClients: async (token) => {
     set({ loading: true, error: null })
     try {
-      const token = useAuthStore.getState().token
       const res = await fetch(`${API_URL}/api/clients`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -22,9 +22,8 @@ export const useClientStore = create((set) => ({
     }
   },
 
-  createClient: async (client) => {
+  addClient: async (client, token) => {
     try {
-      const token = useAuthStore.getState().token
       const res = await fetch(`${API_URL}/api/clients`, {
         method: 'POST',
         headers: {
@@ -41,4 +40,43 @@ export const useClientStore = create((set) => ({
       throw err
     }
   },
+
+  updateClient: async (id, client, token) => {
+    try {
+      const res = await fetch(`${API_URL}/api/clients/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(client),
+      })
+      const data = await res.json()
+      set((state) => ({
+        clients: state.clients.map(c => c.id === id ? data.client : c)
+      }))
+      return data.client
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  deleteClient: async (id, token) => {
+    try {
+      await fetch(`${API_URL}/api/clients/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      set((state) => ({
+        clients: state.clients.filter(c => c.id !== id)
+      }))
+      return true
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  setSelectedClient: (client) => set({ selectedClient: client }),
 }))
