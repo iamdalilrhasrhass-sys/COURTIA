@@ -1,7 +1,7 @@
 import { ArrowLeft, Mail, Phone, MapPin, FileText, AlertCircle, Heart, Clock, FileCheck, MessageSquare, Send, Calendar, Plus, PhoneIcon } from 'lucide-react'
 import { useState } from 'react'
-import { useClientStore } from '../store/clientStore'
-import { useAuthStore } from '../store/authStore'
+import { useClientStore } from '../stores/clientStore'
+import { useAuthStore } from '../stores/authStore'
 import ContractModal from './ContractModal'
 import { callArkAI } from '../services/arkService'
 

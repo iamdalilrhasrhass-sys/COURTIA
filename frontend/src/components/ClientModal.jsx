@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { useClientStore } from '../store/clientStore'
-import { useAuthStore } from '../store/authStore'
+import { useClientStore } from '../stores/clientStore'
+import { useAuthStore } from '../stores/authStore'
 
 export default function ClientModal({ client, onClose }) {
   const token = useAuthStore((state) => state.token)

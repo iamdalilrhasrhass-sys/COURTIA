@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { TrendingUp, Users, Briefcase, DollarSign } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { useClientStore } from '../store/clientStore'
-import { useAuthStore } from '../store/authStore'
+import { useClientStore } from '../stores/clientStore'
+import { useAuthStore } from '../stores/authStore'
 
 const API_URL = 'https://courtia.onrender.com'
 

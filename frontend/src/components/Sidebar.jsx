@@ -1,8 +1,8 @@
 import { Home, Users, Briefcase, Calendar, BarChart3, Settings, LogOut, Menu, X, Bell } from 'lucide-react'
 import NotificationBell from './NotificationBell'
 import { useState } from 'react'
-import { useAuthStore } from '../store/authStore'
-import { useClientStore } from '../store/clientStore'
+import { useAuthStore } from '../stores/authStore'
+import { useClientStore } from '../stores/clientStore'
 import { useResponsive } from '../hooks/useResponsive'
 import SearchBar from './SearchBar'
 

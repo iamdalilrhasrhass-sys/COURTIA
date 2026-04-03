@@ -6,8 +6,11 @@ const authStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
+  loading: false,
+  error: null,
   
   login: async (email, password) => {
+    set({ loading: true, error: null });
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
@@ -20,15 +23,17 @@ const authStore = create((set) => ({
       const data = await response.json();
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      set({ user: data.user, token: data.token, isAuthenticated: true });
+      set({ user: data.user, token: data.token, isAuthenticated: true, loading: false });
       return data;
     } catch (error) {
       console.error('Login error:', error);
+      set({ loading: false, error: error.message });
       throw error;
     }
   },
   
   register: async (email, password, firstName, lastName) => {
+    set({ loading: true, error: null });
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
@@ -41,10 +46,11 @@ const authStore = create((set) => ({
       const data = await response.json();
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      set({ user: data.user, token: data.token, isAuthenticated: true });
+      set({ user: data.user, token: data.token, isAuthenticated: true, loading: false });
       return data;
     } catch (error) {
       console.error('Register error:', error);
+      set({ loading: false, error: error.message });
       throw error;
     }
   },
@@ -52,11 +58,12 @@ const authStore = create((set) => ({
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    set({ user: null, token: null, isAuthenticated: false });
+    set({ user: null, token: null, isAuthenticated: false, loading: false, error: null });
   },
   
   setUser: (user) => set({ user }),
   setToken: (token) => set({ token, isAuthenticated: !!token }),
 }));
 
+export const useAuthStore = authStore;
 export default authStore;

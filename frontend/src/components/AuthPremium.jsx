@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '../stores/authStore'
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true)

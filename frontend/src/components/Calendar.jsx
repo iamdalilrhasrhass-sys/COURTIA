@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Calendar, Plus, Clock, MapPin, X, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useAuthStore } from '../store/authStore'
-import { useClientStore } from '../store/clientStore'
+import { useAuthStore } from '../stores/authStore'
+import { useClientStore } from '../stores/clientStore'
 
 const TYPE_COLORS = {
   'meeting': 'bg-blue-500/20 text-blue-400 border-blue-500',
