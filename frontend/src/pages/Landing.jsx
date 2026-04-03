@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ARKDemo from '../components/ARKDemo';
 
 export default function Landing() {
  const navigate = useNavigate();
@@ -188,41 +189,19 @@ export default function Landing() {
  ))}
  </div>
  </div>
- <div className="reveal reveal-d2">
- <div style={{background:'#0f0f0f',borderRadius:14,border:'0.5px solid rgba(255,255,255,0.06)',overflow:'hidden'}}>
- <div style={{padding:'14px 18px',borderBottom:'0.5px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:10}}>
+ <div className="reveal reveal-d2" style={{background:'#0f0f0f',borderRadius:14,border:'0.5px solid rgba(255,255,255,0.06)',overflow:'hidden',padding:16,minHeight:440}}>
+ <div style={{display:'flex',flexDirection:'column',height:'100%',gap:16}}>
+ <div style={{display:'flex',alignItems:'center',gap:10}}>
  <div style={{width:28,height:28,borderRadius:7,background:'rgba(37,99,235,0.15)',border:'0.5px solid rgba(37,99,235,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
  <div style={{width:8,height:8,borderRadius:'50%',background:'#60a5fa'}}></div>
  </div>
- <span style={{fontSize:12,fontWeight:700,color:'#fff',letterSpacing:1}}>ARK</span>
+ <span style={{fontSize:12,fontWeight:700,color:'#fff',letterSpacing:1}}>ARK DÉMO</span>
  <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
- <div style={{width:6,height:6,borderRadius:'50%',background:'#22c55e'}}></div>
+ <div style={{width:6,height:6,borderRadius:'50%',background:'#22c55e',animation:'pulse 2s ease infinite'}}></div>
  <span style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>En ligne</span>
  </div>
  </div>
- <div style={{padding:16,display:'flex',flexDirection:'column',gap:10}}>
- <div>
- <div style={{fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.2)',fontWeight:700,marginBottom:3}}>ARK</div>
- <div style={{padding:'10px 13px',borderRadius:'4px 10px 10px 10px',fontSize:12,lineHeight:1.6,background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.75)',border:'0.5px solid rgba(255,255,255,0.05)'}}>Bonjour Dalil. Martin Renaud — contrat auto, échéance dans 14 jours. Risque de résiliation élevé. Je recommande un contact cette semaine.</div>
- </div>
- <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}><div style={{fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.2)',fontWeight:700,marginBottom:3}}>Vous</div>
- <div style={{padding:'10px 13px',borderRadius:'10px 4px 10px 10px',fontSize:12,lineHeight:1.6,background:'rgba(37,99,235,0.15)',color:'rgba(255,255,255,0.8)',border:'0.5px solid rgba(37,99,235,0.2)'}}>Rédige un email de relance personnalisé</div>
- </div>
- <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0'}}>
- <div style={{display:'flex',gap:4}}>
- {[0,1,2].map(i => <div key={i} className={`dot${i+1}`} style={{width:5,height:5,borderRadius:'50%',background:'rgba(37,99,235,0.5)'}}></div>)}
- </div>
- <span style={{fontSize:10,color:'rgba(255,255,255,0.2)',letterSpacing:0.5}}>ARK rédige...</span>
- </div>
- <div>
- <div style={{fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.2)',fontWeight:700,marginBottom:3}}>ARK</div>
- <div style={{padding:'10px 13px',borderRadius:'4px 10px 10px 10px',fontSize:12,lineHeight:1.6,background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.75)',border:'0.5px solid rgba(255,255,255,0.05)'}}>Email prêt. Objet : "Votre contrat auto arrive à terme — offre exclusive". J'ai intégré son historique. Voulez-vous que je l'envoie ?</div>
- </div>
- </div>
- <div style={{padding:'12px 16px',borderTop:'0.5px solid rgba(255,255,255,0.05)',display:'flex',gap:8}}>
- <div style={{flex:1,background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)',borderRadius:7,padding:'8px 12px',fontSize:11,color:'rgba(255,255,255,0.3)',fontFamily:'Arial'}}>Demandez à ARK...</div>
- <div style={{background:'#2563eb',borderRadius:7,padding:'8px 14px',fontSize:11,color:'#fff',cursor:'pointer',fontWeight:700}}>Envoyer</div>
- </div>
+ <ARKDemo />
  </div>
  </div>
  </div>
