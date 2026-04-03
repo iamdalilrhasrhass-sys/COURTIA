@@ -1080,7 +1080,7 @@ app.get('/api/exports/clients-excel', verifyToken, async (req, res) => {
     // Get all contracts
     const contractsResult = await pool.query(
       `SELECT c.id, c.type, c.annual_premium, c.status, c.start_date, c.end_date, cl.first_name, cl.last_name
-       FROM contracts c
+       FROM contrats c
        JOIN clients cl ON c.client_id = cl.id
        ORDER BY c.created_at DESC`
     );
@@ -1118,7 +1118,7 @@ app.get('/api/reports/dda/:clientId', verifyToken, async (req, res) => {
     
     // Get contracts
     const contractsResult = await pool.query(
-      'SELECT type, premium, end_date FROM contracts WHERE client_id = $1 AND status = $2',
+      'SELECT type, premium, end_date FROM contrats WHERE client_id = $1 AND status = $2',
       [clientId, 'active']
     );
     
@@ -1158,7 +1158,7 @@ app.get('/api/reports/acpr', verifyToken, async (req, res) => {
   try {
     // Get statistics
     const clientCount = await pool.query('SELECT COUNT(*) FROM clients WHERE status = $1', ['active']);
-    const contractCount = await pool.query('SELECT COUNT(*) FROM contracts WHERE status = $1', ['active']);
+    const contractCount = await pool.query('SELECT COUNT(*) FROM contrats WHERE status = $1', ['active']);
     
     const stats = {
       totalClients: clientCount.rows[0].count || 0,
