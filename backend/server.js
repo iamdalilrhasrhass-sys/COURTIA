@@ -299,8 +299,14 @@ app.post('/api/auth/login', async (req, res) => {
 // Auth middleware
 const verifyToken = (req, res, next) => {
   try {
+    // Handle OPTIONS requests (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader) {
+      console.warn('⚠️  No authorization header in', req.method, req.path);
       return res.status(401).json({ error: 'No authorization header' });
     }
 
@@ -319,6 +325,7 @@ const verifyToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
+    console.error('❌ Token verification error:', err.message);
     res.status(401).json({ error: 'Invalid token', details: err.message });
   }
 };
