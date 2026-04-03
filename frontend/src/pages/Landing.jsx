@@ -72,38 +72,56 @@ export default function Landing() {
       <section style={{ backgroundColor: '#ffffff', padding: '80px 40px', fontFamily: 'Arial, sans-serif' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', marginBottom: '80px' }}>
           <p style={{ fontSize: '12px', color: '#999999', letterSpacing: '2px', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>LES RÉALITÉS DU COURTIER</p>
-          <h2 style={{ fontSize: '40px', fontWeight: 'bold', margin: 0, marginBottom: '12px', fontFamily: 'Arial, sans-serif' }}>Ce que les autres outils ne résolvent pas</h2>
+          <h2 style={{ fontSize: '40px', fontWeight: 'bold', margin: 0, marginBottom: '60px', fontFamily: 'Arial, sans-serif' }}>Ce que les autres outils ne résolvent pas</h2>
+
+          {/* BLOC 1 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '60% 40%', gap: '60px', alignItems: 'center', marginBottom: '60px', backgroundColor: '#f5f5f5', padding: '48px 40px', marginLeft: '-40px', marginRight: '-40px', paddingLeft: '80px', paddingRight: '80px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+              {['📧 Email', '📅 Outlook', '📄 PDF', '📝 Notes', '📌 Post-it'].map(item => (
+                <div key={item} style={{ padding: '20px 12px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px', fontWeight: '500', textAlign: 'center' }}>
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div>
+              <h3 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px', margin: 0, fontFamily: 'Arial, sans-serif' }}>Vos données vivent partout</h3>
+              <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>Client ABC chez vous. Historique en email. RDV en Outlook. Besoins notés sur post-it. Vous jonguez entre les outils.</p>
+            </div>
+          </div>
+
+          {/* BLOC 2 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '60px', alignItems: 'center', marginBottom: '60px', backgroundColor: '#ffffff', padding: '48px 40px', marginLeft: '-40px', marginRight: '-40px', paddingLeft: '80px', paddingRight: '80px' }}>
+            <div>
+              <h3 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px', margin: 0, fontFamily: 'Arial, sans-serif' }}>Vous voyez les données. Pas les patterns.</h3>
+              <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>ABC a renouvelé son auto en 2024. Vous avez déjà tous les signaux. Mais aucun outil ne les relie pour vous au bon moment.</p>
+            </div>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '24px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#999999', marginBottom: '12px' }}>FICHE CLIENT</div>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>ABC Corp</div>
+              <div style={{ fontSize: '12px', color: '#666666', lineHeight: '1.8' }}>
+                Auto: 2022 → 2024 ✓<br/>
+                Renouvellement: 14 déc 2024<br/>
+                Secteur: Transport<br/>
+                <span style={{ fontStyle: 'italic', color: '#999999' }}>=Besoin complémentaire? →</span>
+              </div>
+            </div>
+          </div>
+
+          {/* BLOC 3 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '60% 40%', gap: '60px', alignItems: 'center', backgroundColor: '#f5f5f5', padding: '48px 40px', marginLeft: '-40px', marginRight: '-40px', paddingLeft: '80px', paddingRight: '80px' }}>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '24px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignContent: 'flex-start', minHeight: '140px' }}>
+              {['Appel ABC', 'Email XYZ', 'Contrat OK', 'Alerte', 'Rappel 1', 'Devis 2', 'RDV 3', 'Signature', 'Suivi', 'Doc'].map((task, i) => (
+                <div key={i} style={{ padding: '6px 12px', backgroundColor: '#f0f0f0', border: '0.5px solid #d1d5db', borderRadius: '5px', fontSize: '10px', fontWeight: '500', opacity: 0.7 + (i % 3) * 0.1 }}>
+                  {task}
+                </div>
+              ))}
+            </div>
+            <div>
+              <h3 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px', margin: 0, fontFamily: 'Arial, sans-serif' }}>Votre cerveau n'a pas la place pour plus.</h3>
+              <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>Appels. Emails. Contrats. Alertes. Clients qui rappellent. Zéro espace mental pour la stratégie commerciale.</p>
+            </div>
+          </div>
         </div>
-
-        {/* BLOC 1 - Suivi éclaté */}
-        <ProblemeBloc
-          num={1}
-          bgGray={true}
-          visuelLeft={true}
-          titre="Vos données vivent partout"
-          texte="Client ABC chez vous. Historique en email. RDV en Outlook. Besoins notés sur post-it. Vous jonguez entre les outils."
-          visuel={<VisuProbleme1 />}
-        />
-
-        {/* BLOC 2 - Patterns */}
-        <ProblemeBloc
-          num={2}
-          bgGray={false}
-          visuelLeft={false}
-          titre="Vous voyez les données. Pas les patterns."
-          texte="ABC a renouvelé son auto en 2024. Vous avez déjà tous les signaux. Mais aucun outil ne les relie pour vous au bon moment."
-          visuel={<VisuProbleme2 />}
-        />
-
-        {/* BLOC 3 - Charge mentale */}
-        <ProblemeBloc
-          num={3}
-          bgGray={true}
-          visuelLeft={true}
-          titre="Votre cerveau n'a pas la place pour plus."
-          texte="Appels. Emails. Contrats. Alertes. Clients qui rappellent. Zéro espace mental pour la stratégie commerciale."
-          visuel={<VisuProbleme3 />}
-        />
       </section>
 
       {/* ARK SECTION */}
