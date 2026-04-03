@@ -106,6 +106,24 @@ app.get('/api/status', async (req, res) => {
   }
 });
 
+// Debug: List all tables in database
+app.get('/api/debug/tables', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
+    );
+    res.json({
+      tables: result.rows.map(r => r.table_name),
+      count: result.rows.length
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to list tables',
+      details: err.message
+    });
+  }
+});
+
 // Dashboard stats (public - no auth required for now)
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
