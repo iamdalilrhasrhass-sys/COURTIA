@@ -29,7 +29,7 @@ export default function Auth({ onAuthSuccess }) {
       if (success) {
         onAuthSuccess()
       } else {
-        setError('Authentification échouée. Vérifiez vos identifiants.')
+        setError('Authentification échouée.')
       }
     } catch (err) {
       setError('Erreur. Veuillez réessayer.')
@@ -39,89 +39,49 @@ export default function Auth({ onAuthSuccess }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark via-dark-2 to-dark flex items-center justify-center p-4">
-      <div className="glass p-12 rounded-xl w-full max-w-md">
-        <h1 className="text-gradient text-4xl font-black mb-2 text-center">COURTIA</h1>
-        <p className="text-center text-slate-400 mb-8">CRM d'assurance avec IA native</p>
+    <div style={{minHeight:'100vh',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',fontFamily:'Arial,sans-serif'}}>
+      <div style={{padding:'48px',borderRadius:'10px',width:'100%',maxWidth:'420px',border:'0.5px solid #f0f0f0'}}>
+        <h1 style={{fontSize:'32px',fontWeight:900,textAlign:'center',color:'#0a0a0a',marginBottom:'8px'}}>COURTIA</h1>
+        <p style={{textAlign:'center',color:'#999',marginBottom:'32px',fontSize:'13px'}}>CRM d'assurance avec IA native</p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:'20px'}}>
           {!isLogin && (
             <>
               <div>
-                <label className="block text-sm font-bold mb-2">Prénom</label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="input-field w-full"
-                  required={!isLogin}
-                  placeholder="Votre prénom"
-                />
+                <label style={{display:'block',fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'#0a0a0a'}}>Prénom</label>
+                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required={!isLogin} placeholder="Votre prénom" style={{width:'100%',padding:'10px 12px',border:'0.5px solid #f0f0f0',borderRadius:'8px',fontSize:'13px',fontFamily:'Arial',background:'#fff',color:'#0a0a0a'}} />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-2">Nom</label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="input-field w-full"
-                  required={!isLogin}
-                  placeholder="Votre nom"
-                />
+                <label style={{display:'block',fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'#0a0a0a'}}>Nom</label>
+                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required={!isLogin} placeholder="Votre nom" style={{width:'100%',padding:'10px 12px',border:'0.5px solid #f0f0f0',borderRadius:'8px',fontSize:'13px',fontFamily:'Arial',background:'#fff',color:'#0a0a0a'}} />
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-sm font-bold mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field w-full"
-              required
-              placeholder="vous@example.com"
-            />
+            <label style={{display:'block',fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'#0a0a0a'}}>Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="vous@example.com" style={{width:'100%',padding:'10px 12px',border:'0.5px solid #f0f0f0',borderRadius:'8px',fontSize:'13px',fontFamily:'Arial',background:'#fff',color:'#0a0a0a'}} />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field w-full"
-              required
-              placeholder="••••••••"
-            />
+            <label style={{display:'block',fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'#0a0a0a'}}>Mot de passe</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" style={{width:'100%',padding:'10px 12px',border:'0.5px solid #f0f0f0',borderRadius:'8px',fontSize:'13px',fontFamily:'Arial',background:'#fff',color:'#0a0a0a'}} />
           </div>
 
-          {error && <div className="bg-red-500/20 border border-red-500 p-3 rounded text-red-300 text-sm">{error}</div>}
+          {error && (
+            <div style={{background:'#fee2e2',border:'0.5px solid #fca5a5',padding:'12px',borderRadius:'8px',color:'#dc2626',fontSize:'12px'}}>
+              {error}
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full font-bold py-3"
-          >
+          <button type="submit" disabled={loading} style={{width:'100%',padding:'12px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Arial',letterSpacing:'0.3px',transition:'background 0.2s',opacity:loading?0.6:1}}>
             {loading ? 'Chargement...' : isLogin ? 'Connexion' : 'Créer compte'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => {
-              setIsLogin(!isLogin)
-              setError('')
-              setEmail('')
-              setPassword('')
-              setFirstName('')
-              setLastName('')
-            }}
-            className="text-sm text-slate-400 hover:text-white transition"
-          >
-            {isLogin ? "Pas encore de compte ? S'inscrire" : 'Déjà inscrit ? Se connecter'}
-          </button>
-        </div>
+        <button type="button" onClick={() => {setIsLogin(!isLogin); setError('')}} style={{width:'100%',marginTop:'20px',padding:'0',background:'none',border:'none',fontSize:'13px',color:'#2563eb',cursor:'pointer',fontFamily:'Arial',textDecoration:'none'}}>
+          {isLogin ? 'Pas encore de compte ? S\'inscrire' : 'Déjà inscrit ? Se connecter'}
+        </button>
       </div>
     </div>
   )
