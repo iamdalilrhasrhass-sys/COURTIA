@@ -13,7 +13,7 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         
-        {/* Auth Routes */}
+        {/* Auth Routes - Login/Register */}
         <Route 
           path="/login" 
           element={!token ? <Auth onAuthSuccess={() => {}} /> : <Navigate to="/dashboard" />} 
@@ -26,10 +26,10 @@ export default function App() {
         {/* Protected Routes */}
         <Route 
           path="/dashboard" 
-          element={token ? <Dashboard /> : <Navigate to="/" />} 
+          element={token ? <Dashboard /> : <Navigate to="/login" />} 
         />
         
-        {/* Fallback */}
+        {/* Fallback - redirect unknown routes to landing */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
