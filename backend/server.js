@@ -931,6 +931,74 @@ app.delete('/api/prospects/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ==================== SETTINGS/BROKER PROFILE ====================
+
+// Get broker profile
+app.get('/api/settings/profile', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      'SELECT * FROM broker_profiles WHERE user_id = $1',
+      [userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Get profile error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create or update broker profile
+app.post('/api/settings/profile', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf } = req.body;
+    
+    // Check if profile exists
+    const existingResult = await pool.query(
+      'SELECT id FROM broker_profiles WHERE user_id = $1',
+      [userId]
+    );
+    
+    if (existingResult.rows.length > 0) {
+      // Update
+      const result = await pool.query(
+        `UPDATE broker_profiles SET 
+          firm_name = $1, owner_name = $2, email = $3, phone = $4, 
+          address = $5, city = $6, postal_code = $7, website = $8, 
+          siret = $9, naf = $10, updated_at = NOW()
+         WHERE user_id = $11
+         RETURNING *`,
+        [firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf, userId]
+      );
+      res.json({
+        message: 'Profile updated',
+        profile: result.rows[0]
+      });
+    } else {
+      // Create
+      const result = await pool.query(
+        `INSERT INTO broker_profiles (user_id, firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *`,
+        [userId, firm_name, owner_name, email, phone, address, city, postal_code, website, siret, naf]
+      );
+      res.status(201).json({
+        message: 'Profile created',
+        profile: result.rows[0]
+      });
+    }
+  } catch (err) {
+    console.error('Save profile error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==================== ARK AI ASSISTANT ====================
 
 const anthropic = new Anthropic({
