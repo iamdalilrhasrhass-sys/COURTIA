@@ -1,38 +1,56 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useViewportScroll, useTransform, useMotionValue } from 'framer-motion'
-import { Check, ArrowRight, Zap, Sparkles } from 'lucide-react'
+import { Check, ArrowRight, Zap, Sparkles, BarChart3, Users, Lightbulb, Rocket } from 'lucide-react'
 
-// Premium easing
+// Premium easing curves
 const PREMIUM_EASE = [0.16, 1, 0.3, 1]
 const SMOOTH_EASE = [0.25, 0.46, 0.45, 0.94]
+const BOUNCE_EASE = [0.34, 1.56, 0.64, 1]
 
 export default function Landing() {
   const navigate = useNavigate()
   const [showChat, setShowChat] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
-  const [chatTyping, setChatTyping] = useState(false)
-  const scrollRef = useRef(null)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const containerRef = useRef(null)
   const { scrollY } = useViewportScroll()
 
+  // Mouse tracking for tilt effect
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (containerRef.current) {
+        const { left, top, width, height } = containerRef.current.getBoundingClientRect()
+        setMousePosition({
+          x: (e.clientX - left - width / 2) / 50,
+          y: (e.clientY - top - height / 2) / 50
+        })
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
   // Parallax transforms
-  const heroY = useTransform(scrollY, [0, 500], [0, 150])
-  const mockupScale = useTransform(scrollY, [300, 800], [0.8, 1])
-  const mockupOpacity = useTransform(scrollY, [300, 700], [0.3, 1])
+  const heroY = useTransform(scrollY, [0, 600], [0, 180])
+  const mockupScale = useTransform(scrollY, [400, 900], [0.75, 1])
+  const mockupOpacity = useTransform(scrollY, [300, 800], [0.2, 1])
+  const sectionOpacity1 = useTransform(scrollY, [1200, 1600], [0, 1])
 
   // ARK chat simulation
   useEffect(() => {
     if (showChat && chatMessages.length === 0) {
       setTimeout(() => {
-        setChatMessages([{ role: 'user', text: 'Analyse du client ABC Corp' }])
+        setChatMessages([{ role: 'user', text: 'Analyse ABC Corp' }])
         setTimeout(() => {
-          setChatTyping(true)
+          setChatMessages(prev => [...prev, {
+            role: 'ark',
+            text: '📊 Score: 42/100 | 💰 Opportunité: Renouvellement | ⏰ Appel avant 15 déc',
+            thinking: true
+          }])
           setTimeout(() => {
-            setChatMessages(prev => [...prev, {
-              role: 'ark',
-              text: '📊 Score risque: 42/100 (bon payeur) | 💰 Opportunité: Renouvellement + complémentaire | ⏰ À faire: Appeler avant 15 déc'
-            }])
-            setChatTyping(false)
+            setChatMessages(prev => [...prev.map((m, i) => i === prev.length - 1 ? { ...m, thinking: false } : m)])
           }, 1200)
         }, 600)
       }, 400)
@@ -41,50 +59,39 @@ export default function Landing() {
 
   // Animation variants
   const fadeInUp = {
-    initial: { opacity: 0, y: 50 },
+    initial: { opacity: 0, y: 60 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.9, ease: PREMIUM_EASE }
-  }
-
-  const fadeInDown = {
-    initial: { opacity: 0, y: -50 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.9, ease: PREMIUM_EASE }
+    transition: { duration: 1, ease: PREMIUM_EASE }
   }
 
   const staggerContainerPremium = {
     animate: {
-      transition: { staggerChildren: 0.12, delayChildren: 0.15 }
+      transition: { staggerChildren: 0.15, delayChildren: 0.1 }
     }
   }
 
-  const cardHoverVariant = {
-    initial: { y: 0 },
-    whileHover: { y: -12, transition: { duration: 0.4, ease: SMOOTH_EASE } }
-  }
-
   return (
-    <div ref={scrollRef} style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ffffff', color: '#0a0a0a', overflow: 'hidden' }}>
-      {/* NAVIGATION - Premium Fixed */}
+    <div ref={containerRef} style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ffffff', color: '#0a0a0a', overflow: 'x-hidden' }}>
+      {/* ===== NAVIGATION ===== */}
       <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: SMOOTH_EASE }}
+        transition={{ duration: 0.9, ease: SMOOTH_EASE }}
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          backgroundColor: 'rgba(255, 255, 255, 0.99)',
           borderBottom: '0.5px solid #e5e7eb',
           zIndex: 100,
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+          backdropFilter: 'blur(14px)',
+          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.05)'
         }}
       >
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 80px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <motion.div
-            style={{ fontSize: '15px', fontWeight: 'bold', letterSpacing: '4px', cursor: 'pointer' }}
+            style={{ fontSize: '16px', fontWeight: 'bold', letterSpacing: '4px', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -92,12 +99,12 @@ export default function Landing() {
             COURTIA
           </motion.div>
 
-          <div style={{ display: 'flex', gap: '60px', fontSize: '12px', fontWeight: '500' }}>
-            {['Fonctionnalités', 'ARK IA', 'Tarifs'].map((link) => (
+          <div style={{ display: 'flex', gap: '70px', fontSize: '12px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
+            {['Fonctionnalités', 'Workflow', 'ARK IA', 'Tarifs'].map((link) => (
               <motion.a
                 key={link}
                 href={`#${link.toLowerCase().replace(' ', '')}`}
-                style={{ textDecoration: 'none', color: '#0a0a0a', cursor: 'pointer', position: 'relative' }}
+                style={{ textDecoration: 'none', color: '#0a0a0a', cursor: 'pointer', position: 'relative', fontFamily: 'Arial, sans-serif' }}
                 whileHover={{ color: '#2563eb' }}
                 transition={{ duration: 0.3 }}
               >
@@ -106,7 +113,7 @@ export default function Landing() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '14px' }}>
             <motion.button
               onClick={() => navigate('/login')}
               style={{
@@ -115,7 +122,8 @@ export default function Landing() {
                 color: '#0a0a0a',
                 cursor: 'pointer',
                 fontSize: '12px',
-                fontWeight: '500'
+                fontWeight: '500',
+                fontFamily: 'Arial, sans-serif'
               }}
               whileHover={{ color: '#2563eb' }}
             >
@@ -124,14 +132,15 @@ export default function Landing() {
             <motion.button
               onClick={() => navigate('/register')}
               style={{
-                padding: '10px 24px',
+                padding: '11px 26px',
                 backgroundColor: '#0a0a0a',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '6px',
                 fontSize: '12px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontFamily: 'Arial, sans-serif'
               }}
               whileHover={{ backgroundColor: '#2563eb', scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -142,78 +151,99 @@ export default function Landing() {
         </div>
       </motion.nav>
 
-      {/* ===== HERO CINÉMATIQUE ===== */}
-      <section style={{ minHeight: '100vh', paddingTop: '80px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-        {/* Subtle background glow */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '800px',
-          height: '800px',
-          background: 'radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%)',
-          pointerEvents: 'none'
-        }} />
+      {/* ===== HERO SPECTACULAIRE ===== */}
+      <section style={{ minHeight: '100vh', paddingTop: '100px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Glow background effect */}
+        <motion.div
+          animate={{ opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity }}
+          style={{
+            position: 'absolute',
+            top: '40%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '900px',
+            height: '900px',
+            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }}
+        />
 
-        <motion.div style={{ y: heroY }} style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 60px', textAlign: 'center', width: '100%', position: 'relative', zIndex: 1 }}>
-          {/* Badge */}
+        <motion.div style={{ y: heroY, maxWidth: '1100px', margin: '0 auto', padding: '0 80px', textAlign: 'center', width: '100%', position: 'relative', zIndex: 1, fontFamily: 'Arial, sans-serif' }}>
+          {/* Badge avec animation */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, ease: PREMIUM_EASE }}
+            transition={{ duration: 0.8, ease: PREMIUM_EASE }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '10px 18px',
+              gap: '9px',
+              padding: '11px 20px',
               backgroundColor: '#f0fdf4',
               border: '0.5px solid #dcfce7',
-              borderRadius: '24px',
-              marginBottom: '40px',
+              borderRadius: '26px',
+              marginBottom: '50px',
               fontSize: '11px',
               color: '#166534',
               fontWeight: '600',
-              backdropFilter: 'blur(8px)'
+              backdropFilter: 'blur(10px)',
+              fontFamily: 'Arial, sans-serif'
             }}
           >
             <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
             >
               <Zap size={13} style={{ color: '#16a34a' }} />
             </motion.div>
             Offre Fondateur — 31 places restantes
           </motion.div>
 
-          {/* H1 - Premium Split Animation */}
-          <div style={{ marginBottom: '28px', lineHeight: '1.15' }}>
+          {/* Hero Title - Multi-step reveal */}
+          <div style={{ marginBottom: '32px', lineHeight: '1.1' }}>
             <motion.h1
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.15, ease: PREMIUM_EASE }}
+              transition={{ duration: 1.1, delay: 0.2, ease: PREMIUM_EASE }}
               style={{
-                fontSize: '68px',
+                fontSize: '72px',
                 fontWeight: 'bold',
-                letterSpacing: '-1.2px',
-                margin: 0
+                letterSpacing: '-1.4px',
+                margin: 0,
+                fontFamily: 'Arial, sans-serif'
               }}
             >
-              Le CRM qui pense
+              Le CRM qui
             </motion.h1>
             <motion.h1
-              initial={{ opacity: 0, y: -50 }}
+              initial={{ opacity: 0, y: -60 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.35, ease: PREMIUM_EASE }}
+              transition={{ duration: 1.1, delay: 0.4, ease: PREMIUM_EASE }}
               style={{
-                fontSize: '68px',
+                fontSize: '72px',
                 fontWeight: 'bold',
                 color: '#2563eb',
-                letterSpacing: '-1.2px',
-                margin: '8px 0 0 0'
+                letterSpacing: '-1.4px',
+                margin: '12px 0 0 0',
+                fontFamily: 'Arial, sans-serif'
               }}
             >
-              à votre place
+              pense & agit
+            </motion.h1>
+            <motion.h1
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: SMOOTH_EASE }}
+              style={{
+                fontSize: '72px',
+                fontWeight: 'bold',
+                letterSpacing: '-1.4px',
+                margin: '12px 0 0 0',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              avec vous
             </motion.h1>
           </div>
 
@@ -221,634 +251,775 @@ export default function Landing() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.9, delay: 0.55, ease: SMOOTH_EASE }}
+            transition={{ duration: 1, delay: 0.8, ease: SMOOTH_EASE }}
             style={{
-              fontSize: '17px',
+              fontSize: '18px',
               color: '#64748b',
-              marginBottom: '52px',
-              lineHeight: '1.75',
-              maxWidth: '680px',
-              margin: '0 auto 52px',
-              fontWeight: '400'
+              marginBottom: '60px',
+              lineHeight: '1.8',
+              maxWidth: '720px',
+              margin: '0 auto 60px',
+              fontWeight: '400',
+              fontFamily: 'Arial, sans-serif'
             }}
           >
-            ARK analyse vos clients, détecte vos opportunités et rédige vos emails. En temps réel. Pendant que vous travaillez.
+            ARK analyse. Détecte. Agit. Votre assistant IA natif qui transforme vos données en victoires commerciales, en temps réel.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.7, ease: PREMIUM_EASE }}
-            style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '100px' }}
+            transition={{ duration: 1, delay: 1, ease: PREMIUM_EASE }}
+            style={{ display: 'flex', gap: '18px', justifyContent: 'center', marginBottom: '120px', fontFamily: 'Arial, sans-serif' }}
           >
             <motion.button
               onClick={() => navigate('/register')}
               style={{
-                padding: '15px 40px',
+                padding: '16px 44px',
                 backgroundColor: '#0a0a0a',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '14px',
-                fontWeight: '600',
+                fontWeight: '700',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)'
+                gap: '11px',
+                boxShadow: '0 12px 36px rgba(0, 0, 0, 0.15)',
+                fontFamily: 'Arial, sans-serif'
               }}
-              whileHover={{ backgroundColor: '#2563eb', scale: 1.03, boxShadow: '0 15px 40px rgba(37, 99, 235, 0.3)' }}
+              whileHover={{ backgroundColor: '#2563eb', scale: 1.04, boxShadow: '0 18px 48px rgba(37, 99, 235, 0.35)' }}
               whileTap={{ scale: 0.96 }}
             >
               Rejoindre — 69€/mois
-              <ArrowRight size={16} />
+              <ArrowRight size={17} />
             </motion.button>
             <motion.button
               style={{
-                padding: '15px 40px',
+                padding: '16px 44px',
                 backgroundColor: '#ffffff',
                 color: '#0a0a0a',
                 border: '1px solid #d1d5db',
                 borderRadius: '8px',
                 fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer'
+                fontWeight: '700',
+                cursor: 'pointer',
+                fontFamily: 'Arial, sans-serif'
               }}
-              whileHover={{ borderColor: '#0a0a0a', backgroundColor: '#f8f9fa', scale: 1.03 }}
+              whileHover={{ borderColor: '#0a0a0a', backgroundColor: '#f8f9fa', scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
             >
               Voir la démo
             </motion.button>
           </motion.div>
 
-          {/* Product Mockup - Reveal Progressive */}
+          {/* Premium Product Mockup */}
           <motion.div
             style={{ scale: mockupScale, opacity: mockupOpacity }}
             transition={{ duration: 0.6 }}
           >
-            <motion.div
-              initial={{ opacity: 0, y: 80 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 0.85, ease: PREMIUM_EASE }}
-              style={{
-                background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
-                border: '0.5px solid #e5e7eb',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 40px 80px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
-                aspectRatio: '16/9',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              {/* Browser Chrome */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '20px', borderBottom: '0.5px solid #e5e7eb' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {['#ff5f57', '#ffbd2e', '#28c940'].map((color, idx) => (
-                    <motion.div
-                      key={color}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.5, delay: 1.1 + (idx * 0.1), ease: PREMIUM_EASE }}
-                      style={{
-                        width: '13px',
-                        height: '13px',
-                        backgroundColor: color,
-                        borderRadius: '50%'
-                      }}
-                    />
-                  ))}
-                </div>
-                <div style={{ fontSize: '11px', color: '#999999', flex: 1, textAlign: 'center', fontWeight: '500' }}>
-                  courtia.local
-                </div>
-              </div>
-
-              {/* Mockup Content Grid */}
-              <div style={{ display: 'flex', flex: 1, gap: '20px' }}>
-                {/* Sidebar */}
-                <motion.div
-                  initial={{ opacity: 0, x: -60 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.9, delay: 1.15, ease: PREMIUM_EASE }}
-                  style={{
-                    width: '220px',
-                    backgroundColor: '#0a0a0a',
-                    borderRadius: '10px',
-                    padding: '18px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                    boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.05)'
-                  }}
-                >
-                  {['Dashboard', 'Clients', 'Pipeline', 'Calendrier', 'ARK'].map((item, idx) => (
-                    <motion.div
-                      key={item}
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 1.25 + (idx * 0.08), ease: SMOOTH_EASE }}
-                      style={{
-                        fontSize: '11px',
-                        padding: '10px 14px',
-                        backgroundColor: item === 'Dashboard' ? '#2563eb' : 'rgba(255, 255, 255, 0.08)',
-                        color: item === 'Dashboard' ? '#ffffff' : '#999999',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: '500',
-                        transition: 'all 0.3s ease'
-                      }}
-                    />
-                  ))}
-                </motion.div>
-
-                {/* KPI Cards Grid */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.9, delay: 1.3, ease: PREMIUM_EASE }}
-                  style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}
-                >
-                  {[
-                    { label: 'Total clients', value: '2,847', delay: 1.4 },
-                    { label: 'Contrats actifs', value: '1,204', delay: 1.5 },
-                    { label: 'Opportunités', value: '342', delay: 1.6 },
-                    { label: 'Taux conversion', value: '34%', delay: 1.7 }
-                  ].map((kpi, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.75, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: kpi.delay, ease: PREMIUM_EASE }}
-                      whileHover={{ y: -4, boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)' }}
-                      style={{
-                        backgroundColor: '#f8f9fa',
-                        padding: '16px',
-                        borderRadius: '8px',
-                        textAlign: 'center',
-                        border: '0.5px solid #e5e7eb',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      <div style={{ fontSize: '10px', color: '#999999', marginBottom: '6px', fontWeight: '500' }}>
-                        {kpi.label}
-                      </div>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0a0a0a' }}>
-                        {kpi.value}
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </div>
-            </motion.div>
+            <ProductMockup />
           </motion.div>
         </motion.div>
       </section>
 
-      {/* ===== ARK SECTION - Premium Dark ===== */}
-      <section style={{
-        minHeight: '100vh',
-        backgroundColor: '#0a0a0a',
-        color: '#ffffff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px 60px',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* Glow background */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          right: '0',
-          transform: 'translateY(-50%)',
-          width: '600px',
-          height: '600px',
-          background: 'radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%)',
-          pointerEvents: 'none'
-        }} />
+      {/* ===== WORKFLOW EXPERIENCE SECTION ===== */}
+      <WorkflowSection />
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, amount: 0.3 }}
-          style={{ maxWidth: '1000px', width: '100%', position: 'relative', zIndex: 1 }}
-        >
-          <div style={{ textAlign: 'center', marginBottom: '100px' }}>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: PREMIUM_EASE }}
-              style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '20px', fontWeight: '600', textTransform: 'uppercase' }}
-            >
-              ARK — IA NATIVE
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.1, ease: PREMIUM_EASE }}
-              style={{ fontSize: '56px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.2' }}
-            >
-              Votre bras droit digital.
-              <br />
-              <motion.span
-                style={{ color: '#2563eb' }}
-                animate={{ opacity: [1, 0.8, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                Disponible 24h/24.
-              </motion.span>
-            </motion.h2>
-          </div>
+      {/* ===== ARK SECTION - PREMIUM DARK ===== */}
+      <ARKSection showChat={showChat} setShowChat={setShowChat} chatMessages={chatMessages} setChatMessages={setChatMessages} />
 
-          {/* Chat Premium Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.2, ease: PREMIUM_EASE }}
-            viewport={{ once: true, amount: 0.3 }}
-            style={{
-              maxWidth: '700px',
-              margin: '0 auto',
-              backgroundColor: '#1a1a1a',
-              border: '0.5px solid #333333',
-              borderRadius: '16px',
-              padding: '32px',
-              minHeight: '350px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '18px',
-              boxShadow: '0 0 60px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-              position: 'relative'
-            }}
-          >
-            {/* Typing indicator */}
-            {chatTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={{ display: 'flex', gap: '6px', justifyContent: 'flex-start' }}
-              >
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 0.6, delay: i * 0.1, repeat: Infinity }}
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: '#2563eb',
-                      borderRadius: '50%'
-                    }}
-                  />
-                ))}
-              </motion.div>
-            )}
-
-            {/* Chat Messages */}
-            <AnimatePresence>
-              {chatMessages.map((msg, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: SMOOTH_EASE }}
-                  style={{
-                    display: 'flex',
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
-                  }}
-                >
-                  <div style={{
-                    backgroundColor: msg.role === 'user' ? '#2563eb' : 'rgba(37, 99, 235, 0.15)',
-                    color: msg.role === 'user' ? '#ffffff' : '#e5e7eb',
-                    padding: '14px 18px',
-                    borderRadius: '12px',
-                    maxWidth: '75%',
-                    fontSize: '13px',
-                    lineHeight: '1.6',
-                    fontWeight: msg.role === 'user' ? '500' : '400',
-                    boxShadow: msg.role === 'user' ? '0 4px 12px rgba(37, 99, 235, 0.25)' : 'none'
-                  }}>
-                    {msg.text}
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {chatMessages.length === 0 && !chatTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                style={{ textAlign: 'center', color: '#666666', fontSize: '13px', marginTop: '60px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Sparkles size={16} style={{ marginRight: '8px' }} /> Cliquez pour voir ARK en action...
-              </motion.div>
-            )}
-          </motion.div>
-
-          {/* Demo Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3, ease: PREMIUM_EASE }}
-            viewport={{ once: true, amount: 0.3 }}
-            style={{ textAlign: 'center', marginTop: '56px' }}
-          >
-            <motion.button
-              onClick={() => { setShowChat(!showChat); setChatMessages([]); }}
-              style={{
-                padding: '13px 32px',
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: '0 8px 24px rgba(37, 99, 235, 0.3)'
-              }}
-              whileHover={{ scale: 1.05, boxShadow: '0 12px 32px rgba(37, 99, 235, 0.4)' }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {showChat ? 'Réinitialiser' : 'Démarrer la démo'}
-            </motion.button>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* ===== FONCTIONNALITÉS - Cascade ===== */}
-      <section style={{ minHeight: '100vh', backgroundColor: '#ffffff', padding: '140px 60px', display: 'flex', alignItems: 'center' }}>
-        <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: PREMIUM_EASE }}
-            viewport={{ once: true, amount: 0.3 }}
-            style={{ textAlign: 'center', marginBottom: '100px' }}
-          >
-            <p style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '20px', fontWeight: '600', textTransform: 'uppercase' }}>
-              FONCTIONNALITÉS
-            </p>
-            <h2 style={{ fontSize: '52px', fontWeight: 'bold', margin: 0 }}>
-              Tout ce dont un courtier a besoin
-            </h2>
-          </motion.div>
-
-          {/* Features Grid - Cascade */}
-          <motion.div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '36px' }}
-            variants={staggerContainerPremium}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            {[
-              { title: 'CRM métier', desc: 'Gestion clients intuitive avec scoring et historique complet', icon: '📊' },
-              { title: 'Gestion contrats', desc: 'Suivi des polices, échéances et renouvellements', icon: '📋' },
-              { title: 'Pipeline prospects', desc: 'Kanban drag-drop, scoring et automation', icon: '🎯' },
-              { title: 'Calendrier échéances', desc: 'Rappels automatiques et briefs avant RDV', icon: '📅' },
-              { title: 'Conformité DDA/RGPD', desc: 'Rapports auto-générés, audit trail complet', icon: '✅' },
-              { title: 'ARK IA native', desc: 'Analyse, recommandations et emails en real-time', icon: '⚡' }
-            ].map((feature, idx) => (
-              <motion.div
-                key={idx}
-                variants={fadeInUp}
-                whileHover={{ y: -12, transition: { duration: 0.4, ease: SMOOTH_EASE } }}
-                style={{
-                  padding: '48px 36px',
-                  border: '0.5px solid #e5e7eb',
-                  borderRadius: '14px',
-                  backgroundColor: '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
-                }}
-              >
-                <div style={{ fontSize: '32px', marginBottom: '16px' }}>{feature.icon}</div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', margin: '0 0 12px 0' }}>
-                  {feature.title}
-                </h3>
-                <p style={{ fontSize: '14px', color: '#666666', lineHeight: '1.7', margin: 0 }}>
-                  {feature.desc}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      {/* ===== FONCTIONNALITÉS ===== */}
+      <FeaturesSection />
 
       {/* ===== PRICING ===== */}
-      <section style={{ minHeight: '80vh', backgroundColor: '#f5f5f5', padding: '140px 60px', display: 'flex', alignItems: 'center' }}>
-        <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: PREMIUM_EASE }}
-            viewport={{ once: true, amount: 0.3 }}
-            style={{ textAlign: 'center', marginBottom: '80px' }}
-          >
-            <p style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '20px', fontWeight: '600', textTransform: 'uppercase' }}>
-              TARIFS FONDATEUR
-            </p>
-            <h2 style={{ fontSize: '52px', fontWeight: 'bold', margin: 0 }}>
-              Prix garantis à vie
-            </h2>
-          </motion.div>
-
-          {/* Pricing Cards - Cascade */}
-          <motion.div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '36px' }}
-            variants={staggerContainerPremium}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            {[
-              { name: 'Start', old: '59€', price: '39€', features: ['CRM + 100 clients', 'ARK basique', 'Support email'], featured: false },
-              { name: 'Pro', old: '99€', price: '69€', features: ['CRM + 500 clients', 'ARK complet', 'Support prioritaire', 'Automations illimitées'], featured: true },
-              { name: 'Elite', old: '179€', price: '129€', features: ['CRM illimité', 'ARK + Opus', 'Onboarding perso', 'API access'], featured: false }
-            ].map((plan, idx) => (
-              <motion.div
-                key={idx}
-                variants={fadeInUp}
-                whileHover={cardHoverVariant.whileHover}
-                style={{
-                  padding: '56px 40px',
-                  border: plan.featured ? '1.5px solid #0a0a0a' : '0.5px solid #d1d5db',
-                  borderRadius: '14px',
-                  backgroundColor: plan.featured ? '#0a0a0a' : '#ffffff',
-                  color: plan.featured ? '#ffffff' : '#0a0a0a',
-                  position: 'relative',
-                  boxShadow: plan.featured ? '0 30px 60px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.04)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {plan.featured && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-13px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    padding: '5px 14px',
-                    borderRadius: '14px',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase'
-                  }}>
-                    Le plus choisi
-                  </div>
-                )}
-                <h3 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '18px', margin: '0 0 18px 0' }}>
-                  {plan.name}
-                </h3>
-                <div style={{ marginBottom: '28px' }}>
-                  <span style={{ fontSize: '12px', opacity: 0.6, textDecoration: 'line-through', fontWeight: '500' }}>
-                    {plan.old}
-                  </span>
-                  <div style={{ fontSize: '40px', fontWeight: 'bold', marginTop: '6px' }}>
-                    {plan.price}<span style={{ fontSize: '15px', opacity: 0.6, fontWeight: '500', marginLeft: '4px' }}>/mois</span>
-                  </div>
-                </div>
-                <ul style={{ marginBottom: '36px', gap: '14px', display: 'flex', flexDirection: 'column', padding: 0, listStyle: 'none' }}>
-                  {plan.features.map((feature, i) => (
-                    <li key={i} style={{ display: 'flex', gap: '10px', fontSize: '13px', fontWeight: '500' }}>
-                      <Check size={16} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <motion.button
-                  onClick={() => navigate('/register')}
-                  style={{
-                    width: '100%',
-                    padding: '13px 24px',
-                    backgroundColor: plan.featured ? '#2563eb' : '#0a0a0a',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    boxShadow: plan.featured ? '0 8px 24px rgba(37, 99, 235, 0.3)' : 'none'
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Commencer
-                </motion.button>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <PricingSection navigate={navigate} />
 
       {/* ===== FINAL CTA ===== */}
-      <section style={{ minHeight: '60vh', backgroundColor: '#ffffff', padding: '140px 60px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+      <FinalCTASection navigate={navigate} />
+
+      {/* ===== FOOTER ===== */}
+      <Footer />
+    </div>
+  )
+}
+
+// ===== PRODUCT MOCKUP COMPONENT =====
+function ProductMockup() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 100 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1.3, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+        border: '0.5px solid #e5e7eb',
+        borderRadius: '18px',
+        padding: '28px',
+        boxShadow: '0 50px 100px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+        aspectRatio: '16/9',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'Arial, sans-serif'
+      }}
+    >
+      {/* Browser Chrome */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '0.5px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', gap: '9px' }}>
+          {['#ff5f57', '#ffbd2e', '#28c940'].map((color, idx) => (
+            <motion.div
+              key={color}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 1.35 + (idx * 0.12), ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                width: '14px',
+                height: '14px',
+                backgroundColor: color,
+                borderRadius: '50%'
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ fontSize: '11px', color: '#999999', flex: 1, textAlign: 'center', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
+          courtia.app
+        </div>
+      </div>
+
+      {/* Content Grid */}
+      <div style={{ display: 'flex', flex: 1, gap: '24px', fontFamily: 'Arial, sans-serif' }}>
+        {/* Sidebar */}
         <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: PREMIUM_EASE }}
-          viewport={{ once: true, amount: 0.3 }}
-          style={{ maxWidth: '900px' }}
+          initial={{ opacity: 0, x: -70 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            width: '240px',
+            backgroundColor: '#0a0a0a',
+            borderRadius: '12px',
+            padding: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08)',
+            fontFamily: 'Arial, sans-serif'
+          }}
         >
-          <h2 style={{ fontSize: '56px', fontWeight: 'bold', marginBottom: '24px', lineHeight: '1.2' }}>
-            Rejoignez les
+          {['Dashboard', 'Clients', 'Pipeline', 'Calendrier', 'ARK'].map((item, idx) => (
+            <motion.div
+              key={item}
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.5 + (idx * 0.1), ease: SMOOTH_EASE }}
+              style={{
+                fontSize: '12px',
+                padding: '11px 16px',
+                backgroundColor: item === 'Dashboard' ? '#2563eb' : 'rgba(255, 255, 255, 0.08)',
+                color: item === 'Dashboard' ? '#ffffff' : '#999999',
+                borderRadius: '7px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.3s ease',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Main Content */}
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontFamily: 'Arial, sans-serif' }}>
+          {/* KPI Cards */}
+          {[
+            { label: 'Total clients', value: '2,847', icon: '👥' },
+            { label: 'Contrats actifs', value: '1,204', icon: '📋' },
+            { label: 'Opportunités', value: '342', icon: '🎯' },
+            { label: 'Taux conversion', value: '34%', icon: '📈' }
+          ].map((kpi, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.8, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 1.6 + (i * 0.12), ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(0, 0, 0, 0.1)' }}
+              style={{
+                backgroundColor: '#f8f9fa',
+                padding: '18px',
+                borderRadius: '10px',
+                textAlign: 'center',
+                border: '0.5px solid #e5e7eb',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>{kpi.icon}</div>
+              <div style={{ fontSize: '10px', color: '#999999', marginBottom: '6px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
+                {kpi.label}
+              </div>
+              <div style={{ fontSize: '19px', fontWeight: 'bold', color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
+                {kpi.value}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ===== WORKFLOW SECTION =====
+function WorkflowSection() {
+  return (
+    <section style={{ minHeight: '120vh', backgroundColor: '#f5f5f5', padding: '160px 80px', position: 'relative', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, amount: 0.2 }}
+        style={{ textAlign: 'center', marginBottom: '120px', fontFamily: 'Arial, sans-serif' }}
+      >
+        <p style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '22px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>
+          WORKFLOW INTELLIGENT
+        </p>
+        <h2 style={{ fontSize: '56px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+          Voir COURTIA en action
+        </h2>
+      </motion.div>
+
+      {/* Workflow Steps */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+        <motion.div
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '28px', fontFamily: 'Arial, sans-serif' }}
+          variants={{
+            animate: {
+              transition: { staggerChildren: 0.2, delayChildren: 0.1 }
+            }
+          }}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          {[
+            { step: '01', title: 'Un client arrive', desc: 'Nouveau contact détecté automatiquement', icon: Users },
+            { step: '02', title: 'ARK l\'analyse', desc: 'Scoring, historique, opportunités', icon: BarChart3 },
+            { step: '03', title: 'Intelligence appliquée', desc: 'Recommandations en temps réel', icon: Lightbulb },
+            { step: '04', title: 'Action suggérée', desc: 'Email rédigé, relance programmée', icon: Rocket }
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 60 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: true, amount: 0.3 }}
+              whileHover={{ y: -16, boxShadow: '0 24px 48px rgba(0, 0, 0, 0.12)' }}
+              style={{
+                padding: '48px 32px',
+                backgroundColor: '#ffffff',
+                border: '0.5px solid #e5e7eb',
+                borderRadius: '16px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.4s ease',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb', marginBottom: '16px', fontFamily: 'Arial, sans-serif' }}>
+                {item.step}
+              </div>
+              <item.icon size={32} style={{ color: '#2563eb', margin: '0 auto 16px', display: 'block' }} />
+              <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '10px', margin: '0 0 10px 0', fontFamily: 'Arial, sans-serif' }}>
+                {item.title}
+              </h3>
+              <p style={{ fontSize: '13px', color: '#666666', lineHeight: '1.6', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+                {item.desc}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ===== ARK SECTION =====
+function ARKSection({ showChat, setShowChat, chatMessages, setChatMessages }) {
+  return (
+    <section style={{
+      minHeight: '100vh',
+      backgroundColor: '#0a0a0a',
+      color: '#ffffff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '100px 80px',
+      position: 'relative',
+      overflow: 'hidden',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      {/* Glow */}
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        right: '-20%',
+        transform: 'translateY(-50%)',
+        width: '700px',
+        height: '700px',
+        background: 'radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%)',
+        pointerEvents: 'none'
+      }} />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.9 }}
+        viewport={{ once: true, amount: 0.3 }}
+        style={{ maxWidth: '1000px', width: '100%', position: 'relative', zIndex: 1, fontFamily: 'Arial, sans-serif' }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '100px', fontFamily: 'Arial, sans-serif' }}>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '22px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}
+          >
+            ARK — IA NATIVE
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ fontSize: '60px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.15', fontFamily: 'Arial, sans-serif' }}
+          >
+            Votre assistant
+            <br />
             <motion.span
               animate={{ opacity: [1, 0.7, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-              style={{ color: '#2563eb', display: 'block' }}
+              transition={{ duration: 3, repeat: Infinity }}
+              style={{ color: '#2563eb', fontFamily: 'Arial, sans-serif' }}
             >
-              fondateurs
+              opérant dans le système
             </motion.span>
-          </h2>
+          </motion.h2>
+        </div>
 
-          {/* Progress Bar Animated */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: PREMIUM_EASE }}
-            viewport={{ once: true, amount: 0.5 }}
-            style={{ marginBottom: '56px' }}
-          >
-            <div style={{
-              maxWidth: '400px',
-              margin: '0 auto 20px',
-              height: '2px',
-              backgroundColor: '#e5e7eb',
-              borderRadius: '1px',
-              overflow: 'hidden',
-              position: 'relative'
-            }}>
+        {/* Chat Premium */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.3 }}
+          style={{
+            maxWidth: '750px',
+            margin: '0 auto',
+            backgroundColor: '#1a1a1a',
+            border: '0.5px solid #333333',
+            borderRadius: '18px',
+            padding: '36px',
+            minHeight: '380px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            boxShadow: '0 0 80px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+            position: 'relative',
+            fontFamily: 'Arial, sans-serif'
+          }}
+        >
+          <AnimatePresence>
+            {chatMessages.map((msg, i) => (
               <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                transition={{ duration: 1.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                viewport={{ once: true, amount: 0.5 }}
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: SMOOTH_EASE }}
                 style={{
-                  height: '100%',
-                  width: '100%',
-                  backgroundColor: '#0a0a0a',
-                  transformOrigin: 'left'
+                  display: 'flex',
+                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  fontFamily: 'Arial, sans-serif'
                 }}
-              />
-            </div>
-            <p style={{ fontSize: '13px', color: '#666666', fontWeight: '500' }}>31 sur 50 places réservées</p>
-          </motion.div>
+              >
+                <div style={{
+                  backgroundColor: msg.role === 'user' ? '#2563eb' : 'rgba(37, 99, 235, 0.12)',
+                  color: msg.role === 'user' ? '#ffffff' : '#e5e7eb',
+                  padding: '16px 20px',
+                  borderRadius: '13px',
+                  maxWidth: '75%',
+                  fontSize: '13px',
+                  lineHeight: '1.7',
+                  fontWeight: msg.role === 'user' ? '500' : '400',
+                  boxShadow: msg.role === 'user' ? '0 6px 16px rgba(37, 99, 235, 0.3)' : 'none',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
+                  {msg.thinking && (
+                    <motion.div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      {[0, 1, 2].map((d) => (
+                        <motion.div
+                          key={d}
+                          animate={{ y: [0, -8, 0] }}
+                          transition={{ duration: 0.8, delay: d * 0.15, repeat: Infinity }}
+                          style={{
+                            width: '6px',
+                            height: '6px',
+                            backgroundColor: '#2563eb',
+                            borderRadius: '50%'
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                  {msg.text}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
+          {chatMessages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              style={{ textAlign: 'center', color: '#666666', fontSize: '13px', marginTop: '80px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}
+            >
+              <Sparkles size={16} style={{ marginRight: '10px' }} /> Cliquez pour voir ARK analyser un client...
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Demo Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.3 }}
+          style={{ textAlign: 'center', marginTop: '64px', fontFamily: 'Arial, sans-serif' }}
+        >
           <motion.button
-            onClick={() => navigate('/register')}
+            onClick={() => { setShowChat(!showChat); setChatMessages([]); }}
             style={{
-              padding: '16px 48px',
-              backgroundColor: '#0a0a0a',
+              padding: '15px 40px',
+              backgroundColor: '#2563eb',
               color: '#ffffff',
               border: 'none',
               borderRadius: '8px',
-              fontSize: '15px',
-              fontWeight: '600',
+              fontSize: '13px',
+              fontWeight: '700',
               cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.15)'
+              boxShadow: '0 10px 32px rgba(37, 99, 235, 0.3)',
+              fontFamily: 'Arial, sans-serif'
             }}
-            whileHover={{ backgroundColor: '#2563eb', scale: 1.05, boxShadow: '0 16px 40px rgba(37, 99, 235, 0.4)' }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.06, boxShadow: '0 16px 48px rgba(37, 99, 235, 0.5)' }}
+            whileTap={{ scale: 0.94 }}
           >
-            Réserver ma place
-            <ArrowRight size={18} />
+            {showChat ? 'Réinitialiser' : 'Voir la démo'}
           </motion.button>
         </motion.div>
-      </section>
+      </motion.div>
+    </section>
+  )
+}
 
-      {/* FOOTER */}
-      <footer style={{
-        padding: '80px 60px 50px',
-        backgroundColor: '#ffffff',
-        borderTop: '0.5px solid #e5e7eb',
-        textAlign: 'center'
-      }}>
-        <p style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '28px', letterSpacing: '3px', margin: '0 0 28px 0' }}>COURTIA</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '56px', marginBottom: '28px', fontSize: '12px', color: '#666666' }}>
-          <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Mentions légales</a>
-          <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Confidentialité</a>
-          <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Contact</a>
-        </div>
-        <div style={{ borderTop: '0.5px solid #e5e7eb', paddingTop: '28px', marginTop: '28px' }}>
-          <p style={{ fontSize: '12px', color: '#999999', marginBottom: '8px' }}>© 2026 COURTIA. Tous droits réservés.</p>
-          <p style={{ fontSize: '11px', color: '#999999', fontWeight: '500', letterSpacing: '0.5px', margin: 0 }}>
-            Créé par <span style={{ fontWeight: '700', color: '#0a0a0a' }}>RHASRHASS Dalil</span> <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '13px', display: 'inline-block', marginLeft: '4px', marginRight: '4px', transform: 'scaleX(-1)', display: 'inline-block' }}>⊗</span> <span style={{ fontWeight: '700', color: '#0a0a0a', letterSpacing: '2px' }}>ARK</span>
+// ===== FEATURES SECTION =====
+function FeaturesSection() {
+  return (
+    <section style={{ minHeight: '100vh', backgroundColor: '#ffffff', padding: '160px 80px', display: 'flex', alignItems: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.3 }}
+          style={{ textAlign: 'center', marginBottom: '100px', fontFamily: 'Arial, sans-serif' }}
+        >
+          <p style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '22px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>
+            FONCTIONNALITÉS
           </p>
-        </div>
-      </footer>
-    </div>
+          <h2 style={{ fontSize: '56px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+            Tout ce dont un courtier a besoin
+          </h2>
+        </motion.div>
+
+        {/* Features Grid */}
+        <motion.div
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px', fontFamily: 'Arial, sans-serif' }}
+          variants={{
+            animate: {
+              transition: { staggerChildren: 0.15, delayChildren: 0.1 }
+            }
+          }}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          {[
+            { title: 'CRM métier', desc: 'Gestion clients intuitive avec scoring et historique', icon: '📊' },
+            { title: 'Gestion contrats', desc: 'Suivi des polices, échéances et renouvellements', icon: '📋' },
+            { title: 'Pipeline prospects', desc: 'Kanban drag-drop, scoring et automation', icon: '🎯' },
+            { title: 'Calendrier échéances', desc: 'Rappels automatiques et briefs avant RDV', icon: '📅' },
+            { title: 'Conformité DDA/RGPD', desc: 'Rapports auto-générés, audit trail complet', icon: '✅' },
+            { title: 'ARK IA native', desc: 'Analyse, recommandations et emails en real-time', icon: '⚡' }
+          ].map((feature, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 60 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: true, amount: 0.2 }}
+              whileHover={{ y: -14, boxShadow: '0 20px 48px rgba(0, 0, 0, 0.1)' }}
+              style={{
+                padding: '52px 40px',
+                border: '0.5px solid #e5e7eb',
+                borderRadius: '16px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer',
+                transition: 'all 0.4s ease',
+                boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              <div style={{ fontSize: '40px', marginBottom: '18px', fontFamily: 'Arial, sans-serif' }}>{feature.icon}</div>
+              <h3 style={{ fontSize: '19px', fontWeight: '700', marginBottom: '12px', margin: '0 0 12px 0', fontFamily: 'Arial, sans-serif' }}>
+                {feature.title}
+              </h3>
+              <p style={{ fontSize: '14px', color: '#666666', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+                {feature.desc}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ===== PRICING SECTION =====
+function PricingSection({ navigate }) {
+  return (
+    <section style={{ minHeight: '85vh', backgroundColor: '#f5f5f5', padding: '160px 80px', display: 'flex', alignItems: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.3 }}
+          style={{ textAlign: 'center', marginBottom: '80px', fontFamily: 'Arial, sans-serif' }}
+        >
+          <p style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '22px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>
+            TARIFS
+          </p>
+          <h2 style={{ fontSize: '56px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+            Prix garantis à vie
+          </h2>
+        </motion.div>
+
+        {/* Pricing Cards */}
+        <motion.div
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px', fontFamily: 'Arial, sans-serif' }}
+          variants={{
+            animate: {
+              transition: { staggerChildren: 0.18, delayChildren: 0.1 }
+            }
+          }}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          {[
+            { name: 'Start', old: '59€', price: '39€', features: ['CRM + 100 clients', 'ARK basique', 'Support email'], featured: false },
+            { name: 'Pro', old: '99€', price: '69€', features: ['CRM + 500 clients', 'ARK complet', 'Support prioritaire', 'Automations illimitées'], featured: true },
+            { name: 'Elite', old: '179€', price: '129€', features: ['CRM illimité', 'ARK + Opus', 'Onboarding perso', 'API access'], featured: false }
+          ].map((plan, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 60 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: true, amount: 0.2 }}
+              whileHover={{ y: plan.featured ? -18 : -12, scale: plan.featured ? 1.02 : 1.01 }}
+              style={{
+                padding: '60px 44px',
+                border: plan.featured ? '1.5px solid #0a0a0a' : '0.5px solid #d1d5db',
+                borderRadius: '16px',
+                backgroundColor: plan.featured ? '#0a0a0a' : '#ffffff',
+                color: plan.featured ? '#ffffff' : '#0a0a0a',
+                position: 'relative',
+                boxShadow: plan.featured ? '0 40px 80px rgba(0, 0, 0, 0.2)' : '0 2px 12px rgba(0, 0, 0, 0.04)',
+                cursor: 'pointer',
+                transition: 'all 0.4s ease',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              {plan.featured && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  padding: '6px 16px',
+                  borderRadius: '16px',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
+                  Le plus choisi
+                </div>
+              )}
+              <h3 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '20px', margin: '0 0 20px 0', fontFamily: 'Arial, sans-serif' }}>
+                {plan.name}
+              </h3>
+              <div style={{ marginBottom: '32px', fontFamily: 'Arial, sans-serif' }}>
+                <span style={{ fontSize: '12px', opacity: 0.6, textDecoration: 'line-through', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
+                  {plan.old}
+                </span>
+                <div style={{ fontSize: '44px', fontWeight: 'bold', marginTop: '8px', fontFamily: 'Arial, sans-serif' }}>
+                  {plan.price}<span style={{ fontSize: '16px', opacity: 0.6, fontWeight: '500', marginLeft: '6px', fontFamily: 'Arial, sans-serif' }}>/mois</span>
+                </div>
+              </div>
+              <ul style={{ marginBottom: '40px', gap: '16px', display: 'flex', flexDirection: 'column', padding: 0, listStyle: 'none', fontFamily: 'Arial, sans-serif' }}>
+                {plan.features.map((feature, i) => (
+                  <li key={i} style={{ display: 'flex', gap: '12px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
+                    <Check size={17} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <motion.button
+                onClick={() => navigate('/register')}
+                style={{
+                  width: '100%',
+                  padding: '14px 24px',
+                  backgroundColor: plan.featured ? '#2563eb' : '#0a0a0a',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  boxShadow: plan.featured ? '0 10px 32px rgba(37, 99, 235, 0.3)' : 'none',
+                  fontFamily: 'Arial, sans-serif'
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Commencer
+              </motion.button>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ===== FINAL CTA SECTION =====
+function FinalCTASection({ navigate }) {
+  return (
+    <section style={{ minHeight: '70vh', backgroundColor: '#ffffff', padding: '160px 80px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 70 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, amount: 0.4 }}
+        style={{ maxWidth: '900px', fontFamily: 'Arial, sans-serif' }}
+      >
+        <h2 style={{ fontSize: '60px', fontWeight: 'bold', marginBottom: '28px', lineHeight: '1.2', fontFamily: 'Arial, sans-serif' }}>
+          Rejoignez les
+          <motion.span
+            animate={{ opacity: [1, 0.7, 1] }}
+            transition={{ duration: 2.8, repeat: Infinity }}
+            style={{ color: '#2563eb', display: 'block', marginTop: '8px', fontFamily: 'Arial, sans-serif' }}
+          >
+            fondateurs
+          </motion.span>
+        </h2>
+
+        {/* Progress Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true, amount: 0.5 }}
+          style={{ marginBottom: '64px', fontFamily: 'Arial, sans-serif' }}
+        >
+          <div style={{
+            maxWidth: '440px',
+            margin: '0 auto 24px',
+            height: '2px',
+            backgroundColor: '#e5e7eb',
+            borderRadius: '1px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
+            <motion.div
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              transition={{ duration: 1.8, delay: 0.3, ease: SMOOTH_EASE }}
+              viewport={{ once: true, amount: 0.5 }}
+              style={{
+                height: '100%',
+                width: '100%',
+                backgroundColor: '#0a0a0a',
+                transformOrigin: 'left'
+              }}
+            />
+          </div>
+          <p style={{ fontSize: '13px', color: '#666666', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>31 sur 50 places réservées</p>
+        </motion.div>
+
+        <motion.button
+          onClick={() => navigate('/register')}
+          style={{
+            padding: '18px 52px',
+            backgroundColor: '#0a0a0a',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.18)',
+            fontFamily: 'Arial, sans-serif'
+          }}
+          whileHover={{ backgroundColor: '#2563eb', scale: 1.06, boxShadow: '0 20px 52px rgba(37, 99, 235, 0.4)' }}
+          whileTap={{ scale: 0.94 }}
+        >
+          Réserver ma place
+          <ArrowRight size={19} />
+        </motion.button>
+      </motion.div>
+    </section>
+  )
+}
+
+// ===== FOOTER =====
+function Footer() {
+  return (
+    <footer style={{
+      padding: '100px 80px 60px',
+      backgroundColor: '#ffffff',
+      borderTop: '0.5px solid #e5e7eb',
+      textAlign: 'center',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <p style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '32px', letterSpacing: '3px', margin: '0 0 32px 0', fontFamily: 'Arial, sans-serif' }}>COURTIA</p>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '64px', marginBottom: '32px', fontSize: '12px', color: '#666666', fontFamily: 'Arial, sans-serif' }}>
+        <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s', fontFamily: 'Arial, sans-serif' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Mentions légales</a>
+        <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s', fontFamily: 'Arial, sans-serif' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Confidentialité</a>
+        <a href="#" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', transition: 'color 0.3s', fontFamily: 'Arial, sans-serif' }} onMouseEnter={(e) => e.target.style.color = '#2563eb'} onMouseLeave={(e) => e.target.style.color = '#666666'}>Contact</a>
+      </div>
+      <div style={{ borderTop: '0.5px solid #e5e7eb', paddingTop: '32px', marginTop: '32px', fontFamily: 'Arial, sans-serif' }}>
+        <p style={{ fontSize: '12px', color: '#999999', marginBottom: '10px', fontFamily: 'Arial, sans-serif' }}>© 2026 COURTIA. Tous droits réservés.</p>
+        <p style={{ fontSize: '11px', color: '#999999', fontWeight: '500', letterSpacing: '0.5px', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+          Créé par <span style={{ fontWeight: '700', color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>RHASRHASS Dalil</span> <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '13px', display: 'inline-block', marginLeft: '4px', marginRight: '4px', fontFamily: 'Arial, sans-serif' }}>⊗</span> <span style={{ fontWeight: '700', color: '#0a0a0a', letterSpacing: '2px', fontFamily: 'Arial, sans-serif' }}>ARK</span>
+        </p>
+      </div>
+    </footer>
   )
 }
