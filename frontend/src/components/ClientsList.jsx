@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, Eye, Edit, Trash2 } from 'lucide-react'
+import { Search, Plus, Eye, Edit2, Trash2 } from 'lucide-react'
 import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
-import { useToast } from '../hooks/useToast'
 import { useResponsive } from '../hooks/useResponsive'
 import ClientModal from './ClientModal'
-import Toast from './Toast'
 
 export default function ClientsList() {
   const clients = useClientStore((state) => state.clients)
@@ -14,7 +12,6 @@ export default function ClientsList() {
   const setSelectedClient = useClientStore((state) => state.setSelectedClient)
   const token = useAuthStore((state) => state.token)
   const { isMobile } = useResponsive()
-  const { toast, showToast, closeToast } = useToast()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [selectedForEdit, setSelectedForEdit] = useState(null)
@@ -30,18 +27,9 @@ export default function ClientsList() {
     c.email?.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Confirmer la suppression de ce client ?')) {
-      try {
-        const success = await deleteClient(id, token)
-        if (success) {
-          showToast('Client supprimé avec succès', 'success', 3000)
-        } else {
-          showToast('Erreur lors de la suppression', 'error', 3000)
-        }
-      } catch (error) {
-        showToast('Erreur: ' + error.message, 'error', 3000)
-      }
+  const handleDelete = (id) => {
+    if (window.confirm('Confirmer la suppression ?')) {
+      deleteClient(id, token)
     }
   }
 
@@ -50,118 +38,77 @@ export default function ClientsList() {
     setShowModal(true)
   }
 
-  const handleView = (client) => {
-    setSelectedClient(client)
-  }
-
   return (
-    <div className="ml-64 p-8">
-      {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={closeToast}
+    <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
+      {showModal && (
+        <ClientModal
+          client={selectedForEdit}
+          onClose={() => {setShowModal(false); setSelectedForEdit(null)}}
+          onSuccess={() => {setShowModal(false); setSelectedForEdit(null)}}
         />
       )}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-4xl font-black text-gradient">Clients</h2>
-        <button
-          onClick={() => {
-            setSelectedForEdit(null)
-            setShowModal(true)
-          }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
+
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'32px'}}>
+        <h2 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a'}}>Clients</h2>
+        <button onClick={() => {setSelectedForEdit(null); setShowModal(true)}} style={{display:'flex',alignItems:'center',gap:'8px',padding:'10px 20px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Arial',letterSpacing:'0.3px'}}>
+          <Plus size={18} />
           Ajouter client
         </button>
       </div>
 
       {/* Search Bar */}
-      <div className="glass p-4 rounded-lg mb-6">
-        <div className="flex items-center gap-3">
-          <Search size={20} className="text-slate-500" />
-          <input
-            type="text"
-            placeholder="Rechercher par nom ou email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-field flex-1 bg-transparent border-0"
-          />
-        </div>
+      <div style={{marginBottom:'24px',position:'relative'}}>
+        <Search style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)',color:'#999',width:'18px',height:'18px'}} />
+        <input type="text" placeholder="Rechercher par nom ou email..." value={search} onChange={(e) => setSearch(e.target.value)} style={{width:'100%',padding:'10px 12px 10px 40px',border:'0.5px solid #f0f0f0',borderRadius:'8px',fontSize:'13px',fontFamily:'Arial',background:'#fff',color:'#0a0a0a'}} />
       </div>
 
       {/* Clients Table */}
-      <div className="glass rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-dark-3 border-b border-blue-500/30">
-            <tr>
-              <th className="p-4 text-left">Nom</th>
-              <th className="p-4 text-left">Email</th>
-              <th className="p-4 text-left">Téléphone</th>
-              <th className="p-4 text-left">Statut</th>
-              <th className="p-4 text-left">Risk Score</th>
-              <th className="p-4 text-right">Actions</th>
+      <div style={{border:'0.5px solid #f0f0f0',borderRadius:'10px',overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{background:'#0a0a0a',height:'44px'}}>
+              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff',letterSpacing:'0.5px'}}>Nom</th>
+              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff',letterSpacing:'0.5px'}}>Email</th>
+              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff',letterSpacing:'0.5px'}}>Téléphone</th>
+              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff',letterSpacing:'0.5px'}}>Statut</th>
+              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff',letterSpacing:'0.5px'}}>Risk Score</th>
+              <th style={{padding:'12px 16px',textAlign:'center',fontSize:'12px',fontWeight:700,color:'#fff',letterSpacing:'0.5px'}}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredClients.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="p-6 text-center text-slate-500">
-                  Aucun client trouvé
+            {filteredClients.map((client, idx) => (
+              <tr key={client.id} style={{borderTop:'0.5px solid #f0f0f0',height:'48px',background:idx%2===0?'#fff':'#fafafa'}}>
+                <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:500}}>{client.name}</td>
+                <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.email}</td>
+                <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.phone || 'N/A'}</td>
+                <td style={{padding:'12px 16px',fontSize:'12px',fontWeight:600}}>
+                  <span style={{padding:'4px 10px',borderRadius:'6px',background:client.status==='Active'?'#d1fae5':client.status==='Prospect'?'#dbeafe':'#f3f4f6',color:client.status==='Active'?'#065f46':client.status==='Prospect'?'#1d4ed8':'#6b7280'}}>
+                    {client.status || 'Prospect'}
+                  </span>
+                </td>
+                <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:600}}>{client.risk_score || '—'}</td>
+                <td style={{padding:'12px 16px',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
+                  <button onClick={() => setSelectedClient(client)} style={{background:'none',border:'none',cursor:'pointer',color:'#2563eb',padding:'4px'}}>
+                    <Eye size={16} />
+                  </button>
+                  <button onClick={() => handleEdit(client)} style={{background:'none',border:'none',cursor:'pointer',color:'#666',padding:'4px'}}>
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => handleDelete(client.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:'4px'}}>
+                    <Trash2 size={16} />
+                  </button>
                 </td>
               </tr>
-            ) : (
-              filteredClients.map((client) => (
-                <tr key={client.id} className="border-b border-slate-700/30 hover:bg-dark-3 transition">
-                  <td className="p-4 font-bold">{`${client.first_name} ${client.last_name}` || 'N/A'}</td>
-                  <td className="p-4 text-slate-400">{client.email || 'N/A'}</td>
-                  <td className="p-4 text-slate-400">{client.phone || 'N/A'}</td>
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      client.status === 'actif' ? 'bg-green-500/20 text-green-400' :
-                      client.status === 'prospect' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-slate-500/20 text-slate-400'
-                    }`}>
-                      {client.status === 'actif' ? 'Actif' : client.status === 'prospect' ? 'Prospect' : client.status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="w-12 h-2 bg-dark-3 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-500" style={{width: `${client.risk_score || 50}%`}}></div>
-                    </div>
-                  </td>
-                  <td className="p-4 flex justify-end gap-2">
-                    <button
-                      onClick={() => handleView(client)}
-                      className="p-2 hover:bg-blue-500/20 rounded-lg transition"
-                      title="Voir"
-                    >
-                      <Eye size={18} className="text-cyan-400" />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(client)}
-                      className="p-2 hover:bg-blue-500/20 rounded-lg transition"
-                      title="Modifier"
-                    >
-                      <Edit size={18} className="text-blue-400" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(client.id)}
-                      className="p-2 hover:bg-red-500/20 rounded-lg transition"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={18} className="text-red-400" />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
 
-      {showModal && <ClientModal client={selectedForEdit} onClose={() => setShowModal(false)} />}
+      {filteredClients.length === 0 && (
+        <div style={{textAlign:'center',padding:'48px 24px',color:'#999'}}>
+          <p style={{fontSize:'14px'}}>Aucun client trouvé</p>
+        </div>
+      )}
     </div>
   )
 }
