@@ -63,6 +63,29 @@ let dbReady = false;
 (async () => {
   await initializeDatabase();
   
+  // Ensure appointments table exists
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS appointments (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        client_id INT REFERENCES clients(id) ON DELETE CASCADE,
+        organizer_id INT REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255),
+        description TEXT,
+        start_time TIMESTAMP,
+        end_time TIMESTAMP,
+        timezone VARCHAR(100) DEFAULT 'Europe/Paris',
+        status VARCHAR(50) DEFAULT 'planifié',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('✅ appointments table ensured');
+  } catch (err) {
+    console.error('❌ Error ensuring appointments table:', err.message);
+  }
+  
   // Ensure broker_profiles table exists
   try {
     await pool.query(`
@@ -974,8 +997,8 @@ app.get('/api/settings/profile', verifyToken, async (req, res) => {
     );
     
     if (result.rows.length === 0) {
-      console.log(`   ℹ️  No profile found for user ${userId}`);
-      return res.status(404).json({ error: 'Profile not found' });
+      console.log(`   ℹ️  No profile found for user ${userId} - returning empty object`);
+      return res.json({});
     }
     
     console.log(`   ✓ Profile found: ${result.rows[0].id}`);
