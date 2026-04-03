@@ -6,70 +6,39 @@ import Auth from '../components/AuthPremium'
 import Sidebar from '../components/Sidebar'
 import DashboardComponent from '../components/Dashboard'
 import ClientsList from '../components/ClientsList'
-import ClientDetail from '../components/ClientDetail'
+import ClientDetail from '../pages/ClientDetail'
 import Pipeline from '../components/Pipeline'
 import Calendar from '../components/Calendar'
 import Reports from '../components/Reports'
 import Settings from '../components/Settings'
-import Profile from '../components/Profile'
-import Pricing from '../components/Pricing'
 
 export default function DashboardPage() {
   const token = useAuthStore((state) => state.token)
-  const user = useAuthStore((state) => state.user)
-  const fetchClients = useClientStore((state) => state.fetchClients)
   const { isMobile } = useResponsive()
   const [activeTab, setActiveTab] = useState('dashboard')
-  const selectedClient = useClientStore((state) => state.selectedClient)
-
-  useEffect(() => {
-    if (token) {
-      fetchClients(token)
-    }
-  }, [token, fetchClients])
-
-  // Check if user is trying to access /pricing
-  useEffect(() => {
-    const path = window.location.pathname
-    if (path === '/pricing' && activeTab !== 'pricing') {
-      setActiveTab('pricing')
-    }
-  }, [])
-
-  // Show pricing page without auth
-  if (activeTab === 'pricing') {
-    return <Pricing />
-  }
 
   if (!token) {
     return <Auth onAuthSuccess={() => {}} />
   }
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col' : ''}`}>
+    <div style={{display:'flex',fontFamily:'Arial,sans-serif',background:'#fff'}}>
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      <div className={`${isMobile ? 'w-full mt-16 pb-16' : 'ml-64'} overflow-auto flex-1`}>
-        {selectedClient && activeTab === 'clients' ? (
-          <ClientDetail />
-        ) : activeTab === 'dashboard' ? (
-          <DashboardComponent />
-        ) : activeTab === 'clients' ? (
-          <ClientsList />
-        ) : activeTab === 'pipeline' ? (
-          <Pipeline />
-        ) : activeTab === 'calendar' ? (
-          <Calendar />
-        ) : activeTab === 'reports' ? (
-          <Reports />
-        ) : activeTab === 'settings' ? (
-          <Settings />
-        ) : activeTab === 'profile' ? (
-          <Profile />
-        ) : (
-          <DashboardComponent />
-        )}
+      <div style={{marginLeft:isMobile?0:'280px',width:isMobile?'100%':'calc(100% - 280px)',minHeight:'100vh',background:'#fff',paddingTop:isMobile?'64px':0}}>
+        {activeTab === 'dashboard' && <DashboardComponent />}
+        {activeTab === 'clients' && <ClientsList />}
+        {activeTab === 'pipeline' && <Pipeline />}
+        {activeTab === 'calendar' && <Calendar />}
+        {activeTab === 'reports' && <Reports />}
+        {activeTab === 'settings' && <Settings />}
       </div>
+
+      <style>{`
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #fff; }
+        input, textarea, select { font-family: Arial, sans-serif; }
+      `}</style>
     </div>
   )
 }
