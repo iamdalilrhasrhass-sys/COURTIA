@@ -121,12 +121,12 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const totalClients = parseInt(clientsRes.rows[0].count);
     
     // Active contracts
-    const contractsRes = await pool.query("SELECT COUNT(*) as count FROM contracts WHERE status = 'actif'");
+    const contractsRes = await pool.query("SELECT COUNT(*) as count FROM contrats WHERE status = 'actif'");
     const activeContracts = parseInt(contractsRes.rows[0].count);
     
     // Monthly commissions (sum of 10% of annual premiums / 12)
     const commissionsRes = await pool.query(
-      "SELECT COALESCE(SUM(annual_premium) / 120, 0) as total FROM contracts WHERE status = 'actif'"
+      "SELECT COALESCE(SUM(annual_premium) / 120, 0) as total FROM contrats WHERE status = 'actif'"
     );
     const monthlyCommissions = Math.round(parseFloat(commissionsRes.rows[0].total));
     
