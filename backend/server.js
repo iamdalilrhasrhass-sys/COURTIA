@@ -68,6 +68,25 @@ let dbReady = false;
 
 // ==================== ROUTES ====================
 
+// Debug: Inspect table structure
+app.get('/api/debug/quotes-columns', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'quotes' ORDER BY ordinal_position`
+    );
+    res.json({
+      table: 'quotes',
+      columns: result.rows,
+      count: result.rows.length
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to inspect table',
+      details: err.message
+    });
+  }
+});
+
 // Health check (public - no DB required)
 app.get('/health', (req, res) => {
   res.json({
