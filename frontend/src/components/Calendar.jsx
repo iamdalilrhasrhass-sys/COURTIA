@@ -3,6 +3,8 @@ import { Calendar, Plus, Clock, MapPin, X, Edit2, Trash2, ChevronLeft, ChevronRi
 import { useAuthStore } from '../stores/authStore'
 import { useClientStore } from '../stores/clientStore'
 
+const API_URL = 'https://courtia.onrender.com'
+
 const TYPE_COLORS = {
   'meeting': 'bg-blue-500/20 text-blue-400 border-blue-500',
   'call': 'bg-purple-500/20 text-purple-400 border-purple-500',
@@ -38,7 +40,7 @@ export default function CalendarView() {
 
   const fetchAllAppointments = async () => {
     try {
-      const response = await fetch(`/api/appointments`, {
+      const response = await fetch(`${API_URL}/api/appointments`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await response.json()
@@ -58,7 +60,7 @@ export default function CalendarView() {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/appointments/${editingId}` : '/api/appointments'
       
-      const response = await fetch(url, {
+      const response = await fetch(`${API_URL}${url}`, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +95,7 @@ export default function CalendarView() {
     if (!confirm('Supprimer ce RDV?')) return
     
     try {
-      await fetch(`/api/appointments/${id}`, {
+      await fetch(`${API_URL}/api/appointments/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       })
