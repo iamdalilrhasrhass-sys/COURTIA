@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useAuthStore } from './stores/authStore'
-import { useClientStore } from './stores/clientStore'
-import { useResponsive } from './hooks/useResponsive'
-import Auth from './components/AuthPremium'
-import Sidebar from './components/Sidebar'
-import Dashboard from './components/Dashboard'
-import ClientsList from './components/ClientsList'
-import ClientDetail from './components/ClientDetail'
-import Pipeline from './components/Pipeline'
-import Calendar from './components/Calendar'
-import Reports from './components/Reports'
-import Settings from './components/Settings'
-import Profile from './components/Profile'
-import Pricing from './components/Pricing'
+import { useAuthStore } from '../stores/authStore'
+import { useClientStore } from '../stores/clientStore'
+import { useResponsive } from '../hooks/useResponsive'
+import Auth from '../components/AuthPremium'
+import Sidebar from '../components/Sidebar'
+import DashboardComponent from '../components/Dashboard'
+import ClientsList from '../components/ClientsList'
+import ClientDetail from '../components/ClientDetail'
+import Pipeline from '../components/Pipeline'
+import Calendar from '../components/Calendar'
+import Reports from '../components/Reports'
+import Settings from '../components/Settings'
+import Profile from '../components/Profile'
+import Pricing from '../components/Pricing'
 
-export default function App() {
+export default function DashboardPage() {
   const token = useAuthStore((state) => state.token)
   const user = useAuthStore((state) => state.user)
   const fetchClients = useClientStore((state) => state.fetchClients)
@@ -53,7 +53,7 @@ export default function App() {
         {selectedClient && activeTab === 'clients' ? (
           <ClientDetail />
         ) : activeTab === 'dashboard' ? (
-          <Dashboard />
+          <DashboardComponent />
         ) : activeTab === 'clients' ? (
           <ClientsList />
         ) : activeTab === 'pipeline' ? (
@@ -67,7 +67,7 @@ export default function App() {
         ) : activeTab === 'profile' ? (
           <Profile />
         ) : (
-          <Dashboard />
+          <DashboardComponent />
         )}
       </div>
     </div>
