@@ -106,24 +106,6 @@ app.get('/api/status', async (req, res) => {
   }
 });
 
-// Debug: List all tables in database
-app.get('/api/debug/tables', async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
-    );
-    res.json({
-      tables: result.rows.map(r => r.table_name),
-      count: result.rows.length
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: 'Failed to list tables',
-      details: err.message
-    });
-  }
-});
-
 // Dashboard stats (public - no auth required for now)
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
@@ -138,13 +120,13 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients');
     const totalClients = parseInt(clientsRes.rows[0].count);
     
-    // Active contracts
-    const contractsRes = await pool.query("SELECT COUNT(*) as count FROM contrats WHERE status = 'actif'");
-    const activeContracts = parseInt(contractsRes.rows[0].count);
+    // Active quotes (contracts/devis accepted)
+    const quotesRes = await pool.query("SELECT COUNT(*) as count FROM quotes WHERE status = 'accepted'");
+    const activeContracts = parseInt(quotesRes.rows[0].count);
     
-    // Monthly commissions (sum of 10% of annual premiums / 12)
+    // Monthly commissions (sum of quote amounts / 12 for monthly estimate)
     const commissionsRes = await pool.query(
-      "SELECT COALESCE(SUM(annual_premium) / 120, 0) as total FROM contrats WHERE status = 'actif'"
+      "SELECT COALESCE(SUM(amount) / 12, 0) as total FROM quotes WHERE status = 'accepted'"
     );
     const monthlyCommissions = Math.round(parseFloat(commissionsRes.rows[0].total));
     
@@ -1098,7 +1080,7 @@ app.get('/api/exports/clients-excel', verifyToken, async (req, res) => {
     // Get all contracts
     const contractsResult = await pool.query(
       `SELECT c.id, c.type, c.annual_premium, c.status, c.start_date, c.end_date, cl.first_name, cl.last_name
-       FROM contrats c
+       FROM quotes q
        JOIN clients cl ON c.client_id = cl.id
        ORDER BY c.created_at DESC`
     );
@@ -1136,7 +1118,7 @@ app.get('/api/reports/dda/:clientId', verifyToken, async (req, res) => {
     
     // Get contracts
     const contractsResult = await pool.query(
-      'SELECT type, premium, end_date FROM contrats WHERE client_id = $1 AND status = $2',
+      'SELECT type, amount as premium, null as end_date FROM quotes WHERE client_id = $1 AND status = $2',
       [clientId, 'active']
     );
     
