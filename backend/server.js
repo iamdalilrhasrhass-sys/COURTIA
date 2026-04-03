@@ -181,8 +181,12 @@ app.post('/api/auth/register', async (req, res) => {
       token
     });
   } catch (err) {
-    console.error('Register error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('Register error:', err);
+    console.error('Error message:', err?.message || 'Unknown error');
+    res.status(500).json({ 
+      error: err?.message || 'Registration failed',
+      details: process.env.NODE_ENV === 'development' ? err?.toString() : undefined
+    });
   }
 });
 
@@ -219,8 +223,12 @@ app.post('/api/auth/login', async (req, res) => {
       token
     });
   } catch (err) {
-    console.error('Login error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('Login error:', err);
+    console.error('Error message:', err?.message || 'Unknown error');
+    res.status(500).json({ 
+      error: err?.message || 'Login failed',
+      details: process.env.NODE_ENV === 'development' ? err?.toString() : undefined
+    });
   }
 });
 
