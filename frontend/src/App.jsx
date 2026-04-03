@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useAuthStore } from './store/authStore'
-import { useClientStore } from './store/clientStore'
+import { useAuthStore } from './stores/authStore'
+import { useClientStore } from './stores/clientStore'
 import { useResponsive } from './hooks/useResponsive'
 import Auth from './components/AuthPremium'
 import Sidebar from './components/Sidebar'

@@ -1,5 +1,5 @@
 import { User, Mail, Building2, LogOut, Edit2 } from 'lucide-react'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '../stores/authStore'
 
 export default function Profile() {
   const user = useAuthStore((state) => state.user)

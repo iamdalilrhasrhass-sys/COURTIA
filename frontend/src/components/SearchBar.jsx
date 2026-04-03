@@ -1,6 +1,6 @@
 import { Search, X, Filter } from 'lucide-react'
 import { useState } from 'react'
-import { useClientStore } from '../store/clientStore'
+import { useClientStore } from '../stores/clientStore'
 
 export default function SearchBar({ clients = [], prospects = [], onNavigate }) {
   const setSelectedClient = useClientStore((state) => state.setSelectedClient)
