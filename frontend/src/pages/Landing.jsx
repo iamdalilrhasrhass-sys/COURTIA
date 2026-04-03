@@ -276,11 +276,7 @@ function HeroMockup() {
 
 function ProblemeBloc({ num, bgGray, visuelLeft, titre, texte, visuel }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      viewport={{ once: true, amount: 0.3 }}
+    <div
       style={{
         display: 'grid',
         gridTemplateColumns: visuelLeft ? '60% 40%' : '40% 60%',
@@ -301,7 +297,7 @@ function ProblemeBloc({ num, bgGray, visuelLeft, titre, texte, visuel }) {
       </div>
 
       {!visuelLeft && visuel}
-    </motion.div>
+    </div>
   )
 }
 
