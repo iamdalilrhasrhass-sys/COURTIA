@@ -286,10 +286,8 @@ function ProblemeBloc({ num, bgGray, visuelLeft, titre, texte, visuel }) {
         gridTemplateColumns: visuelLeft ? '60% 40%' : '40% 60%',
         gap: '60px',
         alignItems: 'center',
-        padding: '80px 0',
+        padding: '48px 40px',
         backgroundColor: bgGray ? '#f5f5f5' : '#ffffff',
-        paddingLeft: '40px',
-        paddingRight: '40px',
         marginLeft: '-40px',
         marginRight: '-40px',
         fontFamily: 'Arial, sans-serif'
