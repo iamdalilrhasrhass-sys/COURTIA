@@ -118,6 +118,27 @@ async function initializeDatabase() {
       );
     `);
     console.log('✅ ark_conversations table created');
+
+    // Create broker_profiles table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS broker_profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INT UNIQUE REFERENCES users(id),
+        firm_name VARCHAR(255),
+        owner_name VARCHAR(255),
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        address VARCHAR(500),
+        city VARCHAR(100),
+        postal_code VARCHAR(10),
+        website VARCHAR(255),
+        siret VARCHAR(20),
+        naf VARCHAR(10),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('✅ broker_profiles table created');
     
     console.log('✅ Database initialized successfully');
     return true;
