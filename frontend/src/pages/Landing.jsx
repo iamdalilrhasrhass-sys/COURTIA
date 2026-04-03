@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useViewportScroll, useTransform, useMotionValue } from 'framer-motion'
-import { Check, ArrowRight, Zap, Sparkles, BarChart3, Users, Lightbulb, Rocket } from 'lucide-react'
+import gsap from 'gsap'
+import ScrollTrigger from 'gsap/ScrollTrigger'
+import { Check, ArrowRight, Zap, Sparkles, BarChart3, Users, Lightbulb, Rocket, Crown, Gift } from 'lucide-react'
+
+gsap.registerPlugin(ScrollTrigger)
 
 // Premium easing curves
 const PREMIUM_EASE = [0.16, 1, 0.3, 1]
@@ -12,31 +16,14 @@ export default function Landing() {
   const navigate = useNavigate()
   const [showChat, setShowChat] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const containerRef = useRef(null)
+  const pricingRef = useRef(null)
   const { scrollY } = useViewportScroll()
-
-  // Mouse tracking for tilt effect
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (containerRef.current) {
-        const { left, top, width, height } = containerRef.current.getBoundingClientRect()
-        setMousePosition({
-          x: (e.clientX - left - width / 2) / 50,
-          y: (e.clientY - top - height / 2) / 50
-        })
-      }
-    }
-
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
 
   // Parallax transforms
   const heroY = useTransform(scrollY, [0, 600], [0, 180])
   const mockupScale = useTransform(scrollY, [400, 900], [0.75, 1])
   const mockupOpacity = useTransform(scrollY, [300, 800], [0.2, 1])
-  const sectionOpacity1 = useTransform(scrollY, [1200, 1600], [0, 1])
 
   // ARK chat simulation
   useEffect(() => {
@@ -56,6 +43,27 @@ export default function Landing() {
       }, 400)
     }
   }, [showChat, chatMessages.length])
+
+  // GSAP ScrollTrigger for Pricing section
+  useEffect(() => {
+    if (pricingRef.current) {
+      const cards = pricingRef.current.querySelectorAll('[data-pricing-card]')
+      cards.forEach((card, i) => {
+        gsap.to(card, {
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 80%',
+            end: 'top 20%',
+            scrub: 0.5,
+            markers: false
+          },
+          y: -30 + (i * 5),
+          opacity: 1,
+          duration: 1
+        })
+      })
+    }
+  }, [])
 
   // Animation variants
   const fadeInUp = {
@@ -89,7 +97,7 @@ export default function Landing() {
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.05)'
         }}
       >
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 80px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 80px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'Arial, sans-serif' }}>
           <motion.div
             style={{ fontSize: '16px', fontWeight: 'bold', letterSpacing: '4px', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}
             onClick={() => navigate('/')}
@@ -113,7 +121,7 @@ export default function Landing() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '14px' }}>
+          <div style={{ display: 'flex', gap: '14px', fontFamily: 'Arial, sans-serif' }}>
             <motion.button
               onClick={() => navigate('/login')}
               style={{
@@ -152,8 +160,8 @@ export default function Landing() {
       </motion.nav>
 
       {/* ===== HERO SPECTACULAIRE ===== */}
-      <section style={{ minHeight: '100vh', paddingTop: '100px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-        {/* Glow background effect */}
+      <section style={{ minHeight: '100vh', paddingTop: '100px', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
+        {/* Glow background */}
         <motion.div
           animate={{ opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 8, repeat: Infinity }}
@@ -170,7 +178,7 @@ export default function Landing() {
         />
 
         <motion.div style={{ y: heroY, maxWidth: '1100px', margin: '0 auto', padding: '0 80px', textAlign: 'center', width: '100%', position: 'relative', zIndex: 1, fontFamily: 'Arial, sans-serif' }}>
-          {/* Badge avec animation */}
+          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -191,16 +199,13 @@ export default function Landing() {
               fontFamily: 'Arial, sans-serif'
             }}
           >
-            <motion.div
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            >
+            <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2.5, repeat: Infinity }}>
               <Zap size={13} style={{ color: '#16a34a' }} />
             </motion.div>
             Offre Fondateur — 31 places restantes
           </motion.div>
 
-          {/* Hero Title - Multi-step reveal */}
+          {/* Hero Title */}
           <div style={{ marginBottom: '32px', lineHeight: '1.1' }}>
             <motion.h1
               initial={{ opacity: 0, y: 60 }}
@@ -328,16 +333,16 @@ export default function Landing() {
       {/* ===== WORKFLOW EXPERIENCE SECTION ===== */}
       <WorkflowSection />
 
-      {/* ===== ARK SECTION - PREMIUM DARK ===== */}
+      {/* ===== ARK SECTION ===== */}
       <ARKSection showChat={showChat} setShowChat={setShowChat} chatMessages={chatMessages} setChatMessages={setChatMessages} />
 
       {/* ===== FONCTIONNALITÉS ===== */}
       <FeaturesSection />
 
-      {/* ===== PRICING ===== */}
-      <PricingSection navigate={navigate} />
+      {/* ===== PRICING PREMIUM ===== */}
+      <PricingSection pricingRef={pricingRef} navigate={navigate} />
 
-      {/* ===== FINAL CTA ===== */}
+      {/* ===== FINAL CTA ULTRA-STRONG ===== */}
       <FinalCTASection navigate={navigate} />
 
       {/* ===== FOOTER ===== */}
@@ -346,13 +351,13 @@ export default function Landing() {
   )
 }
 
-// ===== PRODUCT MOCKUP COMPONENT =====
+// ===== PRODUCT MOCKUP =====
 function ProductMockup() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 100 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 1.3, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 1.3, delay: 1.2, ease: PREMIUM_EASE }}
       style={{
         background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
         border: '0.5px solid #e5e7eb',
@@ -362,18 +367,19 @@ function ProductMockup() {
         aspectRatio: '16/9',
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Arial, sans-serif'
+        fontFamily: 'Arial, sans-serif',
+        perspective: 1000
       }}
     >
       {/* Browser Chrome */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '0.5px solid #e5e7eb' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '0.5px solid #e5e7eb', fontFamily: 'Arial, sans-serif' }}>
         <div style={{ display: 'flex', gap: '9px' }}>
           {['#ff5f57', '#ffbd2e', '#28c940'].map((color, idx) => (
             <motion.div
               key={color}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ duration: 0.6, delay: 1.35 + (idx * 0.12), ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, delay: 1.35 + (idx * 0.12), ease: PREMIUM_EASE }}
               style={{
                 width: '14px',
                 height: '14px',
@@ -394,7 +400,7 @@ function ProductMockup() {
         <motion.div
           initial={{ opacity: 0, x: -70 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, delay: 1.4, ease: PREMIUM_EASE }}
           style={{
             width: '240px',
             backgroundColor: '#0a0a0a',
@@ -430,7 +436,6 @@ function ProductMockup() {
 
         {/* Main Content */}
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontFamily: 'Arial, sans-serif' }}>
-          {/* KPI Cards */}
           {[
             { label: 'Total clients', value: '2,847', icon: '👥' },
             { label: 'Contrats actifs', value: '1,204', icon: '📋' },
@@ -441,7 +446,7 @@ function ProductMockup() {
               key={i}
               initial={{ opacity: 0, scale: 0.8, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 1.6 + (i * 0.12), ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.7, delay: 1.6 + (i * 0.12), ease: PREMIUM_EASE }}
               whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(0, 0, 0, 0.1)' }}
               style={{
                 backgroundColor: '#f8f9fa',
@@ -454,7 +459,7 @@ function ProductMockup() {
                 fontFamily: 'Arial, sans-serif'
               }}
             >
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>{kpi.icon}</div>
+              <div style={{ fontSize: '24px', marginBottom: '8px', fontFamily: 'Arial, sans-serif' }}>{kpi.icon}</div>
               <div style={{ fontSize: '10px', color: '#999999', marginBottom: '6px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
                 {kpi.label}
               </div>
@@ -476,7 +481,7 @@ function WorkflowSection() {
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1, ease: PREMIUM_EASE }}
         viewport={{ once: true, amount: 0.2 }}
         style={{ textAlign: 'center', marginBottom: '120px', fontFamily: 'Arial, sans-serif' }}
       >
@@ -511,7 +516,7 @@ function WorkflowSection() {
               key={i}
               initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, ease: PREMIUM_EASE }}
               viewport={{ once: true, amount: 0.3 }}
               whileHover={{ y: -16, boxShadow: '0 24px 48px rgba(0, 0, 0, 0.12)' }}
               style={{
@@ -581,7 +586,7 @@ function ARKSection({ showChat, setShowChat, chatMessages, setChatMessages }) {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, ease: PREMIUM_EASE }}
             style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '22px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}
           >
             ARK — IA NATIVE
@@ -589,7 +594,7 @@ function ARKSection({ showChat, setShowChat, chatMessages, setChatMessages }) {
           <motion.h2
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1, delay: 0.1, ease: PREMIUM_EASE }}
             style={{ fontSize: '60px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.15', fontFamily: 'Arial, sans-serif' }}
           >
             Votre assistant
@@ -608,7 +613,7 @@ function ARKSection({ showChat, setShowChat, chatMessages, setChatMessages }) {
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, delay: 0.2, ease: PREMIUM_EASE }}
           viewport={{ once: true, amount: 0.3 }}
           style={{
             maxWidth: '750px',
@@ -690,7 +695,7 @@ function ARKSection({ showChat, setShowChat, chatMessages, setChatMessages }) {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.3, ease: PREMIUM_EASE }}
           viewport={{ once: true, amount: 0.3 }}
           style={{ textAlign: 'center', marginTop: '64px', fontFamily: 'Arial, sans-serif' }}
         >
@@ -727,7 +732,7 @@ function FeaturesSection() {
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, ease: PREMIUM_EASE }}
           viewport={{ once: true, amount: 0.3 }}
           style={{ textAlign: 'center', marginBottom: '100px', fontFamily: 'Arial, sans-serif' }}
         >
@@ -763,7 +768,7 @@ function FeaturesSection() {
               key={idx}
               initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, ease: PREMIUM_EASE }}
               viewport={{ once: true, amount: 0.2 }}
               whileHover={{ y: -14, boxShadow: '0 20px 48px rgba(0, 0, 0, 0.1)' }}
               style={{
@@ -792,38 +797,47 @@ function FeaturesSection() {
   )
 }
 
-// ===== PRICING SECTION =====
-function PricingSection({ navigate }) {
+// ===== PRICING PREMIUM ENHANCED =====
+function PricingSection({ pricingRef, navigate }) {
   return (
-    <section style={{ minHeight: '85vh', backgroundColor: '#f5f5f5', padding: '160px 80px', display: 'flex', alignItems: 'center', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <section ref={pricingRef} id="tarifs" style={{ minHeight: '95vh', backgroundColor: 'linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%)', padding: '160px 80px', display: 'flex', alignItems: 'center', fontFamily: 'Arial, sans-serif', position: 'relative', overflow: 'hidden' }}>
+      {/* Subtle background glow */}
+      <motion.div
+        animate={{ opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity }}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '1000px',
+          height: '600px',
+          background: 'radial-gradient(ellipse, rgba(37, 99, 235, 0.1) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }}
+      />
+
+      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', fontFamily: 'Arial, sans-serif', position: 'relative', zIndex: 1 }}>
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, ease: PREMIUM_EASE }}
           viewport={{ once: true, amount: 0.3 }}
-          style={{ textAlign: 'center', marginBottom: '80px', fontFamily: 'Arial, sans-serif' }}
+          style={{ textAlign: 'center', marginBottom: '100px', fontFamily: 'Arial, sans-serif' }}
         >
           <p style={{ fontSize: '11px', color: '#999999', letterSpacing: '3px', marginBottom: '22px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>
-            TARIFS
+            TARIFS EXCLUSIFS
           </p>
-          <h2 style={{ fontSize: '56px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+          <h2 style={{ fontSize: '56px', fontWeight: 'bold', margin: '0 0 16px 0', fontFamily: 'Arial, sans-serif' }}>
             Prix garantis à vie
           </h2>
+          <p style={{ fontSize: '16px', color: '#666666', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+            Rejoignez les fondateurs et bénéficiez de tarifs figés, quelle que soit l'évolution du produit.
+          </p>
         </motion.div>
 
-        {/* Pricing Cards */}
-        <motion.div
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px', fontFamily: 'Arial, sans-serif' }}
-          variants={{
-            animate: {
-              transition: { staggerChildren: 0.18, delayChildren: 0.1 }
-            }
-          }}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, amount: 0.2 }}
-        >
+        {/* Pricing Cards with enhanced styling */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', fontFamily: 'Arial, sans-serif' }}>
           {[
             { name: 'Start', old: '59€', price: '39€', features: ['CRM + 100 clients', 'ARK basique', 'Support email'], featured: false },
             { name: 'Pro', old: '99€', price: '69€', features: ['CRM + 500 clients', 'ARK complet', 'Support prioritaire', 'Automations illimitées'], featured: true },
@@ -831,168 +845,282 @@ function PricingSection({ navigate }) {
           ].map((plan, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 60 }}
+              data-pricing-card
+              initial={{ opacity: 0, y: 80 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1, delay: idx * 0.15, ease: PREMIUM_EASE }}
               viewport={{ once: true, amount: 0.2 }}
-              whileHover={{ y: plan.featured ? -18 : -12, scale: plan.featured ? 1.02 : 1.01 }}
+              whileHover={plan.featured ? { y: -20, scale: 1.03 } : { y: -12, scale: 1.01 }}
               style={{
-                padding: '60px 44px',
-                border: plan.featured ? '1.5px solid #0a0a0a' : '0.5px solid #d1d5db',
-                borderRadius: '16px',
+                padding: '64px 48px',
+                border: plan.featured ? '2px solid #0a0a0a' : '0.5px solid #d1d5db',
+                borderRadius: '18px',
                 backgroundColor: plan.featured ? '#0a0a0a' : '#ffffff',
                 color: plan.featured ? '#ffffff' : '#0a0a0a',
                 position: 'relative',
-                boxShadow: plan.featured ? '0 40px 80px rgba(0, 0, 0, 0.2)' : '0 2px 12px rgba(0, 0, 0, 0.04)',
+                boxShadow: plan.featured ? '0 60px 100px rgba(0, 0, 0, 0.25)' : '0 2px 16px rgba(0, 0, 0, 0.06)',
                 cursor: 'pointer',
-                transition: 'all 0.4s ease',
+                transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                 fontFamily: 'Arial, sans-serif'
               }}
             >
               {plan.featured && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-15px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  backgroundColor: '#2563eb',
-                  color: '#ffffff',
-                  padding: '6px 16px',
-                  borderRadius: '16px',
-                  fontSize: '10px',
-                  fontWeight: 'bold',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase',
-                  fontFamily: 'Arial, sans-serif'
-                }}>
-                  Le plus choisi
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: PREMIUM_EASE }}
+                  viewport={{ once: true }}
+                  style={{
+                    position: 'absolute',
+                    top: '-18px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                    color: '#ffffff',
+                    padding: '7px 18px',
+                    borderRadius: '18px',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontFamily: 'Arial, sans-serif',
+                    boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)'
+                  }}
+                >
+                  <Crown size={12} /> Le meilleur choix
+                </motion.div>
               )}
-              <h3 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '20px', margin: '0 0 20px 0', fontFamily: 'Arial, sans-serif' }}>
+
+              {/* Plan Name */}
+              <h3 style={{ fontSize: '26px', fontWeight: '700', marginBottom: '24px', margin: plan.featured ? '16px 0 24px 0' : '0 0 24px 0', fontFamily: 'Arial, sans-serif' }}>
                 {plan.name}
               </h3>
-              <div style={{ marginBottom: '32px', fontFamily: 'Arial, sans-serif' }}>
-                <span style={{ fontSize: '12px', opacity: 0.6, textDecoration: 'line-through', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
-                  {plan.old}
-                </span>
-                <div style={{ fontSize: '44px', fontWeight: 'bold', marginTop: '8px', fontFamily: 'Arial, sans-serif' }}>
-                  {plan.price}<span style={{ fontSize: '16px', opacity: 0.6, fontWeight: '500', marginLeft: '6px', fontFamily: 'Arial, sans-serif' }}>/mois</span>
+
+              {/* Price */}
+              <div style={{ marginBottom: '36px', fontFamily: 'Arial, sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px', fontFamily: 'Arial, sans-serif' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.6, textDecoration: 'line-through', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
+                    {plan.old}
+                  </span>
+                  <span style={{ fontSize: '11px', opacity: 0.5, fontFamily: 'Arial, sans-serif' }}>avant</span>
                 </div>
+                <div style={{ fontSize: '48px', fontWeight: 'bold', fontFamily: 'Arial, sans-serif' }}>
+                  {plan.price}<span style={{ fontSize: '16px', opacity: 0.6, fontWeight: '500', marginLeft: '8px', fontFamily: 'Arial, sans-serif' }}>/mois</span>
+                </div>
+                <div style={{ fontSize: '11px', opacity: 0.5, marginTop: '8px', fontFamily: 'Arial, sans-serif' }}>prix fondateur garanti à vie</div>
               </div>
-              <ul style={{ marginBottom: '40px', gap: '16px', display: 'flex', flexDirection: 'column', padding: 0, listStyle: 'none', fontFamily: 'Arial, sans-serif' }}>
+
+              {/* Features List */}
+              <ul style={{ marginBottom: '44px', gap: '16px', display: 'flex', flexDirection: 'column', padding: 0, listStyle: 'none', fontFamily: 'Arial, sans-serif' }}>
                 {plan.features.map((feature, i) => (
-                  <li key={i} style={{ display: 'flex', gap: '12px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>
-                    <Check size={17} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
+                  <motion.li
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 + (i * 0.08), ease: SMOOTH_EASE }}
+                    viewport={{ once: true }}
+                    style={{ display: 'flex', gap: '12px', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}
+                  >
+                    <Check size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: '2px' }} />
                     {feature}
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
+
+              {/* CTA Button */}
               <motion.button
                 onClick={() => navigate('/register')}
                 style={{
                   width: '100%',
-                  padding: '14px 24px',
+                  padding: '16px 24px',
                   backgroundColor: plan.featured ? '#2563eb' : '#0a0a0a',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '13px',
+                  borderRadius: '9px',
+                  fontSize: '14px',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  boxShadow: plan.featured ? '0 10px 32px rgba(37, 99, 235, 0.3)' : 'none',
+                  boxShadow: plan.featured ? '0 12px 36px rgba(37, 99, 235, 0.35)' : 'none',
                   fontFamily: 'Arial, sans-serif'
                 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, boxShadow: plan.featured ? '0 18px 48px rgba(37, 99, 235, 0.5)' : '0 8px 20px rgba(0,0,0,0.2)' }}
                 whileTap={{ scale: 0.95 }}
               >
-                Commencer
+                {plan.featured ? '🚀 Réserver maintenant' : 'Commencer'}
               </motion.button>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   )
 }
 
-// ===== FINAL CTA SECTION =====
+// ===== FINAL CTA ULTRA-PREMIUM =====
 function FinalCTASection({ navigate }) {
   return (
-    <section style={{ minHeight: '70vh', backgroundColor: '#ffffff', padding: '160px 80px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
+    <section style={{ minHeight: '85vh', backgroundColor: '#ffffff', padding: '160px 80px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
+      {/* Subtle glow */}
+      <motion.div
+        animate={{ opacity: [0.15, 0.3, 0.15] }}
+        transition={{ duration: 12, repeat: Infinity }}
+        style={{
+          position: 'absolute',
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '800px',
+          height: '400px',
+          background: 'radial-gradient(ellipse, rgba(37, 99, 235, 0.15) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 70 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1.1, ease: PREMIUM_EASE }}
         viewport={{ once: true, amount: 0.4 }}
-        style={{ maxWidth: '900px', fontFamily: 'Arial, sans-serif' }}
+        style={{ maxWidth: '1000px', position: 'relative', zIndex: 1, fontFamily: 'Arial, sans-serif' }}
       >
-        <h2 style={{ fontSize: '60px', fontWeight: 'bold', marginBottom: '28px', lineHeight: '1.2', fontFamily: 'Arial, sans-serif' }}>
-          Rejoignez les
+        {/* Main CTA Headline */}
+        <motion.h2
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.1, ease: PREMIUM_EASE }}
+          viewport={{ once: true, amount: 0.4 }}
+          style={{ fontSize: '64px', fontWeight: 'bold', marginBottom: '28px', lineHeight: '1.2', fontFamily: 'Arial, sans-serif' }}
+        >
+          Rejoignez les courtiers
           <motion.span
-            animate={{ opacity: [1, 0.7, 1] }}
-            transition={{ duration: 2.8, repeat: Infinity }}
-            style={{ color: '#2563eb', display: 'block', marginTop: '8px', fontFamily: 'Arial, sans-serif' }}
+            animate={{ opacity: [1, 0.6, 1], color: ['#2563eb', '#1e40af', '#2563eb'] }}
+            transition={{ duration: 3.5, repeat: Infinity }}
+            style={{ color: '#2563eb', display: 'block', marginTop: '12px', fontFamily: 'Arial, sans-serif' }}
           >
-            fondateurs
+            du futur
           </motion.span>
-        </h2>
+        </motion.h2>
+
+        {/* Subtitle */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.9, delay: 0.2, ease: SMOOTH_EASE }}
+          viewport={{ once: true, amount: 0.4 }}
+          style={{ fontSize: '17px', color: '#666666', marginBottom: '60px', lineHeight: '1.8', maxWidth: '700px', margin: '0 auto 60px', fontFamily: 'Arial, sans-serif' }}
+        >
+          L'offre fondateur se ferme rapidement. Ceux qui rejoignent maintenant bénéficieront de tarifs garantis à vie, avec accès à toutes les futures évolutions du produit.
+        </motion.p>
+
+        {/* Exclusivity Counter */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: PREMIUM_EASE }}
+          viewport={{ once: true, amount: 0.4 }}
+          style={{
+            display: 'inline-block',
+            padding: '20px 40px',
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #dcfce7',
+            borderRadius: '12px',
+            marginBottom: '56px',
+            fontFamily: 'Arial, sans-serif'
+          }}
+        >
+          <div style={{ fontSize: '13px', color: '#166534', fontWeight: '600', marginBottom: '6px', fontFamily: 'Arial, sans-serif' }}>
+            PLACES FONDATEUR RESTANTES
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
+            <motion.span
+              animate={{ color: ['#0a0a0a', '#2563eb', '#0a0a0a'] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            >
+              31
+            </motion.span> / 50
+          </div>
+        </motion.div>
 
         {/* Progress Bar */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          viewport={{ once: true, amount: 0.5 }}
-          style={{ marginBottom: '64px', fontFamily: 'Arial, sans-serif' }}
+          transition={{ duration: 0.9, delay: 0.4, ease: PREMIUM_EASE }}
+          viewport={{ once: true, amount: 0.4 }}
+          style={{ marginBottom: '60px', fontFamily: 'Arial, sans-serif' }}
         >
           <div style={{
-            maxWidth: '440px',
-            margin: '0 auto 24px',
-            height: '2px',
+            maxWidth: '500px',
+            margin: '0 auto 16px',
+            height: '3px',
             backgroundColor: '#e5e7eb',
-            borderRadius: '1px',
+            borderRadius: '2px',
             overflow: 'hidden',
             position: 'relative'
           }}>
             <motion.div
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
-              transition={{ duration: 1.8, delay: 0.3, ease: SMOOTH_EASE }}
-              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 2, delay: 0.5, ease: SMOOTH_EASE }}
+              viewport={{ once: true, amount: 0.4 }}
               style={{
                 height: '100%',
                 width: '100%',
-                backgroundColor: '#0a0a0a',
-                transformOrigin: 'left'
+                background: 'linear-gradient(90deg, #2563eb 0%, #1e40af 100%)',
+                transformOrigin: 'left',
+                boxShadow: '0 0 16px rgba(37, 99, 235, 0.5)'
               }}
             />
           </div>
-          <p style={{ fontSize: '13px', color: '#666666', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>31 sur 50 places réservées</p>
+          <p style={{ fontSize: '12px', color: '#666666', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>62% des places réservées</p>
         </motion.div>
 
-        <motion.button
-          onClick={() => navigate('/register')}
-          style={{
-            padding: '18px 52px',
-            backgroundColor: '#0a0a0a',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '15px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '12px',
-            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.18)',
-            fontFamily: 'Arial, sans-serif'
-          }}
-          whileHover={{ backgroundColor: '#2563eb', scale: 1.06, boxShadow: '0 20px 52px rgba(37, 99, 235, 0.4)' }}
-          whileTap={{ scale: 0.94 }}
+        {/* Main CTA Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.5, ease: PREMIUM_EASE }}
+          viewport={{ once: true, amount: 0.4 }}
         >
-          Réserver ma place
-          <ArrowRight size={19} />
-        </motion.button>
+          <motion.button
+            onClick={() => navigate('/register')}
+            style={{
+              padding: '20px 56px',
+              backgroundColor: '#0a0a0a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '9px',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '14px',
+              boxShadow: '0 20px 48px rgba(0, 0, 0, 0.2)',
+              fontFamily: 'Arial, sans-serif'
+            }}
+            whileHover={{ backgroundColor: '#2563eb', scale: 1.07, boxShadow: '0 28px 64px rgba(37, 99, 235, 0.45)' }}
+            whileTap={{ scale: 0.93 }}
+          >
+            <Gift size={20} />
+            Réserver ma place fondateur
+            <ArrowRight size={20} />
+          </motion.button>
+        </motion.div>
+
+        {/* Trust line */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.7, ease: SMOOTH_EASE }}
+          viewport={{ once: true, amount: 0.4 }}
+          style={{ fontSize: '12px', color: '#999999', marginTop: '48px', fontFamily: 'Arial, sans-serif' }}
+        >
+          ✓ Aucune carte de crédit requise • Accès immédiat au produit • Support prioritaire inclus
+        </motion.p>
       </motion.div>
     </section>
   )
