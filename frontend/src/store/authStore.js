@@ -59,4 +59,5 @@ const authStore = create((set) => ({
   setToken: (token) => set({ token, isAuthenticated: !!token }),
 }));
 
+export const useAuthStore = authStore;
 export default authStore;
