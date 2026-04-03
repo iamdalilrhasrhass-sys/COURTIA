@@ -13,7 +13,7 @@ export default function ClientModal({ client, onClose }) {
       lastName: client.last_name || '', 
       email: client.email || '', 
       phone: client.phone || '', 
-      streetAddress: client.street_address || '',
+      address: client.address || '',
       postalCode: client.postal_code || '',
       city: client.city || '',
       dateOfBirth: client.date_of_birth || '',
@@ -24,7 +24,7 @@ export default function ClientModal({ client, onClose }) {
       lastName: '', 
       email: '', 
       phone: '', 
-      streetAddress: '',
+      address: '',
       postalCode: '',
       city: '',
       dateOfBirth: '',
@@ -33,11 +33,9 @@ export default function ClientModal({ client, onClose }) {
     }
   )
   
-  const [addressSuggestions, setAddressSuggestions] = useState([])
+  const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [loading, setLoading] = useState(false)
-  const streetAddressRef = useRef(null)
-  const suggestionsRef = useRef(null)
   const debounceTimerRef = useRef(null)
 
   const handleChange = (e) => {
@@ -45,79 +43,60 @@ export default function ClientModal({ client, onClose }) {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const fetchAddressSuggestions = async (query) => {
-    // Minimum 3 characters and at least one complete word
-    if (!query || query.trim().length < 3) {
-      setAddressSuggestions([])
-      return
-    }
-
-    // Check for at least one complete word (word boundary)
-    const words = query.trim().split(/\s+/)
-    if (words.length === 0 || words[0].length < 3) {
-      setAddressSuggestions([])
-      return
-    }
-
-    setLoading(true)
-    try {
-      const response = await fetch(
-        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query.trim())}&limit=5`
-      )
-      const data = await response.json()
-      
-      if (!data.features || data.features.length === 0) {
-        setAddressSuggestions([])
-        return
-      }
-
-      const suggestions = data.features.map((feature) => ({
-        label: feature.properties.label,
-        streetName: feature.properties.name || '',
-        postalCode: feature.properties.postcode || '',
-        city: feature.properties.city || '',
-        context: feature.properties.context || ''
-      }))
-      setAddressSuggestions(suggestions)
-      setShowSuggestions(true)
-    } catch (error) {
-      console.error('Error fetching address suggestions:', error)
-      setAddressSuggestions([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAddressInput = (e) => {
+  const handleAddressChange = (e) => {
     const value = e.target.value
-    setFormData((prev) => ({ ...prev, streetAddress: value }))
+    setFormData((prev) => ({ ...prev, address: value }))
     
-    // Debounce API calls to avoid too many requests
+    // Clear previous timeout
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     
-    debounceTimerRef.current = setTimeout(() => {
-      fetchAddressSuggestions(value)
+    // Only search if 3+ characters
+    if (value.trim().length < 3) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    
+    // Debounce API call
+    setLoading(true)
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(value.trim())}&limit=5`
+        )
+        const data = await response.json()
+        
+        if (data.features && data.features.length > 0) {
+          const results = data.features.map((feature) => ({
+            label: feature.properties.label,
+            address: feature.properties.name || '',
+            postalCode: feature.properties.postcode || '',
+            city: feature.properties.city || ''
+          }))
+          setSuggestions(results)
+          setShowSuggestions(true)
+        } else {
+          setSuggestions([])
+        }
+      } catch (error) {
+        console.error('Error fetching suggestions:', error)
+        setSuggestions([])
+      } finally {
+        setLoading(false)
+      }
     }, 300)
   }
 
-  const handleAddressSelect = (suggestion) => {
-    // Extract the number from the user's input
-    const userInput = formData.streetAddress.trim()
-    const numberMatch = userInput.match(/^\d+/)
-    const number = numberMatch ? numberMatch[0] : ''
-    
-    // Build the full street address: number + street name
-    const fullAddress = number ? `${number} ${suggestion.streetName}` : suggestion.streetName
-    
+  const handleSelectSuggestion = (suggestion) => {
     setFormData((prev) => ({
       ...prev,
-      streetAddress: fullAddress,
+      address: suggestion.address,
       postalCode: suggestion.postalCode,
       city: suggestion.city
     }))
-    setAddressSuggestions([])
+    setSuggestions([])
     setShowSuggestions(false)
   }
 
@@ -129,7 +108,7 @@ export default function ClientModal({ client, onClose }) {
       last_name: formData.lastName,
       email: formData.email,
       phone: formData.phone,
-      street_address: formData.streetAddress,
+      address: formData.address,
       postal_code: formData.postalCode,
       city: formData.city,
       type: formData.type === 'business' ? 'entreprise' : 'particulier',
@@ -145,18 +124,8 @@ export default function ClientModal({ client, onClose }) {
     onClose()
   }
 
-  // Close suggestions when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target) &&
-          streetAddressRef.current && !streetAddressRef.current.contains(event.target)) {
-        setShowSuggestions(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
       }
@@ -234,33 +203,29 @@ export default function ClientModal({ client, onClose }) {
             />
           </div>
 
-          {/* Street Address with Autocomplete */}
+          {/* Address with Autocomplete */}
           <div className="relative">
-            <label className="block text-xs font-bold mb-1">Adresse (numéro et rue)</label>
+            <label className="block text-xs font-bold mb-1">Adresse</label>
             <input
-              ref={streetAddressRef}
               type="text"
-              name="streetAddress"
-              value={formData.streetAddress}
-              onChange={handleAddressInput}
-              placeholder="Ex: 42 rue de la Paix ou rue de la Paix"
+              name="address"
+              value={formData.address}
+              onChange={handleAddressChange}
+              placeholder="Tapez votre adresse..."
               className="input-field w-full text-sm"
               autoComplete="off"
             />
             {loading && <div className="text-xs text-slate-400 mt-1">Recherche...</div>}
-            {showSuggestions && addressSuggestions.length > 0 && (
-              <div
-                ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-1 bg-dark-2 border border-cyan-500/30 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto"
-              >
-                {addressSuggestions.map((suggestion, idx) => (
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-dark-2 border border-cyan-500/30 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                {suggestions.map((suggestion, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => handleAddressSelect(suggestion)}
+                    onClick={() => handleSelectSuggestion(suggestion)}
                     className="w-full text-left px-3 py-2 text-xs hover:bg-cyan-500/20 border-b border-dark-3 last:border-0 transition"
                   >
-                    <div className="font-semibold">{suggestion.streetName}</div>
+                    <div className="font-semibold">{suggestion.address}</div>
                     <div className="text-slate-400">{suggestion.postalCode} {suggestion.city}</div>
                   </button>
                 ))}
@@ -268,7 +233,6 @@ export default function ClientModal({ client, onClose }) {
             )}
           </div>
 
-          {/* Postal Code (auto-filled, read-only) */}
           <div>
             <label className="block text-xs font-bold mb-1">Code postal</label>
             <input
@@ -276,11 +240,10 @@ export default function ClientModal({ client, onClose }) {
               name="postalCode"
               value={formData.postalCode}
               readOnly
-              className="input-field w-full text-sm bg-dark-3 opacity-75 cursor-not-allowed"
+              className="input-field w-full text-sm bg-dark-3 opacity-75"
             />
           </div>
 
-          {/* City (auto-filled, read-only) */}
           <div>
             <label className="block text-xs font-bold mb-1">Ville</label>
             <input
@@ -288,7 +251,7 @@ export default function ClientModal({ client, onClose }) {
               name="city"
               value={formData.city}
               readOnly
-              className="input-field w-full text-sm bg-dark-3 opacity-75 cursor-not-allowed"
+              className="input-field w-full text-sm bg-dark-3 opacity-75"
             />
           </div>
 
