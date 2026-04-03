@@ -1,359 +1,293 @@
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Landing() {
-  const navigate = useNavigate()
+ const navigate = useNavigate();
 
-  return (
-    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ffffff', color: '#0a0a0a' }}>
-      {/* NAVIGATION */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.97)', borderBottom: '0.5px solid #e5e7eb', zIndex: 100, backdropFilter: 'blur(10px)', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', letterSpacing: '3px', fontFamily: 'Arial, sans-serif' }}>COURTIA</div>
-          <div style={{ display: 'flex', gap: '14px' }}>
-            <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#0a0a0a', cursor: 'pointer', fontSize: '13px', fontWeight: '500', fontFamily: 'Arial, sans-serif' }}>Connexion</button>
-            <button onClick={() => navigate('/register')} style={{ padding: '10px 24px', backgroundColor: '#0a0a0a', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>Rejoindre</button>
-          </div>
-        </div>
-      </nav>
+ useEffect(() => {
+ const observer = new IntersectionObserver(
+ (entries) => entries.forEach(e => {
+ if (e.isIntersecting) e.target.classList.add('visible');
+ }),
+ { threshold: 0.1 }
+ );
+ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+ return () => observer.disconnect();
+ }, []);
 
-      {/* HERO */}
-      <section style={{ minHeight: '95vh', paddingTop: '120px', paddingBottom: '100px', backgroundColor: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '10%', right: '5%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', bottom: '-200px', left: '10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+ return (
+ <div style={{fontFamily:'Arial,sans-serif',background:'#fff',color:'#0a0a0a'}}>
+ <style>{`
+ *{box-sizing:border-box;margin:0;padding:0;}
+ @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+ @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+ @keyframes floatUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+ @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+ @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+ @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.3)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+ .h1-l1{animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both}
+ .h1-l2{animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both}
+ .h1-l3{animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both}
+ .hero-badge{animation:fadeIn 0.6s ease 0s both;animation-name:badgePulse,fadeIn}
+ .hero-sub{animation:fadeIn 0.8s ease 0.7s both}
+ .hero-btns{animation:fadeIn 0.8s ease 0.9s both}
+ .hero-proof{animation:fadeIn 0.8s ease 1.1s both}
+ .mockup-wrap{animation:floatUp 1s cubic-bezier(0.16,1,0.3,1) 0.3s both;transition:transform 0.6s ease}
+ .mockup-wrap:hover{transform:perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-4px)}
+ .dot1{animation:dotBounce 1.2s ease 0s infinite}
+ .dot2{animation:dotBounce 1.2s ease 0.2s infinite}
+ .dot3{animation:dotBounce 1.2s ease 0.4s infinite}
+ .badge-dot-live{animation:pulse 2s ease infinite}
+ .plan-card{transition:transform 0.3s ease,box-shadow 0.3s ease}
+ .plan-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08)}
+ .reveal{opacity:0;transform:translateY(20px);transition:opacity 0.7s ease,transform 0.7s ease}
+ .reveal.visible{opacity:1;transform:translateY(0)}
+ .reveal-d1{transition-delay:0.1s}
+ .reveal-d2{transition-delay:0.2s}
+ .reveal-d3{transition-delay:0.3s}
+ .reveal-d4{transition-delay:0.4s}
+ .reveal-d5{transition-delay:0.5s}
+ .reveal-d6{transition-delay:0.6s}
+ .nav-link:hover{color:#0a0a0a;transition:color 0.2s}
+ .btn-ghost:hover{background:#f5f5f5;transition:background 0.2s}
+ .btn-main:hover{background:#222;transition:background 0.2s}
+ .cta-bar-fill{animation:none}
+ .cta-bar-fill.visible{animation:barFill 1.5s cubic-bezier(0.16,1,0.3,1) 0.3s both}
+ @keyframes barFill{from{width:0}to{width:62%}}
+ `}</style>
 
-        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 40px', width: '100%', position: 'relative', zIndex: 1 }}>
-          <h1 style={{ fontSize: '52px', fontWeight: '900', lineHeight: '1.15', marginBottom: '28px', margin: 0, fontFamily: 'Arial, sans-serif', letterSpacing: '-0.8px' }}>
-            Le premier CRM où l'IA<br/>travaille vraiment avec le courtier
-          </h1>
+ {/* NAV */}
+ <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 56px',background:'#fff',borderBottom:'0.5px solid #f0f0f0'}}>
+ <div style={{fontSize:12,fontWeight:900,letterSpacing:5,color:'#0a0a0a'}}>COURTIA</div>
+ <div style={{display:'flex',gap:36}}>
+ {['Fonctionnalités','ARK IA','Tarifs'].map(l => (
+ <span key={l} className="nav-link" style={{fontSize:12,color:'#999',cursor:'pointer',letterSpacing:0.3}}>{l}</span>
+ ))}
+ </div>
+ <div style={{display:'flex',alignItems:'center',gap:16}}>
+ <span style={{fontSize:12,color:'#666',cursor:'pointer'}} onClick={() => navigate('/login')}>Connexion</span>
+ <div onClick={() => navigate('/register')} style={{background:'#0a0a0a',color:'#fff',padding:'9px 20px',borderRadius:6,fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:0.5}}>Rejoindre →</div>
+ </div>
+ </nav>
 
-          <p style={{ fontSize: '19px', color: '#475569', lineHeight: '1.85', maxWidth: '720px', marginBottom: '50px', fontFamily: 'Arial, sans-serif', fontWeight: '400' }}>
-            ARK analyse vos données, détecte les opportunités et vous propose les bonnes actions. Vous gardez la main. Vous allez plus vite.
-          </p>
+ {/* HERO */}
+ <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',minHeight:640,borderBottom:'0.5px solid #f0f0f0'}}>
+ <div style={{padding:'72px 56px',display:'flex',flexDirection:'column',justifyContent:'center',borderRight:'0.5px solid #f0f0f0'}}>
+ <div className="hero-badge" style={{display:'inline-flex',alignItems:'center',gap:7,border:'0.5px solid #e0e0e0',borderRadius:20,padding:'5px 14px',fontSize:10,color:'#555',letterSpacing:0.5,width:'fit-content',marginBottom:36}}>
+ <div className="badge-dot-live" style={{width:6,height:6,borderRadius:'50%',background:'#22c55e'}}></div>
+ Offre Fondateur — 31 places restantes
+ </div>
+ <div className="h1-l1" style={{fontSize:52,fontWeight:900,lineHeight:1.04,letterSpacing:-2,color:'#0a0a0a'}}>Le CRM qui</div>
+ <div className="h1-l2" style={{fontSize:52,fontWeight:900,lineHeight:1.04,letterSpacing:-2,color:'#0a0a0a'}}>travaille avec</div>
+ <div className="h1-l3" style={{fontSize:52,fontWeight:900,lineHeight:1.04,letterSpacing:-2,color:'#2563eb',marginBottom:28}}>votre intelligence.</div>
+ <p className="hero-sub" style={{fontSize:15,color:'#777',lineHeight:1.75,marginBottom:40,maxWidth:380}}>ARK détecte vos opportunités, rédige vos relances et analyse votre portefeuille. En temps réel. Pendant que vous conseillez.</p>
+ <div className="hero-btns" style={{display:'flex',gap:10,marginBottom:56}}>
+ <div onClick={() => navigate('/register')} style={{background:'#0a0a0a',color:'#fff',padding:'14px 28px',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}} className="btn-main">Rejoindre — 69€/mois →</div>
+ <div style={{background:'#fff',color:'#0a0a0a',padding:'14px 28px',borderRadius:8,fontSize:13,fontWeight:500,cursor:'pointer',border:'0.5px solid #ddd'}} className="btn-ghost">Voir la démo</div>
+ </div>
+ <div className="hero-proof" style={{display:'flex',gap:32,paddingTop:32,borderTop:'0.5px solid #f0f0f0'}}>
+ {[['32 000','courtiers ORIAS en France'],['ARK','IA native — aucun concurrent'],['69€','tarif fondateur garanti à vie']].map(([n,l]) => (
+ <div key={n} style={{textAlign:'center'}}>
+ <div style={{fontSize:22,fontWeight:900,color:'#0a0a0a',letterSpacing:-0.5}}>{n}</div>
+ <div style={{fontSize:11,color:'#aaa',marginTop:2}}>{l}</div>
+ </div>
+ ))}
+ </div>
+ </div>
 
-          <div style={{ display: 'flex', gap: '18px', marginBottom: '120px', fontFamily: 'Arial, sans-serif' }}>
-            <button onClick={() => navigate('/register')} style={{ padding: '16px 48px', backgroundColor: '#0a0a0a', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '9px', fontFamily: 'Arial, sans-serif', boxShadow: '0 12px 32px rgba(10, 10, 10, 0.18)', transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.target.style.boxShadow = '0 18px 48px rgba(10, 10, 10, 0.25)'; e.target.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.target.style.boxShadow = '0 12px 32px rgba(10, 10, 10, 0.18)'; e.target.style.transform = 'translateY(0)'; }}>
-              Rejoindre maintenant
-              <ArrowRight size={17} />
-            </button>
-            <button style={{ padding: '16px 48px', backgroundColor: '#ffffff', color: '#0a0a0a', border: '1.5px solid #d1d5db', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', fontFamily: 'Arial, sans-serif', transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.target.style.borderColor = '#0a0a0a'; e.target.style.backgroundColor = '#f8f9fa'; e.target.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.target.style.borderColor = '#d1d5db'; e.target.style.backgroundColor = '#ffffff'; e.target.style.transform = 'translateY(0)'; }}>
-              Voir la démo
-            </button>
-          </div>
+ <div style={{background:'#fafafa',display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
+ <div className="mockup-wrap" style={{width:'100%',background:'#fff',borderRadius:14,border:'0.5px solid #e0e0e0',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.04)',transform:'perspective(1000px) rotateY(-2deg) rotateX(1deg)'}}>
+ <div style={{background:'#f2f2f2',padding:'9px 14px',display:'flex',alignItems:'center',gap:6,borderBottom:'0.5px solid #e8e8e8'}}>
+ {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{width:9,height:9,borderRadius:'50%',background:c}}></div>)}
+ <div style={{flex:1,background:'#fff',borderRadius:4,padding:'3px 10px',fontSize:9,color:'#bbb',textAlign:'center',margin:'0 10px',border:'0.5px solid #ebebeb'}}>courtia.app</div>
+ </div>
+ <div style={{display:'grid',gridTemplateColumns:'130px 1fr'}}>
+ <div style={{background:'#080808',display:'flex',flexDirection:'column',minHeight:320}}>
+ <div style={{padding:'14px 14px 0'}}>
+ <div style={{fontSize:9,fontWeight:900,letterSpacing:3,color:'#fff',marginBottom:18,paddingBottom:14,borderBottom:'0.5px solid rgba(255,255,255,0.06)'}}>COURTIA</div>
+ {[['Dashboard',true],['Clients',false],['Contrats',false],['Pipeline',false],['Calendrier',false]].map(([label,active]) => (
+ <div key={label} style={{padding:'8px 10px',borderRadius:5,fontSize:9,display:'flex',alignItems:'center',gap:7,color:active?'#fff':'rgba(255,255,255,0.3)',background:active?'rgba(255,255,255,0.08)':'transparent'}}>
+ {active && <div style={{width:3,height:12,background:'#2563eb',borderRadius:1,marginLeft:-4}}></div>}
+ {label}
+ </div>
+ ))}
+ </div>
+ <div style={{margin:'auto 10px 12px',background:'rgba(37,99,235,0.1)',border:'0.5px solid rgba(37,99,235,0.2)',borderRadius:7,padding:'9px 10px'}}>
+ <div style={{fontSize:9,fontWeight:900,color:'#60a5fa',letterSpacing:1.5,marginBottom:3}}>
+ <span style={{display:'inline-block',width:5,height:5,borderRadius:'50%',background:'#22c55e',marginRight:5,verticalAlign:'middle'}}></span>
+ ARK
+ </div>
+ <div style={{fontSize:8,color:'rgba(255,255,255,0.25)'}}>En ligne · 24h/24</div>
+ </div>
+ </div>
+ <div style={{background:'#fafafa',padding:14}}>
+ <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+ <div style={{fontSize:11,fontWeight:700,color:'#0a0a0a'}}>Bonjour Dalil</div>
+ <div style={{fontSize:8,color:'#bbb'}}>Mis à jour il y a 2 min</div>
+ </div>
+ <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5,marginBottom:10}}>
+ {[['CLIENTS','247','+12 ce mois','#22c55e'],['CONTRATS','189','+5 sem.','#22c55e'],['COMMISSIONS','8.4K€','+18%','#22c55e'],['ÉCHÉANCES','14','3 urgentes','#ef4444']].map(([l,v,d,dc]) => (
+ <div key={l} style={{background:'#fff',borderRadius:6,padding:8,border:'0.5px solid #efefef'}}>
+ <div style={{fontSize:7,color:'#bbb',letterSpacing:0.5,fontWeight:700,marginBottom:3}}>{l}</div>
+ <div style={{fontSize:14,fontWeight:900,color:'#0a0a0a',lineHeight:1}}>{v}</div>
+ <div style={{fontSize:7,color:dc,marginTop:2}}>{d}</div>
+ </div>
+ ))}
+ </div>
+ <div style={{display:'grid',gridTemplateColumns:'1fr 88px',gap:8}}>
+ <div style={{background:'#fff',borderRadius:6,border:'0.5px solid #efefef',overflow:'hidden'}}>
+ <div style={{padding:'6px 8px',borderBottom:'0.5px solid #f5f5f5',display:'flex',justifyContent:'space-between',fontSize:8,fontWeight:700,color:'#0a0a0a'}}>Clients récents <span style={{color:'#2563eb',fontWeight:400}}>Voir tout →</span>
+ </div>
+ {[['MR','Martin Renaud','#dbeafe','#1d4ed8','Actif','#d1fae5','#065f46'],['SB','Sophie Blanc','#d1fae5','#065f46','Actif','#d1fae5','#065f46'],['KA','Karim Amara','#ede9fe','#5b21b6','Prospect','#fef3c7','#92400e']].map(([av,name,ab,ac,st,sb,sc]) => (
+ <div key={av} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 8px',borderBottom:'0.5px solid #fafafa'}}>
+ <div style={{width:18,height:18,borderRadius:'50%',background:ab,color:ac,display:'flex',alignItems:'center',justifyContent:'center',fontSize:7,fontWeight:700,flexShrink:0}}>{av}</div>
+ <span style={{fontSize:8,fontWeight:500,flex:1,color:'#111'}}>{name}</span>
+ <span style={{fontSize:7,padding:'2px 5px',borderRadius:5,fontWeight:700,background:sb,color:sc}}>{st}</span>
+ </div>
+ ))}
+ </div>
+ <div style={{background:'#080808',borderRadius:6,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+ <div style={{padding:'6px 8px',borderBottom:'0.5px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:4}}>
+ <div style={{width:4,height:4,borderRadius:'50%',background:'#22c55e'}}></div>
+ <span style={{fontSize:8,fontWeight:900,color:'#60a5fa',letterSpacing:1}}>ARK</span>
+ </div>
+ <div style={{padding:6,display:'flex',flexDirection:'column',gap:4,flex:1}}>
+ <div style={{fontSize:7,lineHeight:1.4,padding:'4px 6px',borderRadius:3,background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.65)'}}>3 contrats à relancer.</div>
+ <div style={{fontSize:7,lineHeight:1.4,padding:'4px 6px',borderRadius:3,background:'rgba(37,99,235,0.2)',color:'rgba(255,255,255,0.8)',textAlign:'right'}}>Email Renaud</div>
+ <div style={{fontSize:7,lineHeight:1.4,padding:'4px 6px',borderRadius:3,background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.65)'}}>Prêt. Envoyer ?</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-          {/* MOCKUP HERO - PREMIUM */}
-          <div style={{ background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 50%, #f8f9fa 100%)', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 50px 100px rgba(0, 0, 0, 0.12), 0 0 40px rgba(37, 99, 235, 0.1), inset 0 1px 0 rgba(255,255,255,0.6)', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
-            {/* Browser Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', gap: '7px' }}>
-                {['#ff5f57', '#ffbd2e', '#28c940'].map(color => (
-                  <div key={color} style={{ width: '12px', height: '12px', backgroundColor: color, borderRadius: '50%', boxShadow: `0 1px 3px ${color}40` }} />
-                ))}
-              </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', flex: 1, textAlign: 'center', fontWeight: '500' }}>courtia.app</div>
-            </div>
+ {/* SECTION ARK */}
+ <div style={{background:'#080808',padding:'96px 56px'}}>
+ <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:80,alignItems:'center',maxWidth:1100,margin:'0 auto'}}>
+ <div>
+ <div className="reveal" style={{fontSize:10,fontWeight:700,letterSpacing:3,color:'rgba(255,255,255,0.3)',marginBottom:20}}>ARK — INTELLIGENCE NATIVE</div>
+ <div className="reveal reveal-d1" style={{fontSize:44,fontWeight:900,lineHeight:1.06,letterSpacing:-1.5,color:'#fff',marginBottom:20}}>Pas un chatbot.<br/>Un <span style={{color:'#60a5fa'}}>copilote</span><br/>qui agit.</div>
+ <p className="reveal reveal-d2" style={{fontSize:14,color:'rgba(255,255,255,0.45)',lineHeight:1.8,marginBottom:40}}>ARK lit votre portefeuille, détecte les signaux faibles et vous propose les bonnes actions au bon moment. Il ne vous assiste pas. Il travaille avec vous.</p>
+ <div style={{display:'flex',flexDirection:'column',gap:16}}>
+ {[
+ ['Détection d\'opportunités','Renouvellements, cross-sell, résiliations — détectés avant vous.','reveal reveal-d3'],
+ ['Rédaction intelligente','Emails, relances, propositions — générés et personnalisés en 1 clic.','reveal reveal-d4'],
+ ['Conformité automatique','DDA, RGPD, ORIAS — ARK connaît les règles et les applique.','reveal reveal-d5'],
+ ].map(([t,d,cls]) => (
+ <div key={t} className={cls} style={{display:'flex',gap:14,alignItems:'flex-start'}}>
+ <div style={{width:32,height:32,borderRadius:7,background:'rgba(37,99,235,0.12)',border:'0.5px solid rgba(37,99,235,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+ <div style={{width:8,height:8,borderRadius:'50%',background:'#60a5fa'}}></div>
+ </div>
+ <div>
+ <div style={{fontSize:13,fontWeight:700,color:'#fff',marginBottom:3}}>{t}</div>
+ <div style={{fontSize:12,color:'rgba(255,255,255,0.4)',lineHeight:1.5}}>{d}</div>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ <div className="reveal reveal-d2">
+ <div style={{background:'#0f0f0f',borderRadius:14,border:'0.5px solid rgba(255,255,255,0.06)',overflow:'hidden'}}>
+ <div style={{padding:'14px 18px',borderBottom:'0.5px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:10}}>
+ <div style={{width:28,height:28,borderRadius:7,background:'rgba(37,99,235,0.15)',border:'0.5px solid rgba(37,99,235,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+ <div style={{width:8,height:8,borderRadius:'50%',background:'#60a5fa'}}></div>
+ </div>
+ <span style={{fontSize:12,fontWeight:700,color:'#fff',letterSpacing:1}}>ARK</span>
+ <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
+ <div style={{width:6,height:6,borderRadius:'50%',background:'#22c55e'}}></div>
+ <span style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>En ligne</span>
+ </div>
+ </div>
+ <div style={{padding:16,display:'flex',flexDirection:'column',gap:10}}>
+ <div>
+ <div style={{fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.2)',fontWeight:700,marginBottom:3}}>ARK</div>
+ <div style={{padding:'10px 13px',borderRadius:'4px 10px 10px 10px',fontSize:12,lineHeight:1.6,background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.75)',border:'0.5px solid rgba(255,255,255,0.05)'}}>Bonjour Dalil. Martin Renaud — contrat auto, échéance dans 14 jours. Risque de résiliation élevé. Je recommande un contact cette semaine.</div>
+ </div>
+ <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}><div style={{fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.2)',fontWeight:700,marginBottom:3}}>Vous</div>
+ <div style={{padding:'10px 13px',borderRadius:'10px 4px 10px 10px',fontSize:12,lineHeight:1.6,background:'rgba(37,99,235,0.15)',color:'rgba(255,255,255,0.8)',border:'0.5px solid rgba(37,99,235,0.2)'}}>Rédige un email de relance personnalisé</div>
+ </div>
+ <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0'}}>
+ <div style={{display:'flex',gap:4}}>
+ {[0,1,2].map(i => <div key={i} className={`dot${i+1}`} style={{width:5,height:5,borderRadius:'50%',background:'rgba(37,99,235,0.5)'}}></div>)}
+ </div>
+ <span style={{fontSize:10,color:'rgba(255,255,255,0.2)',letterSpacing:0.5}}>ARK rédige...</span>
+ </div>
+ <div>
+ <div style={{fontSize:9,letterSpacing:1,color:'rgba(255,255,255,0.2)',fontWeight:700,marginBottom:3}}>ARK</div>
+ <div style={{padding:'10px 13px',borderRadius:'4px 10px 10px 10px',fontSize:12,lineHeight:1.6,background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.75)',border:'0.5px solid rgba(255,255,255,0.05)'}}>Email prêt. Objet : "Votre contrat auto arrive à terme — offre exclusive". J'ai intégré son historique. Voulez-vous que je l'envoie ?</div>
+ </div>
+ </div>
+ <div style={{padding:'12px 16px',borderTop:'0.5px solid rgba(255,255,255,0.05)',display:'flex',gap:8}}>
+ <div style={{flex:1,background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)',borderRadius:7,padding:'8px 12px',fontSize:11,color:'rgba(255,255,255,0.3)',fontFamily:'Arial'}}>Demandez à ARK...</div>
+ <div style={{background:'#2563eb',borderRadius:7,padding:'8px 14px',fontSize:11,color:'#fff',cursor:'pointer',fontWeight:700}}>Envoyer</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-            {/* Main Content */}
-            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '16px' }}>
-              {/* SIDEBAR */}
-              <div style={{ backgroundColor: '#0f172a', borderRadius: '10px', padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.3)' }}>
-                {[
-                  { label: 'Dashboard', icon: '📊', active: true },
-                  { label: 'Clients', icon: '👥', active: false },
-                  { label: 'Pipeline', icon: '🎯', active: false },
-                  { label: 'ARK IA', icon: '⚡', active: false }
-                ].map((item, i) => (
-                  <div key={item.label} style={{ fontSize: '10px', padding: '10px 11px', backgroundColor: item.active ? '#2563eb' : 'rgba(255,255,255,0.04)', color: item.active ? '#ffffff' : '#94a3b8', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', border: item.active ? '1px solid rgba(37,99,235,0.4)' : '1px solid transparent' }}>
-                    <span>{item.icon}</span> {item.label}
-                  </div>
-                ))}
-              </div>
+ {/* PRICING */}
+ <div style={{padding:'96px 56px',background:'#fff'}}>
+ <div style={{textAlign:'center',marginBottom:56}}>
+ <div style={{fontSize:10,fontWeight:700,letterSpacing:3,color:'#bbb',marginBottom:16}}>TARIFICATION</div>
+ <div style={{fontSize:44,fontWeight:900,letterSpacing:-1.5,color:'#0a0a0a',marginBottom:10}}>Transparent. Sans surprise.</div>
+ <div style={{fontSize:14,color:'#999',marginBottom:16}}>Garanti à vie pour les 50 premiers fondateurs.</div>
+ <span style={{display:'inline-flex',alignItems:'center',gap:8,background:'#fff8f0',border:'0.5px solid #fed7aa',borderRadius:20,padding:'6px 16px',fontSize:11,color:'#c2410c',fontWeight:700}}>
+ 31 / 50 places prises — il reste 19 places
+ </span>
+ </div>
+ <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,maxWidth:900,margin:'0 auto'}}>
+ {[
+ {name:'START',price:'39€',old:'59€',sub:'Pour débuter',feats:['100 clients','ARK basique','Dashboard KPIs','Support email'],featured:false},
+ {name:'PRO',price:'69€',old:'99€',sub:'Pour la plupart',feats:['500 clients','ARK complet','Rapports avancés','Support prioritaire'],featured:true},
+ {name:'ELITE',price:'129€',old:'179€',sub:'Illimité',feats:['Clients illimités','ARK vocal','API publique','Account Manager'],featured:false},
+ ].map(p => (
+ <div key={p.name} className="plan-card" style={{borderRadius:14,padding:28,border:p.featured?'1.5px solid #0a0a0a':'0.5px solid #ebebeb',background:p.featured?'#0a0a0a':'#fff',display:'flex',flexDirection:'column'}}>
+ {p.featured && <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,background:'#fff',color:'#0a0a0a',padding:'4px 10px',borderRadius:10,width:'fit-content',marginBottom:14}}>MEILLEUR CHOIX</div>}
+ <div style={{fontSize:11,fontWeight:700,letterSpacing:2,color:p.featured?'rgba(255,255,255,0.4)':'#aaa',marginBottom:8}}>{p.name}</div>
+ <div style={{fontSize:48,fontWeight:900,color:p.featured?'#fff':'#0a0a0a',letterSpacing:-2,lineHeight:1}}>{p.price}</div>
+ <div style={{fontSize:13,color:'#ccc',textDecoration:'line-through',marginTop:4,marginBottom:20}}>{p.old}/mois</div>
+ <div style={{height:'0.5px',background:p.featured?'rgba(255,255,255,0.08)':'#f0f0f0',marginBottom:20}}></div>
+ <div style={{display:'flex',flexDirection:'column',gap:10,flex:1,marginBottom:24}}>
+ {p.feats.map(f => (
+ <div key={f} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:p.featured?'rgba(255,255,255,0.6)':'#555'}}>
+ <div style={{width:14,height:14,borderRadius:'50%',background:p.featured?'rgba(255,255,255,0.1)':'#f0f0f0',flexShrink:0}}></div>
+ {f}
+ </div>
+ ))}
+ </div>
+ <button onClick={() => navigate('/register')} style={{width:'100%',padding:13,borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer',border:p.featured?'none':'0.5px solid #e0e0e0',background:p.featured?'#2563eb':'#fff',color:p.featured?'#fff':'#0a0a0a',fontFamily:'Arial'}}>
+ {p.featured?'Rejoindre maintenant':'Commencer'}
+ </button>
+ </div>
+ ))}
+ </div>
+ </div>
 
-              {/* MAIN AREA */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* TOPBAR */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>Tableau de bord</div>
-                  <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '500' }}>Mis à jour il y a 2m</div>
-                </div>
+ {/* CTA FINAL */}
+ <div style={{padding:'96px 56px',background:'#0a0a0a',textAlign:'center'}}>
+ <div className="reveal" style={{fontSize:52,fontWeight:900,letterSpacing:-2,color:'#fff',lineHeight:1.06,marginBottom:16}}>Rejoignez les<br/><span style={{color:'#60a5fa'}}>19 derniers</span> fondateurs.</div>
+ <div className="reveal reveal-d1" style={{fontSize:15,color:'rgba(255,255,255,0.4)',marginBottom:40}}>Après les 50 premiers, les tarifs normaux s'appliquent. Sans exception.</div>
+ <div className="reveal reveal-d2" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginBottom:32}}>
+ <div style={{width:240,height:3,background:'rgba(255,255,255,0.08)',borderRadius:2,overflow:'hidden'}}>
+ <div className="cta-bar-fill reveal" style={{width:'62%',height:'100%',background:'#2563eb',borderRadius:2}}></div>
+ </div>
+ <div style={{fontSize:11,color:'rgba(255,255,255,0.3)',letterSpacing:0.5}}>31 places prises sur 50</div>
+ </div>
+ <div className="reveal reveal-d3" onClick={() => navigate('/register')} style={{display:'inline-block',background:'#fff',color:'#0a0a0a',padding:'16px 40px',borderRadius:10,fontSize:15,fontWeight:900,cursor:'pointer',letterSpacing:0.3}}>Je rejoins COURTIA — 69€/mois →</div>
+ </div>
 
-                {/* KPI CARDS */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                  {[
-                    { label: 'Clients', value: '2,847', trend: '+12%', color: '#3b82f6' },
-                    { label: 'Contrats', value: '1,204', trend: '+8%', color: '#8b5cf6' },
-                    { label: 'Opps', value: '342', trend: '+24%', color: '#ec4899' },
-                    { label: 'Revenus', value: '€248K', trend: '+18%', color: '#10b981' }
-                  ].map((kpi, i) => (
-                    <div key={i} style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
-                      <div style={{ fontSize: '9px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>{kpi.label}</div>
-                      <div style={{ fontSize: '14px', fontWeight: '700', color: '#0a0a0a', marginBottom: '3px' }}>{kpi.value}</div>
-                      <div style={{ fontSize: '8px', color: kpi.color, fontWeight: '600' }}>{kpi.trend}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* CLIENT TABLE SNIPPET */}
-                <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '10px', fontSize: '9px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr', gap: '8px', marginBottom: '6px', color: '#94a3b8', fontWeight: '600', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb' }}>
-                    <div>Client</div>
-                    <div>Statut</div>
-                    <div>Valeur</div>
-                  </div>
-                  {[
-                    { name: 'ABC Corp', status: 'Actif', value: '€18K' },
-                    { name: 'XYZ Inc', status: 'En révision', value: '€12K' }
-                  ].map((row, i) => (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr', gap: '8px', color: '#475569', paddingBottom: '6px', borderBottom: i === 0 ? '1px solid #e5e7eb' : 'none' }}>
-                      <div style={{ fontWeight: '500' }}>{row.name}</div>
-                      <div style={{ padding: '3px 8px', backgroundColor: row.status === 'Actif' ? '#dcfce7' : '#fef3c7', borderRadius: '4px', color: row.status === 'Actif' ? '#166534' : '#b45309', fontSize: '8px', fontWeight: '600', width: 'fit-content' }}>{row.status}</div>
-                      <div style={{ fontWeight: '600' }}>{row.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROBLÈMES */}
-      <section style={{ backgroundColor: '#ffffff', padding: '80px 40px', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', marginBottom: '80px' }}>
-          <p style={{ fontSize: '12px', color: '#999999', letterSpacing: '2px', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>LES RÉALITÉS DU COURTIER</p>
-          <h2 style={{ fontSize: '40px', fontWeight: 'bold', margin: 0, marginBottom: '60px', fontFamily: 'Arial, sans-serif' }}>Ce que les autres outils ne résolvent pas</h2>
-
-          {/* BLOC 1 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '60% 40%', gap: '60px', alignItems: 'center', marginBottom: '60px', backgroundColor: '#f5f5f5', padding: '48px 80px', marginLeft: '-40px', marginRight: '-40px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
-              {['📧 Email', '📅 Outlook', '📄 PDF', '📝 Notes', '📌 Post-it'].map(item => (
-                <div key={item} style={{ padding: '20px 12px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px', fontWeight: '500', textAlign: 'center' }}>
-                  {item}
-                </div>
-              ))}
-            </div>
-            <div>
-              <h3 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px', margin: 0, fontFamily: 'Arial, sans-serif' }}>Vos données vivent partout</h3>
-              <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>Client ABC chez vous. Historique en email. RDV en Outlook. Besoins notés sur post-it. Vous jonguez entre les outils.</p>
-            </div>
-          </div>
-
-          {/* BLOC 2 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '60px', alignItems: 'center', marginBottom: '60px', backgroundColor: '#ffffff', padding: '48px 80px', marginLeft: '-40px', marginRight: '-40px' }}>
-            <div>
-              <h3 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px', margin: 0, fontFamily: 'Arial, sans-serif' }}>Vous voyez les données. Pas les patterns.</h3>
-              <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>ABC a renouvelé son auto en 2024. Vous avez déjà tous les signaux. Mais aucun outil ne les relie pour vous au bon moment.</p>
-            </div>
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '24px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#999999', marginBottom: '12px' }}>FICHE CLIENT</div>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>ABC Corp</div>
-              <div style={{ fontSize: '12px', color: '#666666', lineHeight: '1.8' }}>
-                Auto: 2022 → 2024 ✓<br/>
-                Renouvellement: 14 déc 2024<br/>
-                Secteur: Transport<br/>
-                <span style={{ fontStyle: 'italic', color: '#999999' }}>=Besoin complémentaire? →</span>
-              </div>
-            </div>
-          </div>
-
-          {/* BLOC 3 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '60% 40%', gap: '60px', alignItems: 'center', backgroundColor: '#f5f5f5', padding: '48px 80px', marginLeft: '-40px', marginRight: '-40px' }}>
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '24px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignContent: 'flex-start', minHeight: '140px' }}>
-              {['Appel ABC', 'Email XYZ', 'Contrat OK', 'Alerte', 'Rappel 1', 'Devis 2', 'RDV 3', 'Signature', 'Suivi', 'Doc'].map((task, i) => (
-                <div key={i} style={{ padding: '6px 12px', backgroundColor: '#f0f0f0', border: '0.5px solid #d1d5db', borderRadius: '5px', fontSize: '10px', fontWeight: '500', opacity: 0.7 + (i % 3) * 0.1 }}>
-                  {task}
-                </div>
-              ))}
-            </div>
-            <div>
-              <h3 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px', margin: 0, fontFamily: 'Arial, sans-serif' }}>Votre cerveau n'a pas la place pour plus.</h3>
-              <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', margin: 0, fontFamily: 'Arial, sans-serif' }}>Appels. Emails. Contrats. Alertes. Clients qui rappellent. Zéro espace mental pour la stratégie commerciale.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ARK - FORTE PRÉSENCE */}
-      <section style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)', padding: '100px 40px', fontFamily: 'Arial, sans-serif', position: 'relative', borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '100px', textAlign: 'center' }}>
-            <p style={{ fontSize: '12px', color: '#475569', letterSpacing: '2.5px', marginBottom: '16px', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>⚡ ARK EN ACTION</p>
-            <h2 style={{ fontSize: '44px', fontWeight: '900', margin: 0, fontFamily: 'Arial, sans-serif', letterSpacing: '-0.5px', color: '#0a0a0a', marginBottom: '12px' }}>Comment ça marche vraiment</h2>
-            <p style={{ fontSize: '16px', color: '#64748b', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>De la détection d'opportunité à la fermeture en quelques clics. ARK pense. Vous décidez.</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '38% 62%', gap: '80px', alignItems: 'start' }}>
-            {/* TIMELINE */}
-            <div style={{ fontFamily: 'Arial, sans-serif', paddingRight: '20px' }}>
-              {[
-                { num: 1, icon: '📥', title: 'La fiche arrive', desc: 'ABC Corp demande devis auto', color: '#3b82f6' },
-                { num: 2, icon: '🔍', title: 'ARK analyse', desc: 'Historique + données réel-time', color: '#8b5cf6' },
-                { num: 3, icon: '💡', title: 'Opportunité détectée', desc: 'Renouvellement proche + besoin identifié', color: '#ec4899' },
-                { num: 4, icon: '✉️', title: 'Action prête', desc: 'Email suggestion + timing optimal', color: '#f59e0b' },
-                { num: 5, icon: '✓', title: 'Vous agissez', desc: 'Fermeture gagnée. Vous avez décidé.', color: '#10b981' }
-              ].map((step, i) => (
-                <div key={i} style={{ display: 'flex', gap: '18px', marginBottom: '36px', paddingBottom: '36px', borderBottom: i < 4 ? '2px solid #e5e7eb' : 'none', fontFamily: 'Arial, sans-serif', position: 'relative' }}>
-                  <div style={{ fontSize: '28px', minWidth: '40px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', backgroundColor: `${step.color}15`, borderRadius: '10px' }}>{step.icon}</div>
-                  <div style={{ flex: 1, fontFamily: 'Arial, sans-serif' }}>
-                    <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px', fontFamily: 'Arial, sans-serif', color: '#0a0a0a' }}>{step.title}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', lineHeight: '1.5' }}>{step.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* SCREENSHOTS - PREMIUM */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px', fontFamily: 'Arial, sans-serif' }}>
-              {[
-                {
-                  title: 'Fiche client',
-                  color: '#3b82f6',
-                  content: (
-                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ fontWeight: '700', marginBottom: '10px', fontFamily: 'Arial, sans-serif', color: '#0a0a0a', fontSize: '13px' }}>ABC Corp</div>
-                      <div style={{ color: '#64748b', lineHeight: '1.8', fontFamily: 'Arial, sans-serif', fontSize: '11px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>Type</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>Entreprise</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>Secteur</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>Transport</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>Auto</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>2024</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>RDV</span><span style={{ fontWeight: '600', color: '#0a0a0a' }}>14 oct</span></div>
-                      </div>
-                    </div>
-                  )
-                },
-                {
-                  title: 'Détection ARK',
-                  color: '#ec4899',
-                  content: (
-                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', backgroundColor: '#ec489915', padding: '12px', borderRadius: '8px', border: '1px solid #ec489930' }}>
-                      <div style={{ fontWeight: '700', marginBottom: '8px', color: '#ec4899', fontFamily: 'Arial, sans-serif', display: 'flex', alignItems: 'center', gap: '6px' }}>💡 Opportunité détectée</div>
-                      <div style={{ color: '#475569', lineHeight: '1.7', fontFamily: 'Arial, sans-serif', fontSize: '11px', fontWeight: '500' }}>
-                        Renouvellement auto<br/>
-                        <strong>45 jours</strong><br/>
-                        + Complémentaire?
-                      </div>
-                    </div>
-                  )
-                },
-                {
-                  title: 'Email suggéré',
-                  color: '#f59e0b',
-                  content: (
-                    <div style={{ fontSize: '11px', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ fontWeight: '700', marginBottom: '8px', fontFamily: 'Arial, sans-serif', color: '#0a0a0a' }}>✉️ Par ARK</div>
-                      <div style={{ color: '#64748b', lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}>
-                        <strong style={{ color: '#0a0a0a' }}>Objet:</strong> Renouvellement auto - Renforcer couverture<br/>
-                        <span style={{ fontStyle: 'italic', fontSize: '10px' }}>"Bonjour, votre contrat arrive à terme..."</span>
-                      </div>
-                    </div>
-                  )
-                },
-                {
-                  title: 'Résultat',
-                  color: '#10b981',
-                  content: (
-                    <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', backgroundColor: '#10b98115', padding: '12px', borderRadius: '8px', border: '1px solid #10b98130' }}>
-                      <div style={{ fontWeight: '700', marginBottom: '10px', fontFamily: 'Arial, sans-serif', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>✓ Fermeture gagnée</div>
-                      <div style={{ color: '#475569', lineHeight: '1.7', fontFamily: 'Arial, sans-serif', fontSize: '11px', fontWeight: '500' }}>
-                        Valeur: <strong style={{ color: '#0a0a0a' }}>€1,200-2K</strong><br/>
-                        Temps: <strong style={{ color: '#0a0a0a' }}>30-45 min</strong>
-                      </div>
-                    </div>
-                  )
-                }
-              ].map((ss, i) => (
-                <div key={i} style={{ padding: '20px', backgroundColor: '#ffffff', border: `1.5px solid ${ss.color}30`, borderRadius: '12px', fontFamily: 'Arial, sans-serif', boxShadow: `0 4px 12px ${ss.color}08`, transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.target.style.borderColor = `${ss.color}50`; e.target.style.boxShadow = `0 8px 20px ${ss.color}15`; e.target.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.target.style.borderColor = `${ss.color}30`; e.target.style.boxShadow = `0 4px 12px ${ss.color}08`; e.target.style.transform = 'translateY(0)'; }}>
-                  <div style={{ fontSize: '10px', fontWeight: '700', color: ss.color, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1.2px', fontFamily: 'Arial, sans-serif' }}>
-                    {ss.title}
-                  </div>
-                  {ss.content}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* MODULES */}
-      <section style={{ backgroundColor: '#ffffff', padding: '80px 40px', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '60px' }}>
-            <p style={{ fontSize: '12px', color: '#999999', letterSpacing: '2px', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>COURTIA COMPLET</p>
-            <h2 style={{ fontSize: '40px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>Au-delà du CRM. Un vrai système.</h2>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '24px' }}>
-            {[
-              { title: 'Clients', desc: 'Centralisé. Structuré. Actionnable.' },
-              { title: 'Pipeline', desc: 'Kanban visual. Toujours à jour.' },
-              { title: 'Contrats', desc: 'Échéances. Alertes. Conformité.' },
-              { title: 'Calendrier', desc: 'RDV + briefs auto + Google Sync' },
-              { title: 'Rapports', desc: 'CERFA + DDA + conformité auto' },
-              { title: 'ARK IA', desc: 'Native. Toujours avec vous.' }
-            ].map((mod, i) => (
-              <div key={i} style={{ padding: '32px 24px', backgroundColor: '#f9fafb', border: '0.5px solid #e5e7eb', borderRadius: '10px', fontFamily: 'Arial, sans-serif' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px', margin: 0, fontFamily: 'Arial, sans-serif' }}>{mod.title}</h3>
-                <p style={{ fontSize: '13px', color: '#666666', margin: 0, lineHeight: '1.6', fontFamily: 'Arial, sans-serif' }}>{mod.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TARIFS */}
-      <section style={{ backgroundColor: '#f5f5f5', padding: '80px 40px', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '60px', textAlign: 'center' }}>
-            <p style={{ fontSize: '12px', color: '#999999', letterSpacing: '2px', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', fontFamily: 'Arial, sans-serif' }}>TARIFICATION</p>
-            <h2 style={{ fontSize: '40px', fontWeight: 'bold', margin: 0, fontFamily: 'Arial, sans-serif' }}>Transparente. Sans surprise. Garantie à vie.</h2>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-            {[
-              { name: 'START', price: '39', desc: 'Pour débuter' },
-              { name: 'PRO', price: '69', desc: 'Pour la plupart', featured: true },
-              { name: 'ELITE', price: '129', desc: 'Illimité' }
-            ].map((tier, i) => (
-              <div key={i} style={{ padding: '40px 32px', border: tier.featured ? '2px solid #0a0a0a' : '0.5px solid #d1d5db', borderRadius: '10px', backgroundColor: tier.featured ? '#0a0a0a' : '#ffffff', color: tier.featured ? '#ffffff' : '#0a0a0a', textAlign: 'center', position: 'relative', fontFamily: 'Arial, sans-serif' }}>
-                {tier.featured && (
-                  <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#2563eb', color: '#ffffff', padding: '4px 14px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold', fontFamily: 'Arial, sans-serif' }}>
-                    MEILLEUR CHOIX
-                  </div>
-                )}
-                <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', margin: tier.featured ? '8px 0 16px 0' : 0, fontFamily: 'Arial, sans-serif' }}>{tier.name}</h3>
-                <div style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '8px', fontFamily: 'Arial, sans-serif' }}>{tier.price}€</div>
-                <div style={{ fontSize: '12px', opacity: 0.7, marginBottom: '24px', fontFamily: 'Arial, sans-serif' }}>/mois</div>
-                <p style={{ fontSize: '12px', marginBottom: '24px', margin: 0, fontFamily: 'Arial, sans-serif' }}>{tier.desc}</p>
-                <button onClick={() => navigate('/register')} style={{ width: '100%', padding: '12px 16px', backgroundColor: tier.featured ? '#2563eb' : '#0a0a0a', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
-                  Commencer
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section style={{ backgroundColor: '#ffffff', padding: '80px 40px', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
-        <h2 style={{ fontSize: '40px', fontWeight: 'bold', marginBottom: '32px', fontFamily: 'Arial, sans-serif' }}>
-          Prêt à transformer votre courtage?
-        </h2>
-        <button onClick={() => navigate('/register')} style={{ padding: '14px 48px', backgroundColor: '#0a0a0a', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: 'Arial, sans-serif' }}>
-          Rejoindre COURTIA
-          <ArrowRight size={16} />
-        </button>
-      </section>
-
-      {/* FOOTER */}
-      <footer style={{ padding: '60px 40px', backgroundColor: '#f5f5f5', borderTop: '0.5px solid #e5e7eb', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
-        <p style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '24px', letterSpacing: '2px', fontFamily: 'Arial, sans-serif' }}>COURTIA</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginBottom: '24px', fontSize: '12px', color: '#666666', fontFamily: 'Arial, sans-serif' }}>
-          <a href="#" style={{ textDecoration: 'none', color: 'inherit', fontFamily: 'Arial, sans-serif' }}>Mentions légales</a>
-          <a href="#" style={{ textDecoration: 'none', color: 'inherit', fontFamily: 'Arial, sans-serif' }}>Confidentialité</a>
-          <a href="#" style={{ textDecoration: 'none', color: 'inherit', fontFamily: 'Arial, sans-serif' }}>Contact</a>
-        </div>
-        <p style={{ fontSize: '11px', color: '#999999', margin: 0, fontFamily: 'Arial, sans-serif' }}>© 2026 COURTIA • Made by RHASRHASS Dalil ⊗ ARK</p>
-      </footer>
-    </div>
-  )
+ {/* FOOTER */}
+ <div style={{padding:'32px 56px',borderTop:'0.5px solid #f0f0f0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+ <div style={{fontSize:11,fontWeight:900,letterSpacing:4,color:'#bbb'}}>COURTIA</div>
+ <div style={{display:'flex',gap:24}}>
+ {['Mentions légales','Confidentialité','Contact'].map(l => <span key={l} style={{fontSize:11,color:'#ccc',cursor:'pointer'}}>{l}</span>)}
+ </div>
+ <div style={{fontSize:11,color:'#ddd'}}>© 2026 COURTIA · Made by RHASRHASS Dalil ⊗ ARK</div>
+ </div>
+ </div>
+ </div>
+ );
 }
