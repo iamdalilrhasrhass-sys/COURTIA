@@ -5,7 +5,8 @@ export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -22,7 +23,7 @@ export default function Auth({ onAuthSuccess }) {
       if (isLogin) {
         success = await login(email, password)
       } else {
-        success = await register(email, password, name)
+        success = await register(email, password, firstName, lastName)
       }
 
       if (success) {
@@ -45,17 +46,30 @@ export default function Auth({ onAuthSuccess }) {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {!isLogin && (
-            <div>
-              <label className="block text-sm font-bold mb-2">Nom</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input-field w-full"
-                required={!isLogin}
-                placeholder="Votre nom"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-bold mb-2">Prénom</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="input-field w-full"
+                  required={!isLogin}
+                  placeholder="Votre prénom"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">Nom</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="input-field w-full"
+                  required={!isLogin}
+                  placeholder="Votre nom"
+                />
+              </div>
+            </>
           )}
 
           <div>
@@ -98,10 +112,14 @@ export default function Auth({ onAuthSuccess }) {
             onClick={() => {
               setIsLogin(!isLogin)
               setError('')
+              setEmail('')
+              setPassword('')
+              setFirstName('')
+              setLastName('')
             }}
-            className="text-cyan hover:underline text-sm"
+            className="text-sm text-slate-400 hover:text-white transition"
           >
-            {isLogin ? 'Créer un compte' : 'Déjà inscrit ?'}
+            {isLogin ? "Pas encore de compte ? S'inscrire" : 'Déjà inscrit ? Se connecter'}
           </button>
         </div>
       </div>
