@@ -3,85 +3,60 @@ const router = express.Router()
 const Anthropic = require('@anthropic-ai/sdk')
 const jwt = require('jsonwebtoken')
 
-// Vérifier la clé API au démarrage
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.warn('⚠️  ANTHROPIC_API_KEY NOT SET — ARK responses will fail')
-} else {
-  console.log('✅ ANTHROPIC_API_KEY loaded:', process.env.ANTHROPIC_API_KEY.substring(0, 20) + '...')
-}
+console.log('✅ ARK routes loading... API Key:', process.env.ANTHROPIC_API_KEY ? '✅ SET' : '❌ MISSING')
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
 })
 
-// Middleware local pour vérifier le JWT
-const verifyTokenLocal = (req, res, next) => {
+// Simple JWT verify
+function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authentication required' })
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.warn('❌ No bearer token')
+    return res.status(401).json({ error: 'No token' })
   }
 
   const token = authHeader.substring(7)
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
-    req.user = decoded
+    req.user = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
     next()
   } catch (err) {
     console.error('JWT error:', err.message)
-    res.status(401).json({ error: 'Invalid token', details: err.message })
+    res.status(401).json({ error: 'Invalid token' })
   }
 }
 
-// POST /api/ark/chat — Chat avec ARK
+// POST /api/ark/chat
 router.post('/chat', async (req, res) => {
   try {
     const { message, clientData, conversationHistory } = req.body
 
-    if (!message || typeof message !== 'string' || message.trim() === '') {
-      return res.status(400).json({ error: 'Message required' })
-    }
+    if (!message) return res.status(400).json({ error: 'Message required' })
 
-    // Vérifier API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({
-        error: 'ARK API key not configured',
-        details: 'ANTHROPIC_API_KEY missing from environment'
-      })
-    }
-
-    // System prompt avec contexte client
-    let systemPrompt
+    // Build system prompt
+    let systemPrompt = `Tu es ARK, l'assistant IA de COURTIA spécialisé en assurance française.`
+    
     if (clientData && clientData.id) {
-      systemPrompt = `Tu es ARK, l'assistant IA de COURTIA spécialisé en assurance.
+      systemPrompt = `Tu es ARK, expert en gestion de portefeuille assurance pour courtiers français.
 
-Données du client:
-- Nom: ${clientData.prenom || ''} ${clientData.nom || ''}
-- Email: ${clientData.email || 'N/A'}
-- Statut: ${clientData.statut || 'N/A'}
-- Score risque: ${clientData.score_risque || 'N/A'}/100
-- Bonus-malus: ${clientData.bonus_malus || 'N/A'}
-- Années permis: ${clientData.annees_permis || 'N/A'}
-- Sinistres 3 ans: ${clientData.nb_sinistres_3ans ?? 'N/A'}
-- Zone: ${clientData.zone_geographique || 'N/A'}
-- Profession: ${clientData.profession || 'N/A'}
+Client: ${clientData.prenom || ''} ${clientData.nom || ''}
+Risque: ${clientData.score_risque || 'N/A'}/100 | Bonus-malus: ${clientData.bonus_malus || 'N/A'}
+Zone: ${clientData.zone_geographique || 'N/A'} | Sinistres 3 ans: ${clientData.nb_sinistres_3ans ?? 0}
+Profession: ${clientData.profession || 'N/A'}
 
-Fournis une analyse détaillée, actionnable et en français.`
-    } else {
-      systemPrompt = `Tu es ARK, l'assistant IA de COURTIA pour courtiers en assurance française. 
-Réponds en français, sois précis et professionnel.`
+Fournis une analyse précise et actionnable en français.`
     }
 
-    // Construire l'historique pour Anthropic
+    // Build message history
     const messages = [
-      ...(conversationHistory || [])
-        .filter(m => m.role && m.content)
-        .map(m => ({ role: m.role, content: m.content })),
+      ...(conversationHistory || []).filter(m => m.role && m.content),
       { role: 'user', content: message.trim() }
     ]
 
-    console.log(`🔄 ARK: "${message.substring(0, 50)}..." | messages: ${messages.length}`)
+    console.log(`🔄 ARK: "${message.substring(0, 40)}..." | Calling Anthropic`)
 
-    // Appel Anthropic
+    // Call Anthropic
     const response = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
@@ -90,23 +65,20 @@ Réponds en français, sois précis et professionnel.`
     })
 
     const reply = response.content[0]?.text || 'No response'
-    console.log(`✅ ARK replied: "${reply.substring(0, 50)}..."`)
+    console.log(`✅ ARK responded: "${reply.substring(0, 40)}..."`)
 
     res.json({ reply })
 
   } catch (err) {
-    console.error('❌ ARK Error:', err.message)
+    console.error('❌ ARK Error:', err.message, err.code)
 
-    if (err.message.includes('401') || err.message.includes('api_key')) {
-      return res.status(500).json({
-        error: 'ANTHROPIC_API_KEY invalid or missing',
-        details: err.message
-      })
-    }
+    const errorMsg = err.message.includes('401') ? 'API key invalid' 
+                   : err.message.includes('rate_limit') ? 'Rate limited'
+                   : err.message
 
     res.status(500).json({
       error: 'ARK error',
-      details: err.message
+      details: errorMsg
     })
   }
 })
