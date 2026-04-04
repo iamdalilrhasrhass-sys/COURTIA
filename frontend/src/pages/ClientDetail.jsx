@@ -313,7 +313,18 @@ Réponds en français, concis et professionnel.`;
             <div style={{marginBottom:'10px'}}><strong>Email:</strong> {client.email || 'N/A'}</div>
             <div style={{marginBottom:'10px'}}><strong>Téléphone:</strong> {client.phone || 'N/A'}</div>
             <div style={{marginBottom:'10px'}}><strong>Statut:</strong> {client.status || 'Prospect'}</div>
-            <div><strong>Societe:</strong> {client.company_name || 'N/A'}</div>
+            <div style={{marginBottom:'10px'}}><strong>Societe:</strong> {client.company_name || 'N/A'}</div>
+            <hr style={{margin:'10px 0',borderColor:'#f0f0f0'}} />
+            <div style={{marginBottom:'8px'}}><strong>Score de risque:</strong> <span style={{fontSize:'16px',fontWeight:700,color:client.risk_score > 70?'#dc2626':client.risk_score > 40?'#f59e0b':'#10b981'}}>{client.risk_score || 50}</span>/100</div>
+            {client.nb_sinistres_3ans || client.annees_permis || client.bonus_malus ? (
+              <div style={{fontSize:'11px',color:'#666',marginTop:'8px',padding:'8px',background:'#fafafa',borderRadius:'4px'}}>
+                <strong>Formule:</strong> 50 + ({client.nb_sinistres_3ans || 0}×15) - ({client.annees_permis || 0}×2) × {client.bonus_malus || 1.0}
+              </div>
+            ) : null}
+            <div style={{marginBottom:'8px',marginTop:'10px'}}>
+              <div style={{fontSize:'11px',color:'#666'}}>Profil:</div>
+              <div style={{fontSize:'13px'}}>{client.profession || 'Non spécifié'} • {client.zone_geographique === 'periurbain' ? 'Périurbain' : client.zone_geographique === 'rural' ? 'Rural' : 'Urbain'} • {client.situation_familiale === 'marie' ? 'Marié' : client.situation_familiale === 'autres' ? 'Autres' : 'Célibataire'}</div>
+            </div>
           </div>
 
           <h3 style={{fontSize:'18px',fontWeight:700,color:'#0a0a0a',marginBottom:'12px'}}>Contrats</h3>

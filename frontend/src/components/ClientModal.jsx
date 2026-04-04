@@ -304,6 +304,25 @@ export default function ClientModal({ client, onClose }) {
             </div>
           </div>
 
+          {/* Assurance Fields */}
+          <h3 style={{fontSize:'14px',fontWeight:700,marginTop:'16px',color:'#fff'}}>Données assurance</h3>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <input type="number" placeholder="Années permis" value={formData.annees_permis || 0} onChange={(e) => setFormData({...formData, annees_permis: parseInt(e.target.value) || 0})} style={{padding:'8px 12px',border:'0.5px solid #666',borderRadius:'6px',background:'#1a1a1a',color:'#fff',fontSize:'13px'}} />
+            <input type="number" placeholder="Sinistres 3ans" value={formData.nb_sinistres_3ans || 0} onChange={(e) => setFormData({...formData, nb_sinistres_3ans: parseInt(e.target.value) || 0})} style={{padding:'8px 12px',border:'0.5px solid #666',borderRadius:'6px',background:'#1a1a1a',color:'#fff',fontSize:'13px'}} />
+            <input type="number" step="0.01" placeholder="Bonus-malus (ex: 1.2)" value={formData.bonus_malus || 1.0} onChange={(e) => setFormData({...formData, bonus_malus: parseFloat(e.target.value) || 1.0})} style={{padding:'8px 12px',border:'0.5px solid #666',borderRadius:'6px',background:'#1a1a1a',color:'#fff',fontSize:'13px'}} />
+            <input type="text" placeholder="Profession" value={formData.profession || ''} onChange={(e) => setFormData({...formData, profession: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #666',borderRadius:'6px',background:'#1a1a1a',color:'#fff',fontSize:'13px'}} />
+            <select value={formData.zone_geographique || 'urbain'} onChange={(e) => setFormData({...formData, zone_geographique: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #666',borderRadius:'6px',background:'#1a1a1a',color:'#fff',fontSize:'13px'}}>
+              <option value="urbain">Urbain</option>
+              <option value="periurbain">Périurbain</option>
+              <option value="rural">Rural</option>
+            </select>
+            <select value={formData.situation_familiale || 'celibataire'} onChange={(e) => setFormData({...formData, situation_familiale: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #666',borderRadius:'6px',background:'#1a1a1a',color:'#fff',fontSize:'13px'}}>
+              <option value="celibataire">Célibataire</option>
+              <option value="marie">Marié</option>
+              <option value="autres">Autres</option>
+            </select>
+          </div>
+
           <div className="flex gap-2 mt-6">
             <button
               type="submit"

@@ -15,13 +15,19 @@ async function initializeDatabase() {
     if (tableCheck.rows[0].exists) {
       console.log('✅ Database already initialized');
       
-      // Migrate: Add courtier_id to clients if missing
+      // Migrate: Add courtier_id + assurance fields to clients
       try {
         await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS courtier_id INTEGER DEFAULT 1');
-        console.log('✓ courtier_id column added/verified');
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS bonus_malus DECIMAL(3,2) DEFAULT 1.00');
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS annees_permis INTEGER DEFAULT 0');
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS nb_sinistres_3ans INTEGER DEFAULT 0');
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS zone_geographique VARCHAR(20) DEFAULT \'urbain\'');
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS profession VARCHAR(100)');
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS situation_familiale VARCHAR(20) DEFAULT \'celibataire\'');
+        console.log('✓ Assurance metadata columns added/verified');
       } catch (e) {
         if (!e.message.includes('already exists')) {
-          console.log('⚠️ courtier_id migration note:', e.message.substring(0, 50));
+          console.log('⚠️ Migration note:', e.message.substring(0, 50));
         }
       }
       return true;
