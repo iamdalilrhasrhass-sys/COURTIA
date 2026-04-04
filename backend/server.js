@@ -234,82 +234,90 @@ app.get('/api/status', async (req, res) => {
 // Dashboard stats
 app.get('/api/dashboard/stats', verifyToken, async (req, res) => {
   try {
-    const courtier_id = req.user.id;
+    // Total clients et taux conversion
+    const clientsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(CASE WHEN status = 'actif' THEN 1 END) as actifs
+      FROM clients
+    `);
 
-    // Total clients
-    const clients = await pool.query(
-      'SELECT COUNT(*) as total, COUNT(CASE WHEN status = $2 THEN 1 END) as actifs FROM clients WHERE courtier_id = $1',
-      [courtier_id, 'actif']
-    );
-    const totalClients = parseInt(clients.rows[0].total);
-    const activeClientsCount = parseInt(clients.rows[0].actifs);
+    const total = parseInt(clientsResult.rows[0].total);
+    const actifs = parseInt(clientsResult.rows[0].actifs);
+    const tauxConversion = total > 0 ? Math.round((actifs / total) * 100 * 10) / 10 : 0;
 
-    // Contrats actifs, commissions, prime totale, contrats urgents
-    const contrats = await pool.query(
-      'SELECT COUNT(*) as actifs, COALESCE(ROUND(SUM(prime_annuelle * 0.15 / 12), 2), 0) as commissions, COALESCE(SUM(prime_annuelle), 0) as prime_totale FROM contracts WHERE courtier_id = $1 AND statut = $2',
-      [courtier_id, 'actif']
-    );
-    const activeContracts = parseInt(contrats.rows[0].actifs);
-    const monthlyCommissions = parseFloat(contrats.rows[0].commissions);
-    const portfolioPremium = parseFloat(contrats.rows[0].prime_totale || 0);
+    // Contrats actifs et commissions
+    const contratsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as actifs,
+        COALESCE(ROUND(SUM((quote_data->>'prime_annuelle')::decimal * 0.15 / 12), 2), 0) as commissions,
+        COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as prime_totale
+      FROM quotes 
+      WHERE status = 'actif'
+    `);
 
-    // Contrats expirant dans 30 jours
-    const urgents = await pool.query(
-      `SELECT COUNT(*) as count FROM contracts WHERE courtier_id = $1 AND statut = 'actif'
-       AND date_echeance BETWEEN NOW() AND NOW() + INTERVAL '30 days'`,
-      [courtier_id]
-    );
-    const urgentContracts = parseInt(urgents.rows[0].count || 0);
+    const contratsActifs = parseInt(contratsResult.rows[0].actifs);
+    const commissionsMois = parseFloat(contratsResult.rows[0].commissions);
+    const primeTotale = parseFloat(contratsResult.rows[0].prime_totale || 0);
 
-    // Taux conversion
-    const tauxConversion = totalClients > 0 ? Math.round((activeClientsCount / totalClients) * 100 * 10) / 10 : 0;
+    // Contrats urgents (< 30 jours)
+    const urgentsResult = await pool.query(`
+      SELECT COUNT(*) as count FROM quotes
+      WHERE (quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
+      AND status = 'actif'
+    `);
+    const contratsUrgents = parseInt(urgentsResult.rows[0].count);
 
     // Revenus 6 derniers mois
-    const revenus = await pool.query(
-      `SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as mois,
-       COALESCE(SUM(prime_annuelle), 0) as revenue
-       FROM contracts WHERE courtier_id = $1 AND created_at >= NOW() - INTERVAL '6 months'
-       GROUP BY DATE_TRUNC('month', created_at)
-       ORDER BY DATE_TRUNC('month', created_at) ASC`,
-      [courtier_id]
-    );
+    const revenusResult = await pool.query(`
+      SELECT 
+        TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as mois,
+        COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as revenue
+      FROM quotes
+      WHERE created_at >= NOW() - INTERVAL '6 months'
+      AND status = 'actif'
+      GROUP BY DATE_TRUNC('month', created_at)
+      ORDER BY DATE_TRUNC('month', created_at) ASC
+    `);
 
-    // Alertes échéances — seulement contrats actifs dans 90j
-    const alertes = await pool.query(
-      `SELECT c.first_name, c.last_name, ct.type_contrat, ct.date_echeance,
-       EXTRACT(DAY FROM ct.date_echeance - NOW())::int as jours_restants
-       FROM contracts ct JOIN clients c ON ct.client_id = c.id
-       WHERE ct.courtier_id = $1 AND ct.statut = 'actif' AND ct.date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days'
-       ORDER BY ct.date_echeance ASC LIMIT 5`,
-      [courtier_id]
-    );
+    // Alertes échéances réelles (< 90 jours)
+    const alertesResult = await pool.query(`
+      SELECT 
+        c.first_name as nom, c.last_name as prenom,
+        q.quote_data->>'type_contrat' as type_contrat,
+        q.quote_data->>'date_echeance' as date_echeance,
+        EXTRACT(DAY FROM (q.quote_data->>'date_echeance')::date - NOW())::int as jours_restants
+      FROM quotes q
+      JOIN clients c ON q.client_id = c.id
+      WHERE (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '90 days'
+      AND q.status = 'actif'
+      ORDER BY (q.quote_data->>'date_echeance')::date ASC
+      LIMIT 5
+    `);
 
     // Clients récents
-    const recents = await pool.query(
-      'SELECT id, first_name, last_name, email, status, risk_score FROM clients WHERE courtier_id = $1 AND first_name IS NOT NULL AND last_name IS NOT NULL ORDER BY created_at DESC LIMIT 5',
-      [courtier_id]
-    );
-    const recentClients = recents.rows;
+    const recentsResult = await pool.query(`
+      SELECT id, first_name as nom, last_name as prenom,
+        email, status as statut, risk_score as score_risque
+      FROM clients
+      ORDER BY created_at DESC
+      LIMIT 5
+    `);
+
     res.json({
-      totalClients,
-      activeContracts,
-      monthlyCommissions,
-      portfolioPremium,
-      urgentContracts,
+      totalClients: total,
+      contratsActifs,
+      commissionsMois,
+      primeTotale,
+      contratsUrgents,
       tauxConversion,
-      revenus6Mois: revenus.rows,
-      alertes: alertes.rows,
-      clientsRecents: recentClients
+      revenus6Mois: revenusResult.rows,
+      alertes: alertesResult.rows,
+      clientsRecents: recentsResult.rows
     });
   } catch (err) {
-    console.error('❌ Stats error:', err);
-    console.error('   Message:', err.message);
-    console.error('   Code:', err.code);
-    res.status(500).json({
-      error: 'Failed to fetch stats',
-      details: err.message,
-      code: err.code
-    });
+    console.error('❌ Stats error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch stats', details: err.message });
   }
 });
 
