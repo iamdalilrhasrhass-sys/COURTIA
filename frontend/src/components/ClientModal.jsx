@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 
@@ -103,6 +104,20 @@ export default function ClientModal({ client, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    // Validation frontend
+    if (!formData.firstName.trim()) {
+      toast.error('Le prénom est obligatoire')
+      return
+    }
+    if (!formData.lastName.trim()) {
+      toast.error('Le nom est obligatoire')
+      return
+    }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('Email invalide')
+      return
+    }
+    
     const payload = {
       first_name: formData.firstName,
       last_name: formData.lastName,
@@ -116,12 +131,18 @@ export default function ClientModal({ client, onClose }) {
       civility: 'M.'
     }
 
-    if (client?.id) {
-      await updateClient(client.id, payload, token)
-    } else {
-      await addClient(payload, token)
+    try {
+      if (client?.id) {
+        await updateClient(client.id, payload, token)
+        toast.success('Client mis à jour ✓')
+      } else {
+        await addClient(payload, token)
+        toast.success('Client ajouté ✓')
+      }
+      onClose()
+    } catch (err) {
+      toast.error(err.message || 'Erreur lors de la sauvegarde')
     }
-    onClose()
   }
 
   useEffect(() => {
