@@ -18,6 +18,23 @@ function ScrollToTop() {
   return null
 }
 
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem('token')
+  if (!token) return <Navigate to="/login" replace />
+  // Vérifier expiration du token
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token')
+      return <Navigate to="/login" replace />
+    }
+  } catch {
+    localStorage.removeItem('token')
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
+
 export default function App() {
   const token = useAuthStore((state) => state.token)
 
@@ -42,23 +59,23 @@ export default function App() {
         {/* Protected Routes */}
         <Route 
           path="/dashboard" 
-          element={token ? <Dashboard /> : <Navigate to="/login" />} 
+          element={<PrivateRoute><Dashboard /></PrivateRoute>} 
         />
         <Route 
           path="/client/:id" 
-          element={token ? <ClientDetail /> : <Navigate to="/login" />} 
+          element={<PrivateRoute><ClientDetail /></PrivateRoute>} 
         />
         <Route 
           path="/contrats" 
-          element={token ? <Contrats /> : <Navigate to="/login" />} 
+          element={<PrivateRoute><Contrats /></PrivateRoute>} 
         />
         <Route 
           path="/taches" 
-          element={token ? <Taches /> : <Navigate to="/login" />} 
+          element={<PrivateRoute><Taches /></PrivateRoute>} 
         />
         <Route 
           path="/parametres" 
-          element={token ? <Parametres /> : <Navigate to="/login" />} 
+          element={<PrivateRoute><Parametres /></PrivateRoute>} 
         />
         
         {/* Fallback - redirect unknown routes to landing */}
