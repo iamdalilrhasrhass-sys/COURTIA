@@ -157,7 +157,15 @@ export default function Contrats() {
     : contrats.filter(c => c.statut === filterStatus)
 
   if (loading) {
-    return <div style={{padding:'32px'}}>Chargement...</div>
+    return <div style={{padding:'32px',textAlign:'center',color:'#999'}}>⏳ Chargement des contrats...</div>
+  }
+
+  if (error) {
+    return <div style={{padding:'32px'}}>
+      <div style={{padding:'16px',background:'#fee2e2',border:'0.5px solid #fca5a5',borderRadius:'8px',color:'#dc2626',fontSize:'13px'}}>
+        ❌ {error}
+      </div>
+    </div>
   }
 
   return (
