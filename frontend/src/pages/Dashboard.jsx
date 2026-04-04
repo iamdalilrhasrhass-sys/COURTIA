@@ -10,7 +10,9 @@ import ClientDetail from '../pages/ClientDetail'
 import Pipeline from '../components/Pipeline'
 import Calendar from '../components/Calendar'
 import Reports from '../components/Reports'
-import Settings from '../components/Settings'
+import Contrats from '../components/Contrats'
+import Taches from '../components/Taches'
+import Parametres from '../components/Parametres'
 
 export default function DashboardPage() {
   const token = useAuthStore((state) => state.token)
@@ -28,10 +30,12 @@ export default function DashboardPage() {
       <div style={{marginLeft:isMobile?0:'280px',width:isMobile?'100%':'calc(100% - 280px)',minHeight:'100vh',background:'#fff',paddingTop:isMobile?'64px':0}}>
         {activeTab === 'dashboard' && <DashboardComponent />}
         {activeTab === 'clients' && <ClientsList />}
+        {activeTab === 'contrats' && <Contrats />}
+        {activeTab === 'taches' && <Taches />}
         {activeTab === 'pipeline' && <Pipeline />}
         {activeTab === 'calendar' && <Calendar />}
         {activeTab === 'reports' && <Reports />}
-        {activeTab === 'settings' && <Settings />}
+        {activeTab === 'parametres' && <Parametres />}
       </div>
 
       <style>{`

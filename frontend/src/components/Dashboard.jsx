@@ -117,12 +117,14 @@ export default function Dashboard() {
         <div className="glass p-6 rounded-lg">
           <h3 className="text-lg font-bold text-cyan mb-4">Clients récents</h3>
           <div className="space-y-2">
-            {(dashboardStats.recentClients && dashboardStats.recentClients.length > 0 ? dashboardStats.recentClients : clients.slice(0, 3)).map((client, idx) => (
+            {(dashboardStats.recentClients && dashboardStats.recentClients.length > 0 ? dashboardStats.recentClients : clients.slice(0, 3)).map((client, idx) => {
+              const displayName = [client.first_name, client.last_name].filter(Boolean).join(' ').trim() || client.email || 'Client sans nom';
+              return (
               <div key={idx} className="flex justify-between items-center p-2 bg-dark-3 rounded">
-                <span>{`${client.first_name || client.name || 'Client'} ${client.last_name || ''}`}</span>
+                <span>{displayName}</span>
                 <span className="text-xs text-slate-500">{client.status === 'actif' ? 'Actif' : client.status}</span>
               </div>
-            ))}
+            );})}
           </div>
         </div>
         <div className="glass p-6 rounded-lg">
