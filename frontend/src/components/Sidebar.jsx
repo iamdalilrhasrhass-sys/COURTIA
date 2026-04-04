@@ -3,11 +3,14 @@ import { useState } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { useClientStore } from '../stores/clientStore'
 import { useResponsive } from '../hooks/useResponsive'
+import ArkDrawer from './ArkDrawer'
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const logout = useAuthStore((state) => state.logout)
+  const token = useAuthStore((state) => state.token)
   const { isMobile } = useResponsive()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [arkDrawerOpen, setArkDrawerOpen] = useState(false)
   
   const tabs = [
     { id: 'dashboard', label: 'Tableau de bord', icon: Home },
@@ -78,10 +81,11 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 
       {/* ARK Button at bottom with pulsing green dot */}
       <div style={{paddingTop:'24px',borderTop:'0.5px solid rgba(255,255,255,0.08)',display:'flex',flexDirection:'column',gap:'12px'}}>
-        <button style={{display:'flex',alignItems:'center',gap:'10px',padding:'12px 14px',borderRadius:'8px',border:'0.5px solid rgba(37,99,235,0.2)',background:'rgba(37,99,235,0.08)',color:'#60a5fa',fontFamily:'Arial',fontSize:'12px',fontWeight:700,cursor:'pointer',letterSpacing:'1px',transition:'all 0.2s'}}>
+        <button onClick={() => setArkDrawerOpen(true)} style={{display:'flex',alignItems:'center',gap:'10px',padding:'12px 14px',borderRadius:'8px',border:'0.5px solid rgba(37,99,235,0.2)',background:'rgba(37,99,235,0.08)',color:'#60a5fa',fontFamily:'Arial',fontSize:'12px',fontWeight:700,cursor:'pointer',letterSpacing:'1px',transition:'all 0.2s'}}>
           <div style={{width:'6px',height:'6px',borderRadius:'50%',background:'#22c55e',animation:'pulse 2s ease infinite'}}></div>
           ARK
         </button>
+        <ArkDrawer isOpen={arkDrawerOpen} onClose={() => setArkDrawerOpen(false)} token={token} />
         <button onClick={logout} style={{display:'flex',alignItems:'center',gap:'12px',padding:'12px 14px',borderRadius:'8px',border:'none',cursor:'pointer',background:'transparent',color:'rgba(255,255,255,0.35)',fontFamily:'Arial',fontSize:'13px',transition:'all 0.2s'}}>
           <LogOut size={18} />
           <span>Déconnexion</span>
