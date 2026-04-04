@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAuthStore } from './stores/authStore'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
@@ -8,11 +9,20 @@ import Taches from './pages/Taches'
 import Parametres from './pages/Parametres'
 import Auth from './components/AuthPremium'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 export default function App() {
   const token = useAuthStore((state) => state.token)
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
