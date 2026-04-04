@@ -124,16 +124,16 @@ export default function Clients() {
             <tbody>
               {filteredClients.map((client) => (
                 <tr key={client.id} className="border-t border-slate-700 hover:bg-slate-700/30">
-                  <td className="px-6 py-4 text-white">{client.first_name} {client.last_name}</td>
+                  <td className="px-6 py-4 text-white">{client.nom} {client.prenom}</td>
                   <td className="px-6 py-4 text-slate-400">{client.email}</td>
-                  <td className="px-6 py-4 text-slate-400">{client.phone || '-'}</td>
+                  <td className="px-6 py-4 text-slate-400">{client.telephone || '-'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      client.status === 'actif' ? 'bg-green-500/20 text-green-300' :
-                      client.status === 'prospect' ? 'bg-blue-500/20 text-blue-300' :
+                      client.statut === 'actif' ? 'bg-green-500/20 text-green-300' :
+                      client.statut === 'prospect' ? 'bg-blue-500/20 text-blue-300' :
                       'bg-red-500/20 text-red-300'
                     }`}>
-                      {client.status}
+                      {client.statut}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -141,14 +141,14 @@ export default function Clients() {
                       <div className="w-12 h-2 bg-slate-700 rounded-full overflow-hidden">
                         <div 
                           className={`h-full ${
-                            client.risk_score < 30 ? 'bg-green-500' :
-                            client.risk_score < 60 ? 'bg-yellow-500' :
+                            client.score_risque < 30 ? 'bg-green-500' :
+                            client.score_risque < 60 ? 'bg-yellow-500' :
                             'bg-red-500'
                           }`}
-                          style={{ width: `${client.risk_score}%` }}
+                          style={{ width: `${client.score_risque}%` }}
                         />
                       </div>
-                      <span className="text-sm">{client.risk_score}</span>
+                      <span className="text-sm">{client.score_risque}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 flex gap-2">
