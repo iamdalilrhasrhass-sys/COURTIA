@@ -16,9 +16,49 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
+// ==================== CHAT ENDPOINT (Frontend) ====================
+
+router.post('/chat', requireAuth, async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+    const userId = req.user.id;
+    const { message, clientData, conversationHistory } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
+    // Utiliser le manager d'IA
+    const result = await aiCostManager.callAiWithQuotaManagement(
+      pool,
+      userId,
+      message,
+      'courtier_assistant',
+      null
+    );
+    
+    if (!result.success) {
+      return res.status(result.statusCode || 400).json({
+        error: result.error,
+        reason: result.reason || null
+      });
+    }
+    
+    res.json({
+      reply: result.response,
+      model: result.model,
+      cost: parseFloat(result.cost.toFixed(4))
+    });
+    
+  } catch (err) {
+    console.error('[ARK CHAT ERROR]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==================== ASK QUESTION WITH QUOTA MANAGEMENT ====================
 
-router.post('/api/ark/ask', requireAuth, async (req, res) => {
+router.post('/ask', requireAuth, async (req, res) => {
   try {
     const pool = req.app.get('pool');
     const userId = req.user.id;
@@ -62,7 +102,7 @@ router.post('/api/ark/ask', requireAuth, async (req, res) => {
 
 // ==================== PERSONAL USAGE ====================
 
-router.get('/api/ark/my-usage', requireAuth, async (req, res) => {
+router.get('/my-usage', requireAuth, async (req, res) => {
   try {
     const pool = req.app.get('pool');
     const userId = req.user.id;
@@ -142,7 +182,7 @@ router.get('/api/ark/my-usage', requireAuth, async (req, res) => {
 
 // ==================== UPGRADE TIER ====================
 
-router.post('/api/ark/upgrade-tier', requireAuth, async (req, res) => {
+router.post('/upgrade-tier', requireAuth, async (req, res) => {
   try {
     const pool = req.app.get('pool');
     const userId = req.user.id;
