@@ -14,6 +14,16 @@ async function initializeDatabase() {
     
     if (tableCheck.rows[0].exists) {
       console.log('✅ Database already initialized');
+      
+      // Migrate: Add courtier_id to clients if missing
+      try {
+        await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS courtier_id INTEGER DEFAULT 1');
+        console.log('✓ courtier_id column added/verified');
+      } catch (e) {
+        if (!e.message.includes('already exists')) {
+          console.log('⚠️ courtier_id migration note:', e.message.substring(0, 50));
+        }
+      }
       return true;
     }
     
