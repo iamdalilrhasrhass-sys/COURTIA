@@ -2,13 +2,27 @@ const express = require('express');
 const router = express.Router();
 const { calculateRiskScore } = require('../utils/riskCalculator');
 
-// Middleware pour vérifier le token (sera passé en paramètre depuis server.js)
-// Les routes utilisent le middleware verifyToken du serveur principal
+// Middleware pour vérifier le token
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No authorization header' });
+  }
+  
+  const jwt = require('jsonwebtoken');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token', details: err.message });
+  }
+};
 
 /**
  * GET /api/clients — Lister tous les clients avec pagination
  */
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const limit = parseInt(req.query.limit) || 20;
@@ -50,7 +64,7 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/clients/:id — Récupérer un client par ID
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const result = await pool.query(
@@ -80,7 +94,7 @@ router.get('/:id', async (req, res) => {
 /**
  * POST /api/clients — Créer un client
  */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -124,7 +138,7 @@ router.post('/', async (req, res) => {
 /**
  * PUT /api/clients/:id — Modifier un client
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -174,7 +188,7 @@ router.put('/:id', async (req, res) => {
 /**
  * DELETE /api/clients/:id — Supprimer un client
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     await pool.query('DELETE FROM clients WHERE id = $1', [req.params.id]);

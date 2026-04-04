@@ -1,10 +1,27 @@
 const express = require('express');
 const router = express.Router();
 
+// Middleware pour vérifier le token
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No authorization header' });
+  }
+  
+  const jwt = require('jsonwebtoken');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token', details: err.message });
+  }
+};
+
 /**
  * GET /api/contrats — Lister les contrats (quotes table)
  */
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const clientId = req.query.client_id;
@@ -55,7 +72,7 @@ router.get('/', async (req, res) => {
 /**
  * POST /api/contrats — Créer un contrat (quote)
  */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -88,7 +105,7 @@ router.post('/', async (req, res) => {
 /**
  * PUT /api/contrats/:id — Modifier un contrat
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -124,7 +141,7 @@ router.put('/:id', async (req, res) => {
 /**
  * DELETE /api/contrats/:id — Supprimer un contrat
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     await pool.query('DELETE FROM quotes WHERE id = $1', [req.params.id]);
