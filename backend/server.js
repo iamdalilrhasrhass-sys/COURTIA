@@ -111,6 +111,30 @@ let dbReady = false;
   console.log('✅ Database ready');
 })();
 
+// ==================== VALIDATION ====================
+
+function validateClient(data) {
+  const errors = []
+  if (!data.first_name?.trim()) errors.push('Le prénom est obligatoire')
+  if (!data.last_name?.trim()) errors.push('Le nom est obligatoire')
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.push('Email invalide')
+  if (data.telephone) data.telephone = data.telephone.replace(/\s/g, '')
+  if (data.risk_score !== undefined && (data.risk_score < 0 || data.risk_score > 100)) errors.push('Score risque doit être entre 0 et 100')
+  const statutsValides = ['prospect', 'actif', 'perdu']
+  if (data.status && !statutsValides.includes(data.status)) errors.push('Statut invalide')
+  return errors
+}
+
+function validateContract(data) {
+  const errors = []
+  if (!data.client_id) errors.push('Client obligatoire')
+  if (!data.prime_annuelle || parseFloat(data.prime_annuelle) <= 0) errors.push('Prime annuelle doit être positive')
+  if (data.date_echeance && data.date_effet && new Date(data.date_echeance) <= new Date(data.date_effet)) errors.push('Date échéance doit être après date effet')
+  const statutsValides = ['actif', 'en_attente', 'résilié', 'expiré']
+  if (data.statut && !statutsValides.includes(data.statut)) errors.push('Statut invalide')
+  return errors
+}
+
 // ==================== ROUTES ====================
 
 // Debug: Inspect clients table columns
@@ -389,6 +413,12 @@ app.get('/api/clients', verifyToken, async (req, res) => {
 // Create client
 app.post('/api/clients', verifyToken, async (req, res) => {
   try {
+    // Validation
+    const errors = validateClient(req.body)
+    if (errors.length > 0) {
+      return res.status(400).json({ errors })
+    }
+
     // Vérifier email en doublon
     if (req.body.email) {
       const doublon = await pool.query(
