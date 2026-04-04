@@ -12,10 +12,10 @@ export default function Sidebar({ activeTab, setActiveTab }) {
   const tabs = [
     { id: 'dashboard', label: 'Tableau de bord', icon: Home },
     { id: 'clients', label: 'Clients', icon: Users },
-    { id: 'pipeline', label: 'Pipeline prospects', icon: Briefcase },
-    { id: 'calendar', label: 'Calendrier', icon: Calendar },
+    { id: 'contrats', label: 'Contrats', icon: Briefcase },
+    { id: 'taches', label: 'Tâches', icon: Calendar },
     { id: 'reports', label: 'Rapports', icon: BarChart3 },
-    { id: 'settings', label: 'Paramètres', icon: Settings }
+    { id: 'parametres', label: 'Paramètres', icon: Settings }
   ]
 
   if (isMobile) {

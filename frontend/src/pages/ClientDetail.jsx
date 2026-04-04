@@ -178,6 +178,7 @@ Réponds en français, concis et professionnel.`;
   }
 
   const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+  const displayTitle = clientName || client.email || `Client #${String(client.id).slice(0, 8)}`;
 
   return (
     <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff',minHeight:'100vh'}}>
@@ -189,7 +190,7 @@ Réponds en français, concis et professionnel.`;
       <div style={{display:'grid',gridTemplateColumns:'1fr 400px',gap:'40px'}}>
         {/* Client Info */}
         <div>
-          <h1 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a',marginBottom:'20px'}}>{clientName || 'Client'}</h1>
+          <h1 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a',marginBottom:'20px'}}>{displayTitle}</h1>
           <div style={{background:'#fff',padding:'20px',border:'0.5px solid #f0f0f0',borderRadius:'10px',marginBottom:'20px'}}>
             <div style={{marginBottom:'10px'}}><strong>Email:</strong> {client.email || 'N/A'}</div>
             <div style={{marginBottom:'10px'}}><strong>Téléphone:</strong> {client.phone || 'N/A'}</div>

@@ -22,10 +22,11 @@ export default function ClientsList() {
     }
   }, [token, fetchClients])
 
-  const filteredClients = clients.filter((c) =>
-    c.name?.toLowerCase().includes(search.toLowerCase()) ||
+  const filteredClients = clients.filter((c) => {
+    const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim().toLowerCase();
+    return fullName.includes(search.toLowerCase()) ||
     c.email?.toLowerCase().includes(search.toLowerCase())
-  )
+  })
 
   const handleDelete = (id) => {
     if (window.confirm('Confirmer la suppression ?')) {
@@ -78,7 +79,7 @@ export default function ClientsList() {
           <tbody>
             {filteredClients.map((client, idx) => (
               <tr key={client.id} style={{borderTop:'0.5px solid #f0f0f0',height:'48px',background:idx%2===0?'#fff':'#fafafa'}}>
-                <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:500}}>{client.name}</td>
+                <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:500}}>{`${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Client sans nom'}</td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.email}</td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.phone || 'N/A'}</td>
                 <td style={{padding:'12px 16px',fontSize:'12px',fontWeight:600}}>
