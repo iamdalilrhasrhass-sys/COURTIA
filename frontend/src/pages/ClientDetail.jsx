@@ -14,6 +14,7 @@ export default function ClientDetail() {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [contrats, setContrats] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
@@ -51,6 +52,24 @@ export default function ClientDetail() {
     };
 
     loadClient();
+  }, [id, token]);
+
+  // Load contrats du client
+  useEffect(() => {
+    if (!id || !token) return;
+    const fetchContrats = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/contracts?client_id=${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setContrats(Array.isArray(data) ? data : data.contracts || []);
+      } catch (err) {
+        console.error('Erreur chargement contrats:', err);
+        setContrats([]);
+      }
+    };
+    fetchContrats();
   }, [id, token]);
 
   useEffect(() => {
@@ -197,6 +216,42 @@ Réponds en français, concis et professionnel.`;
             <div style={{marginBottom:'10px'}}><strong>Statut:</strong> {client.status || 'Prospect'}</div>
             <div><strong>Societe:</strong> {client.company_name || 'N/A'}</div>
           </div>
+
+          <h3 style={{fontSize:'18px',fontWeight:700,color:'#0a0a0a',marginBottom:'12px'}}>Contrats</h3>
+          {contrats.length === 0 ? (
+            <div style={{background:'#f9fafb',padding:'20px',borderRadius:'8px',textAlign:'center',color:'#999'}}>
+              <p style={{fontSize:'13px'}}>Aucun contrat associé</p>
+            </div>
+          ) : (
+            <div style={{background:'#fff',border:'0.5px solid #f0f0f0',borderRadius:'8px',overflow:'hidden'}}>
+              <table style={{width:'100%',borderCollapse:'collapse'}}>
+                <thead>
+                  <tr style={{background:'#f9fafb',borderBottom:'0.5px solid #f0f0f0'}}>
+                    <th style={{padding:'12px',textAlign:'left',fontSize:'12px',fontWeight:600,color:'#666'}}>Type</th>
+                    <th style={{padding:'12px',textAlign:'left',fontSize:'12px',fontWeight:600,color:'#666'}}>Compagnie</th>
+                    <th style={{padding:'12px',textAlign:'left',fontSize:'12px',fontWeight:600,color:'#666'}}>Prime</th>
+                    <th style={{padding:'12px',textAlign:'left',fontSize:'12px',fontWeight:600,color:'#666'}}>Échéance</th>
+                    <th style={{padding:'12px',textAlign:'left',fontSize:'12px',fontWeight:600,color:'#666'}}>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contrats.map((contrat, idx) => (
+                    <tr key={contrat.id} style={{borderTop:'0.5px solid #f0f0f0',background:idx%2===0?'#fff':'#fafafa'}}>
+                      <td style={{padding:'12px',fontSize:'13px'}}>{contrat.type_contrat}</td>
+                      <td style={{padding:'12px',fontSize:'13px'}}>{contrat.compagnie}</td>
+                      <td style={{padding:'12px',fontSize:'13px',fontWeight:600}}>{contrat.prime_annuelle}€</td>
+                      <td style={{padding:'12px',fontSize:'13px'}}>{contrat.date_echeance ? new Date(contrat.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}</td>
+                      <td style={{padding:'12px'}}>
+                        <span style={{padding:'3px 8px',borderRadius:'4px',background:contrat.statut==='actif'?'#d1fae5':'#fee2e2',color:contrat.statut==='actif'?'#065f46':'#dc2626',fontSize:'11px',fontWeight:600}}>
+                          {contrat.statut}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* ARK Widget - Dark #080808 */}
