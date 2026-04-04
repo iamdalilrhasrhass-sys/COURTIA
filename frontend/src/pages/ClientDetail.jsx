@@ -76,6 +76,25 @@ export default function ClientDetail() {
     fetchContrats();
   }, [id, token]);
 
+  // Load conversation history from localStorage
+  useEffect(() => {
+    if (id) {
+      const saved = localStorage.getItem(`ark-history-${id}`);
+      if (saved) {
+        try {
+          setMessages(JSON.parse(saved));
+        } catch (e) {}
+      }
+    }
+  }, [id]);
+
+  // Save conversation to localStorage
+  useEffect(() => {
+    if (id && messages.length > 0) {
+      localStorage.setItem(`ark-history-${id}`, JSON.stringify(messages));
+    }
+  }, [messages, id]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
