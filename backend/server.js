@@ -378,6 +378,17 @@ app.get('/api/clients', verifyToken, async (req, res) => {
 // Create client
 app.post('/api/clients', verifyToken, async (req, res) => {
   try {
+    // Vérifier email en doublon
+    if (req.body.email) {
+      const doublon = await pool.query(
+        'SELECT id FROM clients WHERE email = $1 AND courtier_id = $2',
+        [req.body.email, req.user.id]
+      );
+      if (doublon.rows.length > 0) {
+        return res.status(409).json({ error: 'Un client avec cet email existe déjà.' });
+      }
+    }
+
     const Client = require('./src/models/Client');
     const client = await Client.create(req.body);
 
