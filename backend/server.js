@@ -54,6 +54,41 @@ app.use((req, res, next) => {
   next();
 });
 
+// ==================== MIDDLEWARE: VERIFY TOKEN ====================
+
+const verifyToken = (req, res, next) => {
+  try {
+    // Handle OPTIONS requests (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      console.warn('⚠️  No authorization header in', req.method, req.path);
+      return res.status(401).json({ error: 'No authorization header' });
+    }
+
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      return res.status(401).json({ error: 'Invalid authorization header format' });
+    }
+
+    const token = parts[1];
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'crm-assurance-secret-key-2026'
+    );
+
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error('❌ Token verification error:', err.message);
+    res.status(401).json({ error: 'Invalid token', details: err.message });
+  }
+};
+
 // ==================== DATABASE ====================
 const pool = require('./src/db');
 const { initializeDatabase } = require('./src/seed');
@@ -367,39 +402,6 @@ app.post('/api/auth/login', async (req, res) => {
 // ==================== CLIENT ROUTES ====================
 
 // Auth middleware
-const verifyToken = (req, res, next) => {
-  try {
-    // Handle OPTIONS requests (CORS preflight)
-    if (req.method === 'OPTIONS') {
-      return next();
-    }
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      console.warn('⚠️  No authorization header in', req.method, req.path);
-      return res.status(401).json({ error: 'No authorization header' });
-    }
-
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      return res.status(401).json({ error: 'Invalid authorization header format' });
-    }
-
-    const token = parts[1];
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'crm-assurance-secret-key-2026'
-    );
-
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error('❌ Token verification error:', err.message);
-    res.status(401).json({ error: 'Invalid token', details: err.message });
-  }
-};
-
 // List clients
 app.get('/api/clients', verifyToken, async (req, res) => {
   try {
