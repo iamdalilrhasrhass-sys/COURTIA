@@ -1,0 +1,5 @@
+export const STATUTS_CLIENT = ['prospect', 'actif', 'perdu']
+export const STATUTS_CONTRAT = ['actif', 'en_attente', 'résilié', 'expiré']
+export const STATUTS_TACHE = ['a_faire', 'en_cours', 'terminee']
+export const TYPES_CONTRAT = ['Auto', 'Habitation', 'RC Pro', 'Mutuelle', 'Prévoyance', 'Décennale', 'Autre']
+export const PRIORITES_TACHE = ['haute', 'normale', 'basse']
