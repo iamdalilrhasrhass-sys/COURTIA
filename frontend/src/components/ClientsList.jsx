@@ -20,6 +20,7 @@ export default function ClientsList() {
   const [selectedForEdit, setSelectedForEdit] = useState(null)
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [filterStatus, setFilterStatus] = useState('tous')
 
   useEffect(() => {
     if (token) {
@@ -31,8 +32,9 @@ export default function ClientsList() {
 
   const filteredClients = clients.filter((c) => {
     const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim().toLowerCase();
-    return fullName.includes(search.toLowerCase()) ||
-    c.email?.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = fullName.includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search);
+    const matchStatus = filterStatus === 'tous' || c.status === filterStatus;
+    return matchSearch && matchStatus;
   })
 
   const handleDelete = (id) => {
@@ -81,6 +83,15 @@ export default function ClientsList() {
       <div style={{marginBottom:'24px',position:'relative'}}>
         <Search style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)',color:'#999',width:'18px',height:'18px'}} />
         <input type="text" placeholder="Rechercher par nom ou email..." value={search} onChange={(e) => setSearch(e.target.value)} style={{width:'100%',padding:'10px 12px 10px 40px',border:'0.5px solid #f0f0f0',borderRadius:'8px',fontSize:'13px',fontFamily:'Arial',background:'#fff',color:'#0a0a0a'}} />
+      </div>
+
+      {/* Filtres */}
+      <div style={{display:'flex',gap:'8px',marginBottom:'24px'}}>
+        {['tous', 'prospect', 'actif', 'perdu'].map(status => (
+          <button key={status} onClick={() => setFilterStatus(status)} style={{padding:'8px 16px',background:filterStatus===status?'#0a0a0a':'#f0f0f0',color:filterStatus===status?'#fff':'#0a0a0a',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Clients Table */}
