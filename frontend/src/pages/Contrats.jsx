@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../stores/authStore'
+import { formatDate, formatEuros } from '../utils/format'
 
 const API_URL = 'https://courtia.onrender.com'
 
@@ -325,11 +326,11 @@ export default function Contrats() {
                   <td style={{padding:'12px 16px',fontSize:'13px',fontWeight:500}}>{client ? `${client.first_name} ${client.last_name}` : 'N/A'}</td>
                   <td style={{padding:'12px 16px',fontSize:'13px'}}>{contrat.type_contrat}</td>
                   <td style={{padding:'12px 16px',fontSize:'13px'}}>{contrat.compagnie}</td>
-                  <td style={{padding:'12px 16px',fontSize:'13px',fontWeight:600}}>{contrat.prime_annuelle}€</td>
+                  <td style={{padding:'12px 16px',fontSize:'13px',fontWeight:600}}>{formatEuros(contrat.prime_annuelle)}</td>
                   <td style={{padding:'12px 16px',fontSize:'13px'}}>
                     {contrat.date_echeance && (
                       <div>
-                        {new Date(contrat.date_echeance).toLocaleDateString('fr-FR')}
+                        {formatDate(contrat.date_echeance)}
                         {Math.ceil((new Date(contrat.date_echeance) - new Date()) / (1000 * 60 * 60 * 24)) < 30 && (
                           <AlertCircle size={14} style={{display:'inline',marginLeft:'6px',color:'#f59e0b'}} />
                         )}
