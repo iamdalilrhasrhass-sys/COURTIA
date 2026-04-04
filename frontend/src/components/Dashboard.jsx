@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { TrendingUp, Users, Briefcase, DollarSign } from 'lucide-react'
+import { TrendingUp, Users, Briefcase, DollarSign, AlertCircle } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
@@ -64,9 +64,21 @@ export default function Dashboard() {
     },
     {
       label: 'Taux conversion',
-      value: `${dashboardStats.conversionRate || 0}%`,
+      value: `${dashboardStats.tauxConversion || 0}%`,
       icon: TrendingUp,
       color: 'from-orange-500 to-red-500'
+    },
+    {
+      label: 'Prime portefeuille/an',
+      value: `${(dashboardStats.portfolioPremium || 0).toLocaleString('fr-FR')}€`,
+      icon: DollarSign,
+      color: 'from-indigo-500 to-blue-500'
+    },
+    {
+      label: 'Contrats urgents (< 30j)',
+      value: dashboardStats.urgentContracts || '0',
+      icon: AlertCircle,
+      color: dashboardStats.urgentContracts > 0 ? 'from-red-500 to-pink-500' : 'from-green-500 to-emerald-500'
     }
   ]
 

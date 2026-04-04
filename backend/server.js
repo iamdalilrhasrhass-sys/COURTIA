@@ -209,13 +209,22 @@ app.get('/api/dashboard/stats', verifyToken, async (req, res) => {
     const totalClients = parseInt(clients.rows[0].total);
     const activeClientsCount = parseInt(clients.rows[0].actifs);
 
-    // Contrats actifs et commissions
+    // Contrats actifs, commissions, prime totale, contrats urgents
     const contrats = await pool.query(
-      'SELECT COUNT(*) as actifs, COALESCE(ROUND(SUM(prime_annuelle * 0.15 / 12), 2), 0) as commissions FROM contracts WHERE courtier_id = $1 AND statut = $2',
+      'SELECT COUNT(*) as actifs, COALESCE(ROUND(SUM(prime_annuelle * 0.15 / 12), 2), 0) as commissions, COALESCE(SUM(prime_annuelle), 0) as prime_totale FROM contracts WHERE courtier_id = $1 AND statut = $2',
       [courtier_id, 'actif']
     );
     const activeContracts = parseInt(contrats.rows[0].actifs);
     const monthlyCommissions = parseFloat(contrats.rows[0].commissions);
+    const portfolioPremium = parseFloat(contrats.rows[0].prime_totale || 0);
+
+    // Contrats expirant dans 30 jours
+    const urgents = await pool.query(
+      `SELECT COUNT(*) as count FROM contracts WHERE courtier_id = $1 AND statut = 'actif'
+       AND date_echeance BETWEEN NOW() AND NOW() + INTERVAL '30 days'`,
+      [courtier_id]
+    );
+    const urgentContracts = parseInt(urgents.rows[0].count || 0);
 
     // Taux conversion
     const tauxConversion = totalClients > 0 ? Math.round((activeClientsCount / totalClients) * 100 * 10) / 10 : 0;
@@ -250,6 +259,8 @@ app.get('/api/dashboard/stats', verifyToken, async (req, res) => {
       totalClients,
       activeContracts,
       monthlyCommissions,
+      portfolioPremium,
+      urgentContracts,
       tauxConversion,
       revenus6Mois: revenus.rows,
       alertes: alertes.rows,
