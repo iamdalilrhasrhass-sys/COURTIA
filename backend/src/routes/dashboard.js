@@ -1,10 +1,27 @@
 const express = require('express');
 const router = express.Router();
 
+// Middleware pour vérifier le token
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No authorization header' });
+  }
+  
+  const jwt = require('jsonwebtoken');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token', details: err.message });
+  }
+};
+
 /**
  * GET /api/dashboard/stats — Statistiques dashboard
  */
-router.get('/stats', async (req, res) => {
+router.get('/stats', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
 

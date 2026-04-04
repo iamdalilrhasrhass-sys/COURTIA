@@ -1,10 +1,27 @@
 const express = require('express');
 const router = express.Router();
 
+// Middleware pour vérifier le token
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No authorization header' });
+  }
+  
+  const jwt = require('jsonwebtoken');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token', details: err.message });
+  }
+};
+
 /**
  * GET /api/taches — Lister les tâches (appointments)
  */
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const result = await pool.query(`
@@ -33,7 +50,7 @@ router.get('/', async (req, res) => {
 /**
  * POST /api/taches — Créer une tâche
  */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -57,7 +74,7 @@ router.post('/', async (req, res) => {
 /**
  * PUT /api/taches/:id — Modifier une tâche
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const { titre, description, statut, echeance } = req.body;
@@ -83,7 +100,7 @@ router.put('/:id', async (req, res) => {
 /**
  * DELETE /api/taches/:id — Supprimer une tâche
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     await pool.query('DELETE FROM appointments WHERE id = $1', [req.params.id]);
