@@ -32,4 +32,5 @@ app.use((err, req, res, next) => {
 })
 
 const PORT = process.env.PORT || 10000
+console.log('⚡ COURTIA Backend — ARK Enabled with claude-3-haiku-20250305')
 app.listen(PORT, () => console.log('COURTIA backend port ' + PORT))
