@@ -1,367 +1,267 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import toast from 'react-hot-toast'
-import { useAuthStore } from '../stores/authStore'
-import { formatDate, formatEuros } from '../utils/format'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+
+function getToken() { return localStorage.getItem('token') }
+
+function formatDate(dateStr) {
+ if (!dateStr) return '—'
+ return new Date(dateStr).toLocaleDateString('fr-FR')
+}
+
+function formatEuros(montant) {
+ if (!montant) return '—'
+ return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant)
+}
+
+function joursRestants(dateStr) {
+ if (!dateStr) return null
+ return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24))
+}
 
 export default function Contrats() {
-  const token = useAuthStore((state) => state.token)
-  const [contrats, setContrats] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [showModal, setShowModal] = useState(false)
-  const [selectedForEdit, setSelectedForEdit] = useState(null)
-  const [filterStatus, setFilterStatus] = useState('tous')
-  const [clients, setClients] = useState([])
-  const [formData, setFormData] = useState({
-    client_id: '',
-    type_contrat: 'auto',
-    compagnie: '',
-    numero: '',
-    prime_annuelle: '',
-    date_effet: '',
-    date_echeance: '',
-    statut: 'actif'
-  })
+ const navigate = useNavigate()
+ const [contrats, setContrats] = useState([])
+ const [clients, setClients] = useState([])
+ const [loading, setLoading] = useState(true)
+ const [filtreStatut, setFiltreStatut] = useState('Tous')
+ const [showModal, setShowModal] = useState(false)
+ const [editContrat, setEditContrat] = useState(null)
+ const [showConfirm, setShowConfirm] = useState(null)
+ const [form, setForm] = useState({
+ client_id: '', type_contrat: 'Auto', compagnie: '', numero: '',
+ prime_annuelle: '', date_effet: '', date_echeance: '', statut: 'actif'
+ })
 
-  // Load contrats and clients
-  useEffect(() => {
-    if (token) {
-      fetchContrats()
-      fetchClients()
-    }
-  }, [token])
+ const headers = { Authorization: `Bearer ${getToken()}` }
 
-  const fetchContrats = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/contracts`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await res.json()
-      setContrats(Array.isArray(data) ? data : data.contracts || [])
-      setError(null)
-    } catch (err) {
-      console.error('Error fetching contrats:', err)
-      setError('Erreur lors du chargement des contrats')
-    } finally {
-      setLoading(false)
-    }
-  }
+ const TYPES = ['Auto', 'Habitation', 'RC Pro', 'Mutuelle', 'Prévoyance', 'Décennale', 'Autre']
+ const STATUTS = ['Tous', 'actif', 'résilié', 'en_attente']
+ const COMPAGNIES = ['AXA', 'Allianz', 'Generali', 'MAIF', 'MMA', 'Groupama', 'Covéa', 'April', 'Malakoff Humanis']
 
-  const fetchClients = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/clients`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await res.json()
-      setClients(Array.isArray(data) ? data : data.clients || [])
-    } catch (err) {
-      console.error('Error fetching clients:', err)
-    }
-  }
+ useEffect(() => {
+ loadContrats()
+ loadClients()
+ }, [])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      const method = selectedForEdit ? 'PUT' : 'POST'
-      const endpoint = selectedForEdit ? `/api/contracts/${selectedForEdit.id}` : '/api/contracts'
-      
-      const res = await fetch(`${API_URL}${endpoint}`, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          client_id: parseInt(formData.client_id),
-          type_contrat: formData.type_contrat,
-          compagnie: formData.compagnie,
-          numero: formData.numero,
-          prime_annuelle: parseFloat(formData.prime_annuelle),
-          date_effet: formData.date_effet,
-          date_echeance: formData.date_echeance,
-          statut: formData.statut
-        })
-      })
+ async function loadContrats() {
+ try {
+ setLoading(true)
+ const res = await axios.get(`${API_URL}/api/contrats`, { headers })
+ setContrats(Array.isArray(res.data) ? res.data : [])
+ } catch (err) {
+ toast.error('Erreur chargement contrats')
+ } finally {
+ setLoading(false)
+ }
+ }
 
-      if (res.ok) {
-        fetchContrats()
-        setShowModal(false)
-        setSelectedForEdit(null)
-        setFormData({
-          client_id: '',
-          type_contrat: 'auto',
-          compagnie: '',
-          numero: '',
-          prime_annuelle: '',
-          date_effet: '',
-          date_echeance: '',
-          statut: 'actif'
-        })
-        toast.success(selectedForEdit ? 'Contrat modifié ✓' : 'Contrat ajouté ✓')
-      } else {
-        const errData = await res.json()
-        toast.error(errData.error || 'Erreur lors de la sauvegarde')
-      }
-    } catch (err) {
-      console.error('Error saving contrat:', err)
-      toast.error('Erreur lors de la sauvegarde')
-    }
-  }
+ async function loadClients() {
+ try {
+ const res = await axios.get(`${API_URL}/api/clients?limit=100`, { headers })
+ setClients(res.data.data || res.data || [])
+ } catch (err) {
+ console.error('Erreur chargement clients:', err)
+ }
+ }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Supprimer ce contrat ? Cette action est irréversible.')) return
-    try {
-      const res = await fetch(`${API_URL}/api/contracts/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (res.ok) {
-        fetchContrats()
-        toast.success('Contrat supprimé ✓')
-      } else {
-        toast.error('Erreur lors de la suppression')
-      }
-    } catch (err) {
-      console.error('Error deleting contrat:', err)
-      toast.error('Erreur lors de la suppression')
-    }
-  }
+ async function saveContrat() {
+ try {
+ if (editContrat) {
+ await axios.put(`${API_URL}/api/contrats/${editContrat.id}`, form, { headers })
+ toast.success('Contrat modifié ✓')
+ } else {
+ await axios.post(`${API_URL}/api/contrats`, form, { headers })
+ toast.success('Contrat ajouté ✓')
+ }
+ setShowModal(false)
+ setEditContrat(null)
+ setForm({ client_id: '', type_contrat: 'Auto', compagnie: '', numero: '', prime_annuelle: '', date_effet: '', date_echeance: '', statut: 'actif' })
+ loadContrats()
+ } catch (err) {
+ toast.error('Erreur lors de la sauvegarde')
+ }
+ }
 
-  const handleEdit = (contrat) => {
-    setSelectedForEdit(contrat)
-    setFormData({
-      client_id: contrat.client_id,
-      type_contrat: contrat.type_contrat,
-      compagnie: contrat.compagnie,
-      numero: contrat.numero,
-      prime_annuelle: contrat.prime_annuelle,
-      date_effet: contrat.date_effet,
-      date_echeance: contrat.date_echeance,
-      statut: contrat.statut
-    })
-    setShowModal(true)
-  }
+ async function deleteContrat(id) {
+ try {
+ await axios.delete(`${API_URL}/api/contrats/${id}`, { headers })
+ toast.success('Contrat supprimé ✓')
+ setShowConfirm(null)
+ loadContrats()
+ } catch (err) {
+ toast.error('Erreur suppression')
+ }
+ }
 
-  const getStatusBadge = (status, dateEcheance) => {
-    const days = dateEcheance ? Math.ceil((new Date(dateEcheance) - new Date()) / (1000 * 60 * 60 * 24)) : null
-    
-    if (status === 'actif') {
-      if (days && days < 30 && days > 0) {
-        return { bg: '#fef3c7', color: '#d97706', label: '⚠ Bientôt', icon: '⚠️' }
-      }
-      return { bg: '#d1fae5', color: '#065f46', label: 'Actif', icon: '✓' }
-    }
-    if (status === 'résilié') {
-      return { bg: '#fee2e2', color: '#dc2626', label: 'Résilié', icon: '✗' }
-    }
-    if (days && days <= 0) {
-      return { bg: '#fee2e2', color: '#dc2626', label: 'Expiré', icon: '⚠️' }
-    }
-    return { bg: '#f3f4f6', color: '#6b7280', label: 'En attente', icon: '-' }
-  }
+ function openEdit(contrat) {
+ setEditContrat(contrat)
+ setForm({
+ client_id: contrat.client_id || '',
+ type_contrat: contrat.type_contrat || 'Auto',
+ compagnie: contrat.compagnie || '',
+ numero: contrat.numero || '',
+ prime_annuelle: contrat.prime_annuelle || '',
+ date_effet: contrat.date_effet ? contrat.date_effet.split('T')[0] : '',
+ date_echeance: contrat.date_echeance ? contrat.date_echeance.split('T')[0] : '',
+ statut: contrat.statut || 'actif'
+ })
+ setShowModal(true)
+ }
 
-  const filteredContrats = filterStatus === 'tous' 
-    ? contrats 
-    : contrats.filter(c => c.statut === filterStatus)
+ const contratsFiltres = filtreStatut === 'Tous' ? contrats : contrats.filter(c => c.statut === filtreStatut)
 
-  if (loading) {
-    return <div style={{padding:'32px',textAlign:'center',color:'#999'}}>⏳ Chargement des contrats...</div>
-  }
+ if (loading) return (
+ <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+ <div style={{ width: 40, height: 40, border: '3px solid #e5e7eb', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+ </div>
+ )
 
-  if (error) {
-    return <div style={{padding:'32px'}}>
-      <div style={{padding:'16px',background:'#fee2e2',border:'0.5px solid #fca5a5',borderRadius:'8px',color:'#dc2626',fontSize:'13px'}}>
-        ❌ {error}
-      </div>
-    </div>
-  }
+ return (
+ <div style={{ padding: 32 }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+ <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Contrats</h1>
+ <button onClick={() => { setEditContrat(null); setShowModal(true) }} style={{ padding: '10px 20px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>+ Ajouter contrat</button>
+ </div>
 
-  return (
-    <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
-      {showModal && (
-        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'#fff',padding:'32px',borderRadius:'12px',width:'90%',maxWidth:'500px'}}>
-            <h2 style={{fontSize:'20px',fontWeight:700,marginBottom:'20px'}}>{selectedForEdit ? 'Modifier' : 'Ajouter'} contrat</h2>
-            <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:'16px'}}>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Client *</label>
-                <select 
-                  value={formData.client_id} 
-                  onChange={(e) => setFormData({...formData, client_id: e.target.value})}
-                  required
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                >
-                  <option value=''>-- Sélectionner --</option>
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>{`${c.first_name} ${c.last_name}`}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Type contrat *</label>
-                <select 
-                  value={formData.type_contrat} 
-                  onChange={(e) => setFormData({...formData, type_contrat: e.target.value})}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                >
-                  <option value='auto'>Automobile</option>
-                  <option value='habitation'>Habitation</option>
-                  <option value='sante'>Santé</option>
-                  <option value='prevoyance'>Prévoyance</option>
-                  <option value='pro'>Professionnel</option>
-                </select>
-              </div>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Compagnie *</label>
-                <input 
-                  value={formData.compagnie} 
-                  onChange={(e) => setFormData({...formData, compagnie: e.target.value})}
-                  required
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                />
-              </div>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Numéro contrat</label>
-                <input 
-                  value={formData.numero} 
-                  onChange={(e) => setFormData({...formData, numero: e.target.value})}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                />
-              </div>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Prime annuelle (€)</label>
-                <input 
-                  type='number' 
-                  step='0.01'
-                  value={formData.prime_annuelle} 
-                  onChange={(e) => setFormData({...formData, prime_annuelle: e.target.value})}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                />
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
-                <div>
-                  <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Date effet</label>
-                  <input 
-                    type='date'
-                    value={formData.date_effet} 
-                    onChange={(e) => setFormData({...formData, date_effet: e.target.value})}
-                    style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                  />
-                </div>
-                <div>
-                  <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Date échéance</label>
-                  <input 
-                    type='date'
-                    value={formData.date_echeance} 
-                    onChange={(e) => setFormData({...formData, date_echeance: e.target.value})}
-                    style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                  />
-                </div>
-              </div>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Statut</label>
-                <select 
-                  value={formData.statut} 
-                  onChange={(e) => setFormData({...formData, statut: e.target.value})}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                >
-                  <option value='actif'>Actif</option>
-                  <option value='résilié'>Résilié</option>
-                  <option value='en attente'>En attente</option>
-                </select>
-              </div>
-              <div style={{display:'flex',gap:'12px',marginTop:'20px'}}>
-                <button type='submit' style={{flex:1,padding:'10px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontWeight:600,cursor:'pointer'}}>
-                  {selectedForEdit ? 'Modifier' : 'Créer'}
-                </button>
-                <button type='button' onClick={() => {setShowModal(false);setSelectedForEdit(null)}} style={{flex:1,padding:'10px',background:'#f0f0f0',color:'#0a0a0a',border:'none',borderRadius:'6px',fontWeight:600,cursor:'pointer'}}>
-                  Annuler
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+ {/* Filtres */}
+ <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+ {STATUTS.map(s => (
+ <button key={s} onClick={() => setFiltreStatut(s)} style={{ padding: '8px 16px', background: filtreStatut === s ? '#0a0a0a' : 'white', color: filtreStatut === s ? 'white' : '#374151', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', fontWeight: filtreStatut === s ? 600 : 400 }}>{s === 'Tous' ? 'Tous' : s.charAt(0).toUpperCase() + s.slice(1)}</button>
+ ))}
+ </div>
 
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'32px'}}>
-        <h2 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a'}}>Contrats</h2>
-        <button onClick={() => {setSelectedForEdit(null);setShowModal(true)}} style={{display:'flex',alignItems:'center',gap:'8px',padding:'10px 20px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Arial'}}>
-          <Plus size={18} />
-          Ajouter contrat
-        </button>
-      </div>
+ {/* Table */}
+ {contratsFiltres.length === 0 ? (
+ <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
+ <p style={{ fontSize: 18, marginBottom: 8 }}>Aucun contrat trouvé</p>
+ <p style={{ fontSize: 14 }}>Commencez par ajouter le premier contrat d'un client pour suivre les échéances et commissions.</p>
+ </div>
+ ) : (
+ <div style={{ overflowX: 'auto' }}>
+ <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+ <thead>
+ <tr style={{ background: '#0a0a0a', color: 'white' }}>
+ {['Client', 'Type', 'Compagnie', 'Prime/an', 'Échéance', 'Statut', 'Actions'].map(h => (
+ <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{h}</th>
+ ))}
+ </tr>
+ </thead>
+ <tbody>
+ {contratsFiltres.map((contrat, i) => {
+ const jours = joursRestants(contrat.date_echeance)
+ const isUrgent = jours !== null && jours <= 30 && jours >= 0
+ const isExpire = jours !== null && jours < 0
+ return (
+ <tr key={contrat.id} style={{ borderBottom: '1px solid #f3f4f6', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+ <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 500 }}>
+ <button onClick={() => navigate('/client/' + contrat.client_id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', fontWeight: 600, padding: 0, fontSize: 14 }}>
+ {contrat.client_nom} {contrat.client_prenom}
+ </button>
+ </td>
+ <td style={{ padding: '12px 16px', fontSize: 14 }}>{contrat.type_contrat}</td>
+ <td style={{ padding: '12px 16px', fontSize: 14, color: '#6b7280' }}>{contrat.compagnie}</td>
+ <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 600 }}>{formatEuros(contrat.prime_annuelle)}</td>
+ <td style={{ padding: '12px 16px', fontSize: 14 }}>
+ <div>
+ <span>{formatDate(contrat.date_echeance)}</span>
+ {isUrgent && <span style={{ display: 'block', fontSize: 11, color: '#ea580c', fontWeight: 600 }}>⚠️ {jours}j restants</span>}
+ {isExpire && <span style={{ display: 'block', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>🔴 Expiré</span>}
+ </div>
+ </td>
+ <td style={{ padding: '12px 16px' }}>
+ <span style={{ padding: '4px 10px', background: contrat.statut === 'actif' ? '#dcfce7' : contrat.statut === 'résilié' ? '#fee2e2' : '#fef9c3', color: contrat.statut === 'actif' ? '#16a34a' : contrat.statut === 'résilié' ? '#dc2626' : '#ca8a04', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>
+ {contrat.statut}
+ </span>
+ </td>
+ <td style={{ padding: '12px 16px' }}>
+ <div style={{ display: 'flex', gap: 8 }}>
+ <button onClick={() => openEdit(contrat)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✏️</button>
+ <button onClick={() => setShowConfirm(contrat.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>🗑️</button>
+ </div>
+ </td>
+ </tr>
+ )
+ })}
+ </tbody>
+ </table>
+ </div>
+ )}
 
-      {/* Filters */}
-      <div style={{display:'flex',gap:'8px',marginBottom:'24px'}}>
-        {['tous', 'actif', 'résilié', 'en attente'].map(status => (
-          <button key={status} onClick={() => setFilterStatus(status)} style={{padding:'8px 16px',background:filterStatus===status?'#0a0a0a':'#f0f0f0',color:filterStatus===status?'#fff':'#0a0a0a',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
-        ))}
-      </div>
+ {/* Modal Ajout/Modification */}
+ {showModal && (
+ <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+ <div style={{ background: 'white', borderRadius: 12, padding: 32, width: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+ <h2 style={{ margin: '0 0 24px' }}>{editContrat ? 'Modifier le contrat' : 'Nouveau contrat'}</h2>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Client *</label>
+ <select value={form.client_id} onChange={e => setForm(p => ({ ...p, client_id: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14 }}>
+ <option value="">Sélectionner un client</option>
+ {clients.map(c => <option key={c.id} value={c.id}>{c.nom} {c.prenom}</option>)}
+ </select>
+ </div>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Type *</label>
+ <select value={form.type_contrat} onChange={e => setForm(p => ({ ...p, type_contrat: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14 }}>
+ {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+ </select>
+ </div>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Compagnie</label>
+ <select value={form.compagnie} onChange={e => setForm(p => ({ ...p, compagnie: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14 }}>
+ <option value="">Sélectionner</option>
+ {COMPAGNIES.map(c => <option key={c} value={c}>{c}</option>)}
+ </select>
+ </div>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Numéro</label>
+ <input value={form.numero} onChange={e => setForm(p => ({ ...p, numero: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+ </div>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Prime annuelle (€)</label>
+ <input type="number" value={form.prime_annuelle} onChange={e => setForm(p => ({ ...p, prime_annuelle: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+ </div>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Date d'effet</label>
+ <input type="date" value={form.date_effet} onChange={e => setForm(p => ({ ...p, date_effet: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+ </div>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Date d'échéance *</label>
+ <input type="date" value={form.date_echeance} onChange={e => setForm(p => ({ ...p, date_echeance: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+ </div>
+ </div>
+ <div>
+ <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Statut</label>
+ <select value={form.statut} onChange={e => setForm(p => ({ ...p, statut: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14 }}>
+ {['actif', 'en_attente', 'résilié', 'expiré'].map(s => <option key={s} value={s}>{s}</option>)}
+ </select>
+ </div>
+ </div>
+ <div style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'flex-end' }}>
+ <button onClick={() => { setShowModal(false); setEditContrat(null) }} style={{ padding: '10px 20px', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer' }}>Annuler</button>
+ <button onClick={saveContrat} style={{ padding: '10px 20px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Sauvegarder</button>
+ </div>
+ </div>
+ </div>
+ )}
 
-      {/* Table */}
-      <div style={{border:'0.5px solid #f0f0f0',borderRadius:'10px',overflow:'hidden'}}>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
-          <thead>
-            <tr style={{background:'#0a0a0a',height:'44px'}}>
-              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff'}}>Client</th>
-              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff'}}>Type</th>
-              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff'}}>Compagnie</th>
-              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff'}}>Prime</th>
-              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff'}}>Échéance</th>
-              <th style={{padding:'12px 16px',textAlign:'left',fontSize:'12px',fontWeight:700,color:'#fff'}}>Statut</th>
-              <th style={{padding:'12px 16px',textAlign:'center',fontSize:'12px',fontWeight:700,color:'#fff'}}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredContrats.map((contrat, idx) => {
-              const client = clients.find(c => c.id === contrat.client_id)
-              const badge = getStatusBadge(contrat.statut, contrat.date_echeance)
-              return (
-                <tr key={contrat.id} style={{borderTop:'0.5px solid #f0f0f0',height:'48px',background:idx%2===0?'#fff':'#fafafa'}}>
-                  <td style={{padding:'12px 16px',fontSize:'13px',fontWeight:500}}>{client ? `${client.first_name} ${client.last_name}` : 'N/A'}</td>
-                  <td style={{padding:'12px 16px',fontSize:'13px'}}>{contrat.type_contrat}</td>
-                  <td style={{padding:'12px 16px',fontSize:'13px'}}>{contrat.compagnie}</td>
-                  <td style={{padding:'12px 16px',fontSize:'13px',fontWeight:600}}>{formatEuros(contrat.prime_annuelle)}</td>
-                  <td style={{padding:'12px 16px',fontSize:'13px'}}>
-                    {contrat.date_echeance && (
-                      <div>
-                        {formatDate(contrat.date_echeance)}
-                        {Math.ceil((new Date(contrat.date_echeance) - new Date()) / (1000 * 60 * 60 * 24)) < 30 && (
-                          <AlertCircle size={14} style={{display:'inline',marginLeft:'6px',color:'#f59e0b'}} />
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td style={{padding:'12px 16px'}}>
-                    <span style={{padding:'4px 10px',borderRadius:'6px',background:badge.bg,color:badge.color,fontSize:'12px',fontWeight:600}}>
-                      {badge.label}
-                    </span>
-                  </td>
-                  <td style={{padding:'12px 16px',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
-                    <button onClick={() => handleEdit(contrat)} style={{background:'none',border:'none',cursor:'pointer',color:'#666',padding:'4px'}}>
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(contrat.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:'4px'}}>
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {filteredContrats.length === 0 && (
-        <div style={{textAlign:'center',padding:'48px 24px',color:'#999'}}>
-          <p style={{fontSize:'14px'}}>Aucun contrat trouvé</p>
-        </div>
-      )}
-    </div>
-  )
+ {/* Modal Confirmation suppression */}
+ {showConfirm && (
+ <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+ <div style={{ background: 'white', borderRadius: 12, padding: 32, maxWidth: 400, textAlign: 'center' }}>
+ <p style={{ fontSize: 16, marginBottom: 24 }}>Supprimer ce contrat ? Cette action est irréversible.</p>
+ <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+ <button onClick={() => setShowConfirm(null)} style={{ padding: '10px 20px', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer' }}>Annuler</button>
+ <button onClick={() => deleteContrat(showConfirm)} style={{ padding: '10px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Supprimer</button>
+ </div>
+ </div>
+ </div>
+ )}
+ </div>
+ )
 }
