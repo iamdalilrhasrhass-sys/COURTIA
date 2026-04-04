@@ -20,6 +20,8 @@ export default function ClientDetail() {
   const [thinking, setThinking] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
+  const [noteMode, setNoteMode] = useState(false);
+  const [noteText, setNoteText] = useState('');
   const messagesEndRef = useRef(null);
 
   // Load client from API using URL param
@@ -98,6 +100,34 @@ export default function ClientDetail() {
       }
     } catch (err) {
       console.error('Erreur sauvegarde:', err);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!noteText.trim() || !id || !token || !client) return;
+    try {
+      const timestamp = new Date().toLocaleDateString('fr-FR');
+      const newNote = `[${timestamp}] : ${noteText}\n`;
+      const updatedNotes = newNote + (client.notes || '');
+      
+      const res = await fetch(`${API_URL}/api/clients/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({...client, notes: updatedNotes})
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setClient(updated);
+        setNoteMode(false);
+        setNoteText('');
+        const toast = require('react-hot-toast').default;
+        toast.success('Note ajoutée ✓');
+      }
+    } catch (err) {
+      console.error('Erreur ajout note:', err);
     }
   };
 
@@ -302,6 +332,29 @@ Réponds en français, concis et professionnel.`;
               </table>
             </div>
           )}
+
+          <div style={{marginTop:'32px'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+              <h3 style={{fontSize:'18px',fontWeight:700,color:'#0a0a0a'}}>Notes</h3>
+              <button onClick={() => setNoteMode(!noteMode)} style={{padding:'6px 12px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>+ Note</button>
+            </div>
+            {noteMode && (
+              <div style={{marginBottom:'16px',padding:'12px',background:'#f9fafb',borderRadius:'8px'}}>
+                <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder='Votre note...' style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',fontFamily:'Arial',fontSize:'13px',minHeight:'80px'}} />
+                <div style={{display:'flex',gap:'8px',marginTop:'8px'}}>
+                  <button onClick={handleAddNote} style={{flex:1,padding:'8px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>Enregistrer</button>
+                  <button onClick={() => {setNoteMode(false);setNoteText('');}} style={{flex:1,padding:'8px',background:'#f0f0f0',color:'#0a0a0a',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>Annuler</button>
+                </div>
+              </div>
+            )}
+            {client.notes ? (
+              <div style={{background:'#f9fafb',padding:'12px',borderRadius:'8px',whiteSpace:'pre-wrap',fontSize:'12px',color:'#666'}}>
+                {client.notes}
+              </div>
+            ) : (
+              <div style={{background:'#f9fafb',padding:'12px',borderRadius:'8px',color:'#999',fontSize:'12px'}}>Aucune note</div>
+            )}
+          </div>
         </div>
 
         {/* ARK Widget - Dark #080808 */}
