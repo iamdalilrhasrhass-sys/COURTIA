@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './stores/authStore'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
@@ -23,6 +24,7 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
+      <Toaster position="bottom-right" />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
