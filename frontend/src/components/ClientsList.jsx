@@ -21,6 +21,8 @@ export default function ClientsList() {
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [filterStatus, setFilterStatus] = useState('tous')
+  const [page, setPage] = useState(1)
+  const ITEMS_PER_PAGE = 20
 
   useEffect(() => {
     if (token) {
@@ -36,6 +38,9 @@ export default function ClientsList() {
     const matchStatus = filterStatus === 'tous' || c.status === filterStatus;
     return matchSearch && matchStatus;
   })
+
+  const paginatedClients = filteredClients.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE)
 
   const handleDelete = (id) => {
     setConfirmDelete(id)
@@ -108,7 +113,7 @@ export default function ClientsList() {
             </tr>
           </thead>
           <tbody>
-            {filteredClients.map((client, idx) => (
+            {paginatedClients.map((client, idx) => (
               <tr key={client.id} style={{borderTop:'0.5px solid #f0f0f0',height:'48px',background:idx%2===0?'#fff':'#fafafa'}}>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:500}}>{formatNomClient(client)}</td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.email}</td>
@@ -146,6 +151,14 @@ export default function ClientsList() {
       {filteredClients.length === 0 && search && (
         <div style={{textAlign:'center',padding:'48px 24px',color:'#999'}}>
           <p style={{fontSize:'14px'}}>Aucun client trouvé pour "{search}"</p>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:'8px',marginTop:'24px'}}>
+          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} style={{padding:'8px 12px',background:page===1?'#f0f0f0':'#0a0a0a',color:page===1?'#999':'#fff',border:'none',borderRadius:'6px',fontSize:'12px',cursor:page===1?'default':'pointer'}}>Précédent</button>
+          <span style={{fontSize:'13px',color:'#666'}}>Page {page} / {totalPages}</span>
+          <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} style={{padding:'8px 12px',background:page===totalPages?'#f0f0f0':'#0a0a0a',color:page===totalPages?'#999':'#fff',border:'none',borderRadius:'6px',fontSize:'12px',cursor:page===totalPages?'default':'pointer'}}>Suivant</button>
         </div>
       )}
     </div>
