@@ -229,19 +229,19 @@ app.get('/api/dashboard/stats', verifyToken, async (req, res) => {
       [courtier_id]
     );
 
-    // Alertes échéances
+    // Alertes échéances — seulement contrats actifs dans 90j
     const alertes = await pool.query(
       `SELECT c.first_name, c.last_name, ct.type_contrat, ct.date_echeance,
        EXTRACT(DAY FROM ct.date_echeance - NOW())::int as jours_restants
        FROM contracts ct JOIN clients c ON ct.client_id = c.id
-       WHERE ct.courtier_id = $1 AND ct.date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days'
+       WHERE ct.courtier_id = $1 AND ct.statut = 'actif' AND ct.date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days'
        ORDER BY ct.date_echeance ASC LIMIT 5`,
       [courtier_id]
     );
 
     // Clients récents
     const recents = await pool.query(
-      'SELECT id, first_name, last_name, email, status, risk_score FROM clients WHERE courtier_id = $1 ORDER BY created_at DESC LIMIT 5',
+      'SELECT id, first_name, last_name, email, status, risk_score FROM clients WHERE courtier_id = $1 AND first_name IS NOT NULL AND last_name IS NOT NULL ORDER BY created_at DESC LIMIT 5',
       [courtier_id]
     );
     const recentClients = recents.rows;

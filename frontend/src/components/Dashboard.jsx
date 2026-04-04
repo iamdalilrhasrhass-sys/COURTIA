@@ -118,7 +118,7 @@ export default function Dashboard() {
         <div className="glass p-6 rounded-lg">
           <h3 className="text-lg font-bold text-cyan mb-4">Clients récents</h3>
           <div className="space-y-2">
-            {(dashboardStats.recentClients && dashboardStats.recentClients.length > 0 ? dashboardStats.recentClients : clients.slice(0, 3)).map((client, idx) => (
+            {dashboardStats.clientsRecents && dashboardStats.clientsRecents.length > 0 ? dashboardStats.clientsRecents.map((client, idx) => (
               <div key={idx} onClick={() => window.location.href = `/client/${client.id}`} className="flex justify-between items-center p-2 bg-dark-3 rounded cursor-pointer hover:bg-dark-4 transition-colors">
                 <div style={{display:'flex',flexDirection:'column',gap:'2px'}}>
                   <span style={{fontSize:'13px',fontWeight:500,color:'#fff'}}>{formatNomClient(client)}</span>
@@ -126,17 +126,21 @@ export default function Dashboard() {
                 </div>
                 <span style={{fontSize:'11px',fontWeight:600,padding:'2px 8px',borderRadius:'4px',background:client.status==='actif'?'#d1fae5':'#fee2e2',color:client.status==='actif'?'#065f46':'#dc2626'}}>{client.status === 'actif' ? 'Actif' : client.status}</span>
               </div>
-            ))}
+            )) : (
+              <div style={{fontSize:'12px',color:'#666',padding:'8px'}}>Aucun client.</div>
+            )}
           </div>
         </div>
         <div className="glass p-6 rounded-lg">
           <h3 className="text-lg font-bold text-cyan mb-4">Alertes importantes</h3>
           <div className="space-y-2">
-            {['⚠️ M. Dupont - Renouvellement auto dans 3 mois', '⚠️ Contrat Martin expire demain'].map((alert, idx) => (
+            {dashboardStats.alertes && dashboardStats.alertes.length > 0 ? dashboardStats.alertes.map((alerte, idx) => (
               <div key={idx} className="p-2 bg-red-500/10 border border-red-500/30 rounded text-sm">
-                {alert}
+                ⚠️ {alerte.first_name} {alerte.last_name} - {alerte.type_contrat} expire dans {alerte.jours_restants}j
               </div>
-            ))}
+            )) : (
+              <div className="text-xs text-slate-500">Aucune alerte.</div>
+            )}
           </div>
         </div>
       </div>
