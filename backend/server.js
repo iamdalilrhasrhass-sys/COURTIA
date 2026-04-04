@@ -24,6 +24,7 @@ const excelService = require('./src/services/excelService');
 const logService = require('./src/services/logService');
 const backupService = require('./src/services/backupService');
 const monitoringService = require('./src/services/monitoringService');
+const { calculateRiskScore } = require('./src/utils/riskCalculator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -431,7 +432,14 @@ app.post('/api/clients', verifyToken, async (req, res) => {
     }
 
     const Client = require('./src/models/Client');
-    const client = await Client.create(req.body);
+    const clientData = req.body;
+    
+    // Auto-calc risk score if fields provided
+    if (clientData.nb_sinistres_3ans !== undefined || clientData.annees_permis !== undefined || clientData.bonus_malus !== undefined) {
+      clientData.risk_score = calculateRiskScore(clientData);
+    }
+    
+    const client = await Client.create(clientData);
 
     // Auto-trigger onboarding if telegram_chat_id is provided
     if (req.body.telegram_chat_id) {
@@ -489,7 +497,14 @@ app.put('/api/clients/:id', verifyToken, async (req, res) => {
     }
 
     const Client = require('./src/models/Client');
-    const updated = await Client.update(req.params.id, req.body);
+    const updateData = req.body;
+    
+    // Auto-calc risk score if fields provided
+    if (updateData.nb_sinistres_3ans !== undefined || updateData.annees_permis !== undefined || updateData.bonus_malus !== undefined) {
+      updateData.risk_score = calculateRiskScore(updateData);
+    }
+    
+    const updated = await Client.update(req.params.id, updateData);
 
     res.json({
       message: 'Client updated successfully',
