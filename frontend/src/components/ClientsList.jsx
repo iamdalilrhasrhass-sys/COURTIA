@@ -4,6 +4,7 @@ import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 import { useResponsive } from '../hooks/useResponsive'
 import { formatNomClient } from '../utils/format'
+import Spinner from './Spinner'
 import ClientModal from './ClientModal'
 
 export default function ClientsList() {
@@ -16,10 +17,13 @@ export default function ClientsList() {
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [selectedForEdit, setSelectedForEdit] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (token) {
+      setLoading(true)
       fetchClients(token)
+      setTimeout(() => setLoading(false), 500)
     }
   }, [token, fetchClients])
 
@@ -38,6 +42,10 @@ export default function ClientsList() {
   const handleEdit = (client) => {
     setSelectedForEdit(client)
     setShowModal(true)
+  }
+
+  if (loading) {
+    return <Spinner />
   }
 
   return (
@@ -106,9 +114,16 @@ export default function ClientsList() {
         </table>
       </div>
 
-      {filteredClients.length === 0 && (
+      {filteredClients.length === 0 && !search && (
         <div style={{textAlign:'center',padding:'48px 24px',color:'#999'}}>
-          <p style={{fontSize:'14px'}}>Aucun client trouvé</p>
+          <p style={{fontSize:'14px'}}>📋 Ajoutez votre premier client pour commencer à gérer votre portefeuille.</p>
+          <button onClick={() => {setSelectedForEdit(null); setShowModal(true)}} style={{marginTop:'12px',padding:'10px 20px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontSize:'13px',fontWeight:600,cursor:'pointer'}}>+ Ajouter client</button>
+        </div>
+      )}
+
+      {filteredClients.length === 0 && search && (
+        <div style={{textAlign:'center',padding:'48px 24px',color:'#999'}}>
+          <p style={{fontSize:'14px'}}>Aucun client trouvé pour "{search}"</p>
         </div>
       )}
     </div>
