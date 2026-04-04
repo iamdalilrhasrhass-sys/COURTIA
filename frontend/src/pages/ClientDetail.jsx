@@ -227,10 +227,10 @@ Réponds en français, concis et professionnel.`;
   };
 
   const quickActions = [
-    { label: 'Analyse ce client', prompt: 'Analyse rapidement ce client et propose les meilleures actions.' },
-    { label: 'Rédige un email', prompt: 'Rédige un email de relance professionnel.' },
-    { label: 'Détecte les risques', prompt: 'Quels sont les risques pour ce client ?' },
-    { label: 'Opportunités cross-sell', prompt: 'Quelles opportunités cross-sell pour ce client ?' }
+    { label: 'Analyser les risques', prompt: `Analyse en détail le profil de risque de ${client?.first_name || 'ce client'}. Score risque: ${client?.risk_score || 50}/100, Bonus-malus: ${client?.bonus_malus || 1.0}, Sinistres 3ans: ${client?.nb_sinistres_3ans || 0}, Ancienneté: ${client?.annees_permis || 0} ans, Zone: ${client?.zone_geographique || 'urbain'}. Quels sont les points de vigilance ?` },
+    { label: 'Opportunités cross-sell', prompt: `Analysant les ${contrats.length || 0} contrats de ${client?.first_name || 'ce client'} (${contrats.map(c => c.type_contrat).join(', ') || 'aucun'}) et son profil (${client?.profession || 'professionnel'}), quelles sont les meilleures opportunités de cross-sell ? Justifie chaque recommandation.` },
+    { label: 'Email de relance', prompt: `Rédige un email de relance commercial pour ${client?.first_name} ${client?.last_name}. Mention les contrats expirant bientôt: ${contrats.filter(c => c.date_echeance).map(c => c.type_contrat).join(', ')}. Proposé un RDV. Ton courtois et personnalisé.` },
+    { label: 'Risque résiliation', prompt: `Évalue le risque de résiliation de ${client?.first_name} (statut: ${client?.status}, score: ${client?.risk_score}) sur 1-10. Quels signaux d'alerte ? Quelles actions préventives recommandes-tu ?` }
   ];
 
   if (loading) {
