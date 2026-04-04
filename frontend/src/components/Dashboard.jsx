@@ -119,9 +119,12 @@ export default function Dashboard() {
           <h3 className="text-lg font-bold text-cyan mb-4">Clients récents</h3>
           <div className="space-y-2">
             {(dashboardStats.recentClients && dashboardStats.recentClients.length > 0 ? dashboardStats.recentClients : clients.slice(0, 3)).map((client, idx) => (
-              <div key={idx} className="flex justify-between items-center p-2 bg-dark-3 rounded">
-                <span>{formatNomClient(client)}</span>
-                <span className="text-xs text-slate-500">{client.status === 'actif' ? 'Actif' : client.status}</span>
+              <div key={idx} onClick={() => window.location.href = `/client/${client.id}`} className="flex justify-between items-center p-2 bg-dark-3 rounded cursor-pointer hover:bg-dark-4 transition-colors">
+                <div style={{display:'flex',flexDirection:'column',gap:'2px'}}>
+                  <span style={{fontSize:'13px',fontWeight:500,color:'#fff'}}>{formatNomClient(client)}</span>
+                  <span style={{fontSize:'11px',color:'rgba(255,255,255,0.5)'}}>{client.risk_score ? `Score: ${client.risk_score}` : 'Score: N/A'}</span>
+                </div>
+                <span style={{fontSize:'11px',fontWeight:600,padding:'2px 8px',borderRadius:'4px',background:client.status==='actif'?'#d1fae5':'#fee2e2',color:client.status==='actif'?'#065f46':'#dc2626'}}>{client.status === 'actif' ? 'Actif' : client.status}</span>
               </div>
             ))}
           </div>
