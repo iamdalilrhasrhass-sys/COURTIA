@@ -58,7 +58,7 @@ Fournis une analyse précise et actionnable en français.`
 
     // Call Anthropic
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20250305',
       max_tokens: 1024,
       system: systemPrompt,
       messages
