@@ -162,7 +162,7 @@ export default function Contrats() {
  {contrat.client_nom} {contrat.client_prenom}
  </button>
  </td>
- <td style={{ padding: '12px 16px', fontSize: 14 }}>{contrat.type_contrat}</td>
+ <td style={{ padding: '12px 16px', fontSize: 14 }}>{contrat.type_contrat || '—'}</td>
  <td style={{ padding: '12px 16px', fontSize: 14, color: '#6b7280' }}>{contrat.compagnie}</td>
  <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 600 }}>{formatEuros(contrat.prime_annuelle)}</td>
  <td style={{ padding: '12px 16px', fontSize: 14 }}>
