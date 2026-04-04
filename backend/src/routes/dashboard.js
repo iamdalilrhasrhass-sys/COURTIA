@@ -1,0 +1,98 @@
+const express = require('express');
+const router = express.Router();
+
+/**
+ * GET /api/dashboard/stats — Statistiques dashboard
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+
+    // Total clients et taux conversion
+    const clientsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(CASE WHEN status = 'actif' THEN 1 END) as actifs
+      FROM clients
+    `);
+
+    const total = parseInt(clientsResult.rows[0].total);
+    const actifs = parseInt(clientsResult.rows[0].actifs);
+    const tauxConversion = total > 0 ? Math.round((actifs / total) * 100 * 10) / 10 : 0;
+
+    // Contrats actifs et commissions
+    const contratsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as actifs,
+        COALESCE(ROUND(SUM((quote_data->>'prime_annuelle')::decimal * 0.15 / 12), 2), 0) as commissions,
+        COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as prime_totale
+      FROM quotes 
+      WHERE status = 'actif'
+    `);
+
+    const contratsActifs = parseInt(contratsResult.rows[0].actifs);
+    const commissionsMois = parseFloat(contratsResult.rows[0].commissions);
+    const primeTotale = parseFloat(contratsResult.rows[0].prime_totale || 0);
+
+    // Contrats urgents (< 30 jours)
+    const urgentsResult = await pool.query(`
+      SELECT COUNT(*) as count FROM quotes
+      WHERE (quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
+      AND status = 'actif'
+    `);
+    const contratsUrgents = parseInt(urgentsResult.rows[0].count);
+
+    // Revenus 6 derniers mois
+    const revenusResult = await pool.query(`
+      SELECT 
+        TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as mois,
+        COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as revenue
+      FROM quotes
+      WHERE created_at >= NOW() - INTERVAL '6 months'
+      AND status = 'actif'
+      GROUP BY DATE_TRUNC('month', created_at)
+      ORDER BY DATE_TRUNC('month', created_at) ASC
+    `);
+
+    // Alertes échéances réelles (< 90 jours)
+    const alertesResult = await pool.query(`
+      SELECT 
+        c.first_name as nom, c.last_name as prenom,
+        q.quote_data->>'type_contrat' as type_contrat,
+        q.quote_data->>'date_echeance' as date_echeance,
+        EXTRACT(DAY FROM (q.quote_data->>'date_echeance')::date - NOW())::int as jours_restants
+      FROM quotes q
+      JOIN clients c ON q.client_id = c.id
+      WHERE (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '90 days'
+      AND q.status = 'actif'
+      ORDER BY (q.quote_data->>'date_echeance')::date ASC
+      LIMIT 5
+    `);
+
+    // Clients récents
+    const recentsResult = await pool.query(`
+      SELECT id, first_name as nom, last_name as prenom,
+        email, status as statut, risk_score as score_risque
+      FROM clients
+      ORDER BY created_at DESC
+      LIMIT 5
+    `);
+
+    res.json({
+      totalClients: total,
+      contratsActifs,
+      commissionsMois,
+      primeTotale,
+      contratsUrgents,
+      tauxConversion,
+      revenus6Mois: revenusResult.rows,
+      alertes: alertesResult.rows,
+      clientsRecents: recentsResult.rows
+    });
+  } catch (err) {
+    console.error('GET /api/dashboard/stats error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
