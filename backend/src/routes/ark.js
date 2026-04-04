@@ -33,7 +33,7 @@ const verifyTokenLocal = (req, res, next) => {
 }
 
 // POST /api/ark/chat — Chat avec ARK
-router.post('/chat', verifyTokenLocal, async (req, res) => {
+router.post('/chat', async (req, res) => {
   try {
     const { message, clientData, conversationHistory } = req.body
 
