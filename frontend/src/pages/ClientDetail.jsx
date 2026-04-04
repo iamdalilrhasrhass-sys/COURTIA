@@ -18,6 +18,8 @@ export default function ClientDetail() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Load client from API using URL param
@@ -75,6 +77,29 @@ export default function ClientDetail() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleSaveEdit = async () => {
+    if (!editFormData || !id || !token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/clients/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editFormData)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setClient(updated);
+        setEditMode(false);
+        const toast = require('react-hot-toast').default;
+        toast.success('Client mis à jour ✓');
+      }
+    } catch (err) {
+      console.error('Erreur sauvegarde:', err);
+    }
+  };
 
   const sendToARK = async (prompt) => {
     if (!prompt.trim()) return;
@@ -206,10 +231,35 @@ Réponds en français, concis et professionnel.`;
         Retour
       </button>
 
+      {editMode && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'#fff',padding:'32px',borderRadius:'12px',width:'90%',maxWidth:'500px'}}>
+            <h2 style={{fontSize:'20px',fontWeight:700,marginBottom:'20px'}}>Modifier le client</h2>
+            <div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+              <input type='text' placeholder='Prénom' value={editFormData?.first_name || ''} onChange={(e) => setEditFormData({...editFormData, first_name: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px'}} />
+              <input type='text' placeholder='Nom' value={editFormData?.last_name || ''} onChange={(e) => setEditFormData({...editFormData, last_name: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px'}} />
+              <input type='email' placeholder='Email' value={editFormData?.email || ''} onChange={(e) => setEditFormData({...editFormData, email: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px'}} />
+              <select value={editFormData?.status || ''} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})} style={{padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px'}}>
+                <option value='prospect'>Prospect</option>
+                <option value='actif'>Actif</option>
+                <option value='perdu'>Perdu</option>
+              </select>
+              <div style={{display:'flex',gap:'12px'}}>
+                <button onClick={handleSaveEdit} style={{flex:1,padding:'10px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontWeight:600,cursor:'pointer'}}>Sauvegarder</button>
+                <button onClick={() => {setEditMode(false);setEditFormData(null);}} style={{flex:1,padding:'10px',background:'#f0f0f0',color:'#0a0a0a',border:'none',borderRadius:'6px',fontWeight:600,cursor:'pointer'}}>Annuler</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{display:'grid',gridTemplateColumns:'1fr 400px',gap:'40px'}}>
         {/* Client Info */}
         <div>
-          <h1 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a',marginBottom:'20px'}}>{displayTitle}</h1>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px'}}>
+            <h1 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a'}}>{displayTitle}</h1>
+            <button onClick={() => {setEditFormData(client);setEditMode(true);}} style={{padding:'8px 16px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontSize:'13px',fontWeight:600,cursor:'pointer'}}>Modifier</button>
+          </div>
           <div style={{background:'#fff',padding:'20px',border:'0.5px solid #f0f0f0',borderRadius:'10px',marginBottom:'20px'}}>
             <div style={{marginBottom:'10px'}}><strong>Email:</strong> {client.email || 'N/A'}</div>
             <div style={{marginBottom:'10px'}}><strong>Téléphone:</strong> {client.phone || 'N/A'}</div>
