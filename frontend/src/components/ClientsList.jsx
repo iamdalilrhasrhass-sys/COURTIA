@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useResponsive } from '../hooks/useResponsive'
 import { formatNomClient } from '../utils/format'
 import Spinner from './Spinner'
+import ConfirmModal from './ConfirmModal'
 import ClientModal from './ClientModal'
 
 export default function ClientsList() {
@@ -18,6 +19,7 @@ export default function ClientsList() {
   const [showModal, setShowModal] = useState(false)
   const [selectedForEdit, setSelectedForEdit] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   useEffect(() => {
     if (token) {
@@ -34,8 +36,13 @@ export default function ClientsList() {
   })
 
   const handleDelete = (id) => {
-    if (window.confirm('Confirmer la suppression ?')) {
-      deleteClient(id, token)
+    setConfirmDelete(id)
+  }
+
+  const confirmDeleteAction = () => {
+    if (confirmDelete) {
+      deleteClient(confirmDelete, token)
+      setConfirmDelete(null)
     }
   }
 
@@ -50,6 +57,10 @@ export default function ClientsList() {
 
   return (
     <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
+      {confirmDelete && (
+        <ConfirmModal message="Supprimer ce client ? Cette action est irréversible." onConfirm={confirmDeleteAction} onCancel={() => setConfirmDelete(null)} isDanger={true} />
+      )}
+
       {showModal && (
         <ClientModal
           client={selectedForEdit}
