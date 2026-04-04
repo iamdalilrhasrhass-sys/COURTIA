@@ -172,52 +172,63 @@ app.get('/api/status', async (req, res) => {
 });
 
 // Dashboard stats
-app.get('/api/dashboard/stats', async (req, res) => {
+app.get('/api/dashboard/stats', verifyToken, async (req, res) => {
   try {
-    if (!dbReady) {
-      return res.status(503).json({
-        error: 'Database not ready',
-        details: 'Database initialization in progress'
-      });
-    }
-
-    console.log('📊 Fetching dashboard stats...');
+    const courtier_id = req.user.id;
 
     // Total clients
-    console.log('  - Counting clients...');
-    const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients');
-    const totalClients = parseInt(clientsRes.rows[0].count);
-    console.log(`    ✓ Total clients: ${totalClients}`);
-    
-    // Active quotes (accepted contracts)
-    console.log('  - Counting accepted quotes...');
-    const quotesRes = await pool.query("SELECT COUNT(*) as count FROM quotes WHERE status = 'accepted'");
-    const activeContracts = parseInt(quotesRes.rows[0].count);
-    console.log(`    ✓ Active contracts: ${activeContracts}`);
-    
-    // Monthly commissions (placeholder)
-    const monthlyCommissions = 0;
-    
-    // Conversion rate
-    const conversionRate = totalClients > 0 ? Math.round((activeContracts / totalClients) * 100) : 0;
-    console.log(`    ✓ Conversion rate: ${conversionRate}%`);
-    
-    // Recent clients
-    console.log('  - Fetching recent clients...');
-    const recentClientsRes = await pool.query(
-      "SELECT id FROM clients ORDER BY created_at DESC LIMIT 3"
+    const clients = await pool.query(
+      'SELECT COUNT(*) as total, COUNT(CASE WHEN status = $2 THEN 1 END) as actifs FROM clients WHERE courtier_id = $1',
+      [courtier_id, 'actif']
     );
-    const recentClients = recentClientsRes.rows;
-    console.log(`    ✓ Recent clients: ${recentClients.length}`);
-    
-    console.log('✅ Dashboard stats complete\n');
-    
+    const totalClients = parseInt(clients.rows[0].total);
+    const activeClientsCount = parseInt(clients.rows[0].actifs);
+
+    // Contrats actifs et commissions
+    const contrats = await pool.query(
+      'SELECT COUNT(*) as actifs, COALESCE(ROUND(SUM(prime_annuelle * 0.15 / 12), 2), 0) as commissions FROM contracts WHERE courtier_id = $1 AND statut = $2',
+      [courtier_id, 'actif']
+    );
+    const activeContracts = parseInt(contrats.rows[0].actifs);
+    const monthlyCommissions = parseFloat(contrats.rows[0].commissions);
+
+    // Taux conversion
+    const tauxConversion = totalClients > 0 ? Math.round((activeClientsCount / totalClients) * 100 * 10) / 10 : 0;
+
+    // Revenus 6 derniers mois
+    const revenus = await pool.query(
+      `SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as mois,
+       COALESCE(SUM(prime_annuelle), 0) as revenue
+       FROM contracts WHERE courtier_id = $1 AND created_at >= NOW() - INTERVAL '6 months'
+       GROUP BY DATE_TRUNC('month', created_at)
+       ORDER BY DATE_TRUNC('month', created_at) ASC`,
+      [courtier_id]
+    );
+
+    // Alertes échéances
+    const alertes = await pool.query(
+      `SELECT c.first_name, c.last_name, ct.type_contrat, ct.date_echeance,
+       EXTRACT(DAY FROM ct.date_echeance - NOW())::int as jours_restants
+       FROM contracts ct JOIN clients c ON ct.client_id = c.id
+       WHERE ct.courtier_id = $1 AND ct.date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days'
+       ORDER BY ct.date_echeance ASC LIMIT 5`,
+      [courtier_id]
+    );
+
+    // Clients récents
+    const recents = await pool.query(
+      'SELECT id, first_name, last_name, email, status, risk_score FROM clients WHERE courtier_id = $1 ORDER BY created_at DESC LIMIT 5',
+      [courtier_id]
+    );
+    const recentClients = recents.rows;
     res.json({
       totalClients,
       activeContracts,
       monthlyCommissions,
-      conversionRate,
-      recentClients
+      tauxConversion,
+      revenus6Mois: revenus.rows,
+      alertes: alertes.rows,
+      clientsRecents: recentClients
     });
   } catch (err) {
     console.error('❌ Stats error:', err);
