@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import { formatNomClient } from '../utils/format';
 
 const API_URL = 'https://courtia.onrender.com';
 
@@ -177,8 +178,7 @@ Réponds en français, concis et professionnel.`;
     );
   }
 
-  const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
-  const displayTitle = clientName || client.email || `Client #${String(client.id).slice(0, 8)}`;
+  const displayTitle = formatNomClient(client);
 
   return (
     <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff',minHeight:'100vh'}}>

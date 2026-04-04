@@ -3,6 +3,7 @@ import { Search, Plus, Eye, Edit2, Trash2 } from 'lucide-react'
 import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 import { useResponsive } from '../hooks/useResponsive'
+import { formatNomClient } from '../utils/format'
 import ClientModal from './ClientModal'
 
 export default function ClientsList() {
@@ -79,7 +80,7 @@ export default function ClientsList() {
           <tbody>
             {filteredClients.map((client, idx) => (
               <tr key={client.id} style={{borderTop:'0.5px solid #f0f0f0',height:'48px',background:idx%2===0?'#fff':'#fafafa'}}>
-                <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:500}}>{`${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Client sans nom'}</td>
+                <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:500}}>{formatNomClient(client)}</td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.email}</td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.phone || 'N/A'}</td>
                 <td style={{padding:'12px 16px',fontSize:'12px',fontWeight:600}}>
