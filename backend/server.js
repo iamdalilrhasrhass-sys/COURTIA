@@ -1152,14 +1152,18 @@ const anthropic = new Anthropic({
 
 app.post('/api/ark/chat', verifyToken, async (req, res) => {
   try {
-    const { clientData, userMessage } = req.body;
+    const { clientData, message, userMessage } = req.body;
     const userId = req.user.id;
+    const msg = message || userMessage;
 
-    if (!clientData || !userMessage) {
-      return res.status(400).json({ error: 'clientData and userMessage are required' });
+    if (!msg) {
+      return res.status(400).json({ error: 'message is required' });
     }
 
-    const prompt = `Tu es ARK, assistant commercial expert pour courtiers français.
+    // Si clientData existe, utiliser prompt détaillé. Sinon, prompt générique.
+    let prompt;
+    if (clientData && clientData.first_name) {
+      prompt = `Tu es ARK, assistant commercial expert pour courtiers français.
 
 CLIENT: ${clientData.first_name} ${clientData.last_name}
 Contrats: ${clientData.contracts?.map(c => `${c.type} (${c.premium}€)`).join(', ') || 'Aucun'}
@@ -1169,7 +1173,7 @@ Dernière interaction: ${clientData.last_contact || 'Jamais'}
 OBLIGATOIRE - Réponds en 3 parties:
 
 1️⃣ ACTION IMMÉDIATE (délai précis):
-[Actionconcrète avec timing exact]
+[Action concrète avec timing exact]
 
 2️⃣ SCRIPT EXACT (mot pour mot prêt à dire):
 [Dialogue à utiliser avec le client]
@@ -1177,27 +1181,32 @@ OBLIGATOIRE - Réponds en 3 parties:
 3️⃣ OBJECTIF CHIFFRÉ (euros):
 [Montant attendu ou potentiel]
 
-QUESTION: ${userMessage}`;
+QUESTION: ${msg}`;
+    } else {
+      prompt = `Tu es ARK, assistant IA expert pour courtiers d'assurance français. Aide avec gestion clients, contrats, opportunités de vente croisée, conformité DDA/ORIAS, rédaction de relances.
 
-    const message = await anthropic.messages.create({
+QUESTION: ${msg}`;
+    }
+
+    const response = await anthropic.messages.create({
       model: 'claude-opus-4-1-20250805',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const arkResponse = message.content[0].text;
+    const arkResponse = response.content[0].text;
 
-    // Sauvegarde en DB
+    // Sauvegarde en DB (client_id optionnel pour requêtes globales)
     await pool.query(
       `INSERT INTO ark_conversations (client_id, user_id, user_message, ark_response, created_at)
        VALUES ($1, $2, $3, $4, NOW())`,
-      [clientData.id, userId, userMessage, arkResponse]
+      [clientData?.id || null, userId, msg, arkResponse]
     ).catch(err => console.warn('DB save skipped:', err.message));
 
-    res.json({ response: arkResponse });
+    res.json({ reply: arkResponse });
   } catch (error) {
     console.error('ARK Error:', error);
-    res.status(500).json({ error: 'Failed to process ARK request' });
+    res.status(500).json({ error: 'Failed to process ARK request', details: error.message });
   }
 });
 
