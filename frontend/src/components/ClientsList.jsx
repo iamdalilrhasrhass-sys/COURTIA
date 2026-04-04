@@ -100,7 +100,7 @@ export default function ClientsList() {
       </div>
 
       {/* Clients Table */}
-      <div style={{border:'0.5px solid #f0f0f0',borderRadius:'10px',overflow:'hidden'}}>
+      <div style={{border:'0.5px solid #f0f0f0',borderRadius:'10px',overflow:'hidden',overflowX:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse'}}>
           <thead>
             <tr style={{background:'#0a0a0a',height:'44px'}}>
