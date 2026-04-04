@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useAuthStore } from '../stores/authStore'
 
 const API_URL = 'https://courtia.onrender.com'
@@ -98,14 +99,19 @@ export default function Contrats() {
           date_echeance: '',
           statut: 'actif'
         })
+        toast.success(selectedForEdit ? 'Contrat modifié ✓' : 'Contrat ajouté ✓')
+      } else {
+        const errData = await res.json()
+        toast.error(errData.error || 'Erreur lors de la sauvegarde')
       }
     } catch (err) {
       console.error('Error saving contrat:', err)
+      toast.error('Erreur lors de la sauvegarde')
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Confirmer la suppression ?')) return
+    if (!confirm('Supprimer ce contrat ? Cette action est irréversible.')) return
     try {
       const res = await fetch(`${API_URL}/api/contracts/${id}`, {
         method: 'DELETE',
@@ -113,9 +119,13 @@ export default function Contrats() {
       })
       if (res.ok) {
         fetchContrats()
+        toast.success('Contrat supprimé ✓')
+      } else {
+        toast.error('Erreur lors de la suppression')
       }
     } catch (err) {
       console.error('Error deleting contrat:', err)
+      toast.error('Erreur lors de la suppression')
     }
   }
 
