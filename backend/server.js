@@ -29,6 +29,9 @@ const { calculateRiskScore } = require('./src/utils/riskCalculator');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Assign pool to app.locals for routes to access
+app.locals.pool = require('./src/db');
+
 // ==================== MIDDLEWARE ====================
 
 app.use(express.json({ limit: '10mb' }));
