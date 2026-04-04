@@ -408,14 +408,17 @@ app.post('/api/clients', verifyToken, async (req, res) => {
 // Get client
 app.get('/api/clients/:id', verifyToken, async (req, res) => {
   try {
-    const Client = require('./src/models/Client');
-    const client = await Client.findById(req.params.id);
-
-    if (!client) {
+    // Verify courtier_id ownership (security: multi-tenant isolation)
+    const result = await pool.query(
+      'SELECT * FROM clients WHERE id = $1 AND courtier_id = $2',
+      [req.params.id, req.user.id]
+    );
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
 
-    res.json(client);
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -424,13 +427,16 @@ app.get('/api/clients/:id', verifyToken, async (req, res) => {
 // Update client
 app.put('/api/clients/:id', verifyToken, async (req, res) => {
   try {
-    const Client = require('./src/models/Client');
-    const client = await Client.findById(req.params.id);
-
-    if (!client) {
+    // Verify ownership
+    const check = await pool.query(
+      'SELECT id FROM clients WHERE id = $1 AND courtier_id = $2',
+      [req.params.id, req.user.id]
+    );
+    if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
 
+    const Client = require('./src/models/Client');
     const updated = await Client.update(req.params.id, req.body);
 
     res.json({
@@ -445,13 +451,16 @@ app.put('/api/clients/:id', verifyToken, async (req, res) => {
 // Delete client
 app.delete('/api/clients/:id', verifyToken, async (req, res) => {
   try {
-    const Client = require('./src/models/Client');
-    const client = await Client.findById(req.params.id);
-
-    if (!client) {
+    // Verify ownership
+    const check = await pool.query(
+      'SELECT id FROM clients WHERE id = $1 AND courtier_id = $2',
+      [req.params.id, req.user.id]
+    );
+    if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
 
+    const Client = require('./src/models/Client');
     const result = await Client.delete(req.params.id);
 
     res.json({
