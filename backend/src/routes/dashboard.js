@@ -30,7 +30,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     const clientsResult = await pool.query(`
       SELECT 
         COUNT(*) as total,
-        COUNT(CASE WHEN status = 'actif' THEN 1 END) as actifs
+        COUNT(CASE WHEN statut = 'actif' THEN 1 END) as actifs
       FROM clients
     `);
 
@@ -45,7 +45,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COALESCE(ROUND(SUM((quote_data->>'prime_annuelle')::decimal * 0.15 / 12), 2), 0) as commissions,
         COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as prime_totale
       FROM quotes 
-      WHERE status = 'actif'
+      WHERE statut = 'actif'
     `);
 
     const contratsActifs = parseInt(contratsResult.rows[0].actifs);
@@ -56,7 +56,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     const urgentsResult = await pool.query(`
       SELECT COUNT(*) as count FROM quotes
       WHERE (quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
-      AND status = 'actif'
+      AND statut = 'actif'
     `);
     const contratsUrgents = parseInt(urgentsResult.rows[0].count);
 
@@ -67,7 +67,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as revenue
       FROM quotes
       WHERE created_at >= NOW() - INTERVAL '6 months'
-      AND status = 'actif'
+      AND statut = 'actif'
       GROUP BY DATE_TRUNC('month', created_at)
       ORDER BY DATE_TRUNC('month', created_at) ASC
     `);
@@ -75,14 +75,14 @@ router.get('/stats', verifyToken, async (req, res) => {
     // Alertes échéances réelles (< 90 jours)
     const alertesResult = await pool.query(`
       SELECT 
-        c.first_name as nom, c.last_name as prenom,
+        c.nom as nom, c.prenom as prenom,
         q.quote_data->>'type_contrat' as type_contrat,
         q.quote_data->>'date_echeance' as date_echeance,
         EXTRACT(DAY FROM (q.quote_data->>'date_echeance')::date - NOW())::int as jours_restants
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
       WHERE (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '90 days'
-      AND q.status = 'actif'
+      AND q.statut = 'actif'
       ORDER BY (q.quote_data->>'date_echeance')::date ASC
       LIMIT 5
     `);
@@ -106,11 +106,11 @@ router.get('/stats', verifyToken, async (req, res) => {
           END ORDER BY created_at DESC) as rn
         FROM clients
       )
-      SELECT DISTINCT ON (risk_tier) id, first_name as nom, last_name as prenom, 
-        email, status as statut, risk_score as score_risque
+      SELECT DISTINCT ON (risk_tier) id, nom, prenom, 
+        email, statut, score_risque
       FROM ranked
       WHERE rn = 1
-      ORDER BY risk_tier, risk_score DESC
+      ORDER BY risk_tier, score_risque DESC
       LIMIT 5
     `);
 
