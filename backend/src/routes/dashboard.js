@@ -88,29 +88,12 @@ router.get('/stats', verifyToken, async (req, res) => {
     `);
 
     // Clients récents (avec scores variés pour montrer la diversité)
-    // Prendre 1 client par tier de risque
+    // Prendre 1 client par score_risque distinct
     const recentsResult = await pool.query(`
-      WITH ranked AS (
-        SELECT *, 
-          CASE 
-            WHEN risk_score >= 70 THEN 1
-            WHEN risk_score >= 50 THEN 2
-            WHEN risk_score >= 30 THEN 3
-            ELSE 4
-          END as risk_tier,
-          ROW_NUMBER() OVER (PARTITION BY CASE 
-            WHEN risk_score >= 70 THEN 1
-            WHEN risk_score >= 50 THEN 2
-            WHEN risk_score >= 30 THEN 3
-            ELSE 4
-          END ORDER BY created_at DESC) as rn
-        FROM clients
-      )
-      SELECT DISTINCT ON (risk_tier) id, nom, prenom, 
+      SELECT DISTINCT ON (risk_score) id, nom, prenom, 
         email, statut, risk_score as score_risque
-      FROM ranked
-      WHERE rn = 1
-      ORDER BY risk_tier, risk_score DESC
+      FROM clients
+      ORDER BY risk_score DESC, created_at DESC
       LIMIT 5
     `);
 
