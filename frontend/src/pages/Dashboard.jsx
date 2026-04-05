@@ -12,15 +12,22 @@ function formatEuros(montant) {
  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(montant)
 }
 
-function KPICard({ title, value, icon, color, alert }) {
+function KPICard({ title, value, icon, alert }) {
  return (
- <div style={{ background: `linear-gradient(135deg, ${color}dd, ${color}aa)`, borderRadius: 12, padding: 20, color: 'white', position: 'relative', overflow: 'hidden' }}>
- {alert && <span style={{ position: 'absolute', top: 8, right: 8, background: '#dc2626', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>!</span>}
+ <div style={{ 
+   backgroundColor: 'white', 
+   border: '1px solid #e5e7eb',
+   borderRadius: 12, 
+   padding: 24,
+   position: 'relative',
+   overflow: 'hidden'
+ }}>
+ {alert && <span style={{ position: 'absolute', top: 8, right: 8, background: '#dc2626', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white' }}>!</span>}
  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
- <p style={{ fontSize: 13, opacity: 0.9, margin: 0 }}>{title}</p>
+ <p style={{ fontSize: 13, color: '#6b7280', margin: 0, fontWeight: 500 }}>{title}</p>
  <span style={{ fontSize: 22 }}>{icon}</span>
  </div>
- <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{value}</p>
+ <p style={{ fontSize: 28, fontWeight: 700, color: alert ? '#dc2626' : '#080808', margin: 0 }}>{value}</p>
  </div>
  )
 }
@@ -67,12 +74,12 @@ export default function Dashboard() {
 
  {/* KPI Cards */}
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
- <KPICard title="Total clients" value={stats.totalClients || 0} icon="👥" color="#3b82f6" />
- <KPICard title="Contrats actifs" value={stats.contratsActifs || 0} icon="📋" color="#06b6d4" />
- <KPICard title="Commissions mois" value={formatEuros(stats.commissionsMois)} icon="💰" color="#0891b2" />
- <KPICard title="Taux conversion" value={(stats.tauxConversion || 0) + '%'} icon="📈" color="#0284c7" />
- <KPICard title="Prime portefeuille" value={formatEuros(stats.primeTotale)} icon="🏦" color="#0369a1" />
- <KPICard title="Contrats urgents" value={stats.contratsUrgents || 0} icon="⚠️" color={stats.contratsUrgents > 0 ? '#dc2626' : '#16a34a'} alert={stats.contratsUrgents > 0} />
+ <KPICard title="Total clients" value={stats.totalClients || 0} icon="👥" />
+ <KPICard title="Contrats actifs" value={stats.contratsActifs || 0} icon="📋" />
+ <KPICard title="Commissions mois" value={formatEuros(stats.commissionsMois)} icon="💰" />
+ <KPICard title="Taux conversion" value={(stats.tauxConversion || 0) + '%'} icon="📈" />
+ <KPICard title="Prime portefeuille" value={formatEuros(stats.primeTotale)} icon="🏦" />
+ <KPICard title="Contrats urgents" value={stats.contratsUrgents || 0} icon="⚠️" alert={stats.contratsUrgents > 0} />
  </div>
 
  {/* Indicateurs métier ARK */}
