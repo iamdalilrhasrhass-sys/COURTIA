@@ -90,8 +90,8 @@ router.get('/stats', verifyToken, async (req, res) => {
     // Clients récents (avec scores variés pour montrer la diversité)
     // Prendre 1 client par score_risque distinct
     const recentsResult = await pool.query(`
-      SELECT DISTINCT ON (risk_score) id, nom, prenom, 
-        email, statut, risk_score as score_risque
+      SELECT DISTINCT ON (risk_score) id, first_name as nom, last_name as prenom, 
+        email, status as statut, risk_score as score_risque
       FROM clients
       ORDER BY risk_score DESC, created_at DESC
       LIMIT 5
