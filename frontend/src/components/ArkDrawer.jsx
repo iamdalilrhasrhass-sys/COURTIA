@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
 export default function ArkDrawer({ isOpen, onClose, token }) {
   const [messages, setMessages] = useState([])
