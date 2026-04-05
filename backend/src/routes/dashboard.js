@@ -87,12 +87,12 @@ router.get('/stats', verifyToken, async (req, res) => {
       LIMIT 5
     `);
 
-    // Clients récents (triés par score risque pour montrer variété)
+    // Clients récents (derniers créés avec leurs scores)
     const recentsResult = await pool.query(`
       SELECT id, first_name as nom, last_name as prenom,
         email, status as statut, risk_score as score_risque
       FROM clients
-      ORDER BY risk_score DESC
+      ORDER BY created_at DESC
       LIMIT 5
     `);
 

@@ -32,7 +32,7 @@ export default function Clients() {
     }
   };
 
-  const filteredClients = clients.filter(c => {
+  const filteredClients = (clients || []).filter(c => {
     const matchesSearch = 
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
       (c.email && c.email.toLowerCase().includes(search.toLowerCase()));
