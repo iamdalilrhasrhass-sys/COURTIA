@@ -43,12 +43,13 @@ export default function Clients() {
   
   const filtered = safeClients.filter(c => {
     if (!c) return false
-    const nom = `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase()
+    // API retourne: nom, prenom, score_risque, statut, telephone
+    const nom = `${c.nom || ''} ${c.prenom || ''}`.toLowerCase()
     const email = (c.email || '').toLowerCase()
     const searchLower = search.toLowerCase()
     const matchSearch = nom.includes(searchLower) || email.includes(searchLower)
-    const matchStatus = statusFilter === 'all' || c.status === statusFilter
-    const score = Number(c.risk_score) || 0
+    const matchStatus = statusFilter === 'all' || c.statut === statusFilter
+    const score = Number(c.score_risque) || 0
     const matchRisk = riskFilter === 'all'
       || (riskFilter === 'Faible' && score <= 30)
       || (riskFilter === 'Modéré' && score > 30 && score <= 60)
@@ -102,7 +103,7 @@ export default function Clients() {
           type="text"
           placeholder="Rechercher par nom ou email..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
           style={{
             flex: 1,
             minWidth: '200px',
@@ -117,7 +118,7 @@ export default function Clients() {
         
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
           style={{
             padding: '10px 12px',
             backgroundColor: 'white',
@@ -136,7 +137,7 @@ export default function Clients() {
 
         <select
           value={riskFilter}
-          onChange={(e) => setRiskFilter(e.target.value)}
+          onChange={(e) => { setRiskFilter(e.target.value); setPage(1) }}
           style={{
             padding: '10px 12px',
             backgroundColor: 'white',
@@ -185,19 +186,19 @@ export default function Clients() {
             <tbody>
               {paginated.map((client, idx) => {
                 if (!client || !client.id) return null
-                const statusStyle = getStatusColor(client.status)
-                const riskStyle = getRiskColor(client.risk_score)
+                const statusStyle = getStatusColor(client.statut)
+                const riskStyle = getRiskColor(client.score_risque)
                 const bgColor = idx % 2 === 0 ? 'white' : '#f9fafb'
                 return (
                   <tr key={client.id} style={{ backgroundColor: bgColor, borderTop: '1px solid #e5e7eb' }}>
-                    <td style={{ padding: '12px 16px', color: '#080808', fontSize: '14px' }}>
-                      {client.first_name} {client.last_name}
+                    <td style={{ padding: '12px 16px', color: '#080808', fontSize: '14px', fontWeight: '600' }}>
+                      {client.nom || '—'} {client.prenom || ''}
                     </td>
                     <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>
-                      {client.email || '-'}
+                      {client.email || '—'}
                     </td>
                     <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>
-                      {client.phone || '-'}
+                      {client.telephone || '—'}
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                       <span style={{
@@ -207,7 +208,7 @@ export default function Clients() {
                         borderRadius: '12px',
                         fontWeight: '600'
                       }}>
-                        {client.status || '-'}
+                        {client.statut || '—'}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: '13px' }}>
@@ -218,7 +219,7 @@ export default function Clients() {
                         borderRadius: '12px',
                         fontWeight: '600'
                       }}>
-                        {client.risk_score || 0}/100
+                        {client.score_risque || 0}/100
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: '14px' }}>
