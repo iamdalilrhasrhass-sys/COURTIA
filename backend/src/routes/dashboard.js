@@ -96,6 +96,18 @@ router.get('/stats', verifyToken, async (req, res) => {
       LIMIT 5
     `);
 
+    // Types de contrats
+    const typesResult = await pool.query(`
+      SELECT
+        COALESCE(quote_data->>'type_contrat', 'Autre') as type,
+        COUNT(*) as count,
+        COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as total_primes
+      FROM quotes
+      WHERE status = 'actif'
+      GROUP BY quote_data->>'type_contrat'
+      ORDER BY count DESC
+    `);
+
     res.json({
       totalClients: total,
       contratsActifs,
@@ -105,7 +117,8 @@ router.get('/stats', verifyToken, async (req, res) => {
       tauxConversion,
       revenus6Mois: revenusResult.rows,
       alertes: alertesResult.rows,
-      clientsRecents: recentsResult.rows
+      clientsRecents: recentsResult.rows,
+      typesContrats: typesResult.rows
     });
   } catch (err) {
     console.error('GET /api/dashboard/stats error:', err.message);

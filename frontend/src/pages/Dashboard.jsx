@@ -33,6 +33,8 @@ export default function Dashboard() {
  const headers = { Authorization: `Bearer ${getToken()}` }
 
  useEffect(() => {
+ // Ping le backend pour prévenir cold start
+ fetch(`${API_URL}/ping`).catch(() => {})
  loadStats()
  }, [])
 
@@ -73,6 +75,25 @@ export default function Dashboard() {
  <KPICard title="Contrats urgents" value={stats.contratsUrgents || 0} icon="⚠️" color={stats.contratsUrgents > 0 ? '#dc2626' : '#16a34a'} alert={stats.contratsUrgents > 0} />
  </div>
 
+ {/* Indicateurs métier ARK */}
+ <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+ <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+ <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>🔴 Clients risque élevé</p>
+ <p style={{ fontSize: 28, fontWeight: 700, color: '#dc2626', margin: 0 }}>{(stats.clientsRecents || []).filter(c => c.score_risque > 60).length}</p>
+ <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>sur les 5 derniers clients</p>
+ </div>
+ <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+ <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>📈 Commission annuelle</p>
+ <p style={{ fontSize: 28, fontWeight: 700, color: '#16a34a', margin: 0 }}>{stats.commissionsMois ? ((stats.commissionsMois * 12).toLocaleString('fr-FR') + '€') : '—'}</p>
+ <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>projection sur 12 mois</p>
+ </div>
+ <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+ <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>⚡ Prime moyenne</p>
+ <p style={{ fontSize: 28, fontWeight: 700, color: '#2563eb', margin: 0 }}>{stats.contratsActifs && stats.primeTotale ? (Math.round(stats.primeTotale / stats.contratsActifs).toLocaleString('fr-FR') + '€') : '—'}</p>
+ <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>par contrat actif</p>
+ </div>
+ </div>
+
  {/* Graphique revenus */}
  <div style={{ background: '#1e293b', borderRadius: 12, padding: 24, marginBottom: 24 }}>
  <h2 style={{ color: '#38bdf8', fontSize: 16, fontWeight: 600, margin: '0 0 16px' }}>Revenus 6 derniers mois</h2>
@@ -90,6 +111,43 @@ export default function Dashboard() {
  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 0' }}>Aucune donnée de revenus disponible</p>
  )}
  </div>
+
+ {/* Répartition du portefeuille */}
+ {stats.typesContrats && stats.typesContrats.length > 0 && (
+ <div style={{ background: '#1e293b', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+ <h2 style={{ color: '#38bdf8', fontSize: 16, fontWeight: 600, margin: '0 0 16px' }}>Répartition du portefeuille</h2>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+ {stats.typesContrats.map(type => {
+ const total = stats.typesContrats.reduce((acc, t) => acc + parseInt(t.count), 0)
+ const pct = Math.round((parseInt(type.count) / total) * 100)
+ const colors = {
+ 'Auto': '#3b82f6',
+ 'Habitation': '#10b981',
+ 'Mutuelle': '#8b5cf6',
+ 'RC Pro': '#f59e0b',
+ 'Prévoyance': '#ef4444',
+ 'Décennale': '#06b6d4'
+ }
+ return (
+ <div key={type.type}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+ <span style={{ color: '#e2e8f0', fontSize: 13 }}>{type.type}</span>
+ <span style={{ color: '#94a3b8', fontSize: 13 }}>{type.count} contrats · {pct}%</span>
+ </div>
+ <div style={{ height: 6, background: '#334155', borderRadius: 3 }}>
+ <div style={{
+ height: '100%', borderRadius: 3,
+ width: pct + '%',
+ background: colors[type.type] || '#06b6d4',
+ transition: 'width 0.3s ease'
+ }} />
+ </div>
+ </div>
+ )
+ })}
+ </div>
+ </div>
+ )}
 
  {/* Clients récents + Alertes */}
  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
