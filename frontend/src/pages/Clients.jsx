@@ -9,6 +9,7 @@ export default function Clients() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [riskFilter, setRiskFilter] = useState('all');
 
   useEffect(() => {
     fetchClients();
@@ -35,8 +36,12 @@ export default function Clients() {
     const matchesSearch = 
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
       (c.email && c.email.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesStatus = statusFilter === 'all' || c.statut === statusFilter;
+    const matchesRisk = riskFilter === 'all'
+      || (riskFilter === 'Faible' && c.score_risque <= 30)
+      || (riskFilter === 'Modéré' && c.score_risque > 30 && c.score_risque <= 60)
+      || (riskFilter === 'Élevé' && c.score_risque > 60);
+    return matchesSearch && matchesStatus && matchesRisk;
   });
 
   const handleViewClient = (clientId) => {
@@ -103,6 +108,25 @@ export default function Clients() {
         </select>
       </div>
 
+      {/* Risk Filter */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 13, color: '#6b7280', alignSelf: 'center' }}>Risque :</span>
+        {['all', 'Faible', 'Modéré', 'Élevé'].map(niveau => (
+          <button
+            key={niveau}
+            onClick={() => setRiskFilter(niveau)}
+            style={{
+              padding: '6px 12px',
+              background: riskFilter === niveau ? '#0a0a0a' : 'white',
+              color: riskFilter === niveau ? 'white' : '#374151',
+              border: '1px solid #e5e7eb', borderRadius: 6,
+              cursor: 'pointer', fontSize: 12,
+              fontWeight: riskFilter === niveau ? 600 : 400
+            }}
+          >{niveau === 'all' ? 'Tous' : niveau}</button>
+        ))}
+      </div>
+
       {/* Clients Table */}
       {filteredClients.length === 0 ? (
         <div className="text-center py-12 bg-slate-800/50 rounded-lg">
@@ -136,20 +160,21 @@ export default function Clients() {
                       {client.statut}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${
-                            client.score_risque < 30 ? 'bg-green-500' :
-                            client.score_risque < 60 ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }`}
-                          style={{ width: `${client.score_risque}%` }}
-                        />
-                      </div>
-                      <span className="text-sm">{client.score_risque}</span>
-                    </div>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      background: client.score_risque <= 30 ? '#dcfce7'
+                        : client.score_risque <= 60 ? '#fef9c3'
+                        : client.score_risque <= 80 ? '#ffedd5'
+                        : '#fee2e2',
+                      color: client.score_risque <= 30 ? '#16a34a'
+                        : client.score_risque <= 60 ? '#ca8a04'
+                        : client.score_risque <= 80 ? '#ea580c'
+                        : '#dc2626',
+                      borderRadius: 12, fontSize: 12, fontWeight: 700
+                    }}>
+                      {client.score_risque}/100
+                    </span>
                   </td>
                   <td className="px-6 py-4 flex gap-2">
                     <button 
