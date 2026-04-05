@@ -107,10 +107,10 @@ router.get('/stats', verifyToken, async (req, res) => {
         FROM clients
       )
       SELECT DISTINCT ON (risk_tier) id, nom, prenom, 
-        email, statut, score_risque
+        email, statut, risk_score as score_risque
       FROM ranked
       WHERE rn = 1
-      ORDER BY risk_tier, score_risque DESC
+      ORDER BY risk_tier, risk_score DESC
       LIMIT 5
     `);
 
