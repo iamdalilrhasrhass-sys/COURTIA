@@ -1,71 +1,80 @@
 import { useState, useEffect } from 'react'
-import toast from 'react-hot-toast'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
 export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [page, setPage] = useState(1)
-  const itemsPerPage = 20
+  const PER_PAGE = 20
 
   useEffect(() => {
     fetchContrats()
   }, [])
 
   const fetchContrats = async () => {
-    setLoading(true)
     try {
+      setLoading(true)
+      setError('')
       const token = localStorage.getItem('token')
       const res = await fetch(`${API_URL}/api/contrats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      setContrats(data)
+      const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+      setContrats(arr || [])
     } catch (err) {
-      console.error('Error:', err)
-      toast.error('Erreur chargement contrats')
+      console.error('Fetch error:', err)
+      setError('Impossible de charger les contrats')
+      setContrats([])
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredContrats = (Array.isArray(contrats) ? contrats : []).filter(c => {
-    const matchesStatus = statusFilter === 'all' || c.statut === statusFilter
-    const matchesType = typeFilter === 'all' || c.type_contrat === typeFilter
-    return matchesStatus && matchesType
+  const safeContrats = Array.isArray(contrats) ? contrats : []
+
+  const filtered = safeContrats.filter(c => {
+    if (!c) return false
+    const matchStatus = statusFilter === 'all' || c.statut === statusFilter || c.status === statusFilter
+    const matchType = typeFilter === 'all' || c.type_contrat === typeFilter
+    return matchStatus && matchType
   })
 
-  const totalPages = Math.ceil(filteredContrats.length / itemsPerPage)
-  const paginatedContrats = filteredContrats.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  )
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
-  const getStatusStyle = (status) => {
-    if (status === 'actif') return { bg: '#dcfce7', color: '#166534' }
-    if (status === 'resilié') return { bg: '#fee2e2', color: '#991b1b' }
+  const getStatusColor = (status) => {
+    const s = (status || '').toLowerCase()
+    if (s === 'actif') return { bg: '#dcfce7', color: '#166534' }
+    if (s === 'résilié' || s === 'resilié') return { bg: '#fee2e2', color: '#991b1b' }
     return { bg: '#fed7aa', color: '#92400e' }
-  }
-
-  const getDaysUntilExpiry = (dateStr) => {
-    if (!dateStr) return null
-    const today = new Date()
-    const expiry = new Date(dateStr)
-    const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
-    return daysLeft
   }
 
   const formatEuros = (value) => {
     if (!value) return '-'
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value)
+    const n = Number(value) || 0
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
+  }
+
+  const getDaysUntilExpiry = (dateStr) => {
+    if (!dateStr) return null
+    try {
+      const today = new Date()
+      const expiry = new Date(dateStr)
+      const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+      return daysLeft > 0 ? daysLeft : null
+    } catch {
+      return null
+    }
   }
 
   return (
-    <div style={{ padding: '32px', marginLeft: '260px' }}>
+    <div style={{ padding: '32px', marginLeft: '260px', minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#080808', margin: 0, fontFamily: 'Arial, sans-serif' }}>
@@ -131,13 +140,16 @@ export default function Contrats() {
         </select>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Chargement...</div>
-      ) : paginatedContrats.length === 0 ? (
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>{error}</div>
+      ) : paginated.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Aucun contrat trouvé</div>
       ) : (
         <>
+          {/* Table */}
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
@@ -159,8 +171,9 @@ export default function Contrats() {
               </tr>
             </thead>
             <tbody>
-              {paginatedContrats.map((contrat, idx) => {
-                const statusStyle = getStatusStyle(contrat.statut)
+              {paginated.map((contrat, idx) => {
+                if (!contrat || !contrat.id) return null
+                const statusStyle = getStatusColor(contrat.statut || contrat.status)
                 const daysLeft = getDaysUntilExpiry(contrat.date_echeance)
                 const isUrgent = daysLeft && daysLeft > 0 && daysLeft <= 30
                 const bgColor = idx % 2 === 0 ? 'white' : '#f9fafb'
@@ -170,10 +183,10 @@ export default function Contrats() {
                       {contrat.client_nom} {contrat.client_prenom}
                     </td>
                     <td style={{ padding: '12px 16px', color: '#080808', fontSize: '14px' }}>
-                      {contrat.type_contrat}
+                      {contrat.type_contrat || '-'}
                     </td>
                     <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>
-                      {contrat.compagnie}
+                      {contrat.compagnie || '-'}
                     </td>
                     <td style={{ padding: '12px 16px', color: '#080808', fontSize: '14px', fontWeight: '600' }}>
                       {formatEuros(contrat.prime_annuelle)}
@@ -192,7 +205,7 @@ export default function Contrats() {
                         borderRadius: '12px',
                         fontWeight: '600'
                       }}>
-                        {contrat.statut}
+                        {contrat.statut || contrat.status || '-'}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: '13px' }}>

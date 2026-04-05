@@ -1,73 +1,79 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import toast from 'react-hot-toast'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
 export default function Clients() {
-  const navigate = useNavigate()
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
   const [page, setPage] = useState(1)
-  const itemsPerPage = 20
+  const navigate = useNavigate()
+  const PER_PAGE = 20
 
   useEffect(() => {
     fetchClients()
   }, [])
 
   const fetchClients = async () => {
-    setLoading(true)
     try {
+      setLoading(true)
+      setError('')
       const token = localStorage.getItem('token')
       const res = await fetch(`${API_URL}/api/clients`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      setClients(data)
+      const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+      setClients(arr || [])
     } catch (err) {
-      console.error('Error:', err)
-      toast.error('Erreur chargement clients')
+      console.error('Fetch error:', err)
+      setError('Impossible de charger les clients')
+      setClients([])
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredClients = (Array.isArray(clients) ? clients : []).filter(c => {
-    const matchesSearch = 
-      `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
-      (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
-    const matchesStatus = statusFilter === 'all' || c.status === statusFilter
-    const matchesRisk = riskFilter === 'all'
-      || (riskFilter === 'Faible' && c.risk_score <= 30)
-      || (riskFilter === 'Modéré' && c.risk_score > 30 && c.risk_score <= 60)
-      || (riskFilter === 'Élevé' && c.risk_score > 60)
-    return matchesSearch && matchesStatus && matchesRisk
+  const safeClients = Array.isArray(clients) ? clients : []
+  
+  const filtered = safeClients.filter(c => {
+    if (!c) return false
+    const nom = `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase()
+    const email = (c.email || '').toLowerCase()
+    const searchLower = search.toLowerCase()
+    const matchSearch = nom.includes(searchLower) || email.includes(searchLower)
+    const matchStatus = statusFilter === 'all' || c.status === statusFilter
+    const score = Number(c.risk_score) || 0
+    const matchRisk = riskFilter === 'all'
+      || (riskFilter === 'Faible' && score <= 30)
+      || (riskFilter === 'Modéré' && score > 30 && score <= 60)
+      || (riskFilter === 'Élevé' && score > 60)
+    return matchSearch && matchStatus && matchRisk
   })
 
-  const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
-  const paginatedClients = filteredClients.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  )
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
-  const getStatusBg = (status) => {
+  const getStatusColor = (status) => {
     if (status === 'actif') return { bg: '#dcfce7', color: '#166534' }
     if (status === 'prospect') return { bg: '#fef9c3', color: '#854d0e' }
     return { bg: '#f3f4f6', color: '#6b7280' }
   }
 
   const getRiskColor = (score) => {
-    if (score <= 30) return { bg: '#dcfce7', color: '#166534' }
-    if (score <= 60) return { bg: '#fed7aa', color: '#92400e' }
-    return { bg: '#fee2e2', color: '#991b1b' }
+    const s = Number(score) || 0
+    if (s > 60) return { bg: '#fee2e2', color: '#991b1b' }
+    if (s > 30) return { bg: '#fed7aa', color: '#92400e' }
+    return { bg: '#dcfce7', color: '#166534' }
   }
 
   return (
-    <div style={{ padding: '32px', marginLeft: '260px' }}>
+    <div style={{ padding: '32px', marginLeft: '260px', minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#080808', margin: 0, fontFamily: 'Arial, sans-serif' }}>
@@ -148,13 +154,16 @@ export default function Clients() {
         </select>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Chargement...</div>
-      ) : paginatedClients.length === 0 ? (
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>{error}</div>
+      ) : paginated.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Aucun client trouvé</div>
       ) : (
         <>
+          {/* Table */}
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
@@ -174,8 +183,9 @@ export default function Clients() {
               </tr>
             </thead>
             <tbody>
-              {paginatedClients.map((client, idx) => {
-                const statusStyle = getStatusBg(client.status)
+              {paginated.map((client, idx) => {
+                if (!client || !client.id) return null
+                const statusStyle = getStatusColor(client.status)
                 const riskStyle = getRiskColor(client.risk_score)
                 const bgColor = idx % 2 === 0 ? 'white' : '#f9fafb'
                 return (
@@ -197,7 +207,7 @@ export default function Clients() {
                         borderRadius: '12px',
                         fontWeight: '600'
                       }}>
-                        {client.status}
+                        {client.status || '-'}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: '13px' }}>
@@ -208,7 +218,7 @@ export default function Clients() {
                         borderRadius: '12px',
                         fontWeight: '600'
                       }}>
-                        {client.risk_score}/100
+                        {client.risk_score || 0}/100
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: '14px' }}>
