@@ -1,215 +1,279 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, Edit, Trash2, Plus } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
 export default function Clients() {
-  const navigate = useNavigate();
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [riskFilter, setRiskFilter] = useState('all');
+  const navigate = useNavigate()
+  const [clients, setClients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [riskFilter, setRiskFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const itemsPerPage = 20
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    fetchClients()
+  }, [])
 
   const fetchClients = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('https://courtia.onrender.com/api/clients', {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_URL}/api/clients`, {
         headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setClients(data);
+      })
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setClients(data)
     } catch (err) {
-      toast.error('Erreur chargement clients');
+      console.error('Error:', err)
+      toast.error('Erreur chargement clients')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const filteredClients = (clients || []).filter(c => {
     const matchesSearch = 
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
-      (c.email && c.email.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || c.statut === statusFilter;
+      (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
+    const matchesStatus = statusFilter === 'all' || c.status === statusFilter
     const matchesRisk = riskFilter === 'all'
-      || (riskFilter === 'Faible' && c.score_risque <= 30)
-      || (riskFilter === 'Modéré' && c.score_risque > 30 && c.score_risque <= 60)
-      || (riskFilter === 'Élevé' && c.score_risque > 60);
-    return matchesSearch && matchesStatus && matchesRisk;
-  });
+      || (riskFilter === 'Faible' && c.risk_score <= 30)
+      || (riskFilter === 'Modéré' && c.risk_score > 30 && c.risk_score <= 60)
+      || (riskFilter === 'Élevé' && c.risk_score > 60)
+    return matchesSearch && matchesStatus && matchesRisk
+  })
 
-  const handleViewClient = (clientId) => {
-    navigate(`/client/${clientId}`);
-  };
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
+  const paginatedClients = filteredClients.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  )
 
-  const handleEditClient = (clientId) => {
-    navigate(`/clients/${clientId}/edit`);
-  };
+  const getStatusBg = (status) => {
+    if (status === 'actif') return { bg: '#dcfce7', color: '#166534' }
+    if (status === 'prospect') return { bg: '#fef9c3', color: '#854d0e' }
+    return { bg: '#f3f4f6', color: '#6b7280' }
+  }
 
-  const handleDeleteClient = async (clientId) => {
-    if (!window.confirm('Confirmer la suppression?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`https://courtia.onrender.com/api/clients/${clientId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      toast.success('Client supprimé');
-      fetchClients();
-    } catch (err) {
-      toast.error('Erreur suppression');
-    }
-  };
-
-  if (loading) {
-    return <div className="p-8 text-center">Chargement...</div>;
+  const getRiskColor = (score) => {
+    if (score <= 30) return { bg: '#dcfce7', color: '#166534' }
+    if (score <= 60) return { bg: '#fed7aa', color: '#92400e' }
+    return { bg: '#fee2e2', color: '#991b1b' }
   }
 
   return (
-    <div className="p-8">
+    <div style={{ padding: '32px', marginLeft: '260px' }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white">👥 Clients</h1>
-          <p className="text-slate-400 mt-1">Gérez votre portefeuille client</p>
-        </div>
-        <button 
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#080808', margin: 0, fontFamily: 'Arial, sans-serif' }}>
+          Clients
+        </h1>
+        <button
           onClick={() => navigate('/clients/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '14px'
+          }}
         >
-          <Plus size={18} /> Nouveau client
+          + Nouveau client
         </button>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <input 
+      <div style={{ marginBottom: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <input
           type="text"
           placeholder="Rechercher par nom ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+          style={{
+            flex: 1,
+            minWidth: '200px',
+            padding: '10px 12px',
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px',
+            color: '#080808'
+          }}
         />
-        <select 
-          value={statusFilter} 
+        
+        <select
+          value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+          style={{
+            padding: '10px 12px',
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px',
+            color: '#080808',
+            cursor: 'pointer'
+          }}
         >
           <option value="all">Tous les statuts</option>
           <option value="actif">Actif</option>
           <option value="prospect">Prospect</option>
-          <option value="perdu">Perdu</option>
+          <option value="inactif">Inactif</option>
+        </select>
+
+        <select
+          value={riskFilter}
+          onChange={(e) => setRiskFilter(e.target.value)}
+          style={{
+            padding: '10px 12px',
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px',
+            color: '#080808',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="all">Tous risques</option>
+          <option value="Faible">Faible (0-30)</option>
+          <option value="Modéré">Modéré (31-60)</option>
+          <option value="Élevé">Élevé (61-100)</option>
         </select>
       </div>
 
-      {/* Risk Filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <span style={{ fontSize: 13, color: '#6b7280', alignSelf: 'center' }}>Risque :</span>
-        {['all', 'Faible', 'Modéré', 'Élevé'].map(niveau => (
-          <button
-            key={niveau}
-            onClick={() => setRiskFilter(niveau)}
-            style={{
-              padding: '6px 12px',
-              background: riskFilter === niveau ? '#0a0a0a' : 'white',
-              color: riskFilter === niveau ? 'white' : '#374151',
-              border: '1px solid #e5e7eb', borderRadius: 6,
-              cursor: 'pointer', fontSize: 12,
-              fontWeight: riskFilter === niveau ? 600 : 400
-            }}
-          >{niveau === 'all' ? 'Tous' : niveau}</button>
-        ))}
-      </div>
-
-      {/* Clients Table */}
-      {filteredClients.length === 0 ? (
-        <div className="text-center py-12 bg-slate-800/50 rounded-lg">
-          <p className="text-slate-400">Aucun client trouvé</p>
-        </div>
+      {/* Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Chargement...</div>
+      ) : paginatedClients.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Aucun client trouvé</div>
       ) : (
-        <div className="overflow-x-auto bg-slate-800/30 rounded-lg">
-          <table className="w-full">
-            <thead className="bg-slate-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Nom</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Téléphone</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Score Risque</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Actions</th>
+        <>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: '#080808' }}>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontSize: '13px', fontWeight: '600' }}>Nom & Prénom</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontSize: '13px', fontWeight: '600' }}>Email</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontSize: '13px', fontWeight: '600' }}>Téléphone</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontSize: '13px', fontWeight: '600' }}>Statut</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontSize: '13px', fontWeight: '600' }}>Score risque</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontSize: '13px', fontWeight: '600' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredClients.map((client) => (
-                <tr key={client.id} className="border-t border-slate-700 hover:bg-slate-700/30">
-                  <td className="px-6 py-4 text-white">{client.nom} {client.prenom}</td>
-                  <td className="px-6 py-4 text-slate-400">{client.email}</td>
-                  <td className="px-6 py-4 text-slate-400">{client.telephone || '-'}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      client.statut === 'actif' ? 'bg-green-500/20 text-green-300' :
-                      client.statut === 'prospect' ? 'bg-blue-500/20 text-blue-300' :
-                      'bg-red-500/20 text-red-300'
-                    }`}>
-                      {client.statut}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span style={{
-                      padding: '4px 10px',
-                      background: client.score_risque <= 30 ? '#dcfce7'
-                        : client.score_risque <= 60 ? '#fef9c3'
-                        : client.score_risque <= 80 ? '#ffedd5'
-                        : '#fee2e2',
-                      color: client.score_risque <= 30 ? '#16a34a'
-                        : client.score_risque <= 60 ? '#ca8a04'
-                        : client.score_risque <= 80 ? '#ea580c'
-                        : '#dc2626',
-                      borderRadius: 12, fontSize: 12, fontWeight: 700
-                    }}>
-                      {client.score_risque}/100
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 flex gap-2">
-                    <button 
-                      onClick={() => handleViewClient(client.id)}
-                      className="p-2 hover:bg-blue-500/20 rounded transition-colors text-blue-400"
-                      title="Voir"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleEditClient(client.id)}
-                      className="p-2 hover:bg-cyan-500/20 rounded transition-colors text-cyan-400"
-                      title="Éditer"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteClient(client.id)}
-                      className="p-2 hover:bg-red-500/20 rounded transition-colors text-red-400"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {paginatedClients.map((client, idx) => {
+                const statusStyle = getStatusBg(client.status)
+                const riskStyle = getRiskColor(client.risk_score)
+                const bgColor = idx % 2 === 0 ? 'white' : '#f9fafb'
+                return (
+                  <tr key={client.id} style={{ backgroundColor: bgColor, borderTop: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '12px 16px', color: '#080808', fontSize: '14px' }}>
+                      {client.first_name} {client.last_name}
+                    </td>
+                    <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>
+                      {client.email || '-'}
+                    </td>
+                    <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '14px' }}>
+                      {client.phone || '-'}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px' }}>
+                      <span style={{
+                        padding: '4px 12px',
+                        backgroundColor: statusStyle.bg,
+                        color: statusStyle.color,
+                        borderRadius: '12px',
+                        fontWeight: '600'
+                      }}>
+                        {client.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px' }}>
+                      <span style={{
+                        padding: '4px 12px',
+                        backgroundColor: riskStyle.bg,
+                        color: riskStyle.color,
+                        borderRadius: '12px',
+                        fontWeight: '600'
+                      }}>
+                        {client.risk_score}/100
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '14px' }}>
+                      <button
+                        onClick={() => navigate(`/client/${client.id}`)}
+                        style={{
+                          padding: '4px 12px',
+                          backgroundColor: '#2563eb',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        Voir
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
-        </div>
-      )}
 
-      {/* Pagination info */}
-      <div className="mt-4 text-sm text-slate-400">
-        Affichage {filteredClients.length} / {clients.length} clients
-      </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: page === 1 ? '#e5e7eb' : '#2563eb',
+                  color: page === 1 ? '#9ca3af' : 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: page === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                ← Précédent
+              </button>
+              <span style={{ color: '#6b7280', alignSelf: 'center', fontSize: '14px' }}>
+                Page {page} / {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: page === totalPages ? '#e5e7eb' : '#2563eb',
+                  color: page === totalPages ? '#9ca3af' : 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Suivant →
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
-  );
+  )
 }
