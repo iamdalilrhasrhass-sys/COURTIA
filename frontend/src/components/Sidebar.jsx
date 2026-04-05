@@ -27,7 +27,7 @@ function ArkDrawerPanel({ onClose }) {
         conversationHistory: messages.slice(-10)
       }, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        timeout: 45000
+        timeout: 60000
       })
       let reply = null
       if (res.data && typeof res.data.reply === 'string') {
