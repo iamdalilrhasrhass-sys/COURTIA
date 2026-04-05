@@ -88,34 +88,19 @@ router.get('/stats', verifyToken, async (req, res) => {
     `);
 
     // Clients récents (avec scores variés pour montrer la diversité)
-    // Stratégie : prendre 1 client par tranche de score + 1 recent
+    // Prendre le meilleur client de chaque tranche de score
     const recentsResult = await pool.query(`
-      WITH scored_clients AS (
-        SELECT id, first_name as nom, last_name as prenom,
+      WITH ranked_by_score AS (
+        SELECT 
+          id, first_name as nom, last_name as prenom,
           email, status as statut, risk_score as score_risque,
-          CASE
-            WHEN risk_score >= 70 THEN 'très_élevé'
-            WHEN risk_score >= 55 THEN 'élevé'
-            WHEN risk_score >= 35 THEN 'modéré'
-            ELSE 'faible'
-          END as score_band
+          ROW_NUMBER() OVER (PARTITION BY risk_score ORDER BY id ASC) as rn
         FROM clients
-      ),
-      banded_clients AS (
-        SELECT * FROM scored_clients WHERE score_band = 'très_élevé' ORDER BY risk_score DESC LIMIT 1
-        UNION ALL
-        SELECT * FROM scored_clients WHERE score_band = 'élevé' ORDER BY risk_score DESC LIMIT 1
-        UNION ALL
-        SELECT * FROM scored_clients WHERE score_band = 'modéré' ORDER BY risk_score DESC LIMIT 1
-        UNION ALL
-        SELECT * FROM scored_clients WHERE score_band = 'faible' ORDER BY risk_score ASC LIMIT 1
-        UNION ALL
-        SELECT * FROM scored_clients ORDER BY id DESC LIMIT 1
       )
-      SELECT DISTINCT ON (id) id, nom, prenom, email, statut, score_risque
-      FROM banded_clients
+      SELECT id, nom, prenom, email, statut, score_risque
+      FROM ranked_by_score
+      WHERE rn = 1
       ORDER BY score_risque DESC
-      LIMIT 5
     `);
 
     // Types de contrats
