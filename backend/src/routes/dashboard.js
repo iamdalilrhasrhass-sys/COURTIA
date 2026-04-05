@@ -88,19 +88,30 @@ router.get('/stats', verifyToken, async (req, res) => {
     `);
 
     // Clients récents (avec scores variés pour montrer la diversité)
-    // Prendre le meilleur client de chaque tranche de score
+    // Prendre 1 client par tier de risque
     const recentsResult = await pool.query(`
-      WITH ranked_by_score AS (
-        SELECT 
-          id, first_name as nom, last_name as prenom,
-          email, status as statut, risk_score as score_risque,
-          ROW_NUMBER() OVER (PARTITION BY risk_score ORDER BY id ASC) as rn
+      WITH ranked AS (
+        SELECT *, 
+          CASE 
+            WHEN risk_score >= 70 THEN 1
+            WHEN risk_score >= 50 THEN 2
+            WHEN risk_score >= 30 THEN 3
+            ELSE 4
+          END as risk_tier,
+          ROW_NUMBER() OVER (PARTITION BY CASE 
+            WHEN risk_score >= 70 THEN 1
+            WHEN risk_score >= 50 THEN 2
+            WHEN risk_score >= 30 THEN 3
+            ELSE 4
+          END ORDER BY created_at DESC) as rn
         FROM clients
       )
-      SELECT id, nom, prenom, email, statut, score_risque
-      FROM ranked_by_score
+      SELECT DISTINCT ON (risk_tier) id, first_name as nom, last_name as prenom, 
+        email, status as statut, risk_score as score_risque
+      FROM ranked
       WHERE rn = 1
-      ORDER BY score_risque DESC
+      ORDER BY risk_tier, risk_score DESC
+      LIMIT 5
     `);
 
     // Types de contrats

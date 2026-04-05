@@ -165,7 +165,7 @@ export default function Sidebar() {
       }}>
         {/* Logo */}
         <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid #1a1a1a' }}>
-          <span style={{ color: 'white', fontWeight: 800, fontSize: 22, letterSpacing: 2 }}>COURTIA</span>
+          <span style={{ color: 'white', fontWeight: 700, fontSize: 18, fontFamily: 'Arial, sans-serif' }}>COURTIA</span>
         </div>
 
         {/* Navigation */}
@@ -203,16 +203,18 @@ export default function Sidebar() {
             onClick={() => setArkDrawerOpen(true)}
             style={{
               width: '100%', padding: '12px 16px',
-              background: 'linear-gradient(135deg, #065f46, #047857)',
-              border: '1px solid #059669', borderRadius: 10,
+              background: '#2563eb',
+              border: 'none', borderRadius: 8,
               color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600
+              display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600,
+              transition: 'background 0.2s'
             }}
+            onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
+            onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
           >
             <span style={{
               width: 8, height: 8, background: '#4ade80',
-              borderRadius: '50%', display: 'inline-block',
-              boxShadow: '0 0 6px #4ade80'
+              borderRadius: '50%', display: 'inline-block'
             }} />
             <span>ARK — Assistant IA</span>
           </button>
@@ -224,10 +226,13 @@ export default function Sidebar() {
             onClick={logout}
             style={{
               width: '100%', padding: '10px 16px',
-              background: 'none', border: '1px solid #374151',
-              borderRadius: 8, color: '#9ca3af', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8, fontSize: 13
+              background: 'none', border: 'none',
+              borderRadius: 8, color: '#6b7280', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8, fontSize: 13,
+              transition: 'color 0.2s'
             }}
+            onMouseEnter={e => e.currentTarget.style.color = 'white'}
+            onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
           >
             <span>→</span>
             <span>Déconnexion</span>

@@ -132,23 +132,30 @@ export default function LoginPage() {
           </form>
         </div>
 
+        {/* Lien créer compte */}
+        <p style={{ textAlign: 'center', fontSize: '13px', color: '#6b7280', marginTop: '16px', marginBottom: 0 }}>
+          Pas encore de compte ?{' '}
+          <a href="/register" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
+            Créer un compte
+          </a>
+        </p>
+
         {/* Demo credentials */}
         <div style={{
-          marginTop: '24px',
-          backgroundColor: '#ecf0f1',
-          border: '1px solid #bdc3c7',
-          borderRadius: '8px',
-          padding: '16px',
-          textAlign: 'center'
+          marginTop: '16px',
+          backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: '10px',
+          padding: '16px'
         }}>
-          <p style={{ fontSize: '12px', fontWeight: '600', color: '#2c3e50', margin: '0 0 8px 0' }}>
-            🧪 Compte démo
+          <p style={{ fontSize: '13px', fontWeight: '600', color: '#1d4ed8', margin: '0 0 6px 0' }}>
+            🎯 Accès démonstration
           </p>
-          <p style={{ fontSize: '12px', color: '#34495e', margin: '4px 0', fontFamily: 'monospace' }}>
-            <strong>Email:</strong> demo@courtia.fr
+          <p style={{ fontSize: '13px', color: '#374151', margin: '0 0 2px 0' }}>
+            Email : <strong>demo@courtia.fr</strong>
           </p>
-          <p style={{ fontSize: '12px', color: '#34495e', margin: '4px 0', fontFamily: 'monospace' }}>
-            <strong>Mot de passe:</strong> Demo2026!
+          <p style={{ fontSize: '13px', color: '#374151', margin: 0 }}>
+            Mot de passe : <strong>Demo2026!</strong>
           </p>
         </div>
       </div>
