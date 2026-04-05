@@ -76,7 +76,7 @@ export default function Dashboard() {
  </div>
 
  {/* Indicateurs métier ARK */}
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+ {stats && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
  <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
  <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>🔴 Clients risque élevé</p>
  <p style={{ fontSize: 28, fontWeight: 700, color: '#dc2626', margin: 0 }}>{(stats.clientsRecents || []).filter(c => c.score_risque > 60).length}</p>
@@ -92,7 +92,7 @@ export default function Dashboard() {
  <p style={{ fontSize: 28, fontWeight: 700, color: '#2563eb', margin: 0 }}>{stats.contratsActifs && stats.primeTotale ? (Math.round(stats.primeTotale / stats.contratsActifs).toLocaleString('fr-FR') + '€') : '—'}</p>
  <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>par contrat actif</p>
  </div>
- </div>
+ </div>}
 
  {/* Graphique revenus */}
  <div style={{ background: '#1e293b', borderRadius: 12, padding: 24, marginBottom: 24 }}>
