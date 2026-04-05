@@ -119,7 +119,7 @@ export default function ClientDetail() {
  conversationHistory: arkMessages.slice(-10)
  }, {
  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
- timeout: 45000
+ timeout: 60000
  })
  console.log('ARK: réponse reçue:', res.status, typeof res.data)
  let reply = null
