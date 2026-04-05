@@ -5,8 +5,8 @@ import { useAuthStore } from '../stores/authStore'
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, loading, error } = useAuthStore()
-  const [email, setEmail] = useState('dalil@test.com')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('demo@courtia.fr')
+  const [password, setPassword] = useState('Demo2026!')
   const [err, setErr] = useState('')
 
   const handleSubmit = async (e) => {
@@ -26,11 +26,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-block mb-4 p-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg">
-            <span className="text-4xl">🚗</span>
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">CRM Assurance</h1>
-          <p className="text-slate-400">Insurance management, reimagined</p>
+          <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-2">COURTIA</h1>
+          <p className="text-slate-400">Le CRM intelligent pour courtiers d'assurance</p>
         </div>
 
         <div className="bg-slate-800/60 rounded-xl shadow-lg border border-slate-700/50 backdrop-blur-sm p-8">
@@ -75,8 +72,8 @@ export default function LoginPage() {
 
         <div className="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
           <p className="text-xs font-semibold text-blue-300 mb-2">🧪 Demo Credentials</p>
-          <p className="text-xs text-blue-200">Email: dalil@test.com</p>
-          <p className="text-xs text-blue-200">Password: password123</p>
+          <p className="text-xs text-blue-200">Email: demo@courtia.fr</p>
+          <p className="text-xs text-blue-200">Password: Demo2026!</p>
         </div>
       </div>
     </div>
