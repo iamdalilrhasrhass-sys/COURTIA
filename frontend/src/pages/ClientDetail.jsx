@@ -192,10 +192,10 @@ export default function ClientDetail() {
  <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: '#0a0a0a' }}>👤 Identité</h2>
  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
  {[
- { label: 'Adresse', value: client.adresse || '—' },
+ { label: 'Adresse', value: client.address || client.adresse || '—' },
  { label: 'Profession', value: client.profession || '—' },
  { label: 'Situation familiale', value: client.situation_familiale || '—' },
- { label: 'Segment', value: client.segment || '—' },
+ { label: 'Segment', value: client.type || client.segment || '—' },
  { label: 'Entreprise', value: client.company_name || '—' },
  { label: 'Client depuis', value: formatDate(client.created_at) }
  ].map(({ label, value }) => (
