@@ -114,10 +114,12 @@ export default function ClientDetail() {
  message,
  clientData: client,
  conversationHistory: arkMessages
- }, { headers })
- const reply = res.data.reply || 'Pas de réponse'
+ }, { headers, timeout: 15000 })
+ console.log('ARK Response:', res.data)
+ const reply = res.data?.reply || 'Pas de réponse'
  setArkMessages(prev => [...prev, { role: 'assistant', content: reply }])
  } catch (err) {
+ console.error('ARK Error:', err.message, err.response?.data)
  // Fallback: Mock response for testing when API unavailable
  let mockReply = ''
  if (message.toLowerCase().includes('risque')) {
@@ -201,7 +203,7 @@ export default function ClientDetail() {
  ].map(({ label, value }) => (
  <div key={label}>
  <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>{label}</p>
- <p style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>{value}</p>
+ <p style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#111827' }}>{value}</p>
  </div>
  ))}
  </div>
