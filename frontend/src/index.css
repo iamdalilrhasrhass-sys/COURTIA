@@ -9,9 +9,41 @@
 }
 
 body {
-  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
-  color: #f1f5f9;
+  font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f9fafb;
+  color: #111827;
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+/* App styles override */
+main {
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+/* Landing page - Force Arial everywhere */
 
 /* Landing page - Force Arial everywhere */
 main, section, div {

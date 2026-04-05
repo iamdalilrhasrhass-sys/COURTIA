@@ -104,22 +104,50 @@ export default function ClientDetail() {
  }
 
  async function sendArkMessage(message) {
- if (!message.trim()) return
- const userMsg = { role: 'user', content: message }
- setArkMessages(prev => [...prev, userMsg])
+ if (!message || !message.trim()) return
+ const msgUser = { role: 'user', content: message.trim() }
+ setArkMessages(prev => [...prev, msgUser])
  setArkInput('')
  setArkLoading(true)
  try {
+ const token = getToken()
+ if (!token) throw new Error('Token manquant')
+ console.log('ARK: envoi message:', message.substring(0, 50))
  const res = await axios.post(`${API_URL}/api/ark/chat`, {
- message,
+ message: message.trim(),
  clientData: client,
- conversationHistory: arkMessages
- }, { headers, timeout: 15000 })
- console.log('ARK Response:', res.data)
- const reply = res.data?.reply || 'Pas de réponse'
+ conversationHistory: arkMessages.slice(-10)
+ }, {
+ headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+ timeout: 45000
+ })
+ console.log('ARK: réponse reçue:', res.status, typeof res.data)
+ let reply = null
+ if (res.data && typeof res.data.reply === 'string') {
+ reply = res.data.reply
+ } else if (res.data && typeof res.data.message === 'string') {
+ reply = res.data.message
+ } else if (typeof res.data === 'string') {
+ reply = res.data
+ } else {
+ reply = JSON.stringify(res.data)
+ }
+ if (!reply || reply.trim() === '') reply = 'ARK a traité votre demande mais n\'a pas retourné de réponse.'
  setArkMessages(prev => [...prev, { role: 'assistant', content: reply }])
  } catch (err) {
- console.error('ARK Error:', err.message, err.response?.data)
+ console.error('ARK frontend error:', err.message)
+ console.error('ARK error response:', err.response?.status, err.response?.data)
+ let errMsg = 'ARK est temporairement indisponible.'
+ if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+ errMsg = 'ARK met du temps à répondre (le serveur démarre). Patientez 30 sec et réessayez.'
+ } else if (err.response?.status === 401) {
+ errMsg = 'Session expirée. Reconnectez-vous.'
+ } else if (err.response?.status === 500) {
+ errMsg = `Erreur ARK: ${err.response?.data?.error || 'Erreur serveur'}.`
+ } else if (!err.response) {
+ errMsg = 'Impossible de contacter le serveur.'
+ }
+ setArkMessages(prev => [...prev, { role: 'assistant', content: errMsg }])
  // Fallback: Mock response for testing when API unavailable
  let mockReply = ''
  if (message.toLowerCase().includes('risque')) {
@@ -192,18 +220,18 @@ export default function ClientDetail() {
  {/* Section 1 — Identité */}
  <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24 }}>
  <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: '#0a0a0a' }}>👤 Identité</h2>
- <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
  {[
- { label: 'Adresse', value: client.address || client.adresse || '—' },
+ { label: 'Adresse', value: client.adresse || client.address || '—' },
  { label: 'Profession', value: client.profession || '—' },
  { label: 'Situation familiale', value: client.situation_familiale || '—' },
- { label: 'Segment', value: client.type || client.segment || '—' },
+ { label: 'Segment', value: client.segment || client.type || '—' },
  { label: 'Entreprise', value: client.company_name || '—' },
- { label: 'Client depuis', value: formatDate(client.created_at) }
+ { label: 'Client depuis', value: client.created_at ? new Date(client.created_at).toLocaleDateString('fr-FR') : '—' }
  ].map(({ label, value }) => (
- <div key={label}>
- <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>{label}</p>
- <p style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#111827' }}>{value}</p>
+ <div key={label} style={{ padding: '4px 0' }}>
+ <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 4px 0', fontWeight: 500 }}>{label}</p>
+ <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: '#111827' }}>{String(value)}</p>
  </div>
  ))}
  </div>
