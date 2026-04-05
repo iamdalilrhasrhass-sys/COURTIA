@@ -231,42 +231,30 @@ export default function Contrats() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
               <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: page === 1 ? '#e5e7eb' : '#2563eb',
-                  color: page === 1 ? '#9ca3af' : 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: page === 1 ? 'not-allowed' : 'pointer',
-                  fontWeight: '600'
-                }}
+                style={{ padding: '8px 16px', border: '1px solid #d1d5db', borderRadius: '8px', backgroundColor: page === 1 ? '#f3f4f6' : 'white', color: page === 1 ? '#9ca3af' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: '14px' }}
               >
                 ← Précédent
               </button>
-              <span style={{ color: '#6b7280', alignSelf: 'center', fontSize: '14px' }}>
+              <span style={{ padding: '8px 16px', fontSize: '14px', color: '#6b7280' }}>
                 Page {page} / {totalPages}
               </span>
               <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: page === totalPages ? '#e5e7eb' : '#2563eb',
-                  color: page === totalPages ? '#9ca3af' : 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                  fontWeight: '600'
-                }}
+                style={{ padding: '8px 16px', border: '1px solid #d1d5db', borderRadius: '8px', backgroundColor: page === totalPages ? '#f3f4f6' : 'white', color: page === totalPages ? '#9ca3af' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: '14px' }}
               >
                 Suivant →
               </button>
             </div>
           )}
+
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#9ca3af', marginTop: '12px' }}>
+            {filtered.length} contrat{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
+          </p>
         </>
       )}
     </div>
