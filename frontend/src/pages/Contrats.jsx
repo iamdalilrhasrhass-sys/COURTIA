@@ -33,7 +33,7 @@ export default function Contrats() {
     }
   }
 
-  const filteredContrats = (contrats || []).filter(c => {
+  const filteredContrats = (Array.isArray(contrats) ? contrats : []).filter(c => {
     const matchesStatus = statusFilter === 'all' || c.statut === statusFilter
     const matchesType = typeFilter === 'all' || c.type_contrat === typeFilter
     return matchesStatus && matchesType
