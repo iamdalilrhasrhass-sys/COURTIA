@@ -88,14 +88,25 @@ router.get('/stats', verifyToken, async (req, res) => {
     `);
 
     // Clients récents (avec scores variés pour montrer la diversité)
-    // Prendre 1 client par score_risque distinct
+    // Prendre 1 client par tier de score
     const recentsResult = await pool.query(`
-      SELECT DISTINCT ON (risk_score) id, first_name as nom, last_name as prenom, 
-        email, status as statut, risk_score as score_risque
-      FROM clients
-      ORDER BY risk_score DESC, created_at DESC
+      SELECT DISTINCT ON (tier) id, first_name as nom, last_name as prenom, 
+        status as statut, risk_score as score_risque, created_at, tier
+      FROM (
+        SELECT *,
+        CASE
+          WHEN risk_score >= 80 THEN 'A'
+          WHEN risk_score >= 60 THEN 'B'
+          WHEN risk_score >= 40 THEN 'C'
+          WHEN risk_score >= 20 THEN 'D'
+          ELSE 'E'
+        END as tier
+        FROM clients
+        WHERE courtier_id = $1
+      ) ranked
+      ORDER BY tier ASC, created_at DESC
       LIMIT 5
-    `);
+    `, [req.user.courtier_id || 1]);
 
     // Types de contrats
     const typesResult = await pool.query(`
