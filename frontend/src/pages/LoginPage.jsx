@@ -12,83 +12,144 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setErr('')
     try {
       await login(email, password)
       navigate('/dashboard')
       toast.success('Connecté avec succès')
     } catch (err) {
-      setErr(err.message || 'Erreur de connexion')
+      setErr(err.message || 'Email ou mot de passe incorrect')
       toast.error('Email ou mot de passe incorrect')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Gradient blobs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
-
-      <div className="w-full max-w-md relative z-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-2">
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f8fafc',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'Arial, sans-serif',
+      padding: '0 16px'
+    }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
+        
+        {/* Logo + Titre */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{
+            width: '56px', height: '56px',
+            background: 'linear-gradient(135deg, #2563eb, #0ea5e9)',
+            borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px auto'
+          }}>
+            <span style={{ color: 'white', fontSize: '28px', fontWeight: '700' }}>⚡</span>
+          </div>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', color: '#080808', margin: '0 0 8px 0' }}>
             COURTIA
           </h1>
-          <p className="text-slate-400 text-base">Le CRM intelligent pour courtiers d'assurance</p>
+          <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
+            Le CRM intelligent pour courtiers d'assurance
+          </p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-slate-800/60 rounded-xl shadow-lg border border-slate-700/50 backdrop-blur-sm p-8 mb-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error message */}
-            {(err || error) && (
-              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/50">
-                <p className="text-sm text-red-400">⚠️ {err || error}</p>
-              </div>
-            )}
+        {/* Card formulaire */}
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '12px',
+          padding: '32px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#080808', margin: '0 0 24px 0' }}>
+            Connexion
+          </h2>
 
-            {/* Email input */}
+          {(err || error) && (
+            <div style={{
+              backgroundColor: '#fef2f2', border: '1px solid #fecaca',
+              borderRadius: '8px', padding: '12px', marginBottom: '16px',
+              color: '#dc2626', fontSize: '14px'
+            }}>
+              ⚠️ {err || error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label className="block text-sm font-semibold text-slate-200 mb-2">Email</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="demo@courtia.fr"
-                className="w-full px-4 py-3 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                style={{
+                  width: '100%', padding: '10px 12px',
+                  border: '1px solid #d1d5db', borderRadius: '8px',
+                  fontSize: '14px', color: '#080808',
+                  outline: 'none', boxSizing: 'border-box',
+                  backgroundColor: 'white'
+                }}
               />
             </div>
 
-            {/* Password input */}
             <div>
-              <label className="block text-sm font-semibold text-slate-200 mb-2">Mot de passe</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                Mot de passe
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-lg bg-slate-700/50 border border-slate-600/50 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                style={{
+                  width: '100%', padding: '10px 12px',
+                  border: '1px solid #d1d5db', borderRadius: '8px',
+                  fontSize: '14px', color: '#080808',
+                  outline: 'none', boxSizing: 'border-box',
+                  backgroundColor: 'white'
+                }}
               />
             </div>
 
-            {/* Submit button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                width: '100%', padding: '11px',
+                backgroundColor: loading ? '#93c5fd' : '#2563eb',
+                color: 'white', border: 'none',
+                borderRadius: '8px', fontSize: '15px',
+                fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer',
+                marginTop: '8px'
+              }}
             >
-              {loading ? '🔄 Connexion en cours...' : '🔓 Se connecter'}
+              {loading ? '🔄 Connexion...' : '🔓 Se connecter'}
             </button>
           </form>
         </div>
 
-        {/* Demo credentials info */}
-        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-          <p className="text-xs font-semibold text-blue-300 mb-3">🧪 Compte démo</p>
-          <div className="space-y-2 text-xs text-blue-200">
-            <p className="font-mono">Email: <span className="text-blue-100">demo@courtia.fr</span></p>
-            <p className="font-mono">Mot de passe: <span className="text-blue-100">Demo2026!</span></p>
-          </div>
+        {/* Demo credentials */}
+        <div style={{
+          marginTop: '24px',
+          backgroundColor: '#ecf0f1',
+          border: '1px solid #bdc3c7',
+          borderRadius: '8px',
+          padding: '16px',
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: '600', color: '#2c3e50', margin: '0 0 8px 0' }}>
+            🧪 Compte démo
+          </p>
+          <p style={{ fontSize: '12px', color: '#34495e', margin: '4px 0', fontFamily: 'monospace' }}>
+            <strong>Email:</strong> demo@courtia.fr
+          </p>
+          <p style={{ fontSize: '12px', color: '#34495e', margin: '4px 0', fontFamily: 'monospace' }}>
+            <strong>Mot de passe:</strong> Demo2026!
+          </p>
         </div>
       </div>
     </div>
