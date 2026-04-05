@@ -121,7 +121,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COUNT(*) as count,
         COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as total_primes
       FROM quotes
-      WHERE status = 'actif'
+      WHERE statut = 'actif'
       GROUP BY quote_data->>'type_contrat'
       ORDER BY count DESC
     `);
