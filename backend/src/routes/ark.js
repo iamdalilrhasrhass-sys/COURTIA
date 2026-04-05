@@ -1,85 +1,198 @@
 const express = require('express')
 const router = express.Router()
 const Anthropic = require('@anthropic-ai/sdk')
-const jwt = require('jsonwebtoken')
+const verifyToken = require('../middleware/auth')
 
-console.log('✅ ARK routes loading... API Key:', process.env.ANTHROPIC_API_KEY ? '✅ SET' : '❌ MISSING')
-
+// Initialisation client Anthropic
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || ''
+  apiKey: process.env.ANTHROPIC_API_KEY
 })
 
-// Simple JWT verify
-function verifyToken(req, res, next) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    console.warn('❌ No bearer token')
-    return res.status(401).json({ error: 'No token' })
-  }
-
-  const token = authHeader.substring(7)
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
-    next()
-  } catch (err) {
-    console.error('JWT error:', err.message)
-    res.status(401).json({ error: 'Invalid token' })
-  }
+// Log au démarrage pour vérifier la clé
+console.log('ARK init - ANTHROPIC_API_KEY présente:', !!process.env.ANTHROPIC_API_KEY)
+if (process.env.ANTHROPIC_API_KEY) {
+  console.log('ARK init - Clé commence par:', process.env.ANTHROPIC_API_KEY.substring(0, 15))
 }
 
-// POST /api/ark/chat
-router.post('/chat', async (req, res) => {
+/**
+ * POST /api/ark/chat
+ * Chat avec ARK — utilisable depuis la fiche client ET le drawer global
+ */
+router.post('/chat', verifyToken, async (req, res) => {
   try {
-    const { message, clientData, conversationHistory } = req.body
+    // Accepter plusieurs formats de payload
+    const message = req.body.message || req.body.userMessage || req.body.question || ''
+    const clientData = req.body.clientData || null
+    const conversationHistory = Array.isArray(req.body.conversationHistory) ? req.body.conversationHistory : []
 
-    if (!message) return res.status(400).json({ error: 'Message required' })
-
-    // Build system prompt
-    let systemPrompt = `Tu es ARK, l'assistant IA de COURTIA spécialisé en assurance française.`
-    
-    if (clientData && clientData.id) {
-      systemPrompt = `Tu es ARK, expert en gestion de portefeuille assurance pour courtiers français.
-
-Client: ${clientData.prenom || ''} ${clientData.nom || ''}
-Risque: ${clientData.score_risque || 'N/A'}/100 | Bonus-malus: ${clientData.bonus_malus || 'N/A'}
-Zone: ${clientData.zone_geographique || 'N/A'} | Sinistres 3 ans: ${clientData.nb_sinistres_3ans ?? 0}
-Profession: ${clientData.profession || 'N/A'}
-
-Fournis une analyse précise et actionnable en français.`
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ error: 'Message vide ou manquant' })
     }
 
-    // Build message history
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('ARK ERROR: ANTHROPIC_API_KEY non définie dans les variables Render')
+      return res.status(500).json({
+        error: 'Configuration ARK incomplète',
+        details: 'La clé API Anthropic est manquante. Vérifiez les variables d\'environnement Render.'
+      })
+    }
+
+    // Construire le prompt système selon le contexte
+    let systemPrompt
+    if (clientData && (clientData.id || clientData.nom)) {
+      systemPrompt = `Tu es ARK, l'assistant IA expert de COURTIA, spécialisé en assurance française.
+Tu analyses les portefeuilles clients pour les courtiers d'assurance ORIAS.
+
+PROFIL DU CLIENT ACTUEL :
+- Identité : ${clientData.prenom || ''} ${clientData.nom || ''} ${clientData.email ? '(' + clientData.email + ')' : ''}
+- Statut : ${clientData.statut || clientData.status || 'Non renseigné'}
+- Profession : ${clientData.profession || 'Non renseignée'}
+- Situation familiale : ${clientData.situation_familiale || 'Non renseignée'}
+- Zone géographique : ${clientData.zone_geographique || 'Non renseignée'}
+- Score de risque : ${clientData.score_risque || clientData.risk_score || 'N/A'}/100
+- Bonus-malus CRM : ${clientData.bonus_malus || 'N/A'}
+- Ancienneté permis : ${clientData.annees_permis ? clientData.annees_permis + ' ans' : 'N/A'}
+- Sinistres (3 ans) : ${clientData.nb_sinistres_3ans !== null && clientData.nb_sinistres_3ans !== undefined ? clientData.nb_sinistres_3ans : 'N/A'}
+- Notes courtier : ${clientData.notes || 'Aucune note'}
+
+INSTRUCTIONS :
+- Réponds TOUJOURS en français
+- Sois précis, professionnel et orienté action concrète
+- Donne des recommandations actionnables pour le courtier
+- Utilise les données du client pour personnaliser ta réponse
+- Structure ta réponse avec des points clairs (utilise des tirets ou numéros)
+- Longueur idéale : 150-300 mots`
+    } else {
+      systemPrompt = `Tu es ARK, l'assistant IA expert de COURTIA, spécialisé en assurance française.
+Tu aides les courtiers d'assurance ORIAS dans leur gestion quotidienne :
+- Analyse de portefeuille et détection d'opportunités
+- Stratégies de renouvellement et cross-sell
+- Rédaction de communications commerciales personnalisées
+- Questions réglementaires (DDA, RGPD, ORIAS, IDD)
+- Calcul et interprétation des scores de risque assurance
+- Conseils sur les produits d'assurance français
+
+INSTRUCTIONS :
+- Réponds TOUJOURS en français
+- Sois précis, professionnel et orienté action concrète
+- Structure ta réponse avec des points clairs
+- Longueur idéale : 150-300 mots`
+    }
+
+    // Construire l'historique pour l'API Anthropic
     const messages = [
-      ...(conversationHistory || []).filter(m => m.role && m.content),
-      { role: 'user', content: message.trim() }
+      ...conversationHistory
+        .filter(m => m && m.role && m.content && typeof m.content === 'string')
+        .slice(-10) // Garder les 10 derniers messages max
+        .map(m => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content
+        })),
+      {
+        role: 'user',
+        content: message.trim()
+      }
     ]
 
-    console.log(`🔄 ARK: "${message.substring(0, 40)}..." | Calling Anthropic`)
+    console.log(`ARK: appel Anthropic - message: "${message.substring(0, 60)}..." - client: ${clientData?.id || 'global'}`)
 
-    // Call Anthropic
+    // Appel API Anthropic avec le bon modèle
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-1-20250805',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: systemPrompt,
-      messages
+      messages: messages
     })
 
-    const reply = response.content[0]?.text || 'No response'
-    console.log(`✅ ARK responded: "${reply.substring(0, 40)}..."`)
+    const reply = response.content && response.content[0] ? response.content[0].text : 'Aucune réponse générée'
 
+    console.log(`ARK: réponse reçue - ${reply.substring(0, 80)}...`)
+
+    // Sauvegarder dans ark_conversations si client présent
+    if (clientData && clientData.id) {
+      try {
+        const pool = require('../db')
+        const existing = await pool.query(
+          'SELECT id, messages FROM ark_conversations WHERE client_id = $1 ORDER BY created_at DESC LIMIT 1',
+          [clientData.id]
+        )
+
+        const timestamp = new Date().toISOString()
+        const newMsg = [
+          { role: 'user', content: message, timestamp },
+          { role: 'assistant', content: reply, timestamp }
+        ]
+
+        if (existing.rows.length > 0) {
+          const currentMessages = existing.rows[0].messages || []
+          const updatedMessages = [...currentMessages, ...newMsg].slice(-50) // Max 50 messages
+          await pool.query(
+            'UPDATE ark_conversations SET messages = $1, updated_at = NOW() WHERE id = $2',
+            [JSON.stringify(updatedMessages), existing.rows[0].id]
+          )
+        } else {
+          await pool.query(
+            'INSERT INTO ark_conversations (client_id, messages, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
+            [clientData.id, JSON.stringify(newMsg)]
+          )
+        }
+      } catch (saveErr) {
+        // Ne pas bloquer la réponse principale si la sauvegarde échoue
+        console.error('ARK: erreur sauvegarde conversation:', saveErr.message)
+      }
+    }
+
+    // Répondre au frontend
     res.json({ reply })
 
   } catch (err) {
-    console.error('❌ ARK Error:', err.message, err.code)
+    console.error('ARK ERREUR CRITIQUE:', err.message)
+    console.error('ARK ERREUR STACK:', err.stack)
 
-    const errorMsg = err.message.includes('401') ? 'API key invalid' 
-                   : err.message.includes('rate_limit') ? 'Rate limited'
-                   : err.message
+    // Gérer les erreurs Anthropic spécifiques
+    if (err.status === 401 || (err.message && err.message.includes('api_key'))) {
+      return res.status(500).json({
+        error: 'Clé API Anthropic invalide ou expirée',
+        details: 'Vérifiez ANTHROPIC_API_KEY dans Render Environment'
+      })
+    }
+
+    if (err.status === 429 || (err.message && err.message.includes('rate_limit'))) {
+      return res.status(429).json({
+        error: 'Limite d\'utilisation ARK atteinte',
+        details: 'Réessayez dans quelques instants'
+      })
+    }
+
+    if (err.status === 404 || (err.message && err.message.includes('model'))) {
+      return res.status(500).json({
+        error: 'Modèle ARK non disponible',
+        details: 'Contactez le support COURTIA'
+      })
+    }
 
     res.status(500).json({
-      error: 'ARK error',
-      details: errorMsg
+      error: 'ARK temporairement indisponible',
+      details: err.message || 'Erreur inconnue'
     })
+  }
+})
+
+/**
+ * GET /api/ark/conversations/:clientId
+ * Récupérer l'historique des conversations ARK pour un client
+ */
+router.get('/conversations/:clientId', verifyToken, async (req, res) => {
+  try {
+    const pool = require('../db')
+    const result = await pool.query(
+      'SELECT messages FROM ark_conversations WHERE client_id = $1 ORDER BY updated_at DESC LIMIT 1',
+      [req.params.clientId]
+    )
+    res.json(result.rows[0]?.messages || [])
+  } catch (err) {
+    console.error('ARK conversations erreur:', err.message)
+    res.json([]) // Retourner tableau vide plutôt qu'une erreur
   }
 })
 
