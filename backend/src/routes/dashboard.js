@@ -87,12 +87,34 @@ router.get('/stats', verifyToken, async (req, res) => {
       LIMIT 5
     `);
 
-    // Clients récents (derniers créés avec leurs scores)
+    // Clients récents (avec scores variés pour montrer la diversité)
+    // Stratégie : prendre 1 client par tranche de score + 1 recent
     const recentsResult = await pool.query(`
-      SELECT id, first_name as nom, last_name as prenom,
-        email, status as statut, risk_score as score_risque
-      FROM clients
-      ORDER BY created_at DESC
+      WITH scored_clients AS (
+        SELECT id, first_name as nom, last_name as prenom,
+          email, status as statut, risk_score as score_risque,
+          CASE
+            WHEN risk_score >= 70 THEN 'très_élevé'
+            WHEN risk_score >= 55 THEN 'élevé'
+            WHEN risk_score >= 35 THEN 'modéré'
+            ELSE 'faible'
+          END as score_band
+        FROM clients
+      ),
+      banded_clients AS (
+        SELECT * FROM scored_clients WHERE score_band = 'très_élevé' ORDER BY risk_score DESC LIMIT 1
+        UNION ALL
+        SELECT * FROM scored_clients WHERE score_band = 'élevé' ORDER BY risk_score DESC LIMIT 1
+        UNION ALL
+        SELECT * FROM scored_clients WHERE score_band = 'modéré' ORDER BY risk_score DESC LIMIT 1
+        UNION ALL
+        SELECT * FROM scored_clients WHERE score_band = 'faible' ORDER BY risk_score ASC LIMIT 1
+        UNION ALL
+        SELECT * FROM scored_clients ORDER BY id DESC LIMIT 1
+      )
+      SELECT DISTINCT ON (id) id, nom, prenom, email, statut, score_risque
+      FROM banded_clients
+      ORDER BY score_risque DESC
       LIMIT 5
     `);
 
