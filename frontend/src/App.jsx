@@ -10,6 +10,7 @@ import Clients from './pages/Clients'
 import ClientDetail from './pages/ClientDetail'
 import Contrats from './pages/Contrats'
 import Taches from './pages/Taches'
+import Rapports from './pages/Rapports'
 import Parametres from './pages/Parametres'
 
 // Components
@@ -90,7 +91,7 @@ export default function App() {
         } />
         <Route path="/rapports" element={
           <PrivateRoute>
-            <AppLayout><Dashboard /></AppLayout>
+            <AppLayout><Rapports /></AppLayout>
           </PrivateRoute>
         } />
         <Route path="/parametres" element={

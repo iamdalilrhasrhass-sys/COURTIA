@@ -93,6 +93,26 @@ router.get('/:id', verifyToken, async (req, res) => {
 });
 
 /**
+ * GET /api/clients/:id/contrats — Contrats d'un client
+ */
+router.get('/:id/contrats', verifyToken, async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    const result = await pool.query(
+      `SELECT id, type_contrat, compagnie, prime_annuelle, status,
+              date_effet, date_echeance, numero_contrat
+       FROM quotes WHERE client_id = $1
+       ORDER BY date_echeance ASC NULLS LAST`,
+      [req.params.id]
+    )
+    res.json(result.rows)
+  } catch (err) {
+    console.error('GET /api/clients/:id/contrats error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/**
  * POST /api/clients — Créer un client
  */
 router.post('/', verifyToken, async (req, res) => {

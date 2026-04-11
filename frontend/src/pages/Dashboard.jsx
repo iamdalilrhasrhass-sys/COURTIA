@@ -32,15 +32,29 @@ function KPICard({ title, value, icon, alert }) {
  )
 }
 
+function SkeletonCard() {
+ return (
+ <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24 }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+ <div style={{ width: 100, height: 14, background: '#f3f4f6', borderRadius: 4, animation: 'pulse 1.5s ease infinite' }} />
+ <div style={{ width: 28, height: 28, background: '#f3f4f6', borderRadius: 6, animation: 'pulse 1.5s ease infinite' }} />
+ </div>
+ <div style={{ width: 80, height: 28, background: '#f3f4f6', borderRadius: 4, animation: 'pulse 1.5s ease infinite' }} />
+ <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} } @keyframes spin { to { transform: rotate(360deg) } }`}</style>
+ </div>
+ )
+}
+
 export default function Dashboard() {
  const navigate = useNavigate()
  const [stats, setStats] = useState(null)
  const [loading, setLoading] = useState(true)
+ const [error, setError] = useState('')
+ const [retryCount, setRetryCount] = useState(0)
 
  const headers = { Authorization: `Bearer ${getToken()}` }
 
  useEffect(() => {
- // Ping le backend pour prévenir cold start
  fetch(`${API_URL}/ping`).catch(() => {})
  loadStats()
  }, [])
@@ -48,25 +62,47 @@ export default function Dashboard() {
  async function loadStats() {
  try {
  setLoading(true)
- const res = await axios.get(`${API_URL}/api/dashboard/stats`, { headers })
+ setError('')
+ const res = await axios.get(`${API_URL}/api/dashboard/stats`, { headers, timeout: 35000 })
  setStats(res.data)
  } catch (err) {
  console.error('Erreur dashboard:', err)
+ setError('Impossible de charger le tableau de bord')
+ // Retry automatique après 5s (une seule fois)
+ if (retryCount === 0) {
+   setRetryCount(1)
+   setTimeout(() => loadStats(), 5000)
+ }
  } finally {
  setLoading(false)
  }
  }
 
  if (loading) return (
- <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
- <div style={{ textAlign: 'center' }}>
- <div style={{ width: 40, height: 40, border: '3px solid #e5e7eb', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
- <p style={{ color: '#6b7280' }}>Chargement du tableau de bord...</p>
+ <div style={{ padding: 32 }}>
+ <h1 style={{ fontSize: 28, fontWeight: 700, color: '#2563eb', marginBottom: 24 }}>Tableau de bord</h1>
+ <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+ {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+ </div>
+ <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 100 }}>
+ <p style={{ color: '#6b7280', fontSize: 14 }}>Chargement en cours{retryCount > 0 ? ' (nouvelle tentative…)' : ''}…</p>
  </div>
  </div>
  )
 
- if (!stats) return <div style={{ padding: 32, color: '#dc2626' }}>Erreur chargement — Réessayez</div>
+ if (!stats) return (
+ <div style={{ padding: 32 }}>
+ <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+ <span style={{ fontSize: 18 }}>⚠️</span>
+ <p style={{ color: '#dc2626', fontSize: 14, margin: 0 }}>{error || 'Erreur de chargement'}</p>
+ </div>
+ <button onClick={() => { setRetryCount(0); loadStats() }} style={{ padding: '7px 16px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+ Réessayer
+ </button>
+ </div>
+ </div>
+ )
 
  return (
  <div style={{ padding: 32 }}>

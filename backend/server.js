@@ -53,6 +53,7 @@ const arkRouter = require('./src/routes/ark')
 const adminCostsRouter = require('./src/routes/adminCosts')
 const onboardingRouter = require('./src/routes/onboarding')
 const healthRouter = require('./src/routes/health')
+const statsRouter = require('./src/routes/stats')
 
 app.use('/api/auth', authRouter)
 app.use('/api/clients', clientsRouter)
@@ -63,6 +64,7 @@ app.use('/api/ark', arkRateLimit, arkRouter)
 app.use('/api/admin', adminCostsRouter)
 app.use('/api/onboarding', onboardingRouter)
 app.use('/api/health', healthRouter)
+app.use('/api/stats', statsRouter)
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'courtia-backend' }))
 
@@ -71,9 +73,16 @@ app.get('/ping', (req, res) => {
   res.json({ pong: true, time: new Date().toISOString() })
 })
 
-app.use((err, req, res, next) => { 
-  console.error(err)
-  res.status(500).json({ error: 'Erreur serveur', details: err.message })
+// 404 — route non trouvée
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route non trouvée', path: req.originalUrl })
+})
+
+// Gestionnaire d'erreurs global
+app.use((err, req, res, next) => {
+  console.error('Erreur non gérée:', err.message)
+  console.error(err.stack)
+  res.status(err.status || 500).json({ error: 'Erreur serveur', details: err.message })
 })
 
 const PORT = process.env.PORT || 10000
