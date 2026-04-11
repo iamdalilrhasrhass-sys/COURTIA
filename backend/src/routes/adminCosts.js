@@ -22,7 +22,7 @@ const requireAdmin = async (req, res, next) => {
 
 router.get('/api/admin/costs', requireAdmin, async (req, res) => {
   try {
-    const pool = req.app.get('pool');
+    const pool = req.app.locals.pool;
     
     // Stats globales du mois
     const globalStats = await pool.query(`
@@ -105,7 +105,7 @@ router.get('/api/admin/costs', requireAdmin, async (req, res) => {
 
 router.get('/api/admin/costs/by-user', requireAdmin, async (req, res) => {
   try {
-    const pool = req.app.get('pool');
+    const pool = req.app.locals.pool;
     const { userId, month } = req.query;
     
     let query = `
@@ -163,7 +163,7 @@ router.get('/api/admin/costs/by-user', requireAdmin, async (req, res) => {
 
 router.get('/api/admin/costs/export', requireAdmin, async (req, res) => {
   try {
-    const pool = req.app.get('pool');
+    const pool = req.app.locals.pool;
     const { format = 'csv' } = req.query;
     
     const data = await pool.query(`
@@ -209,7 +209,7 @@ router.get('/api/admin/costs/export', requireAdmin, async (req, res) => {
 
 router.get('/api/admin/quota-status/:userId', requireAdmin, async (req, res) => {
   try {
-    const pool = req.app.get('pool');
+    const pool = req.app.locals.pool;
     const { userId } = req.params;
     
     const result = await pool.query(`
