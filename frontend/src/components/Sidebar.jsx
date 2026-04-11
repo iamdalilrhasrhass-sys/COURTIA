@@ -1,144 +1,173 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
-
 function getToken() { return localStorage.getItem('token') }
 
-// ArkDrawerPanel — intégré directement
-function ArkDrawerPanel({ onClose }) {
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function envoyer(message) {
-    if (!message || !message.trim()) return
-    setMessages(prev => [...prev, { role: 'user', content: message.trim() }])
-    setInput('')
-    setLoading(true)
-    try {
-      const token = getToken()
-      if (!token) throw new Error('Token manquant')
-      const res = await axios.post(`${API_URL}/api/ark/chat`, {
-        message: message.trim(),
-        clientData: null,
-        conversationHistory: messages.slice(-10)
-      }, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        timeout: 60000
-      })
-      let reply = null
-      if (res.data && typeof res.data.reply === 'string') {
-        reply = res.data.reply
-      } else if (res.data && typeof res.data.message === 'string') {
-        reply = res.data.message
-      } else if (typeof res.data === 'string') {
-        reply = res.data
-      } else {
-        reply = JSON.stringify(res.data)
-      }
-      if (!reply || reply.trim() === '') reply = 'ARK a traité votre demande mais n\'a pas retourné de réponse.'
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
-    } catch (err) {
-      console.error('ARK error:', err.message)
-      let errMsg = 'ARK est temporairement indisponible.'
-      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        errMsg = 'ARK met du temps à répondre (serveur en démarrage). Patientez 30 sec et réessayez.'
-      }
-      setMessages(prev => [...prev, { role: 'assistant', content: errMsg }])
-    } finally {
-      setLoading(false)
-    }
-  }
-
+function Logo() {
   return (
-    <div style={{
-      position: 'fixed', top: 0, right: 0, bottom: 0, width: 420,
-      background: '#0a0a0a', zIndex: 9999, display: 'flex', flexDirection: 'column',
-      boxShadow: '-4px 0 20px rgba(0,0,0,0.5)'
-    }}>
-      {/* Header */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <div style={{
-        padding: '20px 24px', borderBottom: '1px solid #1f2937',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        width: 28, height: 28, background: 'white', borderRadius: 6,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 8, height: 8, background: '#22c55e', borderRadius: '50%', display: 'inline-block' }} />
-          <span style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>ARK — Assistant IA</span>
-        </div>
-        <button onClick={onClose} style={{
-          background: 'none', border: 'none', color: '#9ca3af',
-          cursor: 'pointer', fontSize: 20, padding: 4
-        }}>✕</button>
+        <div style={{ width: 12, height: 12, background: '#0a0a0a', transform: 'rotate(45deg)' }} />
       </div>
-
-      {/* Messages */}
-      <div style={{
-        flex: 1, overflowY: 'auto', padding: 16,
-        display: 'flex', flexDirection: 'column', gap: 12
-      }}>
-        {messages.length === 0 && (
-          <div style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
-            <p>Bonjour ! Je suis ARK, votre assistant IA spécialisé en assurance française.</p>
-            <p style={{ marginTop: 8 }}>Posez-moi une question sur votre portefeuille, vos clients ou la réglementation.</p>
-          </div>
-        )}
-        {messages.map((msg, i) => (
-          <div key={i} style={{
-            padding: '10px 14px', borderRadius: 10,
-            background: msg.role === 'user' ? '#1d4ed8' : '#1f2937',
-            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            maxWidth: '85%'
-          }}>
-            <p style={{ color: 'white', fontSize: 14, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-              {msg.content}
-            </p>
-          </div>
-        ))}
-        {loading && (
-          <div style={{
-            padding: '10px 14px', borderRadius: 10,
-            background: '#1f2937', alignSelf: 'flex-start'
-          }}>
-            <p style={{ color: '#9ca3af', fontSize: 14, margin: 0 }}>ARK analyse...</p>
-          </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div style={{ padding: 16, borderTop: '1px solid #1f2937', display: 'flex', gap: 8 }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer(input) } }}
-          placeholder="Demandez à ARK..."
-          style={{
-            flex: 1, padding: '10px 14px',
-            background: '#1f2937', border: '1px solid #374151',
-            borderRadius: 8, color: 'white', fontSize: 14, outline: 'none'
-          }}
-        />
-        <button
-          onClick={() => envoyer(input)}
-          disabled={loading || !input.trim()}
-          style={{
-            padding: '10px 16px', background: '#2563eb', color: 'white',
-            border: 'none', borderRadius: 8, cursor: 'pointer',
-            opacity: loading || !input.trim() ? 0.5 : 1, fontSize: 18
-          }}
-        >→</button>
-      </div>
+      <span style={{ color: 'white', fontSize: 15, fontWeight: 500, letterSpacing: -0.3 }}>COURTIA</span>
     </div>
   )
 }
 
-// Sidebar Principal
+// Drawer ARK global
+function ArkDrawerPanel({ onClose }) {
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [slowWarning, setSlowWarning] = useState(false)
+  const messagesEndRef = useRef(null)
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  async function send(msg) {
+    if (!msg?.trim()) return
+    const text = msg.trim()
+    setMessages(prev => [...prev, { role: 'user', content: text }])
+    setInput('')
+    setLoading(true)
+    setSlowWarning(false)
+    const tid = setTimeout(() => setSlowWarning(true), 28000)
+    try {
+      const res = await axios.post(`${API_URL}/api/ark/chat`, {
+        message: text,
+        clientData: null,
+        conversationHistory: messages.slice(-10)
+      }, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+        timeout: 90000
+      })
+      const reply = res.data?.reply || res.data?.message || JSON.stringify(res.data)
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+    } catch (err) {
+      const errMsg = err.code === 'ECONNABORTED'
+        ? 'ARK se réveille... réessayez dans quelques secondes.'
+        : err.response?.data?.error || 'ARK temporairement indisponible.'
+      setMessages(prev => [...prev, { role: 'assistant', content: errMsg }])
+    } finally {
+      setLoading(false)
+      clearTimeout(tid)
+      setSlowWarning(false)
+    }
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9998 }} />
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, width: 420,
+        background: '#0a0a0a', zIndex: 9999,
+        display: 'flex', flexDirection: 'column',
+        animation: 'slideIn 0.25s ease'
+      }}>
+        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}`}</style>
+
+        {/* Header */}
+        <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 8, height: 8, background: '#22c55e', borderRadius: '50%', animation: 'pulse 2s ease infinite' }} />
+            <span style={{ color: 'white', fontWeight: 600, fontSize: 15, letterSpacing: -0.2 }}>ARK — Assistant IA</span>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1 }}>✕</button>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {messages.length === 0 && (
+            <div style={{ marginTop: 32, textAlign: 'center', padding: '0 16px' }}>
+              <p style={{ color: '#555', fontSize: 13, lineHeight: 1.7 }}>
+                Bonjour. Je suis ARK, votre conseiller IA spécialisé en assurance française.<br />
+                Posez-moi une question sur votre portefeuille.
+              </p>
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} style={{
+              padding: '10px 14px', borderRadius: 10, maxWidth: '85%',
+              background: m.role === 'user' ? '#1d4ed8' : '#1a1a1a',
+              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+              border: m.role === 'assistant' ? '0.5px solid #222' : 'none'
+            }}>
+              <p style={{ color: 'white', fontSize: 13, margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{m.content}</p>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ padding: '12px 16px', background: '#1a1a1a', borderRadius: 10, alignSelf: 'flex-start', border: '0.5px solid #222' }}>
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    width: 6, height: 6, borderRadius: '50%', background: '#2563eb',
+                    animation: `dotBounce 1.2s ease ${i * 0.2}s infinite`
+                  }} />
+                ))}
+              </div>
+              {slowWarning && <p style={{ color: '#555', fontSize: 11, marginTop: 6 }}>Serveur en démarrage... encore quelques secondes</p>}
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div style={{ padding: 16, borderTop: '0.5px solid #1a1a1a', display: 'flex', gap: 8 }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }}
+            placeholder="Demandez à ARK..."
+            style={{
+              flex: 1, padding: '10px 14px',
+              background: '#111', border: '0.5px solid #2a2a2a',
+              borderRadius: 8, color: 'white', fontSize: 14
+            }}
+          />
+          <button
+            onClick={() => send(input)}
+            disabled={loading || !input.trim()}
+            style={{
+              padding: '10px 16px', background: !input.trim() || loading ? '#222' : '#2563eb',
+              color: 'white', border: 'none', borderRadius: 8,
+              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', fontSize: 16
+            }}
+          >→</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+const NAV_ITEMS = [
+  { path: '/dashboard', label: 'Tableau de bord' },
+  { path: '/clients', label: 'Clients' },
+  { path: '/contrats', label: 'Contrats' },
+  null, // séparateur
+  { path: '/rapports', label: 'Rapports' },
+  { path: '/taches', label: 'Tâches' },
+  { path: '/parametres', label: 'Paramètres' },
+]
+
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [arkDrawerOpen, setArkDrawerOpen] = useState(false)
+  const [arkOpen, setArkOpen] = useState(false)
+
+  // Écouter l'event custom pour ouvrir ARK depuis d'autres composants
+  useEffect(() => {
+    const handler = () => setArkOpen(true)
+    window.addEventListener('ark:open', handler)
+    return () => window.removeEventListener('ark:open', handler)
+  }, [])
 
   function logout() {
     localStorage.removeItem('token')
@@ -147,30 +176,30 @@ export default function Sidebar() {
     toast.success('Déconnexion réussie')
   }
 
-  const menuItems = [
-    { path: '/dashboard', label: 'Tableau de bord', icon: '🏠' },
-    { path: '/clients', label: 'Clients', icon: '👥' },
-    { path: '/contrats', label: 'Contrats', icon: '📋' },
-    { path: '/taches', label: 'Tâches', icon: '✅' },
-    { path: '/rapports', label: 'Rapports', icon: '📊' },
-    { path: '/parametres', label: 'Paramètres', icon: '⚙️' },
-  ]
-
   return (
     <>
       <div style={{
-        width: 260, minHeight: '100vh', background: '#080808',
+        width: 240, minHeight: '100vh',
+        background: '#0a0a0a',
         display: 'flex', flexDirection: 'column',
-        borderRight: '1px solid #1a1a1a', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 100
+        position: 'fixed', left: 0, top: 0, bottom: 0,
+        zIndex: 100,
+        borderRight: '0.5px solid #111'
       }}>
         {/* Logo */}
-        <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid #1a1a1a' }}>
-          <span style={{ color: 'white', fontWeight: 700, fontSize: 18, fontFamily: 'Arial, sans-serif' }}>COURTIA</span>
+        <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid #1a1a1a' }}>
+          <Logo />
+          <span style={{ display: 'inline-block', marginTop: 8, fontSize: 10, color: '#555', background: '#111', border: '0.5px solid #222', borderRadius: 4, padding: '2px 7px', letterSpacing: 0.3 }}>
+            Pro · Founder
+          </span>
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
-          {menuItems.map(item => {
+        <nav style={{ flex: 1, padding: '12px 0' }}>
+          {NAV_ITEMS.map((item, idx) => {
+            if (!item) {
+              return <div key={`sep-${idx}`} style={{ margin: '6px 0', borderTop: '0.5px solid #1a1a1a' }} />
+            }
             const isActive = location.pathname === item.path ||
               (item.path === '/clients' && location.pathname.startsWith('/client'))
             return (
@@ -178,81 +207,73 @@ export default function Sidebar() {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '11px 24px', background: 'none', border: 'none',
-                  color: isActive ? 'white' : '#9ca3af',
-                  cursor: 'pointer', fontSize: 14, textAlign: 'left',
-                  borderLeft: isActive ? '3px solid #2563eb' : '3px solid transparent',
-                  fontWeight: isActive ? 600 : 400,
-                  transition: 'all 0.15s'
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '9px 20px', background: isActive ? '#1a1a1a' : 'none',
+                  border: 'none', color: isActive ? 'white' : '#555',
+                  cursor: 'pointer', fontSize: 13, textAlign: 'left',
+                  fontFamily: 'Arial, sans-serif', transition: 'all 0.1s'
                 }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'white' }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = '#9ca3af' }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#111' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'none' }}
               >
-                <span style={{ fontSize: 16 }}>{item.icon}</span>
-                <span>{item.label}</span>
-                {isActive && <span style={{ marginLeft: 'auto', width: 6, height: 6, background: '#2563eb', borderRadius: '50%' }} />}
+                <div style={{
+                  width: 4, height: 4, borderRadius: '50%',
+                  background: isActive ? 'white' : '#333',
+                  flexShrink: 0
+                }} />
+                {item.label}
               </button>
             )
           })}
         </nav>
 
         {/* Bouton ARK */}
-        <div style={{ padding: '16px 16px 8px', borderTop: '1px solid #1a1a1a' }}>
+        <div style={{ padding: '12px 16px 8px' }}>
           <button
-            onClick={() => setArkDrawerOpen(true)}
+            onClick={() => setArkOpen(true)}
             style={{
-              width: '100%', padding: '12px 16px',
-              background: '#2563eb',
-              border: 'none', borderRadius: 8,
-              color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600,
-              transition: 'background 0.2s'
+              width: '100%', padding: '14px 16px',
+              background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+              border: '0.5px solid rgba(37,99,235,0.3)',
+              borderRadius: 10, cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
-            onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
           >
-            <span style={{
-              width: 8, height: 8, background: '#4ade80',
-              borderRadius: '50%', display: 'inline-block'
-            }} />
-            <span>ARK — Assistant IA</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: '#22c55e',
+                animation: 'arkPulse 2s ease infinite'
+              }} />
+              <span style={{ color: 'white', fontSize: 12, fontWeight: 600, letterSpacing: 0.5 }}>ARK · Actif</span>
+            </div>
+            <span style={{ color: '#6b7280', fontSize: 11 }}>Ouvrir l'assistant</span>
           </button>
         </div>
 
         {/* Déconnexion */}
-        <div style={{ padding: '8px 16px 20px' }}>
+        <div style={{ padding: '4px 16px 20px' }}>
           <button
             onClick={logout}
             style={{
-              width: '100%', padding: '10px 16px',
+              width: '100%', padding: '9px 16px',
               background: 'none', border: 'none',
-              borderRadius: 8, color: '#6b7280', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8, fontSize: 13,
-              transition: 'color 0.2s'
+              color: '#333', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+              fontSize: 12, fontFamily: 'Arial, sans-serif', borderRadius: 8,
+              transition: 'color 0.15s'
             }}
-            onMouseEnter={e => e.currentTarget.style.color = 'white'}
-            onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
+            onMouseEnter={e => e.currentTarget.style.color = '#888'}
+            onMouseLeave={e => e.currentTarget.style.color = '#333'}
           >
-            <span>→</span>
-            <span>Déconnexion</span>
+            <span style={{ fontSize: 14 }}>→</span>
+            Déconnexion
           </button>
         </div>
       </div>
 
-      {/* Overlay ARK Drawer */}
-      {arkDrawerOpen && (
-        <>
-          <div
-            onClick={() => setArkDrawerOpen(false)}
-            style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-              zIndex: 9998, cursor: 'pointer'
-            }}
-          />
-          <ArkDrawerPanel onClose={() => setArkDrawerOpen(false)} />
-        </>
-      )}
+      {/* Drawer ARK */}
+      {arkOpen && <ArkDrawerPanel onClose={() => setArkOpen(false)} />}
     </>
   )
 }

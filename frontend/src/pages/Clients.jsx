@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Topbar from '../components/Topbar'
 import StatusBadge from '../components/StatusBadge'
 import RiskScoreBadge from '../components/RiskScoreBadge'
 
@@ -11,6 +12,11 @@ const STATUS_TABS = [
   { key: 'prospect', label: 'Prospects' },
   { key: 'résilié', label: 'Résiliés' },
 ]
+
+function SortIcon({ field, active, dir }) {
+  if (!active) return <span style={{ color: '#d1d5db', fontSize: 9, marginLeft: 4 }}>↕</span>
+  return <span style={{ color: '#60a5fa', fontSize: 9, marginLeft: 4 }}>{dir === 'asc' ? '↑' : '↓'}</span>
+}
 
 export default function Clients() {
   const [clients, setClients] = useState([])
@@ -27,40 +33,32 @@ export default function Clients() {
 
   useEffect(() => { fetchClients() }, [])
 
-  const fetchClients = async () => {
+  async function fetchClients() {
     try {
-      setLoading(true)
-      setError('')
+      setLoading(true); setError('')
       const token = localStorage.getItem('token')
-      if (!token) { setError('Pas de token trouvé'); setClients([]); return }
-      const res = await fetch(`${API_URL}/api/clients`, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-      })
+      if (!token) { setError('Token manquant'); return }
+      const res = await fetch(`${API_URL}/api/clients`, { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      let arr = []
-      if (Array.isArray(data)) arr = data
-      else if (data?.data && Array.isArray(data.data)) arr = data.data
-      else if (data?.clients && Array.isArray(data.clients)) arr = data.clients
+      let arr = Array.isArray(data) ? data : (data?.data || data?.clients || [])
       setClients(arr)
     } catch (err) {
-      console.error('Fetch error:', err)
       setError(`Impossible de charger les clients : ${err.message}`)
-      setClients([])
     } finally {
       setLoading(false)
     }
   }
 
-  const safeClients = Array.isArray(clients) ? clients : []
+  const safe = Array.isArray(clients) ? clients : []
 
-  const filtered = safeClients.filter(c => {
-    if (!c || typeof c !== 'object') return false
-    const fullName = `${c.nom || ''} ${c.prenom || ''}`.toLowerCase()
-    const email = (c.email || '').toLowerCase()
+  const filtered = safe.filter(c => {
+    if (!c) return false
     const s = search.toLowerCase()
-    const matchSearch = fullName.includes(s) || email.includes(s)
-    const matchStatus = statusFilter === 'tous' || (c.statut || '').toLowerCase() === statusFilter
+    const matchSearch = !s || `${c.nom || ''} ${c.prenom || ''}`.toLowerCase().includes(s) || (c.email || '').toLowerCase().includes(s)
+    const st = (c.statut || '').toLowerCase()
+    const matchStatus = statusFilter === 'tous'
+      || (statusFilter === 'résilié' ? ['résilié', 'resilié', 'perdu'].includes(st) : st === statusFilter)
     const score = Number(c.score_risque) || 0
     const matchRisk = riskFilter === 'tous'
       || (riskFilter === 'faible' && score <= 30)
@@ -69,17 +67,10 @@ export default function Clients() {
     return matchSearch && matchStatus && matchRisk
   })
 
-  // Sorting
   const sorted = [...filtered].sort((a, b) => {
-    let va = a[sortField] ?? ''
-    let vb = b[sortField] ?? ''
-    if (sortField === 'score_risque' || sortField === 'loyalty_score') {
-      va = Number(va) || 0
-      vb = Number(vb) || 0
-    } else {
-      va = String(va).toLowerCase()
-      vb = String(vb).toLowerCase()
-    }
+    let va = a[sortField] ?? '', vb = b[sortField] ?? ''
+    if (sortField === 'score_risque') { va = Number(va) || 0; vb = Number(vb) || 0 }
+    else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase() }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
     return 0
@@ -88,188 +79,161 @@ export default function Clients() {
   const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE))
   const paginated = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
-  function toggleSort(field) {
-    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortField(field); setSortDir('asc') }
+  function toggleSort(f) {
+    if (sortField === f) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortField(f); setSortDir('asc') }
     setPage(1)
   }
 
-  function SortIcon({ field }) {
-    if (sortField !== field) return <span style={{ color: '#6b7280', fontSize: 10, marginLeft: 4 }}>↕</span>
-    return <span style={{ color: '#60a5fa', fontSize: 10, marginLeft: 4 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
-  }
+  const thStyle = (f) => ({
+    padding: '11px 16px', textAlign: 'left', color: 'white',
+    fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px',
+    cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', background: '#0a0a0a'
+  })
 
-  const thStyle = {
-    padding: '14px 16px', textAlign: 'left', color: 'white',
-    fontSize: '12px', fontWeight: '700', textTransform: 'uppercase',
-    letterSpacing: '0.05em', cursor: 'pointer', userSelect: 'none',
-    whiteSpace: 'nowrap'
-  }
+  const topbarAction = (
+    <button onClick={() => navigate('/clients/new')}
+      style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+      + Nouveau client
+    </button>
+  )
 
   return (
-    <div style={{ padding: '32px', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+      <Topbar title="Clients" subtitle={`${safe.length} client${safe.length > 1 ? 's' : ''} au total`} action={topbarAction} />
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#080808', margin: 0 }}>Clients</h1>
-        <button
-          onClick={() => navigate('/clients/new')}
-          style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
-        >
-          + Nouveau client
-        </button>
-      </div>
+      <div style={{ padding: '24px 32px' }}>
 
-      {/* Status Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: 4, width: 'fit-content' }}>
-        {STATUS_TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => { setStatusFilter(tab.key); setPage(1) }}
-            style={{
-              padding: '7px 16px', border: 'none', borderRadius: 7, cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
-              background: statusFilter === tab.key ? '#080808' : 'transparent',
-              color: statusFilter === tab.key ? 'white' : '#6b7280'
-            }}
-          >
-            {tab.label}
-            {tab.key !== 'tous' && (
-              <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>
-                ({safeClients.filter(c => tab.key === 'résilié' ? ['résilié', 'resilié', 'perdu'].includes((c.statut || '').toLowerCase()) : (c.statut || '').toLowerCase() === tab.key).length})
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div style={{ marginBottom: 20, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          placeholder="Rechercher par nom ou email..."
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1) }}
-          style={{ flex: 1, minWidth: 200, padding: '10px 12px', backgroundColor: 'white', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, color: '#080808' }}
-        />
-        <select
-          value={riskFilter}
-          onChange={e => { setRiskFilter(e.target.value); setPage(1) }}
-          style={{ padding: '10px 12px', backgroundColor: 'white', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, color: '#080808', cursor: 'pointer' }}
-        >
-          <option value="tous">Tous les risques</option>
-          <option value="faible">Faible (0-30)</option>
-          <option value="modere">Modéré (31-60)</option>
-          <option value="eleve">Élevé (61-100)</option>
-        </select>
-      </div>
-
-      {/* Loading */}
-      {loading && (
-        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280', fontSize: 16 }}>
-          Chargement des clients...
+        {/* Tabs statut */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, padding: 4, width: 'fit-content' }}>
+          {STATUS_TABS.map(tab => {
+            const count = tab.key === 'tous' ? safe.length
+              : tab.key === 'résilié' ? safe.filter(c => ['résilié', 'resilié', 'perdu'].includes((c.statut || '').toLowerCase())).length
+              : safe.filter(c => (c.statut || '').toLowerCase() === tab.key).length
+            return (
+              <button key={tab.key} onClick={() => { setStatusFilter(tab.key); setPage(1) }}
+                style={{
+                  padding: '7px 14px', border: 'none', borderRadius: 7, cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif', transition: 'all 0.1s',
+                  background: statusFilter === tab.key ? '#0a0a0a' : 'transparent',
+                  color: statusFilter === tab.key ? 'white' : '#9ca3af'
+                }}>
+                {tab.label} <span style={{ opacity: 0.6, fontSize: 11 }}>({count})</span>
+              </button>
+            )
+          })}
         </div>
-      )}
 
-      {/* Error */}
-      {error && (
-        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 16, marginBottom: 16, color: '#dc2626', fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>{error}</span>
-          <button onClick={fetchClients} style={{ padding: '6px 14px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Réessayer</button>
+        {/* Search + risk filter */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <input type="text" placeholder="Rechercher..." value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
+            style={{ flex: 1, maxWidth: 360, padding: '10px 14px', background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }} />
+          <select value={riskFilter} onChange={e => { setRiskFilter(e.target.value); setPage(1) }}
+            style={{ padding: '10px 12px', background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, color: '#0a0a0a', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+            <option value="tous">Tous les risques</option>
+            <option value="faible">Faible (0-30)</option>
+            <option value="modere">Modéré (31-60)</option>
+            <option value="eleve">Élevé (61+)</option>
+          </select>
         </div>
-      )}
 
-      {/* Empty */}
-      {!loading && !error && paginated.length === 0 && (
-        <div style={{ textAlign: 'center', padding: 60, color: '#6b7280', fontSize: 14 }}>
-          Aucun client trouvé
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && paginated.length > 0 && (
-        <>
-          <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#080808' }}>
-                  <th style={thStyle} onClick={() => toggleSort('nom')}>
-                    Nom & Prénom <SortIcon field="nom" />
-                  </th>
-                  <th style={thStyle}>Email</th>
-                  <th style={thStyle}>Téléphone</th>
-                  <th style={thStyle} onClick={() => toggleSort('statut')}>
-                    Statut <SortIcon field="statut" />
-                  </th>
-                  <th style={thStyle} onClick={() => toggleSort('score_risque')}>
-                    Score risque <SortIcon field="score_risque" />
-                  </th>
-                  <th style={{ ...thStyle, cursor: 'default' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((client, idx) => {
-                  if (!client?.id) return null
-                  return (
-                    <tr
-                      key={`client-${client.id}`}
-                      style={{ backgroundColor: idx % 2 === 0 ? 'white' : '#f9fafb', borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }}
-                      onClick={() => navigate(`/client/${client.id}`)}
-                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#eff6ff'}
-                      onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'white' : '#f9fafb'}
-                    >
-                      <td style={{ padding: '14px 16px', color: '#080808', fontSize: 14, fontWeight: 600 }}>
-                        {client.nom || '—'} {client.prenom || ''}
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 13 }}>
-                        {client.email || '—'}
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#6b7280', fontSize: 13 }}>
-                        {client.telephone || '—'}
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <StatusBadge status={client.statut} />
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <RiskScoreBadge score={client.score_risque} />
-                      </td>
-                      <td style={{ padding: '14px 16px' }} onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => navigate(`/client/${client.id}`)}
-                          style={{ backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', padding: '6px 14px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-                        >
-                          Voir
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+        {/* Error */}
+        {error && (
+          <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 14, color: '#dc2626', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{error}</span>
+            <button onClick={fetchClients} style={{ padding: '5px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Réessayer</button>
           </div>
+        )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                style={{ padding: '8px 16px', border: '1px solid #d1d5db', borderRadius: 8, backgroundColor: page === 1 ? '#f3f4f6' : 'white', color: page === 1 ? '#9ca3af' : '#374151', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600 }}>
-                ← Précédent
-              </button>
-              <span style={{ padding: '8px 16px', fontSize: 14, color: '#6b7280', fontWeight: 600 }}>
-                Page {page} / {totalPages}
-              </span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                style={{ padding: '8px 16px', border: '1px solid #d1d5db', borderRadius: 8, backgroundColor: page === totalPages ? '#f3f4f6' : 'white', color: page === totalPages ? '#9ca3af' : '#374151', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600 }}>
-                Suivant →
-              </button>
+        {/* Loading */}
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 13 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 28, height: 28, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              Chargement...
             </div>
-          )}
+          </div>
+        )}
 
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#9ca3af', marginTop: 16 }}>
-            {sorted.length} client{sorted.length > 1 ? 's' : ''} trouvé{sorted.length > 1 ? 's' : ''}
-          </p>
-        </>
-      )}
+        {/* Empty */}
+        {!loading && !error && paginated.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 13 }}>
+            Aucun client trouvé
+          </div>
+        )}
+
+        {/* Table */}
+        {!loading && !error && paginated.length > 0 && (
+          <>
+            <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle('nom')} onClick={() => toggleSort('nom')}>
+                      Nom & Prénom <SortIcon field="nom" active={sortField === 'nom'} dir={sortDir} />
+                    </th>
+                    <th style={thStyle(null)}>Email</th>
+                    <th style={thStyle(null)}>Téléphone</th>
+                    <th style={thStyle('statut')} onClick={() => toggleSort('statut')}>
+                      Statut <SortIcon field="statut" active={sortField === 'statut'} dir={sortDir} />
+                    </th>
+                    <th style={thStyle('score_risque')} onClick={() => toggleSort('score_risque')}>
+                      Risque <SortIcon field="score_risque" active={sortField === 'score_risque'} dir={sortDir} />
+                    </th>
+                    <th style={{ ...thStyle(null), cursor: 'default' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((client, idx) => {
+                    if (!client?.id) return null
+                    const bg = idx % 2 === 0 ? 'white' : '#fafaf8'
+                    return (
+                      <tr key={client.id}
+                        style={{ borderBottom: '0.5px solid #f7f6f2', background: bg, cursor: 'pointer' }}
+                        onClick={() => navigate(`/client/${client.id}`)}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f0f8ff'}
+                        onMouseLeave={e => e.currentTarget.style.background = bg}>
+                        <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#0a0a0a' }}>
+                          {client.nom || '—'} {client.prenom || ''}
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#9ca3af' }}>{client.email || '—'}</td>
+                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#9ca3af' }}>{client.telephone || '—'}</td>
+                        <td style={{ padding: '12px 16px' }}><StatusBadge status={client.statut} /></td>
+                        <td style={{ padding: '12px 16px' }}><RiskScoreBadge score={client.score_risque} /></td>
+                        <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => navigate(`/client/${client.id}`)}
+                            style={{ padding: '5px 12px', background: 'white', color: '#2563eb', border: '0.5px solid #bfdbfe', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                            Voir →
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '7px 14px', border: '0.5px solid #e8e6e0', borderRadius: 7, background: 'white', color: page === 1 ? '#d1d5db' : '#0a0a0a', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
+                  ← Précédent
+                </button>
+                <span style={{ padding: '7px 14px', fontSize: 13, color: '#9ca3af' }}>Page {page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  style={{ padding: '7px 14px', border: '0.5px solid #e8e6e0', borderRadius: 7, background: 'white', color: page === totalPages ? '#d1d5db' : '#0a0a0a', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}>
+                  Suivant →
+                </button>
+              </div>
+            )}
+            <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
+              {sorted.length} client{sorted.length > 1 ? 's' : ''}
+            </p>
+          </>
+        )}
+      </div>
     </div>
   )
 }

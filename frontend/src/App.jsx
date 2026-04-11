@@ -43,9 +43,9 @@ function PrivateRoute({ children }) {
 // Layout avec sidebar
 function AppLayout({ children }) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2' }}>
       <Sidebar />
-      <main style={{ flex: 1, marginLeft: 280, background: '#f9fafb', minHeight: '100vh', padding: '24px' }}>
+      <main style={{ flex: 1, marginLeft: 240, background: '#f7f6f2', minHeight: '100vh' }}>
         {children}
       </main>
     </div>

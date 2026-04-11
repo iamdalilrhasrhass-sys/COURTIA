@@ -4,85 +4,71 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import StatusBadge from '../components/StatusBadge'
 import RiskScoreBadge from '../components/RiskScoreBadge'
-import LoadingSpinner from '../components/LoadingSpinner'
-import ErrorBanner from '../components/ErrorBanner'
-import EmptyState from '../components/EmptyState'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 function getToken() { return localStorage.getItem('token') }
 function fmt(v) { if (v === null || v === undefined || v === '') return '—'; return String(v) }
 function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('fr-FR') } catch { return '—' } }
-function fmtEur(v) { if (v === null || v === undefined) return '—'; return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(v)) }
+function fmtEur(v) { if (!v && v !== 0) return '—'; return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)) }
 
 function Stars({ score }) {
-  const stars = Math.round((Number(score) || 0) / 20)
+  const n = Math.round((Number(score) || 0) / 20)
   return (
-    <span style={{ fontSize: 16, letterSpacing: 2 }}>
-      {[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= stars ? '#f59e0b' : '#e5e7eb' }}>★</span>)}
+    <span style={{ fontSize: 14, letterSpacing: 1 }}>
+      {[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= n ? '#f59e0b' : '#e5e7eb' }}>★</span>)}
     </span>
   )
 }
 
-function ScoreBar({ value, max = 100, color = '#3b82f6' }) {
+function ScoreBar({ value, max = 100, color = '#2563eb', label }) {
   const pct = Math.min(100, Math.round((Number(value) || 0) / max * 100))
   return (
     <div>
-      <div style={{ height: 8, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 4, transition: 'width 0.5s ease' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 11, color: '#0a0a0a', fontWeight: 600 }}>{value || 0}/{max}</span>
       </div>
-      <span style={{ fontSize: 11, color: '#6b7280', marginTop: 2, display: 'block' }}>{value || 0} / {max}</span>
+      <div style={{ height: 5, background: '#f7f6f2', borderRadius: 3 }}>
+        <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
+      </div>
     </div>
   )
 }
 
-// ARK Chat Drawer
+// ARK Drawer
 function ArkDrawer({ client, onClose }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [slowWarning, setSlowWarning] = useState(false)
-  const messagesEndRef = useRef(null)
+  const endRef = useRef(null)
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
 
-  async function sendMessage(msg) {
-    if (!msg || !msg.trim()) return
+  async function send(msg) {
+    if (!msg?.trim()) return
     const text = msg.trim()
     setMessages(prev => [...prev, { role: 'user', content: text }])
-    setInput('')
-    setLoading(true)
-    setSlowWarning(false)
-    const timeout = setTimeout(() => setSlowWarning(true), 35000)
+    setInput(''); setLoading(true); setSlowWarning(false)
+    const tid = setTimeout(() => setSlowWarning(true), 28000)
     try {
       const res = await axios.post(`${API_URL}/api/ark/chat`, {
-        message: text,
-        clientData: client,
-        conversationHistory: messages.slice(-10)
-      }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        timeout: 90000
-      })
+        message: text, clientData: client, conversationHistory: messages.slice(-10)
+      }, { headers: { Authorization: `Bearer ${getToken()}` }, timeout: 90000 })
       const reply = res.data?.reply || res.data?.message || JSON.stringify(res.data)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
-      const errMsg = err.code === 'ECONNABORTED'
-        ? 'ARK se réveille... encore quelques secondes. Réessayez.'
-        : err.response?.data?.error || 'ARK temporairement indisponible.'
-      setMessages(prev => [...prev, { role: 'assistant', content: errMsg }])
+      setMessages(prev => [...prev, { role: 'assistant', content: err.code === 'ECONNABORTED' ? 'ARK se réveille... réessayez.' : 'ARK temporairement indisponible.' }])
     } finally {
-      setLoading(false)
-      clearTimeout(timeout)
-      setSlowWarning(false)
+      setLoading(false); clearTimeout(tid); setSlowWarning(false)
     }
   }
 
   const QUICK = [
-    { label: '🔍 Analyser les risques', prompt: 'Analyse en détail le profil de risque de ce client. Points de vigilance ?' },
-    { label: '💡 Opportunités cross-sell', prompt: 'Quelles sont les opportunités de cross-sell ou up-sell les plus pertinentes pour ce client ?' },
-    { label: '📧 Email de relance', prompt: 'Rédige un email de relance professionnel pour ce client en mentionnant les contrats proches de l\'échéance.' },
-    { label: '⚠️ Risque résiliation', prompt: 'Évalue le risque de résiliation de ce client sur 10 et propose des actions préventives.' }
+    { label: 'Analyser les risques', prompt: 'Analyse en détail le profil de risque de ce client. Points de vigilance ?' },
+    { label: 'Opportunités cross-sell', prompt: 'Quelles sont les meilleures opportunités de cross-sell pour ce client ?' },
+    { label: 'Email de relance', prompt: 'Rédige un email de relance professionnel pour ce client.' },
+    { label: 'Risque résiliation', prompt: 'Évalue le risque de résiliation de ce client sur 10 et propose des actions.' },
   ]
 
   return (
@@ -91,79 +77,69 @@ function ArkDrawer({ client, onClose }) {
       <div style={{
         position: 'fixed', top: 0, right: 0, bottom: 0, width: 420,
         background: '#0a0a0a', zIndex: 9999, display: 'flex', flexDirection: 'column',
-        boxShadow: '-4px 0 24px rgba(0,0,0,0.5)'
+        animation: 'slideIn 0.25s ease'
       }}>
-        {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}`}</style>
+
+        <div style={{ padding: '18px 24px', borderBottom: '0.5px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 8, height: 8, background: '#22c55e', borderRadius: '50%', display: 'inline-block' }} />
-            <span style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>ARK — Assistant IA</span>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s ease infinite' }} />
+            <span style={{ color: 'white', fontWeight: 600, fontSize: 14 }}>ARK — {client.nom} {client.prenom}</span>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 20 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
         </div>
 
         {/* Quick actions */}
-        <div style={{ padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, borderBottom: '1px solid #1f2937' }}>
+        <div style={{ padding: '10px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, borderBottom: '0.5px solid #1a1a1a' }}>
           {QUICK.map(q => (
-            <button key={q.label} onClick={() => sendMessage(q.prompt)}
-              style={{ padding: '8px 10px', background: '#1f2937', color: '#e5e7eb', border: '1px solid #374151', borderRadius: 8, cursor: 'pointer', fontSize: 11, textAlign: 'left' }}>
+            <button key={q.label} onClick={() => send(q.prompt)}
+              style={{ padding: '7px 10px', background: '#111', color: '#aaa', border: '0.5px solid #222', borderRadius: 7, cursor: 'pointer', fontSize: 11, textAlign: 'left', fontFamily: 'Arial, sans-serif' }}>
               {q.label}
             </button>
           ))}
         </div>
 
-        {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {messages.length === 0 && (
-            <p style={{ color: '#6b7280', fontSize: 13, textAlign: 'center', marginTop: 20 }}>
-              Posez une question à ARK sur ce client...
+            <p style={{ color: '#555', fontSize: 12, textAlign: 'center', marginTop: 20, lineHeight: 1.7 }}>
+              Posez une question à ARK sur ce client ou utilisez une action rapide.
             </p>
           )}
           {messages.map((m, i) => (
             <div key={i} style={{
-              padding: '10px 14px', borderRadius: 10, maxWidth: '85%',
-              background: m.role === 'user' ? '#1d4ed8' : '#1f2937',
-              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start'
+              padding: '10px 13px', borderRadius: 10, maxWidth: '86%',
+              background: m.role === 'user' ? '#1d4ed8' : '#1a1a1a',
+              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+              border: m.role === 'assistant' ? '0.5px solid #222' : 'none'
             }}>
-              <p style={{ color: 'white', fontSize: 13, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{m.content}</p>
+              <p style={{ color: 'white', fontSize: 12, margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{m.content}</p>
             </div>
           ))}
           {loading && (
-            <div style={{ padding: '10px 14px', background: '#1f2937', borderRadius: 10, alignSelf: 'flex-start', maxWidth: '85%' }}>
-              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                {[0,1,2].map(i => (
-                  <div key={i} style={{
-                    width: 6, height: 6, borderRadius: '50%', background: '#60a5fa',
-                    animation: `dotBounce 1.2s ease ${i * 0.2}s infinite`
-                  }} />
-                ))}
-                <style>{`@keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}`}</style>
+            <div style={{ padding: '10px 14px', background: '#1a1a1a', borderRadius: 10, alignSelf: 'flex-start', border: '0.5px solid #222' }}>
+              <div style={{ display: 'flex', gap: 5 }}>
+                {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#2563eb', animation: `dotBounce 1.2s ease ${i*0.2}s infinite` }} />)}
               </div>
-              {slowWarning && (
-                <p style={{ color: '#9ca3af', fontSize: 11, margin: '6px 0 0' }}>ARK se réveille... encore quelques secondes</p>
-              )}
+              {slowWarning && <p style={{ color: '#555', fontSize: 11, margin: '5px 0 0' }}>Serveur en démarrage...</p>}
             </div>
           )}
-          <div ref={messagesEndRef} />
+          <div ref={endRef} />
         </div>
 
-        {/* Input */}
-        <div style={{ padding: '16px', borderTop: '1px solid #1f2937', display: 'flex', gap: 8 }}>
+        <div style={{ padding: 14, borderTop: '0.5px solid #1a1a1a', display: 'flex', gap: 8 }}>
           <input value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input) } }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }}
             placeholder="Demandez à ARK..."
-            style={{ flex: 1, padding: '10px 14px', background: '#1f2937', border: '1px solid #374151', borderRadius: 8, color: 'white', fontSize: 14, outline: 'none' }} />
-          <button onClick={() => sendMessage(input)} disabled={loading || !input.trim()}
-            style={{ padding: '10px 16px', background: loading || !input.trim() ? '#374151' : '#2563eb', color: 'white', border: 'none', borderRadius: 8, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', fontSize: 18 }}>
-            →
-          </button>
+            style={{ flex: 1, padding: '10px 13px', background: '#111', border: '0.5px solid #2a2a2a', borderRadius: 8, color: 'white', fontSize: 13, fontFamily: 'Arial, sans-serif' }} />
+          <button onClick={() => send(input)} disabled={loading || !input.trim()}
+            style={{ padding: '10px 14px', background: !input.trim() || loading ? '#222' : '#2563eb', color: 'white', border: 'none', borderRadius: 8, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', fontSize: 16 }}>→</button>
         </div>
       </div>
     </>
   )
 }
 
-// Modal modifier client
+// Edit Modal
 function EditModal({ client, onClose, onSaved }) {
   const [form, setForm] = useState({ ...client })
   const [saving, setSaving] = useState(false)
@@ -171,68 +147,56 @@ function EditModal({ client, onClose, onSaved }) {
   async function save() {
     setSaving(true)
     try {
-      await axios.put(`${API_URL}/api/clients/${client.id}`, form, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      })
+      await axios.put(`${API_URL}/api/clients/${client.id}`, form, { headers: { Authorization: `Bearer ${getToken()}` } })
       toast.success('Client mis à jour ✓')
-      onSaved()
-      onClose()
-    } catch {
-      toast.error('Erreur lors de la sauvegarde')
-    } finally {
-      setSaving(false)
-    }
+      onSaved(); onClose()
+    } catch { toast.error('Erreur lors de la sauvegarde') }
+    finally { setSaving(false) }
   }
 
-  const fields = [
-    { key: 'nom', label: 'Nom', type: 'text' },
-    { key: 'prenom', label: 'Prénom', type: 'text' },
-    { key: 'email', label: 'Email', type: 'email' },
-    { key: 'telephone', label: 'Téléphone', type: 'text' },
-    { key: 'adresse', label: 'Adresse', type: 'text' },
-    { key: 'profession', label: 'Profession', type: 'text' },
-    { key: 'bonus_malus', label: 'Bonus-malus', type: 'number' },
-    { key: 'annees_permis', label: 'Années permis', type: 'number' },
-    { key: 'nb_sinistres_3ans', label: 'Sinistres 3 ans', type: 'number' },
-  ]
-  const selects = [
-    { key: 'statut', label: 'Statut', opts: ['prospect', 'actif', 'perdu'] },
-    { key: 'zone_geographique', label: 'Zone', opts: ['urbain', 'périurbain', 'rural'] },
-    { key: 'situation_familiale', label: 'Situation familiale', opts: ['célibataire', 'marié', 'pacsé', 'divorcé', 'veuf'] },
-    { key: 'segment', label: 'Segment', opts: ['particulier', 'professionnel', 'TPE', 'PME'] }
-  ]
+  const inputStyle = { width: '100%', padding: '9px 12px', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box', fontFamily: 'Arial, sans-serif', background: 'white' }
+  const labelStyle = { fontSize: 11, color: '#9ca3af', display: 'block', marginBottom: 5, fontWeight: 600, letterSpacing: 0.3 }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'white', borderRadius: 12, padding: 32, width: 640, maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2 style={{ margin: '0 0 24px', fontSize: 20, fontWeight: 700 }}>Modifier {client.nom} {client.prenom}</h2>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: 'white', borderRadius: 16, padding: 32, width: 640, maxHeight: '90vh', overflowY: 'auto', border: '0.5px solid #e8e6e0' }}>
+        <h2 style={{ margin: '0 0 24px', fontSize: 18, fontWeight: 500, color: '#0a0a0a' }}>Modifier {client.nom} {client.prenom}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {fields.map(f => (
-            <div key={f.key}>
-              <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>{f.label}</label>
-              <input type={f.type} value={form[f.key] || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+          {[
+            ['nom', 'NOM', 'text'], ['prenom', 'PRÉNOM', 'text'], ['email', 'EMAIL', 'email'],
+            ['telephone', 'TÉLÉPHONE', 'text'], ['adresse', 'ADRESSE', 'text'], ['profession', 'PROFESSION', 'text'],
+            ['bonus_malus', 'BONUS-MALUS', 'number'], ['annees_permis', 'ANNÉES PERMIS', 'number'], ['nb_sinistres_3ans', 'SINISTRES 3 ANS', 'number'],
+          ].map(([key, lbl, type]) => (
+            <div key={key}>
+              <label style={labelStyle}>{lbl}</label>
+              <input type={type} value={form[key] || ''} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} style={inputStyle} />
             </div>
           ))}
-          {selects.map(s => (
-            <div key={s.key}>
-              <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>{s.label}</label>
-              <select value={form[s.key] || ''} onChange={e => setForm(p => ({ ...p, [s.key]: e.target.value }))}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }}>
-                <option value="">Sélectionner</option>
-                {s.opts.map(o => <option key={o} value={o}>{o}</option>)}
+          {[
+            ['statut', 'STATUT', ['prospect', 'actif', 'résilié', 'perdu']],
+            ['zone_geographique', 'ZONE', ['urbain', 'périurbain', 'rural']],
+            ['situation_familiale', 'SITUATION', ['célibataire', 'marié', 'pacsé', 'divorcé', 'veuf']],
+            ['segment', 'SEGMENT', ['particulier', 'professionnel', 'TPE', 'PME']],
+          ].map(([key, lbl, opts]) => (
+            <div key={key}>
+              <label style={labelStyle}>{lbl}</label>
+              <select value={form[key] || ''} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
+                style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="">—</option>
+                {opts.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
           ))}
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4 }}>Notes</label>
+            <label style={labelStyle}>NOTES</label>
             <textarea value={form.notes || ''} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, minHeight: 80, boxSizing: 'border-box', resize: 'vertical' }} />
+              style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '10px 20px', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', background: 'white' }}>Annuler</button>
-          <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: saving ? '#93c5fd' : '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '10px 20px', border: '0.5px solid #e8e6e0', borderRadius: 8, cursor: 'pointer', background: 'white', fontSize: 13 }}>Annuler</button>
+          <button onClick={save} disabled={saving}
+            style={{ padding: '10px 20px', background: saving ? '#9ca3af' : '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}>
             {saving ? 'Sauvegarde...' : 'Sauvegarder'}
           </button>
         </div>
@@ -260,18 +224,20 @@ export default function ClientDetail() {
       setLoading(true); setError(null)
       const res = await axios.get(`${API_URL}/api/clients/${id}`, { headers })
       setClient(res.data)
-    } catch {
-      setError('Client introuvable ou erreur serveur')
-    } finally {
-      setLoading(false)
-    }
+    } catch { setError('Client introuvable ou erreur serveur') }
+    finally { setLoading(false) }
   }
 
   async function loadContrats() {
     try {
-      const res = await axios.get(`${API_URL}/api/contrats?client_id=${id}`, { headers })
+      const res = await axios.get(`${API_URL}/api/clients/${id}/contrats`, { headers })
       setContrats(Array.isArray(res.data) ? res.data : [])
-    } catch { setContrats([]) }
+    } catch {
+      try {
+        const res = await axios.get(`${API_URL}/api/contrats?client_id=${id}`, { headers })
+        setContrats(Array.isArray(res.data) ? res.data : [])
+      } catch { setContrats([]) }
+    }
   }
 
   useEffect(() => { loadClient(); loadContrats() }, [id])
@@ -280,176 +246,198 @@ export default function ClientDetail() {
     if (!noteText.trim()) return
     try {
       const date = new Date().toLocaleDateString('fr-FR')
-      const newNotes = `[${date}] : ${noteText}\n${client.notes || ''}`
+      const newNotes = `[${date}] ${noteText}\n${client.notes || ''}`
       await axios.put(`${API_URL}/api/clients/${id}`, { ...client, notes: newNotes }, { headers })
       toast.success('Note ajoutée ✓')
-      setNoteText(''); setShowNote(false)
-      loadClient()
+      setNoteText(''); setShowNote(false); loadClient()
     } catch { toast.error('Erreur ajout note') }
   }
 
-  if (loading) return <LoadingSpinner message="Chargement du client..." />
-  if (error) return (
-    <div style={{ padding: 32 }}>
-      <button onClick={() => navigate(-1)} style={{ marginBottom: 16, padding: '8px 16px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>← Retour</button>
-      <ErrorBanner message={error} onRetry={loadClient} />
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', background: '#f7f6f2' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+        <p style={{ color: '#9ca3af', fontSize: 13 }}>Chargement...</p>
+      </div>
     </div>
   )
+
+  if (error) return (
+    <div style={{ padding: 32, background: '#f7f6f2', minHeight: '100vh' }}>
+      <button onClick={() => navigate(-1)} style={{ marginBottom: 16, padding: '8px 16px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← Retour</button>
+      <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 10, padding: '14px 18px', color: '#dc2626', fontSize: 14 }}>{error}</div>
+    </div>
+  )
+
   if (!client) return null
 
-  const loyaltyStars = Math.round((Number(client.loyalty_score) || 0) / 20)
+  const card = { background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: 24 }
 
   return (
-    <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ background: '#f7f6f2', minHeight: '100vh' }}>
 
-      {/* SECTION 1 — En-tête */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-          <button onClick={() => navigate(-1)} style={{ padding: '8px 16px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginTop: 4 }}>← Retour</button>
+      {/* Topbar */}
+      <div style={{ background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => navigate(-1)}
+            style={{ padding: '7px 14px', background: 'white', color: '#0a0a0a', border: '0.5px solid #e8e6e0', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontFamily: 'Arial, sans-serif' }}>
+            ← Retour
+          </button>
           <div>
-            <h1 style={{ fontSize: 30, fontWeight: 700, margin: '0 0 8px' }}>{fmt(client.nom)} {fmt(client.prenom)}</h1>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <h1 style={{ fontSize: 17, fontWeight: 600, color: '#0a0a0a', margin: 0 }}>{fmt(client.nom)} {fmt(client.prenom)}</h1>
+            <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center' }}>
               <StatusBadge status={client.statut} />
               <RiskScoreBadge score={client.score_risque} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Stars score={client.loyalty_score} />
-                <span style={{ fontSize: 12, color: '#6b7280' }}>fidélité</span>
-              </div>
+              <Stars score={client.loyalty_score} />
             </div>
           </div>
         </div>
-        <button onClick={() => setShowEdit(true)} style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
-          ✏️ Modifier
+        <button onClick={() => setShowEdit(true)}
+          style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, fontFamily: 'Arial, sans-serif' }}>
+          Modifier
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+      <div style={{ padding: '24px 32px', maxWidth: 1100 }}>
 
-        {/* SECTION 2 — Identité */}
-        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, color: '#111' }}>👤 Identité</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {[
-              ['Email', client.email],
-              ['Téléphone', client.telephone],
-              ['Mobile', client.mobile],
-              ['Adresse', client.adresse ? `${client.adresse}${client.postal_code ? ', ' + client.postal_code : ''}${client.city ? ' ' + client.city : ''}` : null],
-              ['Profession', client.profession],
-              ['Situation familiale', client.situation_familiale],
-              ['Type', client.segment || client.type],
-              ['Entreprise', client.company_name],
-              ['Client depuis', fmtDate(client.created_at)]
-            ].map(([label, value]) => (
-              <div key={label} style={{ padding: '4px 0' }}>
-                <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 2px', fontWeight: 600 }}>{label}</p>
-                <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#111', wordBreak: 'break-word' }}>{fmt(value)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Row 1: Identité + Profil assurance */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
 
-        {/* SECTION 3 — Données assurance */}
-        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, color: '#111' }}>🛡️ Profil d'assurance</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-            {[
-              ['Bonus-malus', client.bonus_malus !== null ? String(client.bonus_malus) : null],
-              ['Années permis', client.annees_permis !== null ? client.annees_permis + ' ans' : null],
-              ['Sinistres (3 ans)', client.nb_sinistres_3ans !== null ? String(client.nb_sinistres_3ans) : null],
-              ['Zone géographique', client.zone_geographique]
-            ].map(([label, value]) => (
-              <div key={label} style={{ padding: '4px 0' }}>
-                <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 2px', fontWeight: 600 }}>{label}</p>
-                <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: '#111' }}>{fmt(value)}</p>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 6px', fontWeight: 600 }}>Score de risque</p>
-            <ScoreBar value={client.score_risque} max={100} color={
-              (client.score_risque || 0) <= 30 ? '#dc2626' :
-              (client.score_risque || 0) <= 60 ? '#f59e0b' :
-              (client.score_risque || 0) <= 80 ? '#3b82f6' : '#16a34a'
-            } />
-          </div>
-          <div>
-            <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 6px', fontWeight: 600 }}>Score de fidélité</p>
-            <ScoreBar value={client.loyalty_score} max={100} color="#8b5cf6" />
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 4 — Contrats */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, color: '#111' }}>📋 Contrats ({contrats.length})</h2>
-        {contrats.length === 0 ? (
-          <EmptyState icon="📄" title="Aucun contrat actif" subtitle="Ce client n'a pas encore de contrat associé." />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {contrats.map(c => {
-              const ech = c.date_echeance ? new Date(c.date_echeance) : null
-              const jours = ech ? Math.ceil((ech - new Date()) / 86400000) : null
-              const urgent = jours !== null && jours <= 30
-              return (
-                <div key={c.id} style={{ padding: 14, background: urgent ? '#fff7ed' : '#f9fafb', border: `1px solid ${urgent ? '#fed7aa' : '#e5e7eb'}`, borderRadius: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <p style={{ fontWeight: 600, margin: '0 0 4px', fontSize: 14 }}>{c.type_contrat || '—'} — {c.compagnie || '—'}</p>
-                      <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 2px' }}>N° {c.numero || '—'} · Prime : {fmtEur(c.prime_annuelle)}/an</p>
-                      <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Effet : {fmtDate(c.date_effet)} · Échéance : {fmtDate(c.date_echeance)}</p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <StatusBadge status={c.statut} />
-                      {urgent && <p style={{ fontSize: 11, color: '#ea580c', margin: '6px 0 0', fontWeight: 600 }}>⚠️ J-{jours}</p>}
-                    </div>
-                  </div>
+          {/* Identité */}
+          <div style={card}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: '0 0 16px', textTransform: 'uppercase' }}>Identité</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              {[
+                ['Email', client.email],
+                ['Téléphone', client.telephone],
+                ['Adresse', client.adresse ? `${client.adresse}${client.postal_code ? ', ' + client.postal_code : ''}${client.city ? ' ' + client.city : ''}` : null],
+                ['Profession', client.profession],
+                ['Situation', client.situation_familiale],
+                ['Segment', client.segment || client.type],
+                ['Entreprise', client.company_name],
+                ['Client depuis', fmtDate(client.created_at)],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 3px', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>{label}</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, margin: 0, color: '#0a0a0a', wordBreak: 'break-word' }}>{fmt(value)}</p>
                 </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* SECTION notes */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>📝 Notes</h2>
-          <button onClick={() => setShowNote(!showNote)} style={{ padding: '6px 12px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-            + Note
-          </button>
-        </div>
-        {showNote && (
-          <div style={{ marginBottom: 16 }}>
-            <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Saisir une note..."
-              style={{ width: '100%', padding: 10, border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, minHeight: 80, resize: 'vertical', boxSizing: 'border-box' }} />
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button onClick={saveNote} style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Enregistrer</button>
-              <button onClick={() => setShowNote(false)} style={{ padding: '8px 16px', background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Annuler</button>
+              ))}
             </div>
           </div>
-        )}
-        {client.notes ? (
-          <pre style={{ fontSize: 13, color: '#374151', whiteSpace: 'pre-wrap', background: '#f9fafb', padding: 12, borderRadius: 8, margin: 0, fontFamily: 'Arial, sans-serif' }}>
-            {client.notes}
-          </pre>
-        ) : (
-          <p style={{ color: '#6b7280', fontSize: 13 }}>Aucune note — cliquez sur "+ Note" pour en ajouter une.</p>
-        )}
+
+          {/* Profil assurance */}
+          <div style={card}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: '0 0 16px', textTransform: 'uppercase' }}>Profil d'assurance</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+              {[
+                ['Bonus-malus', client.bonus_malus !== null ? String(client.bonus_malus) : null],
+                ['Années permis', client.annees_permis !== null ? client.annees_permis + ' ans' : null],
+                ['Sinistres (3 ans)', client.nb_sinistres_3ans !== null ? String(client.nb_sinistres_3ans) : null],
+                ['Zone', client.zone_geographique],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 3px', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>{label}</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, margin: 0, color: '#0a0a0a' }}>{fmt(value)}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <ScoreBar
+                label="Score de risque"
+                value={client.score_risque}
+                color={(client.score_risque || 0) <= 30 ? '#dc2626' : (client.score_risque || 0) <= 60 ? '#f59e0b' : '#16a34a'}
+              />
+              <ScoreBar label="Score de fidélité" value={client.loyalty_score} color="#2563eb" />
+            </div>
+            {client.lifetime_value && (
+              <div style={{ marginTop: 14, padding: '10px 14px', background: '#f7f6f2', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>VALEUR VIE CLIENT</span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: '#0a0a0a' }}>{fmtEur(client.lifetime_value)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Contrats */}
+        <div style={{ ...card, marginBottom: 16 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: '0 0 16px', textTransform: 'uppercase' }}>
+            Contrats ({contrats.length})
+          </p>
+          {contrats.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 0', color: '#9ca3af', fontSize: 13 }}>
+              Aucun contrat actif associé à ce client.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {contrats.map(c => {
+                const daysLeft = c.date_echeance ? Math.ceil((new Date(c.date_echeance) - new Date()) / 86400000) : null
+                const urgent = daysLeft !== null && daysLeft <= 30 && daysLeft > 0
+                return (
+                  <div key={c.id} style={{ padding: '12px 16px', background: urgent ? '#fffbeb' : '#fafaf8', border: `0.5px solid ${urgent ? '#fde68a' : '#e8e6e0'}`, borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <p style={{ fontWeight: 600, margin: '0 0 3px', fontSize: 13, color: '#0a0a0a' }}>{c.type_contrat || '—'} — {c.compagnie || '—'}</p>
+                      <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+                        Prime : {fmtEur(c.prime_annuelle)} · Échéance : {fmtDate(c.date_echeance)}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      {urgent && <span style={{ fontSize: 11, fontWeight: 700, color: '#d97706' }}>J-{daysLeft}</span>}
+                      <span style={{
+                        padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+                        background: (c.status || c.statut || '').toLowerCase() === 'actif' ? '#dcfce7' : '#f3f4f6',
+                        color: (c.status || c.statut || '').toLowerCase() === 'actif' ? '#166534' : '#6b7280'
+                      }}>
+                        {c.status || c.statut || '—'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div style={card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: 0, textTransform: 'uppercase' }}>Notes</p>
+            <button onClick={() => setShowNote(!showNote)}
+              style={{ padding: '6px 12px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontFamily: 'Arial, sans-serif' }}>
+              + Note
+            </button>
+          </div>
+          {showNote && (
+            <div style={{ marginBottom: 14 }}>
+              <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Saisir une note..."
+                style={{ width: '100%', padding: '10px 12px', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, minHeight: 80, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'Arial, sans-serif', background: '#fafaf8' }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button onClick={saveNote} style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 13 }}>Enregistrer</button>
+                <button onClick={() => { setShowNote(false); setNoteText('') }} style={{ padding: '8px 16px', background: '#f7f6f2', border: '0.5px solid #e8e6e0', borderRadius: 7, cursor: 'pointer', fontSize: 13 }}>Annuler</button>
+              </div>
+            </div>
+          )}
+          {client.notes ? (
+            <pre style={{ fontSize: 13, color: '#374151', whiteSpace: 'pre-wrap', background: '#fafaf8', padding: '12px 14px', borderRadius: 8, margin: 0, fontFamily: 'Arial, sans-serif', lineHeight: 1.7, border: '0.5px solid #e8e6e0' }}>
+              {client.notes}
+            </pre>
+          ) : (
+            <p style={{ color: '#9ca3af', fontSize: 13 }}>Aucune note.</p>
+          )}
+        </div>
       </div>
 
       {/* Bouton ARK fixe */}
       <button onClick={() => setShowArk(true)} style={{
-        position: 'fixed', bottom: 28, right: 28, padding: '14px 20px',
+        position: 'fixed', bottom: 28, right: 28, padding: '13px 20px',
         background: '#2563eb', color: 'white', border: 'none', borderRadius: 12,
-        cursor: 'pointer', fontSize: 14, fontWeight: 700, zIndex: 999,
-        boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
-        display: 'flex', alignItems: 'center', gap: 8
+        cursor: 'pointer', fontSize: 13, fontWeight: 600, zIndex: 998,
+        boxShadow: '0 4px 20px rgba(37,99,235,0.35)',
+        display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Arial, sans-serif'
       }}>
-        <span style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', display: 'inline-block' }} />
+        <div style={{ width: 7, height: 7, background: '#4ade80', borderRadius: '50%', animation: 'pulse 2s ease infinite' }} />
         Demander à ARK
       </button>
 
-      {/* Modals */}
       {showEdit && <EditModal client={client} onClose={() => setShowEdit(false)} onSaved={loadClient} />}
       {showArk && <ArkDrawer client={client} onClose={() => setShowArk(false)} />}
     </div>
