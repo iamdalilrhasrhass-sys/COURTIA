@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Anthropic = require('@anthropic-ai/sdk')
-const verifyToken = require('../middleware/auth')
+const { verifyToken } = require('../middleware/auth')
 
 // Initialisation client Anthropic
 const anthropic = new Anthropic({

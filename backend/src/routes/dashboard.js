@@ -106,7 +106,7 @@ router.get('/stats', verifyToken, async (req, res) => {
       ) ranked
       ORDER BY tier ASC, created_at DESC
       LIMIT 5
-    `, [req.user.courtier_id || 1]);
+    `, [req.user.id]);
 
     // Types de contrats
     const typesResult = await pool.query(`

@@ -50,6 +50,8 @@ const contratsRouter = require('./src/routes/contrats')
 const dashboardRouter = require('./src/routes/dashboard')
 const tachesRouter = require('./src/routes/taches')
 const arkRouter = require('./src/routes/ark')
+const adminCostsRouter = require('./src/routes/adminCosts')
+const onboardingRouter = require('./src/routes/onboarding')
 
 app.use('/api/auth', authRouter)
 app.use('/api/clients', clientsRouter)
@@ -57,6 +59,8 @@ app.use('/api/contrats', contratsRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/taches', tachesRouter)
 app.use('/api/ark', arkRateLimit, arkRouter)
+app.use('/api/admin', adminCostsRouter)
+app.use('/api/onboarding', onboardingRouter)
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'courtia-backend' }))
 
