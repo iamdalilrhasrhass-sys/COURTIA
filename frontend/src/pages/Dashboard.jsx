@@ -1,245 +1,257 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import axios from 'axios'
+import Topbar from '../components/Topbar'
+import StatusBadge from '../components/StatusBadge'
+import RiskScoreBadge from '../components/RiskScoreBadge'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
-
 function getToken() { return localStorage.getItem('token') }
 
-function formatEuros(montant) {
- if (!montant && montant !== 0) return '—'
- return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(montant)
+function fmt(v) {
+  if (v === null || v === undefined || isNaN(Number(v))) return '—'
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v))
 }
 
-function KPICard({ title, value, icon, alert }) {
- return (
- <div style={{ 
-   backgroundColor: 'white', 
-   border: '1px solid #e5e7eb',
-   borderRadius: 12, 
-   padding: 24,
-   position: 'relative',
-   overflow: 'hidden'
- }}>
- {alert && <span style={{ position: 'absolute', top: 8, right: 8, background: '#dc2626', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white' }}>!</span>}
- <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
- <p style={{ fontSize: 13, color: '#6b7280', margin: 0, fontWeight: 500 }}>{title}</p>
- <span style={{ fontSize: 22 }}>{icon}</span>
- </div>
- <p style={{ fontSize: 28, fontWeight: 700, color: alert ? '#dc2626' : '#080808', margin: 0 }}>{value}</p>
- </div>
- )
+function Skeleton({ w = '100%', h = 20, r = 6 }) {
+  return (
+    <div style={{
+      width: w, height: h, background: '#f0ede8', borderRadius: r,
+      animation: 'skeletonPulse 1.5s ease infinite'
+    }} />
+  )
 }
 
-function SkeletonCard() {
- return (
- <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24 }}>
- <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
- <div style={{ width: 100, height: 14, background: '#f3f4f6', borderRadius: 4, animation: 'pulse 1.5s ease infinite' }} />
- <div style={{ width: 28, height: 28, background: '#f3f4f6', borderRadius: 6, animation: 'pulse 1.5s ease infinite' }} />
- </div>
- <div style={{ width: 80, height: 28, background: '#f3f4f6', borderRadius: 4, animation: 'pulse 1.5s ease infinite' }} />
- <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} } @keyframes spin { to { transform: rotate(360deg) } }`}</style>
- </div>
- )
+function KPICard({ title, value, sub, loading }) {
+  return (
+    <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: 20 }}>
+      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.8, color: '#9ca3af', margin: '0 0 12px', textTransform: 'uppercase' }}>{title}</p>
+      {loading
+        ? <Skeleton h={32} w="60%" />
+        : <p style={{ fontSize: 28, fontWeight: 500, letterSpacing: -0.8, color: '#0a0a0a', margin: '0 0 4px' }}>{value}</p>
+      }
+      {sub && !loading && <p style={{ fontSize: 11, color: '#16a34a', margin: 0 }}>{sub}</p>}
+    </div>
+  )
+}
+
+// Mini bar chart
+function BarChart({ data }) {
+  if (!data?.length) return <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '20px 0' }}>Pas de données</p>
+  const max = Math.max(...data.map(d => parseFloat(d.revenue) || 0), 1)
+  const last = data.length - 1
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 80, padding: '0 4px' }}>
+      {data.map((d, i) => {
+        const h = Math.max(4, Math.round((parseFloat(d.revenue) / max) * 80))
+        const isLast = i === last
+        return (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: '100%', height: h, background: isLast ? '#0a0a0a' : '#e8e6e0', borderRadius: '3px 3px 0 0', opacity: isLast ? 1 : 0.6 }} />
+            <span style={{ fontSize: 9, color: '#9ca3af', whiteSpace: 'nowrap' }}>{d.mois}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function Dashboard() {
- const navigate = useNavigate()
- const [stats, setStats] = useState(null)
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState('')
- const [retryCount, setRetryCount] = useState(0)
+  const navigate = useNavigate()
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
 
- const headers = { Authorization: `Bearer ${getToken()}` }
+  useEffect(() => {
+    fetch(`${API_URL}/ping`).catch(() => {})
+    loadStats()
+  }, [])
 
- useEffect(() => {
- fetch(`${API_URL}/ping`).catch(() => {})
- loadStats()
- }, [])
+  async function loadStats() {
+    try {
+      setLoading(true)
+      setError('')
+      const res = await axios.get(`${API_URL}/api/dashboard/stats`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+        timeout: 35000
+      })
+      setStats(res.data)
+    } catch (err) {
+      setError('Impossible de charger les données')
+      if (retryCount === 0) {
+        setRetryCount(1)
+        setTimeout(loadStats, 5000)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
- async function loadStats() {
- try {
- setLoading(true)
- setError('')
- const res = await axios.get(`${API_URL}/api/dashboard/stats`, { headers, timeout: 35000 })
- setStats(res.data)
- } catch (err) {
- console.error('Erreur dashboard:', err)
- setError('Impossible de charger le tableau de bord')
- // Retry automatique après 5s (une seule fois)
- if (retryCount === 0) {
-   setRetryCount(1)
-   setTimeout(() => loadStats(), 5000)
- }
- } finally {
- setLoading(false)
- }
- }
+  const topbarAction = (
+    <button
+      onClick={() => navigate('/clients/new')}
+      style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}
+    >
+      + Client
+    </button>
+  )
 
- if (loading) return (
- <div style={{ padding: 32 }}>
- <h1 style={{ fontSize: 28, fontWeight: 700, color: '#2563eb', marginBottom: 24 }}>Tableau de bord</h1>
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
- {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
- </div>
- <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 100 }}>
- <p style={{ color: '#6b7280', fontSize: 14 }}>Chargement en cours{retryCount > 0 ? ' (nouvelle tentative…)' : ''}…</p>
- </div>
- </div>
- )
+  return (
+    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+      <Topbar title="Tableau de bord" action={topbarAction} />
 
- if (!stats) return (
- <div style={{ padding: 32 }}>
- <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
- <span style={{ fontSize: 18 }}>⚠️</span>
- <p style={{ color: '#dc2626', fontSize: 14, margin: 0 }}>{error || 'Erreur de chargement'}</p>
- </div>
- <button onClick={() => { setRetryCount(0); loadStats() }} style={{ padding: '7px 16px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
- Réessayer
- </button>
- </div>
- </div>
- )
+      <div style={{ padding: '28px 32px' }}>
 
- return (
- <div style={{ padding: 32 }}>
- <h1 style={{ fontSize: 28, fontWeight: 700, color: '#2563eb', marginBottom: 24 }}>Tableau de bord</h1>
+        {/* Error banner */}
+        {error && !loading && (
+          <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 13, color: '#dc2626' }}>{error}</span>
+            <button onClick={() => { setRetryCount(0); loadStats() }}
+              style={{ padding: '6px 14px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+              Réessayer
+            </button>
+          </div>
+        )}
 
- {/* KPI Cards */}
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
- <KPICard title="Total clients" value={stats.totalClients || 0} icon="👥" />
- <KPICard title="Contrats actifs" value={stats.contratsActifs || 0} icon="📋" />
- <KPICard title="Commissions mois" value={formatEuros(stats.commissionsMois)} icon="💰" />
- <KPICard title="Taux conversion" value={(stats.tauxConversion || 0) + '%'} icon="📈" />
- <KPICard title="Prime portefeuille" value={formatEuros(stats.primeTotale)} icon="🏦" />
- <KPICard title="Contrats urgents" value={stats.contratsUrgents || 0} icon="⚠️" alert={stats.contratsUrgents > 0} />
- </div>
+        {/* KPIs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+          <KPICard title="Clients totaux" value={stats?.totalClients ?? '—'} loading={loading} />
+          <KPICard title="Contrats actifs" value={stats?.contratsActifs ?? '—'} loading={loading} />
+          <KPICard title="Commission du mois" value={fmt(stats?.commissionsMois)} sub={stats?.commissionsMois ? '+' + Math.round(stats.commissionsMois / 12) + '€ vs mois dernier' : null} loading={loading} />
+          <KPICard title="Prime portefeuille" value={fmt(stats?.primeTotale)} loading={loading} />
+        </div>
 
- {/* Indicateurs métier ARK */}
- {stats && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
- <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
- <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>🔴 Clients risque élevé</p>
- <p style={{ fontSize: 28, fontWeight: 700, color: '#dc2626', margin: 0 }}>{(stats.clientsRecents || []).filter(c => c.score_risque > 60).length}</p>
- <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>sur les 5 derniers clients</p>
- </div>
- <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
- <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>📈 Commission annuelle</p>
- <p style={{ fontSize: 28, fontWeight: 700, color: '#16a34a', margin: 0 }}>{stats.commissionsMois ? ((stats.commissionsMois * 12).toLocaleString('fr-FR') + '€') : '—'}</p>
- <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>projection sur 12 mois</p>
- </div>
- <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
- <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px' }}>⚡ Prime moyenne</p>
- <p style={{ fontSize: 28, fontWeight: 700, color: '#2563eb', margin: 0 }}>{stats.contratsActifs && stats.primeTotale ? (Math.round(stats.primeTotale / stats.contratsActifs).toLocaleString('fr-FR') + '€') : '—'}</p>
- <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>par contrat actif</p>
- </div>
- </div>}
+        {/* Section 2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
 
- {/* Graphique revenus */}
- <div style={{ background: '#1e293b', borderRadius: 12, padding: 24, marginBottom: 24 }}>
- <h2 style={{ color: '#38bdf8', fontSize: 16, fontWeight: 600, margin: '0 0 16px' }}>Revenus 6 derniers mois</h2>
- {stats.revenus6Mois && stats.revenus6Mois.length > 0 ? (
- <ResponsiveContainer width="100%" height={220}>
- <LineChart data={stats.revenus6Mois.map(d => ({ ...d, revenue: parseFloat(d.revenue) || 0 }))}>
- <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
- <XAxis dataKey="mois" stroke="#94a3b8" fontSize={12} />
- <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={v => v + '€'} />
- <Tooltip formatter={v => [formatEuros(v), 'Revenus']} contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }} labelStyle={{ color: '#94a3b8' }} />
- <Line type="monotone" dataKey="revenue" stroke="#38bdf8" strokeWidth={2} dot={{ fill: '#38bdf8', r: 4 }} />
- </LineChart>
- </ResponsiveContainer>
- ) : (
- <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 0' }}>Aucune donnée de revenus disponible</p>
- )}
- </div>
+          {/* Clients récents */}
+          <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #e8e6e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a' }}>Clients récents</span>
+              <button onClick={() => navigate('/clients')}
+                style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+                Voir tout →
+              </button>
+            </div>
+            <div>
+              {loading ? (
+                <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} h={36} />)}
+                </div>
+              ) : !stats?.clientsRecents?.length ? (
+                <p style={{ padding: 20, fontSize: 13, color: '#9ca3af', textAlign: 'center' }}>Aucun client récent</p>
+              ) : (
+                stats.clientsRecents.map(client => {
+                  const initial = (client.nom || client.prenom || 'C')[0].toUpperCase()
+                  const score = Number(client.score_risque) || 0
+                  const barColor = score <= 30 ? '#dc2626' : score <= 60 ? '#f59e0b' : score <= 80 ? '#3b82f6' : '#16a34a'
+                  return (
+                    <div key={client.id}
+                      onClick={() => navigate(`/client/${client.id}`)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', cursor: 'pointer', borderBottom: '0.5px solid #fafaf8' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f7f6f2'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                    >
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f7f6f2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#0a0a0a', flexShrink: 0 }}>
+                        {initial}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {client.nom} {client.prenom}
+                        </p>
+                        <div style={{ height: 3, background: '#f7f6f2', borderRadius: 2, width: '60%' }}>
+                          <div style={{ height: '100%', background: barColor, borderRadius: 2, width: score + '%', maxWidth: '100%' }} />
+                        </div>
+                      </div>
+                      <StatusBadge status={client.statut} />
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
 
- {/* Répartition du portefeuille */}
- {stats.typesContrats && stats.typesContrats.length > 0 && (
- <div style={{ background: '#1e293b', borderRadius: 12, padding: 24, marginBottom: 24 }}>
- <h2 style={{ color: '#38bdf8', fontSize: 16, fontWeight: 600, margin: '0 0 16px' }}>Répartition du portefeuille</h2>
- <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
- {stats.typesContrats.map(type => {
- const total = stats.typesContrats.reduce((acc, t) => acc + parseInt(t.count), 0)
- const pct = Math.round((parseInt(type.count) / total) * 100)
- const colors = {
- 'Auto': '#3b82f6',
- 'Habitation': '#10b981',
- 'Mutuelle': '#8b5cf6',
- 'RC Pro': '#f59e0b',
- 'Prévoyance': '#ef4444',
- 'Décennale': '#06b6d4'
- }
- return (
- <div key={type.type}>
- <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
- <span style={{ color: '#e2e8f0', fontSize: 13 }}>{type.type}</span>
- <span style={{ color: '#94a3b8', fontSize: 13 }}>{type.count} contrats · {pct}%</span>
- </div>
- <div style={{ height: 6, background: '#334155', borderRadius: 3 }}>
- <div style={{
- height: '100%', borderRadius: 3,
- width: pct + '%',
- background: colors[type.type] || '#06b6d4',
- transition: 'width 0.3s ease'
- }} />
- </div>
- </div>
- )
- })}
- </div>
- </div>
- )}
+          {/* Activité + Urgences */}
+          <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, overflow: 'hidden' }}>
+            {/* Graphique revenus */}
+            <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #f7f6f2' }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a', margin: '0 0 12px' }}>Revenus 6 mois</p>
+              {loading ? <Skeleton h={80} /> : <BarChart data={stats?.revenus6Mois} />}
+            </div>
+            {/* Contrats urgents */}
+            <div style={{ padding: '14px 20px' }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a', margin: '0 0 12px' }}>Échéances urgentes</p>
+              {loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[...Array(3)].map((_, i) => <Skeleton key={i} h={32} />)}
+                </div>
+              ) : !stats?.alertes?.length ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#16a34a' }}>
+                  <span>✓</span> Aucune échéance urgente dans les 90 jours
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {stats.alertes.slice(0, 3).map((a, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 8, background: '#fafaf8', border: '0.5px solid #f0ede8' }}>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 600, margin: 0, color: '#0a0a0a' }}>{a.nom} {a.prenom}</p>
+                        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{a.type_contrat}</p>
+                      </div>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20,
+                        background: a.jours_restants <= 15 ? '#fef2f2' : '#fffbeb',
+                        color: a.jours_restants <= 15 ? '#dc2626' : '#d97706'
+                      }}>
+                        J-{a.jours_restants}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
- {/* Clients récents + Alertes */}
- <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
- {/* Clients récents */}
- <div style={{ background: '#1e293b', borderRadius: 12, padding: 24 }}>
- <h2 style={{ color: '#38bdf8', fontSize: 16, fontWeight: 600, margin: '0 0 16px' }}>Clients récents</h2>
- {stats.clientsRecents && stats.clientsRecents.length > 0 ? (
- <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
- {stats.clientsRecents.map(client => (
- <div key={client.id} onClick={() => navigate('/client/' + client.id)}
- style={{ padding: '10px 14px', background: '#0f172a', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
- onMouseEnter={e => e.currentTarget.style.background = '#1e3a5f'}
- onMouseLeave={e => e.currentTarget.style.background = '#0f172a'}>
- <div>
- <p style={{ color: 'white', fontWeight: 600, margin: 0, fontSize: 14 }}>{client.nom} {client.prenom}</p>
- <p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Score : {client.score_risque}</p>
- </div>
- <span style={{ padding: '3px 8px', background: client.statut === 'actif' ? '#166534' : '#1e3a5f', color: client.statut === 'actif' ? '#4ade80' : '#93c5fd', borderRadius: 12, fontSize: 12 }}>
- {client.statut}
- </span>
- </div>
- ))}
- </div>
- ) : (
- <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>Aucun client récent</p>
- )}
- </div>
-
- {/* Alertes importantes */}
- <div style={{ background: '#1e293b', borderRadius: 12, padding: 24 }}>
- <h2 style={{ color: '#38bdf8', fontSize: 16, fontWeight: 600, margin: '0 0 16px' }}>Alertes importantes</h2>
- {stats.alertes && stats.alertes.length > 0 ? (
- <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
- {stats.alertes.map((alerte, i) => (
- <div key={i} style={{ padding: '10px 14px', background: alerte.jours_restants <= 30 ? '#450a0a' : '#422006', borderRadius: 8, border: `1px solid ${alerte.jours_restants <= 30 ? '#7f1d1d' : '#78350f'}` }}>
- <p style={{ color: alerte.jours_restants <= 30 ? '#fca5a5' : '#fcd34d', fontWeight: 600, margin: '0 0 2px', fontSize: 14 }}>
- ⚠️ {alerte.nom} {alerte.prenom}
- </p>
- <p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>
- {alerte.type_contrat} — expire dans {alerte.jours_restants} jour{alerte.jours_restants > 1 ? 's' : ''}
- </p>
- </div>
- ))}
- </div>
- ) : (
- <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>✅ Aucune échéance urgente dans les 90 prochains jours</p>
- )}
- </div>
- </div>
- </div>
- )
+        {/* Section 3 — Répartition portefeuille */}
+        {!loading && stats?.typesContrats?.length > 0 && (
+          <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #e8e6e0' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a' }}>Répartition du portefeuille</span>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#fafaf8' }}>
+                  {['Type de contrat', 'Nombre', 'Prime totale', '% du portefeuille'].map(h => (
+                    <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: 0.5, textTransform: 'uppercase', borderBottom: '0.5px solid #e8e6e0' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {stats.typesContrats.map((type, idx) => {
+                  const total = stats.typesContrats.reduce((acc, t) => acc + parseInt(t.count), 0)
+                  const pct = total > 0 ? Math.round((parseInt(type.count) / total) * 100) : 0
+                  return (
+                    <tr key={type.type} style={{ borderBottom: idx < stats.typesContrats.length - 1 ? '0.5px solid #f7f6f2' : 'none' }}>
+                      <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 500, color: '#0a0a0a' }}>{type.type}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, color: '#6b7280' }}>{type.count}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, color: '#0a0a0a' }}>—</td>
+                      <td style={{ padding: '12px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ flex: 1, height: 4, background: '#f7f6f2', borderRadius: 2 }}>
+                            <div style={{ height: '100%', background: '#0a0a0a', borderRadius: 2, width: pct + '%' }} />
+                          </div>
+                          <span style={{ fontSize: 12, color: '#9ca3af', minWidth: 32 }}>{pct}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

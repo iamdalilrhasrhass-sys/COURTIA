@@ -1,295 +1,381 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import ARKDemo from '../components/ARKDemo';
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+
+function Logo({ dark = false }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{
+        width: 28, height: 28, background: dark ? '#0a0a0a' : 'white', borderRadius: 6,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+      }}>
+        <div style={{ width: 12, height: 12, background: dark ? 'white' : '#0a0a0a', transform: 'rotate(45deg)' }} />
+      </div>
+      <span style={{ color: dark ? '#0a0a0a' : 'white', fontSize: 15, fontWeight: 500, letterSpacing: -0.3 }}>COURTIA</span>
+    </div>
+  )
+}
+
+// Mini ARK demo
+function ArkDemo() {
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: 'Bonjour. Je suis ARK. Que puis-je analyser pour vous ?' }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const endRef = useRef(null)
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  const DEMOS = [
+    { label: 'Analyser mon portefeuille', msg: 'Analyse mon portefeuille et donne-moi les 3 actions prioritaires.' },
+    { label: 'Rédiger un email de relance', msg: 'Rédige un email de relance professionnel pour un client dont le contrat auto expire dans 15 jours.' },
+    { label: 'Risque de résiliation', msg: 'Quels sont les signaux d\'un client à risque de résiliation et comment l\'anticiper ?' },
+  ]
+
+  async function send(msg) {
+    if (!msg?.trim() || loading) return
+    const text = msg.trim()
+    setMessages(prev => [...prev, { role: 'user', content: text }])
+    setInput('')
+    setLoading(true)
+    try {
+      const res = await axios.post(`${API_URL}/api/ark/chat`, { message: text, clientData: null, conversationHistory: [] }, { timeout: 60000 })
+      const reply = res.data?.reply || res.data?.message || 'Réponse reçue.'
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'ARK est disponible après connexion. Cette démo illustre l\'interface.' }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 360 }}>
+      {/* Quick actions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+        {DEMOS.map(d => (
+          <button key={d.label} onClick={() => send(d.msg)}
+            style={{ padding: '7px 12px', background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 7, color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer', textAlign: 'left', fontFamily: 'Arial, sans-serif' }}>
+            {d.label} →
+          </button>
+        ))}
+      </div>
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{
+            padding: '8px 12px', borderRadius: 8, maxWidth: '85%', fontSize: 12, lineHeight: 1.6,
+            background: m.role === 'user' ? '#1d4ed8' : 'rgba(255,255,255,0.07)',
+            alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+            color: 'white'
+          }}>
+            {m.content}
+          </div>
+        ))}
+        {loading && (
+          <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.07)', borderRadius: 8, alignSelf: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#2563eb', animation: `dotBounce 1.2s ease ${i*0.2}s infinite` }} />)}
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      {/* Input */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <input value={input} onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') send(input) }}
+          placeholder="Demandez à ARK..."
+          style={{ flex: 1, padding: '9px 12px', background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 7, color: 'white', fontSize: 13, fontFamily: 'Arial, sans-serif' }} />
+        <button onClick={() => send(input)} disabled={loading}
+          style={{ padding: '9px 14px', background: '#2563eb', border: 'none', borderRadius: 7, color: 'white', cursor: 'pointer', fontSize: 14 }}>→</button>
+      </div>
+    </div>
+  )
+}
 
 export default function Landing() {
- const navigate = useNavigate();
+  const navigate = useNavigate()
 
- useEffect(() => {
- const observer = new IntersectionObserver(
- (entries) => entries.forEach(e => {
- if (e.isIntersecting) e.target.classList.add('visible');
- }),
- { threshold: 0.1 }
- );
- document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
- return () => observer.disconnect();
- }, []);
+  const s = {
+    page: { fontFamily: 'Arial, sans-serif', background: '#f7f6f2', color: '#0a0a0a' },
+    nav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0', position: 'sticky', top: 0, zIndex: 50 },
+    btnBlack: { background: '#0a0a0a', color: 'white', padding: '10px 22px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' },
+    btnGhost: { background: 'white', color: '#0a0a0a', padding: '10px 22px', borderRadius: 8, border: '0.5px solid #e8e6e0', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' },
+    card: { background: 'white', borderRadius: 12, border: '0.5px solid #e8e6e0', padding: 28 },
+    label: { fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: '#9ca3af' },
+  }
 
- return (
- <div style={{fontFamily:'Arial,sans-serif',background:'#fff',color:'#0a0a0a'}}>
- <style>{`
- *{box-sizing:border-box;margin:0;padding:0;}
- @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
- @keyframes fadeIn{from{opacity:0}to{opacity:1}}
- @keyframes floatUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
- @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
- @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
- @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.3)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
- .h1-l1{animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both}
- .h1-l2{animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both}
- .h1-l3{animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both}
- .hero-badge{animation:fadeIn 0.6s ease 0s both;animation-name:badgePulse,fadeIn}
- .hero-sub{animation:fadeIn 0.8s ease 0.7s both}
- .hero-btns{animation:fadeIn 0.8s ease 0.9s both}
- .hero-proof{animation:fadeIn 0.8s ease 1.1s both}
- .mockup-wrap{animation:floatUp 1s cubic-bezier(0.16,1,0.3,1) 0.3s both;transition:transform 0.6s ease}
- .mockup-wrap:hover{transform:perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-4px)}
- .dot1{animation:dotBounce 1.2s ease 0s infinite}
- .dot2{animation:dotBounce 1.2s ease 0.2s infinite}
- .dot3{animation:dotBounce 1.2s ease 0.4s infinite}
- .badge-dot-live{animation:pulse 2s ease infinite}
- .plan-card{transition:transform 0.3s ease,box-shadow 0.3s ease}
- .plan-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08)}
- .reveal{opacity:0;transform:translateY(20px);transition:opacity 0.7s ease,transform 0.7s ease}
- .reveal.visible{opacity:1;transform:translateY(0)}
- .reveal-d1{transition-delay:0.1s}
- .reveal-d2{transition-delay:0.2s}
- .reveal-d3{transition-delay:0.3s}
- .reveal-d4{transition-delay:0.4s}
- .reveal-d5{transition-delay:0.5s}
- .reveal-d6{transition-delay:0.6s}
- .nav-link:hover{color:#0a0a0a;transition:color 0.2s}
- .btn-ghost:hover{background:#f5f5f5;transition:background 0.2s}
- .btn-main:hover{background:#222;transition:background 0.2s}
- .cta-bar-fill{animation:none}
- .cta-bar-fill.visible{animation:barFill 1.5s cubic-bezier(0.16,1,0.3,1) 0.3s both}
- @keyframes barFill{from{width:0}to{width:62%}}
- `}</style>
+  return (
+    <div style={s.page}>
+      <style>{`
+        @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.25)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+        .hover-lift{transition:transform 0.2s ease}
+        .hover-lift:hover{transform:translateY(-2px)}
+      `}</style>
 
- {/* NAV */}
- <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 56px',background:'#fff',borderBottom:'0.5px solid #f0f0f0'}}>
- <div style={{fontSize:12,fontWeight:900,letterSpacing:5,color:'#0a0a0a'}}>COURTIA</div>
- <div style={{display:'flex',gap:36}}>
- {['Fonctionnalités','ARK IA','Tarifs'].map(l => (
- <span key={l} className="nav-link" style={{fontSize:12,color:'#999',cursor:'pointer',letterSpacing:0.3}}>{l}</span>
- ))}
- </div>
- <div style={{display:'flex',alignItems:'center',gap:16}}>
- <span style={{fontSize:12,color:'#666',cursor:'pointer'}} onClick={() => navigate('/login')}>Connexion</span>
- <div onClick={() => navigate('/register')} style={{background:'#0a0a0a',color:'#fff',padding:'9px 20px',borderRadius:6,fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:0.5}}>Rejoindre →</div>
- </div>
- </nav>
+      {/* NAVBAR */}
+      <nav style={s.nav}>
+        <Logo dark />
+        <div style={{ display: 'flex', gap: 32 }}>
+          {['Produit', 'Tarifs', 'À propos'].map(l => (
+            <span key={l} style={{ fontSize: 13, color: '#9ca3af', cursor: 'pointer', letterSpacing: 0.2 }}
+              onMouseEnter={e => e.target.style.color = '#0a0a0a'}
+              onMouseLeave={e => e.target.style.color = '#9ca3af'}>{l}</span>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => navigate('/login')} style={s.btnGhost}>Connexion</button>
+          <button onClick={() => navigate('/register')} style={s.btnBlack}>Démarrer →</button>
+        </div>
+      </nav>
 
- {/* HERO */}
- <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',minHeight:640,borderBottom:'0.5px solid #f0f0f0'}}>
- <div style={{padding:'72px 56px',display:'flex',flexDirection:'column',justifyContent:'center',borderRight:'0.5px solid #f0f0f0'}}>
- <div className="hero-badge" style={{display:'inline-flex',alignItems:'center',gap:7,border:'0.5px solid #e0e0e0',borderRadius:20,padding:'5px 14px',fontSize:10,color:'#555',letterSpacing:0.5,width:'fit-content',marginBottom:36}}>
- <div className="badge-dot-live" style={{width:6,height:6,borderRadius:'50%',background:'#22c55e'}}></div>
- Offre Fondateur — 31 places restantes
- </div>
- <div className="h1-l1" style={{fontSize:52,fontWeight:900,lineHeight:1.04,letterSpacing:-2,color:'#0a0a0a'}}>Le CRM qui</div>
- <div className="h1-l2" style={{fontSize:52,fontWeight:900,lineHeight:1.04,letterSpacing:-2,color:'#0a0a0a'}}>travaille avec</div>
- <div className="h1-l3" style={{fontSize:52,fontWeight:900,lineHeight:1.04,letterSpacing:-2,color:'#2563eb',marginBottom:28}}>votre intelligence.</div>
- <p className="hero-sub" style={{fontSize:15,color:'#777',lineHeight:1.75,marginBottom:40,maxWidth:380}}>ARK détecte vos opportunités, rédige vos relances et analyse votre portefeuille. En temps réel. Pendant que vous conseillez.</p>
- <div className="hero-btns" style={{display:'flex',gap:10,marginBottom:56}}>
- <div onClick={() => navigate('/register')} style={{background:'#0a0a0a',color:'#fff',padding:'14px 28px',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}} className="btn-main">Rejoindre — 69€/mois →</div>
- <div style={{background:'#fff',color:'#0a0a0a',padding:'14px 28px',borderRadius:8,fontSize:13,fontWeight:500,cursor:'pointer',border:'0.5px solid #ddd'}} className="btn-ghost">Voir la démo</div>
- </div>
- <div className="hero-proof" style={{display:'flex',gap:32,paddingTop:32,borderTop:'0.5px solid #f0f0f0'}}>
- {[['32 000','courtiers ORIAS en France'],['ARK','IA native — aucun concurrent'],['69€','tarif fondateur garanti à vie']].map(([n,l]) => (
- <div key={n} style={{textAlign:'center'}}>
- <div style={{fontSize:22,fontWeight:900,color:'#0a0a0a',letterSpacing:-0.5}}>{n}</div>
- <div style={{fontSize:11,color:'#aaa',marginTop:2}}>{l}</div>
- </div>
- ))}
- </div>
- </div>
+      {/* HERO */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 680, borderBottom: '0.5px solid #e8e6e0' }}>
+        {/* Left */}
+        <div style={{ padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '0.5px solid #e8e6e0' }}>
+          {/* Badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 20, padding: '5px 14px', fontSize: 11, color: '#555', width: 'fit-content', marginBottom: 36, animation: 'badgePulse 2s ease infinite' }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
+            ARK · IA native · Aucun rival
+          </div>
+          <h1 style={{ fontSize: 56, fontWeight: 500, lineHeight: 1.04, letterSpacing: -2.5, color: '#0a0a0a', margin: '0 0 24px', maxWidth: 480 }}>
+            Le CRM qui pense avec vous.
+          </h1>
+          <p style={{ fontSize: 15, color: '#9ca3af', lineHeight: 1.75, margin: '0 0 40px', maxWidth: 400 }}>
+            Le premier CRM SaaS pour courtiers ORIAS. ARK analyse votre portefeuille en temps réel, détecte les opportunités et rédige pour vous.
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 56 }}>
+            <button onClick={() => navigate('/register')} style={s.btnBlack}>Essayer gratuitement →</button>
+            <button style={s.btnGhost}>Voir la démo</button>
+          </div>
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: 40, paddingTop: 32, borderTop: '0.5px solid #e8e6e0' }}>
+            {[['32 000', 'courtiers ORIAS ciblés'], ['0', 'concurrent avec IA native'], ['50', 'spots Founder restants']].map(([n, l]) => (
+              <div key={n}>
+                <div style={{ fontSize: 22, fontWeight: 600, color: '#0a0a0a', letterSpacing: -0.5 }}>{n}</div>
+                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
- <div style={{background:'#fafafa',display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
- <div className="mockup-wrap" style={{width:'100%',background:'#fff',borderRadius:14,border:'0.5px solid #e0e0e0',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.04)',transform:'perspective(1000px) rotateY(-2deg) rotateX(1deg)'}}>
- <div style={{background:'#f2f2f2',padding:'9px 14px',display:'flex',alignItems:'center',gap:6,borderBottom:'0.5px solid #e8e8e8'}}>
- {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{width:9,height:9,borderRadius:'50%',background:c}}></div>)}
- <div style={{flex:1,background:'#fff',borderRadius:4,padding:'3px 10px',fontSize:9,color:'#bbb',textAlign:'center',margin:'0 10px',border:'0.5px solid #ebebeb'}}>courtia.app</div>
- </div>
- <div style={{display:'grid',gridTemplateColumns:'130px 1fr'}}>
- <div style={{background:'#080808',display:'flex',flexDirection:'column',minHeight:320}}>
- <div style={{padding:'14px 14px 0'}}>
- <div style={{fontSize:9,fontWeight:900,letterSpacing:3,color:'#fff',marginBottom:18,paddingBottom:14,borderBottom:'0.5px solid rgba(255,255,255,0.06)'}}>COURTIA</div>
- {[['Dashboard',true],['Clients',false],['Contrats',false],['Pipeline',false],['Calendrier',false]].map(([label,active]) => (
- <div key={label} style={{padding:'8px 10px',borderRadius:5,fontSize:9,display:'flex',alignItems:'center',gap:7,color:active?'#fff':'rgba(255,255,255,0.3)',background:active?'rgba(255,255,255,0.08)':'transparent'}}>
- {active && <div style={{width:3,height:12,background:'#2563eb',borderRadius:1,marginLeft:-4}}></div>}
- {label}
- </div>
- ))}
- </div>
- <div style={{margin:'auto 10px 12px',background:'rgba(37,99,235,0.1)',border:'0.5px solid rgba(37,99,235,0.2)',borderRadius:7,padding:'9px 10px'}}>
- <div style={{fontSize:9,fontWeight:900,color:'#60a5fa',letterSpacing:1.5,marginBottom:3}}>
- <span style={{display:'inline-block',width:5,height:5,borderRadius:'50%',background:'#22c55e',marginRight:5,verticalAlign:'middle'}}></span>
- ARK
- </div>
- <div style={{fontSize:8,color:'rgba(255,255,255,0.25)'}}>En ligne · 24h/24</div>
- </div>
- </div>
- <div style={{background:'#fafafa',padding:14}}>
- <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
- <div style={{fontSize:11,fontWeight:700,color:'#0a0a0a'}}>Bonjour Dalil</div>
- <div style={{fontSize:8,color:'#bbb'}}>Mis à jour il y a 2 min</div>
- </div>
- <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5,marginBottom:10}}>
- {[['CLIENTS','247','+12 ce mois','#22c55e'],['CONTRATS','189','+5 sem.','#22c55e'],['COMMISSIONS','8.4K€','+18%','#22c55e'],['ÉCHÉANCES','14','3 urgentes','#ef4444']].map(([l,v,d,dc]) => (
- <div key={l} style={{background:'#fff',borderRadius:6,padding:8,border:'0.5px solid #efefef'}}>
- <div style={{fontSize:7,color:'#bbb',letterSpacing:0.5,fontWeight:700,marginBottom:3}}>{l}</div>
- <div style={{fontSize:14,fontWeight:900,color:'#0a0a0a',lineHeight:1}}>{v}</div>
- <div style={{fontSize:7,color:dc,marginTop:2}}>{d}</div>
- </div>
- ))}
- </div>
- <div style={{display:'grid',gridTemplateColumns:'1fr 88px',gap:8}}>
- <div style={{background:'#fff',borderRadius:6,border:'0.5px solid #efefef',overflow:'hidden'}}>
- <div style={{padding:'6px 8px',borderBottom:'0.5px solid #f5f5f5',display:'flex',justifyContent:'space-between',fontSize:8,fontWeight:700,color:'#0a0a0a'}}>Clients récents <span style={{color:'#2563eb',fontWeight:400}}>Voir tout →</span>
- </div>
- {[['MR','Martin Renaud','#dbeafe','#1d4ed8','Actif','#d1fae5','#065f46'],['SB','Sophie Blanc','#d1fae5','#065f46','Actif','#d1fae5','#065f46'],['KA','Karim Amara','#ede9fe','#5b21b6','Prospect','#fef3c7','#92400e']].map(([av,name,ab,ac,st,sb,sc]) => (
- <div key={av} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 8px',borderBottom:'0.5px solid #fafafa'}}>
- <div style={{width:18,height:18,borderRadius:'50%',background:ab,color:ac,display:'flex',alignItems:'center',justifyContent:'center',fontSize:7,fontWeight:700,flexShrink:0}}>{av}</div>
- <span style={{fontSize:8,fontWeight:500,flex:1,color:'#111'}}>{name}</span>
- <span style={{fontSize:7,padding:'2px 5px',borderRadius:5,fontWeight:700,background:sb,color:sc}}>{st}</span>
- </div>
- ))}
- </div>
- <div style={{background:'#080808',borderRadius:6,display:'flex',flexDirection:'column',overflow:'hidden'}}>
- <div style={{padding:'6px 8px',borderBottom:'0.5px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:4}}>
- <div style={{width:4,height:4,borderRadius:'50%',background:'#22c55e'}}></div>
- <span style={{fontSize:8,fontWeight:900,color:'#60a5fa',letterSpacing:1}}>ARK</span>
- </div>
- <div style={{padding:6,display:'flex',flexDirection:'column',gap:4,flex:1}}>
- <div style={{fontSize:7,lineHeight:1.4,padding:'4px 6px',borderRadius:3,background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.65)'}}>3 contrats à relancer.</div>
- <div style={{fontSize:7,lineHeight:1.4,padding:'4px 6px',borderRadius:3,background:'rgba(37,99,235,0.2)',color:'rgba(255,255,255,0.8)',textAlign:'right'}}>Email Renaud</div>
- <div style={{fontSize:7,lineHeight:1.4,padding:'4px 6px',borderRadius:3,background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.65)'}}>Prêt. Envoyer ?</div>
- </div>
- </div>
- </div>
- </div>
- </div>
- </div>
- </div>
+        {/* Right — Mockup */}
+        <div style={{ background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
+          <div style={{ width: '100%', maxWidth: 520, background: '#1a1a1a', borderRadius: 14, overflow: 'hidden', border: '0.5px solid #2a2a2a' }}>
+            {/* Window bar */}
+            <div style={{ background: '#111', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '0.5px solid #2a2a2a' }}>
+              {['#ff5f57', '#febc2e', '#28c840'].map(c => <div key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />)}
+              <div style={{ flex: 1, background: '#222', borderRadius: 4, padding: '3px 10px', fontSize: 9, color: '#555', textAlign: 'center', margin: '0 10px', border: '0.5px solid #2a2a2a' }}>courtia.app</div>
+            </div>
+            {/* App layout */}
+            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', minHeight: 340 }}>
+              {/* Mini sidebar */}
+              <div style={{ background: '#0a0a0a', padding: '14px 0', display: 'flex', flexDirection: 'column', borderRight: '0.5px solid #111' }}>
+                <div style={{ padding: '0 14px 14px', borderBottom: '0.5px solid #111', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 14, height: 14, background: 'white', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 6, height: 6, background: '#0a0a0a', transform: 'rotate(45deg)' }} />
+                    </div>
+                    <span style={{ fontSize: 8, fontWeight: 500, color: 'white' }}>COURTIA</span>
+                  </div>
+                </div>
+                {[['Dashboard', true], ['Clients', false], ['Contrats', false], ['Rapports', false], ['Tâches', false]].map(([l, a]) => (
+                  <div key={l} style={{ padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 8, color: a ? 'white' : '#444', background: a ? '#1a1a1a' : 'transparent' }}>
+                    <div style={{ width: 3, height: 3, borderRadius: '50%', background: a ? 'white' : '#333', flexShrink: 0 }} />
+                    {l}
+                  </div>
+                ))}
+                <div style={{ margin: 'auto 10px 0', background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', borderRadius: 7, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 8, fontWeight: 600, color: '#60a5fa', marginBottom: 2 }}>ARK · Actif</div>
+                  <div style={{ fontSize: 7, color: '#444' }}>Ouvrir →</div>
+                </div>
+              </div>
+              {/* Mini content */}
+              <div style={{ background: '#f7f6f2', padding: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 500, color: '#0a0a0a', marginBottom: 10 }}>Tableau de bord</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 10 }}>
+                  {[['247 clients', '+12 mois'], ['189 contrats', 'actifs'], ['8 400€', 'commissions']].map(([v, l]) => (
+                    <div key={v} style={{ background: 'white', borderRadius: 6, padding: '8px 8px', border: '0.5px solid #e8e6e0' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#0a0a0a', lineHeight: 1.1 }}>{v}</div>
+                      <div style={{ fontSize: 7, color: '#9ca3af', marginTop: 2 }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background: 'white', borderRadius: 6, border: '0.5px solid #e8e6e0', overflow: 'hidden' }}>
+                  <div style={{ padding: '6px 8px', borderBottom: '0.5px solid #f0f0f0', fontSize: 8, fontWeight: 600, color: '#0a0a0a' }}>Clients récents</div>
+                  {[['MR', 'Martin Renaud', 'Actif'], ['SB', 'Sophie Blanc', 'Actif'], ['KA', 'Karim Amara', 'Prospect']].map(([av, n, s]) => (
+                    <div key={av} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderBottom: '0.5px solid #fafaf8' }}>
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#f7f6f2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 700, color: '#0a0a0a', flexShrink: 0 }}>{av}</div>
+                      <span style={{ fontSize: 8, flex: 1, fontWeight: 500 }}>{n}</span>
+                      <span style={{ fontSize: 7, padding: '1px 5px', borderRadius: 4, background: s === 'Actif' ? '#dcfce7' : '#dbeafe', color: s === 'Actif' ? '#166534' : '#1d4ed8' }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
- {/* SECTION ARK */}
- <div style={{background:'#080808',padding:'96px 56px'}}>
- <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:80,alignItems:'center',maxWidth:1100,margin:'0 auto'}}>
- <div>
- <div className="reveal" style={{fontSize:10,fontWeight:700,letterSpacing:3,color:'rgba(255,255,255,0.3)',marginBottom:20}}>ARK — INTELLIGENCE NATIVE</div>
- <div className="reveal reveal-d1" style={{fontSize:44,fontWeight:900,lineHeight:1.06,letterSpacing:-1.5,color:'#fff',marginBottom:20}}>Pas un chatbot.<br/>Un <span style={{color:'#60a5fa'}}>copilote</span><br/>qui agit.</div>
- <p className="reveal reveal-d2" style={{fontSize:14,color:'rgba(255,255,255,0.45)',lineHeight:1.8,marginBottom:40}}>ARK lit votre portefeuille, détecte les signaux faibles et vous propose les bonnes actions au bon moment. Il ne vous assiste pas. Il travaille avec vous.</p>
- <div style={{display:'flex',flexDirection:'column',gap:16}}>
- {[
- ['Détection d\'opportunités','Renouvellements, cross-sell, résiliations — détectés avant vous.','reveal reveal-d3'],
- ['Rédaction intelligente','Emails, relances, propositions — générés et personnalisés en 1 clic.','reveal reveal-d4'],
- ['Conformité automatique','DDA, RGPD, ORIAS — ARK connaît les règles et les applique.','reveal reveal-d5'],
- ].map(([t,d,cls]) => (
- <div key={t} className={cls} style={{display:'flex',gap:14,alignItems:'flex-start'}}>
- <div style={{width:32,height:32,borderRadius:7,background:'rgba(37,99,235,0.12)',border:'0.5px solid rgba(37,99,235,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
- <div style={{width:8,height:8,borderRadius:'50%',background:'#60a5fa'}}></div>
- </div>
- <div>
- <div style={{fontSize:13,fontWeight:700,color:'#fff',marginBottom:3}}>{t}</div>
- <div style={{fontSize:12,color:'rgba(255,255,255,0.4)',lineHeight:1.5}}>{d}</div>
- </div>
- </div>
- ))}
- </div>
- </div>
- <div className="reveal reveal-d2" style={{background:'#0f0f0f',borderRadius:14,border:'0.5px solid rgba(255,255,255,0.06)',overflow:'hidden',padding:16,minHeight:440}}>
- <div style={{display:'flex',flexDirection:'column',height:'100%',gap:16}}>
- <div style={{display:'flex',alignItems:'center',gap:10}}>
- <div style={{width:28,height:28,borderRadius:7,background:'rgba(37,99,235,0.15)',border:'0.5px solid rgba(37,99,235,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
- <div style={{width:8,height:8,borderRadius:'50%',background:'#60a5fa'}}></div>
- </div>
- <span style={{fontSize:12,fontWeight:700,color:'#fff',letterSpacing:1}}>ARK DÉMO</span>
- <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
- <div style={{width:6,height:6,borderRadius:'50%',background:'#22c55e',animation:'pulse 2s ease infinite'}}></div>
- <span style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>En ligne</span>
- </div>
- </div>
- <ARKDemo />
- </div>
- </div>
- </div>
- </div>
+      {/* COMMENT ÇA MARCHE */}
+      <div style={{ padding: '96px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0' }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <p style={{ ...s.label, marginBottom: 14 }}>COMMENT ÇA MARCHE</p>
+          <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a' }}>Opérationnel en 10 minutes.</h2>
+          <p style={{ fontSize: 14, color: '#9ca3af', marginTop: 10 }}>Pas de formation. Pas de migration complexe.</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 900, margin: '0 auto' }}>
+          {[
+            { num: '01', icon: '📥', title: 'Importez vos clients', desc: 'Chargez votre base existante ou ajoutez vos clients manuellement. COURTIA structure chaque fiche automatiquement.' },
+            { num: '02', icon: '🧠', title: 'ARK analyse votre portefeuille', desc: 'En temps réel, ARK détecte les opportunités, calcule les scores de risque et identifie les contrats à renouveler en priorité.' },
+            { num: '03', icon: '⚡', title: 'Gagnez du temps chaque jour', desc: 'Relances personnalisées, rapports clairs, recommandations actionnables. Vous conseillez — ARK fait le reste.' },
+          ].map(step => (
+            <div key={step.num} className="hover-lift" style={{ ...s.card, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 16, right: 16, fontSize: 52, fontWeight: 700, color: '#f7f6f2', lineHeight: 1, userSelect: 'none' }}>{step.num}</div>
+              <div style={{ fontSize: 28, marginBottom: 14 }}>{step.icon}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: '#0a0a0a', marginBottom: 8 }}>{step.title}</div>
+              <div style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.7 }}>{step.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
- {/* COMMENT ÇA MARCHE */}
- <div style={{padding:'96px 56px',background:'#fafafa',borderTop:'0.5px solid #f0f0f0'}}>
- <div style={{textAlign:'center',marginBottom:56}}>
- <div style={{fontSize:10,fontWeight:700,letterSpacing:3,color:'#bbb',marginBottom:16}}>COMMENT ÇA MARCHE</div>
- <div style={{fontSize:44,fontWeight:900,letterSpacing:-1.5,color:'#0a0a0a',marginBottom:10}}>Opérationnel en 10 minutes.</div>
- <div style={{fontSize:14,color:'#999'}}>Pas de formation. Pas de migration complexe. Juste de l'efficacité.</div>
- </div>
- <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:32,maxWidth:900,margin:'0 auto'}}>
- {[
- {num:'01',title:'Importez vos clients',desc:'Chargez votre base existante ou ajoutez vos clients manuellement. COURTIA structure et enrichit automatiquement chaque fiche.',icon:'📥'},
- {num:'02',title:'ARK analyse votre portefeuille',desc:'En temps réel, ARK détecte les opportunités, calcule les scores de risque et identifie les contrats à renouveler en priorité.',icon:'🧠'},
- {num:'03',title:'Gagnez du temps chaque jour',desc:'Relances automatisées, rapports clairs, recommandations actionnables. Vous conseillez — ARK fait le reste.',icon:'⚡'},
- ].map(step => (
- <div key={step.num} className="reveal" style={{background:'#fff',borderRadius:14,padding:32,border:'0.5px solid #e8e8e8',position:'relative',overflow:'hidden'}}>
- <div style={{position:'absolute',top:20,right:20,fontSize:48,fontWeight:900,color:'#f5f5f5',lineHeight:1,userSelect:'none'}}>{step.num}</div>
- <div style={{fontSize:32,marginBottom:16}}>{step.icon}</div>
- <div style={{fontSize:16,fontWeight:700,color:'#0a0a0a',marginBottom:10}}>{step.title}</div>
- <div style={{fontSize:13,color:'#888',lineHeight:1.7}}>{step.desc}</div>
- </div>
- ))}
- </div>
- </div>
+      {/* FONCTIONNALITÉS */}
+      <div style={{ padding: '96px 56px', background: 'white', borderBottom: '0.5px solid #e8e6e0' }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <p style={{ ...s.label, marginBottom: 14 }}>FONCTIONNALITÉS</p>
+          <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a' }}>Tout ce dont un courtier a besoin.</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 960, margin: '0 auto' }}>
+          {[
+            { icon: '🧠', title: 'ARK IA native', desc: 'Analyse de portefeuille, détection d\'opportunités, rédaction commerciale — intégré, pas en add-on.' },
+            { icon: '📊', title: 'CRM assurance', desc: 'Gestion des clients, contrats, scores de risque et fidélité. Conçu pour les courtiers ORIAS, pas adapté.' },
+            { icon: '✉️', title: 'Relances automatiques', desc: 'ARK détecte les échéances, rédige les emails personnalisés et vous propose d\'envoyer en 1 clic.' },
+            { icon: '📈', title: 'Rapports dirigeant', desc: 'Vue portefeuille complète, top clients, répartition par type, commissions — en temps réel.' },
+            { icon: '👥', title: 'Multi-collaborateurs', desc: 'Invitez vos collaborateurs, définissez les accès et travaillez en équipe sur le même portefeuille.' },
+            { icon: '⚖️', title: 'Conformité DDA/RGPD', desc: 'ARK connaît les obligations réglementaires françaises et vous alerte avant tout risque de non-conformité.' },
+          ].map(f => (
+            <div key={f.title} className="hover-lift" style={{ ...s.card }}>
+              <div style={{ fontSize: 24, marginBottom: 12 }}>{f.icon}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', marginBottom: 6 }}>{f.title}</div>
+              <div style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.65 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
- {/* PRICING */}
- <div style={{padding:'96px 56px',background:'#fff'}}>
- <div style={{textAlign:'center',marginBottom:56}}>
- <div style={{fontSize:10,fontWeight:700,letterSpacing:3,color:'#bbb',marginBottom:16}}>TARIFICATION</div>
- <div style={{fontSize:44,fontWeight:900,letterSpacing:-1.5,color:'#0a0a0a',marginBottom:10}}>Transparent. Sans surprise.</div>
- <div style={{fontSize:14,color:'#999',marginBottom:16}}>Garanti à vie pour les 50 premiers fondateurs.</div>
- <span style={{display:'inline-flex',alignItems:'center',gap:8,background:'#fff8f0',border:'0.5px solid #fed7aa',borderRadius:20,padding:'6px 16px',fontSize:11,color:'#c2410c',fontWeight:700}}>
- 31 / 50 places prises — il reste 19 places
- </span>
- </div>
- <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,maxWidth:900,margin:'0 auto'}}>
- {[
- {name:'START',price:'39€',old:'59€',sub:'Pour débuter',feats:['100 clients','ARK basique','Dashboard KPIs','Support email'],featured:false},
- {name:'PRO',price:'69€',old:'99€',sub:'Pour la plupart',feats:['500 clients','ARK complet','Rapports avancés','Support prioritaire'],featured:true},
- {name:'ELITE',price:'129€',old:'179€',sub:'Illimité',feats:['Clients illimités','ARK vocal','API publique','Account Manager'],featured:false},
- ].map(p => (
- <div key={p.name} className="plan-card" style={{borderRadius:14,padding:28,border:p.featured?'1.5px solid #0a0a0a':'0.5px solid #ebebeb',background:p.featured?'#0a0a0a':'#fff',display:'flex',flexDirection:'column'}}>
- {p.featured && <div style={{fontSize:9,fontWeight:700,letterSpacing:1.5,background:'#fff',color:'#0a0a0a',padding:'4px 10px',borderRadius:10,width:'fit-content',marginBottom:14}}>MEILLEUR CHOIX</div>}
- <div style={{fontSize:11,fontWeight:700,letterSpacing:2,color:p.featured?'rgba(255,255,255,0.4)':'#aaa',marginBottom:8}}>{p.name}</div>
- <div style={{fontSize:48,fontWeight:900,color:p.featured?'#fff':'#0a0a0a',letterSpacing:-2,lineHeight:1}}>{p.price}</div>
- <div style={{fontSize:13,color:'#ccc',textDecoration:'line-through',marginTop:4,marginBottom:20}}>{p.old}/mois</div>
- <div style={{height:'0.5px',background:p.featured?'rgba(255,255,255,0.08)':'#f0f0f0',marginBottom:20}}></div>
- <div style={{display:'flex',flexDirection:'column',gap:10,flex:1,marginBottom:24}}>
- {p.feats.map(f => (
- <div key={f} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:p.featured?'rgba(255,255,255,0.6)':'#555'}}>
- <div style={{width:14,height:14,borderRadius:'50%',background:p.featured?'rgba(255,255,255,0.1)':'#f0f0f0',flexShrink:0}}></div>
- {f}
- </div>
- ))}
- </div>
- <button onClick={() => navigate('/register')} style={{width:'100%',padding:13,borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer',border:p.featured?'none':'0.5px solid #e0e0e0',background:p.featured?'#2563eb':'#fff',color:p.featured?'#fff':'#0a0a0a',fontFamily:'Arial'}}>
- {p.featured?'Rejoindre maintenant':'Commencer'}
- </button>
- </div>
- ))}
- </div>
- </div>
+      {/* PRICING */}
+      <div style={{ padding: '96px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0' }}>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <p style={{ ...s.label, marginBottom: 14 }}>TARIFICATION</p>
+          <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a', marginBottom: 8 }}>50 spots. Prix garantis à vie.</h2>
+          <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 24 }}>Après les 50 premiers abonnés, les tarifs passent à 49€ / 99€ / 199€.</p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: '#d97706' }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#f59e0b' }} />
+            31 places prises sur 50 — il reste 19 spots Founder
+          </div>
+        </div>
 
- {/* CTA FINAL */}
- <div style={{padding:'96px 56px',background:'#0a0a0a',textAlign:'center'}}>
- <div className="reveal" style={{fontSize:52,fontWeight:900,letterSpacing:-2,color:'#fff',lineHeight:1.06,marginBottom:16}}>Rejoignez les<br/><span style={{color:'#60a5fa'}}>19 derniers</span> fondateurs.</div>
- <div className="reveal reveal-d1" style={{fontSize:15,color:'rgba(255,255,255,0.4)',marginBottom:40}}>Après les 50 premiers, les tarifs normaux s'appliquent. Sans exception.</div>
- <div className="reveal reveal-d2" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginBottom:32}}>
- <div style={{width:240,height:3,background:'rgba(255,255,255,0.08)',borderRadius:2,overflow:'hidden'}}>
- <div className="cta-bar-fill reveal" style={{width:'62%',height:'100%',background:'#2563eb',borderRadius:2}}></div>
- </div>
- <div style={{fontSize:11,color:'rgba(255,255,255,0.3)',letterSpacing:0.5}}>31 places prises sur 50</div>
- </div>
- <div className="reveal reveal-d3" onClick={() => navigate('/register')} style={{display:'inline-block',background:'#fff',color:'#0a0a0a',padding:'16px 40px',borderRadius:10,fontSize:15,fontWeight:900,cursor:'pointer',letterSpacing:0.3}}>Je rejoins COURTIA — 69€/mois →</div>
- </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 900, margin: '48px auto 0' }}>
+          {[
+            { name: 'START', price: '39€', tag: 'Founder · Limité', feats: ['100 clients', 'ARK basique', 'Dashboard KPIs', 'Support email'], featured: false },
+            { name: 'PRO', price: '69€', tag: 'Le plus choisi', feats: ['500 clients', '**ARK complet**', '**Rapports avancés**', 'Support prioritaire', 'Multi-collaborateurs'], featured: true },
+            { name: 'ELITE', price: '129€', tag: 'Illimité', feats: ['Clients illimités', '**ARK vocal**', '**API publique**', 'Account Manager dédié', 'Formations incluses'], featured: false },
+          ].map(p => (
+            <div key={p.name} className="hover-lift" style={{
+              borderRadius: 14, padding: 32, display: 'flex', flexDirection: 'column',
+              background: p.featured ? '#0a0a0a' : 'white',
+              border: p.featured ? 'none' : '0.5px solid #e8e6e0'
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1.5, color: p.featured ? '#555' : '#9ca3af', marginBottom: 12 }}>{p.tag.toUpperCase()}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: p.featured ? 'rgba(255,255,255,0.4)' : '#aaa', marginBottom: 6 }}>{p.name}</div>
+              <div style={{ fontSize: 48, fontWeight: 500, letterSpacing: -2, lineHeight: 1, color: p.featured ? 'white' : '#0a0a0a', marginBottom: 4 }}>{p.price}</div>
+              <div style={{ fontSize: 12, color: p.featured ? '#555' : '#9ca3af', marginBottom: 24 }}>/mois · garanti à vie</div>
+              <div style={{ height: '0.5px', background: p.featured ? '#1a1a1a' : '#f0f0f0', marginBottom: 24 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, marginBottom: 28 }}>
+                {p.feats.map(f => {
+                  const bold = f.startsWith('**') && f.endsWith('**')
+                  const text = bold ? f.slice(2, -2) : f
+                  return (
+                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: p.featured ? (bold ? 'white' : 'rgba(255,255,255,0.5)') : (bold ? '#0a0a0a' : '#6b7280'), fontWeight: bold ? 600 : 400 }}>
+                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: p.featured ? '#2563eb' : '#e5e7eb', flexShrink: 0 }} />
+                      {text}
+                    </div>
+                  )
+                })}
+              </div>
+              <button onClick={() => navigate('/register')} style={{
+                width: '100%', padding: '12px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', border: p.featured ? 'none' : '0.5px solid #e8e6e0',
+                background: p.featured ? '#2563eb' : 'white', color: p.featured ? 'white' : '#0a0a0a',
+                fontFamily: 'Arial, sans-serif'
+              }}>
+                {p.featured ? 'Rejoindre maintenant' : 'Commencer'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
- {/* FOOTER */}
- <div style={{padding:'32px 56px',borderTop:'0.5px solid #f0f0f0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
- <div style={{fontSize:11,fontWeight:900,letterSpacing:4,color:'#bbb'}}>COURTIA</div>
- <div style={{display:'flex',gap:24}}>
- {['Mentions légales','Confidentialité','Contact'].map(l => <span key={l} style={{fontSize:11,color:'#ccc',cursor:'pointer'}}>{l}</span>)}
- </div>
- <div style={{fontSize:11,color:'#ddd'}}>© 2026 COURTIA · Made by RHASRHASS Dalil ⊗ ARK</div>
- </div>
- </div>
- </div>
- );
+      {/* ARK DÉMO */}
+      <div style={{ padding: '96px 56px', background: '#0a0a0a', borderBottom: '0.5px solid #111' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
+          {/* Left */}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, color: '#555', marginBottom: 20 }}>ARK — INTELLIGENCE NATIVE</p>
+            <h2 style={{ fontSize: 44, fontWeight: 500, lineHeight: 1.06, letterSpacing: -1.5, color: 'white', marginBottom: 20 }}>
+              ARK travaille pendant que vous conseillez.
+            </h2>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.8, marginBottom: 40 }}>
+              ARK n'est pas un chatbot ajouté. C'est une intelligence intégrée au cœur de COURTIA qui lit votre portefeuille, détecte les signaux faibles et vous propose les bonnes actions au bon moment.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                ['Détection d\'opportunités', 'Renouvellements, cross-sell, résiliations — détectés avant vous.'],
+                ['Rédaction intelligente', 'Emails, relances, propositions — générés et personnalisés en 1 clic.'],
+                ['Conformité automatique', 'DDA, RGPD, ORIAS, IDD — ARK connaît les règles et les applique.'],
+              ].map(([t, d]) => (
+                <div key={t} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2563eb', marginTop: 6, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'white', marginBottom: 3 }}>{t}</div>
+                    <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>{d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Right — demo */}
+          <div style={{ background: '#111', borderRadius: 14, border: '0.5px solid #1a1a1a', overflow: 'hidden', padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 14, borderBottom: '0.5px solid #1a1a1a' }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s ease infinite' }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'white', letterSpacing: 0.5 }}>ARK DÉMO</span>
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555' }}>Essayez maintenant</span>
+            </div>
+            <ArkDemo />
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div style={{ padding: '32px 56px', background: '#f7f6f2', borderTop: '0.5px solid #e8e6e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <Logo dark />
+          <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>Construit pour les 32 000 courtiers ORIAS français</p>
+        </div>
+        <div style={{ display: 'flex', gap: 24 }}>
+          {['CGU', 'Confidentialité', 'Contact'].map(l => (
+            <span key={l} style={{ fontSize: 12, color: '#9ca3af', cursor: 'pointer' }}>{l}</span>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: '#d1d5db' }}>© 2026 COURTIA · Dalil Rhasrhass</div>
+      </div>
+    </div>
+  )
 }
