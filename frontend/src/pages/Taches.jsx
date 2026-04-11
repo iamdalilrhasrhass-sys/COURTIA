@@ -1,102 +1,126 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, CheckCircle2, Circle } from 'lucide-react'
-import { useAuthStore } from '../stores/authStore'
+import toast from 'react-hot-toast'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+function getToken() { return localStorage.getItem('token') }
 
 export default function Taches() {
-  const token = useAuthStore((state) => state.token)
   const [tasks, setTasks] = useState([])
+  const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedForEdit, setSelectedForEdit] = useState(null)
-  const [filterStatut, setFilterStatut] = useState('a_faire')
+  const [filterStatut, setFilterStatut] = useState('tous')
   const [filterPriorite, setFilterPriorite] = useState('tous')
-  const [clients, setClients] = useState([])
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
-    priorite: 'normale',
-    client_id: null,
+    client_id: '',
     echeance: '',
     statut: 'a_faire'
   })
 
   useEffect(() => {
-    if (token) {
-      fetchTasks()
-      fetchClients()
-    }
-  }, [token])
+    fetchTasks()
+    fetchClients()
+  }, [])
+
+  const headers = { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' }
 
   const fetchTasks = async () => {
     try {
-      // Simulating tasks API - will be replaced with real endpoint
-      const mockTasks = [
-        {
-          id: 1,
-          titre: 'Appeler Martin Renaud',
-          description: 'Renouvellement auto assurance',
-          priorite: 'haute',
-          statut: 'a_faire',
-          echeance: '2026-04-10',
-          client_id: 1
-        },
-        {
-          id: 2,
-          titre: 'Envoyer devis habitation',
-          description: 'Devis pour maison Île-de-France',
-          priorite: 'normale',
-          statut: 'en_cours',
-          echeance: '2026-04-15',
-          client_id: 2
-        }
-      ]
-      setTasks(mockTasks)
-      setLoading(false)
+      setLoading(true)
+      const res = await fetch(`${API_URL}/api/taches`, { headers })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setTasks(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('Error fetching tasks:', err)
+      console.error('Erreur tâches:', err)
+      toast.error('Impossible de charger les tâches')
+      setTasks([])
+    } finally {
       setLoading(false)
     }
   }
 
   const fetchClients = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/clients`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await fetch(`${API_URL}/api/clients`, { headers })
+      if (!res.ok) return
       const data = await res.json()
-      setClients(Array.isArray(data) ? data : data.clients || [])
+      const arr = Array.isArray(data) ? data : (data.data || [])
+      setClients(arr)
     } catch (err) {
-      console.error('Error fetching clients:', err)
+      console.error('Erreur clients:', err)
     }
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (selectedForEdit) {
-      setTasks(tasks.map(t => t.id === selectedForEdit.id ? {...formData, id: selectedForEdit.id} : t))
-    } else {
-      setTasks([...tasks, {...formData, id: Date.now()}])
-    }
-    setShowModal(false)
+  const resetForm = () => {
+    setFormData({ titre: '', description: '', client_id: '', echeance: '', statut: 'a_faire' })
     setSelectedForEdit(null)
-    setFormData({titre: '', description: '', priorite: 'normale', client_id: null, echeance: '', statut: 'a_faire'})
   }
 
-  const handleDelete = (id) => {
-    if (!confirm('Confirmer la suppression ?')) return
-    setTasks(tasks.filter(t => t.id !== id))
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      if (selectedForEdit) {
+        const res = await fetch(`${API_URL}/api/taches/${selectedForEdit.id}`, {
+          method: 'PUT', headers,
+          body: JSON.stringify(formData)
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        toast.success('Tâche modifiée ✓')
+      } else {
+        const res = await fetch(`${API_URL}/api/taches`, {
+          method: 'POST', headers,
+          body: JSON.stringify(formData)
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        toast.success('Tâche créée ✓')
+      }
+      setShowModal(false)
+      resetForm()
+      fetchTasks()
+    } catch (err) {
+      toast.error('Erreur lors de la sauvegarde')
+    }
   }
 
-  const handleToggleStatut = (task) => {
-    const newStatut = task.statut === 'a_faire' ? 'terminee' : 'a_faire'
-    setTasks(tasks.map(t => t.id === task.id ? {...t, statut: newStatut} : t))
+  const handleDelete = async (id) => {
+    if (!confirm('Supprimer cette tâche ?')) return
+    try {
+      const res = await fetch(`${API_URL}/api/taches/${id}`, { method: 'DELETE', headers })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      toast.success('Tâche supprimée')
+      setTasks(tasks.filter(t => t.id !== id))
+    } catch (err) {
+      toast.error('Erreur lors de la suppression')
+    }
+  }
+
+  const handleToggleStatut = async (task) => {
+    const newStatut = task.statut === 'terminee' ? 'a_faire' : 'terminee'
+    try {
+      const res = await fetch(`${API_URL}/api/taches/${task.id}`, {
+        method: 'PUT', headers,
+        body: JSON.stringify({ ...task, statut: newStatut })
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setTasks(tasks.map(t => t.id === task.id ? { ...t, statut: newStatut } : t))
+    } catch (err) {
+      toast.error('Erreur mise à jour statut')
+    }
   }
 
   const handleEdit = (task) => {
     setSelectedForEdit(task)
-    setFormData(task)
+    setFormData({
+      titre: task.titre || '',
+      description: task.description || '',
+      client_id: task.client_id || '',
+      echeance: task.echeance ? task.echeance.split('T')[0] : '',
+      statut: task.statut || 'a_faire'
+    })
     setShowModal(true)
   }
 
@@ -113,93 +137,69 @@ export default function Taches() {
     const matchStatut = filterStatut === 'tous' || t.statut === filterStatut
     const matchPriorite = filterPriorite === 'tous' || t.priorite === filterPriorite
     return matchStatut && matchPriorite
-  }).sort((a, b) => {
-    const priorityOrder = { haute: 1, normale: 2, basse: 3 }
-    return (priorityOrder[a.priorite] || 2) - (priorityOrder[b.priorite] || 2)
   })
 
-  if (loading) return <div style={{padding:'32px'}}>Chargement...</div>
+  const urgentCount = tasks.filter(t => t.priorite === 'haute' && t.statut !== 'terminee').length
 
-  const urgentCount = tasks.filter(t => t.priorite === 'haute' && t.statut === 'a_faire').length
+  if (loading) return (
+    <div style={{ padding: 32, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: 36, height: 36, border: '3px solid #e5e7eb', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+        <p style={{ color: '#6b7280' }}>Chargement des tâches...</p>
+      </div>
+    </div>
+  )
 
   return (
-    <div style={{padding:'32px',fontFamily:'Arial,sans-serif',background:'#fff'}}>
+    <div style={{ padding: 32, fontFamily: 'Arial, sans-serif', background: '#f8fafc', minHeight: '100vh' }}>
+      {/* Modal */}
       {showModal && (
-        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'#fff',padding:'32px',borderRadius:'12px',width:'90%',maxWidth:'500px'}}>
-            <h2 style={{fontSize:'20px',fontWeight:700,marginBottom:'20px'}}>{selectedForEdit ? 'Modifier' : 'Créer'} tâche</h2>
-            <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '90%', maxWidth: 500 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>{selectedForEdit ? 'Modifier' : 'Créer'} une tâche</h2>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Titre *</label>
-                <input 
-                  value={formData.titre} 
-                  onChange={(e) => setFormData({...formData, titre: e.target.value})}
-                  required
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                />
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>Titre *</label>
+                <input value={formData.titre} onChange={e => setFormData({ ...formData, titre: e.target.value })} required
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, boxSizing: 'border-box', fontSize: 14 }} />
               </div>
               <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Description</label>
-                <textarea 
-                  value={formData.description} 
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  rows={3}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                />
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>Description</label>
+                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={3}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, boxSizing: 'border-box', fontSize: 14, resize: 'vertical' }} />
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Priorité</label>
-                  <select 
-                    value={formData.priorite} 
-                    onChange={(e) => setFormData({...formData, priorite: e.target.value})}
-                    style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                  >
-                    <option value='basse'>Basse</option>
-                    <option value='normale'>Normale</option>
-                    <option value='haute'>Haute</option>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>Statut</label>
+                  <select value={formData.statut} onChange={e => setFormData({ ...formData, statut: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}>
+                    <option value="a_faire">À faire</option>
+                    <option value="en_cours">En cours</option>
+                    <option value="terminee">Terminée</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Statut</label>
-                  <select 
-                    value={formData.statut} 
-                    onChange={(e) => setFormData({...formData, statut: e.target.value})}
-                    style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                  >
-                    <option value='a_faire'>À faire</option>
-                    <option value='en_cours'>En cours</option>
-                    <option value='terminee'>Terminée</option>
-                  </select>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>Échéance</label>
+                  <input type="date" value={formData.echeance} onChange={e => setFormData({ ...formData, echeance: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }} />
                 </div>
               </div>
               <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Client (optionnel)</label>
-                <select 
-                  value={formData.client_id || ''} 
-                  onChange={(e) => setFormData({...formData, client_id: e.target.value ? parseInt(e.target.value) : null})}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                >
-                  <option value=''>-- Aucun --</option>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>Client (optionnel)</label>
+                <select value={formData.client_id || ''} onChange={e => setFormData({ ...formData, client_id: e.target.value || null })}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}>
+                  <option value="">-- Aucun --</option>
                   {clients.map(c => (
-                    <option key={c.id} value={c.id}>{`${c.first_name} ${c.last_name}`}</option>
+                    <option key={c.id} value={c.id}>{c.nom || c.first_name} {c.prenom || c.last_name}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label style={{fontSize:'12px',fontWeight:600,color:'#666'}}>Échéance</label>
-                <input 
-                  type='date'
-                  value={formData.echeance} 
-                  onChange={(e) => setFormData({...formData, echeance: e.target.value})}
-                  style={{width:'100%',padding:'8px 12px',border:'0.5px solid #ddd',borderRadius:'6px',marginTop:'4px',fontFamily:'Arial'}}
-                />
-              </div>
-              <div style={{display:'flex',gap:'12px',marginTop:'20px'}}>
-                <button type='submit' style={{flex:1,padding:'10px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'6px',fontWeight:600,cursor:'pointer'}}>
+              <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                <button type="submit" style={{ flex: 1, padding: 10, background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>
                   {selectedForEdit ? 'Modifier' : 'Créer'}
                 </button>
-                <button type='button' onClick={() => {setShowModal(false);setSelectedForEdit(null)}} style={{flex:1,padding:'10px',background:'#f0f0f0',color:'#0a0a0a',border:'none',borderRadius:'6px',fontWeight:600,cursor:'pointer'}}>
+                <button type="button" onClick={() => { setShowModal(false); resetForm() }}
+                  style={{ flex: 1, padding: 10, background: '#f0f0f0', color: '#0a0a0a', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>
                   Annuler
                 </button>
               </div>
@@ -208,71 +208,92 @@ export default function Taches() {
         </div>
       )}
 
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'32px'}}>
-        <h2 style={{fontSize:'32px',fontWeight:900,color:'#0a0a0a'}}>Tâches {urgentCount > 0 && <span style={{background:'#dc2626',color:'#fff',borderRadius:'50%',width:'28px',height:'28px',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,marginLeft:'8px'}}>{urgentCount}</span>}</h2>
-        <button onClick={() => {setSelectedForEdit(null);setShowModal(true)}} style={{display:'flex',alignItems:'center',gap:'8px',padding:'10px 20px',background:'#0a0a0a',color:'#fff',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Arial'}}>
-          <Plus size={18} />
-          Créer tâche
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0a0a0a', margin: 0 }}>
+          Tâches
+          {urgentCount > 0 && (
+            <span style={{ background: '#dc2626', color: '#fff', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, marginLeft: 10 }}>
+              {urgentCount}
+            </span>
+          )}
+        </h1>
+        <button onClick={() => { resetForm(); setShowModal(true) }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          + Créer tâche
         </button>
       </div>
 
-      {/* Filters */}
-      <div style={{marginBottom:'24px'}}>
-        <div style={{marginBottom:'12px'}}>
-          <label style={{fontSize:'12px',fontWeight:600,color:'#666',marginRight:'12px'}}>Statut:</label>
-          {['a_faire', 'en_cours', 'terminee'].map(statut => (
-            <button key={statut} onClick={() => setFilterStatut(statut)} style={{padding:'6px 12px',background:filterStatut===statut?'#0a0a0a':'#f0f0f0',color:filterStatut===statut?'#fff':'#0a0a0a',border:'none',borderRadius:'6px',fontSize:'11px',fontWeight:600,cursor:'pointer',marginRight:'6px'}}>
-              {statut === 'a_faire' ? 'À faire' : statut === 'en_cours' ? 'En cours' : 'Terminée'}
+      {/* Filtres */}
+      <div style={{ marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#666', alignSelf: 'center', marginRight: 4 }}>Statut :</span>
+          {[['tous', 'Tous'], ['a_faire', 'À faire'], ['en_cours', 'En cours'], ['terminee', 'Terminée']].map(([val, label]) => (
+            <button key={val} onClick={() => setFilterStatut(val)}
+              style={{ padding: '6px 12px', background: filterStatut === val ? '#0a0a0a' : '#f0f0f0', color: filterStatut === val ? '#fff' : '#0a0a0a', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              {label}
             </button>
           ))}
         </div>
-        <div>
-          <label style={{fontSize:'12px',fontWeight:600,color:'#666',marginRight:'12px'}}>Priorité:</label>
-          {['tous', 'haute', 'normale', 'basse'].map(p => (
-            <button key={p} onClick={() => setFilterPriorite(p)} style={{padding:'6px 12px',background:filterPriorite===p?'#0a0a0a':'#f0f0f0',color:filterPriorite===p?'#fff':'#0a0a0a',border:'none',borderRadius:'6px',fontSize:'11px',fontWeight:600,cursor:'pointer',marginRight:'6px'}}>
-              {p === 'tous' ? 'Tous' : p.charAt(0).toUpperCase() + p.slice(1)}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#666', alignSelf: 'center', marginRight: 4 }}>Priorité :</span>
+          {[['tous', 'Tous'], ['haute', 'Haute'], ['normale', 'Normale'], ['basse', 'Basse']].map(([val, label]) => (
+            <button key={val} onClick={() => setFilterPriorite(val)}
+              style={{ padding: '6px 12px', background: filterPriorite === val ? '#0a0a0a' : '#f0f0f0', color: filterPriorite === val ? '#fff' : '#0a0a0a', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              {label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tasks List */}
-      <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+      {/* Liste */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {filteredTasks.length === 0 ? (
-          <div style={{textAlign:'center',padding:'48px 24px',color:'#999'}}>
-            <p style={{fontSize:'14px'}}>Aucune tâche — tout est à jour ✓</p>
+          <div style={{ textAlign: 'center', padding: '48px 24px', color: '#9ca3af', background: 'white', borderRadius: 12, border: '1px solid #e5e7eb' }}>
+            <p style={{ fontSize: 14 }}>Aucune tâche — cliquez sur "+ Créer tâche" pour commencer</p>
           </div>
         ) : (
           filteredTasks.map(task => {
-            const client = clients.find(c => c.id === task.client_id)
             const prioColor = getPrioriteColor(task.priorite)
+            const clientLabel = task.client_nom ? `${task.client_nom} ${task.client_prenom || ''}`.trim() : null
             return (
-              <div key={task.id} style={{padding:'16px',border:'0.5px solid #f0f0f0',borderRadius:'8px',background:task.statut==='terminee'?'#f9fafb':'#fff',opacity:task.statut==='terminee'?0.6:1}}>
-                <div style={{display:'flex',alignItems:'flex-start',gap:'12px'}}>
-                  <button onClick={() => handleToggleStatut(task)} style={{background:'none',border:'none',cursor:'pointer',padding:'0',marginTop:'2px'}}>
-                    {task.statut === 'terminee' ? (
-                      <CheckCircle2 size={20} style={{color:'#22c55e'}} />
-                    ) : (
-                      <Circle size={20} style={{color:'#ddd'}} />
-                    )}
+              <div key={task.id} style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 10, background: task.statut === 'terminee' ? '#f9fafb' : 'white', opacity: task.statut === 'terminee' ? 0.65 : 1, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <button onClick={() => handleToggleStatut(task)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2, fontSize: 20 }}>
+                    {task.statut === 'terminee' ? '✅' : '⬜'}
                   </button>
-                  <div style={{flex:1}}>
-                    <h3 style={{fontSize:'14px',fontWeight:600,color:task.statut==='terminee'?'#999':'#0a0a0a',textDecoration:task.statut==='terminee'?'line-through':'none'}}>{task.titre}</h3>
-                    {task.description && <p style={{fontSize:'12px',color:'#666',marginTop:'4px'}}>{task.description}</p>}
-                    <div style={{display:'flex',alignItems:'center',gap:'12px',marginTop:'8px'}}>
-                      <span style={{padding:'3px 8px',borderRadius:'4px',background:prioColor.bg,color:prioColor.color,fontSize:'11px',fontWeight:600}}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: task.statut === 'terminee' ? '#9ca3af' : '#0a0a0a', textDecoration: task.statut === 'terminee' ? 'line-through' : 'none', margin: '0 0 4px' }}>
+                      {task.titre}
+                    </p>
+                    {task.description && <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>{task.description}</p>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ padding: '3px 8px', borderRadius: 4, background: prioColor.bg, color: prioColor.color, fontSize: 11, fontWeight: 600 }}>
                         {prioColor.label}
                       </span>
-                      {task.echeance && <span style={{fontSize:'11px',color:'#666'}}>📅 {new Date(task.echeance).toLocaleDateString('fr-FR')}</span>}
-                      {client && <span style={{fontSize:'11px',color:'#2563eb'}}>👤 {client.first_name} {client.last_name}</span>}
+                      {task.statut !== 'terminee' && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, background: '#eff6ff', color: '#2563eb', fontSize: 11, fontWeight: 600 }}>
+                          {task.statut === 'a_faire' ? 'À faire' : 'En cours'}
+                        </span>
+                      )}
+                      {task.echeance && (
+                        <span style={{ fontSize: 11, color: '#6b7280' }}>
+                          📅 {new Date(task.echeance).toLocaleDateString('fr-FR')}
+                        </span>
+                      )}
+                      {clientLabel && (
+                        <span style={{ fontSize: 11, color: '#2563eb' }}>👤 {clientLabel}</span>
+                      )}
                     </div>
                   </div>
-                  <div style={{display:'flex',gap:'8px'}}>
-                    <button onClick={() => handleEdit(task)} style={{background:'none',border:'none',cursor:'pointer',color:'#666',padding:'4px'}}>
-                      <Edit2 size={16} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleEdit(task)}
+                      style={{ background: '#f3f4f6', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 14 }}>
+                      ✏️
                     </button>
-                    <button onClick={() => handleDelete(task.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:'4px'}}>
-                      <Trash2 size={16} />
+                    <button onClick={() => handleDelete(task.id)}
+                      style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 14 }}>
+                      🗑️
                     </button>
                   </div>
                 </div>
