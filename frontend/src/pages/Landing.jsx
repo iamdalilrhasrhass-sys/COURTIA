@@ -207,6 +207,29 @@ export default function Landing() {
  </div>
  </div>
 
+ {/* COMMENT ÇA MARCHE */}
+ <div style={{padding:'96px 56px',background:'#fafafa',borderTop:'0.5px solid #f0f0f0'}}>
+ <div style={{textAlign:'center',marginBottom:56}}>
+ <div style={{fontSize:10,fontWeight:700,letterSpacing:3,color:'#bbb',marginBottom:16}}>COMMENT ÇA MARCHE</div>
+ <div style={{fontSize:44,fontWeight:900,letterSpacing:-1.5,color:'#0a0a0a',marginBottom:10}}>Opérationnel en 10 minutes.</div>
+ <div style={{fontSize:14,color:'#999'}}>Pas de formation. Pas de migration complexe. Juste de l'efficacité.</div>
+ </div>
+ <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:32,maxWidth:900,margin:'0 auto'}}>
+ {[
+ {num:'01',title:'Importez vos clients',desc:'Chargez votre base existante ou ajoutez vos clients manuellement. COURTIA structure et enrichit automatiquement chaque fiche.',icon:'📥'},
+ {num:'02',title:'ARK analyse votre portefeuille',desc:'En temps réel, ARK détecte les opportunités, calcule les scores de risque et identifie les contrats à renouveler en priorité.',icon:'🧠'},
+ {num:'03',title:'Gagnez du temps chaque jour',desc:'Relances automatisées, rapports clairs, recommandations actionnables. Vous conseillez — ARK fait le reste.',icon:'⚡'},
+ ].map(step => (
+ <div key={step.num} className="reveal" style={{background:'#fff',borderRadius:14,padding:32,border:'0.5px solid #e8e8e8',position:'relative',overflow:'hidden'}}>
+ <div style={{position:'absolute',top:20,right:20,fontSize:48,fontWeight:900,color:'#f5f5f5',lineHeight:1,userSelect:'none'}}>{step.num}</div>
+ <div style={{fontSize:32,marginBottom:16}}>{step.icon}</div>
+ <div style={{fontSize:16,fontWeight:700,color:'#0a0a0a',marginBottom:10}}>{step.title}</div>
+ <div style={{fontSize:13,color:'#888',lineHeight:1.7}}>{step.desc}</div>
+ </div>
+ ))}
+ </div>
+ </div>
+
  {/* PRICING */}
  <div style={{padding:'96px 56px',background:'#fff'}}>
  <div style={{textAlign:'center',marginBottom:56}}>
