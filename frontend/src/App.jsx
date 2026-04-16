@@ -13,6 +13,8 @@ import Contrats from './pages/Contrats'
 import Taches from './pages/Taches'
 import Rapports from './pages/Rapports'
 import Parametres from './pages/Parametres'
+import Capitia from './pages/Capitia'
+import AnalyticsExecutive from './pages/AnalyticsExecutive'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -105,6 +107,16 @@ export default function App() {
         <Route path="/morning-brief" element={
           <PrivateRoute>
             <AppLayout><MorningBrief /></AppLayout>
+          </PrivateRoute>
+        } />
+        <Route path="/capitia" element={
+          <PrivateRoute>
+            <AppLayout><Capitia /></AppLayout>
+          </PrivateRoute>
+        } />
+        <Route path="/analytics" element={
+          <PrivateRoute>
+            <AppLayout><AnalyticsExecutive /></AppLayout>
           </PrivateRoute>
         } />
 
