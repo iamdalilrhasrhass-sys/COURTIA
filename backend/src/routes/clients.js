@@ -2,6 +2,10 @@ const express = require('express');
 const pool = require('../db');
 const router = express.Router();
 const { calculateRiskScore } = require('../utils/riskCalculator');
+const { requireUnderLimit } = require('../middleware/planGuard');
+const { getUserPlanInfo } = require('../services/planService');
+const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
+const Anthropic = require('@anthropic-ai/sdk');
 
 // Middleware pour vérifier le token
 const verifyToken = (req, res, next) => {
@@ -115,7 +119,7 @@ router.get('/:id/contrats', verifyToken, async (req, res) => {
 /**
  * POST /api/clients — Créer un client
  */
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, requireUnderLimit('clients'), async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -216,6 +220,186 @@ router.delete('/:id', verifyToken, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/clients/:id error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/:id/score
+// Score de santé individuel du client.
+// Tout plan : score brut visible.
+// Pro/Elite : breakdown complet (client_score_breakdown).
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/:id/score', verifyToken, async (req, res) => {
+  try {
+    const courtierId = req.user.id || req.user.userId;
+    const clientId   = parseInt(req.params.id);
+    if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
+
+    const [planInfo, breakdown] = await Promise.all([
+      getUserPlanInfo(courtierId),
+      getClientScoreBreakdown(clientId, courtierId),
+    ]);
+
+    if (!breakdown) {
+      return res.status(404).json({ error: 'Client non trouvé ou accès refusé' });
+    }
+
+    const plan    = planInfo?.plan || 'start';
+    const hasBreakdown = planInfo?.limits?.features?.client_score_breakdown === true;
+
+    if (!hasBreakdown) {
+      // Start : score brut uniquement
+      return res.json({
+        client_id:       clientId,
+        score:           breakdown.score,
+        grade:           breakdown.grade,
+        plan,
+        upgrade_required: true,
+        upgrade_message:  'Le détail par dimension est disponible avec le plan Pro ou Elite.',
+      });
+    }
+
+    res.json({ ...breakdown, plan });
+
+  } catch (err) {
+    console.error('GET /api/clients/:id/score error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/:id/ark-action-plan
+// ARK génère un plan d'action personnalisé pour ce client (Elite uniquement).
+// Claude Opus 4.6 : 5 actions concrètes, impact en points, délai, message suggéré.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/:id/ark-action-plan', verifyToken, async (req, res) => {
+  try {
+    const courtierId = req.user.id || req.user.userId;
+    const clientId   = parseInt(req.params.id);
+    if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
+
+    // Vérifier le plan (Elite uniquement)
+    const planInfo = await getUserPlanInfo(courtierId);
+    const plan     = planInfo?.plan || 'start';
+    const hasFeature = planInfo?.limits?.features?.client_ark_action_plan === true;
+
+    if (!hasFeature) {
+      return res.status(402).json({
+        error:            'plan_upgrade_required',
+        feature:          'client_ark_action_plan',
+        required_plan:    'elite',
+        plan,
+        message: plan === 'start'
+          ? 'Le plan d\'action ARK personnalisé est disponible avec le plan Elite.'
+          : 'Passez au plan Elite pour accéder au plan d\'action ARK personnalisé.',
+      });
+    }
+
+    // Récupérer le breakdown
+    const breakdown = await getClientScoreBreakdown(clientId, courtierId);
+    if (!breakdown) {
+      return res.status(404).json({ error: 'Client non trouvé ou accès refusé' });
+    }
+
+    // Données client pour le contexte
+    const clientRes = await pool.query(
+      `SELECT first_name, last_name, email, phone, profession,
+              situation_familiale, address, created_at, notes
+       FROM clients WHERE id = $1 AND courtier_id = $2`,
+      [clientId, courtierId]
+    );
+    const client = clientRes.rows[0];
+
+    const dimLines = breakdown.breakdown.map(d =>
+      `- ${d.label} : ${d.score}/100 (${d.reason}) — ${d.impact}`
+    ).join('\n');
+
+    const prompt = `Tu es ARK, expert en courtage d'assurance français. Analyse ce client et génère un plan d'action personnalisé.
+
+CLIENT :
+- Nom : ${client.first_name || ''} ${client.last_name || ''}
+- Profession : ${client.profession || 'Non renseignée'}
+- Situation familiale : ${client.situation_familiale || 'Non renseignée'}
+- Email : ${client.email ? 'OK' : 'MANQUANT'}
+- Téléphone : ${client.phone ? 'OK' : 'MANQUANT'}
+- Adresse : ${client.address ? 'OK' : 'MANQUANTE'}
+- Client depuis : ${client.created_at ? new Date(client.created_at).toLocaleDateString('fr-FR') : 'inconnu'}
+- Contrats actifs : ${breakdown.total_quotes}
+
+SCORE ACTUEL : ${breakdown.score}/100 (grade ${breakdown.grade})
+SCORE POTENTIEL : ${breakdown.potential_score}/100
+
+DIMENSIONS :
+${dimLines}
+
+VALEUR CLIENT ESTIMÉE : ${breakdown.client_value_estimate.min}–${breakdown.client_value_estimate.max}€ LTV (${breakdown.client_value_estimate.label})
+
+Génère exactement 5 actions concrètes et prioritaires pour améliorer ce score. Chaque action doit être réaliste, spécifique à ce profil, et inclure un message de contact (email ou SMS).
+
+Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc markdown :
+{
+  "actions": [
+    {
+      "order": 1,
+      "title": "<max 80 chars>",
+      "description": "<max 200 chars>",
+      "dimension": "multi_equipment|compliance|recency|diversification|growth",
+      "score_impact": <nombre de points gagnés estimés>,
+      "delay_days": <délai recommandé en jours>,
+      "priority": "critical|high|medium",
+      "suggested_message": {
+        "channel": "email|sms|call",
+        "subject": "<sujet si email>",
+        "body": "<max 300 chars — message personnalisé>"
+      }
+    }
+  ],
+  "projected_score": <score estimé si toutes les actions faites>,
+  "time_to_100": "<estimation ex: 30 jours | 3 mois | 6 mois>",
+  "coaching_summary": "<max 200 chars — synthèse ARK pour le courtier>"
+}`;
+
+    let result = {
+      actions:          [],
+      projected_score:  breakdown.potential_score,
+      time_to_100:      'Non estimable',
+      coaching_summary: 'Analyse ARK non disponible (clé API manquante).',
+    };
+
+    if (process.env.ANTHROPIC_API_KEY) {
+      const anthropic  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const response   = await anthropic.messages.create({
+        model:      'claude-opus-4-6',
+        max_tokens: 2500,
+        messages:   [{ role: 'user', content: prompt }],
+      });
+
+      const rawText = response.content?.[0]?.text || '{}';
+      const cleaned = rawText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+
+      try {
+        const parsed = JSON.parse(cleaned);
+        result = { ...result, ...parsed };
+      } catch (parseErr) {
+        console.error('[clients/ark-action-plan] Erreur JSON Opus:', parseErr.message);
+      }
+    }
+
+    res.json({
+      client_id:       clientId,
+      current_score:   breakdown.score,
+      current_grade:   breakdown.grade,
+      ltv:             breakdown.client_value_estimate,
+      breakdown_short: breakdown.breakdown.map(d => ({
+        dim: d.dim, score: d.score, points_lost: d.points_lost
+      })),
+      action_plan: result,
+      plan,
+    });
+
+  } catch (err) {
+    console.error('GET /api/clients/:id/ark-action-plan error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
