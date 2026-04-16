@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { TrendingUp, Users, FileText, Heart, Lock, ChevronUp, ChevronDown, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { TrendingUp, Users, FileText, Heart, Lock, ChevronUp, ChevronDown, AlertTriangle, CheckCircle2, Sparkles, ExternalLink } from 'lucide-react'
 import api from '../api'
 import PaywallModal from '../components/PaywallModal'
 import LockedFeature from '../components/LockedFeature'
+import PageTransition from '../components/ui/PageTransition'
+import InteractiveBarChart from '../components/ui/InteractiveBarChart'
+import PremiumTooltip from '../components/ui/PremiumTooltip'
 
 // ─── Shimmer skeleton ────────────────────────────────────────────────────────
 const shimmerKf = `
@@ -35,7 +38,7 @@ function CountUp({ to, duration = 1.2, prefix = '', suffix = '', decimals = 0 })
   const [display, setDisplay] = useState(`${prefix}0${suffix}`)
 
   useEffect(() => {
-    const unsub = rounded.onChange(v => setDisplay(v))
+    const unsub = rounded.on('change', v => setDisplay(v))
     const ctrl = animate(mv, to, { duration, ease: 'easeOut' })
     return () => { ctrl.stop(); unsub() }
   }, [to]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -96,7 +99,7 @@ function KpiCard({ icon: Icon, iconColor, label, value, prefix = '', suffix = ''
   )
 }
 
-// ─── Custom Bar Chart (no Recharts) ──────────────────────────────────────────
+// ─── Bar chart data ───────────────────────────────────────────────────────────
 const MOCK_BARS = [
   { label: 'Jan', value: 12 },
   { label: 'Fév', value: 18 },
@@ -112,38 +115,41 @@ const MOCK_BARS = [
   { label: 'Déc', value: 30 },
 ]
 
-function BarChart({ newContracts30d = 0 }) {
-  const maxVal = Math.max(...MOCK_BARS.map(b => b.value), 1)
-  const CHART_H = 120
+// ─── Insight IA card ──────────────────────────────────────────────────────────
+const INSIGHTS = [
+  { title: 'Pic de renouvellements', body: 'Septembre concentre 23 % des échéances annuelles. Anticipez vos relances dès mi-août.', color: '#2563eb' },
+  { title: 'Segment en croissance', body: 'Les contrats Santé ont progressé de +18 % ce trimestre. Fort potentiel de cross-sell.', color: '#7c3aed' },
+  { title: 'Taux de rétention', body: 'Votre taux de rétention est 4 points au-dessus de la moyenne nationale (87 % vs 83 %).', color: '#16a34a' },
+]
 
+function InsightCard({ insight, delay = 0 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: CHART_H + 24 }}>
-      {MOCK_BARS.map((bar, i) => {
-        const pct = bar.value / maxVal
-        const barH = Math.round(pct * CHART_H)
-        const isHighlight = i === MOCK_BARS.length - 1
-        return (
-          <div key={bar.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <motion.div
-              initial={{ scaleY: 0, originY: 1 }}
-              animate={{ scaleY: 1 }}
-              transition={{ delay: 0.05 * i, duration: 0.5, ease: 'easeOut' }}
-              style={{
-                width: '100%',
-                height: barH,
-                borderRadius: '4px 4px 0 0',
-                background: isHighlight
-                  ? 'linear-gradient(180deg, #2563eb, #1e40af)'
-                  : '#dbeafe',
-                transformOrigin: 'bottom',
-              }}
-              title={`${bar.label}: ${bar.value} contrats`}
-            />
-            <span style={{ fontSize: 10, color: '#9b9690', fontWeight: 500 }}>{bar.label}</span>
-          </div>
-        )
-      })}
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      style={{
+        background: '#fff',
+        border: '1px solid #e8e6e0',
+        borderRadius: 14,
+        padding: '18px 20px',
+        borderLeft: `3px solid ${insight.color}`,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+        <Sparkles size={13} color={insight.color} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: insight.color, letterSpacing: '0.02em' }}>
+          Insight IA
+        </span>
+      </div>
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#1a1814', margin: '0 0 5px', lineHeight: 1.3 }}>
+        {insight.title}
+      </p>
+      <p style={{ fontSize: 12, color: '#6b6660', margin: 0, lineHeight: 1.5 }}>
+        {insight.body}
+      </p>
+    </motion.div>
   )
 }
 
@@ -195,6 +201,17 @@ function ComplianceBanner({ data }) {
           {data?.message || (ok ? 'Aucun manquement détecté sur les 30 derniers jours.' : 'Certaines formations ou documents sont à renouveler.')}
         </div>
       </div>
+      <a
+        href="/taches?filter=dda"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          fontSize: 12, fontWeight: 600, color: ok ? '#15803d' : '#a16207',
+          textDecoration: 'none', marginLeft: 'auto', flexShrink: 0,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Voir mon tableau <ExternalLink size={11} />
+      </a>
     </div>
   )
 }
@@ -265,6 +282,7 @@ export default function AnalyticsExecutive() {
   } = kpis
 
   return (
+    <PageTransition>
     <div style={{ padding: '32px 28px', maxWidth: 960, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
 
       {/* ── Header ── */}
@@ -421,8 +439,32 @@ export default function AnalyticsExecutive() {
             {loadingKpis ? '—' : new_contracts_30d} <span style={{ fontSize: 13, fontWeight: 600 }}>ce mois</span>
           </div>
         </div>
-        <BarChart newContracts30d={new_contracts_30d} />
+        <InteractiveBarChart
+          data={MOCK_BARS}
+          formatValue={v => `${v} contrats`}
+          height={140}
+        />
       </motion.div>
+
+      {/* ── Insights IA ── */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <Sparkles size={15} color="#2563eb" />
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1814', margin: 0 }}>
+            Insights IA
+          </h2>
+          <span style={{
+            fontSize: 11, fontWeight: 700,
+            background: '#eff6ff', color: '#2563eb',
+            padding: '2px 8px', borderRadius: 20,
+          }}>Pro</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+          {INSIGHTS.map((ins, i) => (
+            <InsightCard key={i} insight={ins} delay={0.28 + i * 0.07} />
+          ))}
+        </div>
+      </div>
 
       {/* ── Lead Scoring (LockedFeature) ── */}
       <motion.div
@@ -446,43 +488,54 @@ export default function AnalyticsExecutive() {
             border: '1px solid #e8e6e0',
             overflow: 'hidden',
           }}>
-            {MOCK_LEADS.map((lead, i) => (
-              <div
-                key={lead.name}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 20px',
-                  borderBottom: i < MOCK_LEADS.length - 1 ? '1px solid #f5f2ec' : 'none',
-                }}
-              >
-                {/* Avatar */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #bfdbfe, #93c5fd)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, fontSize: 13, fontWeight: 700, color: '#1e40af',
-                }}>
-                  {lead.name.charAt(0)}
-                </div>
-
-                {/* Name + tags */}
-                <div style={{ minWidth: 160 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1814' }}>{lead.name}</div>
-                  <div style={{ display: 'flex', gap: 4, marginTop: 3 }}>
-                    {lead.tags.map(t => (
-                      <span key={t} style={{
-                        fontSize: 10, fontWeight: 600,
-                        padding: '1px 6px', borderRadius: 4,
-                        background: '#f0ede8', color: '#6b6660',
-                      }}>{t}</span>
-                    ))}
+            {MOCK_LEADS.map((lead, i) => {
+              const scoreColor = lead.score >= 80 ? '#16a34a' : lead.score >= 60 ? '#ca8a04' : '#dc2626'
+              const tooltipLabel = lead.score >= 80 ? 'Lead chaud — à contacter en priorité' : lead.score >= 60 ? 'Lead tiède — opportunité à suivre' : 'Lead froid — à requalifier'
+              return (
+                <motion.div
+                  key={lead.name}
+                  whileHover={{ backgroundColor: '#fafaf8' }}
+                  transition={{ duration: 0.12 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '14px 20px',
+                    borderBottom: i < MOCK_LEADS.length - 1 ? '1px solid #f5f2ec' : 'none',
+                    cursor: 'default',
+                  }}
+                >
+                  {/* Avatar */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #bfdbfe, #93c5fd)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, fontSize: 13, fontWeight: 700, color: '#1e40af',
+                  }}>
+                    {lead.name.charAt(0)}
                   </div>
-                </div>
 
-                {/* Score bar */}
-                <LeadScoreBar score={lead.score} />
-              </div>
-            ))}
+                  {/* Name + tags */}
+                  <div style={{ minWidth: 160 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1814' }}>{lead.name}</div>
+                    <div style={{ display: 'flex', gap: 4, marginTop: 3 }}>
+                      {lead.tags.map(t => (
+                        <span key={t} style={{
+                          fontSize: 10, fontWeight: 600,
+                          padding: '1px 6px', borderRadius: 4,
+                          background: '#f0ede8', color: '#6b6660',
+                        }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Score bar + tooltip */}
+                  <PremiumTooltip content={`${tooltipLabel} (score : ${lead.score}/100)`} position="top">
+                    <div style={{ flex: 1 }}>
+                      <LeadScoreBar score={lead.score} />
+                    </div>
+                  </PremiumTooltip>
+                </motion.div>
+              )
+            })}
           </div>
         </LockedFeature>
       </motion.div>
@@ -515,5 +568,6 @@ export default function AnalyticsExecutive() {
         onUpgrade={(plan) => { window.location.href = `/billing?plan=${plan}` }}
       />
     </div>
+    </PageTransition>
   )
 }

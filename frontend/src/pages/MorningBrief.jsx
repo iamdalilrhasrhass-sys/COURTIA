@@ -7,6 +7,9 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import PageTransition from '../components/ui/PageTransition'
+import AnimatedNumber from '../components/ui/AnimatedNumber'
+import PremiumTooltip from '../components/ui/PremiumTooltip'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
@@ -108,7 +111,7 @@ function ScoreRing({ score, plan }) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
             style={{ fontSize: 26, fontWeight: 700, color: '#0a0a0a', lineHeight: 1 }}
           >
-            {displayScore}
+            <AnimatedNumber value={displayScore} duration={1.1} />
           </motion.span>
         ) : (
           <span style={{ fontSize: 16, fontWeight: 700, color: '#9ca3af', lineHeight: 1 }}>{displayRange}</span>
@@ -172,6 +175,41 @@ function ActionCard({ action, index }) {
             </span>
           </div>
         )}
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+          <button
+            onClick={e => { e.stopPropagation(); toast.success('Action marquée comme traitée') }}
+            style={{
+              padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 6,
+              fontFamily: 'Arial, sans-serif'
+            }}
+          >
+            Traiter
+          </button>
+          <button
+            onClick={e => { e.stopPropagation(); toast.success('Relance programmée') }}
+            style={{
+              padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              background: 'none', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 6,
+              fontFamily: 'Arial, sans-serif'
+            }}
+          >
+            Relancer
+          </button>
+          {action.client_id && (
+            <button
+              onClick={e => { e.stopPropagation(); navigate(`/client/${action.client_id}`) }}
+              style={{
+                padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                background: 'none', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: 6,
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              Voir client
+            </button>
+          )}
+        </div>
       </div>
       {action.client_id && <ChevronRight size={14} color="#d1d5db" style={{ marginTop: 4, flexShrink: 0 }} />}
     </motion.div>
@@ -281,6 +319,7 @@ export default function MorningBrief() {
   const totalCountDisplay = brief?.total_count || actions.length
 
   return (
+    <PageTransition>
     <div style={{ minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
       <style>{`
         @keyframes shimmer {
@@ -376,18 +415,26 @@ export default function MorningBrief() {
               </div>
             ) : actions.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
                 style={{
-                  background: 'white', border: '0.5px solid #e8e6e0',
-                  borderRadius: 12, padding: 32, textAlign: 'center'
+                  background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                  border: '0.5px solid #bbf7d0',
+                  borderRadius: 16, padding: '36px 24px', textAlign: 'center'
                 }}
               >
-                <CheckCircle2 size={32} color="#22c55e" style={{ margin: '0 auto 12px' }} />
-                <p style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 4px' }}>
+                <motion.div
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ display: 'inline-flex', marginBottom: 14 }}
+                >
+                  <CheckCircle2 size={36} color="#22c55e" />
+                </motion.div>
+                <p style={{ fontSize: 15, fontWeight: 700, color: '#14532d', margin: '0 0 6px' }}>
                   Tout est à jour !
                 </p>
-                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
-                  Aucune action urgente pour aujourd'hui.
+                <p style={{ fontSize: 13, color: '#15803d', margin: 0 }}>
+                  Aucune action urgente pour aujourd'hui. Profitez de votre journée.
                 </p>
               </motion.div>
             ) : (
@@ -425,7 +472,9 @@ export default function MorningBrief() {
                     Passez à Pro pour accéder à toutes vos actions
                   </p>
                 </div>
-                <button
+                <motion.button
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
                   onClick={() => navigate('/billing?plan=pro')}
                   style={{
                     padding: '7px 14px', background: '#2563eb', color: 'white',
@@ -434,7 +483,7 @@ export default function MorningBrief() {
                   }}
                 >
                   Débloquer
-                </button>
+                </motion.button>
               </motion.div>
             )}
           </motion.div>
@@ -474,22 +523,24 @@ export default function MorningBrief() {
                   {(currentPlan === 'pro' || currentPlan === 'elite') && score?.breakdown && (
                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {Object.entries(score.breakdown).slice(0, 3).map(([key, val]) => (
-                        <div key={key}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                            <span style={{ fontSize: 11, color: '#6b7280', textTransform: 'capitalize' }}>
-                              {key.replace(/_/g, ' ')}
-                            </span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: '#0a0a0a' }}>{val}</span>
+                        <PremiumTooltip key={key} content={`${key.replace(/_/g, ' ')} : ${val}/100`} position="top">
+                          <div style={{ width: '100%' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                              <span style={{ fontSize: 11, color: '#6b7280', textTransform: 'capitalize' }}>
+                                {key.replace(/_/g, ' ')}
+                              </span>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: '#0a0a0a' }}>{val}</span>
+                            </div>
+                            <div style={{ height: 3, background: '#f7f6f2', borderRadius: 2 }}>
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: Math.min(val, 100) + '%' }}
+                                transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+                                style={{ height: '100%', background: '#0a0a0a', borderRadius: 2 }}
+                              />
+                            </div>
                           </div>
-                          <div style={{ height: 3, background: '#f7f6f2', borderRadius: 2 }}>
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: Math.min(val, 100) + '%' }}
-                              transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
-                              style={{ height: '100%', background: '#0a0a0a', borderRadius: 2 }}
-                            />
-                          </div>
-                        </div>
+                        </PremiumTooltip>
                       ))}
                     </div>
                   )}
@@ -561,5 +612,6 @@ export default function MorningBrief() {
         </div>
       </div>
     </div>
+    </PageTransition>
   )
 }

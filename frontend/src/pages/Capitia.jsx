@@ -12,6 +12,8 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import PageTransition from '../components/ui/PageTransition'
+import AnimatedNumber from '../components/ui/AnimatedNumber'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
@@ -47,8 +49,8 @@ function CapitiaHeader({ stateBadge }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       style={{
-        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 60%, #bfdbfe 100%)',
-        borderBottom: '0.5px solid #bfdbfe',
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.15)',
         padding: '24px 32px',
         display: 'flex',
         alignItems: 'center',
@@ -57,14 +59,15 @@ function CapitiaHeader({ stateBadge }) {
     >
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: '#2563eb', letterSpacing: -1 }}>CAPITIA</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: 'white', letterSpacing: -1 }}>CAPITIA</span>
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
-            background: '#2563eb', color: 'white',
-            padding: '2px 8px', borderRadius: 20
+            background: 'rgba(255,255,255,0.25)', color: 'white',
+            padding: '2px 8px', borderRadius: 20,
+            backdropFilter: 'blur(4px)'
           }}>ADD-ON</span>
         </div>
-        <p style={{ fontSize: 13, color: '#3b82f6', margin: 0, fontWeight: 500 }}>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: 0, fontWeight: 500 }}>
           Module Financement pour courtiers IOBSP
         </p>
       </div>
@@ -194,10 +197,13 @@ function StateA({ onSuccess }) {
               onChange={e => setOrias(e.target.value.replace(/\D/g, '').slice(0, 8))}
               placeholder="12345678"
               maxLength={8}
+              onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)' }}
+              onBlur={e => { e.currentTarget.style.borderColor = orias.length > 0 && !oriasValid ? '#ef4444' : '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}
               style={{
                 width: '100%', padding: '10px 12px', borderRadius: 8,
                 border: `1px solid ${orias.length > 0 && !oriasValid ? '#ef4444' : '#e5e7eb'}`,
-                fontSize: 14, fontFamily: 'Arial, sans-serif', outline: 'none', boxSizing: 'border-box'
+                fontSize: 14, fontFamily: 'Arial, sans-serif', outline: 'none', boxSizing: 'border-box',
+                transition: 'border-color 0.15s, box-shadow 0.15s'
               }}
             />
             {orias.length > 0 && !oriasValid && (
@@ -215,10 +221,13 @@ function StateA({ onSuccess }) {
               value={contactEmail}
               onChange={e => setContactEmail(e.target.value)}
               placeholder="vous@cabinet.fr"
+              onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)' }}
+              onBlur={e => { e.currentTarget.style.borderColor = contactEmail.length > 0 && !emailValid ? '#ef4444' : '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}
               style={{
                 width: '100%', padding: '10px 12px', borderRadius: 8,
                 border: `1px solid ${contactEmail.length > 0 && !emailValid ? '#ef4444' : '#e5e7eb'}`,
-                fontSize: 14, fontFamily: 'Arial, sans-serif', outline: 'none', boxSizing: 'border-box'
+                fontSize: 14, fontFamily: 'Arial, sans-serif', outline: 'none', boxSizing: 'border-box',
+                transition: 'border-color 0.15s, box-shadow 0.15s'
               }}
             />
             {contactEmail.length > 0 && !emailValid && (
@@ -534,7 +543,9 @@ function StateD() {
             CAPITIA Add-on
           </p>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 16 }}>
-            <span style={{ fontSize: 36, fontWeight: 800, color: '#2563eb' }}>49€</span>
+            <span style={{ fontSize: 36, fontWeight: 800, color: '#2563eb' }}>
+              <AnimatedNumber value={49} duration={1.2} suffix="€" />
+            </span>
             <span style={{ fontSize: 13, color: '#3b82f6' }}>/mois HT</span>
           </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1009,6 +1020,7 @@ export default function Capitia() {
   const effectiveState = forceStateA ? 'A' : stateKey
 
   return (
+    <PageTransition>
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'Arial, sans-serif' }}>
       <style>{`
         @keyframes shimmer {
@@ -1054,5 +1066,6 @@ export default function Capitia() {
         </AnimatePresence>
       )}
     </div>
+    </PageTransition>
   )
 }
