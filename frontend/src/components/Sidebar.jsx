@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import {
+  LayoutDashboard, Sun, Users, FileText, BarChart2,
+  Sparkles, CheckSquare, PieChart, Settings, LogOut
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import { usePlanStore } from '../stores/planStore'
 
 function Logo() {
   return (
@@ -143,22 +149,29 @@ function ArkDrawerPanel({ onClose }) {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard',      label: 'Tableau de bord' },
-  { path: '/morning-brief',  label: 'Morning Brief' },
-  { path: '/clients',        label: 'Clients' },
-  { path: '/contrats',       label: 'Contrats' },
-  { path: '/analytics',      label: 'Analytics' },
-  null, // séparateur
-  { path: '/capitia',        label: 'CAPITIA' },
-  { path: '/taches',         label: 'Tâches' },
-  { path: '/rapports',       label: 'Rapports' },
-  { path: '/parametres',     label: 'Paramètres' },
+  { path: '/dashboard',      label: 'Tableau de bord', icon: LayoutDashboard },
+  { path: '/morning-brief',  label: 'Morning Brief',   icon: Sun },
+  { path: '/clients',        label: 'Clients',         icon: Users },
+  { path: '/contrats',       label: 'Contrats',        icon: FileText },
+  { path: '/analytics',      label: 'Analytics',       icon: BarChart2 },
+  { separator: true, label: 'MODULES' },
+  { path: '/capitia',        label: 'CAPITIA',         icon: Sparkles },
+  { path: '/taches',         label: 'Tâches',          icon: CheckSquare },
+  { path: '/rapports',       label: 'Rapports',        icon: PieChart },
+  { path: '/parametres',     label: 'Paramètres',      icon: Settings },
 ]
+
+const PLAN_BADGE = {
+  start:  { bg: '#1a1a1a',             color: '#9ca3af', label: 'Start' },
+  pro:    { bg: 'rgba(37,99,235,0.2)', color: '#60a5fa', label: 'Pro' },
+  elite:  { bg: 'rgba(124,58,237,0.2)',color: '#a78bfa', label: 'Elite' },
+}
 
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [arkOpen, setArkOpen] = useState(false)
+  const currentPlan = usePlanStore(s => s.currentPlan)
 
   // Écouter l'event custom pour ouvrir ARK depuis d'autres composants
   useEffect(() => {
@@ -175,6 +188,8 @@ export default function Sidebar() {
     toast.success('Déconnexion réussie')
   }
 
+  const badge = PLAN_BADGE[currentPlan] || { bg: '#1a1a1a', color: '#555', label: 'Pro' }
+
   return (
     <>
       <div style={{
@@ -183,57 +198,82 @@ export default function Sidebar() {
         display: 'flex', flexDirection: 'column',
         position: 'fixed', left: 0, top: 0, bottom: 0,
         zIndex: 100,
-        borderRight: '0.5px solid #111'
+        borderRight: '0.5px solid #111',
+        fontFamily: 'Arial, sans-serif'
       }}>
-        {/* Logo */}
+        {/* Logo + Plan badge */}
         <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid #1a1a1a' }}>
           <Logo />
-          <span style={{ display: 'inline-block', marginTop: 8, fontSize: 10, color: '#555', background: '#111', border: '0.5px solid #222', borderRadius: 4, padding: '2px 7px', letterSpacing: 0.3 }}>
-            Pro · Founder
+          <span style={{
+            display: 'inline-block', marginTop: 8, fontSize: 10, fontWeight: 700,
+            background: badge.bg, color: badge.color,
+            border: '0.5px solid rgba(255,255,255,0.06)',
+            borderRadius: 4, padding: '2px 8px', letterSpacing: 0.5,
+            textTransform: 'uppercase'
+          }}>
+            {badge.label} · Courtier
           </span>
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '12px 0' }}>
+        <nav style={{ flex: 1, padding: '10px 0' }}>
           {NAV_ITEMS.map((item, idx) => {
-            if (!item) {
-              return <div key={`sep-${idx}`} style={{ margin: '6px 0', borderTop: '0.5px solid #1a1a1a' }} />
+            // Séparateur avec label MODULES
+            if (item.separator) {
+              return (
+                <div key={`sep-${idx}`} style={{ margin: '10px 0 6px', padding: '0 20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#333', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      {item.label}
+                    </span>
+                    <div style={{ flex: 1, height: '0.5px', background: '#1a1a1a' }} />
+                  </div>
+                </div>
+              )
             }
+
             const isActive = location.pathname === item.path ||
               (item.path === '/clients' && location.pathname.startsWith('/client'))
+            const Icon = item.icon
+
             return (
-              <button
+              <motion.button
                 key={item.path}
                 onClick={() => navigate(item.path)}
+                whileHover={!isActive ? { x: 2 } : {}}
+                transition={{ duration: 0.12 }}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 20px', background: isActive ? '#1a1a1a' : 'none',
-                  border: 'none', color: isActive ? 'white' : '#555',
+                  width: '100%',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '9px 20px',
+                  paddingLeft: 17,
+                  background: isActive ? 'rgba(37,99,235,0.08)' : 'transparent',
+                  borderLeft: isActive ? '3px solid #2563eb' : '3px solid transparent',
+                  borderTop: 'none', borderRight: 'none', borderBottom: 'none',
+                  color: isActive ? 'white' : '#555',
                   cursor: 'pointer', fontSize: 13, textAlign: 'left',
-                  fontFamily: 'Arial, sans-serif', transition: 'all 0.1s'
+                  fontFamily: 'Arial, sans-serif',
                 }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#111' }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'none' }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
               >
-                <div style={{
-                  width: 4, height: 4, borderRadius: '50%',
-                  background: isActive ? 'white' : '#333',
-                  flexShrink: 0
-                }} />
-                {item.label}
-              </button>
+                {Icon && <Icon size={14} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.55 }} />}
+                <span style={{ fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
+              </motion.button>
             )
           })}
         </nav>
 
-        {/* Bouton ARK */}
+        {/* Bouton ARK — valorisé */}
         <div style={{ padding: '12px 16px 8px' }}>
-          <button
+          <motion.button
             onClick={() => setArkOpen(true)}
+            whileHover={{ scale: 1.01, boxShadow: '0 6px 24px rgba(37,99,235,0.25)' }}
+            transition={{ duration: 0.15 }}
             style={{
               width: '100%', padding: '14px 16px',
               background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-              border: '0.5px solid rgba(37,99,235,0.3)',
+              border: '0.5px solid rgba(37,99,235,0.4)',
               borderRadius: 10, cursor: 'pointer',
               display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left'
             }}
@@ -245,29 +285,32 @@ export default function Sidebar() {
                 animation: 'arkPulse 2s ease infinite'
               }} />
               <span style={{ color: 'white', fontSize: 12, fontWeight: 600, letterSpacing: 0.5 }}>ARK · Actif</span>
+              <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(37,99,235,0.8)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>IA</span>
             </div>
-            <span style={{ color: '#6b7280', fontSize: 11 }}>Ouvrir l'assistant</span>
-          </button>
+            <span style={{ color: '#4b6180', fontSize: 11 }}>Ouvrir l'assistant →</span>
+          </motion.button>
         </div>
 
         {/* Déconnexion */}
         <div style={{ padding: '4px 16px 20px' }}>
-          <button
+          <motion.button
             onClick={logout}
+            whileHover={{ x: 2 }}
+            transition={{ duration: 0.12 }}
             style={{
               width: '100%', padding: '9px 16px',
-              background: 'none', border: 'none',
+              background: 'none',
+              border: 'none', borderLeft: '3px solid transparent',
               color: '#333', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
               fontSize: 12, fontFamily: 'Arial, sans-serif', borderRadius: 8,
-              transition: 'color 0.15s'
             }}
-            onMouseEnter={e => e.currentTarget.style.color = '#888'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
+            onMouseEnter={e => { e.currentTarget.style.color = '#666' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#333' }}
           >
-            <span style={{ fontSize: 14 }}>→</span>
+            <LogOut size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
             Déconnexion
-          </button>
+          </motion.button>
         </div>
       </div>
 
