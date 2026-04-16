@@ -1,7 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 
 // Pages
 import LoginPage from './pages/LoginPage'
@@ -18,8 +17,14 @@ import AnalyticsExecutive from './pages/AnalyticsExecutive'
 
 // Components
 import Sidebar from './components/Sidebar'
+import PaywallModal from './components/PaywallModal'
+import ImpersonationBanner from './components/ImpersonationBanner'
 
-// ScrollToTop
+// Stores / API
+import { usePlanStore } from './stores/planStore'
+import { onPaywallTriggered } from './api'
+
+// ScrollToTop — useLocation est inclus dans l'import react-router-dom du haut
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
@@ -45,14 +50,29 @@ function PrivateRoute({ children }) {
   return children
 }
 
-// Layout avec sidebar
-function AppLayout({ children }) {
+// Layout avec sidebar — monte UNE SEULE FOIS pour toute la session authentifiée
+// Les pages enfants sont injectées via <Outlet /> (React Router nested routes)
+function AppLayout() {
+  const navigate = useNavigate()
+  const fetchPlanInfo = usePlanStore(s => s.fetchPlanInfo)
+  const [paywallError, setPaywallError] = useState(null)
+
+  useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
+  useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
       <Sidebar />
       <main style={{ flex: 1, marginLeft: 240, background: '#f7f6f2', minHeight: '100vh' }}>
-        {children}
+        <ImpersonationBanner />
+        <Outlet />
       </main>
+      <PaywallModal
+        open={!!paywallError}
+        error={paywallError}
+        onClose={() => setPaywallError(null)}
+        onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
+      />
     </div>
   )
 }
@@ -68,57 +88,19 @@ export default function App() {
         <Route path="/register" element={<LoginPage />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Routes privées avec sidebar */}
-        <Route path="/dashboard" element={
-          <PrivateRoute>
-            <AppLayout><Dashboard /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/clients" element={
-          <PrivateRoute>
-            <AppLayout><Clients /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/client/:id" element={
-          <PrivateRoute>
-            <AppLayout><ClientDetail /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/contrats" element={
-          <PrivateRoute>
-            <AppLayout><Contrats /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/taches" element={
-          <PrivateRoute>
-            <AppLayout><Taches /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/rapports" element={
-          <PrivateRoute>
-            <AppLayout><Rapports /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/parametres" element={
-          <PrivateRoute>
-            <AppLayout><Parametres /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/morning-brief" element={
-          <PrivateRoute>
-            <AppLayout><MorningBrief /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/capitia" element={
-          <PrivateRoute>
-            <AppLayout><Capitia /></AppLayout>
-          </PrivateRoute>
-        } />
-        <Route path="/analytics" element={
-          <PrivateRoute>
-            <AppLayout><AnalyticsExecutive /></AppLayout>
-          </PrivateRoute>
-        } />
+        {/* Routes privées — AppLayout monte une seule fois, pages via Outlet */}
+        <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+          <Route path="/dashboard"     element={<Dashboard />} />
+          <Route path="/clients"       element={<Clients />} />
+          <Route path="/client/:id"    element={<ClientDetail />} />
+          <Route path="/contrats"      element={<Contrats />} />
+          <Route path="/taches"        element={<Taches />} />
+          <Route path="/rapports"      element={<Rapports />} />
+          <Route path="/parametres"    element={<Parametres />} />
+          <Route path="/morning-brief" element={<MorningBrief />} />
+          <Route path="/capitia"       element={<Capitia />} />
+          <Route path="/analytics"     element={<AnalyticsExecutive />} />
+        </Route>
 
         {/* 404 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

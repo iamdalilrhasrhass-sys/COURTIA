@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
-function getToken() { return localStorage.getItem('token') }
+import api from '../api'
 
 function Logo() {
   return (
@@ -41,14 +38,11 @@ function ArkDrawerPanel({ onClose }) {
     setSlowWarning(false)
     const tid = setTimeout(() => setSlowWarning(true), 28000)
     try {
-      const res = await axios.post(`${API_URL}/api/ark/chat`, {
+      const res = await api.post('/api/ark/chat', {
         message: text,
         clientData: null,
         conversationHistory: messages.slice(-10)
-      }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        timeout: 90000
-      })
+      }, { timeout: 90000 })
       const reply = res.data?.reply || res.data?.message || JSON.stringify(res.data)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (err) {
@@ -70,9 +64,10 @@ function ArkDrawerPanel({ onClose }) {
         position: 'fixed', top: 0, right: 0, bottom: 0, width: 420,
         background: '#0a0a0a', zIndex: 9999,
         display: 'flex', flexDirection: 'column',
+        fontFamily: 'Arial, sans-serif',
         animation: 'slideIn 0.25s ease'
       }}>
-        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}`}</style>
+        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}} @keyframes arkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
         {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -148,13 +143,16 @@ function ArkDrawerPanel({ onClose }) {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Tableau de bord' },
-  { path: '/clients', label: 'Clients' },
-  { path: '/contrats', label: 'Contrats' },
+  { path: '/dashboard',      label: 'Tableau de bord' },
+  { path: '/morning-brief',  label: 'Morning Brief' },
+  { path: '/clients',        label: 'Clients' },
+  { path: '/contrats',       label: 'Contrats' },
+  { path: '/analytics',      label: 'Analytics' },
   null, // séparateur
-  { path: '/rapports', label: 'Rapports' },
-  { path: '/taches', label: 'Tâches' },
-  { path: '/parametres', label: 'Paramètres' },
+  { path: '/capitia',        label: 'CAPITIA' },
+  { path: '/taches',         label: 'Tâches' },
+  { path: '/rapports',       label: 'Rapports' },
+  { path: '/parametres',     label: 'Paramètres' },
 ]
 
 export default function Sidebar() {
@@ -170,6 +168,7 @@ export default function Sidebar() {
   }, [])
 
   function logout() {
+    localStorage.removeItem('courtia_token')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     navigate('/login')
