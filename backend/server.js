@@ -1,6 +1,8 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const { subscriptionGuard } = require('./src/middleware/subscriptionGuard')
+const dunningWorker = require('./src/services/dunningWorker')
 const app = express()
 
 // Initialize database pool
@@ -8,6 +10,18 @@ const pool = require('./src/db')
 app.locals.pool = pool
 
 app.use(cors({ origin: ['https://courtia.vercel.app', 'http://localhost:5173'], credentials: true }))
+
+// ⚠️  ORDRE CRITIQUE : le webhook Stripe a besoin du body RAW (Buffer).
+//     express.raw() sur cette route AVANT app.use(express.json()).
+//     Si l'ordre est inversé, stripe.webhooks.constructEvent() rejette la signature.
+const billingRouter = require('./src/routes/billing')
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: 'application/json' }),
+  billingRouter.webhookHandler
+)
+
+// Toutes les autres routes utilisent le body JSON parsé
 app.use(express.json())
 
 // Headers de sécurité basiques
@@ -44,27 +58,46 @@ function arkRateLimit(req, res, next) {
   next()
 }
 
-const authRouter = require('./src/routes/auth')
-const clientsRouter = require('./src/routes/clients')
-const contratsRouter = require('./src/routes/contrats')
-const dashboardRouter = require('./src/routes/dashboard')
-const tachesRouter = require('./src/routes/taches')
-const arkRouter = require('./src/routes/ark')
+const authRouter       = require('./src/routes/auth')
+const clientsRouter    = require('./src/routes/clients')
+const contratsRouter   = require('./src/routes/contrats')
+const dashboardRouter  = require('./src/routes/dashboard')
+const tachesRouter     = require('./src/routes/taches')
+const arkRouter        = require('./src/routes/ark')
 const adminCostsRouter = require('./src/routes/adminCosts')
 const onboardingRouter = require('./src/routes/onboarding')
-const healthRouter = require('./src/routes/health')
-const statsRouter = require('./src/routes/stats')
+const healthRouter     = require('./src/routes/health')
+const statsRouter      = require('./src/routes/stats')
+const plansRouter      = require('./src/routes/plans')
+const portfolioRouter      = require('./src/routes/portfolio')
+const adminSuperAdminRouter = require('./src/routes/adminSuperAdmin')
+const financingRouter      = require('./src/routes/financing')
+const financingToolsRouter = require('./src/routes/financingTools')
+const impersonationContext  = require('./src/middleware/impersonationContext')
 
-app.use('/api/auth', authRouter)
-app.use('/api/clients', clientsRouter)
-app.use('/api/contrats', contratsRouter)
-app.use('/api/dashboard', dashboardRouter)
-app.use('/api/taches', tachesRouter)
-app.use('/api/ark', arkRateLimit, arkRouter)
-app.use('/api/admin', adminCostsRouter)
-app.use('/api/onboarding', onboardingRouter)
-app.use('/api/health', healthRouter)
-app.use('/api/stats', statsRouter)
+// Middleware d'impersonation — appliqué globalement après JSON parsing
+// Transparent si JWT normal, active le contexte si JWT d'impersonation
+app.use(impersonationContext)
+
+// Routes sans subscriptionGuard (auth, billing, plans, admin, health — toujours accessibles)
+app.use('/api/auth',    authRouter)
+app.use('/api/billing', billingRouter)   // checkout, portal, status — pas de guard (doit rester accessible même suspendu)
+app.use('/api/plans',   plansRouter)
+app.use('/api/health',  healthRouter)
+app.use('/api/admin',   adminCostsRouter)
+app.use('/api/admin',   adminSuperAdminRouter)  // Super Admin : users, impersonate, analytics, IOBSP
+
+// Routes métier — subscriptionGuard appliqué (bloque les comptes suspendus)
+app.use('/api/clients',    subscriptionGuard, clientsRouter)
+app.use('/api/contrats',   subscriptionGuard, contratsRouter)
+app.use('/api/dashboard',  subscriptionGuard, dashboardRouter)
+app.use('/api/taches',     subscriptionGuard, tachesRouter)
+app.use('/api/ark',        subscriptionGuard, arkRateLimit, arkRouter)
+app.use('/api/onboarding', subscriptionGuard, onboardingRouter)
+app.use('/api/stats',      subscriptionGuard, statsRouter)
+app.use('/api/portfolio',  subscriptionGuard, portfolioRouter)
+app.use('/api/financing',       subscriptionGuard, financingRouter)
+app.use('/api/financing/tools', subscriptionGuard, financingToolsRouter)
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'courtia-backend' }))
 
@@ -85,6 +118,46 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: 'Erreur serveur', details: err.message })
 })
 
+// Démarrer le dunning worker — cron horaire, suspension des comptes en grâce expirée
+dunningWorker.init()
+
+// ─── Cron Portefeuille Vivant — 03h00 Europe/Paris ───────────────────────────
+// Analyse nocturne de tous les courtiers actifs (non-suspendus).
+// Protection double-exécution : analyzePortfolio vérifie dernière analyse < 6h.
+const cron = require('node-cron')
+const { analyzePortfolio } = require('./src/services/portfolioAnalyzer')
+
+cron.schedule('0 3 * * *', async () => {
+  console.log('[portfolioCron] Lancement analyse nocturne portefeuilles...')
+  try {
+    // Récupérer tous les courtiers actifs (non suspendus, abonnés)
+    const usersRes = await pool.query(
+      `SELECT id FROM users
+       WHERE subscription_status IN ('active', 'trialing', 'grace_period')
+         AND subscription_plan   IN ('start', 'pro', 'elite')
+         AND role NOT IN ('super_admin')
+       ORDER BY id`
+    )
+    const users = usersRes.rows
+    console.log(`[portfolioCron] ${users.length} courtier(s) à analyser`)
+
+    let done = 0, skipped = 0, errors = 0
+    for (const user of users) {
+      try {
+        const result = await analyzePortfolio(user.id)
+        if (result === null) { skipped++; }
+        else                 { done++;    }
+      } catch (err) {
+        errors++
+        console.error(`[portfolioCron] Erreur user ${user.id}:`, err.message)
+      }
+    }
+    console.log(`[portfolioCron] Terminé — analysés: ${done}, sautés: ${skipped}, erreurs: ${errors}`)
+  } catch (err) {
+    console.error('[portfolioCron] Erreur critique:', err.message)
+  }
+}, { timezone: 'Europe/Paris' })
+
 const PORT = process.env.PORT || 10000
-console.log('⚡ COURTIA Backend — ARK Enabled with claude-3-haiku-20250305')
+console.log('⚡ COURTIA Backend — ARK Enabled with claude-haiku-4-5')
 app.listen(PORT, () => console.log('COURTIA backend port ' + PORT))
