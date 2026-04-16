@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const Anthropic = require('@anthropic-ai/sdk')
 const { verifyToken } = require('../middleware/auth')
+const { requireUnderLimit } = require('../middleware/planGuard')
+const { incrementUsage } = require('../services/planService')
 
 // Initialisation client Anthropic
 const anthropic = new Anthropic({
@@ -18,7 +20,7 @@ if (process.env.ANTHROPIC_API_KEY) {
  * POST /api/ark/chat
  * Chat avec ARK — utilisable depuis la fiche client ET le drawer global
  */
-router.post('/chat', verifyToken, async (req, res) => {
+router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req, res) => {
   try {
     // Accepter plusieurs formats de payload
     const message = req.body.message || req.body.userMessage || req.body.question || ''
@@ -161,8 +163,17 @@ INSTRUCTIONS :
       }
     }
 
-    // Répondre au frontend
+    // Répondre au frontend EN PREMIER — toujours avant incrementUsage
     res.json({ reply })
+
+    // Incrémenter APRÈS la réponse réussie (Anthropic a bien répondu)
+    // Si Anthropic avait échoué, on ne serait pas arrivé ici
+    try {
+      const userId = req.user.userId || req.user.id
+      await incrementUsage(userId, 'ark_messages')
+    } catch (err) {
+      console.error('[ARK] Erreur incrément usage (non bloquant):', err.message)
+    }
 
   } catch (err) {
     console.error('ARK ERREUR CRITIQUE:', err.message)
