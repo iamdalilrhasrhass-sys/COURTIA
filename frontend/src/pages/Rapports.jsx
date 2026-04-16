@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import Topbar from '../components/Topbar'
+import PremiumTooltip from '../components/ui/PremiumTooltip'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
-function getToken() { return localStorage.getItem('token') }
+function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 
 function fmtEur(v) {
   if (v === null || v === undefined || v === '' || isNaN(Number(v))) return '—'
@@ -17,6 +20,35 @@ function KPICard({ label, value, sub }) {
       <p style={{ fontSize: 26, fontWeight: 500, color: '#0a0a0a', margin: 0, letterSpacing: -0.5 }}>{value}</p>
       {sub && <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>{sub}</p>}
     </div>
+  )
+}
+
+function DaysBadge({ days }) {
+  const veryUrgent = days <= 7
+  const urgent = days <= 30
+  const soon = days <= 90
+
+  let bg, color
+  if (veryUrgent) { bg = '#fee2e2'; color = '#dc2626' }
+  else if (urgent) { bg = '#ffedd5'; color = '#ea580c' }
+  else { bg = '#fef9c3'; color = '#d97706' }
+
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+      {veryUrgent && (
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: color, flexShrink: 0,
+          animation: 'urgentPulse 1.5s ease infinite',
+        }} />
+      )}
+      <span style={{
+        padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+        background: bg, color,
+      }}>
+        J-{days}
+      </span>
+    </span>
   )
 }
 
@@ -64,7 +96,11 @@ export default function Rapports() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+    <div style={{ minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes urgentPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+      `}</style>
       <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
 
       <div style={{ padding: '24px 32px', maxWidth: 1100 }}>
@@ -153,16 +189,20 @@ export default function Rapports() {
                   </thead>
                   <tbody>
                     {top10.map((client, i) => (
-                      <tr key={client.id}
+                      <motion.tr
+                        key={client.id}
+                        whileHover={{ x: 2 }}
+                        transition={{ duration: 0.12 }}
                         onClick={() => navigate(`/client/${client.id}`)}
                         style={{ cursor: 'pointer', background: i % 2 === 0 ? 'white' : '#fafaf8' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#f0f8ff'}
-                        onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}>
+                        onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
+                        onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
+                      >
                         <td style={{ ...tdStyle, color: '#9ca3af', fontWeight: 700, textAlign: 'center' }}>{i + 1}</td>
                         <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{client.nom} {client.prenom}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', color: '#2563eb', fontWeight: 600 }}>{client.loyalty_score ?? '—'}/100</td>
                         <td style={{ ...tdStyle, textAlign: 'right', color: '#9ca3af' }}>{fmtEur(client.lifetime_value)}</td>
-                      </tr>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
@@ -172,14 +212,16 @@ export default function Rapports() {
 
           {/* Échéances urgentes */}
           <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>ÉCHÉANCES URGENTES <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af', letterSpacing: 0 }}>{'<'} 90 jours</span></h2>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>
+              ÉCHÉANCES URGENTES <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af', letterSpacing: 0 }}>{'<'} 90 jours</span>
+            </h2>
             {renewals.length === 0 ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '24px 0', color: '#16a34a', fontSize: 13 }}>
                 <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>✓</div>
                 Aucune échéance urgente
               </div>
             ) : (
-              <div style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'visible' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
@@ -191,20 +233,35 @@ export default function Rapports() {
                   <tbody>
                     {renewals.map((a, i) => {
                       const days = a.jours_restants ?? 999
-                      const urgent = days <= 30
-                      const bg = i % 2 === 0 ? 'white' : '#fafaf8'
+                      const clientId = a.client_id || a.id
+                      const tooltipContent = (
+                        <span>
+                          Échéance dans <strong>{days}j</strong><br />
+                          {a.type_contrat ? `Contrat : ${a.type_contrat}` : ''}{a.type_contrat && (a.nom || a.prenom) ? ' · ' : ''}
+                          {a.nom || a.prenom ? `${a.nom} ${a.prenom}` : ''}<br />
+                          <span style={{ color: '#9ca3af', fontSize: 10 }}>Cliquer pour ouvrir le dossier</span>
+                        </span>
+                      )
                       return (
-                        <tr key={i} style={{ background: bg }}>
-                          <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{a.nom} {a.prenom}</td>
-                          <td style={{ ...tdStyle, color: '#9ca3af' }}>{a.type_contrat || '—'}</td>
-                          <td style={{ ...tdStyle, textAlign: 'right' }}>
-                            <span style={{
-                              padding: '3px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                              background: urgent ? '#fee2e2' : '#fef9c3',
-                              color: urgent ? '#dc2626' : '#d97706'
-                            }}>J-{days}</span>
-                          </td>
-                        </tr>
+                        <PremiumTooltip key={i} content={tooltipContent} position="top">
+                          <motion.tr
+                            whileHover={{ x: 2 }}
+                            transition={{ duration: 0.12 }}
+                            onClick={() => {
+                              if (clientId) navigate(`/client/${clientId}`)
+                              else toast('Dossier client non disponible', { icon: 'ℹ️' })
+                            }}
+                            style={{ cursor: 'pointer', display: 'table-row' }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
+                            onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
+                          >
+                            <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{a.nom} {a.prenom}</td>
+                            <td style={{ ...tdStyle, color: '#9ca3af' }}>{a.type_contrat || '—'}</td>
+                            <td style={{ ...tdStyle, textAlign: 'right' }}>
+                              <DaysBadge days={days} />
+                            </td>
+                          </motion.tr>
+                        </PremiumTooltip>
                       )
                     })}
                   </tbody>
