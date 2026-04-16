@@ -8,6 +8,7 @@ import StatusBadge from '../components/StatusBadge'
 import PageTransition from '../components/ui/PageTransition'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
 import InteractiveBarChart from '../components/ui/InteractiveBarChart'
+import PremiumEmptyState from '../components/ui/PremiumEmptyState'
 
 // ─── Shimmer skeleton ──────────────────────────────────────────────────────────
 
@@ -502,18 +503,30 @@ export default function Dashboard() {
               >
                 {/* Bar chart */}
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid #f7f6f2' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: '#080808' }}>Revenus 6 mois</span>
                     <TrendingUp size={14} color="#9ca3af" />
                   </div>
+                  <p style={{ fontSize: 10, color: '#c4bfb8', margin: '0 0 12px' }}>
+                    Survolez un mois pour voir le détail · cliquez pour verrouiller
+                  </p>
                   {loading
                     ? <Skeleton h={90} />
-                    : <InteractiveBarChart
-                        data={chartData}
-                        height={90}
-                        barColor="#e8e6e0"
-                        activeBarColor="#2563eb"
-                      />
+                    : chartData.length === 0
+                      ? <PremiumEmptyState
+                          icon={TrendingUp}
+                          title="Aucun revenu à afficher"
+                          description="Les revenus apparaîtront ici dès que vos contrats seront renseignés."
+                          ctaLabel="Voir les contrats"
+                          onCta={() => window.location.assign('/contrats')}
+                          variant="default"
+                        />
+                      : <InteractiveBarChart
+                          data={chartData}
+                          height={90}
+                          barColor="#e8e6e0"
+                          activeBarColor="#2563eb"
+                        />
                   }
                 </div>
 

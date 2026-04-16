@@ -5,7 +5,7 @@ const defaultFormat = v =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
 
 /**
- * Bar chart interactif avec tooltip au hover.
+ * Bar chart interactif avec tooltip, sélection au clic et mini-card détail.
  * Props: { data, height, barColor, activeBarColor, formatValue, label }
  * data: Array<{ label: string, value: number }>
  */
@@ -18,6 +18,7 @@ export default function InteractiveBarChart({
   label,
 }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
+  const [selectedIdx, setSelectedIdx] = useState(null)
 
   if (!data?.length) {
     return (
@@ -33,6 +34,21 @@ export default function InteractiveBarChart({
   const avg = vals.reduce((a, b) => a + b, 0) / vals.length
   const avgPct = avg / max
 
+  function getDelta(i) {
+    const prev = i > 0 ? data[i - 1].value : null
+    return prev && prev > 0 ? ((data[i].value - prev) / prev) * 100 : null
+  }
+
+  const selDelta = selectedIdx !== null ? getDelta(selectedIdx) : null
+  const selPhrase = selDelta === null ? 'Période de référence.'
+    : selDelta > 0 ? 'Progression sur cette période.'
+    : selDelta < 0 ? 'Baisse à surveiller.'
+    : 'Période stable.'
+
+  function handleBarClick(i) {
+    setSelectedIdx(prev => prev === i ? null : i)
+  }
+
   return (
     <div style={{ width: '100%', fontFamily: 'Arial, sans-serif' }}>
       {label && (
@@ -41,8 +57,8 @@ export default function InteractiveBarChart({
         </p>
       )}
 
-      {/* Chart area */}
-      <div style={{ position: 'relative', width: '100%' }}>
+      {/* Chart area — overflow visible pour les tooltips */}
+      <div style={{ position: 'relative', width: '100%', overflow: 'visible' }}>
 
         {/* Average dashed line */}
         <div
@@ -79,14 +95,19 @@ export default function InteractiveBarChart({
           {data.map((d, i) => {
             const barH = Math.max(4, Math.round((d.value / max) * height))
             const isHovered = hoveredIdx === i
-            const prev = i > 0 ? data[i - 1].value : null
-            const delta = prev && prev > 0 ? ((d.value - prev) / prev) * 100 : null
-            const isLast = i === data.length - 1
+            const isSelected = selectedIdx === i
+            const delta = getDelta(i)
+
+            let barBg
+            if (isSelected) barBg = '#1e40af'
+            else if (isHovered) barBg = activeBarColor
+            else if (i === data.length - 1) barBg = '#1e293b'
+            else barBg = barColor
 
             return (
               <div
                 key={i}
-                style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end' }}
+                style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end', overflow: 'visible' }}
               >
                 {/* Tooltip */}
                 <AnimatePresence>
@@ -104,28 +125,26 @@ export default function InteractiveBarChart({
                         background: '#080808',
                         borderRadius: 8,
                         padding: '8px 12px',
-                        zIndex: 50,
+                        zIndex: 9999,
                         pointerEvents: 'none',
-                        minWidth: 90,
+                        minWidth: 110,
                         textAlign: 'center',
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.22)',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 3px', fontWeight: 600, letterSpacing: '0.03em' }}>
-                        {d.label}
-                      </p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: delta !== null ? '0 0 3px' : 0 }}>
+                      <p style={{ fontSize: 10, color: '#9ca3af', margin: '0 0 3px', fontWeight: 600 }}>{d.label}</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: delta !== null ? '0 0 3px' : '0 0 4px' }}>
                         {fmt(d.value)}
                       </p>
                       {delta !== null && (
-                        <p style={{
-                          fontSize: 11, fontWeight: 600, margin: 0,
-                          color: delta >= 0 ? '#4ade80' : '#f87171',
-                        }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, margin: '0 0 4px', color: delta >= 0 ? '#4ade80' : '#f87171' }}>
                           {delta >= 0 ? '+' : ''}{delta.toFixed(1)}%
                         </p>
                       )}
-                      {/* Arrow */}
+                      <p style={{ fontSize: 9, color: '#555', margin: 0, letterSpacing: 0.3 }}>
+                        Cliquer pour détailler
+                      </p>
                       <div style={{
                         position: 'absolute', bottom: -4, left: '50%', marginLeft: -5,
                         width: 0, height: 0,
@@ -147,17 +166,16 @@ export default function InteractiveBarChart({
                     width: '100%',
                     height: barH,
                     transformOrigin: '50% 100%',
-                    background: isHovered
-                      ? activeBarColor
-                      : isLast
-                        ? '#1e293b'
-                        : barColor,
-                    borderRadius: '4px 4px 0 0',
+                    background: barBg,
+                    borderRadius: isSelected ? '4px 4px 0 0' : '4px 4px 0 0',
                     transition: 'background 0.18s ease',
-                    cursor: 'default',
+                    cursor: 'pointer',
+                    outline: isSelected ? '2px solid #1e40af' : 'none',
+                    outlineOffset: 1,
                   }}
                   onHoverStart={() => setHoveredIdx(i)}
                   onHoverEnd={() => setHoveredIdx(null)}
+                  onClick={() => handleBarClick(i)}
                 />
               </div>
             )
@@ -171,9 +189,10 @@ export default function InteractiveBarChart({
               key={i}
               style={{
                 flex: 1, textAlign: 'center',
-                fontSize: 9, color: hoveredIdx === i ? '#2563eb' : '#9ca3af',
-                fontWeight: hoveredIdx === i ? 700 : 400,
-                transition: 'color 0.15s, font-weight 0.15s',
+                fontSize: 9,
+                color: selectedIdx === i ? '#1e40af' : hoveredIdx === i ? activeBarColor : '#9ca3af',
+                fontWeight: selectedIdx === i || hoveredIdx === i ? 700 : 400,
+                transition: 'color 0.15s',
               }}
             >
               {d.label}
@@ -181,6 +200,50 @@ export default function InteractiveBarChart({
           ))}
         </div>
       </div>
+
+      {/* Mini-card détail sélectionné */}
+      <AnimatePresence>
+        {selectedIdx !== null && data[selectedIdx] && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              marginTop: 12,
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              borderLeft: '3px solid #1e40af',
+              borderRadius: 10,
+              padding: '12px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>
+                {data[selectedIdx].label}
+              </p>
+              <p style={{ fontSize: 18, fontWeight: 800, color: '#1e3a8a', margin: 0 }}>
+                {fmt(data[selectedIdx].value)}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              {selDelta !== null && (
+                <p style={{ fontSize: 13, fontWeight: 700, margin: '0 0 2px', color: selDelta >= 0 ? '#16a34a' : '#dc2626' }}>
+                  {selDelta >= 0 ? '+' : ''}{selDelta.toFixed(1)}%
+                </p>
+              )}
+              <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>{selPhrase}</p>
+            </div>
+            <button
+              onClick={() => setSelectedIdx(null)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#93c5fd', fontSize: 14, padding: '0 0 0 12px', lineHeight: 1 }}
+            >✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
