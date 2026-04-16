@@ -74,6 +74,13 @@ const adminSuperAdminRouter = require('./src/routes/adminSuperAdmin')
 const financingRouter      = require('./src/routes/financing')
 const financingToolsRouter = require('./src/routes/financingTools')
 const impersonationContext  = require('./src/middleware/impersonationContext')
+const { router: tagsRouter, clientTagsRouter } = require('./src/routes/tags')
+const kanbanRouter         = require('./src/routes/kanban')
+const emailTemplatesRouter = require('./src/routes/emailTemplates')
+const automationsRouter    = require('./src/routes/automations')
+const documentsRouter      = require('./src/routes/documents')
+const ddaQuizRouter        = require('./src/routes/ddaQuiz')
+const analyticsRouter      = require('./src/routes/analytics')
 
 // Middleware d'impersonation — appliqué globalement après JSON parsing
 // Transparent si JWT normal, active le contexte si JWT d'impersonation
@@ -98,6 +105,14 @@ app.use('/api/stats',      subscriptionGuard, statsRouter)
 app.use('/api/portfolio',  subscriptionGuard, portfolioRouter)
 app.use('/api/financing',       subscriptionGuard, financingRouter)
 app.use('/api/financing/tools', subscriptionGuard, financingToolsRouter)
+app.use('/api/tags',            subscriptionGuard, tagsRouter)
+app.use('/api/clients',         subscriptionGuard, clientTagsRouter)
+app.use('/api/kanban',          subscriptionGuard, kanbanRouter)
+app.use('/api/email-templates', subscriptionGuard, emailTemplatesRouter)
+app.use('/api/automations',     subscriptionGuard, automationsRouter)
+app.use('/api/documents',       subscriptionGuard, documentsRouter)
+app.use('/api/dda',             subscriptionGuard, ddaQuizRouter)
+app.use('/api/analytics',       subscriptionGuard, analyticsRouter)
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'courtia-backend' }))
 
