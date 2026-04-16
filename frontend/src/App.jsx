@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 // Pages
 import LoginPage from './pages/LoginPage'
@@ -19,6 +19,7 @@ import AnalyticsExecutive from './pages/AnalyticsExecutive'
 import Sidebar from './components/Sidebar'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
+import CommandPalette from './components/ui/CommandPalette'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -56,9 +57,23 @@ function AppLayout() {
   const navigate = useNavigate()
   const fetchPlanInfo = usePlanStore(s => s.fetchPlanInfo)
   const [paywallError, setPaywallError] = useState(null)
+  const [cmdOpen, setCmdOpen] = useState(false)
 
   useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
   useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
+
+  // Global Cmd+K / Ctrl+K listener
+  const handleKeyDown = useCallback((e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault()
+      setCmdOpen(prev => !prev)
+    }
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
@@ -73,6 +88,7 @@ function AppLayout() {
         onClose={() => setPaywallError(null)}
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
     </div>
   )
 }
