@@ -6,6 +6,7 @@ import { useLocation } from 'react-router-dom'
 // Pages
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
+import MorningBrief from './pages/MorningBrief'
 import Clients from './pages/Clients'
 import ClientDetail from './pages/ClientDetail'
 import Contrats from './pages/Contrats'
@@ -23,17 +24,19 @@ function ScrollToTop() {
   return null
 }
 
-// PrivateRoute
+// PrivateRoute — supporte courtia_token (nouveau) et token (legacy)
 function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
   if (!token) return <Navigate to="/login" replace />
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     if (payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('courtia_token')
       localStorage.removeItem('token')
       return <Navigate to="/login" replace />
     }
   } catch {
+    localStorage.removeItem('courtia_token')
     localStorage.removeItem('token')
     return <Navigate to="/login" replace />
   }
@@ -97,6 +100,11 @@ export default function App() {
         <Route path="/parametres" element={
           <PrivateRoute>
             <AppLayout><Parametres /></AppLayout>
+          </PrivateRoute>
+        } />
+        <Route path="/morning-brief" element={
+          <PrivateRoute>
+            <AppLayout><MorningBrief /></AppLayout>
           </PrivateRoute>
         } />
 
