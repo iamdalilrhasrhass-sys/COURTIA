@@ -64,7 +64,7 @@ function AppLayout() {
 
   // Global Cmd+K / Ctrl+K listener
   const handleKeyDown = useCallback((e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
       e.preventDefault()
       setCmdOpen(prev => !prev)
     }
@@ -89,6 +89,28 @@ function AppLayout() {
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+
+      {/* Bouton de secours Cmd+K */}
+      <button
+        onClick={() => setCmdOpen(true)}
+        title="Ouvrir la palette (⌘K)"
+        style={{
+          position: 'fixed', bottom: 20, right: 20, zIndex: 200,
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '8px 14px',
+          background: '#080808', color: 'white',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 10, cursor: 'pointer',
+          fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
+        onMouseLeave={e => e.currentTarget.style.background = '#080808'}
+      >
+        <span style={{ fontSize: 13 }}>⌘K</span>
+        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Recherche</span>
+      </button>
     </div>
   )
 }
