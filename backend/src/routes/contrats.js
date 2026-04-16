@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db');
 const router = express.Router();
+const { requireUnderLimit } = require('../middleware/planGuard');
 
 // Middleware pour vérifier le token
 const verifyToken = (req, res, next) => {
@@ -73,7 +74,7 @@ router.get('/', verifyToken, async (req, res) => {
 /**
  * POST /api/contrats — Créer un contrat (quote)
  */
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, requireUnderLimit('contracts'), async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
