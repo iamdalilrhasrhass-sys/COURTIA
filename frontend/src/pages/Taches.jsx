@@ -84,6 +84,16 @@ export default function Taches() {
     } catch { toast.error('Erreur mise à jour') }
   }
 
+  async function syncAutoTasks() {
+    try {
+      const res = await fetch(`${API_URL}/api/taches/auto-generate`, { headers })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      toast.success(`${data.created} tâche${data.created !== 1 ? 's' : ''} auto générée${data.created !== 1 ? 's' : ''}`)
+      if (data.created > 0) fetchTasks()
+    } catch { toast.error('Synchronisation impossible') }
+  }
+
   function handleEdit(task) {
     setSelected(task)
     setForm({ titre: task.titre || '', description: task.description || '', client_id: task.client_id || '', echeance: task.echeance ? task.echeance.split('T')[0] : '', statut: task.statut || 'a_faire', priorite: task.priorite || 'normale' })
@@ -102,10 +112,16 @@ export default function Taches() {
   const labelStyle = { fontSize: 11, color: '#9ca3af', display: 'block', marginBottom: 5, fontWeight: 600, letterSpacing: 0.3 }
 
   const topbarAction = (
-    <button onClick={() => { resetForm(); setShowModal(true) }}
-      style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
-      + Créer tâche
-    </button>
+    <div style={{ display: 'flex', gap: 8 }}>
+      <button onClick={syncAutoTasks}
+        style={{ padding: '9px 14px', background: 'white', color: '#374151', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+        ↻ Synchroniser
+      </button>
+      <button onClick={() => { resetForm(); setShowModal(true) }}
+        style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+        + Créer tâche
+      </button>
+    </div>
   )
 
   return (
