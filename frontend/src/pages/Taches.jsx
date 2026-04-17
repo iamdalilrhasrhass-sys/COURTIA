@@ -86,7 +86,7 @@ export default function Taches() {
 
   async function syncAutoTasks() {
     try {
-      const res = await fetch(`${API_URL}/api/taches/auto-generate`, { headers })
+      const res = await fetch(`${API_URL}/api/taches/auto-generate`, { method: 'POST', headers })
       if (!res.ok) throw new Error()
       const data = await res.json()
       toast.success(`${data.created} tâche${data.created !== 1 ? 's' : ''} auto générée${data.created !== 1 ? 's' : ''}`)
