@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import Topbar from '../components/Topbar'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
-function getToken() { return localStorage.getItem('token') }
+function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 
 export default function Parametres() {
   const [profile, setProfile] = useState(null)

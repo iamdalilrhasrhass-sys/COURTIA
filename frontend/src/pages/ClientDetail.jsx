@@ -6,7 +6,7 @@ import StatusBadge from '../components/StatusBadge'
 import RiskScoreBadge from '../components/RiskScoreBadge'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
-function getToken() { return localStorage.getItem('token') }
+function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 function fmt(v) { if (v === null || v === undefined || v === '') return '—'; return String(v) }
 function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('fr-FR') } catch { return '—' } }
 function fmtEur(v) { if (!v && v !== 0) return '—'; return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)) }

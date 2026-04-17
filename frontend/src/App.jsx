@@ -9,6 +9,8 @@ import MorningBrief from './pages/MorningBrief'
 import Clients from './pages/Clients'
 import ClientDetail from './pages/ClientDetail'
 import Contrats from './pages/Contrats'
+import ClientNew from './pages/ClientNew'
+import ContratNew from './pages/ContratNew'
 import Taches from './pages/Taches'
 import Rapports from './pages/Rapports'
 import Parametres from './pages/Parametres'
@@ -130,8 +132,10 @@ export default function App() {
         <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
+          <Route path="/clients/new"   element={<ClientNew />} />
           <Route path="/client/:id"    element={<ClientDetail />} />
           <Route path="/contrats"      element={<Contrats />} />
+          <Route path="/contrats/new"  element={<ContratNew />} />
           <Route path="/taches"        element={<Taches />} />
           <Route path="/rapports"      element={<Rapports />} />
           <Route path="/parametres"    element={<Parametres />} />

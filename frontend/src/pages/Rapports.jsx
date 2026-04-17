@@ -173,8 +173,7 @@ export default function Rapports() {
             <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>TOP CLIENTS <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af', letterSpacing: 0 }}>par fidélité</span></h2>
             {top10.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: '#9ca3af', fontSize: 13 }}>
-                <p style={{ margin: '0 0 4px' }}>Données disponibles après déploiement</p>
-                <p style={{ margin: 0, fontSize: 11 }}>GET /api/stats/portfolio</p>
+                <p style={{ margin: 0 }}>Aucun client à afficher pour l'instant</p>
               </div>
             ) : (
               <div style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
