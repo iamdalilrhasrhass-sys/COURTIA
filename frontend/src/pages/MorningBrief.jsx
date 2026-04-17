@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sun, Zap, TrendingUp, RefreshCw, ChevronRight,
-  AlertCircle, CheckCircle2, Clock, BarChart2
+  AlertCircle, CheckCircle2, Clock, BarChart2, UserPlus
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 import PageTransition from '../components/ui/PageTransition'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
+import PremiumEmptyState from '../components/ui/PremiumEmptyState'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
@@ -410,9 +411,14 @@ export default function MorningBrief() {
             {briefLoading ? (
               <BriefSkeleton />
             ) : briefError ? (
-              <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12 }}>
-                <BlockError message={briefError} onRetry={fetchBrief} />
-              </div>
+              <PremiumEmptyState
+                icon={UserPlus}
+                title="ARK préparera vos priorités dès que votre portefeuille sera enrichi"
+                description="Ajoutez vos premiers clients et contrats pour que ARK génère votre brief quotidien."
+                ctaLabel="Ajouter un client"
+                onCta={() => navigate('/clients/new')}
+                variant="default"
+              />
             ) : actions.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}

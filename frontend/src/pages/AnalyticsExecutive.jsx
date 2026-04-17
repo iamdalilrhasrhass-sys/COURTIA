@@ -7,6 +7,7 @@ import LockedFeature from '../components/LockedFeature'
 import PageTransition from '../components/ui/PageTransition'
 import InteractiveBarChart from '../components/ui/InteractiveBarChart'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
+import PremiumEmptyState from '../components/ui/PremiumEmptyState'
 
 // ─── Shimmer skeleton ────────────────────────────────────────────────────────
 const shimmerKf = `
@@ -350,13 +351,15 @@ export default function AnalyticsExecutive() {
 
       {/* ── KPI error ── */}
       {errorKpis && !paywallOpen && (
-        <div style={{
-          background: '#fef2f2', border: '1px solid #fecaca',
-          borderRadius: 10, padding: '12px 16px', marginBottom: 20,
-          fontSize: 13, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <AlertTriangle size={15} />
-          {errorKpis}
+        <div style={{ marginBottom: 20 }}>
+          <PremiumEmptyState
+            icon={TrendingUp}
+            title="Vos analyses arrivent bientôt"
+            description="Enrichissez votre portefeuille avec des clients et contrats pour débloquer vos KPIs."
+            ctaLabel="Configurer mon espace"
+            onCta={() => window.location.href = '/parametres'}
+            variant="default"
+          />
         </div>
       )}
 

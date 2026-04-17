@@ -43,7 +43,7 @@ export default function Contrats() {
   async function fetchContrats() {
     try {
       setLoading(true); setError('')
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
       if (!token) { setError('Token manquant'); return }
       const res = await fetch(`${API_URL}/api/contrats`, { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)

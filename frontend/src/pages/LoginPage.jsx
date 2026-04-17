@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import toast from 'react-hot-toast'
@@ -18,13 +18,35 @@ function Logo({ size = 'md' }) {
   )
 }
 
+const SLOW_MESSAGES = [
+  { delay: 5000,  text: 'Première connexion du jour, le serveur démarre...' },
+  { delay: 15000, text: 'Encore quelques secondes...' },
+  { delay: 45000, text: 'Le serveur ne répond pas. Réessayez dans 1 minute.' },
+]
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, loading } = useAuthStore()
   const [email, setEmail] = useState('demo@courtia.fr')
   const [password, setPassword] = useState('Demo2026!')
   const [err, setErr] = useState('')
+  const [slowMsg, setSlowMsg] = useState('')
+  const timersRef = useRef([])
   const isRegister = window.location.pathname === '/register'
+
+  useEffect(() => {
+    if (loading) {
+      setSlowMsg('')
+      timersRef.current = SLOW_MESSAGES.map(({ delay, text }) =>
+        setTimeout(() => setSlowMsg(text), delay)
+      )
+    } else {
+      timersRef.current.forEach(clearTimeout)
+      timersRef.current = []
+      setSlowMsg('')
+    }
+    return () => { timersRef.current.forEach(clearTimeout) }
+  }, [loading])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -104,6 +126,11 @@ export default function LoginPage() {
             >
               {loading ? 'Connexion...' : (isRegister ? 'Créer mon compte' : 'Connexion')}
             </button>
+            {slowMsg && (
+              <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', margin: '8px 0 0', lineHeight: 1.4 }}>
+                {slowMsg}
+              </p>
+            )}
           </form>
         </div>
 
