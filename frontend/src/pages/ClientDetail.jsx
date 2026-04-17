@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import StatusBadge from '../components/StatusBadge'
 import RiskScoreBadge from '../components/RiskScoreBadge'
 import { computeScores } from '../lib/scoring'
+import { buildArkContext } from '../lib/ark/client'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
@@ -130,20 +131,7 @@ function ValeurCard({ valeur, nbActifs }) {
   )
 }
 
-// ─── PROMPT BUILDER ──────────────────────────────────────────────────────────
-
-function buildPrompt(scores, client, contrats, goal) {
-  const activeC = contrats.filter(c => (c.statut || c.status || '').toLowerCase() === 'actif')
-  const types = activeC.map(c => c.type_contrat).filter(Boolean).join(', ') || 'aucun'
-  return [
-    `Client: ${client.prenom} ${client.nom}, ${client.profession || 'NC'}, ${client.segment || 'particulier'}`,
-    `Scores: Risque ${scores.risque}/100, Fidélité ${scores.fidelite}/100, Opportunité ${scores.opportunite}/100, Rétention ${scores.retention}/100`,
-    `Contrats: ${activeC.length} actifs (${types}), ${scores.valeur > 0 ? scores.valeur + '€/an' : 'prime NC'}`,
-    `Signaux: ${scores.signaux.map(s => s.label).join(', ') || 'aucun'}`,
-    `Mission: ${goal}`,
-    `Format strict: résumé 2 lignes max · 3 points max · 3 actions max. Réponse courte, commerciale, actionnable.`
-  ].join('\n')
-}
+// buildPrompt → remplacé par buildArkContext (lib/ark/client.js)
 
 // ─── ARK DRAWER ──────────────────────────────────────────────────────────────
 
@@ -424,13 +412,13 @@ function CockpitScoring({ scores, client, contrats, onOpenArk }) {
 
   function handleArkBtn(goal) {
     const goalMap = {
-      analyser: 'Analyse ce profil : 2 lignes de synthèse, 3 points clés, 3 recommandations.',
-      appel: "Guide d'appel : accroche 1 phrase, 3 questions clés, 2 offres à proposer.",
-      ameliorer: '3 actions concrètes pour améliorer les scores faibles de ce client.',
-      message: 'Message de relance courtier, 80 mots max, ton direct et professionnel.',
+      analyser: 'Analyse ce profil en JSON : résumé 2 lignes, 3 points clés, 3 recommandations.',
+      appel: "Guide appel en JSON : accroche 1 phrase, 3 questions clés, 2 offres à proposer.",
+      ameliorer: '3 actions JSON pour améliorer les scores faibles.',
+      message: 'Message relance en JSON, 80 mots max.',
     }
-    const prompt = buildPrompt(scores, client, contrats, goalMap[goal])
-    onOpenArk(prompt)
+    const ctx = buildArkContext(client, scores, contrats)
+    onOpenArk(`${ctx}\nMission: ${goalMap[goal]}`)
   }
 
   const btnStyle = {

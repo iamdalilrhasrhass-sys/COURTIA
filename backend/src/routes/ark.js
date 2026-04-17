@@ -51,53 +51,23 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
         ? contratsActifs.map(c => `  • ${c.type_contrat || c.type} chez ${c.compagnie || 'N/A'} — prime ${c.prime_annuelle ? c.prime_annuelle + '€' : 'N/A'} — échéance ${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}`).join('\n')
         : '  Aucun contrat actif renseigné'
 
-      systemPrompt = `Tu es ARK, le conseiller IA senior de COURTIA, expert en assurance française.
-Tu analyses les portefeuilles clients pour les courtiers d'assurance ORIAS et fournis des recommandations stratégiques.
-Date du jour : ${today}
+      systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert assurance française. Date : ${today}
 
-PROFIL DU CLIENT ANALYSÉ :
-- Identité : ${clientData.civility ? clientData.civility + ' ' : ''}${clientData.prenom || ''} ${clientData.nom || ''} ${clientData.email ? '(' + clientData.email + ')' : ''}
-- Statut : ${clientData.statut || clientData.status || 'Non renseigné'}
-- Profession : ${clientData.profession || 'Non renseignée'}
-- Situation familiale : ${clientData.situation_familiale || 'Non renseignée'}
-- Zone géographique : ${clientData.zone_geographique || 'Non renseignée'}
-- Score de risque : ${clientData.score_risque || clientData.risk_score || 'N/A'}/100
-- Score de fidélité : ${clientData.loyalty_score || 'N/A'}/100
-- Valeur vie client : ${clientData.lifetime_value ? clientData.lifetime_value + '€' : 'N/A'}
-- Bonus-malus : ${clientData.bonus_malus || 'N/A'}
-- Ancienneté permis : ${clientData.annees_permis ? clientData.annees_permis + ' ans' : 'N/A'}
-- Sinistres (3 ans) : ${clientData.nb_sinistres_3ans !== null && clientData.nb_sinistres_3ans !== undefined ? clientData.nb_sinistres_3ans : 'N/A'}
-- Notes courtier : ${clientData.notes || 'Aucune note'}
+CLIENT : ${clientData.prenom || ''} ${clientData.nom || ''} | Statut : ${clientData.statut || clientData.status || 'NC'} | Profession : ${clientData.profession || 'NC'} | Zone : ${clientData.zone_geographique || 'NC'}
+CONTRATS ACTIFS : ${contratsStr}
 
-CONTRATS ACTIFS :
-${contratsStr}
+RÈGLE ABSOLUE : Si le message contient une instruction JSON, tu dois répondre UNIQUEMENT en JSON valide avec ce schéma exact et rien d'autre :
+{"resume":"string ≤200 chars","points":["string ≤100","string ≤100","string ≤100"],"actions":[{"label":"string","priorite":"haute|moyenne|basse","impact":"string"}]}
+Maximum 3 points, maximum 3 actions. Pas de markdown, pas de texte hors JSON.
 
-INSTRUCTIONS :
-- Réponds TOUJOURS en français, avec un ton professionnel et bienveillant
-- Sois orienté action : chaque réponse doit proposer des actions concrètes
-- Utilise toutes les données disponibles pour personnaliser ta réponse
-- Signale les opportunités de cross-sell ou de renouvellement si pertinent
-- Structure avec des tirets ou numéros pour la lisibilité
-- Longueur idéale : 150-300 mots`
+Si le message ne demande pas de JSON : réponds en français, ton expert, 120 mots max, orienté action.`
     } else {
-      systemPrompt = `Tu es ARK, le conseiller IA senior de COURTIA, expert en assurance française et droit des assurances.
-Tu aides les courtiers d'assurance ORIAS dans leur gestion quotidienne.
-Date du jour : ${today}
+      systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert assurance française. Date : ${today}
+Expertise : portefeuille, cross-sell, fidélisation, réglementation DDA/ORIAS/Loi Hamon.
 
-Tes domaines d'expertise :
-- Analyse de portefeuille et détection d'opportunités commerciales
-- Stratégies de renouvellement, cross-sell et fidélisation
-- Rédaction de communications personnalisées (emails, relances, propositions)
-- Réglementation française : DDA, RGPD, ORIAS, IDD, Loi Châtel, Loi Hamon
-- Calcul et interprétation des scores de risque
-- Produits d'assurance : Auto, Habitation, Mutuelle, RC Pro, Prévoyance, Décennale
-
-INSTRUCTIONS :
-- Réponds TOUJOURS en français, avec un ton expert et professionnel
-- Sois orienté action : propose des recommandations concrètes
-- Cite les textes réglementaires pertinents si la question porte sur la conformité
-- Structure avec des tirets ou numéros pour la lisibilité
-- Longueur idéale : 150-300 mots`
+RÈGLE ABSOLUE : Si le message contient une instruction JSON, réponds UNIQUEMENT en JSON valide :
+{"resume":"...","points":["...","...","..."],"actions":[{"label":"...","priorite":"haute|moyenne|basse","impact":"..."}]}
+Sinon : réponse française, 120 mots max, orientée action.`
     }
 
     // Construire l'historique pour l'API Anthropic
@@ -120,7 +90,7 @@ INSTRUCTIONS :
     // Appel API Anthropic avec le bon modèle
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 600,
       system: systemPrompt,
       messages: messages
     })
