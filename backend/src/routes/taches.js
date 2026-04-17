@@ -101,7 +101,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 /**
  * GET /api/taches/auto-generate — Générer les tâches automatiques manquantes
  */
-router.get('/auto-generate', verifyToken, async (req, res) => {
+router.post('/auto-generate', verifyToken, async (req, res) => {
   try {
     const { generateAutoTasks } = require('../jobs/autoTasks')
     const pool = req.app.locals.pool
@@ -109,7 +109,7 @@ router.get('/auto-generate', verifyToken, async (req, res) => {
     const result = await generateAutoTasks(pool, courtierId)
     res.json(result)
   } catch (err) {
-    console.error('GET /api/taches/auto-generate error:', err.message)
+    console.error('POST /api/taches/auto-generate error:', err.message)
     res.status(500).json({ error: err.message })
   }
 });
