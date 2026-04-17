@@ -357,7 +357,7 @@ export default function MorningBrief() {
     setBriefLoading(true)
     try {
       const [clientsRes, contratsRes, tachesRes] = await Promise.all([
-        api.get('/api/clients').catch(() => ({ data: [] })),
+        api.get('/api/clients?limit=1000').catch(() => ({ data: [] })),
         api.get('/api/contrats').catch(() => ({ data: [] })),
         api.get('/api/taches').catch(() => ({ data: [] })),
       ])

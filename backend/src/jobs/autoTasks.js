@@ -1,6 +1,6 @@
 /**
  * @file autoTasks.js — Générateur de tâches automatiques basé sur règles locales.
- * Aucun appel IA. Déclenchement manuel via GET /api/taches/auto-generate.
+ * Aucun appel IA. Déclenchement manuel via POST /api/taches/auto-generate.
  */
 
 const RULES = [
@@ -50,11 +50,12 @@ const CLIENT_RULES = [
   {
     key: 'reprendre_contact',
     check: (client, contrats, tachesClient) => {
-      if (!client.updated_at) return null
-      const daysSince = Math.floor((Date.now() - new Date(client.updated_at).getTime()) / 86400000)
+      const lastActivity = client.updated_at || client.created_at
+      if (!lastActivity) return null
+      const daysSince = Math.floor((Date.now() - new Date(lastActivity).getTime()) / 86400000)
       if (daysSince < 90) return null
       const statut = (client.statut || '').toLowerCase()
-      if (statut !== 'actif') return null
+      if (statut !== 'actif' && statut !== 'active') return null
       const exists = tachesClient.some(t =>
         t.statut !== 'terminee' &&
         t.titre?.toLowerCase().includes('contact') &&
@@ -63,7 +64,7 @@ const CLIENT_RULES = [
       if (exists) return null
       const echeance = new Date(Date.now() + 7 * 86400000).toISOString()
       return {
-        titre: `Reprendre contact — ${client.prenom || ''} ${client.nom || ''}`.trim(),
+        titre: `Reprendre contact — ${client.nom || ''} ${client.prenom || ''}`.trim(),
         description: `Aucune activité depuis ${daysSince} jours`,
         priorite: 'normale',
         echeance,
@@ -86,7 +87,7 @@ const CLIENT_RULES = [
       if (exists) return null
       const echeance = new Date(Date.now() + 14 * 86400000).toISOString()
       return {
-        titre: `Compléter dossier — ${client.prenom || ''} ${client.nom || ''}`.trim(),
+        titre: `Compléter dossier — ${client.nom || ''} ${client.prenom || ''}`.trim(),
         description: `Dossier à ${completude}% — données clés manquantes`,
         priorite: 'basse',
         echeance,
@@ -104,11 +105,29 @@ const CLIENT_RULES = [
 async function generateAutoTasks(pool, courtierId) {
   const created = []
 
-  // Récupérer clients, contrats, tâches existantes
   const [clientsRes, contratsRes, tachesRes] = await Promise.all([
-    pool.query('SELECT * FROM clients WHERE user_id = $1 OR courtier_id = $1', [courtierId]),
-    pool.query('SELECT * FROM quotes WHERE courtier_id = $1', [courtierId]),
-    pool.query('SELECT id, title as titre, status as statut, client_id FROM appointments WHERE user_id = $1', [courtierId]),
+    pool.query(`
+      SELECT
+        id, first_name as nom, last_name as prenom,
+        email, phone as telephone, address as adresse,
+        status as statut, bonus_malus, annees_permis,
+        nb_sinistres_3ans, zone_geographique, profession,
+        situation_familiale, type as segment,
+        created_at, updated_at
+      FROM clients
+    `),
+    pool.query(`
+      SELECT
+        id, client_id, status as statut,
+        quote_data->>'date_echeance' as date_echeance,
+        quote_data->>'type_contrat' as type_contrat
+      FROM quotes
+    `),
+    pool.query(
+      `SELECT id, title as titre, status as statut, client_id
+       FROM appointments WHERE user_id = $1`,
+      [courtierId]
+    ),
   ])
 
   const clients  = clientsRes.rows
@@ -121,8 +140,8 @@ async function generateAutoTasks(pool, courtierId) {
 
     // Règles par contrat
     for (const contrat of contratsClient) {
-      const statut = (contrat.statut || contrat.status || '').toLowerCase()
-      if (statut !== 'actif') continue
+      const statut = (contrat.statut || '').toLowerCase()
+      if (statut !== 'actif' && statut !== 'active') continue
       for (const rule of RULES) {
         const task = rule.check(client, contrat, tachesClient)
         if (!task) continue
