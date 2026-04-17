@@ -11,6 +11,7 @@ import PageTransition from '../components/ui/PageTransition'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 import PremiumEmptyState from '../components/ui/PremiumEmptyState'
+import { computeDailyPriorities } from '../lib/priorities'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
@@ -242,19 +243,105 @@ function BlockError({ message, onRetry }) {
 
 // ─── Page principale ────────────────────────────────────────────────────────────
 
+// ─── Carte de priorité ───────────────────────────────────────────────────────
+
+function PriorityCard({ priority, level, navigate }) {
+  const colorMap = {
+    critique:   { bg: '#fef2f2', border: '#fecaca', text: '#dc2626', dot: '#dc2626', badge: '#fee2e2' },
+    importante: { bg: '#fffbeb', border: '#fde68a', text: '#d97706', dot: '#f59e0b', badge: '#fef9c3' },
+    suggeree:   { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', dot: '#22c55e', badge: '#dcfce7' },
+  }
+  const c = colorMap[level]
+  const [arkLoading, setArkLoading] = useState(false)
+  const [arkResult, setArkResult] = useState(null)
+
+  async function handleExplainArk(e) {
+    e.stopPropagation()
+    if (arkLoading || arkResult) return
+    setArkLoading(true)
+    try {
+      const { askArk } = await import('../lib/ark/client')
+      const result = await askArk('analyserClient', { id: priority.clientId, nom: priority.clientNom }, null, [])
+      setArkResult(result)
+    } catch {
+      toast.error('ARK indisponible')
+    } finally {
+      setArkLoading(false)
+    }
+  }
+
+  return (
+    <div
+      style={{ background: c.bg, border: `0.5px solid ${c.border}`, borderRadius: 12, padding: '14px 18px', cursor: 'pointer' }}
+      onClick={() => navigate(priority.cta.target)}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: c.dot, marginTop: 5, flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a', margin: '0 0 2px' }}>{priority.clientNom}</p>
+          <p style={{ fontSize: 13, color: '#374151', margin: '0 0 4px' }}>{priority.titre}</p>
+          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{priority.sousTitre}</p>
+          <div style={{ display: 'flex', gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={e => { e.stopPropagation(); navigate(priority.cta.target) }}
+              style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 6, fontFamily: 'Arial, sans-serif' }}
+            >
+              {priority.cta.label}
+            </button>
+            <button
+              onClick={handleExplainArk}
+              disabled={arkLoading}
+              style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: 'none', color: c.text, border: `1px solid ${c.border}`, borderRadius: 6, fontFamily: 'Arial, sans-serif', opacity: arkLoading ? 0.6 : 1 }}
+            >
+              {arkLoading ? '…' : 'Expliquer avec ARK'}
+            </button>
+          </div>
+          {arkResult && (
+            <div style={{ marginTop: 10, background: 'white', borderRadius: 8, padding: '10px 12px', border: '0.5px solid #e8e6e0' }}>
+              <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.6 }}>{arkResult.resume}</p>
+              {arkResult.actions.length > 0 && (
+                <ul style={{ margin: '6px 0 0', paddingLeft: 14 }}>
+                  {arkResult.actions.slice(0, 2).map((a, i) => (
+                    <li key={i} style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>{a.label}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        <ChevronRight size={14} color="#d1d5db" style={{ marginTop: 4, flexShrink: 0 }} />
+      </div>
+    </div>
+  )
+}
+
+function PrioritySection({ label, items, level, navigate, color }) {
+  if (items.length === 0) return null
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: 0.6 }}>{label}</span>
+        <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '1px 7px', borderRadius: 20 }}>{items.length}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {items.map((p, i) => <PriorityCard key={p.id || i} priority={p} level={level} navigate={navigate} />)}
+      </div>
+    </div>
+  )
+}
+
 export default function MorningBrief() {
   const navigate = useNavigate()
   const [firstName, setFirstName] = useState('Courtier')
-  const [brief, setBrief] = useState(null)
+  const [priorities, setPriorities] = useState(null)
   const [briefLoading, setBriefLoading] = useState(true)
-  const [briefError, setBriefError] = useState(null)
   const [score, setScore] = useState(null)
   const [scoreLoading, setScoreLoading] = useState(true)
   const [scoreError, setScoreError] = useState(null)
   const [regenerating, setRegenerating] = useState(false)
   const [currentPlan, setCurrentPlan] = useState(null)
 
-  // Fetch firstName + plan depuis /api/auth/me
   useEffect(() => {
     api.get('/api/auth/me')
       .then(res => {
@@ -262,23 +349,24 @@ export default function MorningBrief() {
         if (res.data?.plan) setCurrentPlan(res.data.plan)
       })
       .catch(() => {
-        // fallback silencieux : tenter plans/info
-        api.get('/api/plans/info')
-          .then(r => {
-            if (r.data?.plan) setCurrentPlan(r.data.plan)
-          })
-          .catch(() => {})
+        api.get('/api/plans/info').then(r => { if (r.data?.plan) setCurrentPlan(r.data.plan) }).catch(() => {})
       })
   }, [])
 
-  const fetchBrief = useCallback(async () => {
+  const fetchPriorities = useCallback(async () => {
     setBriefLoading(true)
-    setBriefError(null)
     try {
-      const res = await api.get('/api/portfolio/morning-brief')
-      setBrief(res.data?.data || res.data)
-    } catch (err) {
-      setBriefError(err.response?.data?.message || 'Données indisponibles')
+      const [clientsRes, contratsRes, tachesRes] = await Promise.all([
+        api.get('/api/clients').catch(() => ({ data: [] })),
+        api.get('/api/contrats').catch(() => ({ data: [] })),
+        api.get('/api/taches').catch(() => ({ data: [] })),
+      ])
+      const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
+      const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
+      const taches   = Array.isArray(tachesRes.data) ? tachesRes.data : (tachesRes.data?.data || [])
+      setPriorities(computeDailyPriorities(clients, contrats, taches))
+    } catch {
+      setPriorities({ critiques: [], importantes: [], suggerees: [] })
     } finally {
       setBriefLoading(false)
     }
@@ -297,27 +385,17 @@ export default function MorningBrief() {
     }
   }, [])
 
-  useEffect(() => {
-    fetchBrief()
-    fetchScore()
-  }, [fetchBrief, fetchScore])
+  useEffect(() => { fetchPriorities(); fetchScore() }, [fetchPriorities, fetchScore])
 
   const handleRegenerate = async () => {
     if (regenerating) return
     setRegenerating(true)
-    try {
-      await api.post('/api/portfolio/regenerate')
-      await Promise.all([fetchBrief(), fetchScore()])
-    } catch {
-      toast.error('Actualisation impossible, réessayez.', { duration: 3000 })
-    } finally {
-      setRegenerating(false)
-    }
+    try { await fetchPriorities(); await fetchScore() }
+    catch { toast.error('Actualisation impossible', { duration: 3000 }) }
+    finally { setRegenerating(false) }
   }
 
-  const actions = brief?.actions || brief?.morning_brief?.actions || []
-  const lockedCount = brief?.locked_count || null
-  const totalCountDisplay = brief?.total_count || actions.length
+  const totalPriorities = priorities ? (priorities.critiques.length + priorities.importantes.length + priorities.suggerees.length) : 0
 
   return (
     <PageTransition>
@@ -397,82 +475,50 @@ export default function MorningBrief() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
               <Zap size={16} color="#0a0a0a" />
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#0a0a0a' }}>Actions du jour</span>
-              {!briefLoading && !briefError && totalCountDisplay > 0 && (
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: '#9ca3af',
-                  background: '#f0ede8', padding: '2px 8px', borderRadius: 20
-                }}>
-                  {totalCountDisplay}
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#0a0a0a' }}>Priorités du jour</span>
+              {!briefLoading && totalPriorities > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', background: '#f0ede8', padding: '2px 8px', borderRadius: 20 }}>
+                  {totalPriorities}
                 </span>
               )}
             </div>
 
             {briefLoading ? (
               <BriefSkeleton />
-            ) : briefError ? (
-              <PremiumEmptyState
-                icon={UserPlus}
-                title="ARK préparera vos priorités dès que votre portefeuille sera enrichi"
-                description="Ajoutez vos premiers clients et contrats pour que ARK génère votre brief quotidien."
-                ctaLabel="Ajouter un client"
-                onCta={() => navigate('/clients/new')}
-                variant="default"
-              />
-            ) : actions.length === 0 ? (
+            ) : totalPriorities === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
-                style={{
-                  background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                  border: '0.5px solid #bbf7d0',
-                  borderRadius: 16, padding: '36px 24px', textAlign: 'center'
-                }}
+                style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '0.5px solid #bbf7d0', borderRadius: 16, padding: '36px 24px', textAlign: 'center' }}
               >
-                <motion.div
-                  animate={{ scale: [1, 1.08, 1] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ display: 'inline-flex', marginBottom: 14 }}
-                >
+                <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }} style={{ display: 'inline-flex', marginBottom: 14 }}>
                   <CheckCircle2 size={36} color="#22c55e" />
                 </motion.div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: '#14532d', margin: '0 0 6px' }}>
-                  Tout est à jour !
-                </p>
-                <p style={{ fontSize: 13, color: '#15803d', margin: 0 }}>
-                  Aucune action urgente pour aujourd'hui. Profitez de votre journée.
-                </p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: '#14532d', margin: '0 0 6px' }}>Tout est sous contrôle aujourd'hui.</p>
+                <p style={{ fontSize: 13, color: '#15803d', margin: '0 0 14px' }}>Profitez-en pour prospecter.</p>
+                <button
+                  onClick={() => navigate('/clients/new')}
+                  style={{ padding: '8px 16px', background: '#15803d', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Arial, sans-serif' }}
+                >
+                  + Nouveau client
+                </button>
               </motion.div>
             ) : (
-              <AnimatePresence>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {actions.map((action, i) => (
-                    <ActionCard key={action.id || i} action={action} index={i} />
-                  ))}
-                </div>
-              </AnimatePresence>
+              <>
+                <PrioritySection label="Critiques" items={priorities.critiques} level="critique" navigate={navigate} color="#dc2626" />
+                <PrioritySection label="Importantes" items={priorities.importantes} level="importante" navigate={navigate} color="#d97706" />
+                <PrioritySection label="Suggérées" items={priorities.suggerees} level="suggeree" navigate={navigate} color="#22c55e" />
+              </>
             )}
 
-            {/* Bandeau plan Start : actions bloquées */}
-            {!briefLoading && !briefError && parseInt(lockedCount, 10) > 0 && (
+            {/* Bandeau plan (conservé pour compatibilité) */}
+            {false && (
               <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                style={{
-                  marginTop: 12,
-                  background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-                  border: '0.5px solid #bfdbfe',
-                  borderRadius: 12,
-                  padding: '14px 18px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}
+                style={{ marginTop: 12, background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', border: '0.5px solid #bfdbfe', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
               >
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#1d4ed8', margin: '0 0 2px' }}>
-                    +{lockedCount} actions masquées
+                    Actions masquées
                   </p>
                   <p style={{ fontSize: 12, color: '#3b82f6', margin: 0 }}>
                     Passez à Pro pour accéder à toutes vos actions
