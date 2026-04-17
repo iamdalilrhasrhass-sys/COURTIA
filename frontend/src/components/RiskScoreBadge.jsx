@@ -8,14 +8,12 @@ export default function RiskScoreBadge({ score }) {
   }
   const s = Number(score)
   let bg, color, label
-  if (s <= 30) {
+  if (s >= 70) {
     bg = '#fee2e2'; color = '#dc2626'; label = 'Risque élevé'
-  } else if (s <= 60) {
+  } else if (s >= 40) {
     bg = '#fed7aa'; color = '#c2410c'; label = 'Risque modéré'
-  } else if (s <= 80) {
-    bg = '#dbeafe'; color = '#1d4ed8'; label = 'Risque faible'
   } else {
-    bg = '#dcfce7'; color = '#166534'; label = 'Excellent'
+    bg = '#dcfce7'; color = '#166534'; label = 'Risque faible'
   }
   return (
     <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color, whiteSpace: 'nowrap' }}>

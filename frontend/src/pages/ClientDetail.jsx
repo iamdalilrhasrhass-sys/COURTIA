@@ -71,10 +71,10 @@ function computeScores(client, contrats) {
   fidelite = Math.min(100, Math.max(0, Math.round(fidelite)))
 
   // ── OPPORTUNITÉ (0-100) ──
+  const proKeywords = ['médecin', 'dentiste', 'avocat', 'notaire', 'architecte', 'chef', 'directeur', 'gérant', 'pharmacien', 'ingénieur']
   let opportunite = 25
   if (nbActifs === 1) opportunite += 20
   else if (nbActifs === 0) opportunite += 10
-  const proKeywords = ['médecin', 'dentiste', 'avocat', 'notaire', 'architecte', 'chef', 'directeur', 'gérant', 'pharmacien', 'ingénieur']
   if (proKeywords.some(kw => profession.includes(kw))) opportunite += 18
   if (['professionnel', 'tpe', 'pme', 'entreprise'].includes(segment)) opportunite += 15
   if (['marié', 'pacsé'].includes(situation)) opportunite += 10
@@ -155,16 +155,24 @@ function computeScores(client, contrats) {
   }
 
   // ── RAISONS ──
-  const raisons = []
-  if (sins > 0) raisons.push(`${sins} sinistre(s) sur 3 ans`)
-  if (bm > 1.2) raisons.push(`Bonus-malus de ${bm}`)
   const ancAns = Math.round(ancienneteAns)
-  if (ancAns > 0) raisons.push(`Client depuis ${ancAns} an(s)`)
-  if (nbActifs > 0) raisons.push(`${nbActifs} contrat(s) actif(s)`)
-  else raisons.push('Aucun contrat actif')
-  if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 90) raisons.push(`Prochaine échéance dans ${prochaineEcheanceDays} jours`)
-  if (completude < 80) raisons.push(`Dossier complété à ${completude}%`)
-  if (opportunite > 70 && nbActifs === 1) raisons.push('Un seul contrat — potentiel cross-sell')
+  const raisons = []
+  if (sins > 1) raisons.push(`${sins} sinistres sur 3 ans — profil instable`)
+  else if (sins === 1) raisons.push('1 sinistre sur 3 ans')
+  if (bm > 1.5) raisons.push(`Bonus-malus dégradé (${bm}) — majoration de prime`)
+  else if (bm > 1.2) raisons.push(`Bonus-malus à surveiller (${bm})`)
+  if (ancienneteAns >= 5) raisons.push(`Client fidèle depuis ${ancAns} ans`)
+  else if (ancAns > 0) raisons.push(`Client depuis ${ancAns} an(s)`)
+  if (nbActifs > 2) raisons.push(`${nbActifs} contrats actifs — portefeuille multi-équipé`)
+  else if (nbActifs === 1) raisons.push('1 seul contrat — potentiel multi-équipement non exploité')
+  else if (nbActifs === 0) raisons.push('Aucun contrat actif — risque de départ')
+  if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 30) raisons.push(`Échéance dans ${prochaineEcheanceDays} jours — à traiter en priorité`)
+  else if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 90) raisons.push(`Prochaine échéance dans ${prochaineEcheanceDays} jours`)
+  if (completude < 60) raisons.push(`Dossier incomplet (${completude}%) — manque de données clés`)
+  else if (completude < 80) raisons.push(`Dossier à ${completude}% — enrichissement possible`)
+  if (zone === 'urbain') raisons.push('Zone urbaine — facteur de risque aggravant')
+  if (proKeywords.some(kw => profession.includes(kw))) raisons.push(`Profession à fort potentiel (${client.profession})`)
+  if (['marié', 'pacsé'].includes(situation)) raisons.push('En couple — opportunité prévoyance / habitation')
 
   return {
     risque, fidelite, opportunite, retention, completude, valeur,
@@ -299,10 +307,11 @@ function buildPrompt(scores, client, contrats, goal) {
   const types = activeC.map(c => c.type_contrat).filter(Boolean).join(', ') || 'aucun'
   return [
     `Client: ${client.prenom} ${client.nom}, ${client.profession || 'NC'}, ${client.segment || 'particulier'}`,
-    `Scores: Risque ${scores.risque}/100, Fidélité ${scores.fidelite}/100, Opportunité ${scores.opportunite}/100, Rétention ${scores.retention}/100, Complétude ${scores.completude}%`,
-    `Contrats actifs: ${activeC.length} (${types}), Prime totale: ${scores.valeur}€/an`,
+    `Scores: Risque ${scores.risque}/100, Fidélité ${scores.fidelite}/100, Opportunité ${scores.opportunite}/100, Rétention ${scores.retention}/100`,
+    `Contrats: ${activeC.length} actifs (${types}), ${scores.valeur > 0 ? scores.valeur + '€/an' : 'prime NC'}`,
     `Signaux: ${scores.signaux.map(s => s.label).join(', ') || 'aucun'}`,
-    `Objectif: ${goal}`
+    `Mission: ${goal}`,
+    `Format strict: résumé 2 lignes max · 3 points max · 3 actions max. Réponse courte, commerciale, actionnable.`
   ].join('\n')
 }
 
@@ -365,25 +374,25 @@ function ArkDrawer({ client, scores, contrats, onClose, initialPrompt }) {
   const QUICK = scores ? [
     {
       label: 'Analyser les risques',
-      prompt: `Analyse le profil de risque de ce client. Scores: Risque ${scores.risque}/100 (${riskLabel}), Fidélité ${scores.fidelite}/100, Sinistres: ${sins}, BM: ${bm}. Signaux: ${signaux.map(s => s.label).join(', ')}. Points de vigilance ?`
+      prompt: `Risque ${scores.risque}/100 (${riskLabel}), BM: ${bm}, sinistres: ${sins}. Signaux: ${signaux.map(s => s.label).join(', ') || 'aucun'}. 3 points de vigilance max. Réponse courte.`
     },
     {
       label: 'Opportunités cross-sell',
-      prompt: `Quelles opportunités de cross-sell pour ce client ? Opportunité: ${scores.opportunite}/100. Contrats actifs: ${nbActifs} (${types}). Profession: ${client.profession || 'NC'}.`
+      prompt: `Opportunité ${scores.opportunite}/100. Contrats: ${nbActifs} (${types}). Profession: ${client.profession || 'NC'}. 3 opportunités cross-sell concrètes. Réponse courte.`
     },
     {
       label: "Préparer l'appel",
-      prompt: `Prépare un guide d'appel pour ce client. Priorité: ${priorite}. Rétention: ${scores.retention}/100. Prochaine échéance: ${echeanceInfo}. Actions recommandées ?`
+      prompt: `Rétention ${scores.retention}/100, priorité ${priorite}, échéance ${echeanceInfo}. Guide appel : accroche + 3 questions + 2 offres. Format court.`
     },
     {
       label: 'Message de relance',
-      prompt: `Rédige un message de relance professionnel. Client: ${client.nom} ${client.prenom}, ${client.profession || 'NC'}. Priorité: ${priorite}. Ton: professionnel et direct. 150 mots max.`
+      prompt: `Rédige un message de relance pour ${client.nom} ${client.prenom}. Priorité ${priorite}. 80 mots max, ton courtier direct.`
     },
   ] : [
-    { label: 'Analyser les risques', prompt: 'Analyse en détail le profil de risque de ce client. Points de vigilance ?' },
-    { label: 'Opportunités cross-sell', prompt: 'Quelles sont les meilleures opportunités de cross-sell pour ce client ?' },
-    { label: 'Email de relance', prompt: 'Rédige un email de relance professionnel pour ce client.' },
-    { label: 'Risque résiliation', prompt: 'Évalue le risque de résiliation de ce client sur 10 et propose des actions.' },
+    { label: 'Analyser les risques', prompt: 'Risques principaux de ce client en 3 points. Réponse courte.' },
+    { label: 'Opportunités cross-sell', prompt: '3 opportunités cross-sell pour ce client. Réponse courte.' },
+    { label: 'Message de relance', prompt: 'Message de relance, 80 mots max, ton professionnel direct.' },
+    { label: 'Risque résiliation', prompt: 'Risque résiliation sur 10 + 2 actions concrètes.' },
   ]
 
   return (
@@ -585,10 +594,10 @@ function CockpitScoring({ scores, client, contrats, onOpenArk }) {
 
   function handleArkBtn(goal) {
     const goalMap = {
-      analyser: 'Donne une analyse complète du profil. Synthèse, risques, opportunités, recommandations.',
-      appel: "Prépare un guide d'appel : objectif, accroche, questions clés, offres à présenter, conclusion.",
-      ameliorer: 'Comment améliorer chaque score ? Plan d\'action concret pour passer à 80+.',
-      message: 'Rédige un message de relance professionnel, 100 mots max, ton courtier-client.',
+      analyser: 'Analyse ce profil : 2 lignes de synthèse, 3 points clés, 3 recommandations.',
+      appel: "Guide d'appel : accroche 1 phrase, 3 questions clés, 2 offres à proposer.",
+      ameliorer: '3 actions concrètes pour améliorer les scores faibles de ce client.',
+      message: 'Message de relance courtier, 80 mots max, ton direct et professionnel.',
     }
     const prompt = buildPrompt(scores, client, contrats, goalMap[goal])
     onOpenArk(prompt)
@@ -840,8 +849,8 @@ export default function ClientDetail() {
             <h1 style={{ fontSize: 17, fontWeight: 600, color: '#0a0a0a', margin: 0 }}>{fmt(client.nom)} {fmt(client.prenom)}</h1>
             <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center' }}>
               <StatusBadge status={client.statut} />
-              <RiskScoreBadge score={client.score_risque} />
-              <Stars score={client.loyalty_score} />
+              <RiskScoreBadge score={scores?.risque} />
+              <Stars score={scores?.fidelite} />
             </div>
           </div>
         </div>
@@ -909,10 +918,10 @@ export default function ClientDetail() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <ScoreBar
                 label="Score de risque"
-                value={client.score_risque}
-                color={(client.score_risque || 0) <= 30 ? '#dc2626' : (client.score_risque || 0) <= 60 ? '#f59e0b' : '#16a34a'}
+                value={scores?.risque}
+                color={(scores?.risque || 0) >= 70 ? '#dc2626' : (scores?.risque || 0) >= 40 ? '#f59e0b' : '#16a34a'}
               />
-              <ScoreBar label="Score de fidélité" value={client.loyalty_score} color="#2563eb" />
+              <ScoreBar label="Score de fidélité" value={scores?.fidelite} color="#2563eb" />
             </div>
             {client.lifetime_value && (
               <div style={{ marginTop: 14, padding: '10px 14px', background: '#f7f6f2', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
