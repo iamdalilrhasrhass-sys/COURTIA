@@ -11,37 +11,310 @@ function fmt(v) { if (v === null || v === undefined || v === '') return '—'; r
 function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('fr-FR') } catch { return '—' } }
 function fmtEur(v) { if (!v && v !== 0) return '—'; return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)) }
 
-function Stars({ score }) {
-  const n = Math.round((Number(score) || 0) / 20)
-  return (
-    <span style={{ fontSize: 14, letterSpacing: 1 }}>
-      {[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= n ? '#f59e0b' : '#e5e7eb' }}>★</span>)}
-    </span>
-  )
+// ─── SCORING ENGINE ─────────────────────────────────────────────────────────
+
+function computeScores(client, contrats) {
+  const sins = Number(client.nb_sinistres_3ans) || 0
+  const bm = Number(client.bonus_malus) || 1
+  const annees = Number(client.annees_permis) || 0
+  const zone = (client.zone_geographique || '').toLowerCase()
+  const statut = (client.statut || '').toLowerCase()
+  const segment = (client.segment || '').toLowerCase()
+  const profession = (client.profession || '').toLowerCase()
+  const situation = (client.situation_familiale || '').toLowerCase()
+
+  const activeContrats = contrats.filter(c => (c.statut || c.status || '').toLowerCase() === 'actif')
+  const nbActifs = activeContrats.length
+  const primeTotal = activeContrats.reduce((sum, c) => sum + (Number(c.prime_annuelle) || 0), 0)
+
+  // Ancienneté
+  const createdAt = client.created_at ? new Date(client.created_at) : null
+  const nowMs = Date.now()
+  const ancienneteMs = createdAt ? nowMs - createdAt.getTime() : 0
+  const ancienneteAns = ancienneteMs / (365.25 * 24 * 3600 * 1000)
+
+  // Prochaine échéance (jours)
+  let prochaineEcheanceDays = null
+  contrats.forEach(c => {
+    if (!c.date_echeance) return
+    const d = Math.ceil((new Date(c.date_echeance) - new Date()) / 86400000)
+    if (d > 0 && (prochaineEcheanceDays === null || d < prochaineEcheanceDays)) {
+      prochaineEcheanceDays = d
+    }
+  })
+
+  // ── RISQUE (0-100, élevé = dangereux) ──
+  let risque = 20
+  risque += Math.min(45, sins * 18)
+  if (bm > 2.5) risque += 30
+  else if (bm > 1.5) risque += 20
+  else if (bm > 1.1) risque += 10
+  if (zone === 'urbain') risque += 12
+  else if (zone === 'périurbain') risque += 6
+  if (annees < 3 && annees > 0) risque += 15
+  else if (annees < 5 && annees >= 3) risque += 8
+  if (nbActifs === 0) risque += 10
+  risque = Math.min(100, Math.max(0, Math.round(risque)))
+
+  // ── FIDÉLITÉ (0-100, élevé = bon) ──
+  let fidelite = 20
+  if (ancienneteAns > 5) fidelite += 30
+  else if (ancienneteAns > 3) fidelite += 20
+  else if (ancienneteAns > 1) fidelite += 12
+  else if (ancienneteAns > 0.5) fidelite += 6
+  if (nbActifs > 2) fidelite += 20
+  else if (nbActifs > 1) fidelite += 12
+  else if (nbActifs === 1) fidelite += 6
+  if (statut === 'actif') fidelite += 15
+  if (sins === 0) fidelite += 15
+  if (statut === 'résilié') fidelite = Math.max(0, fidelite - 30)
+  fidelite = Math.min(100, Math.max(0, Math.round(fidelite)))
+
+  // ── OPPORTUNITÉ (0-100) ──
+  let opportunite = 25
+  if (nbActifs === 1) opportunite += 20
+  else if (nbActifs === 0) opportunite += 10
+  const proKeywords = ['médecin', 'dentiste', 'avocat', 'notaire', 'architecte', 'chef', 'directeur', 'gérant', 'pharmacien', 'ingénieur']
+  if (proKeywords.some(kw => profession.includes(kw))) opportunite += 18
+  if (['professionnel', 'tpe', 'pme', 'entreprise'].includes(segment)) opportunite += 15
+  if (['marié', 'pacsé'].includes(situation)) opportunite += 10
+  if (statut === 'actif') opportunite += 8
+  if (primeTotal > 2000) opportunite += 10
+  else if (primeTotal > 1000) opportunite += 5
+  opportunite = Math.min(100, Math.max(0, Math.round(opportunite)))
+
+  // ── RÉTENTION (0-100) ──
+  let retention = 40
+  if (statut === 'résilié' || statut === 'perdu') {
+    retention = 0
+  } else {
+    if (ancienneteAns > 3) retention += 20
+    else if (ancienneteAns > 1) retention += 10
+    if (nbActifs > 2) retention += 15
+    else if (nbActifs > 1) retention += 8
+    if (sins > 2) retention -= 20
+    else if (sins > 1) retention -= 10
+    if (bm > 2) retention -= 15
+    if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 30) retention -= 20
+    else if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 60) retention -= 10
+    if (statut === 'actif') retention += 8
+  }
+  retention = Math.min(100, Math.max(0, Math.round(retention)))
+
+  // ── COMPLÉTUDE (0-100) ──
+  const champsCles = ['nom', 'prenom', 'email', 'telephone', 'adresse', 'profession', 'situation_familiale', 'bonus_malus', 'annees_permis', 'nb_sinistres_3ans', 'zone_geographique', 'segment']
+  const filled = champsCles.filter(k => client[k] !== null && client[k] !== undefined && String(client[k]).trim() !== '').length
+  const completude = Math.round(filled / champsCles.length * 100)
+
+  // ── VALEUR (€) ──
+  let valeur = 0
+  if (primeTotal > 0) valeur = primeTotal
+  else if (client.lifetime_value) valeur = Number(client.lifetime_value) || 0
+
+  // ── PRIORITÉ GLOBALE ──
+  let priorite = 'faible'
+  if (
+    (retention < 45 && valeur > 500) ||
+    (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 30) ||
+    (opportunite > 75 && nbActifs <= 1)
+  ) {
+    priorite = 'haute'
+  } else if (
+    retention < 60 ||
+    opportunite > 65 ||
+    (sins > 1 && nbActifs > 0)
+  ) {
+    priorite = 'moyenne'
+  }
+
+  // ── SIGNAUX ──
+  const signaux = []
+  if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 30) {
+    signaux.push({ label: `Échéance J-${prochaineEcheanceDays}`, color: '#dc2626', bg: '#fef2f2' })
+  }
+  if (completude < 70) {
+    signaux.push({ label: 'Dossier incomplet', color: '#d97706', bg: '#fffbeb' })
+  }
+  if (retention < 45 && nbActifs > 0) {
+    signaux.push({ label: 'À relancer', color: '#dc2626', bg: '#fef2f2' })
+  }
+  if (sins > 1) {
+    signaux.push({ label: 'Historique instable', color: '#92400e', bg: '#fef3c7' })
+  }
+  if (risque > 70) {
+    signaux.push({ label: 'Profil à risque', color: '#dc2626', bg: '#fef2f2' })
+  }
+  if (opportunite > 75) {
+    signaux.push({ label: 'Potentiel élevé', color: '#16a34a', bg: '#dcfce7' })
+  }
+  if (nbActifs === 1) {
+    signaux.push({ label: 'Multi-équipement possible', color: '#2563eb', bg: '#eff6ff' })
+  }
+  if (fidelite > 75) {
+    signaux.push({ label: 'Client fidèle', color: '#16a34a', bg: '#dcfce7' })
+  }
+
+  // ── RAISONS ──
+  const raisons = []
+  if (sins > 0) raisons.push(`${sins} sinistre(s) sur 3 ans`)
+  if (bm > 1.2) raisons.push(`Bonus-malus de ${bm}`)
+  const ancAns = Math.round(ancienneteAns)
+  if (ancAns > 0) raisons.push(`Client depuis ${ancAns} an(s)`)
+  if (nbActifs > 0) raisons.push(`${nbActifs} contrat(s) actif(s)`)
+  else raisons.push('Aucun contrat actif')
+  if (prochaineEcheanceDays !== null && prochaineEcheanceDays <= 90) raisons.push(`Prochaine échéance dans ${prochaineEcheanceDays} jours`)
+  if (completude < 80) raisons.push(`Dossier complété à ${completude}%`)
+  if (opportunite > 70 && nbActifs === 1) raisons.push('Un seul contrat — potentiel cross-sell')
+
+  return {
+    risque, fidelite, opportunite, retention, completude, valeur,
+    priorite, signaux, raisons,
+    // helpers exposés
+    nbActifs, primeTotal, prochaineEcheanceDays, sins, bm, ancienneteAns
+  }
 }
 
-function ScoreBar({ value, max = 100, color = '#2563eb', label }) {
-  const pct = Math.min(100, Math.round((Number(value) || 0) / max * 100))
+// ─── SCORE CARD ──────────────────────────────────────────────────────────────
+
+function getScoreColor(score, inverse) {
+  if (inverse) {
+    if (score >= 80) return '#dc2626'
+    if (score >= 60) return '#d97706'
+    if (score >= 40) return '#2563eb'
+    return '#16a34a'
+  } else {
+    if (score >= 80) return '#16a34a'
+    if (score >= 60) return '#2563eb'
+    if (score >= 40) return '#d97706'
+    return '#dc2626'
+  }
+}
+
+function getScoreLabel(score, type) {
+  const labels = {
+    risque:      ['Faible', 'Modéré', 'Élevé', 'Critique'],
+    fidelite:    ['Faible', 'Fragile', 'Correcte', 'Forte'],
+    opportunite: ['Faible', 'Modérée', 'Bonne', 'Forte'],
+    retention:   ['Faible', 'Fragile', 'Correcte', 'Forte'],
+    completude:  ['Incomplète', 'Partielle', 'Bonne', 'Excellente'],
+  }
+  const set = labels[type] || ['Faible', 'Modéré', 'Bon', 'Excellent']
+  if (score >= 80) return set[3]
+  if (score >= 60) return set[2]
+  if (score >= 40) return set[1]
+  return set[0]
+}
+
+function getScoreBg(score, inverse) {
+  const c = getScoreColor(score, inverse)
+  const map = {
+    '#dc2626': '#fef2f2',
+    '#d97706': '#fffbeb',
+    '#2563eb': '#eff6ff',
+    '#16a34a': '#dcfce7',
+  }
+  return map[c] || '#f3f4f6'
+}
+
+function ScoreCard({ label, score, inverse = false, type, description }) {
+  const color = getScoreColor(score, inverse)
+  const lbl = type ? getScoreLabel(score, type) : description || ''
+  const bg = getScoreBg(score, inverse)
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 11, color: '#0a0a0a', fontWeight: 600 }}>{value || 0}/{max}</span>
+    <div style={{
+      background: 'white',
+      border: '1px solid #e8e6e0',
+      borderRadius: 14,
+      padding: '18px 16px',
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 6,
+      transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
+    >
+      <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</span>
+      <div>
+        <span style={{ fontSize: 36, fontWeight: 700, color, lineHeight: 1 }}>{score}</span>
+        <span style={{ fontSize: 13, color: '#9ca3af' }}>/100</span>
       </div>
-      <div style={{ height: 5, background: '#f7f6f2', borderRadius: 3 }}>
-        <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
+      {/* Barre */}
+      <div style={{ width: '100%', height: 4, background: '#f3f4f6', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          width: score + '%',
+          background: color,
+          borderRadius: 2,
+          transition: 'width 0.6s ease',
+        }} />
       </div>
+      {lbl && (
+        <span style={{
+          fontSize: 11, fontWeight: 700,
+          background: bg, color,
+          borderRadius: 20, padding: '3px 10px',
+          marginTop: 2,
+        }}>{lbl}</span>
+      )}
     </div>
   )
 }
 
-// ARK Drawer
-function ArkDrawer({ client, onClose }) {
+// Carte spéciale Valeur
+function ValeurCard({ valeur, nbActifs }) {
+  return (
+    <div style={{
+      background: 'white',
+      border: '1px solid #e8e6e0',
+      borderRadius: 14,
+      padding: '18px 16px',
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 6,
+      transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
+    >
+      <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8 }}>Valeur</span>
+      <span style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', lineHeight: 1 }}>{fmtEur(valeur)}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', borderRadius: 20, padding: '3px 10px', marginTop: 2 }}>
+        {nbActifs} contrat{nbActifs !== 1 ? 's' : ''} actif{nbActifs !== 1 ? 's' : ''}
+      </span>
+      <span style={{ fontSize: 10, color: '#d1d5db', letterSpacing: 0.4 }}>annuelle</span>
+    </div>
+  )
+}
+
+// ─── PROMPT BUILDER ──────────────────────────────────────────────────────────
+
+function buildPrompt(scores, client, contrats, goal) {
+  const activeC = contrats.filter(c => (c.statut || c.status || '').toLowerCase() === 'actif')
+  const types = activeC.map(c => c.type_contrat).filter(Boolean).join(', ') || 'aucun'
+  return [
+    `Client: ${client.prenom} ${client.nom}, ${client.profession || 'NC'}, ${client.segment || 'particulier'}`,
+    `Scores: Risque ${scores.risque}/100, Fidélité ${scores.fidelite}/100, Opportunité ${scores.opportunite}/100, Rétention ${scores.retention}/100, Complétude ${scores.completude}%`,
+    `Contrats actifs: ${activeC.length} (${types}), Prime totale: ${scores.valeur}€/an`,
+    `Signaux: ${scores.signaux.map(s => s.label).join(', ') || 'aucun'}`,
+    `Objectif: ${goal}`
+  ].join('\n')
+}
+
+// ─── ARK DRAWER ──────────────────────────────────────────────────────────────
+
+function ArkDrawer({ client, scores, contrats, onClose, initialPrompt }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [slowWarning, setSlowWarning] = useState(false)
   const endRef = useRef(null)
+  const didSendInitial = useRef(false)
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
 
@@ -57,6 +330,12 @@ function ArkDrawer({ client, onClose }) {
       }, { headers: { Authorization: `Bearer ${getToken()}` }, timeout: 90000 })
       const reply = res.data?.reply || res.data?.message || JSON.stringify(res.data)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      // Cache cockpit
+      if (client?.id) {
+        try {
+          localStorage.setItem(`ark_cockpit_${client.id}`, JSON.stringify({ ts: Date.now(), summary: reply.substring(0, 200) }))
+        } catch {}
+      }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: err.code === 'ECONNABORTED' ? 'ARK se réveille... réessayez.' : 'ARK temporairement indisponible.' }])
     } finally {
@@ -64,7 +343,43 @@ function ArkDrawer({ client, onClose }) {
     }
   }
 
-  const QUICK = [
+  useEffect(() => {
+    if (initialPrompt && !didSendInitial.current) {
+      didSendInitial.current = true
+      send(initialPrompt)
+    }
+  }, [])
+
+  const sins = scores?.sins ?? (Number(client.nb_sinistres_3ans) || 0)
+  const bm = scores?.bm ?? (Number(client.bonus_malus) || 1)
+  const nbActifs = scores?.nbActifs ?? 0
+  const priorite = scores?.priorite ?? 'faible'
+  const signaux = scores?.signaux ?? []
+  const riskLabel = scores ? getScoreLabel(scores.risque, 'risque') : ''
+  const activeC = contrats ? contrats.filter(c => (c.statut || c.status || '').toLowerCase() === 'actif') : []
+  const types = activeC.map(c => c.type_contrat).filter(Boolean).join(', ') || 'aucun'
+  const echeanceInfo = scores?.prochaineEcheanceDays !== null && scores?.prochaineEcheanceDays !== undefined
+    ? `dans ${scores.prochaineEcheanceDays} jours`
+    : 'non renseignée'
+
+  const QUICK = scores ? [
+    {
+      label: 'Analyser les risques',
+      prompt: `Analyse le profil de risque de ce client. Scores: Risque ${scores.risque}/100 (${riskLabel}), Fidélité ${scores.fidelite}/100, Sinistres: ${sins}, BM: ${bm}. Signaux: ${signaux.map(s => s.label).join(', ')}. Points de vigilance ?`
+    },
+    {
+      label: 'Opportunités cross-sell',
+      prompt: `Quelles opportunités de cross-sell pour ce client ? Opportunité: ${scores.opportunite}/100. Contrats actifs: ${nbActifs} (${types}). Profession: ${client.profession || 'NC'}.`
+    },
+    {
+      label: "Préparer l'appel",
+      prompt: `Prépare un guide d'appel pour ce client. Priorité: ${priorite}. Rétention: ${scores.retention}/100. Prochaine échéance: ${echeanceInfo}. Actions recommandées ?`
+    },
+    {
+      label: 'Message de relance',
+      prompt: `Rédige un message de relance professionnel. Client: ${client.nom} ${client.prenom}, ${client.profession || 'NC'}. Priorité: ${priorite}. Ton: professionnel et direct. 150 mots max.`
+    },
+  ] : [
     { label: 'Analyser les risques', prompt: 'Analyse en détail le profil de risque de ce client. Points de vigilance ?' },
     { label: 'Opportunités cross-sell', prompt: 'Quelles sont les meilleures opportunités de cross-sell pour ce client ?' },
     { label: 'Email de relance', prompt: 'Rédige un email de relance professionnel pour ce client.' },
@@ -79,7 +394,13 @@ function ArkDrawer({ client, onClose }) {
         background: '#0a0a0a', zIndex: 9999, display: 'flex', flexDirection: 'column',
         animation: 'slideIn 0.25s ease'
       }}>
-        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}`}</style>
+        <style>{`
+          @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+          @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+          @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+          @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.6}}
+          @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%) 0}}
+        `}</style>
 
         <div style={{ padding: '18px 24px', borderBottom: '0.5px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -118,7 +439,7 @@ function ArkDrawer({ client, onClose }) {
           {loading && (
             <div style={{ padding: '10px 14px', background: '#1a1a1a', borderRadius: 10, alignSelf: 'flex-start', border: '0.5px solid #222' }}>
               <div style={{ display: 'flex', gap: 5 }}>
-                {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#2563eb', animation: `dotBounce 1.2s ease ${i*0.2}s infinite` }} />)}
+                {[0, 1, 2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#2563eb', animation: `dotBounce 1.2s ease ${i * 0.2}s infinite` }} />)}
               </div>
               {slowWarning && <p style={{ color: '#555', fontSize: 11, margin: '5px 0 0' }}>Serveur en démarrage...</p>}
             </div>
@@ -139,7 +460,8 @@ function ArkDrawer({ client, onClose }) {
   )
 }
 
-// Edit Modal
+// ─── EDIT MODAL ──────────────────────────────────────────────────────────────
+
 function EditModal({ client, onClose, onSaved }) {
   const [form, setForm] = useState({ ...client })
   const [saving, setSaving] = useState(false)
@@ -205,6 +527,225 @@ function EditModal({ client, onClose, onSaved }) {
   )
 }
 
+// ─── HELPERS UI ──────────────────────────────────────────────────────────────
+
+function Stars({ score }) {
+  const n = Math.round((Number(score) || 0) / 20)
+  return (
+    <span style={{ fontSize: 14, letterSpacing: 1 }}>
+      {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ color: i <= n ? '#f59e0b' : '#e5e7eb' }}>★</span>)}
+    </span>
+  )
+}
+
+function ScoreBar({ value, max = 100, color = '#2563eb', label }) {
+  const pct = Math.min(100, Math.round((Number(value) || 0) / max * 100))
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 11, color: '#0a0a0a', fontWeight: 600 }}>{value || 0}/{max}</span>
+      </div>
+      <div style={{ height: 5, background: '#f7f6f2', borderRadius: 3 }}>
+        <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
+      </div>
+    </div>
+  )
+}
+
+function timeAgoFr(ts) {
+  const diff = Date.now() - ts
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor(diff / 60000)
+  if (h >= 1) return `il y a ${h}h`
+  if (m >= 1) return `il y a ${m}min`
+  return "à l'instant"
+}
+
+// ─── COCKPIT COMPONENT ───────────────────────────────────────────────────────
+
+function CockpitScoring({ scores, client, contrats, onOpenArk }) {
+  const [showRaisons, setShowRaisons] = useState(false)
+  const [arkCache, setArkCache] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`ark_cockpit_${client.id}`) || 'null') } catch { return null }
+  })
+
+  const cacheValid = arkCache && (Date.now() - arkCache.ts) < 4 * 3600 * 1000
+
+  const riskLabel = getScoreLabel(scores.risque, 'risque')
+  const fideliteLabel = getScoreLabel(scores.fidelite, 'fidelite')
+
+  const staticSummary = [
+    `Profil ${scores.priorite}`,
+    `Risque ${riskLabel.toLowerCase()}`,
+    `Fidélité ${fideliteLabel.toLowerCase()}`,
+    `${scores.nbActifs} contrat${scores.nbActifs !== 1 ? 's' : ''}`,
+    scores.valeur > 0 ? `${fmtEur(scores.valeur)}/an` : null,
+  ].filter(Boolean).join(' · ')
+
+  function handleArkBtn(goal) {
+    const goalMap = {
+      analyser: 'Donne une analyse complète du profil. Synthèse, risques, opportunités, recommandations.',
+      appel: "Prépare un guide d'appel : objectif, accroche, questions clés, offres à présenter, conclusion.",
+      ameliorer: 'Comment améliorer chaque score ? Plan d\'action concret pour passer à 80+.',
+      message: 'Rédige un message de relance professionnel, 100 mots max, ton courtier-client.',
+    }
+    const prompt = buildPrompt(scores, client, contrats, goalMap[goal])
+    onOpenArk(prompt)
+  }
+
+  const btnStyle = {
+    background: 'white',
+    border: '1px solid #bfdbfe',
+    borderRadius: 9,
+    padding: '9px 14px',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'Arial, sans-serif',
+    color: '#1e40af',
+    textAlign: 'left',
+    transition: 'background 0.15s ease',
+  }
+
+  return (
+    <div style={{ padding: '0 32px 0 32px', marginBottom: 16 }}>
+
+      {/* A — Priority Banner (haute uniquement) */}
+      {scores.priorite === 'haute' && (
+        <div style={{
+          background: 'linear-gradient(135deg, #fff1f2, #fef2f2)',
+          border: '1px solid #fecaca',
+          borderRadius: 10,
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          marginBottom: 14,
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', flexShrink: 0, animation: 'pulseDot 1.5s ease infinite' }} />
+          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: 13 }}>Priorité haute</span>
+          <span style={{ color: '#6b7280', fontSize: 12 }}>·</span>
+          <span style={{ color: '#374151', fontSize: 12, flex: 1 }}>{scores.raisons.slice(0, 3).join(' · ')}</span>
+        </div>
+      )}
+
+      {/* B — Row scorecards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 14 }}>
+        <ScoreCard label="Risque" score={scores.risque} inverse={true} type="risque" />
+        <ScoreCard label="Fidélité" score={scores.fidelite} inverse={false} type="fidelite" />
+        <ScoreCard label="Opportunité" score={scores.opportunite} inverse={false} type="opportunite" />
+        <ScoreCard label="Rétention" score={scores.retention} inverse={false} type="retention" />
+        <ScoreCard label="Complétude" score={scores.completude} inverse={false} type="completude" />
+        <ValeurCard valeur={scores.valeur} nbActifs={scores.nbActifs} />
+      </div>
+
+      {/* C — Signaux */}
+      {scores.signaux.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, marginRight: 10 }}>SIGNAUX</span>
+          <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
+            {scores.signaux.map((s, i) => (
+              <span key={i} style={{
+                fontSize: 11, fontWeight: 700,
+                background: s.bg, color: s.color,
+                borderRadius: 20, padding: '3px 10px',
+                border: `1px solid ${s.color}22`,
+              }}>{s.label}</span>
+            ))}
+          </span>
+        </div>
+      )}
+
+      {/* D — Pourquoi ces notes */}
+      <div style={{ marginBottom: 14 }}>
+        <button
+          onClick={() => setShowRaisons(r => !r)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer', fontSize: 12,
+            color: '#6b7280', fontFamily: 'Arial, sans-serif', padding: 0, fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}
+        >
+          <span style={{ transition: 'transform 0.2s', display: 'inline-block', transform: showRaisons ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+          Pourquoi ces notes ?
+        </button>
+        {showRaisons && (
+          <div style={{
+            marginTop: 8,
+            background: '#fafaf8',
+            borderRadius: 10,
+            padding: '12px 16px',
+            border: '0.5px solid #e8e6e0',
+            animation: 'fadeIn 0.15s ease',
+          }}>
+            <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            {scores.raisons.map((r, i) => (
+              <p key={i} style={{ margin: '0 0 6px', fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+                • {r}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* E — Cockpit ARK */}
+      <div style={{
+        background: 'linear-gradient(135deg, #f8faff, #eff6ff)',
+        border: '1px solid #bfdbfe',
+        borderRadius: 14,
+        padding: '20px 24px',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulseDot 1.5s ease infinite' }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: '#1e3a8a' }}>ARK Intelligence</span>
+          <span style={{
+            fontSize: 10, fontWeight: 700, background: '#dbeafe', color: '#2563eb',
+            borderRadius: 20, padding: '2px 8px', letterSpacing: 0.4,
+          }}>IA • Sur demande</span>
+        </div>
+
+        {/* Résumé statique */}
+        <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 14px', lineHeight: 1.6 }}>
+          {staticSummary}
+        </p>
+
+        {/* Cache ARK */}
+        {cacheValid && (
+          <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.6)', borderRadius: 8, border: '0.5px solid #bfdbfe' }}>
+            <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>Dernière analyse ARK : {timeAgoFr(arkCache.ts)}</span>
+            <p style={{ fontSize: 11, color: '#9ca3af', margin: '4px 0 0', lineHeight: 1.5, fontStyle: 'italic' }}>"{arkCache.summary}..."</p>
+          </div>
+        )}
+
+        {/* Boutons 2x2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {[
+            { label: 'Analyser ce client', goal: 'analyser' },
+            { label: 'Préparer mon appel', goal: 'appel' },
+            { label: 'Comment améliorer ?', goal: 'ameliorer' },
+            { label: 'Générer un message', goal: 'message' },
+          ].map(b => (
+            <button
+              key={b.goal}
+              onClick={() => handleArkBtn(b.goal)}
+              style={btnStyle}
+              onMouseEnter={e => e.currentTarget.style.background = '#eff6ff'}
+              onMouseLeave={e => e.currentTarget.style.background = 'white'}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── PAGE PRINCIPALE ─────────────────────────────────────────────────────────
+
 export default function ClientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -214,6 +755,7 @@ export default function ClientDetail() {
   const [error, setError] = useState(null)
   const [showEdit, setShowEdit] = useState(false)
   const [showArk, setShowArk] = useState(false)
+  const [arkInitialPrompt, setArkInitialPrompt] = useState(null)
   const [noteText, setNoteText] = useState('')
   const [showNote, setShowNote] = useState(false)
 
@@ -253,6 +795,11 @@ export default function ClientDetail() {
     } catch { toast.error('Erreur ajout note') }
   }
 
+  function openArk(prompt) {
+    setArkInitialPrompt(prompt || null)
+    setShowArk(true)
+  }
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', background: '#f7f6f2' }}>
       <div style={{ textAlign: 'center' }}>
@@ -271,10 +818,16 @@ export default function ClientDetail() {
 
   if (!client) return null
 
+  const scores = !loading ? computeScores(client, contrats) : null
   const card = { background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: 24 }
 
   return (
     <div style={{ background: '#f7f6f2', minHeight: '100vh' }}>
+      <style>{`
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.6}}
+      `}</style>
 
       {/* Topbar */}
       <div style={{ background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
@@ -298,7 +851,19 @@ export default function ClientDetail() {
         </button>
       </div>
 
-      <div style={{ padding: '24px 32px', maxWidth: 1100 }}>
+      {/* ── COCKPIT SCORING (après topbar, avant identité) ── */}
+      {scores !== null && (
+        <div style={{ paddingTop: 24 }}>
+          <CockpitScoring
+            scores={scores}
+            client={client}
+            contrats={contrats}
+            onOpenArk={openArk}
+          />
+        </div>
+      )}
+
+      <div style={{ padding: '0 32px 24px', maxWidth: 1100 }}>
 
         {/* Row 1: Identité + Profil assurance */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -427,7 +992,7 @@ export default function ClientDetail() {
       </div>
 
       {/* Bouton ARK fixe */}
-      <button onClick={() => setShowArk(true)} style={{
+      <button onClick={() => openArk(null)} style={{
         position: 'fixed', bottom: 28, right: 28, padding: '13px 20px',
         background: '#2563eb', color: 'white', border: 'none', borderRadius: 12,
         cursor: 'pointer', fontSize: 13, fontWeight: 600, zIndex: 998,
@@ -439,7 +1004,15 @@ export default function ClientDetail() {
       </button>
 
       {showEdit && <EditModal client={client} onClose={() => setShowEdit(false)} onSaved={loadClient} />}
-      {showArk && <ArkDrawer client={client} onClose={() => setShowArk(false)} />}
+      {showArk && (
+        <ArkDrawer
+          client={client}
+          scores={scores}
+          contrats={contrats}
+          onClose={() => { setShowArk(false); setArkInitialPrompt(null) }}
+          initialPrompt={arkInitialPrompt}
+        />
+      )}
     </div>
   )
 }
