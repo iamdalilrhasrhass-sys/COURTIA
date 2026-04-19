@@ -3,7 +3,7 @@ import { useAuthStore } from './authStore'
 
 const API_URL = 'https://courtia.onrender.com'
 
-export const useClientStore = create((set) => ({
+export const useClientStore = create((set, get) => ({
   clients: [],
   selectedClient: null,
   loading: false,
@@ -15,6 +15,7 @@ export const useClientStore = create((set) => ({
       const res = await fetch(`${API_URL}/api/clients`, {
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       set({ clients: data.clients || [], loading: false })
     } catch (err) {
@@ -22,16 +23,41 @@ export const useClientStore = create((set) => ({
     }
   },
 
+  fetchClientDetail: async (id) => {
+    set({ loading: true, error: null })
+    try {
+      const token = useAuthStore.getState().token
+      const headers = { Authorization: `Bearer ${token}` }
+
+      const [clientRes, contractsRes] = await Promise.all([
+        fetch(`${API_URL}/api/clients/${id}`, { headers }),
+        fetch(`${API_URL}/api/clients/${id}/contracts`, { headers }),
+      ])
+
+      if (!clientRes.ok) throw new Error(`Client HTTP ${clientRes.status}`)
+
+      const client = await clientRes.json()
+      const contractsData = contractsRes.ok ? await contractsRes.json() : { contracts: [] }
+
+      const enriched = { ...client, contracts: contractsData.contracts || [] }
+      set({ selectedClient: enriched, loading: false })
+      return enriched
+    } catch (err) {
+      set({ error: err.message, loading: false })
+      throw err
+    }
+  },
+
+  setSelectedClient: (client) => set({ selectedClient: client }),
+
   addClient: async (client, token) => {
     try {
       const res = await fetch(`${API_URL}/api/clients`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(client),
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       set((state) => ({ clients: [data.client, ...state.clients] }))
       return data.client
@@ -62,21 +88,46 @@ export const useClientStore = create((set) => ({
     }
   },
 
-  deleteClient: async (id, token) => {
+  deleteClient: async (id) => {
     try {
-      await fetch(`${API_URL}/api/clients/${id}`, {
+      const token = useAuthStore.getState().token
+      const res = await fetch(`${API_URL}/api/clients/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
-      set((state) => ({
-        clients: state.clients.filter(c => c.id !== id)
-      }))
+      if (!res.ok) return false
+      set((state) => ({ clients: state.clients.filter((c) => c.id !== id) }))
       return true
+    } catch (err) {
+      set({ error: err.message })
+      return false
+    }
+  },
+
+  refreshClientScore: async (id) => {
+    try {
+      const token = useAuthStore.getState().token
+      const res = await fetch(`${API_URL}/api/clients/${id}/score/refresh`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const selected = get().selectedClient
+      if (selected && selected.id === id) {
+        set({
+          selectedClient: {
+            ...selected,
+            risk_score: data.risk.score,
+            risk_level: data.risk.level,
+            risk_reasons: data.risk.reasons,
+          }
+        })
+      }
+      return data
     } catch (err) {
       set({ error: err.message })
       throw err
     }
   },
-
-  setSelectedClient: (client) => set({ selectedClient: client }),
 }))

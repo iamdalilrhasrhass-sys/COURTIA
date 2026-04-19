@@ -1,58 +1,93 @@
-import { ArrowLeft, Mail, Phone, MapPin, FileText, AlertCircle, Heart, Clock, FileCheck, MessageSquare, Send, Calendar, Plus, PhoneIcon } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Mail, Phone, MapPin, FileText, AlertCircle, Heart, MessageSquare, Send, Plus, RefreshCw } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 import ContractModal from './ContractModal'
 import { callArkAI } from '../services/arkService'
 
+function ScoreBar({ score, colorClass }) {
+  return (
+    <div className="w-full h-3 bg-dark-3 rounded-full overflow-hidden">
+      <div
+        className={`h-full bg-gradient-to-r ${colorClass} transition-all duration-500`}
+        style={{ width: `${score}%` }}
+      />
+    </div>
+  )
+}
+
+function ScoreReasons({ reasons }) {
+  if (!reasons || reasons.length === 0) return null
+  return (
+    <ul className="mt-2 space-y-1">
+      {reasons.map((r) => (
+        <li key={r.code} className="text-xs text-slate-400 flex justify-between">
+          <span>{r.label}</span>
+          <span className="text-slate-500">+{r.points} pts</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default function ClientDetail() {
   const selectedClient = useClientStore((state) => state.selectedClient)
   const setSelectedClient = useClientStore((state) => state.setSelectedClient)
+  const fetchClientDetail = useClientStore((state) => state.fetchClientDetail)
+  const refreshClientScore = useClientStore((state) => state.refreshClientScore)
   const token = useAuthStore((state) => state.token)
+
   const [note, setNote] = useState('')
   const [showContractModal, setShowContractModal] = useState(false)
   const [showRDVModal, setShowRDVModal] = useState(false)
   const [arkMessage, setArkMessage] = useState('')
   const [arkResponse, setArkResponse] = useState('')
   const [arkLoading, setArkLoading] = useState(false)
+  const [scoreLoading, setScoreLoading] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
   const [rdvData, setRDVData] = useState({
-    title: '',
-    description: '',
-    start_time: '',
-    end_time: '',
-    type: 'meeting'
+    title: '', description: '', start_time: '', end_time: '', type: 'meeting'
   })
-  const [contracts, setContracts] = useState([
-    { name: 'Responsabilité civile', date: '2026-12-31', amount: '850€' },
-    { name: 'Auto 2 véhicules', date: '2026-06-15', amount: '1200€' },
-    { name: 'Habitation', date: '2027-03-20', amount: '450€' }
-  ])
 
-  const handleAddContract = (contractData) => {
-    // Ajouter le contrat à la liste locale
-    const newContract = {
-      name: `${contractData.contract_type} - ${contractData.company}`,
-      date: contractData.endDate,
-      amount: `${contractData.premium}€`
+  // Enrichit le client sélectionné avec ses contrats dès l'ouverture de la fiche
+  useEffect(() => {
+    if (!selectedClient) return
+    // Recharge uniquement si les contrats ne sont pas encore présents
+    if (!Array.isArray(selectedClient.contracts)) {
+      setDetailLoading(true)
+      fetchClientDetail(selectedClient.id)
+        .catch(console.error)
+        .finally(() => setDetailLoading(false))
     }
-    setContracts([...contracts, newContract])
-    // TODO: Envoyer à l'API pour sauvegarder
+  }, [selectedClient?.id])
+
+  const handleRefreshScore = async () => {
+    if (!selectedClient) return
+    setScoreLoading(true)
+    try {
+      await refreshClientScore(selectedClient.id)
+    } catch (err) {
+      console.error('Score refresh error:', err)
+    } finally {
+      setScoreLoading(false)
+    }
   }
 
   const handleCall = () => {
-    const tel = selectedClient.phone.replace(/\s/g, '')
-    window.location.href = `tel:${tel}`
+    const tel = selectedClient.phone?.replace(/\s/g, '') || ''
+    if (tel) window.location.href = `tel:${tel}`
   }
 
   const handleWhatsApp = () => {
     const msg = `Bonjour ${selectedClient.first_name}, suite à notre conversation sur votre assurance...`
-    const phone = selectedClient.phone.replace(/\D/g, '')
-    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+    const phone = selectedClient.phone?.replace(/\D/g, '') || ''
+    if (phone) window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
   }
 
   const handleEmail = () => {
     const subject = `Vos contrats d'assurance - ${selectedClient.first_name}`
-    const body = `Bonjour ${selectedClient.first_name},\n\nVoici un résumé de votre situation:\n\nContrats actifs: ${contracts.length}\nScore fidélité: ${selectedClient.loyalty_score}/100\n\nCordialement`
+    const contracts = selectedClient.contracts || []
+    const body = `Bonjour ${selectedClient.first_name},\n\nContrats actifs: ${contracts.length}\nScore fidélité: ${selectedClient.loyalty_score ?? '—'}/100\n\nCordialement`
     window.location.href = `mailto:${selectedClient.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
 
@@ -61,29 +96,15 @@ export default function ClientDetail() {
       alert('Tous les champs sont requis')
       return
     }
-
     try {
-      const response = await fetch('/api/appointments', {
+      const response = await fetch('https://courtia.onrender.com/api/appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          client_id: selectedClient.id,
-          ...rdvData
-        })
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ client_id: selectedClient.id, ...rdvData })
       })
-
       if (response.ok) {
         setShowRDVModal(false)
-        setRDVData({
-          title: '',
-          description: '',
-          start_time: '',
-          end_time: '',
-          type: 'meeting'
-        })
+        setRDVData({ title: '', description: '', start_time: '', end_time: '', type: 'meeting' })
         alert('RDV créé avec succès!')
       }
     } catch (error) {
@@ -93,49 +114,29 @@ export default function ClientDetail() {
 
   const handleSendArkMessage = async () => {
     if (!arkMessage.trim()) return
-
     setArkLoading(true)
     setArkResponse('')
-
     try {
-      // Préparer les données du client pour ARK
+      const contracts = selectedClient.contracts || []
       const clientData = {
-        first_name: selectedClient.first_name,
-        last_name: selectedClient.last_name,
-        email: selectedClient.email,
-        phone: selectedClient.phone,
+        ...selectedClient,
         contracts: contracts.map(c => ({
-          type: c.name,
-          premium: c.amount.replace('€', ''),
-          endDate: c.date
+          type: c.type,
+          premium: c.annual_premium,
+          endDate: c.end_date
         })),
-        claims: [
-          { date: '2024-11-15', description: 'Accident auto', status: 'résolu' },
-          { date: '2023-05-20', description: 'Dégât habitation', status: 'payé' }
-        ],
-        alerts: [
-          'Contrat expire dans 60 jours',
-          'RDV de révision recommandé',
-          'Cross-sell: RC civile'
-        ],
-        riskScore: selectedClient.risk_score || 50,
-        loyaltyScore: selectedClient.loyalty_score || 50,
-        history: [
-          { date: '2026-03-26', action: 'Contrat auto renouvelé' },
-          { date: '2026-03-20', action: 'Appel de révision' },
-          { date: '2026-02-14', action: 'Demande de devis habitation' },
-          { date: '2026-01-10', action: 'Visite sinistre' }
-        ],
+        claims: [],
+        alerts: selectedClient.risk_reasons?.map(r => r.label) || [],
+        riskScore: selectedClient.risk_score,
+        loyaltyScore: selectedClient.loyalty_score,
+        history: [],
         notes: note
       }
-
-      // Appeler l'API ARK
       const response = await callArkAI(clientData, arkMessage, token)
       setArkResponse(response)
       setArkMessage('')
     } catch (error) {
-      console.error('ARK Error:', error)
-      setArkResponse('Erreur: Impossible de contacter ARK. Vérifiez votre connexion.')
+      setArkResponse('Erreur: Impossible de contacter ARK.')
     } finally {
       setArkLoading(false)
     }
@@ -149,7 +150,18 @@ export default function ClientDetail() {
     )
   }
 
-  const displayName = `${selectedClient.first_name} ${selectedClient.last_name}`
+  if (detailLoading) {
+    return (
+      <div className="ml-64 p-8 flex items-center gap-3 text-slate-400">
+        <RefreshCw size={20} className="animate-spin" />
+        Chargement de la fiche client…
+      </div>
+    )
+  }
+
+  const contracts = selectedClient.contracts || []
+  const riskScore = selectedClient.risk_score
+  const loyaltyScore = selectedClient.loyalty_score
 
   return (
     <div className="ml-64 p-8 max-h-screen overflow-y-auto">
@@ -162,16 +174,16 @@ export default function ClientDetail() {
       </button>
 
       <div className="grid grid-cols-3 gap-6">
-        {/* Client Info */}
+        {/* Colonne principale */}
         <div className="col-span-2">
-          {/* Header avec infos principales */}
           <div className="glass p-8 rounded-lg mb-6">
             <div className="flex justify-between items-start mb-6">
-              <h2 className="text-3xl font-black text-gradient">{displayName}</h2>
+              <h2 className="text-3xl font-black text-gradient">
+                {selectedClient.first_name} {selectedClient.last_name}
+              </h2>
               <div className="flex gap-2">
                 <button onClick={handleCall} className="btn-primary flex items-center gap-2">
-                  <Phone size={18} />
-                  Appeler
+                  <Phone size={18} /> Appeler
                 </button>
                 <button onClick={handleWhatsApp} className="btn-secondary flex items-center gap-2">
                   💬 WhatsApp
@@ -180,12 +192,11 @@ export default function ClientDetail() {
                   ✉️ Email
                 </button>
                 <button onClick={() => setShowRDVModal(true)} className="btn-primary flex items-center gap-2">
-                  <Plus size={18} />
-                  RDV
+                  <Plus size={18} /> RDV
                 </button>
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Mail size={20} className="text-cyan" />
                 <span>{selectedClient.email || 'N/A'}</span>
@@ -199,87 +210,46 @@ export default function ClientDetail() {
                 <span>{selectedClient.address || selectedClient.city || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Heart size={20} className={selectedClient.loyalty_score > 70 ? 'text-red-500' : 'text-slate-500'} />
-                <span>Score fidélité: {selectedClient.loyalty_score || 50}/100</span>
+                <Heart size={20} className={loyaltyScore > 70 ? 'text-red-500' : 'text-slate-500'} />
+                <span>Score fidélité: {loyaltyScore != null ? `${loyaltyScore}/100` : '—'}</span>
               </div>
-            </div>
-
-            {/* Prochain RDV */}
-            <div className="mt-6 pt-6 border-t border-slate-700">
-              <label className="block text-sm font-bold mb-2">Prochain RDV</label>
-              <input type="date" className="input-field w-full" defaultValue="2026-04-05" />
             </div>
           </div>
 
-          {/* Contrats actifs */}
+          {/* Contrats — données réelles */}
           <div className="glass p-6 rounded-lg mb-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-cyan flex items-center gap-2">
-                <FileText size={20} />
-                Contrats actifs
+                <FileText size={20} /> Contrats actifs
               </h3>
               <button onClick={() => setShowContractModal(true)} className="btn-secondary text-sm">+ Ajouter</button>
             </div>
-            <div className="space-y-3">
-              {contracts.map((contract, idx) => (
-                <div key={idx} className="bg-dark-3 p-4 rounded-lg flex justify-between items-center">
-                  <div>
-                    <p className="font-bold">{contract.name}</p>
-                    <p className="text-sm text-slate-500">Expire : {contract.date}</p>
+            {contracts.length === 0 ? (
+              <p className="text-slate-500 text-sm">Aucun contrat enregistré</p>
+            ) : (
+              <div className="space-y-3">
+                {contracts.map((c) => (
+                  <div key={c.id} className="bg-dark-3 p-4 rounded-lg flex justify-between items-center">
+                    <div>
+                      <p className="font-bold">{c.type}</p>
+                      <p className="text-xs text-slate-500">{c.company} · N°{c.number}</p>
+                      <p className="text-sm text-slate-500">
+                        Expire: {c.end_date ? new Date(c.end_date).toLocaleDateString('fr-FR') : 'N/A'}
+                      </p>
+                    </div>
+                    <p className="font-bold text-cyan">
+                      {c.annual_premium ? `${c.annual_premium}€/an` : '—'}
+                    </p>
                   </div>
-                  <p className="font-bold text-cyan">{contract.amount}/an</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Sinistres */}
-          <div className="glass p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-bold text-cyan mb-4">Sinistres</h3>
-            <div className="space-y-2 text-sm text-slate-400">
-              <div className="bg-dark-3 p-3 rounded">2024-11-15 - Accident auto (résolu)</div>
-              <div className="bg-dark-3 p-3 rounded">2023-05-20 - Dégât habitation (payé)</div>
-            </div>
-            <p className="text-xs text-slate-500 mt-3">Total: 2 sinistres (5 ans)</p>
-          </div>
-
-          {/* Documents */}
-          <div className="glass p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-bold text-cyan mb-4 flex items-center gap-2">
-              <FileCheck size={20} />
-              Documents
-            </h3>
-            <div className="space-y-2">
-              <div className="bg-dark-3 p-3 rounded flex justify-between items-center">
-                <span>Devis habitation 2026.pdf</span>
-                <button className="text-cyan hover:opacity-80 text-sm">📥</button>
+                ))}
               </div>
-              <div className="bg-dark-3 p-3 rounded flex justify-between items-center">
-                <span>Contrat auto signé.pdf</span>
-                <button className="text-cyan hover:opacity-80 text-sm">📥</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Historique */}
-          <div className="glass p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-bold text-cyan mb-4 flex items-center gap-2">
-              <Clock size={20} />
-              Historique
-            </h3>
-            <div className="space-y-2 text-sm text-slate-400">
-              <p>2026-03-26 - Contrat auto renouvelé</p>
-              <p>2026-03-20 - Appel de révision</p>
-              <p>2026-02-14 - Demande de devis habitation</p>
-              <p>2026-01-10 - Visite sinistre</p>
-            </div>
+            )}
           </div>
 
           {/* Notes */}
           <div className="glass p-6 rounded-lg">
             <h3 className="text-xl font-bold text-cyan mb-4 flex items-center gap-2">
-              <MessageSquare size={20} />
-              Notes internes
+              <MessageSquare size={20} /> Notes internes
             </h3>
             <textarea
               value={note}
@@ -291,7 +261,7 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        {/* Right Sidebar */}
+        {/* Colonne droite */}
         <div>
           {/* ARK Chat */}
           <div className="glass p-6 rounded-lg mb-6">
@@ -303,17 +273,7 @@ export default function ClientDetail() {
                     {arkResponse}
                   </div>
                 ) : (
-                  <>
-                    <div className="bg-blue-500/20 p-2 rounded text-cyan">
-                      ✓ Brief RDV préparé
-                    </div>
-                    <div className="bg-red-500/20 p-2 rounded text-red-400">
-                      ⚠️ Contrat auto expire bientôt
-                    </div>
-                    <div className="bg-green-500/20 p-2 rounded text-green-400">
-                      💡 Cross-sell: RC possible
-                    </div>
-                  </>
+                  <p className="text-slate-500 text-xs">Posez une question sur ce client…</p>
                 )}
               </div>
               <div className="flex gap-2 items-end">
@@ -329,7 +289,7 @@ export default function ClientDetail() {
                 <button
                   onClick={handleSendArkMessage}
                   disabled={arkLoading || !arkMessage.trim()}
-                  className="btn-primary p-2 flex items-center gap-2 disabled:opacity-50"
+                  className="btn-primary p-2 disabled:opacity-50"
                 >
                   {arkLoading ? '...' : <Send size={18} />}
                 </button>
@@ -339,52 +299,62 @@ export default function ClientDetail() {
 
           {/* Risk Score */}
           <div className="glass p-6 rounded-lg mb-6">
-            <h3 className="text-lg font-bold text-cyan mb-4">Risk Score</h3>
-            <div className="text-4xl font-black text-cyan mb-4">{selectedClient.risk_score || 50}/100</div>
-            <div className="w-full h-3 bg-dark-3 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-green-500 to-cyan-500"
-                style={{width: `${(selectedClient.risk_score || 50)}%`}}
-              ></div>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-bold text-cyan">Risk Score</h3>
+              <button
+                onClick={handleRefreshScore}
+                disabled={scoreLoading}
+                title="Recalculer le score"
+                className="text-slate-400 hover:text-cyan disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw size={16} className={scoreLoading ? 'animate-spin' : ''} />
+              </button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
-              {(selectedClient.risk_score || 50) < 40 ? 'Bas risque' : (selectedClient.risk_score || 50) < 70 ? 'Risque modéré' : 'Haut risque'}
-            </p>
+            {riskScore != null ? (
+              <>
+                <div className="text-4xl font-black text-cyan mb-2">{riskScore}/100</div>
+                <ScoreBar score={riskScore} colorClass="from-green-500 to-cyan-500" />
+                <p className="text-xs text-slate-500 mt-2 capitalize">
+                  {selectedClient.risk_level || (riskScore < 40 ? 'faible' : riskScore < 70 ? 'modéré' : 'élevé')}
+                </p>
+                <ScoreReasons reasons={selectedClient.risk_reasons} />
+              </>
+            ) : (
+              <p className="text-slate-500 text-sm">Non calculé — cliquez sur ↻</p>
+            )}
           </div>
 
           {/* Loyalty Score */}
           <div className="glass p-6 rounded-lg mb-6">
-            <h3 className="text-lg font-bold text-cyan mb-4">Score Fidélité</h3>
-            <div className="text-4xl font-black text-pink-500 mb-4">{selectedClient.loyalty_score || 50}/100</div>
-            <div className="w-full h-3 bg-dark-3 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-pink-500 to-red-500"
-                style={{width: `${(selectedClient.loyalty_score || 50)}%`}}
-              ></div>
-            </div>
-            <p className="text-xs text-slate-500 mt-2">
-              {(selectedClient.loyalty_score || 50) > 80 ? 'Très fidèle' : (selectedClient.loyalty_score || 50) > 60 ? 'Fidèle' : 'À cultiver'}
-            </p>
+            <h3 className="text-lg font-bold text-cyan mb-3">Score Fidélité</h3>
+            {loyaltyScore != null ? (
+              <>
+                <div className="text-4xl font-black text-pink-500 mb-2">{loyaltyScore}/100</div>
+                <ScoreBar score={loyaltyScore} colorClass="from-pink-500 to-red-500" />
+                <p className="text-xs text-slate-500 mt-2">
+                  {loyaltyScore > 80 ? 'Très fidèle' : loyaltyScore > 60 ? 'Fidèle' : 'À cultiver'}
+                </p>
+              </>
+            ) : (
+              <p className="text-slate-500 text-sm">Non calculé</p>
+            )}
           </div>
 
-          {/* Alertes */}
-          <div className="glass p-6 rounded-lg">
-            <h3 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-              <AlertCircle size={20} />
-              Alertes actives
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="bg-red-500/10 p-2 rounded text-red-400 font-bold">
-                🔴 Contrat expire dans 60 jours
-              </div>
-              <div className="bg-orange-500/10 p-2 rounded text-orange-400">
-                🟠 RDV de révision recommandé
-              </div>
-              <div className="bg-yellow-500/10 p-2 rounded text-yellow-400">
-                🟡 Cross-sell: RC civile
+          {/* Alertes — dérivées des risk_reasons après calcul */}
+          {selectedClient.risk_reasons && selectedClient.risk_reasons.length > 0 && (
+            <div className="glass p-6 rounded-lg">
+              <h3 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+                <AlertCircle size={20} /> Alertes actives
+              </h3>
+              <div className="space-y-2 text-sm">
+                {selectedClient.risk_reasons.map((r) => (
+                  <div key={r.code} className="bg-red-500/10 p-2 rounded text-red-400">
+                    🔴 {r.label}
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -392,75 +362,39 @@ export default function ClientDetail() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="glass p-8 rounded-lg max-w-md w-full">
             <h2 className="text-2xl font-bold text-cyan mb-6">Créer RDV</h2>
-            
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-slate-400 mb-2 block">Titre *</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Revue d'assurance"
-                  className="input-field w-full"
-                  value={rdvData.title}
-                  onChange={(e) => setRDVData({ ...rdvData, title: e.target.value })}
-                />
+                <input type="text" placeholder="Ex: Revue d'assurance" className="input-field w-full"
+                  value={rdvData.title} onChange={(e) => setRDVData({ ...rdvData, title: e.target.value })} />
               </div>
-
               <div>
                 <label className="text-sm text-slate-400 mb-2 block">Description</label>
-                <textarea
-                  placeholder="Notes..."
-                  className="input-field w-full min-h-20 resize-none"
-                  value={rdvData.description}
-                  onChange={(e) => setRDVData({ ...rdvData, description: e.target.value })}
-                />
+                <textarea placeholder="Notes..." className="input-field w-full min-h-20 resize-none"
+                  value={rdvData.description} onChange={(e) => setRDVData({ ...rdvData, description: e.target.value })} />
               </div>
-
               <div>
-                <label className="text-sm text-slate-400 mb-2 block">Date/Heure début *</label>
-                <input
-                  type="datetime-local"
-                  className="input-field w-full"
-                  value={rdvData.start_time}
-                  onChange={(e) => setRDVData({ ...rdvData, start_time: e.target.value })}
-                />
+                <label className="text-sm text-slate-400 mb-2 block">Début *</label>
+                <input type="datetime-local" className="input-field w-full"
+                  value={rdvData.start_time} onChange={(e) => setRDVData({ ...rdvData, start_time: e.target.value })} />
               </div>
-
               <div>
-                <label className="text-sm text-slate-400 mb-2 block">Date/Heure fin *</label>
-                <input
-                  type="datetime-local"
-                  className="input-field w-full"
-                  value={rdvData.end_time}
-                  onChange={(e) => setRDVData({ ...rdvData, end_time: e.target.value })}
-                />
+                <label className="text-sm text-slate-400 mb-2 block">Fin *</label>
+                <input type="datetime-local" className="input-field w-full"
+                  value={rdvData.end_time} onChange={(e) => setRDVData({ ...rdvData, end_time: e.target.value })} />
               </div>
-
               <div>
                 <label className="text-sm text-slate-400 mb-2 block">Type</label>
-                <select
-                  className="input-field w-full"
-                  value={rdvData.type}
-                  onChange={(e) => setRDVData({ ...rdvData, type: e.target.value })}
-                >
+                <select className="input-field w-full"
+                  value={rdvData.type} onChange={(e) => setRDVData({ ...rdvData, type: e.target.value })}>
                   <option value="meeting">Réunion</option>
                   <option value="call">Appel</option>
                   <option value="email_follow_up">Email suivi</option>
                 </select>
               </div>
-
               <div className="flex gap-4 pt-4">
-                <button
-                  onClick={() => setShowRDVModal(false)}
-                  className="btn-secondary flex-1"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleCreateRDV}
-                  className="btn-primary flex-1"
-                >
-                  Créer
-                </button>
+                <button onClick={() => setShowRDVModal(false)} className="btn-secondary flex-1">Annuler</button>
+                <button onClick={handleCreateRDV} className="btn-primary flex-1">Créer</button>
               </div>
             </div>
           </div>
@@ -471,7 +405,7 @@ export default function ClientDetail() {
         <ContractModal
           clientId={selectedClient?.id}
           onClose={() => setShowContractModal(false)}
-          onAdd={handleAddContract}
+          onAdd={() => fetchClientDetail(selectedClient.id)}
         />
       )}
     </div>

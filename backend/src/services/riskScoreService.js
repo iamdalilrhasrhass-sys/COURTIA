@@ -1,65 +1,58 @@
 const riskScoreService = {
-  // Calculate risk score based on real data
-  async calculateRiskScore(clientData, pool) {
-    try {
-      let score = 50; // Base score
+  async calculateRiskScore(clientData) {
+    let score = 50;
+    const reasons = [];
 
-      // Factor 1: Days since last contact (up to 30 points)
-      if (clientData.last_contact_date) {
-        const daysSince = Math.floor((new Date() - new Date(clientData.last_contact_date)) / (1000 * 60 * 60 * 24));
-        if (daysSince > 180) score += 30;
-        else if (daysSince > 90) score += 20;
-        else if (daysSince > 30) score += 10;
-      } else {
-        score += 25; // Never contacted
+    // Facteur 1 : délai depuis dernier contact (jusqu'à 30 pts)
+    if (clientData.last_contact_date) {
+      const daysSince = Math.floor(
+        (Date.now() - new Date(clientData.last_contact_date)) / 86400000
+      );
+      if (daysSince > 180) {
+        score += 30;
+        reasons.push({ code: 'NO_CONTACT_180D', label: `Aucun contact depuis ${daysSince} jours`, points: 30 });
+      } else if (daysSince > 90) {
+        score += 20;
+        reasons.push({ code: 'NO_CONTACT_90D', label: `Aucun contact depuis ${daysSince} jours`, points: 20 });
+      } else if (daysSince > 30) {
+        score += 10;
+        reasons.push({ code: 'NO_CONTACT_30D', label: `Aucun contact depuis ${daysSince} jours`, points: 10 });
       }
-
-      // Factor 2: Expiring contracts (up to 25 points)
-      if (clientData.contracts && clientData.contracts.length > 0) {
-        const expiringIn30 = clientData.contracts.filter(c => {
-          const days = Math.floor((new Date(c.end_date) - new Date()) / (1000 * 60 * 60 * 24));
-          return days > 0 && days <= 30;
-        }).length;
-        
-        if (expiringIn30 > 0) score += 25;
-      }
-
-      // Factor 3: Recent claims (up to 20 points)
-      if (clientData.recent_claims && clientData.recent_claims > 0) {
-        score += Math.min(clientData.recent_claims * 5, 20);
-      }
-
-      // Factor 4: Low loyalty score (up to 15 points)
-      if (clientData.loyalty_score && clientData.loyalty_score < 40) {
-        score += 15;
-      }
-
-      // Cap at 100
-      score = Math.min(score, 100);
-
-      return Math.round(score);
-    } catch (error) {
-      console.error('Risk score calculation error:', error);
-      return 50; // Default
+    } else {
+      score += 25;
+      reasons.push({ code: 'NEVER_CONTACTED', label: 'Client jamais contacté', points: 25 });
     }
-  },
 
-  // Recalculate all clients (nightly job)
-  async recalculateAll(pool) {
-    try {
-      const result = await pool.query('SELECT * FROM clients WHERE status = $1', ['active']);
-      const clients = result.rows;
-
-      for (const client of clients) {
-        const score = await this.calculateRiskScore(client, pool);
-        await pool.query('UPDATE clients SET risk_score = $1 WHERE id = $2', [score, client.id]);
+    // Facteur 2 : contrats expirant dans les 30 jours (jusqu'à 25 pts)
+    if (clientData.contracts && clientData.contracts.length > 0) {
+      const expiringIn30 = clientData.contracts.filter(c => {
+        if (!c.end_date) return false;
+        const days = Math.floor((new Date(c.end_date) - Date.now()) / 86400000);
+        return days > 0 && days <= 30;
+      }).length;
+      if (expiringIn30 > 0) {
+        score += 25;
+        reasons.push({ code: 'CONTRACT_EXPIRING', label: `${expiringIn30} contrat(s) expirant dans 30 jours`, points: 25 });
       }
-
-      return { updated: clients.length };
-    } catch (error) {
-      console.error('Bulk recalculation error:', error);
-      throw error;
     }
+
+    // Facteur 3 : sinistres récents (jusqu'à 20 pts)
+    if (clientData.recent_claims && clientData.recent_claims > 0) {
+      const pts = Math.min(clientData.recent_claims * 5, 20);
+      score += pts;
+      reasons.push({ code: 'RECENT_CLAIMS', label: `${clientData.recent_claims} sinistre(s) récent(s)`, points: pts });
+    }
+
+    // Facteur 4 : score fidélité bas (jusqu'à 15 pts)
+    if (clientData.loyalty_score != null && clientData.loyalty_score < 40) {
+      score += 15;
+      reasons.push({ code: 'LOW_LOYALTY', label: `Score fidélité faible (${clientData.loyalty_score}/100)`, points: 15 });
+    }
+
+    score = Math.min(score, 100);
+    const level = score >= 70 ? 'élevé' : score >= 40 ? 'modéré' : 'faible';
+
+    return { score: Math.round(score), level, reasons };
   }
 };
 
