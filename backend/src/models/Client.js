@@ -53,6 +53,15 @@ class Client {
     return result.rows[0];
   }
 
+  static async updateScores(id, riskScore, loyaltyScore) {
+    const result = await pool.query(
+      `UPDATE clients SET risk_score = $1, loyalty_score = $2, updated_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [riskScore, loyaltyScore, id]
+    );
+    return result.rows[0];
+  }
+
   static async delete(id) {
     const result = await pool.query('DELETE FROM clients WHERE id = $1 RETURNING id', [id]);
     return result.rows[0];
