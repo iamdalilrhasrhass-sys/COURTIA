@@ -51,10 +51,19 @@ export default function Sidebar() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('courtia_user')
-      if (storedUser) setUser(JSON.parse(storedUser))
-    } catch (e) { console.error("Failed to parse user from localStorage", e) }
+    const updateUserState = () => {
+      try {
+        const storedUser = localStorage.getItem('courtia_user')
+        if (storedUser) setUser(JSON.parse(storedUser))
+      } catch (e) { console.error("Failed to parse user from localStorage", e) }
+    }
+
+    updateUserState() // Chargement initial
+
+    // Met à jour la sidebar si le profil change ailleurs dans l'app
+    window.addEventListener('profileUpdated', updateUserState)
+
+    return () => window.removeEventListener('profileUpdated', updateUserState)
   }, [])
 
   function logout() {
