@@ -1,3 +1,13 @@
+- Plan actuel en grand : badge coloré + nom plan + prix/mois. Liste features actuelles avec Check vert
+   
+            >                                                                                       
+              <Icon size={18} />                                                                 
+- Envoie ça sur Telegram :
+   = useState(true)
+ 36│  const [saving, setSaving] = useState(false)
+ 37│  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', cabinet: '', 
+orias: '', telephone: '' })
+ 38│  c
 - /drop frontend/src/pages/Clients.jsx frontend/src/pages/ClientDetail.jsx frontend/src/pages/Contrats
     element={<ClientDetail />} />                                
           <Route path="/contrats"      element={<Contrats />} />                                    

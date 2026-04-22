@@ -130,7 +130,7 @@ export default function Login() {
                     </form>
 
                     <footer className="text-center mt-12">
-                        <p className="text-xs text-gray-400">Rhasrhass®</p>
+                        <p className="text-xs text-gray-400">COURTIA®</p>
                     </footer>
                 </div>
             </div>

@@ -192,7 +192,7 @@ export default function Dashboard() {
           </div>
         </motion.div>
         <footer className="text-center mt-12">
-            <p className="text-xs text-gray-300">Rhasrhass®</p>
+            <p className="text-xs text-gray-300">COURTIA®</p>
         </footer>
       </main>
     </div>

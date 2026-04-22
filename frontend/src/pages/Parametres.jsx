@@ -1,29 +1,32 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check } from 'lucide-react'
+import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles } from 'lucide-react'
 import api from '../api'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
   { id: 'securite', label: 'Sécurité', icon: Lock },
-  { id: 'plan', label: 'Plan & Facturation', icon: CreditCard },
+  { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'notifications', label: 'Notifications', icon: Bell },
 ]
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
 
-const Toggle = ({ label, description, enabled, setEnabled }) => (
-  <div className="flex items-center justify-between py-1">
-    <div>
-      <p className="font-semibold text-sm text-gray-800">{label}</p>
-      <p className="text-xs text-gray-500">{description}</p>
+const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
+  <div className="flex items-center justify-between py-3">
+    <div className="flex items-start gap-4">
+      <Icon className="text-gray-400 mt-0.5" size={20} />
+      <div>
+        <p className="font-medium text-sm text-gray-800">{label}</p>
+        <p className="text-xs text-gray-400">{description}</p>
+      </div>
     </div>
     <button
       onClick={() => setEnabled(!enabled)}
-      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563eb] ${enabled ? 'bg-[#2563eb]' : 'bg-gray-200'}`}
+      className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563eb] ${enabled ? 'bg-[#2563eb]' : 'bg-gray-200'}`}
     >
-      <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+      <span className={`inline-block w-5 h-5 transform bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${enabled ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
     </button>
   </div>
 )
@@ -37,7 +40,7 @@ export default function Parametres() {
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', cabinet: '', orias: '', telephone: '' })
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
-  const [notifications, setNotifications] = useState({ summary: true, alerts: true, news: false })
+  const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
 
   useEffect(() => { fetchProfile() }, [])
 
@@ -77,18 +80,18 @@ export default function Parametres() {
   const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
 
   const planConfig = {
-    pro: { label: 'Pro', classes: 'bg-blue-100 text-blue-700', features: ['Jusqu\'à 500 clients', 'Assistant IA - ARK', 'Rapports avancés'] },
-    starter: { label: 'Starter', classes: 'bg-emerald-100 text-emerald-700', features: ['Jusqu\'à 100 clients', 'Scores & Segments', 'Module Tâches'] },
-    elite: { label: 'Elite', classes: 'bg-violet-100 text-violet-700', features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
-    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'] }
+    pro: { label: 'Pro', classes: 'bg-blue-100 text-blue-700', price: 69, features: ['Jusqu\'à 500 clients', 'Assistant IA - ARK', 'Rapports avancés'] },
+    starter: { label: 'Starter', classes: 'bg-emerald-100 text-emerald-700', price: 39, features: ['Jusqu\'à 100 clients', 'Scores & Segments', 'Module Tâches'] },
+    elite: { label: 'Elite', classes: 'bg-violet-100 text-violet-700', price: 129, features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
+    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: 0, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'] }
   }
   const tier = (profile?.pricing_tier || '').toLowerCase()
-  const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', features: [] }
+  const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', price: 0, features: [] }
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] font-sans">
+    <div className="min-h-screen bg-[#fafafa] font-sans">
       <main className="p-8 max-w-6xl mx-auto">
         <header className="mb-10">
           <h1 className="text-3xl font-black text-gray-900">Paramètres</h1>
@@ -157,30 +160,39 @@ export default function Parametres() {
               </div>
             </section>
 
-            <section id="plan" className="scroll-mt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Plan & Facturation</h2>
+            <section id="abonnement" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Abonnement</h2>
               <p className="text-sm text-gray-500 mb-5">Gérez votre abonnement et consultez vos factures.</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-3"><p className="font-semibold text-gray-800">Votre plan actuel</p><span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span></div>
-                  <ul className="mt-4 space-y-2 text-sm text-gray-600">{currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}</ul>
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <p className="font-semibold text-gray-800">Votre plan actuel</p>
+                            <span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span>
+                        </div>
+                        <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                        <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                            {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
+                        </ul>
+                    </div>
+                    <button onClick={() => navigate('/abonnement')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Upgrader mon plan</button>
                 </div>
-                <button onClick={() => navigate('/abonnement')} className="px-5 py-2.5 bg-white text-gray-800 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-100 hover:border-gray-300 transition-all shadow-sm">Gérer l'abonnement</button>
               </div>
             </section>
 
             <section id="notifications" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-gray-900 mb-1">Notifications</h2>
               <p className="text-sm text-gray-500 mb-5">Choisissez comment nous pouvons vous contacter.</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 space-y-3 divide-y divide-gray-100">
-                <Toggle label="Résumé hebdomadaire" description="Recevez un bilan de votre activité chaque lundi matin." enabled={notifications.summary} setEnabled={() => { setNotifications({...notifications, summary: !notifications.summary}); toast.info('Préférence sauvegardée.') }}/>
-                <Toggle label="Alertes importantes" description="Échéances de contrat, tâches urgentes, etc." enabled={notifications.alerts} setEnabled={() => { setNotifications({...notifications, alerts: !notifications.alerts}); toast.info('Préférence sauvegardée.') }}/>
-                <Toggle label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
+                <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} setEnabled={() => { setNotifications({...notifications, echeances: !notifications.echeances}); toast.info('Préférence sauvegardée.') }}/>
+                <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
+                <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
+                <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
               </div>
             </section>
           </div>
         </div>
-        <footer className="text-center py-12"><p className="text-xs text-gray-400">Rhasrhass®</p></footer>
+        <footer className="text-center py-8"><p className="text-xs text-gray-300">Rhasrhass®</p></footer>
       </main>
     </div>
   )
