@@ -1,3 +1,8 @@
+- /drop frontend/src/api/index.js frontend/src/lib/scoring.js frontend/src/pages/Clients.jsx
+/add fron
+                                                      
+            {activeTab === 'ark' && <ArkChatTab client={client} />}                                 
+            {activeTab === 'timeline' && <Plac
 - drop frontend/src/api/index.js frontend/src/lib/scoring.js frontend/src/pages/Clients.jsx
 /add front
                   
