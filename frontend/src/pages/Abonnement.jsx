@@ -77,16 +77,16 @@ export default function Abonnement() {
 
         <div className="mt-12 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 relative">
           {currentPlans.map(plan => (
-            <div key={plan.id} className={`bg-white rounded-2xl p-8 border transition-all duration-300 ${plan.popular ? 'border-2 border-[#2563eb] shadow-2xl shadow-blue-500/20 scale-105 z-10' : 'border-gray-200 shadow-lg'}`}>
+            <div key={plan.id} className={`bg-white rounded-2xl p-8 border transition-all duration-300 ${plan.popular ? 'border-2 border-[#2563eb] shadow-2xl shadow-blue-500/20 scale-105 z-10' : 'border-gray-100 shadow-sm hover:shadow-lg'}`}>
               <div className="flex justify-between items-start">
                 <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
                 {plan.badge && <span className={`px-3 py-1 text-xs font-semibold rounded-full ${plan.badgeClass}`}>{plan.badge}</span>}
               </div>
-              <p className="mt-6"><span className="text-6xl font-black text-gray-900">{plan.price}€</span><span className="text-lg font-semibold text-gray-500">{plan.per || '/mois'}</span></p>
+              <p className="mt-6"><span className="text-5xl font-black text-gray-900">{plan.price}€</span><span className="text-lg font-semibold text-gray-500">{plan.per || '/mois'}</span></p>
               <ul className="mt-8 space-y-4 text-sm text-gray-600">
                 {plan.features.map(f => (<li key={f} className="flex items-start gap-3"><Check className="text-emerald-500 mt-0.5 flex-shrink-0" size={18} /><span>{f}</span></li>))}
               </ul>
-              <button onClick={() => handleCheckout(plan.id)} disabled={loading} className="w-full mt-10 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ease-out hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white hover:shadow-blue-500/30">
+              <button onClick={() => handleCheckout(plan.id)} disabled={loading} className={`w-full mt-10 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ease-out hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${plan.popular ? 'bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white hover:shadow-blue-500/30' : 'bg-white text-gray-800 border border-gray-200 hover:bg-gray-50'}`}>
                 {loading === plan.id ? 'Redirection...' : 'Choisir ce plan'}
               </button>
             </div>

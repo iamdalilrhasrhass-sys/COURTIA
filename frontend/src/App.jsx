@@ -135,6 +135,7 @@ export default function App() {
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
           <Route path="/client/:id"    element={<ClientDetail />} />
+          <Route path="/clients/:id/edit" element={<ClientNew />} />
           <Route path="/contrats"      element={<Contrats />} />
           <Route path="/contrats/new"  element={<ContratNew />} />
           <Route path="/taches"        element={<Taches />} />

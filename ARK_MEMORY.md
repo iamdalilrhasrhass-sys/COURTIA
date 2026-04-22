@@ -1,3 +1,7 @@
+- /drop frontend/src/pages/Clients.jsx frontend/src/pages/ClientDetail.jsx frontend/src/pages/Contrats
+    element={<ClientDetail />} />                                
+          <Route path="/contrats"      element={<Contrats />} />                                    
+=======                            
 - /drop frontend/src/pages/Dashboard.jsx frontend/src/components/Sidebar.jsx
 /add frontend/src/pages/C
         
