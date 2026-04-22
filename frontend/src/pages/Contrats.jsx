@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ChevronUp, ChevronDown, Clock } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import Topbar from '../components/Topbar'
 import api from '../api'
 
@@ -28,65 +28,118 @@ const StatusBadge = ({ status }) => {
   }
 
   return (
-    <span className={`px-3 py-1 text-xs font-semibold rounded-full inline-flex items-center gap-1.5 ${colorClasses}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${colorClasses.replace('text', 'bg').replace('-100', '-500')}`}></span>
+    <span className={`px-2 py-1 text-xs font-semibold rounded-full inline-block ${colorClasses}`}>
       {label}
     </span>
   )
 }
 
 const EcheanceIndicator = ({ date }) => {
-  if (!date) return <span className="text-sm text-gray-400">—</span>
+  if (!date) return <span className="text-sm text-gray-500">—</span>
   const d = new Date(date)
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   
   const daysLeft = Math.ceil((d - now) / (1000 * 60 * 60 * 24))
 
+  let color = 'text-emerald-600'
+  let label = fmtDate(date)
+
   if (daysLeft < 0) {
-    return <span className="text-sm text-gray-500">Expiré</span>
+    color = 'text-gray-500'
+    label = `Expiré`
+  } else if (daysLeft <= 30) {
+    color = 'text-red-600 font-semibold'
+    label = `J-${daysLeft}`
+  } else if (daysLeft <= 90) {
+    color = 'text-amber-600'
+    label = `J-${daysLeft}`
   }
-  if (daysLeft <= 30) {
-    return (
-      <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600">
-        <Clock size={14} /> J-{daysLeft}
-      </span>
-    )
-  }
-  return <span className="text-sm text-gray-600">{fmtDate(date)}</span>
+
+  return (
+    <div className={`flex items-center gap-1.5 text-sm ${color}`}>
+      <Calendar size={14} />
+      <span>{label}</span>
+    </div>
+  )
 }
 
-const SortIcon = ({ active, dir }) => {
-  if (!active) return <ChevronUp size={14} className="text-gray-300" />
-  return dir === 'asc' ? <ChevronUp size={14} className="text-blue-500" /> : <ChevronDown size={14} className="text-blue-500" />
+const MiniAvatar = ({ name }) => {
+  const getInitials = (name) => {
+    const names = (name || '').trim().split(' ').filter(Boolean)
+    if (names.length === 0) return '?'
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 text-white flex items-center justify-center text-xs font-bold">
+      {getInitials(name)}
+    </div>
+  )
 }
 
-const SkeletonRow = () => (
-  <tr className="animate-pulse">
-    <td className="p-5"><div className="w-24 h-4 bg-gray-200 rounded"></div></td>
-    <td className="p-5"><div className="w-20 h-4 bg-gray-200 rounded"></div></td>
-    <td className="p-5">
-        <div>
-          <div className="w-24 h-4 bg-gray-200 rounded"></div>
-          <div className="w-32 h-3 mt-1.5 bg-gray-200 rounded"></div>
+function ContratCard({ contrat, onClientClick }) {
+  if (!contrat) return null;
+  const clientName = `${contrat.client_prenom || ''} ${contrat.client_nom || ''}`.trim()
+  const daysLeft = contrat.date_echeance ? Math.ceil((new Date(contrat.date_echeance) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+
+  return (
+    <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300 flex flex-col">
+      <div className="p-5 border-b border-gray-100">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="font-semibold text-gray-900">{contrat.type_contrat}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{contrat.compagnie}</p>
+          </div>
+          <StatusBadge status={contrat.statut} />
         </div>
-    </td>
-    <td className="p-5"><div className="w-16 h-4 bg-gray-200 rounded text-right"></div></td>
-    <td className="p-5"><div className="w-20 h-5 bg-gray-200 rounded-full"></div></td>
-    <td className="p-5"><div className="w-24 h-4 bg-gray-200 rounded"></div></td>
-  </tr>
-)
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <div
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => contrat.client_id && onClientClick(contrat.client_id)}
+          >
+            <MiniAvatar name={clientName} />
+            <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+              {clientName || 'Client non spécifié'}
+            </span>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Prime annuelle</p>
+            <p className="text-2xl font-black text-gray-900 mt-1">{fmtEur(contrat.prime_annuelle)}</p>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <EcheanceIndicator date={contrat.date_echeance} />
+        </div>
+      </div>
+
+      <div className="p-4 bg-gray-50/70 border-t border-gray-100 rounded-b-xl flex items-center justify-end gap-3">
+        <button className="px-3 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm">
+          Voir
+        </button>
+        {daysLeft !== null && daysLeft > 0 && daysLeft <= 90 && (
+          <button className="px-3 py-1.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-md hover:from-blue-600 hover:to-blue-700 shadow-sm hover:shadow-md transition-all">
+            Renouveler
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
-  const [sortField, setSortField] = useState('date_echeance')
-  const [sortDir, setSortDir] = useState('asc')
   const [page, setPage] = useState(1)
   const navigate = useNavigate()
-  const PER_PAGE = 15
+  const PER_PAGE = 10
 
   useEffect(() => {
     fetchContrats()
@@ -115,36 +168,13 @@ export default function Contrats() {
   })
 
   const sorted = [...filtered].sort((a, b) => {
-    let va = a[sortField]
-    let vb = b[sortField]
-
-    if (sortField === 'date_echeance') {
-      va = va ? new Date(va).getTime() : (sortDir === 'asc' ? Infinity : -Infinity)
-      vb = vb ? new Date(vb).getTime() : (sortDir === 'asc' ? Infinity : -Infinity)
-    } else if (sortField === 'prime_annuelle') {
-      va = Number(va) || 0; vb = Number(vb) || 0
-    } else if (sortField === 'client') {
-      va = `${a.client_nom || ''} ${a.client_prenom || ''}`.trim().toLowerCase()
-      vb = `${b.client_nom || ''} ${b.client_prenom || ''}`.trim().toLowerCase()
-    } else {
-      va = String(va ?? '').toLowerCase(); vb = String(vb ?? '').toLowerCase()
-    }
-
-    if (va < vb) return sortDir === 'asc' ? -1 : 1
-    if (va > vb) return sortDir === 'asc' ? 1 : -1
-    return 0
+    const da = a.date_echeance ? new Date(a.date_echeance).getTime() : Infinity
+    const db = b.date_echeance ? new Date(b.date_echeance).getTime() : Infinity
+    return da - db
   })
   
   const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE))
   const paginated = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE)
-
-  function toggleSort(f) {
-    if (sortField === f) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortField(f); setSortDir('asc') }
-    setPage(1)
-  }
-
-  const thClass = "p-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider select-none"
   
   const topbarAction = (
     <button onClick={() => navigate('/contrats/new')}
@@ -180,64 +210,30 @@ export default function Contrats() {
           </div>
         )}
 
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('type_contrat')}>
-                  <div className="flex items-center gap-1.5">Type Contrat <SortIcon active={sortField === 'type_contrat'} dir={sortDir} /></div>
-                </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('compagnie')}>
-                  <div className="flex items-center gap-1.5">Compagnie <SortIcon active={sortField === 'compagnie'} dir={sortDir} /></div>
-                </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('client')}>
-                  <div className="flex items-center gap-1.5">Client <SortIcon active={sortField === 'client'} dir={sortDir} /></div>
-                </th>
-                <th className={`${thClass} text-right cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('prime_annuelle')}>
-                  <div className="flex items-center justify-end gap-1.5">Prime Annuelle <SortIcon active={sortField === 'prime_annuelle'} dir={sortDir} /></div>
-                </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('statut')}>
-                  <div className="flex items-center gap-1.5">Statut <SortIcon active={sortField === 'statut'} dir={sortDir} /></div>
-                </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('date_echeance')}>
-                  <div className="flex items-center gap-1.5">Échéance <SortIcon active={sortField === 'date_echeance'} dir={sortDir} /></div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
-              {!loading && paginated.map((c) => {
-                if (!c?.id) return null
-                const clientName = `${c.client_prenom || ''} ${c.client_nom || ''}`.trim()
-                return (
-                  <tr key={c.id}
-                    className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/50 transition-all duration-200 ease-out">
-                    <td className="p-5 font-bold text-sm text-gray-800">{c.type_contrat || '—'}</td>
-                    <td className="p-5 text-sm text-gray-600">{c.compagnie || '—'}</td>
-                    <td className="p-5">
-                      <div
-                        className="text-sm font-bold text-gray-800 tracking-tight cursor-pointer hover:text-blue-600"
-                        onClick={() => c.client_id && navigate(`/client/${c.client_id}`)}
-                      >
-                        {clientName || '—'}
-                      </div>
-                      <p className="text-xs text-gray-500">{c.client_email || ''}</p>
-                    </td>
-                    <td className="p-5 text-sm font-semibold text-gray-800 text-right">{fmtEur(c.prime_annuelle)}</td>
-                    <td className="p-5"><StatusBadge status={c.statut} /></td>
-                    <td className="p-5"><EcheanceIndicator date={c.date_echeance} /></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          {!loading && !error && paginated.length === 0 && (
-            <div className="text-center py-20 text-gray-500 text-sm">
-              <p className="font-semibold">Aucun contrat trouvé</p>
-              <p className="mt-1">Essayez de modifier vos filtres.</p>
-            </div>
-          )}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white border border-gray-200/80 rounded-xl p-5 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="mt-6 h-8 w-8 bg-gray-200 rounded-full"></div>
+                <div className="mt-6 h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="mt-1 h-8 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : paginated.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginated.map(c => (
+              <ContratCard key={c.id} contrat={c} onClientClick={(id) => navigate(`/client/${id}`)} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 text-gray-500 text-sm bg-gray-50/70 rounded-xl">
+            <p className="font-semibold">Aucun contrat trouvé</p>
+            <p className="mt-1">Essayez de modifier vos filtres.</p>
+          </div>
+        )}
 
         {!loading && totalPages > 1 && (
           <div className="flex justify-center items-center gap-4 mt-8">

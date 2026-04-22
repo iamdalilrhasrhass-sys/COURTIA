@@ -1,3 +1,7 @@
+- > Cards au lieu d'une table (layout grille 2 colonnes). Chaque card contrat : header avec type_contr
+  ems-center justify-between">                               
+                    <h2 className="text-base font-bold text-gray-800">{column.title}</h2>           
+                    <span className="te
 - /drop frontend/src/pages/Parametres.jsx
 /add frontend/src/components/Sidebar.jsx frontend/src/pages/
                                                                                  
