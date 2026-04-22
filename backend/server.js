@@ -127,13 +127,13 @@ const automationsRouter    = require('./src/routes/automations')
 const documentsRouter      = require('./src/routes/documents')
 const ddaQuizRouter        = require('./src/routes/ddaQuiz')
 const analyticsRouter      = require('./src/routes/analytics')
-const stripeRouter         = require('./src/routes/stripe')
+// const stripeRouter         = require('./src/routes/stripe')
 const plansRouter          = require('./src/routes/plans')
 
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
-app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
+// app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
