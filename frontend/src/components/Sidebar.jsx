@@ -13,12 +13,13 @@ function Logo() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <div style={{
-        width: 28, height: 28, background: 'white', borderRadius: 6,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+        width: 32, height: 32, background: 'linear-gradient(135deg, #fff, #e0e0e0)', borderRadius: 8,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        boxShadow: '0 2px 8px rgba(255,255,255,0.1)'
       }}>
-        <div style={{ width: 12, height: 12, background: '#0a0a0a', transform: 'rotate(45deg)' }} />
+        <div style={{ width: 14, height: 14, background: '#0a0a0a', transform: 'rotate(45deg)', borderRadius: 2 }} />
       </div>
-      <span style={{ color: 'white', fontSize: 15, fontWeight: 500, letterSpacing: -0.3 }}>COURTIA</span>
+      <span style={{ color: 'white', fontSize: 16, fontWeight: 600, letterSpacing: -0.3 }}>COURTIA</span>
     </div>
   )
 }
@@ -194,15 +195,15 @@ export default function Sidebar() {
     <>
       <div style={{
         width: 240, minHeight: '100vh',
-        background: '#0a0a0a',
+        background: 'linear-gradient(180deg, #0f0f0f, #0a0a0a)',
         display: 'flex', flexDirection: 'column',
         position: 'fixed', left: 0, top: 0, bottom: 0,
         zIndex: 100,
-        borderRight: '0.5px solid #111',
+        borderRight: '0.5px solid #222',
         fontFamily: 'Arial, sans-serif'
       }}>
         {/* Logo + Plan badge */}
-        <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid #1a1a1a' }}>
+        <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid #222' }}>
           <Logo />
           <span style={{
             display: 'inline-block', marginTop: 8, fontSize: 10, fontWeight: 700,
@@ -216,17 +217,17 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '10px 0' }}>
+        <nav style={{ flex: 1, padding: '16px 0' }}>
           {NAV_ITEMS.map((item, idx) => {
             // Séparateur avec label MODULES
             if (item.separator) {
               return (
-                <div key={`sep-${idx}`} style={{ margin: '10px 0 6px', padding: '0 20px' }}>
+                <div key={`sep-${idx}`} style={{ margin: '16px 0 8px', padding: '0 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#333', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#444', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                       {item.label}
                     </span>
-                    <div style={{ flex: 1, height: '0.5px', background: '#1a1a1a' }} />
+                    <div style={{ flex: 1, height: '0.5px', background: '#222' }} />
                   </div>
                 </div>
               )
@@ -243,22 +244,21 @@ export default function Sidebar() {
                 whileHover={!isActive ? { x: 2 } : {}}
                 transition={{ duration: 0.12 }}
                 style={{
-                  width: '100%',
+                  width: 'calc(100% - 24px)', margin: '2px 12px',
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 20px',
-                  paddingLeft: 17,
-                  background: isActive ? 'rgba(37,99,235,0.08)' : 'transparent',
-                  borderLeft: isActive ? '3px solid #2563eb' : '3px solid transparent',
-                  borderTop: 'none', borderRight: 'none', borderBottom: 'none',
-                  color: isActive ? 'white' : '#555',
+                  padding: '9px 12px',
+                  background: isActive ? '#1d4ed8' : 'transparent',
+                  border: 'none',
+                  borderRadius: 7,
+                  color: isActive ? 'white' : '#888',
                   cursor: 'pointer', fontSize: 13, textAlign: 'left',
                   fontFamily: 'Arial, sans-serif',
                 }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#bbb' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#888' }}
               >
-                {Icon && <Icon size={14} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.55 }} />}
-                <span style={{ fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
+                {Icon && <Icon size={15} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.7 }} />}
+                <span style={{ fontWeight: isActive ? 600 : 500 }}>{item.label}</span>
               </motion.button>
             )
           })}
@@ -268,48 +268,49 @@ export default function Sidebar() {
         <div style={{ padding: '12px 16px 8px' }}>
           <motion.button
             onClick={() => setArkOpen(true)}
-            whileHover={{ scale: 1.01, boxShadow: '0 6px 24px rgba(37,99,235,0.25)' }}
-            transition={{ duration: 0.15 }}
+            whileHover={{ scale: 1.02, y: -1, boxShadow: '0 8px 30px rgba(37,99,235,0.3)' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             style={{
               width: '100%', padding: '14px 16px',
-              background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-              border: '0.5px solid rgba(37,99,235,0.4)',
-              borderRadius: 10, cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left'
+              background: 'linear-gradient(135deg, #1e40af, #2563eb)',
+              border: '1px solid #2563eb',
+              borderRadius: 12, cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left',
+              boxShadow: '0 4px 15px rgba(37,99,235,0.2)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
-                width: 7, height: 7, borderRadius: '50%',
-                background: '#22c55e',
-                animation: 'arkPulse 2s ease infinite'
+                width: 8, height: 8, borderRadius: '50%',
+                background: '#4ade80',
+                animation: 'arkPulse 1.5s ease infinite'
               }} />
-              <span style={{ color: 'white', fontSize: 12, fontWeight: 600, letterSpacing: 0.5 }}>ARK · Actif</span>
-              <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(37,99,235,0.8)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>IA</span>
+              <span style={{ color: 'white', fontSize: 13, fontWeight: 600, letterSpacing: 0.2 }}>ARK · Assistant</span>
+              <span style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.1)', color: 'white', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>IA</span>
             </div>
-            <span style={{ color: '#4b6180', fontSize: 11 }}>Ouvrir l'assistant →</span>
+            <span style={{ color: '#93c5fd', fontSize: 11, marginTop: 2 }}>Questions & Analyse →</span>
           </motion.button>
         </div>
 
         {/* Déconnexion */}
-        <div style={{ padding: '4px 16px 20px' }}>
+        <div style={{ padding: '8px 16px 20px' }}>
           <motion.button
             onClick={logout}
             whileHover={{ x: 2 }}
             transition={{ duration: 0.12 }}
             style={{
-              width: '100%', padding: '9px 16px',
-              background: 'none',
-              border: 'none', borderLeft: '3px solid transparent',
-              color: '#333', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-              fontSize: 12, fontFamily: 'Arial, sans-serif', borderRadius: 8,
+              width: '100%', padding: '9px 12px',
+              background: 'transparent',
+              border: 'none',
+              color: '#555', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 10,
+              fontSize: 13, fontFamily: 'Arial, sans-serif', borderRadius: 7,
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#666' }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#333' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#999'; e.currentTarget.style.background = '#1a1a1a' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#555'; e.currentTarget.style.background = 'transparent' }}
           >
-            <LogOut size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
-            Déconnexion
+            <LogOut size={15} style={{ opacity: 0.6, flexShrink: 0 }} />
+            <span style={{ fontWeight: 500 }}>Déconnexion</span>
           </motion.button>
         </div>
       </div>

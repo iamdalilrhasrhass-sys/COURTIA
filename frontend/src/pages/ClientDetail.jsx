@@ -63,40 +63,40 @@ function ScoreCard({ label, score, inverse = false, type, description }) {
   return (
     <div style={{
       background: 'white',
-      border: '1px solid #e8e6e0',
-      borderRadius: 14,
-      padding: '18px 16px',
-      textAlign: 'center',
+      border: '1px solid #e5e7eb',
+      borderRadius: 16,
+      padding: '16px',
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      gap: 6,
+      gap: 8,
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
     }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'translateY(-3px)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
     >
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</span>
-      <div>
-        <span style={{ fontSize: 36, fontWeight: 700, color, lineHeight: 1 }}>{score}</span>
-        <span style={{ fontSize: 13, color: '#9ca3af' }}>/100</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span>
+      <div style={{ textAlign: 'center', marginTop: 4, marginBottom: 4 }}>
+        <span style={{ fontSize: 44, fontWeight: 800, color, lineHeight: 1 }}>{score}</span>
+        <span style={{ fontSize: 16, color: '#9ca3af', fontWeight: 600 }}>/100</span>
       </div>
       {/* Barre */}
-      <div style={{ width: '100%', height: 4, background: '#f3f4f6', borderRadius: 2, overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: 5, background: '#f3f4f6', borderRadius: 2.5, overflow: 'hidden' }}>
         <div style={{
           height: '100%',
           width: score + '%',
           background: color,
-          borderRadius: 2,
+          borderRadius: 2.5,
           transition: 'width 0.6s ease',
         }} />
       </div>
       {lbl && (
         <span style={{
-          fontSize: 11, fontWeight: 700,
+          fontSize: 12, fontWeight: 700,
           background: bg, color,
-          borderRadius: 20, padding: '3px 10px',
-          marginTop: 2,
+          borderRadius: 20, padding: '4px 12px',
+          textAlign: 'center',
+          marginTop: 4,
+          alignSelf: 'center'
         }}>{lbl}</span>
       )}
     </div>
@@ -107,26 +107,27 @@ function ScoreCard({ label, score, inverse = false, type, description }) {
 function ValeurCard({ valeur, nbActifs }) {
   return (
     <div style={{
-      background: 'white',
-      border: '1px solid #e8e6e0',
-      borderRadius: 14,
-      padding: '18px 16px',
+      background: 'linear-gradient(135deg, #1e3a8a, #1d4ed8)',
+      border: '1px solid #3b82f6',
+      borderRadius: 16,
+      padding: '16px',
       textAlign: 'center',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       gap: 6,
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+      color: 'white',
     }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 25px rgba(30,64,175,0.3)'; e.currentTarget.style.transform = 'translateY(-3px)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
     >
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8 }}>Valeur</span>
-      <span style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', lineHeight: 1 }}>{fmtEur(valeur)}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', borderRadius: 20, padding: '3px 10px', marginTop: 2 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: 0.5 }}>Valeur</span>
+      <span style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2, marginTop: 4, marginBottom: 4 }}>{fmtEur(valeur)}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: 20, padding: '4px 12px', marginTop: 2 }}>
         {nbActifs} contrat{nbActifs !== 1 ? 's' : ''} actif{nbActifs !== 1 ? 's' : ''}
       </span>
-      <span style={{ fontSize: 10, color: '#d1d5db', letterSpacing: 0.4 }}>annuelle</span>
+      <span style={{ fontSize: 10, color: '#60a5fa', letterSpacing: 0.4, marginTop: 2 }}>annuelle</span>
     </div>
   )
 }
@@ -369,11 +370,11 @@ function ScoreBar({ value, max = 100, color = '#2563eb', label }) {
   const pct = Math.min(100, Math.round((Number(value) || 0) / max * 100))
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 11, color: '#0a0a0a', fontWeight: 600 }}>{value || 0}/{max}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 12, color: '#111827', fontWeight: 600 }}>{value || 0}/{max}</span>
       </div>
-      <div style={{ height: 5, background: '#f7f6f2', borderRadius: 3 }}>
+      <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3 }}>
         <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
       </div>
     </div>
@@ -421,40 +422,27 @@ function CockpitScoring({ scores, client, contrats, onOpenArk }) {
     onOpenArk(`${ctx}\nMission: ${goalMap[goal]}`)
   }
 
-  const btnStyle = {
-    background: 'white',
-    border: '1px solid #bfdbfe',
-    borderRadius: 9,
-    padding: '9px 14px',
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'Arial, sans-serif',
-    color: '#1e40af',
-    textAlign: 'left',
-    transition: 'background 0.15s ease',
-  }
-
   return (
     <div style={{ padding: '0 32px 0 32px', marginBottom: 16 }}>
 
       {/* A — Priority Banner (haute uniquement) */}
       {scores.priorite === 'haute' && (
         <div style={{
-          background: 'linear-gradient(135deg, #fff1f2, #fef2f2)',
-          border: '1px solid #fecaca',
-          borderRadius: 10,
-          padding: '10px 20px',
+          background: 'linear-gradient(135deg, #dc2626, #ef4444)',
+          borderRadius: 12,
+          padding: '14px 20px',
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
-          marginBottom: 14,
-          flexWrap: 'wrap',
+          gap: 12,
+          marginBottom: 16,
+          color: 'white',
+          boxShadow: '0 4px 20px rgba(220,38,38,0.25)',
         }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', flexShrink: 0, animation: 'pulseDot 1.5s ease infinite' }} />
-          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: 13 }}>Priorité haute</span>
-          <span style={{ color: '#6b7280', fontSize: 12 }}>·</span>
-          <span style={{ color: '#374151', fontSize: 12, flex: 1 }}>{scores.raisons.slice(0, 3).join(' · ')}</span>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#fef2f2', flexShrink: 0, animation: 'pulseDot 1.5s ease infinite' }} />
+          <div>
+            <span style={{ fontWeight: 800, fontSize: 14, letterSpacing: 0.3 }}>PRIORITÉ HAUTE</span>
+            <p style={{ color: '#fecaca', fontSize: 12, margin: '2px 0 0', lineHeight: 1.5 }}>{scores.raisons.slice(0, 3).join(' · ')}</p>
+          </div>
         </div>
       )}
 
@@ -519,31 +507,33 @@ function CockpitScoring({ scores, client, contrats, onOpenArk }) {
 
       {/* E — Cockpit ARK */}
       <div style={{
-        background: 'linear-gradient(135deg, #f8faff, #eff6ff)',
-        border: '1px solid #bfdbfe',
-        borderRadius: 14,
+        background: 'linear-gradient(135deg, #0f172a, #1e3a8a)',
+        border: '1px solid #1e40af',
+        borderRadius: 16,
         padding: '20px 24px',
+        color: 'white',
+        boxShadow: '0 8px 30px rgba(30,58,138,0.2)',
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulseDot 1.5s ease infinite' }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: '#1e3a8a' }}>ARK Intelligence</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulseDot 1.5s ease infinite' }} />
+          <span style={{ fontWeight: 700, fontSize: 15 }}>ARK Intelligence</span>
           <span style={{
-            fontSize: 10, fontWeight: 700, background: '#dbeafe', color: '#2563eb',
-            borderRadius: 20, padding: '2px 8px', letterSpacing: 0.4,
-          }}>IA • Sur demande</span>
+            fontSize: 10, fontWeight: 700, background: 'rgba(255,255,255,0.1)', color: '#93c5fd',
+            borderRadius: 20, padding: '3px 9px', letterSpacing: 0.4,
+          }}>IA • SUR DEMANDE</span>
         </div>
 
         {/* Résumé statique */}
-        <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 14px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 13, color: '#dbeafe', margin: '0 0 16px', lineHeight: 1.6 }}>
           {staticSummary}
         </p>
 
         {/* Cache ARK */}
         {cacheValid && (
-          <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.6)', borderRadius: 8, border: '0.5px solid #bfdbfe' }}>
-            <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>Dernière analyse ARK : {timeAgoFr(arkCache.ts)}</span>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: '4px 0 0', lineHeight: 1.5, fontStyle: 'italic' }}>"{arkCache.summary}..."</p>
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 10, border: '0.5px solid #1e40af' }}>
+            <span style={{ fontSize: 12, color: '#93c5fd', fontWeight: 600 }}>Dernière analyse ARK : {timeAgoFr(arkCache.ts)}</span>
+            <p style={{ fontSize: 12, color: '#60a5fa', margin: '4px 0 0', lineHeight: 1.5, fontStyle: 'italic' }}>"{arkCache.summary}..."</p>
           </div>
         )}
 
@@ -558,9 +548,21 @@ function CockpitScoring({ scores, client, contrats, onOpenArk }) {
             <button
               key={b.goal}
               onClick={() => handleArkBtn(b.goal)}
-              style={btnStyle}
-              onMouseEnter={e => e.currentTarget.style.background = '#eff6ff'}
-              onMouseLeave={e => e.currentTarget.style.background = 'white'}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid #1e40af',
+                borderRadius: 9,
+                padding: '10px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'Arial, sans-serif',
+                color: '#dbeafe',
+                textAlign: 'left',
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
             >
               {b.label}
             </button>
@@ -628,16 +630,16 @@ export default function ClientDetail() {
   }
 
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', background: '#f7f6f2' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', background: '#f9fafb' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+        <div style={{ width: 32, height: 32, border: '3px solid #e5e7eb', borderTopColor: '#1d4ed8', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
         <p style={{ color: '#9ca3af', fontSize: 13 }}>Chargement...</p>
       </div>
     </div>
   )
 
   if (error) return (
-    <div style={{ padding: 32, background: '#f7f6f2', minHeight: '100vh' }}>
+    <div style={{ padding: 32, background: '#f9fafb', minHeight: '100vh' }}>
       <button onClick={() => navigate(-1)} style={{ marginBottom: 16, padding: '8px 16px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← Retour</button>
       <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 10, padding: '14px 18px', color: '#dc2626', fontSize: 14 }}>{error}</div>
     </div>
@@ -646,10 +648,10 @@ export default function ClientDetail() {
   if (!client) return null
 
   const scores = !loading ? computeScores(client, contrats) : null
-  const card = { background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: 24 }
+  const card = { background: 'white', border: '1px solid #e5e7eb', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.01)' }
 
   return (
-    <div style={{ background: '#f7f6f2', minHeight: '100vh' }}>
+    <div style={{ background: '#f9fafb', minHeight: '100vh' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
@@ -657,14 +659,14 @@ export default function ClientDetail() {
       `}</style>
 
       {/* Topbar */}
-      <div style={{ background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button onClick={() => navigate(-1)}
-            style={{ padding: '7px 14px', background: 'white', color: '#0a0a0a', border: '0.5px solid #e8e6e0', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontFamily: 'Arial, sans-serif' }}>
+            style={{ padding: '8px 16px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontFamily: 'Arial, sans-serif', fontWeight: 600 }}>
             ← Retour
           </button>
           <div>
-            <h1 style={{ fontSize: 17, fontWeight: 600, color: '#0a0a0a', margin: 0 }}>{fmt(client.nom)} {fmt(client.prenom)}</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>{fmt(client.nom)} {fmt(client.prenom)}</h1>
             <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center' }}>
               <StatusBadge status={client.statut} />
               <RiskScoreBadge score={scores?.risque} />
@@ -672,10 +674,16 @@ export default function ClientDetail() {
             </div>
           </div>
         </div>
-        <button onClick={() => setShowEdit(true)}
-          style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, fontFamily: 'Arial, sans-serif' }}>
-          Modifier
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => setShowNote(true)}
+            style={{ padding: '9px 18px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+            + Note
+          </button>
+          <button onClick={() => setShowEdit(true)}
+            style={{ padding: '9px 18px', background: '#1d4ed8', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+            Modifier
+          </button>
+        </div>
       </div>
 
       {/* ── COCKPIT SCORING (après topbar, avant identité) ── */}
@@ -697,7 +705,7 @@ export default function ClientDetail() {
 
           {/* Identité */}
           <div style={card}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: '0 0 16px', textTransform: 'uppercase' }}>Identité</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: 0.8, margin: '0 0 16px', textTransform: 'uppercase' }}>Identité</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               {[
                 ['Email', client.email],
@@ -719,7 +727,7 @@ export default function ClientDetail() {
 
           {/* Profil assurance */}
           <div style={card}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: '0 0 16px', textTransform: 'uppercase' }}>Profil d'assurance</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: 0.8, margin: '0 0 16px', textTransform: 'uppercase' }}>Profil d'assurance</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
               {[
                 ['Bonus-malus', client.bonus_malus !== null ? String(client.bonus_malus) : null],
@@ -752,7 +760,7 @@ export default function ClientDetail() {
 
         {/* Contrats */}
         <div style={{ ...card, marginBottom: 16 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: '0 0 16px', textTransform: 'uppercase' }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: 0.8, margin: '0 0 16px', textTransform: 'uppercase' }}>
             Contrats ({contrats.length})
           </p>
           {contrats.length === 0 ? (
@@ -793,10 +801,6 @@ export default function ClientDetail() {
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: 1, margin: 0, textTransform: 'uppercase' }}>Notes</p>
-            <button onClick={() => setShowNote(!showNote)}
-              style={{ padding: '6px 12px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontFamily: 'Arial, sans-serif' }}>
-              + Note
-            </button>
           </div>
           {showNote && (
             <div style={{ marginBottom: 14 }}>
@@ -820,13 +824,18 @@ export default function ClientDetail() {
 
       {/* Bouton ARK fixe */}
       <button onClick={() => openArk(null)} style={{
-        position: 'fixed', bottom: 28, right: 28, padding: '13px 20px',
-        background: '#2563eb', color: 'white', border: 'none', borderRadius: 12,
-        cursor: 'pointer', fontSize: 13, fontWeight: 600, zIndex: 998,
-        boxShadow: '0 4px 20px rgba(37,99,235,0.35)',
-        display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Arial, sans-serif'
-      }}>
-        <div style={{ width: 7, height: 7, background: '#4ade80', borderRadius: '50%', animation: 'pulse 2s ease infinite' }} />
+        position: 'fixed', bottom: 28, right: 28, padding: '14px 22px',
+        background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
+        color: 'white', border: 'none', borderRadius: 14,
+        cursor: 'pointer', fontSize: 14, fontWeight: 600, zIndex: 998,
+        boxShadow: '0 6px 25px rgba(37,99,235,0.4)',
+        display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'Arial, sans-serif',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(37,99,235,0.5)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 25px rgba(37,99,235,0.4)' }}
+      >
+        <div style={{ width: 8, height: 8, background: '#4ade80', borderRadius: '50%', animation: 'pulse 1.5s ease infinite' }} />
         Demander à ARK
       </button>
 
