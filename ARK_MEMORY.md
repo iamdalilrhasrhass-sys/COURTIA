@@ -1,3 +1,9 @@
+- /drop frontend/src/pages/Contrats.jsx
+/add frontend/src/pages/Taches.jsx
+Réécris Taches.jsx en entie
+    </div>                                                                          
+                  )}                                                                                
+                
 - /drop frontend/src/pages/ClientDetail.jsx
 /add frontend/src/pages/Contrats.jsx
 Réécris Contrats.jsx 
