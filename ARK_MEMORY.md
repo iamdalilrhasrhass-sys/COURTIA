@@ -1,3 +1,8 @@
+- /drop frontend/src/pages/Parametres.jsx
+/add frontend/src/components/Sidebar.jsx frontend/src/pages/
+                                                                                 
+          <Route path="/capitia"       element={<Capitia />} />                                     
+          <Route pa
 - /drop frontend/src/pages/Taches.jsx
 /add frontend/src/pages/Parametres.jsx
 Réécris Parametres.jsx en
