@@ -551,3 +551,38 @@ module.exports = {
   handleWebhookEvent,
   sendDunningEmail,
 };
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+async function createCustomer(userId, email) {
+  const customer = await stripe.customers.create({
+    email: email,
+    metadata: {
+      userId: userId
+    }
+  });
+  return customer;
+}
+
+async function createSubscription(customerId, plan) {
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [
+      {
+        plan: plan
+      }
+    ],
+    payment_settings: {
+      payment_method_types: ['card']
+    }
+  });
+  return subscription;
+}
+
+async function getSubscription(customerId) {
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customerId
+  });
+  return subscriptions.data[0];
+}
+
+module.exports = { createCustomer, createSubscription, getSubscription };

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Topbar from '../components/Topbar'
-import StatusBadge from '../components/StatusBadge'
-import RiskScoreBadge from '../components/RiskScoreBadge'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
@@ -13,9 +11,80 @@ const STATUS_TABS = [
   { key: 'résilié', label: 'Résiliés' },
 ]
 
+const Avatar = ({ name }) => {
+  const getInitials = (name) => {
+    const names = (name || '').trim().split(' ').filter(Boolean)
+    if (names.length === 0) return '?'
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  }
+
+  const getBgColor = (name) => {
+    if (!name) return 'bg-gray-500'
+    const colors = [
+      'bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-lime-400', 
+      'bg-green-400', 'bg-teal-400', 'bg-cyan-400', 'bg-blue-400', 
+      'bg-indigo-400', 'bg-purple-400', 'bg-pink-400'
+    ]
+    let hash = 0; if (!name) return colors[0];
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return colors[Math.abs(hash) % colors.length]
+  }
+
+  const clientName = name || ''
+  const initials = getInitials(clientName)
+  const bgColorClass = getBgColor(clientName)
+
+  return (
+    <div className={`w-8 h-8 rounded-full ${bgColorClass} text-white flex items-center justify-center text-sm font-semibold`}>
+      {initials}
+    </div>
+  )
+}
+
+const StatusBadge = ({ status }) => {
+  const s = (status || '').toLowerCase()
+  let colorClasses = 'bg-gray-100 text-gray-700'
+  let label = 'Inconnu'
+
+  if (s === 'actif') {
+    colorClasses = 'bg-green-100 text-green-700'; label = 'Actif'
+  } else if (s === 'prospect') {
+    colorClasses = 'bg-blue-100 text-blue-700'; label = 'Prospect'
+  } else if (['résilié', 'resilié', 'perdu', 'inactif'].includes(s)) {
+    colorClasses = 'bg-gray-100 text-gray-700'
+    label = 'Inactif'
+    if (s.includes('résilié') || s.includes('resilié')) label = 'Résilié'
+  }
+
+  return (
+    <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full inline-block ${colorClasses}`}>
+      {label}
+    </span>
+  )
+}
+
+const RiskScoreBadge = ({ score }) => {
+  const s = Math.min(100, Math.max(0, Number(score) || 0))
+  let colorClass = 'bg-green-500' // Faible
+  if (s > 60) colorClass = 'bg-red-500' // Élevé
+  else if (s > 30) colorClass = 'bg-yellow-500' // Modéré
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-20 bg-gray-200 rounded-full h-1.5">
+        <div className={`${colorClass} h-1.5 rounded-full`} style={{ width: `${s}%` }}></div>
+      </div>
+      <span className="text-xs font-semibold text-gray-600 w-6 text-right">{s}</span>
+    </div>
+  )
+}
+
 function SortIcon({ field, active, dir }) {
-  if (!active) return <span style={{ color: '#d1d5db', fontSize: 9, marginLeft: 4 }}>↕</span>
-  return <span style={{ color: '#60a5fa', fontSize: 9, marginLeft: 4 }}>{dir === 'asc' ? '↑' : '↓'}</span>
+  if (!active) return <span className="text-gray-300 text-[9px] ml-1">↕</span>
+  return <span className="text-blue-400 text-[9px] ml-1">{dir === 'asc' ? '↑' : '↓'}</span>
 }
 
 export default function Clients() {
@@ -85,52 +154,43 @@ export default function Clients() {
     setPage(1)
   }
 
-  const thStyle = (f) => ({
-    padding: '11px 16px', textAlign: 'left', color: 'white',
-    fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px',
-    cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap', background: '#0a0a0a'
-  })
+  const thClass = "px-4 py-3 text-left text-[11px] font-bold text-white uppercase tracking-wider whitespace-nowrap bg-[#0a0a0a] select-none"
 
   const topbarAction = (
     <button onClick={() => navigate('/clients/new')}
-      style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+      className="px-4 py-2 bg-[#0a0a0a] text-white border-none rounded-lg text-sm font-medium cursor-pointer font-sans hover:bg-gray-800">
       + Nouveau client
     </button>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+    <div className="min-h-screen bg-gray-50 font-sans">
       <Topbar title="Clients" subtitle={`${safe.length} client${safe.length > 1 ? 's' : ''} au total`} action={topbarAction} />
 
-      <div style={{ padding: '24px 32px' }}>
+      <div className="p-8">
 
         {/* Tabs statut */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, padding: 4, width: 'fit-content' }}>
+        <div className="flex gap-1 mb-4 bg-white border border-stone-200 rounded-xl p-1 w-fit shadow-sm">
           {STATUS_TABS.map(tab => {
             const count = tab.key === 'tous' ? safe.length
               : tab.key === 'résilié' ? safe.filter(c => ['résilié', 'resilié', 'perdu'].includes((c.statut || '').toLowerCase())).length
               : safe.filter(c => (c.statut || '').toLowerCase() === tab.key).length
             return (
               <button key={tab.key} onClick={() => { setStatusFilter(tab.key); setPage(1) }}
-                style={{
-                  padding: '7px 14px', border: 'none', borderRadius: 7, cursor: 'pointer',
-                  fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif', transition: 'all 0.1s',
-                  background: statusFilter === tab.key ? '#0a0a0a' : 'transparent',
-                  color: statusFilter === tab.key ? 'white' : '#9ca3af'
-                }}>
-                {tab.label} <span style={{ opacity: 0.6, fontSize: 11 }}>({count})</span>
+                className={`px-4 py-1.5 border-none rounded-lg cursor-pointer text-xs font-semibold font-sans transition-all duration-100 ${statusFilter === tab.key ? 'bg-black text-white' : 'bg-transparent text-gray-400 hover:bg-gray-100'}`}>
+                {tab.label} <span className="opacity-60 text-xs">({count})</span>
               </button>
             )
           })}
         </div>
 
         {/* Search + risk filter */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-          <input type="text" placeholder="Rechercher..." value={search}
+        <div className="flex gap-4 mb-4">
+          <input type="text" placeholder="Rechercher par nom, prénom, email..." value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
-            style={{ flex: 1, maxWidth: 360, padding: '10px 14px', background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }} />
+            className="flex-1 max-w-sm px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm text-black font-sans shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
           <select value={riskFilter} onChange={e => { setRiskFilter(e.target.value); setPage(1) }}
-            style={{ padding: '10px 12px', background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, color: '#0a0a0a', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
+            className="px-3 py-2 bg-white border border-stone-200 rounded-lg text-sm text-black cursor-pointer font-sans shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
             <option value="tous">Tous les risques</option>
             <option value="faible">Faible (0-30)</option>
             <option value="modere">Modéré (31-60)</option>
@@ -140,17 +200,17 @@ export default function Clients() {
 
         {/* Error */}
         {error && (
-          <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 14, color: '#dc2626', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="bg-red-50 border border-red-300 rounded-lg p-3 mb-4 text-red-600 text-sm flex justify-between items-center shadow-sm">
             <span>{error}</span>
-            <button onClick={fetchClients} style={{ padding: '5px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Réessayer</button>
+            <button onClick={fetchClients} className="px-3 py-1 bg-red-600 text-white border-none rounded-md cursor-pointer text-xs hover:bg-red-700">Réessayer</button>
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 13 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 28, height: 28, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div className="flex justify-center py-12 text-gray-400 text-sm">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-7 h-7 border-2 border-stone-200 border-t-black rounded-full animate-spin" />
               Chargement...
             </div>
           </div>
@@ -158,52 +218,52 @@ export default function Clients() {
 
         {/* Empty */}
         {!loading && !error && paginated.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 13 }}>
-            Aucun client trouvé
+          <div className="text-center py-12 text-gray-400 text-sm">
+            Aucun client trouvé pour les filtres actuels.
           </div>
         )}
 
         {/* Table */}
         {!loading && !error && paginated.length > 0 && (
           <>
-            <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="bg-white border border-stone-200 rounded-xl overflow-hidden shadow">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr>
-                    <th style={thStyle('nom')} onClick={() => toggleSort('nom')}>
-                      Nom & Prénom <SortIcon field="nom" active={sortField === 'nom'} dir={sortDir} />
+                  <tr className="border-b border-stone-200">
+                    <th className={`${thClass} cursor-pointer`} onClick={() => toggleSort('nom')}>
+                      Client <SortIcon field="nom" active={sortField === 'nom'} dir={sortDir} />
                     </th>
-                    <th style={thStyle(null)}>Email</th>
-                    <th style={thStyle(null)}>Téléphone</th>
-                    <th style={thStyle('statut')} onClick={() => toggleSort('statut')}>
+                    <th className={thClass}>Email</th>
+                    <th className={thClass}>Téléphone</th>
+                    <th className={`${thClass} cursor-pointer`} onClick={() => toggleSort('statut')}>
                       Statut <SortIcon field="statut" active={sortField === 'statut'} dir={sortDir} />
                     </th>
-                    <th style={thStyle('score_risque')} onClick={() => toggleSort('score_risque')}>
+                    <th className={`${thClass} cursor-pointer`} onClick={() => toggleSort('score_risque')}>
                       Risque <SortIcon field="score_risque" active={sortField === 'score_risque'} dir={sortDir} />
                     </th>
-                    <th style={{ ...thStyle(null), cursor: 'default' }}>Action</th>
+                    <th className={thClass}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.map((client, idx) => {
+                  {paginated.map((client) => {
                     if (!client?.id) return null
-                    const bg = idx % 2 === 0 ? 'white' : '#fafaf8'
                     return (
                       <tr key={client.id}
-                        style={{ borderBottom: '0.5px solid #f7f6f2', background: bg, cursor: 'pointer' }}
-                        onClick={() => navigate(`/client/${client.id}`)}
-                        onMouseEnter={e => e.currentTarget.style.background = '#f0f8ff'}
-                        onMouseLeave={e => e.currentTarget.style.background = bg}>
-                        <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#0a0a0a' }}>
-                          {client.nom || '—'} {client.prenom || ''}
+                        className="border-b border-stone-100 last:border-b-0 hover:bg-blue-50 cursor-pointer"
+                        onClick={() => navigate(`/client/${client.id}`)}>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-800">
+                          <div className="flex items-center gap-3">
+                            <Avatar name={`${client.prenom || ''} ${client.nom || ''}`} />
+                            <span>{client.nom || '—'} {client.prenom || ''}</span>
+                          </div>
                         </td>
-                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#9ca3af' }}>{client.email || '—'}</td>
-                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#9ca3af' }}>{client.telephone || '—'}</td>
-                        <td style={{ padding: '12px 16px' }}><StatusBadge status={client.statut} /></td>
-                        <td style={{ padding: '12px 16px' }}><RiskScoreBadge score={client.score_risque} /></td>
-                        <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
+                        <td className="px-4 py-3 text-sm text-gray-500">{client.email || '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">{client.telephone || '—'}</td>
+                        <td className="px-4 py-3"><StatusBadge status={client.statut} /></td>
+                        <td className="px-4 py-3"><RiskScoreBadge score={client.score_risque} /></td>
+                        <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                           <button onClick={() => navigate(`/client/${client.id}`)}
-                            style={{ padding: '5px 12px', background: 'white', color: '#2563eb', border: '0.5px solid #bfdbfe', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                            className="px-3 py-1 bg-white text-blue-600 border border-blue-200 rounded-md cursor-pointer text-xs font-semibold hover:bg-blue-50 hover:border-blue-300">
                             Voir →
                           </button>
                         </td>
@@ -216,20 +276,20 @@ export default function Clients() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
+              <div className="flex justify-center items-center gap-2 mt-5">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  style={{ padding: '7px 14px', border: '0.5px solid #e8e6e0', borderRadius: 7, background: 'white', color: page === 1 ? '#d1d5db' : '#0a0a0a', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
+                  className="px-3.5 py-1.5 border border-stone-200 rounded-md bg-white text-sm text-black cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm">
                   ← Précédent
                 </button>
-                <span style={{ padding: '7px 14px', fontSize: 13, color: '#9ca3af' }}>Page {page} / {totalPages}</span>
+                <span className="px-3.5 py-1.5 text-sm text-gray-500">Page {page} / {totalPages}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  style={{ padding: '7px 14px', border: '0.5px solid #e8e6e0', borderRadius: 7, background: 'white', color: page === totalPages ? '#d1d5db' : '#0a0a0a', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}>
+                  className="px-3.5 py-1.5 border border-stone-200 rounded-md bg-white text-sm text-black cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm">
                   Suivant →
                 </button>
               </div>
             )}
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
-              {sorted.length} client{sorted.length > 1 ? 's' : ''}
+            <p className="text-center text-xs text-gray-400 mt-3">
+              {sorted.length} client{sorted.length > 1 ? 's' : ''} correspondant aux filtres
             </p>
           </>
         )}

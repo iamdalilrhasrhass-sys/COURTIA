@@ -7,7 +7,14 @@ const pool = require('./src/db')
 app.locals.pool = pool
 
 app.use(cors({ origin: ['https://courtia.vercel.app', 'http://localhost:5173'], credentials: true }))
-app.use(express.json())
+app.use(express.json({
+  // We need the raw body for Stripe webhook verification
+  verify: (req, res, buf) => {
+    if (req.originalUrl.startsWith('/api/stripe/webhook')) {
+      req.rawBody = buf
+    }
+  }
+}))
 
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -120,10 +127,12 @@ const automationsRouter    = require('./src/routes/automations')
 const documentsRouter      = require('./src/routes/documents')
 const ddaQuizRouter        = require('./src/routes/ddaQuiz')
 const analyticsRouter      = require('./src/routes/analytics')
+const stripeRouter         = require('./src/routes/stripe')
 
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
+app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
