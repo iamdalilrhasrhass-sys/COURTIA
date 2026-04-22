@@ -16,6 +16,7 @@ import Rapports from './pages/Rapports'
 import Parametres from './pages/Parametres'
 import Capitia from './pages/Capitia'
 import AnalyticsExecutive from './pages/AnalyticsExecutive'
+import Abonnement from './pages/Abonnement'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -142,6 +143,7 @@ export default function App() {
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
+          <Route path="/abonnement"    element={<Abonnement />} />
         </Route>
 
         {/* 404 */}
