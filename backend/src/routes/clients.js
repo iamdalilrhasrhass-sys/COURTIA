@@ -86,10 +86,15 @@ router.get('/:id/contrats', async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const result = await pool.query(
-      `SELECT id, type_contrat, compagnie, prime_annuelle, statut,
-              date_effet, date_echeance
-       FROM contrats WHERE client_id = $1
-       ORDER BY date_echeance ASC NULLS LAST`,
+      `SELECT id,
+              quote_data->>'type_contrat' as type_contrat,
+              quote_data->>'compagnie' as compagnie,
+              (quote_data->>'prime_annuelle')::numeric as prime_annuelle,
+              status as statut,
+              (quote_data->>'date_effet')::date as date_effet,
+              (quote_data->>'date_echeance')::date as date_echeance
+       FROM quotes WHERE client_id = $1
+       ORDER BY (quote_data->>'date_echeance')::date ASC NULLS LAST`,
       [req.params.id]
     )
     res.json(result.rows)
