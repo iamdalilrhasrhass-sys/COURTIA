@@ -1,3 +1,8 @@
+- /drop frontend/src/pages/Taches.jsx frontend/src/pages/Parametres.jsx frontend/src/pages/Abonnement.
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+Aider v0.86.2
+Main model: gemini/gemini-2.5-pro with diff-fenced edit format
+Weak model: gemini/gem
 - Plan actuel en grand : badge coloré + nom plan + prix/mois. Liste features actuelles avec Check vert
    
             >                                                                                       
