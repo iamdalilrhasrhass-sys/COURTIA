@@ -108,7 +108,7 @@ export default function Dashboard() {
   const clientStatusData = [
     { name: 'Prospects', value: stats?.clientsParStatut?.prospect || 0 },
     { name: 'Actifs', value: stats?.clientsParStatut?.actif || 0 },
-    { name: 'Inactifs', value: stats?.clientsParStatut?.inactif || 0 },
+    { name: 'Inactifs', value: (stats?.clientsParStatut?.inactif || 0) + (stats?.clientsParStatut?.résilié || 0) + (stats?.clientsParStatut?.resilié || 0) + (stats?.clientsParStatut?.perdu || 0) },
   ].filter(item => item.value > 0);
   const PIE_COLORS = ['#2563eb', '#10b981', '#9ca3af']
   
