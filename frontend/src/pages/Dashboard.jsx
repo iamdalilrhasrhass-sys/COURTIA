@@ -88,6 +88,7 @@ export default function Dashboard() {
         api.get('/api/dashboard/stats'),
         api.get('/api/auth/me').catch(() => ({ data: { prenom: 'Admin' } }))
       ])
+      console.log('Dashboard stats API response:', statsRes.data)
       setStats(statsRes.data)
       setUser(userRes.data)
     } catch (err) { console.error("Erreur de chargement du dashboard:", err) } 
@@ -105,11 +106,15 @@ export default function Dashboard() {
     return Array.from({length: 12}, (_, i) => ({ name: months[i], Primes: Math.floor(Math.random() * (3500 - 1500 + 1)) + 1500 }))
   }, [stats])
   
-  const clientStatusData = [
-    { name: 'Prospects', value: stats?.clientsParStatut?.prospect || 0 },
-    { name: 'Actifs', value: stats?.clientsParStatut?.actif || 0 },
-    { name: 'Inactifs', value: (stats?.clientsParStatut?.inactif || 0) + (stats?.clientsParStatut?.résilié || 0) + (stats?.clientsParStatut?.resilié || 0) + (stats?.clientsParStatut?.perdu || 0) },
-  ].filter(item => item.value > 0);
+  const clientStatusData = useMemo(() => {
+    if (!stats?.clientsParStatut) return []
+    const counts = stats.clientsParStatut
+    return [
+      { name: 'Prospects', value: counts.prospect || 0 },
+      { name: 'Actifs', value: counts.actif || 0 },
+      { name: 'Inactifs', value: (counts.inactif || 0) + (counts.résilié || 0) + (counts.resilié || 0) + (counts.perdu || 0) },
+    ].filter(item => item.value > 0);
+  }, [stats])
   const PIE_COLORS = ['#2563eb', '#10b981', '#9ca3af']
   
   const clientsASurveiller = (stats?.clientsRecents || []).sort((a,b) => (b.score_risque || 0) - (a.score_risque || 0)).slice(0, 5)
