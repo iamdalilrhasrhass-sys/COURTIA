@@ -1,51 +1,69 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Plus, User, Calendar, X, Trash2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Clock, X } from 'lucide-react'
 import Topbar from '../components/Topbar'
 import api from '../api'
 
 const KANBAN_COLUMNS = [
-  { id: 'a_faire', title: 'À faire', color: 'bg-blue-500' },
-  { id: 'en_cours', title: 'En cours', color: 'bg-amber-500' },
-  { id: 'terminee', title: 'Terminé', color: 'bg-emerald-500' },
+  { id: 'a_faire', title: 'À faire', headerClasses: 'bg-gray-100 border-gray-200' },
+  { id: 'en_cours', title: 'En cours', headerClasses: 'bg-blue-50 border-t-2 border-blue-500' },
+  { id: 'terminee', title: 'Terminé', headerClasses: 'bg-emerald-50 border-t-2 border-emerald-500' },
 ]
 
 const PRIORITY_STYLES = {
-  haute:   { indicator: 'bg-red-500', label: 'Haute' },
-  normale: { indicator: 'bg-blue-500', label: 'Normale' },
-  basse:   { indicator: 'bg-gray-400', label: 'Basse' },
+  haute:   { label: 'Haute', classes: 'bg-red-100 text-red-600' },
+  normale: { label: 'Normale', classes: 'bg-blue-100 text-blue-600' },
+  basse:   { label: 'Basse', classes: 'bg-gray-100 text-gray-500' },
 }
 
-const fmtDateShort = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : null
+const MiniAvatar = ({ name }) => {
+  const getInitials = (name) => {
+    if (!name) return '?'
+    const names = name.trim().split(' ').filter(Boolean)
+    if (names.length === 0) return '?'
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  }
+  return (
+    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+      {getInitials(name)}
+    </div>
+  )
+}
 
 function TaskCard({ task, onEdit, onDelete }) {
   const priority = PRIORITY_STYLES[task.priorite] || PRIORITY_STYLES.basse
   const clientName = task.client_nom ? `${task.client_nom} ${task.client_prenom || ''}`.trim() : null
   const echeance = task.echeance ? new Date(task.echeance) : null
-
-  let echeanceColor = 'text-gray-500'
-  if (echeance) {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    const diffDays = Math.ceil((echeance - today) / (1000 * 60 * 60 * 24))
-    if (diffDays < 0) echeanceColor = 'text-red-600 font-semibold'
-    else if (diffDays <= 7) echeanceColor = 'text-amber-600'
-  }
+  const isOverdue = echeance && new Date() > echeance
 
   return (
-    <div className="bg-white p-3.5 rounded-lg border border-gray-200/80 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer group" onClick={() => onEdit(task)}>
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 group transition-shadow hover:shadow-md">
       <div className="flex justify-between items-start">
-        <p className="text-sm font-semibold text-gray-800 flex-1 pr-2">{task.titre}</p>
-        <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${priority.indicator}`} title={`Priorité ${priority.label}`}></div>
+        <p className="font-semibold text-sm text-gray-800 pr-4">{task.titre}</p>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button onClick={() => onEdit(task)} className="p-1 text-gray-400 hover:text-blue-600"><Edit size={14} /></button>
+          <button onClick={() => onDelete(task.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
+        </div>
       </div>
-      {task.description && <p className="text-xs text-gray-500 mt-1.5 line-clamp-2">{task.description}</p>}
+      
+      {clientName && (
+        <div className="flex items-center gap-2 mt-3">
+          <MiniAvatar name={clientName} />
+          <span className="text-xs text-gray-600 font-medium">{clientName}</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          {clientName && <span className="flex items-center gap-1.5" title={clientName}><User size={13} /> <span className="truncate max-w-[80px]">{clientName}</span></span>}
-          {echeance && <span className={`flex items-center gap-1.5 ${echeanceColor}`}><Calendar size={13} /> {fmtDateShort(echeance)}</span>}
-        </div>
-        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); onDelete(task.id) }} className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
-        </div>
+        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${priority.classes}`}>
+          {priority.label}
+        </span>
+        {echeance && (
+          <span className={`flex items-center gap-1.5 text-xs ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+            <Clock size={12} />
+            {echeance.toLocaleDateString('fr-FR')}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -134,7 +152,6 @@ function TaskModal({ task, clients, onSave, onClose }) {
   )
 }
 
-
 export default function Taches() {
   const [tasks, setTasks] = useState([])
   const [clients, setClients] = useState([])
@@ -190,7 +207,7 @@ export default function Taches() {
 
   const topbarAction = (
     <button onClick={() => { setSelectedTask(null); setShowModal(true) }}
-      className="flex items-center gap-2 px-4 py-2 bg-[#2563eb] text-white rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 ease-out hover:bg-gradient-to-r hover:from-[#2563eb] hover:to-[#7c3aed] hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02]">
+      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 ease-out hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02]">
       <Plus size={16} />
       Nouvelle tâche
     </button>
@@ -215,15 +232,18 @@ export default function Taches() {
             <div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" style={{ animationDuration: '400ms' }}>
             {KANBAN_COLUMNS.map(column => (
-              <div key={column.id} className="bg-gray-50/70 rounded-xl p-4 min-h-[300px]">
-                <div className="flex items-center gap-3 mb-5 px-1">
-                  <div className={`w-2 h-2 rounded-full ${column.color}`}></div>
-                  <h2 className="text-base font-bold text-gray-800">{column.title}</h2>
-                  <span className="text-sm font-semibold text-gray-400">{tasksByStatus[column.id].length}</span>
+              <div key={column.id} className="bg-gray-50/70 rounded-xl flex flex-col">
+                <div className={`p-4 rounded-t-xl border-b ${column.headerClasses}`}>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-base font-bold text-gray-800">{column.title}</h2>
+                    <span className="text-sm font-semibold text-gray-500 bg-white/70 px-2 py-0.5 rounded-md">
+                      {tasksByStatus[column.id].length}
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-3 h-full overflow-y-auto">
+                <div className="p-4 space-y-4 h-full overflow-y-auto">
                   {tasksByStatus[column.id].map(task => (
                     <TaskCard key={task.id} task={task} onEdit={handleEdit} onDelete={handleDelete} />
                   ))}
