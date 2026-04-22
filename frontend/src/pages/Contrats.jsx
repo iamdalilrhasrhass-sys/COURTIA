@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Plus, ChevronUp, ChevronDown, Clock } from 'lucide-react'
 import Topbar from '../components/Topbar'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+import api from '../api'
 
 const STATUS_TABS = [
   { key: 'tous', label: 'Tous' },
@@ -11,43 +11,92 @@ const STATUS_TABS = [
   { key: 'résilié', label: 'Résiliés' },
 ]
 
-function StatusPill({ status }) {
+const fmtEur = (v) => (!v && v !== 0) ? '—' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v))
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
+
+const StatusBadge = ({ status }) => {
   const s = (status || '').toLowerCase()
-  let bg, color, label
-  if (s === 'actif') { bg = '#dcfce7'; color = '#166534'; label = 'Actif' }
-  else if (s === 'résilié' || s === 'resilié' || s === 'resilie') { bg = '#fee2e2'; color = '#991b1b'; label = 'Résilié' }
-  else if (s === 'en attente') { bg = '#fef9c3'; color = '#854d0e'; label = 'En attente' }
-  else { bg = '#f3f4f6'; color = '#6b7280'; label = status || '—' }
-  return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color, whiteSpace: 'nowrap' }}>{label}</span>
+  let colorClasses = 'bg-gray-100 text-gray-700'
+  let label = status
+
+  if (s === 'actif') {
+    colorClasses = 'bg-emerald-100 text-emerald-700'; label = 'Actif'
+  } else if (['résilié', 'resilié', 'perdu'].includes(s)) {
+    colorClasses = 'bg-red-100 text-red-700'; label = 'Résilié'
+  } else if (['en attente', 'suspendu'].includes(s)) {
+    colorClasses = 'bg-amber-100 text-amber-700'; label = 'En attente'
+  }
+
+  return (
+    <span className={`px-3 py-1 text-xs font-semibold rounded-full inline-flex items-center gap-1.5 ${colorClasses}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${colorClasses.replace('text', 'bg').replace('-100', '-500')}`}></span>
+      {label}
+    </span>
+  )
 }
 
-function SortIcon({ field, active, dir }) {
-  if (!active) return <span style={{ color: '#555', fontSize: 9, marginLeft: 4 }}>↕</span>
-  return <span style={{ color: '#60a5fa', fontSize: 9, marginLeft: 4 }}>{dir === 'asc' ? '↑' : '↓'}</span>
+const EcheanceIndicator = ({ date }) => {
+  if (!date) return <span className="text-sm text-gray-400">—</span>
+  const d = new Date(date)
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  
+  const daysLeft = Math.ceil((d - now) / (1000 * 60 * 60 * 24))
+
+  if (daysLeft < 0) {
+    return <span className="text-sm text-gray-500">Expiré</span>
+  }
+  if (daysLeft <= 30) {
+    return (
+      <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600">
+        <Clock size={14} /> J-{daysLeft}
+      </span>
+    )
+  }
+  return <span className="text-sm text-gray-600">{fmtDate(date)}</span>
 }
+
+const SortIcon = ({ active, dir }) => {
+  if (!active) return <ChevronUp size={14} className="text-gray-300" />
+  return dir === 'asc' ? <ChevronUp size={14} className="text-blue-500" /> : <ChevronDown size={14} className="text-blue-500" />
+}
+
+const SkeletonRow = () => (
+  <tr className="animate-pulse">
+    <td className="p-5"><div className="w-24 h-4 bg-gray-200 rounded"></div></td>
+    <td className="p-5"><div className="w-20 h-4 bg-gray-200 rounded"></div></td>
+    <td className="p-5">
+        <div>
+          <div className="w-24 h-4 bg-gray-200 rounded"></div>
+          <div className="w-32 h-3 mt-1.5 bg-gray-200 rounded"></div>
+        </div>
+    </td>
+    <td className="p-5"><div className="w-16 h-4 bg-gray-200 rounded text-right"></div></td>
+    <td className="p-5"><div className="w-20 h-5 bg-gray-200 rounded-full"></div></td>
+    <td className="p-5"><div className="w-24 h-4 bg-gray-200 rounded"></div></td>
+  </tr>
+)
 
 export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
-  const [typeFilter, setTypeFilter] = useState('tous')
   const [sortField, setSortField] = useState('date_echeance')
   const [sortDir, setSortDir] = useState('asc')
   const [page, setPage] = useState(1)
   const navigate = useNavigate()
-  const PER_PAGE = 20
+  const PER_PAGE = 15
 
-  useEffect(() => { fetchContrats() }, [])
+  useEffect(() => {
+    fetchContrats()
+  }, [])
 
   async function fetchContrats() {
     try {
       setLoading(true); setError('')
-      const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-      if (!token) { setError('Token manquant'); return }
-      const res = await fetch(`${API_URL}/api/contrats`, { headers: { Authorization: `Bearer ${token}` } })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
+      const res = await api.get('/api/contrats')
+      const data = res.data
       let arr = Array.isArray(data) ? data : (data?.data || data?.contrats || [])
       setContrats(arr)
     } catch (err) {
@@ -62,28 +111,30 @@ export default function Contrats() {
   const filtered = safe.filter(c => {
     if (!c) return false
     const st = (c.statut || c.status || '').toLowerCase()
-    const ty = (c.type_contrat || c.type || '').toLowerCase()
-    const matchStatus = statusFilter === 'tous' || st === statusFilter
-    const matchType = typeFilter === 'tous' || ty === typeFilter
-    return matchStatus && matchType
+    return statusFilter === 'tous' || st === statusFilter
   })
 
   const sorted = [...filtered].sort((a, b) => {
-    let va = a[sortField] ?? a[sortField === 'date_echeance' ? 'echeance' : sortField] ?? ''
-    let vb = b[sortField] ?? b[sortField === 'date_echeance' ? 'echeance' : sortField] ?? ''
+    let va = a[sortField]
+    let vb = b[sortField]
+
     if (sortField === 'date_echeance') {
-      va = va ? new Date(va).getTime() : Infinity
-      vb = vb ? new Date(vb).getTime() : Infinity
+      va = va ? new Date(va).getTime() : (sortDir === 'asc' ? Infinity : -Infinity)
+      vb = vb ? new Date(vb).getTime() : (sortDir === 'asc' ? Infinity : -Infinity)
     } else if (sortField === 'prime_annuelle') {
       va = Number(va) || 0; vb = Number(vb) || 0
+    } else if (sortField === 'client') {
+      va = `${a.client_nom || ''} ${a.client_prenom || ''}`.trim().toLowerCase()
+      vb = `${b.client_nom || ''} ${b.client_prenom || ''}`.trim().toLowerCase()
     } else {
-      va = String(va).toLowerCase(); vb = String(vb).toLowerCase()
+      va = String(va ?? '').toLowerCase(); vb = String(vb ?? '').toLowerCase()
     }
+
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
     return 0
   })
-
+  
   const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE))
   const paginated = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
@@ -93,156 +144,118 @@ export default function Contrats() {
     setPage(1)
   }
 
-  function fmtEur(v) { if (!v && v !== 0) return '—'; return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v) || 0) }
-  function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('fr-FR') } catch { return '—' } }
-  function getDaysLeft(d) { if (!d) return null; try { const diff = Math.ceil((new Date(d) - new Date()) / 86400000); return diff > 0 ? diff : null } catch { return null } }
-
-  const thStyle = (f) => ({
-    padding: '11px 16px', textAlign: 'left', color: 'white', background: '#0a0a0a',
-    fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px',
-    cursor: f ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap'
-  })
-
+  const thClass = "p-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider select-none"
+  
   const topbarAction = (
     <button onClick={() => navigate('/contrats/new')}
-      style={{ padding: '9px 18px', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
-      + Nouveau contrat
+      className="flex items-center gap-2 px-4 py-2 bg-[#2563eb] text-white rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 ease-out hover:bg-gradient-to-r hover:from-[#2563eb] hover:to-[#7c3aed] hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02]">
+      <Plus size={16} />
+      Nouveau contrat
     </button>
   )
-
+  
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+    <div className="min-h-screen bg-white font-sans">
       <Topbar title="Contrats" subtitle={`${safe.length} contrat${safe.length > 1 ? 's' : ''} au total`} action={topbarAction} />
 
-      <div style={{ padding: '24px 32px' }}>
+      <main className="p-8 animate-fade-in">
+        <header className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            {STATUS_TABS.map(tab => {
+              const count = tab.key === 'tous' ? safe.length
+                : safe.filter(c => (c.statut || c.status || '').toLowerCase() === tab.key).length
+              return (
+                <button key={tab.key} onClick={() => { setStatusFilter(tab.key); setPage(1) }}
+                  className={`px-4 py-2 border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 ${statusFilter === tab.key ? 'bg-[#2563eb] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black'}`}>
+                  {tab.label} <span className="opacity-60 text-xs">({count})</span>
+                </button>
+              )
+            })}
+          </div>
+        </header>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, padding: 4, width: 'fit-content' }}>
-          {STATUS_TABS.map(tab => (
-            <button key={tab.key} onClick={() => { setStatusFilter(tab.key); setPage(1) }}
-              style={{
-                padding: '7px 14px', border: 'none', borderRadius: 7, cursor: 'pointer',
-                fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif',
-                background: statusFilter === tab.key ? '#0a0a0a' : 'transparent',
-                color: statusFilter === tab.key ? 'white' : '#9ca3af'
-              }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Type filter */}
-        <div style={{ marginBottom: 16 }}>
-          <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1) }}
-            style={{ padding: '10px 12px', background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 8, fontSize: 13, color: '#0a0a0a', cursor: 'pointer', fontFamily: 'Arial, sans-serif' }}>
-            <option value="tous">Tous les types</option>
-            <option value="auto">Auto</option>
-            <option value="habitation">Habitation</option>
-            <option value="mutuelle">Mutuelle</option>
-            <option value="rc pro">RC Pro</option>
-            <option value="prévoyance">Prévoyance</option>
-            <option value="décennale">Décennale</option>
-          </select>
-        </div>
-
-        {/* Error */}
         {error && (
-          <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 14, color: '#dc2626', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-[#ef4444] text-sm">
             <span>{error}</span>
-            <button onClick={fetchContrats} style={{ padding: '5px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Réessayer</button>
           </div>
         )}
 
-        {loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 13, flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 28, height: 28, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            Chargement...
-          </div>
-        )}
-
-        {!loading && !error && paginated.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 13 }}>Aucun contrat trouvé</div>
-        )}
-
-        {!loading && !error && paginated.length > 0 && (
-          <>
-            <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={thStyle('client_nom')} onClick={() => toggleSort('client_nom')}>
-                      Client <SortIcon field="client_nom" active={sortField === 'client_nom'} dir={sortDir} />
-                    </th>
-                    <th style={thStyle('type_contrat')} onClick={() => toggleSort('type_contrat')}>
-                      Type <SortIcon field="type_contrat" active={sortField === 'type_contrat'} dir={sortDir} />
-                    </th>
-                    <th style={thStyle(null)}>Compagnie</th>
-                    <th style={thStyle('prime_annuelle')} onClick={() => toggleSort('prime_annuelle')}>
-                      Prime <SortIcon field="prime_annuelle" active={sortField === 'prime_annuelle'} dir={sortDir} />
-                    </th>
-                    <th style={thStyle('date_echeance')} onClick={() => toggleSort('date_echeance')}>
-                      Échéance <SortIcon field="date_echeance" active={sortField === 'date_echeance'} dir={sortDir} />
-                    </th>
-                    <th style={thStyle(null)}>Statut</th>
-                    <th style={thStyle(null)}>Urgence</th>
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('type_contrat')}>
+                  <div className="flex items-center gap-1.5">Type Contrat <SortIcon active={sortField === 'type_contrat'} dir={sortDir} /></div>
+                </th>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('compagnie')}>
+                  <div className="flex items-center gap-1.5">Compagnie <SortIcon active={sortField === 'compagnie'} dir={sortDir} /></div>
+                </th>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('client')}>
+                  <div className="flex items-center gap-1.5">Client <SortIcon active={sortField === 'client'} dir={sortDir} /></div>
+                </th>
+                <th className={`${thClass} text-right cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('prime_annuelle')}>
+                  <div className="flex items-center justify-end gap-1.5">Prime Annuelle <SortIcon active={sortField === 'prime_annuelle'} dir={sortDir} /></div>
+                </th>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('statut')}>
+                  <div className="flex items-center gap-1.5">Statut <SortIcon active={sortField === 'statut'} dir={sortDir} /></div>
+                </th>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('date_echeance')}>
+                  <div className="flex items-center gap-1.5">Échéance <SortIcon active={sortField === 'date_echeance'} dir={sortDir} /></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
+              {!loading && paginated.map((c) => {
+                if (!c?.id) return null
+                const clientName = `${c.client_prenom || ''} ${c.client_nom || ''}`.trim()
+                return (
+                  <tr key={c.id}
+                    className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/50 transition-all duration-200 ease-out">
+                    <td className="p-5 font-bold text-sm text-gray-800">{c.type_contrat || '—'}</td>
+                    <td className="p-5 text-sm text-gray-600">{c.compagnie || '—'}</td>
+                    <td className="p-5">
+                      <div
+                        className="text-sm font-bold text-gray-800 tracking-tight cursor-pointer hover:text-blue-600"
+                        onClick={() => c.client_id && navigate(`/client/${c.client_id}`)}
+                      >
+                        {clientName || '—'}
+                      </div>
+                      <p className="text-xs text-gray-500">{c.client_email || ''}</p>
+                    </td>
+                    <td className="p-5 text-sm font-semibold text-gray-800 text-right">{fmtEur(c.prime_annuelle)}</td>
+                    <td className="p-5"><StatusBadge status={c.statut} /></td>
+                    <td className="p-5"><EcheanceIndicator date={c.date_echeance} /></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {paginated.map((c, idx) => {
-                    if (!c?.id) return null
-                    const bg = idx % 2 === 0 ? 'white' : '#fafaf8'
-                    const daysLeft = getDaysLeft(c.date_echeance || c.echeance)
-                    const clientId = c.client_id
-                    return (
-                      <tr key={c.id} style={{ borderBottom: '0.5px solid #f7f6f2', background: bg }}>
-                        <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#2563eb', cursor: clientId ? 'pointer' : 'default' }}
-                          onClick={() => clientId && navigate(`/client/${clientId}`)}>
-                          {c.client_nom || c.nom_client || '—'}
-                        </td>
-                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#0a0a0a', fontWeight: 500 }}>
-                          {c.type_contrat || c.type || '—'}
-                        </td>
-                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#9ca3af' }}>{c.compagnie || '—'}</td>
-                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#0a0a0a', fontWeight: 500 }}>
-                          {fmtEur(c.prime_annuelle || c.prime)}
-                        </td>
-                        <td style={{ padding: '12px 16px', fontSize: 13, color: '#9ca3af' }}>
-                          {fmtDate(c.date_echeance || c.echeance)}
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <StatusPill status={c.statut || c.status} />
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          {daysLeft !== null && daysLeft <= 90 ? (
-                            <span style={{
-                              fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20,
-                              background: daysLeft <= 15 ? '#fee2e2' : daysLeft <= 30 ? '#fef9c3' : '#fafaf8',
-                              color: daysLeft <= 15 ? '#dc2626' : daysLeft <= 30 ? '#d97706' : '#9ca3af'
-                            }}>
-                              J-{daysLeft}
-                            </span>
-                          ) : <span style={{ color: '#d1d5db', fontSize: 13 }}>—</span>}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                )
+              })}
+            </tbody>
+          </table>
+          {!loading && !error && paginated.length === 0 && (
+            <div className="text-center py-20 text-gray-500 text-sm">
+              <p className="font-semibold">Aucun contrat trouvé</p>
+              <p className="mt-1">Essayez de modifier vos filtres.</p>
             </div>
+          )}
+        </div>
 
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  style={{ padding: '7px 14px', border: '0.5px solid #e8e6e0', borderRadius: 7, background: 'white', color: page === 1 ? '#d1d5db' : '#0a0a0a', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>← Précédent</button>
-                <span style={{ padding: '7px 14px', fontSize: 13, color: '#9ca3af' }}>Page {page} / {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  style={{ padding: '7px 14px', border: '0.5px solid #e8e6e0', borderRadius: 7, background: 'white', color: page === totalPages ? '#d1d5db' : '#0a0a0a', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: 13 }}>Suivant →</button>
-              </div>
-            )}
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12 }}>{sorted.length} contrat{sorted.length > 1 ? 's' : ''}</p>
-          </>
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-700 cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm">
+              ← Précédent
+            </button>
+            <span className="text-sm text-gray-500 font-medium">Page {page} sur {totalPages}</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-700 cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm">
+              Suivant →
+            </button>
+          </div>
         )}
-      </div>
+        <footer className="text-center mt-8">
+          <p className="text-xs text-gray-400">Rhasrhass®</p>
+        </footer>
+      </main>
     </div>
   )
 }
