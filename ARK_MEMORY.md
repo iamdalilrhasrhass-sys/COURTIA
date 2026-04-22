@@ -1,3 +1,9 @@
+- /drop frontend/src/pages/Taches.jsx
+/add frontend/src/pages/Parametres.jsx
+Réécris Parametres.jsx en
+                             
+                label="Alertes importantes"                                                         
+                description="Échéances de contrat, tâches urgentes, etc
 - /drop frontend/src/pages/Contrats.jsx
 /add frontend/src/pages/Taches.jsx
 Réécris Taches.jsx en entie
