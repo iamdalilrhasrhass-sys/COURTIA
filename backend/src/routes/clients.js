@@ -7,27 +7,10 @@ const { getUserPlanInfo } = require('../services/planService');
 const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
 const Anthropic = require('@anthropic-ai/sdk');
 
-// Middleware pour vérifier le token
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No authorization header' });
-  }
-  
-  const jwt = require('jsonwebtoken');
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token', details: err.message });
-  }
-};
-
 /**
  * GET /api/clients — Lister tous les clients avec pagination
  */
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const limit = parseInt(req.query.limit) || 20;
@@ -37,7 +20,7 @@ router.get('/', verifyToken, async (req, res) => {
     // Récupérer les clients
     const result = await pool.query(
       `SELECT 
-        id, first_name as nom, last_name as prenom, 
+        id, first_name as prenom, last_name as nom, 
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
         bonus_malus, annees_permis, nb_sinistres_3ans,
@@ -69,12 +52,12 @@ router.get('/', verifyToken, async (req, res) => {
 /**
  * GET /api/clients/:id — Récupérer un client par ID
  */
-router.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const result = await pool.query(
       `SELECT 
-        id, first_name as nom, last_name as prenom,
+        id, first_name as prenom, last_name as nom,
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
         bonus_malus, annees_permis, nb_sinistres_3ans,
@@ -99,12 +82,12 @@ router.get('/:id', verifyToken, async (req, res) => {
 /**
  * GET /api/clients/:id/contrats — Contrats d'un client
  */
-router.get('/:id/contrats', verifyToken, async (req, res) => {
+router.get('/:id/contrats', async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const result = await pool.query(
       `SELECT id, type_contrat, compagnie, prime_annuelle, statut,
-              date_effet, date_echeance, numero as numero_contrat
+              date_effet, date_echeance
        FROM contrats WHERE client_id = $1
        ORDER BY date_echeance ASC NULLS LAST`,
       [req.params.id]
@@ -119,7 +102,7 @@ router.get('/:id/contrats', verifyToken, async (req, res) => {
 /**
  * POST /api/clients — Créer un client
  */
-router.post('/', verifyToken, requireUnderLimit('clients'), async (req, res) => {
+router.post('/', requireUnderLimit('clients'), async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -146,7 +129,7 @@ router.post('/', verifyToken, requireUnderLimit('clients'), async (req, res) => 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
       RETURNING *`,
       [
-        nom, prenom, email, telephone, adresse, statut || 'prospect', segment || 'particulier',
+        prenom, nom, email, telephone, adresse, statut || 'prospect', segment || 'particulier',
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
         postal_code, city, civility, country
@@ -163,7 +146,7 @@ router.post('/', verifyToken, requireUnderLimit('clients'), async (req, res) => 
 /**
  * PUT /api/clients/:id — Modifier un client
  */
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const {
@@ -192,7 +175,7 @@ router.put('/:id', verifyToken, async (req, res) => {
        updated_at = NOW()
       WHERE id = $20 RETURNING *`,
       [
-        nom, prenom, email, telephone, adresse, statut, segment,
+        prenom, nom, email, telephone, adresse, statut, segment,
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
         postal_code, city, civility, country, req.params.id
@@ -213,7 +196,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 /**
  * DELETE /api/clients/:id — Supprimer un client
  */
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     await pool.query('DELETE FROM clients WHERE id = $1', [req.params.id]);
@@ -230,7 +213,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 // Tout plan : score brut visible.
 // Pro/Elite : breakdown complet (client_score_breakdown).
 // ─────────────────────────────────────────────────────────────────────────────
-router.get('/:id/score', verifyToken, async (req, res) => {
+router.get('/:id/score', async (req, res) => {
   try {
     const courtierId = req.user.id || req.user.userId;
     const clientId   = parseInt(req.params.id);
@@ -273,7 +256,7 @@ router.get('/:id/score', verifyToken, async (req, res) => {
 // ARK génère un plan d'action personnalisé pour ce client (Elite uniquement).
 // Claude Opus 4.6 : 5 actions concrètes, impact en points, délai, message suggéré.
 // ─────────────────────────────────────────────────────────────────────────────
-router.get('/:id/ark-action-plan', verifyToken, async (req, res) => {
+router.get('/:id/ark-action-plan', async (req, res) => {
   try {
     const courtierId = req.user.id || req.user.userId;
     const clientId   = parseInt(req.params.id);

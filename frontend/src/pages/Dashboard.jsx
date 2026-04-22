@@ -107,8 +107,11 @@ export default function Dashboard() {
   }, [stats])
   
   const clientStatusData = useMemo(() => {
-    if (!stats?.clientsParStatut) return []
-    const counts = stats.clientsParStatut
+    if (!stats?.clientsParStatut || typeof stats.clientsParStatut !== 'object') return []
+    const counts = Object.entries(stats.clientsParStatut).reduce((acc, [key, value]) => {
+      acc[key.toLowerCase()] = value
+      return acc
+    }, {})
     return [
       { name: 'Prospects', value: counts.prospect || 0 },
       { name: 'Actifs', value: counts.actif || 0 },

@@ -1,3 +1,36 @@
+- /drop backend/src/routes/clients.js
+/add backend/src/routes/clients.js backend/server.js frontend/sr
+  ticsRouter)                                       
+app.use('/api/plans',           verifyToken, plansRouter)                                           
+                                                
+- "/drop frontend/src/pages/ClientDetail.jsx frontend/src/pages/Clients.jsx
+/add backend/src/routes/cl
+  3]
+Hit:6 http://security.ubuntu.com/ubuntu questing-security InRelease
+Get:7 http://archive.ubuntu.com/ubuntu questing-updates InRelease [136 kB]
+Hit:8 http://archive.ubuntu.com/ubuntu questing-backpo
+- "/drop frontend/src/pages/Clients.jsx
+/add frontend/src/pages/ClientDetail.jsx
+Bug confirmé : GET /a
+  12 -m playwright install --with-deps chromium
+
+See https://aider.chat/docs/install/optional.html#enable-playwright for more info.
+
+
+Installing: /usr/local/bin/python3.12 -m playwright install --with-d
+- "/drop frontend/src/pages/AnalyticsExecutive.jsx frontend/src/pages/Login.jsx
+/add frontend/src/page
+  at.
+https://aider.chat/docs/troubleshooting/edit-errors.html
+
+frontend/src/pages/Dashboard.jsx
+
+frontend/src/pages/Login.jsx
+
+frontend/src/pages/Parametres.jsx
+
+frontend/src/pages/Taches.jsx
+I underst
 - "/drop frontend/src/pages/Dashboard.jsx frontend/src/pages/Clients.jsx
 /add frontend/src/pages/Clien
   }                                                
