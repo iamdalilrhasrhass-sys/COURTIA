@@ -63,7 +63,7 @@ function TaskCard({ task, onEdit, onDelete }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer group transition-all duration-200 ease-out hover:shadow-md"
+      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer group transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-px"
       onClick={() => onEdit(task)}
     >
       <div className="flex justify-between items-start gap-2">
@@ -175,47 +175,37 @@ export default function Taches() {
   const tasksByStatus = KANBAN_COLUMNS.reduce((acc, col) => ({...acc, [col.id]: tasks.filter(t => t.statut === col.id)}), {})
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] font-sans antialiased">
+    <div className="min-h-screen bg-[#f9fafb] font-sans">
       <main className="p-8">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Tâches</h1>
-          <button onClick={() => { setSelectedTask(null); setShowModal(true) }} className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-px"><Plus size={16} />Nouvelle tâche</button>
+          <div className="flex items-center gap-3"><h1 className="text-2xl font-black text-gray-900">Tâches</h1><span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">{tasks.length}</span></div>
+          <button onClick={() => { setSelectedTask(null); setShowModal(true) }} className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02]"><Plus size={16} />Nouvelle tâche</button>
         </header>
 
         {loading ? (
           <div className="flex justify-center items-center h-64"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
         ) : (
-          <>
-            <div className="flex items-center gap-4 mb-6">
-              {KANBAN_COLUMNS.map(col => (
-                <div key={col.id} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 ${col.pillBg}`}>
-                  <span className={`text-sm font-bold ${col.pillText}`}>{tasksByStatus[col.id].length}</span>
-                  <span className={`text-sm font-semibold ${col.pillText}`}>{col.title}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {KANBAN_COLUMNS.map(column => (
+              <div key={column.id} className="bg-gray-50/70 rounded-xl p-4">
+                <div className="flex justify-between items-center gap-3 mb-5 px-1">
+                  <h2 className="text-base font-bold text-gray-800">{column.title}</h2>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${column.pillBg} ${column.pillText}`}>{tasksByStatus[column.id].length}</span>
                 </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {KANBAN_COLUMNS.map(column => (
-                <div key={column.id} className="bg-gray-50/70 rounded-xl p-4">
-                  <div className="flex justify-between items-center gap-3 mb-5 px-1">
-                    <h2 className="text-base font-bold text-gray-800">{column.title}</h2>
-                    <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">{tasksByStatus[column.id].length}</span>
-                  </div>
-                  <div className="space-y-3 h-full">
-                    <AnimatePresence>
-                      {tasksByStatus[column.id].map(task => (<TaskCard key={task.id} task={task} onEdit={() => { setSelectedTask(task); setShowModal(true) }} onDelete={handleDelete} />))}
-                    </AnimatePresence>
-                    {tasksByStatus[column.id].length === 0 && (<div className="text-center py-10 text-xs text-gray-400">Aucune tâche ici.</div>)}
-                  </div>
+                <div className="space-y-3 h-full">
+                  <AnimatePresence>
+                    {tasksByStatus[column.id].map(task => (<TaskCard key={task.id} task={task} onEdit={() => { setSelectedTask(task); setShowModal(true) }} onDelete={handleDelete} />))}
+                  </AnimatePresence>
+                  {tasksByStatus[column.id].length === 0 && (<div className="text-center py-10 text-xs text-gray-400">Aucune tâche ici.</div>)}
                 </div>
-              ))}
-            </div>
-          </>
+              </div>
+            ))}
+          </div>
         )}
       </main>
       <AnimatePresence>{showModal && <TaskModal task={selectedTask} clients={clients} onSave={handleSave} onClose={() => setShowModal(false)} />}</AnimatePresence>
-      <footer className="text-center py-4">
-          <p className="text-xs text-gray-400">Rhasrhass®</p>
+      <footer className="text-center py-8">
+        <p className="text-xs text-gray-400">Rhasrhass®</p>
       </footer>
     </div>
   )

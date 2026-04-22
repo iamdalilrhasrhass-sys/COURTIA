@@ -303,9 +303,9 @@ export default function ClientDetail() {
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"><ArrowLeft size={16} />Retour</button>
                     <div className="flex items-center gap-3">
-                        <button className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Modifier</button>
-                        <button className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] rounded-lg shadow-sm hover:opacity-90 transition-opacity">Nouveau contrat</button>
-                        <button className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] rounded-lg shadow-sm hover:opacity-90 transition-opacity">Contacter ARK</button>
+                        <button onClick={() => navigate(`/clients/${id}/edit`)} className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Modifier</button>
+                        <button onClick={() => navigate('/contrats/new')} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] rounded-lg shadow-sm hover:opacity-90 transition-opacity">Nouveau contrat</button>
+                        <button onClick={() => setActiveTab('ark')} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] rounded-lg shadow-sm hover:opacity-90 transition-opacity">Contacter ARK</button>
                     </div>
                 </div>
                 <div className="flex items-center gap-6">

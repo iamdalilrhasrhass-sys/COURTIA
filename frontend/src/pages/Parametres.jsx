@@ -14,7 +14,7 @@ const NAV_ITEMS = [
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
 
 const Toggle = ({ label, description, enabled, setEnabled }) => (
-  <div className="flex items-center justify-between">
+  <div className="flex items-center justify-between py-1">
     <div>
       <p className="font-semibold text-sm text-gray-800">{label}</p>
       <p className="text-xs text-gray-500">{description}</p>
@@ -47,7 +47,6 @@ export default function Parametres() {
       const { data } = await api.get('/api/auth/me')
       setProfile(data)
       setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
-      // Met à jour le user dans localStorage et notifie les autres composants
       localStorage.setItem('courtia_user', JSON.stringify(data))
       window.dispatchEvent(new Event('profileUpdated'))
     } catch { toast.error('Impossible de charger le profil') } 
@@ -71,10 +70,10 @@ export default function Parametres() {
 
   const handleNavClick = (sectionId) => {
     setActiveSection(sectionId)
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const inputClass = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-black focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] outline-none transition-all duration-200"
+  const inputClass = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-black shadow-sm focus:border-[#2563eb] focus:shadow-md focus:shadow-blue-100 outline-none transition-all duration-200"
   const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
 
   const planConfig = {
@@ -92,7 +91,7 @@ export default function Parametres() {
     <div className="min-h-screen bg-[#f9fafb] font-sans">
       <main className="p-8 max-w-6xl mx-auto">
         <header className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900">Paramètres</h1>
+          <h1 className="text-3xl font-black text-gray-900">Paramètres</h1>
           <p className="text-gray-500 mt-1">Gérez votre profil, vos préférences et votre abonnement.</p>
         </header>
 
@@ -102,7 +101,7 @@ export default function Parametres() {
               {NAV_ITEMS.map(item => (
                 <button key={item.id} onClick={() => handleNavClick(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                    ${activeSection === item.id ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                    ${activeSection === item.id ? 'bg-white text-[#2563eb] shadow-sm border border-gray-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
                   <item.icon size={18} />
                   <span>{item.label}</span>
                 </button>
@@ -111,61 +110,69 @@ export default function Parametres() {
           </aside>
           
           <div className="flex-1 space-y-12">
-            <section id="profil">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Profil</h2>
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <form onSubmit={handleProfileSubmit} className="space-y-5">
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 text-[40px] rounded-full bg-gradient-to-br from-[#2563eb] to-[#7c3aed] text-white flex items-center justify-center font-bold flex-shrink-0">{getInitials(form.first_name, form.last_name)}</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-                      <div><label htmlFor="first_name" className={labelClass}>Prénom *</label><input id="first_name" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} required className={inputClass} /></div>
-                      <div><label htmlFor="last_name" className={labelClass}>Nom *</label><input id="last_name" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} required className={inputClass} /></div>
+            <section id="profil" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Profil</h2>
+              <p className="text-sm text-gray-500 mb-5">Informations publiques et coordonnées.</p>
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
+                <form onSubmit={handleProfileSubmit}>
+                  <div className="p-6 space-y-5">
+                    <div className="flex items-center gap-6">
+                      <div className="w-20 h-20 text-[40px] rounded-full bg-gradient-to-br from-[#2563eb] to-[#7c3aed] text-white flex items-center justify-center font-bold flex-shrink-0">{getInitials(form.first_name, form.last_name)}</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                        <div><label htmlFor="first_name" className={labelClass}>Prénom *</label><input id="first_name" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} required className={inputClass} /></div>
+                        <div><label htmlFor="last_name" className={labelClass}>Nom *</label><input id="last_name" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} required className={inputClass} /></div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div><label htmlFor="email" className={labelClass}>Email (lecture seule)</label><input id="email" type="email" value={form.email} disabled className={`${inputClass} bg-gray-100 cursor-not-allowed`} /></div>
+                      <div><label htmlFor="telephone" className={labelClass}>Téléphone</label><input id="telephone" type="tel" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} className={inputClass} /></div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div><label htmlFor="cabinet" className={labelClass}>Cabinet</label><input id="cabinet" value={form.cabinet} onChange={e => setForm({ ...form, cabinet: e.target.value })} className={inputClass} /></div>
+                      <div><label htmlFor="orias" className={labelClass}>Numéro ORIAS</label><input id="orias" value={form.orias} onChange={e => setForm({ ...form, orias: e.target.value })} className={inputClass} /></div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label htmlFor="email" className={labelClass}>Email (lecture seule)</label><input id="email" type="email" value={form.email} disabled className={`${inputClass} bg-gray-100 cursor-not-allowed`} /></div>
-                    <div><label htmlFor="telephone" className={labelClass}>Téléphone</label><input id="telephone" type="tel" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} className={inputClass} /></div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label htmlFor="cabinet" className={labelClass}>Cabinet</label><input id="cabinet" value={form.cabinet} onChange={e => setForm({ ...form, cabinet: e.target.value })} className={inputClass} /></div>
-                    <div><label htmlFor="orias" className={labelClass}>Numéro ORIAS</label><input id="orias" value={form.orias} onChange={e => setForm({ ...form, orias: e.target.value })} className={inputClass} /></div>
-                  </div>
-                  <div className="pt-2 flex justify-end"><button type="submit" disabled={saving} className="px-5 py-2.5 bg-[#2563eb] text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
+                  <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="submit" disabled={saving} className="px-5 py-2.5 bg-[#2563eb] text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
                 </form>
               </div>
             </section>
 
-            <section id="securite">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Sécurité</h2>
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <form onSubmit={handlePasswordSubmit} className="space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {[ {id: 'current', label: 'Actuel'}, {id: 'new', label: 'Nouveau'}, {id: 'confirm', label: 'Confirmer'} ].map(p => (
-                      <div key={p.id}>
-                        <label htmlFor={`${p.id}_password`} className={labelClass}>Mot de passe {p.label}</label>
-                        <div className="relative"><input id={`${p.id}_password`} type={showPass[p.id] ? 'text' : 'password'} value={passwords[p.id]} onChange={e => setPasswords({...passwords, [p.id]: e.target.value})} className={inputClass} /><button type="button" onClick={() => setShowPass({...showPass, [p.id]: !showPass[p.id]})} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass[p.id] ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
+            <section id="securite" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Sécurité</h2>
+              <p className="text-sm text-gray-500 mb-5">Changez votre mot de passe.</p>
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
+                <form onSubmit={handlePasswordSubmit}>
+                    <div className="p-6 space-y-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {[ {id: 'current', label: 'Actuel'}, {id: 'new', label: 'Nouveau'}, {id: 'confirm', label: 'Confirmer'} ].map(p => (
+                          <div key={p.id}>
+                            <label htmlFor={`${p.id}_password`} className={labelClass}>Mot de passe {p.label}</label>
+                            <div className="relative"><input id={`${p.id}_password`} type={showPass[p.id] ? 'text' : 'password'} value={passwords[p.id]} onChange={e => setPasswords({...passwords, [p.id]: e.target.value})} className={inputClass} /><button type="button" onClick={() => setShowPass({...showPass, [p.id]: !showPass[p.id]})} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass[p.id] ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <div className="pt-2 flex justify-end"><button type="submit" className="px-5 py-2.5 bg-[#2563eb] text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">Changer</button></div>
+                    </div>
+                    <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="submit" className="px-5 py-2.5 bg-white text-gray-800 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors shadow-sm">Changer</button></div>
                 </form>
               </div>
             </section>
 
-            <section id="plan">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Plan & Facturation</h2>
-              <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-between">
+            <section id="plan" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Plan & Facturation</h2>
+              <p className="text-sm text-gray-500 mb-5">Gérez votre abonnement et consultez vos factures.</p>
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3"><p className="font-semibold text-gray-800">Votre plan actuel</p><span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span></div>
                   <ul className="mt-4 space-y-2 text-sm text-gray-600">{currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}</ul>
                 </div>
-                <button onClick={() => navigate('/abonnement')} className="px-5 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all shadow-sm">Gérer l'abonnement</button>
+                <button onClick={() => navigate('/abonnement')} className="px-5 py-2.5 bg-white text-gray-800 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-100 hover:border-gray-300 transition-all shadow-sm">Gérer l'abonnement</button>
               </div>
             </section>
 
-            <section id="notifications">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Notifications</h2>
-              <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+            <section id="notifications" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Notifications</h2>
+              <p className="text-sm text-gray-500 mb-5">Choisissez comment nous pouvons vous contacter.</p>
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 space-y-3 divide-y divide-gray-100">
                 <Toggle label="Résumé hebdomadaire" description="Recevez un bilan de votre activité chaque lundi matin." enabled={notifications.summary} setEnabled={() => { setNotifications({...notifications, summary: !notifications.summary}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle label="Alertes importantes" description="Échéances de contrat, tâches urgentes, etc." enabled={notifications.alerts} setEnabled={() => { setNotifications({...notifications, alerts: !notifications.alerts}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
