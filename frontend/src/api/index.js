@@ -30,10 +30,20 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Intercepteur response : détecte 402 et déclenche paywall
+// Intercepteur response : gère les erreurs (401, 402)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token expiré ou invalide
+      localStorage.removeItem('courtia_token')
+      localStorage.removeItem('token')
+      // Redirige vers la page de connexion, en évitant les boucles
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+
     if (error.response && error.response.status === 402) {
       emitPaywall(error.response.data)
     }
