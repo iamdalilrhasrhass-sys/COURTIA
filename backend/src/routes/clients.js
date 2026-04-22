@@ -103,9 +103,9 @@ router.get('/:id/contrats', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const result = await pool.query(
-      `SELECT id, type_contrat, compagnie, prime_annuelle, status,
-              date_effet, date_echeance, numero_contrat
-       FROM quotes WHERE client_id = $1
+      `SELECT id, type_contrat, compagnie, prime_annuelle, statut,
+              date_effet, date_echeance, numero as numero_contrat
+       FROM contrats WHERE client_id = $1
        ORDER BY date_echeance ASC NULLS LAST`,
       [req.params.id]
     )
