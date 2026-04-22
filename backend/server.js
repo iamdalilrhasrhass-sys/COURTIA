@@ -128,6 +128,7 @@ const documentsRouter      = require('./src/routes/documents')
 const ddaQuizRouter        = require('./src/routes/ddaQuiz')
 const analyticsRouter      = require('./src/routes/analytics')
 const stripeRouter         = require('./src/routes/stripe')
+const plansRouter          = require('./src/routes/plans')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -154,6 +155,7 @@ app.use('/api/automations',     verifyToken, automationsRouter)
 app.use('/api/documents',       verifyToken, documentsRouter)
 app.use('/api/dda',             verifyToken, ddaQuizRouter)
 app.use('/api/analytics',       verifyToken, analyticsRouter)
+app.use('/api/plans',           verifyToken, plansRouter)
 
 // ==================== PORTFOLIO CRON (03h00 Europe/Paris) ====================
 
