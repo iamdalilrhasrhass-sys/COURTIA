@@ -38,7 +38,7 @@ export default function Login() {
             const { token, user } = res.data
             localStorage.setItem('courtia_token', token)
             if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
-            navigate('/') // Redirect to dashboard
+            navigate('/dashboard')
         } catch (err) {
             setError(err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
         } finally {
@@ -47,16 +47,16 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex font-sans">
+        <div className="min-h-screen flex font-sans bg-gray-100">
             {/* Left Panel */}
-            <div className="hidden lg:flex flex-col justify-between w-1/2 bg-[#080808] text-white p-12">
-                <div>
+            <div className="w-1/2 flex-col justify-between bg-[#080808] text-white p-12 hidden md:flex">
+                <div className="flex-shrink-0">
                     <CourtiaLogo />
                     <p className="mt-6 text-2xl font-medium leading-snug max-w-md">
                         Le CRM intelligent qui anticipe les besoins de vos clients.
                     </p>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 flex-shrink-0">
                     <Feature text="Scores de risque et d'opportunité en temps réel" />
                     <Feature text="Alertes proactives pour ne manquer aucune échéance" />
                     <Feature text="Vision 360° du portefeuille pour des ventes croisées efficaces" />
@@ -64,16 +64,16 @@ export default function Login() {
             </div>
 
             {/* Right Panel */}
-            <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8 lg:p-12 animate-fade-in" style={{ animationDuration: '600ms' }}>
+            <div className="w-full md:w-1/2 bg-white flex items-center justify-center p-8 lg:p-12">
                 <div className="w-full max-w-sm">
-                    <div className="text-center lg:text-left mb-10">
+                    <div className="text-center md:text-left mb-10">
                         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Connexion</h1>
                         <p className="mt-2 text-gray-500">
                             Heureux de vous revoir !
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} noValidate>
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-sm text-red-600 rounded-lg p-3 mb-4 flex items-center gap-2">
                                 <AlertCircle size={16} />

@@ -1,3 +1,8 @@
+- "/drop frontend/src/pages/Dashboard.jsx frontend/src/pages/Clients.jsx
+/add frontend/src/pages/Clien
+  }                                                
+                                    onChange={(e) => setPassword(e.target.value)}                   
+                                    className="w-
 - "/add frontend/src/App.jsx frontend/src/pages/Clients.jsx frontend/src/pages/Dashboard.jsx
 Corrige m
                                                                                                   
