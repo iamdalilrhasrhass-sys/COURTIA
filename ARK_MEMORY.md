@@ -1,3 +1,9 @@
+- /drop frontend/src/pages/ClientDetail.jsx
+/add frontend/src/pages/Contrats.jsx
+Réécris Contrats.jsx 
+  >                                                                               
+            <span className="text-sm text-gray-500 font-medium">Page {page} sur {totalPages}</span> 
+            <butto
 - /drop frontend/src/api/index.js frontend/src/lib/scoring.js frontend/src/pages/Clients.jsx
 /add fron
                                                       
