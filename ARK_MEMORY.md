@@ -1,3 +1,18 @@
+- NAV PRINCIPALE (mt-8, px-12px) :
+Items : Tableau de bord (LayoutDashboard), Clients (Users), Contrat
+  .label}</span>                                                             
+            </button>                                                                               
+          )            
+- drop frontend/src/pages/Contrats.jsx frontend/src/pages/Taches.jsx
+/add frontend/src/pages/Dashboard
+                                        
+>>>>>>> REPLACE                                                                                     
+                                                            
+- > "/drop frontend/src/components/Sidebar.jsx frontend/src/pages/Abonnement.jsx frontend/src/App.jsx
+
+  ="px-2.5 py-1 bg-gray-100 text-gray-600 text-sm            
+font-semibold rounded-full">{tasks.length}</span></div>                                             
+            <button onClick={() => { se
 - > Cards au lieu d'une table (layout grille 2 colonnes). Chaque card contrat : header avec type_contr
   ems-center justify-between">                               
                     <h2 className="text-base font-bold text-gray-800">{column.title}</h2>           
