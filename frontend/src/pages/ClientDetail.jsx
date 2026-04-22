@@ -267,7 +267,7 @@ export default function ClientDetail() {
           api.get(`/api/clients/${id}`),
           api.get(`/api/clients/${id}/contrats`)
         ])
-        setClient(clientRes.data?.data || clientRes.data)
+        setClient(clientRes.data)
         setContrats(Array.isArray(contratsRes.data) ? contratsRes.data : [])
       } catch (err) {
         console.error("Erreur de chargement du client:", err.response?.data || err.message)
