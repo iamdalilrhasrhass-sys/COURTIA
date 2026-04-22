@@ -1,22 +1,48 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Plus, User, Calendar, X, Trash2 } from 'lucide-react'
+import { Plus, Clock, X, Trash2, Edit } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
 
 const KANBAN_COLUMNS = [
-  { id: 'a_faire', title: 'À faire', color: '#2563eb' },
-  { id: 'en_cours', title: 'En cours', color: '#f59e0b' },
-  { id: 'terminee', title: 'Terminé', color: '#10b981' },
+  { id: 'a_faire', title: 'À faire', color: 'bg-blue-500', pillBg: 'bg-blue-100', pillText: 'text-blue-600' },
+  { id: 'en_cours', title: 'En cours', color: 'bg-amber-500', pillBg: 'bg-amber-100', pillText: 'text-amber-600' },
+  { id: 'terminee', title: 'Terminé', color: 'bg-emerald-500', pillBg: 'bg-emerald-100', pillText: 'text-emerald-600' },
 ]
 
 const PRIORITY_STYLES = {
-  haute:   { indicator: 'bg-red-500', label: 'Haute' },
-  normale: { indicator: 'bg-blue-500', label: 'Normale' },
-  basse:   { indicator: 'bg-gray-400', label: 'Basse' },
+  haute:   { bg: 'bg-red-100', text: 'text-red-700', label: 'Haute' },
+  normale: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Normale' },
+  basse:   { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Basse' },
 }
 
 const fmtDateShort = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : null
+
+const getHash = (str) => {
+  let hash = 0
+  for (let i = 0; i < (str || '').length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  return hash
+}
+const getHSL = (str) => `hsl(${getHash(str) % 360}, 60%, 80%)`
+
+const Avatar = ({ name, size = 24 }) => {
+  const getInitials = (name) => {
+    const names = (name || '').trim().split(' ').filter(Boolean)
+    if (names.length === 0) return '?'
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  }
+  return (
+    <div className="rounded-full text-white flex items-center justify-center font-bold flex-shrink-0"
+      style={{
+        width: size, height: size, fontSize: size / 2.2,
+        background: `linear-gradient(135deg, ${getHSL(name)} 0%, hsl(${ (getHash(name) + 60) % 360}, 70%, 65%) 100%)`
+      }}
+    >
+      {getInitials(name)}
+    </div>
+  )
+}
 
 function TaskCard({ task, onEdit, onDelete }) {
   const priority = PRIORITY_STYLES[task.priorite] || PRIORITY_STYLES.basse
@@ -37,23 +63,31 @@ function TaskCard({ task, onEdit, onDelete }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="bg-white p-4 rounded-lg border border-gray-100 cursor-pointer group transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-px"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04)' }}
+      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer group transition-all duration-200 ease-out hover:shadow-md"
       onClick={() => onEdit(task)}
     >
-      <div className="flex justify-between items-start">
-        <p className="text-sm font-semibold text-gray-800 flex-1 pr-2">{task.titre}</p>
-        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${priority.indicator}`} title={`Priorité ${priority.label}`}></div>
+      <div className="flex justify-between items-start gap-2">
+        <p className="text-sm font-semibold text-gray-800 flex-1">{task.titre}</p>
+        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${priority.bg} ${priority.text}`}>{priority.label}</span>
       </div>
-      {task.description && <p className="text-xs text-gray-500 mt-1.5 line-clamp-2">{task.description}</p>}
+      
       <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          {clientName && <span className="flex items-center gap-1" title={clientName}><User size={13} /> <span className="truncate max-w-[80px]">{clientName}</span></span>}
-          {echeance && <span className={`flex items-center gap-1.5 ${echeanceColor}`}><Calendar size={13} /> {fmtDateShort(echeance)}</span>}
-        </div>
-        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); onDelete(task.id) }} className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
-        </div>
+        {clientName ? (
+            <div className="flex items-center gap-2">
+                <Avatar name={clientName} size={24} />
+                <span className="text-xs text-gray-600 font-medium">{clientName}</span>
+            </div>
+        ) : <div />}
+        {echeance && (
+          <span className={`flex items-center gap-1.5 text-xs ${echeanceColor}`}>
+            <Clock size={13} /> {fmtDateShort(echeance)}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end mt-2 -mb-2 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(task) }} className="p-2 text-gray-400 hover:text-blue-600"><Edit size={14} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(task.id) }} className="p-2 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
       </div>
     </motion.div>
   )
@@ -141,27 +175,48 @@ export default function Taches() {
   const tasksByStatus = KANBAN_COLUMNS.reduce((acc, col) => ({...acc, [col.id]: tasks.filter(t => t.statut === col.id)}), {})
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans antialiased">
+    <div className="min-h-screen bg-[#f9fafb] font-sans antialiased">
       <main className="p-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3"><h1 className="text-2xl font-bold text-gray-900">Tâches</h1><span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">{tasks.length}</span></div>
-            <button onClick={() => { setSelectedTask(null); setShowModal(true) }} className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-px"><Plus size={16} />Nouvelle tâche</button>
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Tâches</h1>
+          <button onClick={() => { setSelectedTask(null); setShowModal(true) }} className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-px"><Plus size={16} />Nouvelle tâche</button>
         </header>
 
         {loading ? (
           <div className="flex justify-center items-center h-64"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {KANBAN_COLUMNS.map(column => (
-              <div key={column.id} className="bg-gray-50/70 rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-5 px-1"><span style={{ backgroundColor: column.color }} className="w-2 h-2 rounded-full"></span><h2 className="text-base font-bold text-gray-800">{column.title}</h2><span className="text-sm font-semibold text-gray-400">{tasksByStatus[column.id].length}</span></div>
-                <div className="space-y-3 h-full"><AnimatePresence>{tasksByStatus[column.id].map(task => (<TaskCard key={task.id} task={task} onEdit={() => { setSelectedTask(task); setShowModal(true) }} onDelete={handleDelete} />))}</AnimatePresence>{tasksByStatus[column.id].length === 0 && (<div className="text-center py-10 text-xs text-gray-400">Aucune tâche ici.</div>)}</div>
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              {KANBAN_COLUMNS.map(col => (
+                <div key={col.id} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 ${col.pillBg}`}>
+                  <span className={`text-sm font-bold ${col.pillText}`}>{tasksByStatus[col.id].length}</span>
+                  <span className={`text-sm font-semibold ${col.pillText}`}>{col.title}</span>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {KANBAN_COLUMNS.map(column => (
+                <div key={column.id} className="bg-gray-50/70 rounded-xl p-4">
+                  <div className="flex justify-between items-center gap-3 mb-5 px-1">
+                    <h2 className="text-base font-bold text-gray-800">{column.title}</h2>
+                    <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">{tasksByStatus[column.id].length}</span>
+                  </div>
+                  <div className="space-y-3 h-full">
+                    <AnimatePresence>
+                      {tasksByStatus[column.id].map(task => (<TaskCard key={task.id} task={task} onEdit={() => { setSelectedTask(task); setShowModal(true) }} onDelete={handleDelete} />))}
+                    </AnimatePresence>
+                    {tasksByStatus[column.id].length === 0 && (<div className="text-center py-10 text-xs text-gray-400">Aucune tâche ici.</div>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </main>
       <AnimatePresence>{showModal && <TaskModal task={selectedTask} clients={clients} onSave={handleSave} onClose={() => setShowModal(false)} />}</AnimatePresence>
+      <footer className="text-center py-4">
+          <p className="text-xs text-gray-400">Rhasrhass®</p>
+      </footer>
     </div>
   )
 }

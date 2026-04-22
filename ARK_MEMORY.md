@@ -1,3 +1,12 @@
+- /drop frontend/src/pages/Dashboard.jsx frontend/src/components/Sidebar.jsx
+/add frontend/src/pages/C
+        
+              <ContratCard key={c.id} contrat={c} onClientClick={(id) => navigate(`/client/${id}`)} 
+/>                                                                                          
+- Header + bouton. Stats row : 3 pills (À faire count bleu, En cours count orange, Terminé count vert)
+                                                          
+      try {                                                                                         
+        const storedUser = localStorage.ge
 - NAV PRINCIPALE (mt-8, px-12px) :
 Items : Tableau de bord (LayoutDashboard), Clients (Users), Contrat
   .label}</span>                                                             
