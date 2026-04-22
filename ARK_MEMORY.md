@@ -1,3 +1,50 @@
+- drop frontend/src/api/index.js frontend/src/lib/scoring.js frontend/src/pages/Clients.jsx
+/add front
+                  
+                                    name="password"                                                 
+                                    type="password"                               
+- Stop Clients.jsx. Fichier cible exclusif : frontend/src/pages/Login.jsx. Réécris ce fichier en entie
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+Aider v0.86.2
+Main model: gemini/gemini-2.5-pro with diff-fenced edit format
+Weak model: gemini/gem
+- /add frontend/src/pages/Login.jsx
+                                              
+                    className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/50         
+transition-all duration-200 ease-out cursor-pointer"  
+- Ouvre et refais complètement le fichier frontend/src/pages/Login.jsx : split 50/50, gauche fond #080
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+Aider v0.86.2
+Main model: gemini/gemini-2.5-pro with diff-fenced edit format
+Weak model: gemini/gem
+- cd /root/courtia && git add -A && git commit -m "feat: Clients actions navigation" && git push origi
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+Aider v0.86.2
+Main model: gemini/gemini-2.5-pro with diff-fenced edit format
+Weak model: gemini/gem
+- cd /root/courtia && git add -A && git commit -m "feat: design system Inter font CSS animations" && g
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+Aider v0.86.2
+Main model: gemini/gemini-2.5-pro with diff-fenced edit format
+Weak model: gemini/gem
+- Continue. Refais maintenant Login.jsx complet selon les specs.
+                                              
+>>>>>>> REPLACE                                                                                     
+                                                      
+- Voici le prompt complet à envoyer à ARK sur Telegram :
+
+"Mission COURTIA 189/100 — transformation vi
+                 
+                                                                                                    
+@keyframes arkPulse {                                                              
+- Refais complètement Dashboard.jsx avec effet WOW premium : greeting dynamique 'Bonjour [prénom] 👋', 
+                               
+                    <div className="flex-1 min-w-0">                                                
+                      <p className="text-sm font-bold text-[#080808] 
+- Refais complètement Clients.jsx avec le design premium : fond blanc, sidebar #080808, accent #2563eb
+                                              
+              })}                                                                                   
+            </tbody>                                  
 - Tâche: Mission : transformation visuelle totale de COURTIA niveau 189/100. Objectif : choquer les prospects
   Résultat: e="text-xs text-gray-400">Rhasrhass®</p>                                       
         </footer>                                                                                   

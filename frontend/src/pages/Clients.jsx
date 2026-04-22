@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, AlertCircle } from 'lucide-react'
 import Topbar from '../components/Topbar'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+import api from '../api'
 
 const STATUS_TABS = [
   { key: 'tous', label: 'Tous' },
@@ -76,8 +75,8 @@ const StatusBadge = ({ status }) => {
 const RiskScoreBadge = ({ score }) => {
   const s = Math.min(100, Math.max(0, Number(score) || 0))
   let colorClasses = 'from-emerald-500 to-green-500' // Faible
-  if (s > 60) colorClasses = 'from-red-500 to-rose-500' // Élevé
-  else if (s > 30) colorClasses = 'from-amber-500 to-orange-500' // Modéré
+  if (s >= 70) colorClasses = 'from-red-500 to-rose-500' // Élevé
+  else if (s >= 40) colorClasses = 'from-amber-500 to-orange-500' // Modéré
 
   return (
     <div className="flex items-center gap-3">
@@ -135,11 +134,8 @@ export default function Clients() {
   async function fetchClients() {
     try {
       setLoading(true); setError('')
-      const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-      if (!token) { setError('Token manquant'); return }
-      const res = await fetch(`${API_URL}/api/clients`, { headers: { Authorization: `Bearer ${token}` } })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
+      const res = await api.get('/api/clients')
+      const data = res.data
       let arr = Array.isArray(data) ? data : (data?.data || data?.clients || [])
       setClients(arr)
     } catch (err) {
@@ -199,7 +195,7 @@ export default function Clients() {
   )
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <Topbar title="Clients" subtitle={`${safe.length} client${safe.length > 1 ? 's' : ''} au total`} action={topbarAction} />
 
       <main className="p-8 animate-fade-in" style={{ animationDuration: '400ms' }}>
@@ -209,7 +205,7 @@ export default function Clients() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input type="text" placeholder="Rechercher par nom, email, téléphone..." value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-black shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200" />
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-black focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] outline-none transition-all duration-200" />
           </div>
           <div className="flex items-center gap-2">
             {STATUS_TABS.map(tab => {
@@ -218,7 +214,7 @@ export default function Clients() {
                 : safe.filter(c => (c.statut || '').toLowerCase() === tab.key).length
               return (
                 <button key={tab.key} onClick={() => { setStatusFilter(tab.key); setPage(1) }}
-                  className={`px-4 py-2 border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 ${statusFilter === tab.key ? 'bg-black text-white' : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-black'}`}>
+                  className={`px-4 py-2 border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 ${statusFilter === tab.key ? 'bg-[#2563eb] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black'}`}>
                   {tab.label} <span className="opacity-60 text-xs">({count})</span>
                 </button>
               )
@@ -234,20 +230,20 @@ export default function Clients() {
           </div>
         )}
 
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg shadow-gray-500/5">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className={`${thClass} cursor-pointer hover:bg-gray-100 transition-colors`} onClick={() => toggleSort('nom')}>
+              <tr className="border-b border-gray-200">
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('nom')}>
                   <div className="flex items-center gap-1.5">Client <SortIcon active={sortField === 'nom'} dir={sortDir} /></div>
                 </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-100 transition-colors`} onClick={() => toggleSort('statut')}>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('statut')}>
                   <div className="flex items-center gap-1.5">Statut <SortIcon active={sortField === 'statut'} dir={sortDir} /></div>
                 </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-100 transition-colors`} onClick={() => toggleSort('score_risque')}>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('score_risque')}>
                   <div className="flex items-center gap-1.5">Score de risque <SortIcon active={sortField === 'score_risque'} dir={sortDir} /></div>
                 </th>
-                <th className={`${thClass} cursor-pointer hover:bg-gray-100 transition-colors`} onClick={() => toggleSort('created_at')}>
+                <th className={`${thClass} cursor-pointer hover:bg-gray-50 transition-colors`} onClick={() => toggleSort('created_at')}>
                   <div className="flex items-center gap-1.5">Dernière activité <SortIcon active={sortField === 'created_at'} dir={sortDir} /></div>
                 </th>
                 <th className={thClass}><div className="text-right">Actions</div></th>
@@ -259,8 +255,7 @@ export default function Clients() {
                 if (!client?.id) return null
                 return (
                   <tr key={client.id}
-                    className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/50 transition-all duration-200 ease-out cursor-pointer"
-                    onClick={() => navigate(`/client/${client.id}`)}>
+                    className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/50 transition-all duration-200 ease-out">
                     <td className="p-5">
                       <div className="flex items-center gap-3">
                         <Avatar name={`${client.prenom || ''} ${client.nom || ''}`} />
@@ -273,11 +268,11 @@ export default function Clients() {
                     <td className="p-5"><StatusBadge status={client.statut} /></td>
                     <td className="p-5"><RiskScoreBadge score={client.score_risque} /></td>
                     <td className="p-5 text-sm text-gray-500">{timeAgo(client.created_at)}</td>
-                    <td className="p-5" onClick={e => e.stopPropagation()}>
+                    <td className="p-5">
                       <div className="flex justify-end items-center gap-1">
-                          <button className="p-2 rounded-md hover:bg-gray-200 transition-colors text-gray-500 hover:text-black"><Eye size={16} /></button>
-                          <button className="p-2 rounded-md hover:bg-gray-200 transition-colors text-gray-500 hover:text-black"><Pencil size={16} /></button>
-                          <button className="p-2 rounded-md hover:bg-red-100 transition-colors text-gray-500 hover:text-red-600"><Trash2 size={16} /></button>
+                          <button onClick={() => navigate(`/client/${client.id}`)} className="p-2 rounded-md hover:bg-gray-200 transition-colors text-gray-500 hover:text-black" title="Voir"><Eye size={16} /></button>
+                          <button onClick={() => navigate(`/clients/${client.id}/edit`)} className="p-2 rounded-md hover:bg-gray-200 transition-colors text-gray-500 hover:text-black" title="Modifier"><Pencil size={16} /></button>
+                          <button onClick={() => alert('Suppression non implémentée')} className="p-2 rounded-md hover:bg-red-100 transition-colors text-gray-500 hover:text-red-600" title="Supprimer"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
@@ -294,14 +289,14 @@ export default function Clients() {
         </div>
 
         {!loading && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+          <div className="flex justify-center items-center gap-4 mt-8">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-black cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm">
+              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-700 cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm">
               ← Précédent
             </button>
-            <span className="text-sm text-gray-500">Page {page} / {totalPages}</span>
+            <span className="text-sm text-gray-500 font-medium">Page {page} sur {totalPages}</span>
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-black cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm">
+              className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-700 cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm">
               Suivant →
             </button>
           </div>
