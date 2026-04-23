@@ -1,3 +1,8 @@
+- ═══ CONTENU BULLES — TEXTE NOIR LISIBLE ═══
+Sur fond transparent blanc, le texte doit être text-slat
+  
+        <ScoreSidebar scores={scores} client={client} contrats={contrats}                           
+onBubbleEnter={handleBubbleEnter} onBubbleLeave={handleBubbleLeave} />                            
 - /drop frontend/src/pages/ClientNew.jsx
 /add frontend/src/pages/ClientDetail.jsx
 MISSION BULLES VIBE 
