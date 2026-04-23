@@ -1,3 +1,9 @@
+- /drop frontend/src/pages/ClientNew.jsx
+/add frontend/src/pages/ClientDetail.jsx
+MISSION BULLES VIBE 
+   flex items-center        
+justify-center font-black flex-shrink-0 select-none" style={{ background:                           
+getGradient(`${client.prenom} ${client.nom}`), boxShadow: '0 0 40px rgba
 - LÉGENDE PÉDAGOGIQUE : en bas du panneau droit, ajoute une section repliable 'Comment sont calculés v
   ><label className={labelClass}>Notes               
 ({form.notes.length}/500)</label><textarea value={form.notes} onChange={e => set('notes',           
