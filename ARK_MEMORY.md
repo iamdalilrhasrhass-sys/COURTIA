@@ -1,3 +1,18 @@
+- LÉGENDE PÉDAGOGIQUE : en bas du panneau droit, ajoute une section repliable 'Comment sont calculés v
+  ><label className={labelClass}>Notes               
+({form.notes.length}/500)</label><textarea value={form.notes} onChange={e => set('notes',           
+e.target.value)} rows="3" maxLength="500" class
+- /drop frontend/src/pages/ClientDetail.jsx
+/add frontend/src/pages/ClientDetail.jsx frontend/src/page
+  4ed8] text-white rounded-lg text-sm font-semibold hover:opacity-90            
+transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">                          
+                {loa
+- /drop frontend/src/pages/Taches.jsx frontend/src/pages/Parametres.jsx frontend/src/pages/Abonnement.
+  Release
+  404  Not Found [IP: 2400:52e0:1e00::1053:1 443]
+Reading package lists...
+E: The repository 'https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu questing Release' does not
+have a Release f
 - /drop backend/src/routes/clients.js
 /add backend/src/routes/clients.js backend/server.js frontend/sr
   ticsRouter)                                       
