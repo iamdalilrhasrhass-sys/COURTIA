@@ -168,7 +168,9 @@ export default function ClientDetail() {
   }, [id])
 
   const handleBubbleEnter = (type) => { clearTimeout(bubbleTimeoutRef.current); setActiveBubble(type) }
-  const handleBubbleLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 200) }
+  const handleBubbleLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 300) }
+  const handleBubbleMouseEnter = () => { clearTimeout(bubbleTimeoutRef.current) }
+  const handleBubbleMouseLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 300) }
 
   const scores = !loading && client ? {
     ...computeScores(client, contrats),
