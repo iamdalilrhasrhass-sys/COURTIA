@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { FileText, Shield, CheckSquare, Bot, Clock, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FileText, Shield, CheckSquare, Bot, Clock, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, ChevronDown } from 'lucide-react'
 import api from '../api'
 import { computeScores } from '../lib/scoring'
 
@@ -36,54 +37,228 @@ const StatusBadge = ({ status }) => {
     prospect: { label: 'Prospect', classes: 'bg-blue-100 text-blue-700' },
   }[s] || { label: 'Inactif', classes: 'bg-gray-100 text-gray-700' }
 
+  return <span className={`px-2 py-1 text-xs font-semibold rounded-full inline-block ${config.classes}`}>{config.label}</span>
+}
+
+const Criterion = ({ label, value, color, weight }) => (
+  <div className="flex items-center justify-between text-xs">
+    <div className="flex items-center gap-2">
+      <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
+      <span className="text-gray-600">{label}</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="font-semibold text-gray-800">{value}</span>
+      <span className="text-gray-400 font-mono text-[11px] w-10 text-right">({weight}%)</span>
+    </div>
+  </div>
+)
+
+const Advice = ({ children }) => (
+  <div className="mt-4 pt-3 border-t border-gray-100">
+    <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Conseil ARK</h4>
+    <p className="text-xs text-gray-600 bg-blue-50/50 border-l-2 border-blue-300 p-2 rounded-r-md">{children}</p>
+  </div>
+)
+
+const RiskTooltipContent = ({ client }) => {
+  const bm = client.bonus_malus || 1
+  const sins = client.nb_sinistres_3ans || 0
+  const permis = client.annees_permis || 0
+  
+  const bmColor = bm <= 1 ? 'bg-green-400' : bm <= 1.5 ? 'bg-yellow-400' : 'bg-red-400'
+  const sinsColor = sins === 0 ? 'bg-green-400' : sins === 1 ? 'bg-yellow-400' : 'bg-red-400'
+  const zoneColor = (client.zone_geographique || '').toLowerCase() === 'urbain' ? 'bg-red-400' : (client.zone_geographique || '').toLowerCase() === 'périurbain' ? 'bg-yellow-400' : 'bg-gray-400'
+  const permisColor = permis < 3 ? 'bg-red-400' : permis <= 10 ? 'bg-yellow-400' : 'bg-green-400'
+
   return (
-    <span className={`px-2 py-1 text-xs font-semibold rounded-full inline-block ${config.classes}`}>
-      {config.label}
-    </span>
+    <>
+      <div className="space-y-2">
+        <Criterion label="Bonus-malus" value={bm} color={bmColor} weight={35} />
+        <Criterion label="Sinistres (3 ans)" value={sins} color={sinsColor} weight={30} />
+        <Criterion label="Zone géographique" value={fmt(client.zone_geographique)} color={zoneColor} weight={20} />
+        <Criterion label="Années de permis" value={`${permis} ans`} color={permisColor} weight={15} />
+      </div>
+      { (bm > 1.2 || sins >= 2 || (client.zone_geographique || '').toLowerCase() === 'urbain') && (
+        <Advice>
+          {bm > 1.2 && 'Proposer un stage de conduite défensive pour améliorer son bonus-malus. '}
+          {sins >= 2 && 'Suggérer une franchise modulable pour réduire les petits sinistres. '}
+          {(client.zone_geographique || '').toLowerCase() === 'urbain' && 'Envisager une garantie vol/vandalisme renforcée.'}
+        </Advice>
+      )}
+    </>
   )
 }
 
-function ScoreGauge({ score = 0, label, color = '#2563eb' }) {
-  const size = 80
-  const strokeWidth = 8
-  const radius = (size - strokeWidth) / 2
+const FidelityTooltipContent = ({ scores }) => {
+  const anciennete = scores.ancienneteAns || 0
+  const contrats = scores.nbActifs || 0
+  
+  const ancColor = anciennete >= 5 ? 'bg-green-400' : anciennete >= 2 ? 'bg-yellow-400' : 'bg-red-400'
+  const contColor = contrats >= 3 ? 'bg-green-400' : contrats === 2 ? 'bg-yellow-400' : 'bg-red-400'
+  
+  return (
+    <>
+      <div className="space-y-2">
+        <Criterion label="Ancienneté" value={`${anciennete.toFixed(1)} ans`} color={ancColor} weight={50} />
+        <Criterion label="Contrats actifs" value={contrats} color={contColor} weight={30} />
+        <Criterion label="Dernière interaction" value="N/A" color="bg-gray-400" weight={20} />
+      </div>
+      {(contrats < 2 || anciennete < 1 || anciennete >= 5) && (
+        <Advice>
+          {contrats < 2 && 'Opportunité multi-équipement détectée — proposer un pack famille. '}
+          {anciennete < 1 && 'Client récent — programmer un appel de suivi à 3 mois pour renforcer la relation. '}
+          {anciennete >= 5 && 'Client fidèle — éligible au programme de parrainage COURTIA. '}
+        </Advice>
+      )}
+    </>
+  )
+}
+
+const OpportunityTooltipContent = ({ client, contrats }) => {
+  const sit = (client.situation_familiale || '').toLowerCase()
+  const hasProKeywords = ['médecin', 'dentiste', 'avocat', 'notaire', 'architecte', 'chef', 'directeur', 'gérant', 'pharmacien', 'ingénieur'].some(kw => (client.profession || '').toLowerCase().includes(kw))
+  const clientContrats = (contrats || []).map(c => (c.type_contrat || '').toLowerCase())
+  const manquant = ['habitation', 'prévoyance', 'auto'].filter(p => !clientContrats.includes(p)).join(', ') || 'Aucun'
+
+  return (
+    <>
+      <div className="space-y-2">
+        <Criterion label="Situation familiale" value={fmt(client.situation_familiale)} color={['marié', 'pacsé'].includes(sit) ? 'bg-green-400' : 'bg-gray-400'} weight={30} />
+        <Criterion label="Profession" value={fmt(client.profession)} color={hasProKeywords ? 'bg-green-400' : 'bg-gray-400'} weight={30} />
+        <Criterion label="Segment" value={fmt(client.segment)} color="bg-gray-400" weight={20} />
+        <Criterion label="Produits manquants" value={manquant} color={manquant !== 'Aucun' ? 'bg-yellow-400' : 'bg-green-400'} weight={20} />
+      </div>
+      {(['marié', 'pacsé'].includes(sit) && !clientContrats.includes('habitation') || (hasProKeywords && !clientContrats.includes('rc pro'))) && (
+        <Advice>
+          {['marié', 'pacsé'].includes(sit) && !clientContrats.includes('habitation') && "Proposer un contrat MRH. Potentiel de prime estimé à +450€/an. "}
+          {hasProKeywords && !clientContrats.includes('rc pro') && "RC Professionnelle manquante. Risque légal important pour le client à couvrir."}
+        </Advice>
+      )}
+    </>
+  )
+}
+
+const RetentionTooltipContent = ({ scores }) => {
+    const echeance = scores.prochaineEcheanceDays
+    const risque = scores.risque || 0
+    const echColor = echeance === null ? 'bg-gray-400' : echeance <= 30 ? 'bg-red-400' : echeance <= 90 ? 'bg-yellow-400' : 'bg-green-400'
+    const echValue = echeance === null ? 'N/A' : `J-${echeance}`
+
+    return (
+    <>
+      <div className="space-y-2">
+        <Criterion label="Prochaine échéance" value={echValue} color={echColor} weight={40} />
+        <Criterion label="Score de risque" value={risque} color={risque >= 70 ? 'bg-red-400' : risque >= 40 ? 'bg-yellow-400' : 'bg-green-400'} weight={30} />
+        <Criterion label="Historique renouvel." value="N/A" color="bg-gray-400" weight={30} />
+      </div>
+      {(echeance !== null && echeance <= 30 || risque >= 70) && (
+        <Advice>
+          {echeance !== null && echeance <= 30 && `URGENT — Contacter avant le ${new Date(Date.now() + echeance * 864e5).toLocaleDateString('fr-FR')} pour le renouvellement. `}
+          {risque >= 70 && 'Risque de résiliation par la compagnie. Préparer une offre alternative compétitive.'}
+        </Advice>
+      )}
+    </>
+  )
+}
+
+const ScoreTooltip = ({ type, client, contrats, scores }) => {
+  const contentMap = {
+    risque: { title: "🔴 Score de Risque", coeff: "x4", Content: RiskTooltipContent },
+    fidelite: { title: "💙 Score de Fidélité", coeff: "x2.5", Content: FidelityTooltipContent },
+    opportunite: { title: "🟢 Score d'Opportunité", coeff: "x2", Content: OpportunityTooltipContent },
+    retention: { title: "🟡 Score de Rétention", coeff: "x1.5", Content: RetentionTooltipContent },
+  }
+  const { title, coeff, Content } = contentMap[type]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="absolute bottom-full mb-3 w-[280px] bg-white border border-gray-100 shadow-2xl rounded-xl p-4 z-50 origin-bottom"
+      style={{ left: '50%', transform: 'translateX(-50%)' }}
+    >
+      <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-b border-r border-gray-100 transform rotate-45" />
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-bold text-gray-800">{title}</h3>
+        <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Coeff. {coeff}</span>
+      </div>
+      <Content client={client} contrats={contrats} scores={scores} />
+    </motion.div>
+  )
+}
+
+function ScoreGaugeWithTooltip({ score = 0, label, color = '#2563eb', tooltipType, client, contrats, scores }) {
+  const [isHovered, setIsHovered] = useState(false)
+  const size = 80, strokeWidth = 8, radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
 
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
-      <div className="relative" style={{ width: size, height: size }}>
+    <div className="flex flex-col items-center gap-2 text-center relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div className={`relative rounded-full ${isHovered ? 'halo-effect' : ''}`} style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
           <circle cx={size / 2} cy={size / 2} r={radius} stroke="#e5e7eb" strokeWidth={strokeWidth} fill="none" />
-          <circle
-            cx={size / 2} cy={size / 2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none"
-            strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
-          />
+          <circle cx={size / 2} cy={size / 2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-xl font-bold" style={{ color }}>{score}</span>
         </div>
       </div>
       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+      <AnimatePresence>
+        {isHovered && <ScoreTooltip type={tooltipType} client={client} contrats={contrats} scores={scores} />}
+      </AnimatePresence>
     </div>
   )
 }
 
-function ScoreSidebar({ scores }) {
+function ScoreSidebar({ scores, client, contrats }) {
+  const [explanationVisible, setExplanationVisible] = useState(false)
   if (!scores) return null
+
+  // Le score de risque est inversé (haut = mauvais), on l'inverse pour le score global.
+  const globalScore = Math.round(
+    (100 - scores.risque) * 0.40 +
+    scores.fidelite * 0.25 +
+    scores.opportunite * 0.20 +
+    scores.retention * 0.15
+  )
+
   return (
     <aside className="w-[280px] border-l border-gray-200 bg-white p-6 sticky top-0 h-screen overflow-y-auto">
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Score Global</h3>
-        <p className="text-5xl font-black text-[#2563eb] my-2">{Math.round((scores.fidelite + scores.opportunite + scores.retention) / 3)}</p>
+        <p className="text-5xl font-black text-[#2563eb] my-2">{globalScore}</p>
         <p className="text-xs text-gray-400">Basé sur 4 indicateurs clés</p>
       </div>
-      <div className="grid grid-cols-2 gap-6 mt-6">
-        <ScoreGauge score={scores.risque} label="Risque" color={scores.risque >= 70 ? '#ef4444' : scores.risque >= 40 ? '#f59e0b' : '#22c55e'} />
-        <ScoreGauge score={scores.fidelite} label="Fidélité" color="#2563eb" />
-        <ScoreGauge score={scores.opportunite} label="Opportunité" color="#8b5cf6" />
-        <ScoreGauge score={scores.retention} label="Rétention" color="#14b8a6" />
+      <div className="grid grid-cols-2 gap-y-8 gap-x-4 mt-8">
+        <ScoreGaugeWithTooltip score={scores.risque} label="Risque" color={scores.risque >= 70 ? '#ef4444' : scores.risque >= 40 ? '#f59e0b' : '#22c55e'} tooltipType="risque" client={client} contrats={contrats} scores={scores} />
+        <ScoreGaugeWithTooltip score={scores.fidelite} label="Fidélité" color="#2563eb" tooltipType="fidelite" client={client} contrats={contrats} scores={scores} />
+        <ScoreGaugeWithTooltip score={scores.opportunite} label="Opportunité" color="#8b5cf6" tooltipType="opportunite" client={client} contrats={contrats} scores={scores} />
+        <ScoreGaugeWithTooltip score={scores.retention} label="Rétention" color="#14b8a6" tooltipType="retention" client={client} contrats={contrats} scores={scores} />
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-gray-100">
+        <button onClick={() => setExplanationVisible(!explanationVisible)} className="w-full flex justify-between items-center text-left text-gray-700 hover:text-gray-900 transition-colors">
+          <h4 className="text-xs font-semibold">Comment sont calculés vos scores ?</h4>
+          <ChevronDown size={16} className={`transform transition-transform duration-300 ${explanationVisible ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+        {explanationVisible && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
+            <p className="mt-2 text-xs text-gray-500">
+              COURTIA calcule 4 scores pondérés. Le <b>Score de Risque (40%)</b> est le plus important car il impacte la sinistralité. Viennent ensuite la <b>Fidélité (25%)</b>, l'<b>Opportunité (20%)</b> et la <b>Rétention (15%)</b> pour une vision complète du client.
+            </p>
+          </motion.div>
+        )}
+        </AnimatePresence>
       </div>
     </aside>
   )
@@ -96,9 +271,7 @@ function TabsNav({ activeTab, setActiveTab }) {
   useEffect(() => {
     const activeIndex = TABS.findIndex(t => t.id === activeTab)
     const activeTabNode = tabsRef.current[activeIndex]
-    if (activeTabNode) {
-      setUnderlineStyle({ left: activeTabNode.offsetLeft, width: activeTabNode.offsetWidth })
-    }
+    if (activeTabNode) setUnderlineStyle({ left: activeTabNode.offsetLeft, width: activeTabNode.offsetWidth })
   }, [activeTab])
 
   return (
@@ -106,14 +279,8 @@ function TabsNav({ activeTab, setActiveTab }) {
         <div className="relative px-8">
             <nav className="flex gap-8">
                 {TABS.map((tab, index) => (
-                    <button
-                        key={tab.id}
-                        ref={el => tabsRef.current[index] = el}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 py-3 text-sm transition-colors duration-200 ${activeTab === tab.id ? 'text-[#2563eb] font-semibold' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                        <tab.icon size={16} />
-                        <span>{tab.label}</span>
+                    <button key={tab.id} ref={el => tabsRef.current[index] = el} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 py-3 text-sm transition-colors duration-200 ${activeTab === tab.id ? 'text-[#2563eb] font-semibold' : 'text-gray-500 hover:text-gray-700'}`}>
+                        <tab.icon size={16} /><span>{tab.label}</span>
                     </button>
                 ))}
             </nav>
@@ -144,7 +311,7 @@ function InfosTab({ client }) {
         <DataItem icon={User} label="Nom Complet" value={`${client.prenom} ${client.nom}`} />
         <DataItem icon={Mail} label="Email" value={client.email} />
         <DataItem icon={Phone} label="Téléphone" value={client.telephone} />
-        <DataItem icon={MapPin} label="Adresse" value={`${client.adresse}, ${client.code_postal} ${client.ville}`} />
+        <DataItem icon={MapPin} label="Adresse" value={client.adresse ? `${client.adresse}, ${client.postal_code || ''} ${client.city || ''}`.replace(/, $/, '') : '—'} />
         <DataItem icon={Building} label="Profession" value={client.profession} />
         <DataItem icon={User} label="Segment" value={client.segment} />
       </InfoCard>
@@ -154,6 +321,7 @@ function InfosTab({ client }) {
         <DataItem icon={AlertTriangle} label="Sinistres (3 ans)" value={client.nb_sinistres_3ans} />
         <DataItem icon={Calendar} label="Client depuis" value={fmtDate(client.created_at)} />
         <DataItem icon={MapPin} label="Zone" value={client.zone_geographique} />
+        <DataItem icon={User} label="Situation" value={client.situation_familiale} />
       </InfoCard>
     </div>
   )
@@ -281,11 +449,7 @@ export default function ClientDetail() {
   }, [id])
 
   const scores = !loading && client ? computeScores(client, contrats) : null
-  const getInitials = (c) => {
-    const first = (c?.prenom || '').charAt(0)
-    const last = (c?.nom || '').charAt(0)
-    return (first + last).toUpperCase() || '?'
-  }
+  const getInitials = (c) => ((c?.prenom || '').charAt(0) + (c?.nom || '').charAt(0)).toUpperCase() || '?'
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
   if (error) return <div className="p-8 text-center"><p className="text-red-600">{error}</p><button onClick={() => navigate('/clients')} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg">Retour</button></div>
@@ -298,6 +462,13 @@ export default function ClientDetail() {
 
   return (
     <div className="min-h-screen bg-[#f9fafb] font-sans">
+      <style>{`
+        @keyframes halo-pulse {
+          0% { box-shadow: 0 0 0 0px rgba(37, 99, 235, 0.4); }
+          100% { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0); }
+        }
+        .halo-effect { animation: halo-pulse 1.5s infinite; }
+      `}</style>
       <div className="flex">
         <main className="flex-1">
             <header className="bg-white border-b border-gray-100 shadow-sm px-8 py-6">
@@ -316,9 +487,9 @@ export default function ClientDetail() {
                     <div className="flex-1">
                         <h1 className="text-3xl font-black text-gray-900 tracking-tight">{client.prenom} {client.nom}</h1>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                            <span className="flex items-center gap-1.5"><Mail size={14} /> {client.email}</span>
-                            <span className="flex items-center gap-1.5"><Phone size={14} /> {client.telephone}</span>
-                            <span className="flex items-center gap-1.5"><MapPin size={14} /> {client.adresse}</span>
+                            <span className="flex items-center gap-1.5"><Mail size={14} /> {client.email || '—'}</span>
+                            <span className="flex items-center gap-1.5"><Phone size={14} /> {client.telephone || '—'}</span>
+                            <span className="flex items-center gap-1.5"><MapPin size={14} /> {client.adresse || '—'}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 self-start">
@@ -339,7 +510,7 @@ export default function ClientDetail() {
           </div>
         </main>
 
-        <ScoreSidebar scores={scores} />
+        <ScoreSidebar scores={scores} client={client} contrats={contrats} />
       </div>
     </div>
   )

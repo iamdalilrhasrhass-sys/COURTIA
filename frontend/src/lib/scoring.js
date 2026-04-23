@@ -170,8 +170,6 @@ export function computeScores(client, contrats, taches = []) {
     signaux.push({ label: 'Potentiel élevé', color: '#16a34a', bg: '#dcfce7' })
   if (nbActifs === 1)
     signaux.push({ label: 'Multi-équipement possible', color: '#2563eb', bg: '#eff6ff' })
-  if (fidelite > 75)
-    signaux.push({ label: 'Client fidèle', color: '#16a34a', bg: '#dcfce7' })
 
   const scores = { risque, fidelite, opportunite, retention, completude, valeur_eur, nbActifs, primeTotal, prochaineEcheanceDays, sins, bm, ancienneteAns }
   const raisons = getScoreReasons(client, c, taches, scores)
