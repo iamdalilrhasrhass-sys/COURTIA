@@ -6,6 +6,7 @@ import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Bui
 import api from '../api'
 import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
 import ContratsTab from '../components/ContratsTab'
+import TachesTab from '../components/TachesTab'
 
 // ─── HELPERS & SMALL COMPONENTS ──────────────────────────────────────────────
 const fmt = (v) => (v === null || v === undefined || v === '') ? '—' : String(v)
@@ -148,6 +149,7 @@ export default function ClientDetail() {
   const navigate = useNavigate()
   const [client, setClient] = useState(null)
   const [contrats, setContrats] = useState([])
+  const [taches, setTaches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('infos')
@@ -158,9 +160,14 @@ export default function ClientDetail() {
     async function loadAll() {
       try {
         setLoading(true); setError(null)
-        const [clientRes, contratsRes] = await Promise.all([api.get(`/api/clients/${id}`), api.get(`/api/clients/${id}/contrats`)])
+        const [clientRes, contratsRes, tachesRes] = await Promise.all([
+          api.get(`/api/clients/${id}`), 
+          api.get(`/api/clients/${id}/contrats`),
+          api.get(`/api/taches?clientId=${id}`).catch(() => ({ data: [] }))
+        ])
         setClient(clientRes.data)
         setContrats(Array.isArray(contratsRes.data) ? contratsRes.data : [])
+        setTaches(Array.isArray(tachesRes.data) ? tachesRes.data : [])
       } catch (err) { setError('Client introuvable.'); toast.error('Client introuvable.') }
       finally { setLoading(false) }
     }
@@ -181,7 +188,7 @@ export default function ClientDetail() {
   if (error) return <div className="p-8 text-center text-red-500 bg-gray-50 h-screen flex flex-col justify-center items-center">{error}<button onClick={() => navigate('/clients')} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg">Retour</button></div>
   if (!client) return null
   
-  const TABS = [ { id: 'infos', label: 'Informations', icon: FileText, component: <InfosTab client={client}/> }, { id: 'contrats', label: 'Contrats', icon: Shield, component: <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} /> }, { id: 'taches', label: 'Tâches', icon: CheckSquare, component: <PlaceholderTab title="Tâches"/> }, { id: 'ark', label: 'ARK Chat', icon: Bot, component: <PlaceholderTab title="ARK Chat"/> }]
+  const TABS = [ { id: 'infos', label: 'Informations', icon: FileText, component: <InfosTab client={client}/> }, { id: 'contrats', label: 'Contrats', icon: Shield, component: <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} /> }, { id: 'taches', label: 'Tâches', icon: CheckSquare, component: <TachesTab taches={taches} clientId={client.id} navigate={navigate} /> }, { id: 'ark', label: 'ARK Chat', icon: Bot, component: <PlaceholderTab title="ARK Chat"/> }]
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans text-gray-800">
