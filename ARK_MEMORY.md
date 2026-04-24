@@ -1,3 +1,9 @@
+- /add frontend/src/App.jsx frontend/src/pages/Contrats.jsx
+
+MISSION DIAGNOSTIC — ne touche à rien ava
+  nsition-colors">                                                               
+                        Renouveler                                                                  
+                   
 - ═══ CONTENU BULLES — TEXTE NOIR LISIBLE ═══
 Sur fond transparent blanc, le texte doit être text-slat
   
