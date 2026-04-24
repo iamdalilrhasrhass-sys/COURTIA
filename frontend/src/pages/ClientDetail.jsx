@@ -7,6 +7,7 @@ import api from '../api'
 import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
 import ContratsTab from '../components/ContratsTab'
 import TachesTab from '../components/TachesTab'
+import ARKChatTab from '../components/ARKChatTab'
 
 // ─── HELPERS & SMALL COMPONENTS ──────────────────────────────────────────────
 const fmt = (v) => (v === null || v === undefined || v === '') ? '—' : String(v)
@@ -188,7 +189,7 @@ export default function ClientDetail() {
   if (error) return <div className="p-8 text-center text-red-500 bg-gray-50 h-screen flex flex-col justify-center items-center">{error}<button onClick={() => navigate('/clients')} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg">Retour</button></div>
   if (!client) return null
   
-  const TABS = [ { id: 'infos', label: 'Informations', icon: FileText, component: <InfosTab client={client}/> }, { id: 'contrats', label: 'Contrats', icon: Shield, component: <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} /> }, { id: 'taches', label: 'Tâches', icon: CheckSquare, component: <TachesTab taches={taches} clientId={client.id} navigate={navigate} /> }, { id: 'ark', label: 'ARK Chat', icon: Bot, component: <PlaceholderTab title="ARK Chat"/> }]
+  const TABS = [ { id: 'infos', label: 'Informations', icon: FileText, component: <InfosTab client={client}/> }, { id: 'contrats', label: 'Contrats', icon: Shield, component: <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} /> }, { id: 'taches', label: 'Tâches', icon: CheckSquare, component: <TachesTab taches={taches} clientId={client.id} navigate={navigate} /> }, { id: 'ark', label: 'ARK Chat', icon: Bot, component: <ARKChatTab clientId={client.id} client={client} /> }]
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans text-gray-800">
