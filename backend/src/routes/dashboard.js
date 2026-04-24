@@ -29,7 +29,10 @@ router.get('/stats', verifyToken, async (req, res) => {
     const statutResult = await pool.query(`SELECT status, COUNT(*) as count FROM clients GROUP BY status`);
     const clientsParStatut = statutResult.rows.reduce((acc, row) => { if (row.status) acc[row.status] = parseInt(row.count); return acc; }, {});
 
-    const contratsResult = await pool.query(`SELECT COUNT(q.*) as actifs, COALESCE(ROUND(SUM((q.quote_data->>'prime_annuelle')::decimal * 0.15 / 12), 2), 0) as commissions, COALESCE(SUM((q.quote_data->>'prime_annuelle')::decimal), 0) as prime_totale FROM quotes q WHERE q.status = 'actif'`);
+    const segmentResult = await pool.query(`SELECT type as segment, COUNT(*) as count FROM clients WHERE type IS NOT NULL GROUP BY type`);
+    const clientsParSegment = segmentResult.rows.reduce((acc, row) => { if (row.segment) acc[row.segment] = parseInt(row.count); return acc; }, {});
+
+    const contratsResult = await pool.query(`SELECT COUNT(*) as actifs, COALESCE(ROUND(SUM((quote_data->>'prime_annuelle')::decimal * 0.15 / 12), 2), 0) as commissions, COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as prime_totale FROM quotes WHERE status = 'actif'`);
     const contratsActifs = parseInt(contratsResult.rows[0].actifs);
     const commissionsMois = parseFloat(contratsResult.rows[0].commissions);
     const primeTotale = parseFloat(contratsResult.rows[0].prime_totale || 0);
@@ -44,9 +47,6 @@ router.get('/stats', verifyToken, async (req, res) => {
     const recentsResult = await pool.query(`SELECT id, first_name as nom, last_name as prenom, status as statut, risk_score as score_risque, created_at FROM clients ORDER BY created_at DESC LIMIT 5`);
 
     const typesResult = await pool.query(`SELECT COALESCE(quote_data->>'type_contrat', 'Autre') as type, COUNT(*) as count, COALESCE(SUM((quote_data->>'prime_annuelle')::decimal), 0) as total_primes FROM quotes WHERE status = 'actif' GROUP BY quote_data->>'type_contrat' ORDER BY count DESC`);
-
-    const segmentResult = await pool.query(`SELECT type as segment, COUNT(*) as count FROM clients WHERE type IS NOT NULL GROUP BY type`);
-    const clientsParSegment = segmentResult.rows.reduce((acc, row) => { if (row.segment) acc[row.segment] = parseInt(row.count); return acc; }, {});
 
     res.json({ totalClients: total, contratsActifs, commissionsMois, primeTotale, contratsUrgents, tauxConversion, scoreRisqueMoyen, clientsParStatut, clientsParSegment, revenus6Mois: revenusResult.rows, alertes: alertesResult.rows, clientsRecents: recentsResult.rows, typesContrats: typesResult.rows });
   } catch (err) {
