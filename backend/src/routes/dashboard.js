@@ -29,7 +29,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COUNT(*) as total,
         COUNT(CASE WHEN status = 'actif' THEN 1 END) as actifs
       FROM clients
-      WHERE courtier_id = $1
+      WHERE user_id = $1
     `, [courtierId]);
     const total = parseInt(clientsResult.rows[0].total);
     const actifs = parseInt(clientsResult.rows[0].actifs);
@@ -39,7 +39,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     const scoreMoyenResult = await pool.query(`
       SELECT COALESCE(ROUND(AVG(risk_score)), 0) as score
       FROM clients
-      WHERE courtier_id = $1
+      WHERE user_id = $1
     `, [courtierId]);
     const scoreRisqueMoyen = parseInt(scoreMoyenResult.rows[0].score);
     
@@ -47,7 +47,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     const statutResult = await pool.query(`
       SELECT status, COUNT(*) as count
       FROM clients
-      WHERE courtier_id = $1
+      WHERE user_id = $1
       GROUP BY status
     `, [courtierId]);
     const clientsParStatut = statutResult.rows.reduce((acc, row) => {
@@ -59,7 +59,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     const segmentResult = await pool.query(`
       SELECT type as segment, COUNT(*) as count
       FROM clients
-      WHERE courtier_id = $1
+      WHERE user_id = $1
       GROUP BY type
     `, [courtierId]);
     const clientsParSegment = segmentResult.rows.reduce((acc, row) => {
@@ -74,7 +74,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COALESCE(ROUND(SUM((q.quote_data->>'prime_annuelle')::decimal * 0.15 / 12), 2), 0) as commissions,
         COALESCE(SUM((q.quote_data->>'prime_annuelle')::decimal), 0) as prime_totale
       FROM quotes q JOIN clients c ON q.client_id = c.id
-      WHERE q.status = 'actif' AND c.courtier_id = $1
+      WHERE q.status = 'actif' AND c.user_id = $1
     `, [courtierId]);
     const contratsActifs = parseInt(contratsResult.rows[0].actifs);
     const commissionsMois = parseFloat(contratsResult.rows[0].commissions);
@@ -84,7 +84,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     const urgentsResult = await pool.query(`
       SELECT COUNT(q.*) as count FROM quotes q JOIN clients c ON q.client_id = c.id
       WHERE (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
-      AND q.status = 'actif' AND c.courtier_id = $1
+      AND q.status = 'actif' AND c.user_id = $1
     `, [courtierId]);
     const contratsUrgents = parseInt(urgentsResult.rows[0].count);
 
@@ -95,7 +95,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COALESCE(SUM((q.quote_data->>'prime_annuelle')::decimal), 0) as revenue
       FROM quotes q JOIN clients c ON q.client_id = c.id
       WHERE q.created_at >= NOW() - INTERVAL '6 months'
-      AND q.status = 'actif' AND c.courtier_id = $1
+      AND q.status = 'actif' AND c.user_id = $1
       GROUP BY DATE_TRUNC('month', q.created_at)
       ORDER BY DATE_TRUNC('month', q.created_at) ASC
     `, [courtierId]);
@@ -110,7 +110,7 @@ router.get('/stats', verifyToken, async (req, res) => {
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
       WHERE (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '90 days'
-      AND q.status = 'actif' AND c.courtier_id = $1
+      AND q.status = 'actif' AND c.user_id = $1
       ORDER BY (q.quote_data->>'date_echeance')::date ASC
       LIMIT 5
     `, [courtierId]);
@@ -129,7 +129,7 @@ router.get('/stats', verifyToken, async (req, res) => {
             ELSE 'E'
           END as tier
         FROM clients
-        WHERE courtier_id = $1
+        WHERE user_id = $1
       ) ranked
       ORDER BY tier ASC, created_at DESC
       LIMIT 5
@@ -142,7 +142,7 @@ router.get('/stats', verifyToken, async (req, res) => {
         COUNT(*) as count,
         COALESCE(SUM((q.quote_data->>'prime_annuelle')::decimal), 0) as total_primes
       FROM quotes q JOIN clients c ON q.client_id = c.id
-      WHERE q.status = 'actif' AND c.courtier_id = $1
+      WHERE q.status = 'actif' AND c.user_id = $1
       GROUP BY q.quote_data->>'type_contrat'
       ORDER BY count DESC
     `, [courtierId]);
