@@ -5,8 +5,8 @@ const PLANS = {
     name: 'Starter',
     price: 39,
     limits: {
-      // TODO: Définir les limites réelles pour le plan starter
       clients: 100,
+      contracts: 50,
     },
     features: {
       // TODO: Définir les fonctionnalités réelles pour le plan starter
@@ -17,8 +17,8 @@ const PLANS = {
     name: 'Pro',
     price: 69,
     limits: {
-      // TODO: Définir les limites réelles pour le plan pro
       clients: 500,
+      contracts: 500,
     },
     features: {
       dashboardAccess: true,
@@ -30,6 +30,7 @@ const PLANS = {
     price: 129,
     limits: {
       clients: Infinity,
+      contracts: Infinity,
     },
     features: {
       dashboardAccess: true,
@@ -63,8 +64,14 @@ async function checkFeatureAccess(userId, featureKey) {
 }
 
 async function checkLimit(userId, limitType) {
+  // Exception: super_admin et utilisateurs test (id=3) contournent limite
+  const { rows } = await pool.query('SELECT role FROM courtiers WHERE id = $1', [userId]);
+  if (rows[0]?.role === 'super_admin' || userId === 3) {
+    return { allowed: true, current: 0, max: Infinity };
+  }
+  
   const planInfo = await getUserPlanInfo(userId);
-  const max = planInfo.limits[limitType] || 0;
+  const max = planInfo.limits[limitType] || Infinity;
 
   // TODO: Implémenter le suivi de l'utilisation actuelle.
   // Cela nécessitera d'interroger d'autres tables (par exemple, compter les clients de l'utilisateur).
