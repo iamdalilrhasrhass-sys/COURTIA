@@ -44,7 +44,7 @@ const DEFAULT_PLAN = 'starter';
 
 async function getUserPlanInfo(userId) {
   try {
-    const { rows } = await pool.query('SELECT plan FROM courtiers WHERE id = $1', [userId]);
+    const { rows } = await pool.query('SELECT plan FROM users WHERE id = $1', [userId]);
     if (rows.length > 0) {
       const planKey = rows[0].plan && PLANS[rows[0].plan] ? rows[0].plan : DEFAULT_PLAN;
       return { plan: planKey, ...PLANS[planKey] };
@@ -65,7 +65,7 @@ async function checkFeatureAccess(userId, featureKey) {
 
 async function checkLimit(userId, limitType) {
   // Exception: super_admin et utilisateurs test (id=3) contournent limite
-  const { rows } = await pool.query('SELECT role FROM courtiers WHERE id = $1', [userId]);
+  const { rows } = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
   if (rows[0]?.role === 'super_admin' || userId === 3) {
     return { allowed: true, current: 0, max: Infinity };
   }
