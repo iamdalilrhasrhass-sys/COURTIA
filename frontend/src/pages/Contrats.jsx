@@ -58,7 +58,7 @@ const EcheanceIndicator = ({ date }) => {
   )
 }
 
-function ContratCard({ contrat, onClientClick }) {
+function ContratCard({ contrat, onClientClick, onDetailClick, onRenewClick }) {
     if (!contrat) return null;
     const clientName = `${contrat.client_prenom || ''} ${contrat.client_nom || ''}`.trim()
     const echeance = contrat.date_echeance ? new Date(contrat.date_echeance) : null
@@ -100,11 +100,11 @@ function ContratCard({ contrat, onClientClick }) {
 
             {/* Footer */}
             <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
-                <button className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <button onClick={() => contrat.client_id && onDetailClick(contrat.client_id)} className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     Voir détail
                 </button>
                 {daysLeft <= 90 && daysLeft > 0 &&
-                    <button className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#2563eb] rounded-lg hover:bg-blue-700 transition-colors">
+                    <button onClick={() => contrat.client_id && onRenewClick(contrat.client_id)} className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#2563eb] rounded-lg hover:bg-blue-700 transition-colors">
                         Renouveler
                     </button>
                 }
@@ -179,7 +179,13 @@ export default function Contrats() {
         ) : paginated.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {paginated.map(c => (
-              <ContratCard key={c.id} contrat={c} onClientClick={(id) => navigate(`/client/${id}`)} />
+              <ContratCard
+                key={c.id}
+                contrat={c}
+                onClientClick={(id) => navigate(`/client/${id}`)}
+                onDetailClick={(id) => navigate(`/client/${id}`)}
+                onRenewClick={(id) => navigate(`/contrats/new?clientId=${id}`)}
+              />
             ))}
           </div>
         ) : (
