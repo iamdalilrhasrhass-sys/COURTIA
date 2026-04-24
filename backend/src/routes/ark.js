@@ -31,6 +31,35 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
       return res.status(400).json({ error: 'Message vide ou manquant' })
     }
 
+    // Auto-fetch contrats et tâches si clientData est présent
+    if (clientData && clientData.id) {
+      const pool = require('../db')
+      if (!Array.isArray(clientData.contrats)) {
+        try {
+          const contratsRes = await pool.query(
+            `SELECT quote_data->>'type_contrat' as type, quote_data->>'compagnie' as compagnie, (quote_data->>'prime_annuelle')::numeric as prime_annuelle, status as statut, (quote_data->>'date_echeance')::date as date_echeance FROM quotes WHERE client_id = $1`,
+            [clientData.id]
+          )
+          clientData.contrats = contratsRes.rows || []
+        } catch (e) {
+          console.error('ARK auto-fetch contrats failed:', e.message)
+          clientData.contrats = []
+        }
+      }
+      if (!Array.isArray(clientData.taches)) {
+        try {
+          const tachesRes = await pool.query(
+            `SELECT titre, statut, priorite, echeance FROM taches WHERE client_id = $1 AND statut != 'terminee' ORDER BY echeance ASC NULLS LAST LIMIT 5`,
+            [clientData.id]
+          )
+          clientData.taches = tachesRes.rows || []
+        } catch (e) {
+          console.error('ARK auto-fetch taches failed:', e.message)
+          clientData.taches = []
+        }
+      }
+    }
+
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('ARK ERROR: ANTHROPIC_API_KEY non définie dans les variables Render')
       return res.status(500).json({
@@ -43,6 +72,33 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
     const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     let systemPrompt
     if (clientData && (clientData.id || clientData.nom)) {
+      // Fetch auto contrats + tâches si pas déjà fournis
+      if (clientData.id && !clientData.contrats) {
+        try {
+          const pool = req.app.locals.pool
+          const contratsResult = await pool.query(
+            `SELECT 
+              q.status,
+              q.quote_data->>'type_contrat' as type_contrat,
+              q.quote_data->>'compagnie' as compagnie,
+              (q.quote_data->>'prime_annuelle')::decimal as prime_annuelle,
+              q.quote_data->>'date_echeance' as date_echeance
+            FROM quotes q 
+            WHERE q.client_id = $1`,
+            [clientData.id]
+          )
+          clientData.contrats = contratsResult.rows
+          
+          const tachesResult = await pool.query(
+            "SELECT titre as title, priorite as priority, statut as status, echeance as due_date FROM taches WHERE client_id = $1 AND statut != 'terminee' ORDER BY echeance ASC LIMIT 5",
+            [clientData.id]
+          )
+          clientData.taches_actives = tachesResult.rows
+        } catch (fetchErr) {
+          console.error('ARK: erreur fetch contrats/tâches:', fetchErr.message)
+        }
+      }
+
       // Lister les contrats actifs du client si disponibles
       const contratsActifs = Array.isArray(clientData.contrats)
         ? clientData.contrats.filter(c => (c.status || c.statut || '').toLowerCase() === 'actif')
@@ -51,23 +107,42 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
         ? contratsActifs.map(c => `  • ${c.type_contrat || c.type} chez ${c.compagnie || 'N/A'} — prime ${c.prime_annuelle ? c.prime_annuelle + '€' : 'N/A'} — échéance ${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}`).join('\n')
         : '  Aucun contrat actif renseigné'
 
-      systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert assurance française. Date : ${today}
+      const tachesStr = Array.isArray(clientData.taches_actives) && clientData.taches_actives.length > 0
+        ? clientData.taches_actives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\n')
+        : '  Aucune tâche active'
 
-CLIENT : ${clientData.prenom || ''} ${clientData.nom || ''} | Statut : ${clientData.statut || clientData.status || 'NC'} | Profession : ${clientData.profession || 'NC'} | Zone : ${clientData.zone_geographique || 'NC'}
-CONTRATS ACTIFS : ${contratsStr}
+      const scoreRisque = clientData.risk_score || clientData.score_risque || 'NC'
+      
+      systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert en courtage d'assurance français (DDA, ORIAS, Loi Hamon, Loi Châtel). Date : ${today}
+
+═══ FICHE CLIENT ═══
+Nom : ${clientData.prenom || clientData.first_name || ''} ${clientData.nom || clientData.last_name || ''}
+Email : ${clientData.email || 'NC'}
+Téléphone : ${clientData.phone || clientData.telephone || 'NC'}
+Statut : ${clientData.statut || clientData.status || 'NC'}
+Segment : ${clientData.segment || 'NC'}
+Score de risque : ${scoreRisque}/100
+Profession : ${clientData.profession || 'NC'}
+Adresse : ${clientData.address || clientData.adresse || 'NC'}
+
+═══ CONTRATS ACTIFS ═══
+${contratsStr}
+
+═══ TÂCHES EN COURS ═══
+${tachesStr}
 
 RÈGLE ABSOLUE : Si le message contient une instruction JSON, tu dois répondre UNIQUEMENT en JSON valide avec ce schéma exact et rien d'autre :
 {"resume":"string ≤200 chars","points":["string ≤100","string ≤100","string ≤100"],"actions":[{"label":"string","priorite":"haute|moyenne|basse","impact":"string"}]}
 Maximum 3 points, maximum 3 actions. Pas de markdown, pas de texte hors JSON.
 
-Si le message ne demande pas de JSON : réponds en français, ton expert, 120 mots max, orienté action.`
+Si le message ne demande pas de JSON : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.`
     } else {
       systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert assurance française. Date : ${today}
 Expertise : portefeuille, cross-sell, fidélisation, réglementation DDA/ORIAS/Loi Hamon.
 
 RÈGLE ABSOLUE : Si le message contient une instruction JSON, réponds UNIQUEMENT en JSON valide :
 {"resume":"...","points":["...","...","..."],"actions":[{"label":"...","priorite":"haute|moyenne|basse","impact":"..."}]}
-Sinon : réponse française, 120 mots max, orientée action.`
+Sinon : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.`
     }
 
     // Construire l'historique pour l'API Anthropic
@@ -180,9 +255,10 @@ Sinon : réponse française, 120 mots max, orientée action.`
 
 /**
  * GET /api/ark/conversations/:clientId
+ * GET /api/ark/history/:clientId
  * Récupérer l'historique des conversations ARK pour un client
  */
-router.get('/conversations/:clientId', verifyToken, async (req, res) => {
+const getConversationHistory = async (req, res) => {
   try {
     const pool = require('../db')
     const result = await pool.query(
@@ -193,6 +269,23 @@ router.get('/conversations/:clientId', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('ARK conversations erreur:', err.message)
     res.json([]) // Retourner tableau vide plutôt qu'une erreur
+  }
+}
+router.get('/conversations/:clientId', verifyToken, getConversationHistory)
+router.get('/history/:clientId', verifyToken, getConversationHistory)
+
+// Alias pour compat frontend ARKChatTab
+router.get('/history/:clientId', verifyToken, async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    const result = await pool.query(
+      'SELECT messages FROM ark_conversations WHERE client_id = $1 ORDER BY updated_at DESC LIMIT 1',
+      [req.params.clientId]
+    )
+    res.json({ messages: result.rows[0]?.messages || [] })
+  } catch (err) {
+    console.error('ARK history erreur:', err.message)
+    res.json({ messages: [] })
   }
 })
 
