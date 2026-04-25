@@ -29,8 +29,8 @@ function AnimatedNumber({ value, format = 'number' }) {
   return <span>{displayValue}</span>
 }
 
-// ─── KPI Bubble Card ─────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, title, value, format = 'number', loading, color, index }) {
+// ─── Indicateur Bubble Card ─────────────────────────────────────────────────────────
+function IndicateurCard({ icon: Icon, title, value, format = 'number', loading, color, index }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -242,7 +242,7 @@ export default function AnalyticsExecutive() {
     ? (activeClients / (activeClients + prospects)) * 100
     : 0
 
-  // KPI config — 6 cards
+  // Indicateur config — 6 cards
   const kpis = [
     { title: 'Taux résiliation', value: 3.2, format: 'percent', icon: Percent, color: '#dc2626' },
     { title: 'Score de satisfaction', value: 72, format: 'number', icon: Star, color: '#f59e0b' },
@@ -272,10 +272,10 @@ export default function AnalyticsExecutive() {
           </p>
         </motion.div>
 
-        {/* 6 KPI Cards */}
+        {/* 6 Indicateur Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
           {kpis.map((kpi, i) => (
-            <KPICard
+            <IndicateurCard
               key={kpi.title}
               icon={kpi.icon}
               title={kpi.title}
@@ -291,7 +291,7 @@ export default function AnalyticsExecutive() {
         {/* Chart + bottom sections */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Monthly evolution chart */}
-          <BubbleCard hover={false} padding={24}>
+          <BubbleCard hover={false} padding={24} style={{ maxHeight: 320, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
                 Évolution mensuelle du CA

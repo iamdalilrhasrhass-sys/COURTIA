@@ -373,7 +373,7 @@ export default function Clients() {
           )
         )}
 
-        {/* View: Bulles */}
+        {/* View: Bulles — Apple-grade glassmorphism bubbles with conic-gradient irisation */}
         {viewMode === 'bulles' && (
           <>
             <style>{`
@@ -385,7 +385,7 @@ export default function Clients() {
             {loading ? (
               <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="animate-pulse rounded-full mx-auto" style={{ width: 130, height: 130, background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}></div>
+                  <div key={i} className="animate-pulse rounded-full mx-auto" style={{ width: 130, height: 130, background: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.5)' }}></div>
                 ))}
               </div>
             ) : paginatedClients.length > 0 ? (
@@ -395,18 +395,31 @@ export default function Clients() {
                   const riskScore = client.riskScore ?? client.score_risque ?? 0
                   const st = (client.status || client.statut || '').toLowerCase()
 
-                  // Iridescent color config per status
-                  const statusColors = {
-                    prospect:    { base: '#3b82f6', light: 'rgba(147,197,253,0.85)', mid: 'rgba(59,130,246,0.65)', dark: 'rgba(37,99,235,0.88)' },
-                    actif:       { base: '#10b981', light: 'rgba(167,243,208,0.85)', mid: 'rgba(16,185,129,0.65)', dark: 'rgba(5,150,105,0.88)' },
-                    inactif:     { base: '#9ca3af', light: 'rgba(229,231,235,0.85)', mid: 'rgba(156,163,175,0.65)', dark: 'rgba(107,114,128,0.88)' },
-                    résilié:     { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
-                    resilié:     { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
-                    perdu:       { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
-                    opportunite: { base: '#8b5cf6', light: 'rgba(196,181,253,0.85)', mid: 'rgba(139,92,246,0.65)', dark: 'rgba(124,58,237,0.88)' },
-                    a_risque:    { base: '#ec4899', light: 'rgba(252,165,165,0.85)', mid: 'rgba(236,72,153,0.65)', dark: 'rgba(219,39,119,0.88)' },
+                  // Radial-gradient backgrounds by status (transparent — see-through)
+                  const radialBgByStatus = {
+                    prospect:    'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(59,130,246,0.35) 60%, rgba(59,130,246,0.25))',
+                    actif:       'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(16,185,129,0.35) 60%, rgba(16,185,129,0.25))',
+                    inactif:     'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(156,163,175,0.35) 60%, rgba(156,163,175,0.25))',
+                    résilié:     'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(239,68,68,0.35) 60%, rgba(239,68,68,0.25))',
+                    resilié:     'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(239,68,68,0.35) 60%, rgba(239,68,68,0.25))',
+                    perdu:       'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(239,68,68,0.35) 60%, rgba(239,68,68,0.25))',
+                    opportunite: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(139,92,246,0.35) 60%, rgba(139,92,246,0.25))',
+                    a_risque:    'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(236,72,153,0.35) 60%, rgba(236,72,153,0.25))',
                   }
-                  const c = statusColors[st] || statusColors.inactif
+                  const radialBg = radialBgByStatus[st] || radialBgByStatus.inactif
+
+                  // Status base color for badges
+                  const statusBaseColors = {
+                    prospect: '#3b82f6',
+                    actif: '#10b981',
+                    inactif: '#9ca3af',
+                    résilié: '#ef4444',
+                    resilié: '#ef4444',
+                    perdu: '#ef4444',
+                    opportunite: '#8b5cf6',
+                    a_risque: '#ec4899',
+                  }
+                  const statusBase = statusBaseColors[st] || '#9ca3af'
 
                   // Risk score color
                   let riskColor = '#10b981'
@@ -414,7 +427,6 @@ export default function Clients() {
                   else if (riskScore >= 40) riskColor = '#f59e0b'
 
                   const initials = getInitials(name)
-                  const gradId = `bubble-${client.id}`
                   const floatDelay = (idx % 5) * 0.25
 
                   return (
@@ -431,40 +443,47 @@ export default function Clients() {
                       onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.12))' }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)' }}
                     >
-                      <svg width="130" height="130" viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <radialGradient id={`${gradId}-main`} cx="28%" cy="25%" r="75%">
-                            <stop offset="0%" stopColor="rgba(255,255,255,1)" />
-                            <stop offset="10%" stopColor="rgba(255,255,255,0.94)" />
-                            <stop offset="28%" stopColor={c.light} />
-                            <stop offset="60%" stopColor={c.mid} />
-                            <stop offset="100%" stopColor={c.dark} />
-                          </radialGradient>
-                          <radialGradient id={`${gradId}-iris`} cx="55%" cy="45%" r="55%">
-                            <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
-                            <stop offset="40%" stopColor="rgba(255,255,255,0.04)" />
-                            <stop offset="70%" stopColor="rgba(255,255,255,0.18)" />
-                            <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
-                          </radialGradient>
-                          <filter id={`${gradId}-blur`}>
-                            <feGaussianBlur stdDeviation="1.2" />
-                          </filter>
-                        </defs>
-                        {/* Outer glow ring */}
-                        <circle cx="65" cy="65" r="57" fill="none" stroke={c.base} strokeWidth="0.8" opacity="0.25" filter={`url(#${gradId}-blur)`} />
-                        {/* Main bubble body */}
-                        <circle cx="65" cy="65" r="55" fill={`url(#${gradId}-main)`} stroke={c.base} strokeWidth="0.7" opacity="0.92" />
-                        {/* Iris overlay */}
-                        <circle cx="65" cy="65" r="55" fill={`url(#${gradId}-iris)`} opacity="0.28" style={{ mixBlendMode: 'screen' }} />
-                        {/* Specular highlight — top-left */}
-                        <ellipse cx="43" cy="34" rx="15" ry="9" fill="rgba(255,255,255,0.78)" transform="rotate(-14 43 34)" filter={`url(#${gradId}-blur)`} />
-                        {/* Bright core spot */}
-                        <ellipse cx="38" cy="31" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.95)" transform="rotate(-14 38 31)" />
-                        {/* Secondary reflection — bottom-right */}
-                        <ellipse cx="91" cy="93" rx="6.5" ry="3.5" fill="rgba(255,255,255,0.32)" transform="rotate(-22 91 93)" filter={`url(#${gradId}-blur)`} />
-                        {/* Tiny reflection top-right */}
-                        <ellipse cx="78" cy="28" rx="3.5" ry="2" fill="rgba(255,255,255,0.28)" transform="rotate(8 78 28)" />
-                      </svg>
+                      {/* Main bubble circle — Apple-grade glassmorphism */}
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        opacity: 0.85,
+                        background: radialBg,
+                        border: '0.5px solid rgba(255,255,255,0.5)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.3)',
+                      }}>
+                        {/* Conic-gradient irisation overlay */}
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          background: 'conic-gradient(from 180deg, #ff00ff, #00ffff, #ff00ff)',
+                          mixBlendMode: 'screen',
+                          opacity: 0.10,
+                          pointerEvents: 'none',
+                        }} />
+                        {/* Glass highlight — top-left specular sheen */}
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          background: 'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.50), transparent 50%)',
+                          mixBlendMode: 'overlay',
+                          pointerEvents: 'none',
+                        }} />
+                        {/* Secondary reflection — bottom-right edge */}
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          background: 'radial-gradient(circle at 78% 78%, rgba(255,255,255,0.18), transparent 40%)',
+                          mixBlendMode: 'overlay',
+                          pointerEvents: 'none',
+                        }} />
+                      </div>
                       {/* Overlay content */}
                       <div style={{
                         position: 'absolute',
@@ -517,7 +536,7 @@ export default function Clients() {
                           fontSize: 9,
                           fontWeight: 700,
                           color: 'white',
-                          background: c.base,
+                          background: statusBase,
                           padding: '1px 7px',
                           borderRadius: 999,
                           textShadow: '0 1px 2px rgba(0,0,0,0.2)',
