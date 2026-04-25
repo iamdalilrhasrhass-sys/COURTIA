@@ -1,3 +1,4 @@
+// COURTIA Login — Bulles de savon physiques — Ark x Dalil — v2 force rebuild
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
@@ -514,7 +515,7 @@ export default function Login() {
             </div>
 
             <h1 style={{ fontSize:'21px', fontWeight:500, color:'#0a0a0a', marginBottom:4 }}>
-              Connexion
+              Connexion ✦
             </h1>
             <p style={{ fontSize:'13px', color:'rgba(0,0,0,0.42)', marginBottom:24 }}>
               Accédez à votre espace courtier
