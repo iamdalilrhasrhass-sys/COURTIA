@@ -100,7 +100,7 @@ const TestimonialCard = ({ text, author, city }) => (
 
 // ─── Plan Card ────────────────────────────────────────────────────────────────
 const PLAN_FEATURES = {
-  starter: ['5 clients max', 'Dashboard KPIs', 'ARK Chat basique', 'Gestion contrats', 'Support email'],
+  starter: ['5 clients max', 'Tableau de bord Indicateurs', 'ARK Chat basique', 'Gestion contrats', 'Support email'],
   pro: ['Clients illimités', 'ARK complet + analyses IA', 'Priorité support', 'ARK IA', 'Rapports avancés', '3 collaborateurs'],
   premium: ['Tout inclus Pro', 'API publique', 'Audit RGPD', 'Onboarding dédié', 'Account Manager', 'Collaborateurs illimités'],
 }

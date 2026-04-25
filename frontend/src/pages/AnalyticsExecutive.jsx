@@ -122,7 +122,21 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
   const areaD = `${pathD} L ${xScale(data.length - 1)} ${chartH - padding.bottom} L ${xScale(0)} ${chartH - padding.bottom} Z`
 
   return (
-    <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }}>
+    <>
+      <style>{`
+        .mini-chart-svg {
+          max-height: 320px;
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        @media (max-width: 767px) {
+          .mini-chart-svg {
+            max-height: 260px;
+          }
+        }
+      `}</style>
+      <svg className="mini-chart-svg" viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet">
       {/* Grid lines */}
       {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
         <line
@@ -161,7 +175,8 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
           </text>
         )
       })}
-    </svg>
+      </svg>
+    </>
   )
 }
 
@@ -230,8 +245,8 @@ export default function AnalyticsExecutive() {
   // KPI config — 6 cards
   const kpis = [
     { title: 'Taux résiliation', value: 3.2, format: 'percent', icon: Percent, color: '#dc2626' },
-    { title: 'NPS', value: 72, format: 'number', icon: Star, color: '#f59e0b' },
-    { title: 'CA YTD', value: 142000, format: 'currency', icon: TrendingUp, color: '#10b981' },
+    { title: 'Score de satisfaction', value: 72, format: 'number', icon: Star, color: '#f59e0b' },
+    { title: 'CA Cumul annuel', value: 142000, format: 'currency', icon: TrendingUp, color: '#10b981' },
     { title: 'Nouveaux clients/mois', value: 5.3, format: 'percent', icon: Users, color: '#2563eb' },
     { title: 'Contrats vendus/mois', value: 11, format: 'number', icon: FileText, color: '#7c3aed' },
     { title: 'Tâches complétées/sem', value: 24, format: 'number', icon: CheckSquare, color: '#ec4899' },
@@ -250,7 +265,7 @@ export default function AnalyticsExecutive() {
           style={{ marginBottom: 28 }}
         >
           <h1 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
-            Analytics Executive
+            Analyses dirigeants
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>
             Vue d'ensemble et indicateurs clés de votre portefeuille.
@@ -281,7 +296,7 @@ export default function AnalyticsExecutive() {
               <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
                 Évolution mensuelle du CA
               </h3>
-              <BubbleBadge color="#2563eb" size="sm">YTD +14%</BubbleBadge>
+              <BubbleBadge color="#2563eb" size="sm">Cumul annuel +14%</BubbleBadge>
             </div>
             <MiniLineChart data={MONTHLY_DATA} color="#2563eb" height={200} />
           </BubbleCard>

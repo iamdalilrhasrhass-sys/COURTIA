@@ -22,10 +22,10 @@ export default function Pricing() {
       features: [
         'Jusqu\'à 50 clients',
         'Gestion basique des contrats',
-        'Dashboard simple',
+        'Tableau de bord simple',
         'Support email',
         'Calendrier RDV',
-        'Export CSV'
+        'Exporter CSV'
       ],
       color: 'from-blue-500 to-blue-600',
       button: 'bg-blue-600 hover:bg-blue-700'
@@ -42,7 +42,7 @@ export default function Pricing() {
         'Pipeline prospects kanban',
         'Notifications Telegram',
         'Briefs RDV automatiques',
-        'Export Excel & PDF',
+        'Exporter Excel & PDF',
         'API intégrations',
         'Historique ARK',
         'Support prioritaire'
@@ -64,7 +64,7 @@ export default function Pricing() {
         'Automations custom',
         'Multi-utilisateurs',
         'Rapports DDA/RGPD/ACPR',
-        'Analytics avancées',
+        'Analyses avancées',
         'Webhooks & API complète',
         'Support 24/7 dédié',
         'Formation complète',

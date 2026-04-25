@@ -41,7 +41,7 @@ const NAV_ITEMS = [
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
   { separator: true, label: 'MODULES' },
-  { path: '/analytics', label: 'Analytics', icon: BarChart2 },
+  { path: '/analytics', label: 'Analyses dirigeants', icon: BarChart2 },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
 ]
@@ -128,7 +128,7 @@ export default function Sidebar() {
             <LogOut size={16} />
           </button>
         </div>
-        <p className="text-center text-[9px] text-gray-700 mt-2">Rhasrhass®</p>
+        <p className="text-center text-[9px] text-gray-700 mt-2" style={{opacity:0.18}}>RHASRHASS®</p>
       </div>
     </aside>
   )

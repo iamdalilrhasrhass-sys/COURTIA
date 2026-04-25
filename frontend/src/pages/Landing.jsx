@@ -185,7 +185,7 @@ export default function Landing() {
                     <span style={{ fontSize: 8, fontWeight: 500, color: 'white' }}>COURTIA</span>
                   </div>
                 </div>
-                {[['Dashboard', true], ['Clients', false], ['Contrats', false], ['Rapports', false], ['Tâches', false]].map(([l, a]) => (
+                {[['Tableau de bord', true], ['Clients', false], ['Contrats', false], ['Rapports', false], ['Tâches', false]].map(([l, a]) => (
                   <div key={l} style={{ padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 8, color: a ? 'white' : '#444', background: a ? '#1a1a1a' : 'transparent' }}>
                     <div style={{ width: 3, height: 3, borderRadius: '50%', background: a ? 'white' : '#333', flexShrink: 0 }} />
                     {l}
@@ -284,7 +284,7 @@ export default function Landing() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 900, margin: '48px auto 0' }}>
           {[
-            { name: 'START', price: '39€', tag: 'Founder · Limité', feats: ['100 clients', 'ARK basique', 'Dashboard KPIs', 'Support email'], featured: false },
+            { name: 'START', price: '39€', tag: 'Founder · Limité', feats: ['100 clients', 'ARK basique', 'Tableau de bord Indicateurs', 'Support email'], featured: false },
             { name: 'PRO', price: '69€', tag: 'Le plus choisi', feats: ['500 clients', '**ARK complet**', '**Rapports avancés**', 'Support prioritaire', 'Multi-collaborateurs'], featured: true },
             { name: 'ELITE', price: '129€', tag: 'Illimité', feats: ['Clients illimités', '**ARK vocal**', '**API publique**', 'Account Manager dédié', 'Formations incluses'], featured: false },
           ].map(p => (

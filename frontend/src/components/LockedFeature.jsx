@@ -9,7 +9,7 @@ const PLAN_CONFIG = {
     btnBg: '#2563eb',
     benefits: [
       'Lead scoring et priorisation automatique',
-      'Analytics avancés et insights IA',
+      'Analyses avancés et insights IA',
       'Rapports personnalisés exportables',
     ],
   },
