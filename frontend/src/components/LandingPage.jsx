@@ -18,7 +18,7 @@ export default function LandingPage() {
           </div>
           <div className="glass p-6 rounded-lg">
             <p className="text-4xl mb-2">📊</p>
-            <p className="font-bold">Analytics</p>
+            <p className="font-bold">Analyses</p>
             <p className="text-sm text-slate-400">Insights en temps réel</p>
           </div>
         </div>
