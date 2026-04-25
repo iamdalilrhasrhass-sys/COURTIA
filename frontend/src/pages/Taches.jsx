@@ -223,13 +223,13 @@ export default function Taches() {
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <BubbleBackground intensity="subtle" />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 960, margin: '0 auto' }}>
+      <div className="px-4 md:px-10" style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 960, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
+          <h1 className="text-2xl md:text-3xl" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
             Tâches
           </h1>
-          <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4, marginBottom: 16 }}>
+          <p className="text-xs md:text-sm" style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4, marginBottom: 16 }}>
             Gérez vos actions et rappels quotidiens.
           </p>
 
@@ -262,7 +262,7 @@ export default function Taches() {
 
         {/* Priority sections */}
         {!loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="gap-4 md:gap-5" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {PRIORITY_SECTIONS.map((section) => {
               const sectionTasks = tasksByPriority[section.id] || []
               const activeTasks = sectionTasks.filter((t) => t.statut !== 'terminee')

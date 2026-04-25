@@ -267,7 +267,7 @@ export default function Landing() {
           <p style={{ ...s.label, marginBottom: 14 }}>FONCTIONNALITÉS</p>
           <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a' }}>Tout ce dont un courtier a besoin.</h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 960, margin: '0 auto' }}>
+        <div className="landing-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 960, margin: '0 auto' }}>
           {[
             { icon: '🧠', title: 'ARK IA native', desc: 'Analyse de portefeuille, détection d\'opportunités, rédaction commerciale — intégré, pas en add-on.' },
             { icon: '📊', title: 'CRM assurance', desc: 'Gestion des clients, contrats, scores de risque et fidélité. Conçu pour les courtiers ORIAS, pas adapté.' },
@@ -297,7 +297,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 900, margin: '48px auto 0' }}>
+        <div className="landing-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 900, margin: '48px auto 0' }}>
           {[
             { name: 'START', price: '39€', tag: 'Founder · Limité', feats: ['100 clients', 'ARK basique', 'Tableau de bord Indicateurs', 'Support email'], featured: false },
             { name: 'PRO', price: '69€', tag: 'Le plus choisi', feats: ['500 clients', '**ARK complet**', '**Rapports avancés**', 'Support prioritaire', 'Multi-collaborateurs'], featured: true },
@@ -340,7 +340,7 @@ export default function Landing() {
 
       {/* ARK DÉMO */}
       <div className="landing-section" style={{ padding: '96px 56px', background: '#0a0a0a', borderBottom: '0.5px solid #111' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
+        <div className="landing-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
           {/* Left */}
           <div>
             <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, color: '#555', marginBottom: 20 }}>ARK — INTELLIGENCE NATIVE</p>
@@ -379,7 +379,7 @@ export default function Landing() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ padding: '32px 56px', background: '#f7f6f2', borderTop: '0.5px solid #e8e6e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      <div className="landing-footer" style={{ padding: '32px 56px', background: '#f7f6f2', borderTop: '0.5px solid #e8e6e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <Logo dark />
           <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>Construit pour les 32 000 courtiers ORIAS français</p>
