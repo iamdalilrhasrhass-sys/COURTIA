@@ -48,6 +48,7 @@ function CapitiaHeader({ stateBadge }) {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
+      className="ca-header"
       style={{
         background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%)',
         borderBottom: '0.5px solid rgba(255,255,255,0.15)',
@@ -138,7 +139,7 @@ function StateA({ onSuccess }) {
   ]
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 32px' }}>
+    <div className="ca-container" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 32px' }}>
       {/* Bénéfices */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -152,7 +153,7 @@ function StateA({ onSuccess }) {
         <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>
           Première étape : soumettez votre dossier IOBSP pour validation.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+        <div className="ca-benefits-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
           {benefits.map((b, i) => (
             <motion.div
               key={i}
@@ -180,6 +181,7 @@ function StateA({ onSuccess }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
+        className="ca-form-card"
         style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 16, padding: '28px 28px' }}
       >
         <h2 style={{ fontSize: 16, fontWeight: 700, color: '#080808', margin: '0 0 20px' }}>
@@ -355,6 +357,7 @@ function StateB({ data }) {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
+        className="ca-stateb-card"
         style={{
           background: 'white', border: '0.5px solid #e8e6e0',
           borderRadius: 20, padding: '40px 36px', textAlign: 'center'
@@ -440,6 +443,7 @@ function StateE({ data, onRestart }) {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
+        className="ca-statee-card"
         style={{
           background: 'white', border: '0.5px solid #fecaca',
           borderRadius: 20, padding: '40px 36px', textAlign: 'center'
@@ -514,6 +518,7 @@ function StateD() {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
+        className="ca-stated-card"
         style={{
           background: 'white', border: '0.5px solid #bbf7d0',
           borderRadius: 20, padding: '40px 36px', textAlign: 'center'
@@ -793,7 +798,7 @@ function StateC({ data, onRefresh }) {
   const simIcons = { immo: <Building2 size={18} color="#2563eb" />, conso: <Euro size={18} color="#2563eb" />, regroupement: <TrendingUp size={18} color="#2563eb" /> }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 32px' }}>
+    <div className="ca-container" style={{ maxWidth: 900, margin: '0 auto', padding: '28px 32px' }}>
       {/* Bandeau actif */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -809,7 +814,7 @@ function StateC({ data, onRefresh }) {
         <span style={{ fontSize: 12, color: '#6b7280' }}>— Vous avez accès à tous les outils de financement IOBSP</span>
       </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="ca-statec-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         {/* Bloc A : Simulateurs */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -1026,6 +1031,16 @@ export default function Capitia() {
         @keyframes shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
+        }
+        @media (max-width: 767px) {
+          .ca-header { padding: 16px 16px !important; flex-direction: column !important; gap: 10px !important; align-items: flex-start !important; }
+          .ca-container { padding: 20px 16px !important; }
+          .ca-benefits-grid { grid-template-columns: 1fr !important; }
+          .ca-statec-grid { grid-template-columns: 1fr !important; }
+          .ca-stateb-card { padding: 28px 20px !important; }
+          .ca-stated-card { padding: 28px 20px !important; }
+          .ca-statee-card { padding: 28px 20px !important; }
+          .ca-form-card { padding: 20px 16px !important; }
         }
       `}</style>
 

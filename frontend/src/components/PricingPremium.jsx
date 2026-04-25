@@ -100,19 +100,19 @@ export default function PricingPremium() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-red-500/20 border border-red-500/50 p-4 rounded-lg">
               <p className="text-red-400 text-sm">💸 SANS COURTIA/an</p>
-              <p className="text-2xl font-black text-red-400 mt-2">{lostWithoutCOURTIA.toLocaleString()}€</p>
+              <p className="text-xl md:text-2xl font-black text-red-400 mt-2">{lostWithoutCOURTIA.toLocaleString()}€</p>
               <p className="text-xs text-slate-400 mt-2">Perdu en efficacité</p>
             </div>
             <div className="bg-green-500/20 border border-green-500/50 p-4 rounded-lg">
               <p className="text-green-400 text-sm">💰 AVEC COURTIA/an</p>
-              <p className="text-2xl font-black text-green-400 mt-2">+{gainWithCOURTIA.toLocaleString()}€</p>
+              <p className="text-xl md:text-2xl font-black text-green-400 mt-2">+{gainWithCOURTIA.toLocaleString()}€</p>
               <p className="text-xs text-slate-400 mt-2">Revenu supplémentaire</p>
             </div>
           </div>
 
           <div className="bg-cyan-500/10 border border-cyan-500/50 p-4 rounded-lg">
             <p className="text-cyan text-sm font-bold">ROI TOTAL ANNUEL</p>
-            <p className="text-3xl font-black text-cyan mt-2">{(lostWithoutCOURTIA + gainWithCOURTIA).toLocaleString()}€</p>
+            <p className="text-2xl md:text-3xl font-black text-cyan mt-2">{(lostWithoutCOURTIA + gainWithCOURTIA).toLocaleString()}€</p>
           </div>
         </div>
       </div>
@@ -132,11 +132,11 @@ export default function PricingPremium() {
               </div>
             )}
 
-            <h3 className="text-2xl font-bold text-cyan mb-2">{plan.name}</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-cyan mb-2">{plan.name}</h3>
             <p className="text-slate-400 text-sm mb-4">{plan.clients}</p>
 
             <div className="mb-6">
-              <p className="text-4xl font-black text-white">{plan.price}€<span className="text-lg text-slate-400">/mois</span></p>
+              <p className="text-3xl md:text-4xl font-black text-white">{plan.price}€<span className="text-lg text-slate-400">/mois</span></p>
               <p className="text-xs text-green-400 mt-2">-50% premier mois</p>
             </div>
 
@@ -162,10 +162,10 @@ export default function PricingPremium() {
 
       {/* Témoignages */}
       <div className="mb-12">
-        <h2 className="text-2xl font-black text-gradient text-center mb-8">Témoignages Courtiers</h2>
-        <div className="grid grid-cols-3 gap-6">
+        <h2 className="text-xl md:text-2xl font-black text-gradient text-center mb-8">Témoignages Courtiers</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((test, idx) => (
-            <div key={idx} className="glass p-6 rounded-lg">
+            <div key={idx} className="glass p-4 md:p-6 rounded-lg">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-4xl">{test.avatar}</span>
                 <div>
