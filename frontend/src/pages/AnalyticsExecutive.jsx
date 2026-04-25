@@ -137,6 +137,7 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
           .ae-container { padding: 24px 16px !important; }
           .ae-bottom-grid { grid-template-columns: 1fr !important; }
           .ae-title { font-size: 22px !important; }
+          .ae-heatmap { gap: 2px !important; }
         }
       `}</style>
       <svg className="mini-chart-svg" viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet">
@@ -320,6 +321,7 @@ export default function AnalyticsExecutive() {
                 Activité hebdomadaire
               </h3>
               <div
+                className="ae-heatmap"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(7, 1fr)',
