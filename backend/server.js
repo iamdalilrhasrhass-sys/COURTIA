@@ -202,6 +202,28 @@ const whatsappService = require('./src/services/whatsappService');
   }
 })();
 
+// ==================== IMAP WATCHER (Emails entrants) ====================
+
+const { startIMAPWatcher } = require('./src/services/imapService');
+
+if (process.env.IMAP_PASSWORD && process.env.IMAP_PASSWORD.length > 0) {
+  console.log('📧 Démarrage watcher IMAP (emails entrants)...');
+  startIMAPWatcher(pool, 5); // Vérifie toutes les 5 minutes
+} else {
+  console.log('📧 IMAP désactivé (IMAP_PASSWORD non configuré)');
+}
+
+// ==================== RELANCE SCHEDULER (09h00 Europe/Paris) ====================
+
+const { startRelanceScheduler } = require('./src/jobs/relanceScheduler');
+
+if (process.env.DISABLE_RELANCES !== 'true') {
+  console.log('🔔 Démarrage scheduler relances...');
+  startRelanceScheduler(pool);
+} else {
+  console.log('🔔 Relances désactivées (DISABLE_RELANCES=true)');
+}
+
 // ==================== ERROR HANDLERS ====================
 
 app.use((req, res) => {
