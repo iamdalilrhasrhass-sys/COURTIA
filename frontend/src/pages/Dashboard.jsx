@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, Euro, AlertTriangle, Zap, TrendingUp, Calendar, Search } from 'lucide-react'
+import { Users, FileText, Euro, AlertTriangle, Zap, TrendingUp, Calendar } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
@@ -327,31 +327,6 @@ export default function Dashboard() {
               </BubbleButton>
             </div>
           </BubbleCard>
-        </div>
-
-        {/* Search floating button */}
-        <div style={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          background: 'rgba(255,255,255,0.7)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '0.5px solid rgba(0,0,0,0.08)',
-          borderRadius: 12,
-          padding: '10px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          cursor: 'pointer',
-          zIndex: 50,
-          fontSize: 11,
-          fontFamily: 'Arial, sans-serif',
-          fontWeight: 700,
-          color: 'rgba(0,0,0,0.6)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
-        }} onClick={() => navigate('/search')}>
-          <Search size={14} /> ⌘K Recherche
         </div>
 
       </div>
