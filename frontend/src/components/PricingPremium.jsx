@@ -30,7 +30,7 @@ const plans = [
     name: 'Starter',
     price: 99,
     clients: 'Jusqu\'à 100',
-    features: ['Dashboard', 'CRUD clients', 'Prospects basique', 'Export PDF', 'Email support']
+    features: ['Tableau de bord', 'CRUD clients', 'Prospects basique', 'Exporter PDF', 'Email support']
   },
   {
     name: 'Pro',

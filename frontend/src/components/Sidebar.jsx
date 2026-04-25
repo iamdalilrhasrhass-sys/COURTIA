@@ -41,7 +41,7 @@ const NAV_ITEMS = [
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
   { separator: true, label: 'MODULES' },
-  { path: '/analytics', label: 'Analytics', icon: BarChart2 },
+  { path: '/analytics', label: 'Analyses', icon: BarChart2 },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
 ]
