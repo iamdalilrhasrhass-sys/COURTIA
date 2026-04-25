@@ -653,7 +653,7 @@ function SimulatorModal({ onClose }) {
         {result && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             style={{ marginTop: 16, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="ca-sim-result-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
                 { l: 'Mensualité', v: fmtCurrency(result.mensualite) },
                 { l: 'Coût total', v: fmtCurrency(result.cout_total) },
@@ -925,7 +925,7 @@ function StateC({ data, onRefresh }) {
       </motion.div>
 
       {/* Boutons bas */}
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div className="ca-statec-buttons" style={{ display: 'flex', gap: 12 }}>
         <button onClick={() => navigate('/billing?addon=capitia')}
           style={{ padding: '9px 16px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Arial, sans-serif' }}>
           Gérer mon abonnement CAPITIA
@@ -1041,13 +1041,16 @@ export default function Capitia() {
           .ca-stated-card { padding: 28px 20px !important; }
           .ca-statee-card { padding: 28px 20px !important; }
           .ca-form-card { padding: 20px 16px !important; }
+          .ca-statec-buttons { flex-direction: column !important; align-items: stretch !important; }
+          .ca-sim-result-grid { grid-template-columns: 1fr !important; }
+          .ca-loading-container { padding: 0 16px !important; }
         }
       `}</style>
 
       <CapitiaHeader stateBadge={loading ? <Shimmer w={80} h={28} r={20} /> : stateBadge} />
 
       {loading ? (
-        <div style={{ maxWidth: 640, margin: '48px auto', padding: '0 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="ca-loading-container" style={{ maxWidth: 640, margin: '48px auto', padding: '0 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Shimmer h={120} r={14} />
           <Shimmer h={200} r={14} />
         </div>
