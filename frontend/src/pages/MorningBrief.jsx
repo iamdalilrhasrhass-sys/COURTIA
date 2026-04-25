@@ -281,7 +281,7 @@ function PriorityCard({ priority, level, navigate }) {
           <p style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a', margin: '0 0 2px' }}>{priority.clientNom}</p>
           <p style={{ fontSize: 13, color: '#374151', margin: '0 0 4px' }}>{priority.titre}</p>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{priority.sousTitre}</p>
-          <div style={{ display: 'flex', gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+          <div className="mb-action-buttons" style={{ display: 'flex', gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
             <button
               onClick={e => { e.stopPropagation(); navigate(priority.cta.target) }}
               style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: '#0a0a0a', color: 'white', border: 'none', borderRadius: 6, fontFamily: 'Arial, sans-serif' }}

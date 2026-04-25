@@ -106,6 +106,7 @@ export default function Rapports() {
           .rp-2col { grid-template-columns: 1fr !important; }
           .rp-ark-grid { grid-template-columns: 1fr !important; }
           .rp-table-wrap { overflow-x: auto; }
+          .rp-card { padding: 16px !important; }
         }
       `}</style>
       <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
@@ -128,7 +129,7 @@ export default function Rapports() {
         </div>
 
         {/* Répartition portefeuille */}
-        <div style={card}>
+        <div className="rp-card" style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>RÉPARTITION DU PORTEFEUILLE</h2>
           {contratsByType.length === 0 ? (
             <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Aucune donnée disponible</p>
@@ -176,7 +177,7 @@ export default function Rapports() {
         <div className="rp-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
 
           {/* Top clients */}
-          <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>
+          <div className="rp-card" style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>TOP CLIENTS <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af', letterSpacing: 0 }}>par fidélité</span></h2>
             {top10.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: '#9ca3af', fontSize: 13 }}>
@@ -217,7 +218,7 @@ export default function Rapports() {
           </div>
 
           {/* Échéances urgentes */}
-          <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>
+          <div className="rp-card" style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>
               ÉCHÉANCES URGENTES <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af', letterSpacing: 0 }}>{'<'} 90 jours</span>
             </h2>
@@ -278,7 +279,7 @@ export default function Rapports() {
         </div>
 
         {/* Activité ARK */}
-        <div style={card}>
+        <div className="rp-card" style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>ACTIVITÉ ARK</h2>
           <div className="rp-ark-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             {[
