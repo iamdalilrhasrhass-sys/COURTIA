@@ -393,6 +393,27 @@ CREATE TABLE optional_coverage (id SERIAL PRIMARY KEY, contract_id INTEGER, cove
 CREATE TABLE network_reporting (id SERIAL PRIMARY KEY, period_start DATE, period_end DATE, total_revenue DECIMAL(12,2), total_clients INTEGER);
 CREATE TABLE recruitment_applications (id SERIAL PRIMARY KEY, applicant_name VARCHAR(100), email VARCHAR(100), region VARCHAR(50), application_date TIMESTAMP, status VARCHAR(20));
 
+-- ==================== MESSAGING SYSTEM ====================
+
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS preferred_canal VARCHAR(20) DEFAULT 'email';
+
+CREATE TABLE IF NOT EXISTS messages (
+    id              SERIAL PRIMARY KEY,
+    client_id       INTEGER          REFERENCES clients(id) ON DELETE SET NULL,
+    canal           VARCHAR(20)      NOT NULL,
+    direction       VARCHAR(10)      DEFAULT 'outgoing',
+    content         TEXT             NOT NULL,
+    status          VARCHAR(20)      DEFAULT 'pending',
+    external_id     VARCHAR(255),
+    error           TEXT,
+    created_at      TIMESTAMPTZ      DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_client ON messages(client_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_canal  ON messages(canal, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_status ON messages(status);
+CREATE INDEX IF NOT EXISTS idx_clients_preferred_canal ON clients(preferred_canal);
+
 -- ==================== OPTION 4: AI COST MANAGEMENT ====================
 
 -- Ajouter colonne pricing_tier et api_quota_remaining à users (si pas existe)
