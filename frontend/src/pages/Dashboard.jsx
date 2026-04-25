@@ -1,80 +1,178 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Users, FileText, Activity, Euro, ArrowUpRight, Zap, ExternalLink } from 'lucide-react'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { Users, FileText, Euro, Calendar, ArrowUpRight, Zap, TrendingUp } from 'lucide-react'
 import api from '../api'
-import AnimatedNumber from '../components/ui/AnimatedNumber'
+import BubbleCard from '../components/BubbleCard'
+import BubbleBadge from '../components/BubbleBadge'
+import BubbleButton from '../components/BubbleButton'
+import BubbleBackground from '../components/BubbleBackground'
+import Logo from '../components/Logo'
 
-const Skeleton = ({ className }) => <div className={`bg-gray-100 rounded-lg animate-pulse ${className}`} />
+/* ─── tiny helpers ──────────────────────────────────────── */
+const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
 
-const KPICard = ({ icon: Icon, title, value, trend, format = 'number', loading, iconBg, iconColor, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: index * 0.08, ease: 'easeOut' }}
-    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-  >
-    <div className="flex items-center justify-between mb-4">
-      <p className="text-sm font-medium text-gray-500">{title}</p>
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${iconBg}`}>
-        <Icon className={`w-5 h-5 ${iconColor}`} />
-      </div>
-    </div>
-    {loading ? <Skeleton className="w-3/4 h-10 mb-2" /> : (
-      <p className="text-4xl font-black text-gray-900 tracking-tight">
-        <AnimatedNumber value={value} format={format} />
-        {format === 'score' && <span className="text-2xl text-gray-400">/100</span>}
-      </p>
-    )}
-    {loading ? <Skeleton className="w-1/2 h-5" /> : trend != null && trend > 0 && (
-      <div className="flex items-center text-sm font-semibold text-emerald-500 mt-1">
-        <ArrowUpRight className="w-4 h-4 mr-1" />
-        <span>+{trend}%</span>
-      </div>
-    )}
-  </motion.div>
-)
+/* ─── BubblePortfolioMap (inline SVG chart with smooth bezier + floating bubbles) ── */
+function BubblePortfolioMap({ data }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null)
+  const points = data || [
+    { label: 'Jan', value: 120 }, { label: 'Fév', value: 145 },
+    { label: 'Mar', value: 132 }, { label: 'Avr', value: 168 },
+    { label: 'Mai', value: 155 }, { label: 'Juin', value: 178 },
+  ]
+  const max = Math.max(...points.map(p => p.value), 1)
+  const w = 600, h = 200
+  const pad = { top: 20, bottom: 30, left: 44, right: 28 }
 
-const Avatar = ({ name }) => {
-  const getHash = (str) => { let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash); return hash }
-  const getHSL = (str) => `hsl(${getHash(str) % 360}, 60%, 80%)`
-  const getInitials = (name) => {
-    const names = (name || '').trim().split(' ').filter(Boolean)
-    if (names.length === 0) return '?'
-    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
-    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  const xScale = (i) => pad.left + (i / Math.max(points.length - 1, 1)) * (w - pad.left - pad.right)
+  const yScale = (v) => pad.top + h - pad.bottom - ((v / max) * (h - pad.top - pad.bottom - 10))
+
+  /* ── build cubic bezier path through all points ───── */
+  const buildBezierPath = (pts) => {
+    if (pts.length === 0) return ''
+    let d = `M${xScale(0).toFixed(1)},${yScale(pts[0].value).toFixed(1)}`
+    for (let i = 1; i < pts.length; i++) {
+      const x1 = xScale(i - 1), y1 = yScale(pts[i - 1].value)
+      const x2 = xScale(i),     y2 = yScale(pts[i].value)
+      const dx = x2 - x1
+      const cp1x = (x1 + dx / 3).toFixed(1)
+      const cp1y = y1.toFixed(1)
+      const cp2x = (x2 - dx / 3).toFixed(1)
+      const cp2y = y2.toFixed(1)
+      d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${x2.toFixed(1)},${y2.toFixed(1)}`
+    }
+    return d
   }
+
+  const lineD = buildBezierPath(points)
+  const lastX = xScale(points.length - 1)
+  const firstX = xScale(0)
+  const bottomY = h - pad.bottom + 2
+  const areaD = lineD + ` L${lastX.toFixed(1)},${bottomY} L${firstX.toFixed(1)},${bottomY} Z`
+
   return (
-    <div className="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
-      style={{ background: `linear-gradient(135deg, ${getHSL(name || '')} 0%, hsl(${(getHash(name || '') + 60) % 360}, 70%, 65%) 100%)` }}>
-      {getInitials(name)}
-    </div>
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto', maxHeight: 230 }}>
+      <defs>
+        {/* Area fill gradient */}
+        <linearGradient id="portfolioGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.01" />
+        </linearGradient>
+
+        {/* Iridescent bubble gradient — inspired by Logo.jsx */}
+        <radialGradient id="bubbleMain" cx="35%" cy="28%" r="80%">
+          <stop offset="0%" stopColor="rgba(255,255,255,1)" />
+          <stop offset="18%" stopColor="rgba(255,255,255,0.88)" />
+          <stop offset="38%" stopColor="rgba(232,247,255,0.72)" />
+          <stop offset="60%" stopColor="rgba(186,230,253,0.55)" />
+          <stop offset="82%" stopColor="rgba(167,139,250,0.6)" />
+          <stop offset="100%" stopColor="rgba(124,58,237,0.7)" />
+        </radialGradient>
+
+        <linearGradient id="bubbleIris" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(186,230,253,0.35)" />
+          <stop offset="33%" stopColor="rgba(196,181,253,0.3)" />
+          <stop offset="66%" stopColor="rgba(253,186,116,0.25)" />
+          <stop offset="100%" stopColor="rgba(236,72,153,0.35)" />
+        </linearGradient>
+
+        <filter id="bubbleSoft"><feGaussianBlur stdDeviation="0.4" /></filter>
+      </defs>
+
+      {/* Smooth filled area */}
+      <path d={areaD} fill="url(#portfolioGrad)" />
+
+      {/* Smooth bezier curve line */}
+      <path d={lineD} fill="none" stroke="url(#bubbleIris)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.55" style={{ mixBlendMode: 'screen' }} />
+      <path d={lineD} fill="none" stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Floating data-point bubbles */}
+      {points.map((p, i) => {
+        const cx = xScale(i)
+        const cy = yScale(p.value)
+        const isHovered = hoveredIndex === i
+        const r = isHovered ? 11 : 5.5
+
+        return (
+          <g key={i}
+            style={{ animation: `bubbleFloat${i % 3} 3.6s ease-in-out infinite`, animationDelay: `${i * 0.25}s`, transformOrigin: `${cx}px ${cy}px` }}
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            {/* Hover glow ring */}
+            {isHovered && (
+              <circle cx={cx} cy={cy} r={16} fill="none" stroke="rgba(37,99,235,0.18)" strokeWidth="6" opacity="0.5" />
+            )}
+
+            {/* Main iridescent bubble */}
+            <circle cx={cx} cy={cy} r={r} fill="url(#bubbleMain)" stroke="rgba(148,163,184,0.5)" strokeWidth="0.7" filter="url(#bubbleSoft)" />
+            <circle cx={cx} cy={cy} r={r} fill="url(#bubbleIris)" opacity="0.32" style={{ mixBlendMode: 'screen' }} />
+
+            {/* Specular highlight */}
+            <ellipse cx={cx - r * 0.28} cy={cy - r * 0.32} rx={r * 0.42} ry={r * 0.28} fill="rgba(255,255,255,0.82)" transform={`rotate(-15 ${cx - r * 0.28} ${cy - r * 0.32})`} filter="url(#bubbleSoft)" />
+
+            {/* Value label on hover */}
+            {isHovered && (
+              <g>
+                <rect x={cx - 28} y={cy - 32} width={56} height={20} rx={6} fill="rgba(15,15,15,0.85)" />
+                <text x={cx} y={cy - 18} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff" fontFamily="Arial, sans-serif">
+                  {fmtEur(p.value)}
+                </text>
+              </g>
+            )}
+
+            {/* Month label at bottom */}
+            <text x={cx} y={h - 5} textAnchor="middle" fontSize="11" fill="rgba(0,0,0,0.45)" fontFamily="Arial, sans-serif">{p.label}</text>
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 
-const ScoreBar = ({ score }) => {
-    const s = Math.min(100, Math.max(0, Number(score) || 0))
-    let color = '#10b981' // green
-    if (s > 70) color = '#ef4444' // red
-    else if (s >= 40) color = '#f59e0b' // orange
-    return (
-      <div className="flex items-center gap-2 w-[100px]">
-        <div className="w-full bg-gray-100 rounded-full h-1.5"><div className="h-1.5 rounded-full" style={{ width: `${s}%`, backgroundColor: color }}></div></div>
-        <span className="text-xs font-bold text-gray-700 w-8 text-right">{s}</span>
+/* ─── KPI Card using BubbleCard ──────────────────────────── */
+function KpiCard({ icon: Icon, title, value, format, accent }) {
+  const display = format === 'currency' ? fmtEur(value) : format === 'number' ? fmtNum(value) : value
+  return (
+    <BubbleCard padding={20} style={{ flex: 1, minWidth: 180 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.01em' }}>{title}</span>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${accent || '#2563eb'}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={18} color={accent || '#2563eb'} />
+        </div>
       </div>
-    )
+      <div style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', lineHeight: 1.2 }}>{display}</div>
+      <div style={{ marginTop: 6, fontSize: 12, color: 'rgba(0,0,0,0.4)' }}>
+        <span style={{ color: '#10b981', fontWeight: 600 }}>▲ +12%</span> vs mois dernier
+      </div>
+    </BubbleCard>
+  )
 }
 
-const StatusBadge = ({ status }) => {
-  const s = (status || '').toLowerCase()
-  let config = { label: 'Inconnu', classes: 'bg-gray-100 text-gray-500' }
-  if (s === 'actif') config = { label: 'Actif', classes: 'bg-green-100 text-green-700' }
-  else if (s === 'prospect') config = { label: 'Prospect', classes: 'bg-blue-100 text-blue-700' }
-  return <span className={`px-2 py-0.5 text-xs font-semibold rounded-full inline-block ${config.classes}`}>{config.label}</span>
-}
+/* ─── Mock data ─────────────────────────────────────────── */
+const MOCK_KPIS = [
+  { title: 'Clients actifs', value: 42, icon: Users, accent: '#2563eb' },
+  { title: 'Contrats en cours', value: 89, icon: FileText, accent: '#10b981' },
+  { title: 'CA Mensuel', value: 28450, format: 'currency', icon: Euro, accent: '#7c3aed' },
+  { title: 'Tâches dues', value: 7, icon: Calendar, accent: '#f59e0b' },
+]
 
+const MOCK_INSIGHTS = [
+  'Client M. Dupont — échéance contrat Auto dans 15 jours',
+  'Opportunité cross-sell détectée pour Mme Martin',
+  '3 contrats à renouveler cette semaine',
+  'ARK recommande un suivi prioritaire pour client #1042',
+  'Sinistre déclaré: contrat INC-2024-089 à traiter',
+]
 
+const MOCK_ECHEANCES = [
+  { date: '25/04', label: 'Renouvellement - Martin' },
+  { date: '28/04', label: 'RDV téléphonique - Dubois' },
+  { date: '02/05', label: 'Soumission - Petit' },
+  { date: '05/05', label: 'Relance cotisation - Bernard' },
+]
+
+/* ─── MAIN ──────────────────────────────────────────────── */
 export default function Dashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
@@ -91,118 +189,156 @@ export default function Dashboard() {
       console.log('Dashboard stats API response:', statsRes.data)
       setStats(statsRes.data)
       setUser(userRes.data)
-    } catch (err) { console.error("Erreur de chargement du dashboard:", err) } 
+    } catch (err) { console.error("Erreur de chargement du dashboard:", err) }
     finally { setLoading(false) }
   }, [])
 
   useEffect(() => { loadAllData() }, [loadAllData])
 
-  const chartData = useMemo(() => {
-    if (stats?.revenus6Mois) {
-      return stats.revenus6Mois.map(d => ({ name: d.mois, Primes: parseFloat(d.revenue) || 0 }))
-    }
-    // Mock data
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
-    return Array.from({length: 12}, (_, i) => ({ name: months[i], Primes: Math.floor(Math.random() * (3500 - 1500 + 1)) + 1500 }))
-  }, [stats])
-  
-  const clientStatusData = useMemo(() => {
-    if (!stats?.clientsParStatut || typeof stats.clientsParStatut !== 'object') return []
-    const counts = Object.entries(stats.clientsParStatut).reduce((acc, [key, value]) => {
-      acc[key.toLowerCase()] = value
-      return acc
-    }, {})
+  const kpis = useMemo(() => {
+    if (!stats) return MOCK_KPIS
     return [
-      { name: 'Prospects', value: counts.prospect || 0 },
-      { name: 'Actifs', value: counts.actif || 0 },
-      { name: 'Inactifs', value: (counts.inactif || 0) + (counts.résilié || 0) + (counts.resilié || 0) + (counts.perdu || 0) },
-    ].filter(item => item.value > 0);
+      { title: 'Clients actifs', value: stats?.totalClients || MOCK_KPIS[0].value, icon: Users, accent: '#2563eb' },
+      { title: 'Contrats en cours', value: stats?.contratsActifs || MOCK_KPIS[1].value, icon: FileText, accent: '#10b981' },
+      { title: 'CA Mensuel', value: stats?.primeTotale || MOCK_KPIS[2].value, format: 'currency', icon: Euro, accent: '#7c3aed' },
+      { title: 'Tâches dues', value: 7, icon: Calendar, accent: '#f59e0b' },
+    ]
   }, [stats])
-  const PIE_COLORS = ['#2563eb', '#10b981', '#9ca3af']
-  
-  const clientsASurveiller = (stats?.clientsRecents || []).sort((a,b) => (b.score_risque || 0) - (a.score_risque || 0)).slice(0, 5)
+
+  const chartData = useMemo(() => {
+    if (stats?.revenus6Mois) return stats.revenus6Mois.map(d => ({ label: d.mois, value: parseFloat(d.revenue) || 0 }))
+    return [
+      { label: 'Jan', value: 18400 }, { label: 'Fév', value: 21200 },
+      { label: 'Mar', value: 19800 }, { label: 'Avr', value: 24500 },
+      { label: 'Mai', value: 23200 }, { label: 'Juin', value: 28450 },
+    ]
+  }, [stats])
+
   const currentDate = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans antialiased">
-      <main className="p-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div style={{ position: 'relative', minHeight: '100vh', background: '#f7f6f2' }}>
+      <BubbleBackground intensity="subtle" />
+      <div className="px-4 md:px-8" style={{ position: 'relative', zIndex: 1, padding: '28px 32px', maxWidth: 1280 }}>
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 md:gap-0" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Bonjour {user.prenom} 👋</h1>
-            <p className="text-sm text-gray-400 mt-1">{currentDate}</p>
+            <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: '#0a0a0a' }}>
+              Bonjour {user.prenom} <span role="img" aria-label="wave">👋</span>
+            </h1>
+            <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', marginTop: 4 }}>{currentDate}</p>
           </div>
-          <button onClick={() => navigate('/morning-brief')}
-            className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 bg-white text-sm font-semibold text-gray-700 rounded-xl border border-gray-200 shadow-sm cursor-pointer transition-all hover:shadow-md hover:border-blue-200">
-            <Zap size={16} className="text-[#2563eb]" />
-            Morning Brief
-          </button>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-8">
-          <KPICard title="Clients totaux" value={stats?.totalClients || 0} trend={2} icon={Users} loading={loading} index={0} iconBg="bg-blue-50" iconColor="text-[#2563eb]" />
-          <KPICard title="Contrats actifs" value={stats?.contratsActifs || 0} trend={5} icon={FileText} loading={loading} index={1} iconBg="bg-emerald-50" iconColor="text-[#10b981]" />
-          <KPICard title="Score moyen portefeuille" value={stats?.scoreRisqueMoyen || 0} format="score" icon={Activity} loading={loading} index={2} iconBg="bg-purple-50" iconColor="text-[#7c3aed]" />
-          <KPICard title="Primes totales" value={stats?.primeTotale || 0} format="currency" trend={12} icon={Euro} loading={loading} index={3} iconBg="bg-amber-50" iconColor="text-[#f59e0b]" />
+          <BubbleButton variant="secondary" size="sm" onClick={() => navigate('/morning-brief')}>
+            <Zap size={14} color="#2563eb" /> Morning Brief
+          </BubbleButton>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-8 gap-5 mt-5">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="lg:col-span-5 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <h3 className="text-base font-semibold text-gray-800 mb-4">Évolution du portefeuille</h3>
-            <div style={{ height: '220px' }}>
-              {loading ? <Skeleton className="w-full h-full" /> : 
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-                    <defs><linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#2563eb" stopOpacity={0.15}/><stop offset="95%" stopColor="#2563eb" stopOpacity={0}/></linearGradient></defs>
-                    <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000)}k€`} />
-                    <Tooltip contentStyle={{ background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '8px', border: 'none', padding: '8px 12px' }} formatter={(value) => [`${value.toLocaleString('fr-FR')}€`, null]} />
-                    <Area type="monotone" dataKey="Primes" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              }
-            </div>
-          </motion.div>
-          
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="lg:col-span-3 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <h3 className="text-base font-semibold text-gray-800 mb-4">Répartition clients</h3>
-            <div style={{ height: '220px' }}>
-              {loading ? <Skeleton className="w-full h-full" /> : 
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart><Pie data={clientStatusData} cx="50%" cy="50%" labelLine={false} innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={5}>{clientStatusData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="none" />)}</Pie><Tooltip formatter={(value, name) => [`${value} (${((value / (stats.totalClients || 1)) * 100).toFixed(0)}%)`, name]} /><Legend iconSize={8} iconType="circle" wrapperStyle={{fontSize: "12px"}} /></PieChart>
-                </ResponsiveContainer>
-              }
-            </div>
-          </motion.div>
+        {/* KPI row */}
+        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+          {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-gray-800">Clients à surveiller</h3>
-              {!loading && <span className="px-2 py-0.5 text-xs font-semibold text-red-800 bg-red-100 rounded-full">{clientsASurveiller.length}</span>}
+        {/* Middle: Portfolio Map + small stats */}
+        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+          <BubbleCard padding={24} style={{ flex: 3, minWidth: 300 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 16px', color: '#0a0a0a' }}>
+              Évolution du portefeuille
+            </h3>
+            <BubblePortfolioMap data={chartData} />
+          </BubbleCard>
+          <BubbleCard padding={24} style={{ flex: 1.2, minWidth: 200 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: '#0a0a0a' }}>
+              Répartition clients
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { label: 'Prospects', value: stats?.clientsParStatut?.prospect || 18, color: '#2563eb' },
+                { label: 'Actifs', value: stats?.clientsParStatut?.actif || 42, color: '#10b981' },
+                { label: 'Inactifs', value: (stats?.clientsParStatut?.inactif || 0) + (stats?.clientsParStatut?.résilié || 0) + (stats?.clientsParStatut?.perdu || 0) || 5, color: '#9ca3af' },
+              ].map((item, i) => {
+                const total = (stats?.totalClients || 65)
+                const pct = ((item.value / total) * 100).toFixed(0)
+                return (
+                  <div key={i}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>{item.label}</span>
+                      <span style={{ fontWeight: 700, color: '#0a0a0a' }}>{item.value} ({pct}%)</span>
+                    </div>
+                    <div style={{ height: 5, background: 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: item.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-            <button onClick={() => navigate('/clients')} className="text-sm font-semibold text-blue-600 hover:underline">Voir tous</button>
-          </div>
-          <div>
-            <table className="w-full text-sm">
-                <tbody>
-                {loading ? Array.from({ length: 5 }).map((_, i) => (<tr key={i}><td colSpan="4" className="py-3"><div className="flex items-center space-x-4"><Skeleton className="w-10 h-10 rounded-full" /><div className="flex-1 min-w-0"><Skeleton className="h-4 w-3/4 mb-1.5" /><Skeleton className="h-3 w-1/2" /></div></div></td></tr>
-                )) : clientsASurveiller.map((client) => (
-                    <tr key={client.id} className="border-b border-gray-50 last:border-0">
-                        <td className="py-3 pr-4"><div className="flex items-center space-x-4"><Avatar name={`${client.prenom} ${client.nom}`} /><div className="flex-1 min-w-0"><p className="font-semibold text-gray-900 truncate">{client.prenom} {client.nom}</p><p className="text-gray-400 truncate">{client.email}</p></div></div></td>
-                        <td className="py-3 px-4"><StatusBadge status={client.statut} /></td>
-                        <td className="py-3 px-4"><ScoreBar score={client.score_risque} /></td>
-                        <td className="py-3 pl-4 text-right"><button onClick={() => navigate(`/client/${client.id}`)} className="p-2 text-gray-400 rounded-md hover:bg-gray-100 hover:text-gray-800 transition-colors"><ExternalLink size={16} /></button></td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-          </div>
-        </motion.div>
-        <footer className="text-center mt-12">
-            <p className="text-xs text-gray-300">COURTIA®</p>
-        </footer>
-      </main>
+          </BubbleCard>
+        </div>
+
+        {/* Bottom: Insights + Échéances */}
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <BubbleCard padding={20} style={{ flex: 1.5, minWidth: 260 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: '#0a0a0a' }}>
+              <TrendingUp size={16} style={{ marginRight: 6, verticalAlign: 'middle', color: '#2563eb' }} />
+              ARK Insights
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(MOCK_INSIGHTS).map((insight, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  background: i === 0 ? '#2563eb08' : 'transparent',
+                  border: '0.5px solid rgba(0,0,0,0.04)',
+                  fontSize: 13, color: 'rgba(0,0,0,0.7)',
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: i === 0 ? '#2563eb' : i < 3 ? '#10b981' : '#f59e0b', flexShrink: 0 }} />
+                  {insight}
+                </div>
+              ))}
+            </div>
+          </BubbleCard>
+          <BubbleCard padding={20} style={{ flex: 1, minWidth: 200 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: '#0a0a0a' }}>
+              <Calendar size={16} style={{ marginRight: 6, verticalAlign: 'middle', color: '#7c3aed' }} />
+              Échéances
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {MOCK_ECHEANCES.map((e, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  border: '0.5px solid rgba(0,0,0,0.04)',
+                  fontSize: 12,
+                }}>
+                  <BubbleBadge color={i === 0 ? '#f59e0b' : '#2563eb'} size="sm">{e.date}</BubbleBadge>
+                  <span style={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>{e.label}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 12, textAlign: 'center' }}>
+              <BubbleButton variant="ghost" size="sm" onClick={() => navigate('/taches')}>
+                Voir toutes les échéances →
+              </BubbleButton>
+            </div>
+          </BubbleCard>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 40, fontSize: 11, color: 'rgba(0,0,0,0.2)' }}>
+          COURTIA®
+        </div>
+      </div>
+
+      {/* Mobile responsive */}
+      <style>{`
+        @keyframes bubbleFloat0 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+        @keyframes bubbleFloat1 { 0%,100% { transform: translateY(-1px) } 50% { transform: translateY(2px) } }
+        @keyframes bubbleFloat2 { 0%,100% { transform: translateY(0.5px) } 55% { transform: translateY(-2.5px) } }
+        @media (max-width: 768px) {
+          .dashboard-kpi-row { flex-direction: column; }
+        }
+      `}</style>
     </div>
   )
 }

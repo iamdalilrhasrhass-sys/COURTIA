@@ -1,37 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
-  Settings, CreditCard, LogOut, Shield
+  Settings, CreditCard, LogOut, Shield, Menu, X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Logo from './Logo'
 
 const getInitials = (firstName, lastName) => {
   const f = (firstName || '').charAt(0)
   const l = (lastName || '').charAt(0)
   return (f + l).toUpperCase() || '?'
-}
-
-function Logo() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative">
-        <div className="w-9 h-9 bg-[#2563eb] rounded-lg flex items-center justify-center" style={{ filter: 'drop-shadow(0 0 8px rgba(37,99,235,0.6))' }}>
-          <Shield className="text-white" size={20} />
-        </div>
-        <style jsx>{`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-          }
-          .pulse-dot { animation: pulse 2s infinite; }
-        `}</style>
-        <span className="pulse-dot absolute top-0 right-0 block h-1.5 w-1.5 rounded-full bg-blue-400 ring-2 ring-[#080808]" />
-      </div>
-      <span className="text-white text-xl font-black tracking-[-0.03em]">COURTIA</span>
-    </div>
-  )
 }
 
 const NAV_ITEMS = [
@@ -40,7 +20,7 @@ const NAV_ITEMS = [
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
   { separator: true, label: 'MODULES' },
-  { path: '/analytics', label: 'Analytics', icon: BarChart2 },
+  { path: '/analytics', label: 'Analyses', icon: BarChart2 },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
 ]
@@ -49,6 +29,12 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Ferme le menu mobile quand on change de page
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     const updateUserState = () => {
@@ -58,11 +44,9 @@ export default function Sidebar() {
       } catch (e) { console.error("Failed to parse user from localStorage", e) }
     }
 
-    updateUserState() // Chargement initial
+    updateUserState()
 
-    // Met à jour la sidebar si le profil change ailleurs dans l'app
     window.addEventListener('profileUpdated', updateUserState)
-
     return () => window.removeEventListener('profileUpdated', updateUserState)
   }, [])
 
@@ -74,13 +58,20 @@ export default function Sidebar() {
     toast.success('Déconnexion réussie');
   }
 
-  return (
-    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col bg-[#080808] border-r border-white/5 z-50 font-sans">
-      <div className="p-5 border-b border-white/10 h-[65px] flex items-center">
-        <Logo />
+  const sidebarContent = (
+    <aside className="w-[240px] h-full flex flex-col bg-[#080808] border-r border-white/5 font-sans">
+      <div className="p-5 border-b border-white/10 h-[65px] flex items-center justify-between">
+        <Logo size={36} dark={true} textSize={15} />
+        {/* Bouton fermer — visible seulement sur mobile */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+        >
+          <X size={20} />
+        </button>
       </div>
 
-      <nav className="flex-1 mt-8 px-[12px] space-y-1">
+      <nav className="flex-1 mt-8 px-[12px] space-y-1 overflow-y-auto">
         {NAV_ITEMS.map((item, idx) => {
           if (item.separator) {
             return (
@@ -110,7 +101,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="absolute bottom-0 w-full p-4 border-t border-white/5">
+      <div className="p-4 border-t border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2563eb] to-[#7c3aed] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
             {user ? getInitials(user.first_name, user.last_name) : '?'}
@@ -130,5 +121,52 @@ export default function Sidebar() {
         <p className="text-center text-[9px] text-gray-700 mt-2">Rhasrhass®</p>
       </div>
     </aside>
+  )
+
+  return (
+    <>
+      {/* === BOUTON HAMBURGER MOBILE === */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed top-3 left-3 z-[60] p-2 bg-[#080808] border border-white/10 rounded-lg text-white shadow-lg hover:bg-[#1a1a1a] transition-colors"
+        aria-label="Ouvrir le menu"
+      >
+        <Menu size={22} />
+      </button>
+
+      {/* === OVERLAY MOBILE === */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden fixed inset-0 bg-black/60 z-[55] backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* === SIDEBAR DESKTOP (toujours visible) === */}
+      <div className="hidden md:block fixed top-0 left-0 h-screen z-50">
+        {sidebarContent}
+      </div>
+
+      {/* === SIDEBAR MOBILE (slide-in) === */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ x: -280 }}
+            animate={{ x: 0 }}
+            exit={{ x: -280 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="md:hidden fixed top-0 left-0 h-screen z-[60] shadow-2xl"
+          >
+            {sidebarContent}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

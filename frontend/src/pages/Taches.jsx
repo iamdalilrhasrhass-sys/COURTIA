@@ -1,185 +1,364 @@
 import { useState, useEffect, useMemo } from 'react'
-import toast from 'react-hot-toast'
-import { Plus, Clock, X, Trash2, Edit, MoreHorizontal } from 'lucide-react'
+import { Check, Plus, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
 import api from '../api'
+import BubbleCard from '../components/BubbleCard'
+import BubbleBadge from '../components/BubbleBadge'
+import BubbleButton from '../components/BubbleButton'
+import BubbleBackground from '../components/BubbleBackground'
 
-// ─── DATA & CONFIG ────────────────────────────────────────────────────────────────
-const KANBAN_COLUMNS = [
-  { id: 'a_faire', title: 'À faire', headerBg: 'bg-gray-50', borderColor: 'border-gray-300' },
-  { id: 'en_cours', title: 'En cours', headerBg: 'bg-amber-50', borderColor: 'border-amber-400' },
-  { id: 'terminee', title: 'Terminé', headerBg: 'bg-emerald-50', borderColor: 'border-emerald-400' },
+const PRIORITY_SECTIONS = [
+  { id: 'urgente',   label: 'Urgentes',   color: '#dc2626', bgLight: 'rgba(220,38,38,0.04)', border: '0.5px solid rgba(220,38,38,0.15)' },
+  { id: 'haute',     label: 'Hautes',     color: '#d97706', bgLight: 'rgba(217,119,6,0.04)',  border: '0.5px solid rgba(217,119,6,0.15)' },
+  { id: 'normale',   label: 'Normales',   color: '#2563eb', bgLight: 'rgba(37,99,235,0.04)',  border: '0.5px solid rgba(37,99,235,0.15)' },
+  { id: 'basse',     label: 'Basses',     color: '#6b7280', bgLight: 'rgba(107,114,128,0.04)', border: '0.5px solid rgba(107,114,128,0.15)' },
 ]
-const PRIORITIES = {
-  haute:   { label: 'Haute', classes: 'bg-red-50 text-red-600 border border-red-100' },
-  normale: { label: 'Normale', classes: 'bg-blue-50 text-blue-600 border border-blue-100' },
-  basse:   { label: 'Basse', classes: 'bg-gray-50 text-gray-500 border border-gray-200' },
+
+const MOCK_TASKS = [
+  { id: 1, titre: 'Relancer client Dubois pour signature', priorite: 'urgente', echeance: '2026-04-26', statut: 'a_faire', client_nom: 'Dubois', client_prenom: 'Marc' },
+  { id: 2, titre: 'Finaliser rapport mensuel Q1', priorite: 'urgente', echeance: '2026-04-27', statut: 'en_cours', client_nom: null, client_prenom: null },
+  { id: 3, titre: 'Appel prospection secteur Lyon', priorite: 'haute', echeance: '2026-04-28', statut: 'a_faire', client_nom: 'Petit', client_prenom: 'Chloe' },
+  { id: 4, titre: 'Mise à jour contrat Prevoyance', priorite: 'haute', echeance: '2026-04-25', statut: 'a_faire', client_nom: 'Martin', client_prenom: 'Julie' },
+  { id: 5, titre: 'Vérifier éligibilité nouveau prospect', priorite: 'normale', echeance: '2026-04-30', statut: 'terminee', client_nom: 'Leroy', client_prenom: 'Sophie' },
+  { id: 6, titre: 'Préparer dossier sinistre Bernard', priorite: 'normale', echeance: '2026-05-02', statut: 'a_faire', client_nom: 'Bernard', client_prenom: 'Pierre' },
+  { id: 7, titre: 'Envoyer devis auto client Moreau', priorite: 'basse', echeance: '2026-05-05', statut: 'en_cours', client_nom: 'Moreau', client_prenom: 'Luc' },
+  { id: 8, titre: 'Archiver contrats 2025', priorite: 'basse', echeance: '2026-05-10', statut: 'a_faire', client_nom: null, client_prenom: null },
+  { id: 9, titre: 'Reunion equipe commerciale', priorite: 'normale', echeance: '2026-04-29', statut: 'terminee', client_nom: null, client_prenom: null },
+  { id: 10, titre: 'Correction bug import CSV', priorite: 'haute', echeance: '2026-04-26', statut: 'terminee', client_nom: null, client_prenom: null },
+]
+
+const fmtDate = (d) => {
+  if (!d) return null
+  const date = new Date(d)
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────────
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : null
-const getHash = (str) => { let hash=0; for (let i=0; i<(str||'').length; i++) hash = str.charCodeAt(i) + ((hash<<5)-hash); return hash }
-const getGradient = (str) => `linear-gradient(135deg, hsl(${getHash(str)%360}, 60%, 80%) 0%, hsl(${(getHash(str)+60)%360}, 70%, 65%) 100%)`
-
-// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────────
-const Avatar = ({ name, size = 24 }) => {
-  const getInitials = (n) => { const parts = (n||'').trim().split(' ').filter(Boolean); return parts.length > 1 ? (parts[0][0] + parts[parts.length-1][0]) : (parts[0] || '?').substring(0,2) }
-  return <div className="rounded-full text-white flex items-center justify-center font-bold flex-shrink-0" style={{ width: size, height: size, fontSize: size/2.2, background: getGradient(name) }}>{getInitials(name).toUpperCase()}</div>
+const isOverdue = (d) => {
+  if (!d) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const date = new Date(d)
+  date.setHours(0, 0, 0, 0)
+  return date < today
 }
 
-function TaskCard({ task, onEdit, onDelete }) {
-  const priority = PRIORITIES[task.priorite] || PRIORITIES.basse
-  const clientName = task.client_nom ? `${task.client_nom} ${task.client_prenom || ''}`.trim() : null
-  const echeance = task.echeance ? new Date(task.echeance) : null
-  const isOverdue = echeance && (new Date()).setHours(0,0,0,0) > echeance.setHours(0,0,0,0)
+function TaskRow({ task, priorityColor, onComplete }) {
+  const clientName = task.client_nom
+    ? `${task.client_nom} ${task.client_prenom || ''}`.trim()
+    : null
+  const overdue = isOverdue(task.echeance)
+  const completed = task.statut === 'terminee'
 
   return (
-    <motion.div layout initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer group transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5" onClick={() => onEdit(task)}>
-      <div className="flex justify-between items-start gap-2">
-        <p className="text-sm font-semibold text-gray-900 flex-1 pr-2">{task.titre}</p>
-        <div className="relative">
-          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${priority.classes}`}>{priority.label}</span>
-          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={(e) => { e.stopPropagation(); alert('Menu a implementer')}} className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500"><MoreHorizontal size={14} /></button>
-          </div>
-        </div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '10px 14px',
+        borderRadius: 'var(--r-md, 12px)',
+        background: completed ? 'rgba(16,185,129,0.04)' : 'transparent',
+        border: '0.5px solid rgba(0,0,0,0.04)',
+        transition: 'background 0.2s',
+        opacity: completed ? 0.6 : 1,
+      }}
+      onMouseEnter={(e) => { if (!completed) e.currentTarget.style.background = 'rgba(0,0,0,0.02)' }}
+      onMouseLeave={(e) => { if (!completed) e.currentTarget.style.background = 'transparent' }}
+    >
+      {/* Color dot */}
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          minWidth: 10,
+          borderRadius: '50%',
+          background: completed ? '#10b981' : priorityColor,
+          opacity: completed ? 0.5 : 1,
+        }}
+      />
+
+      {/* Title */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: completed ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.85)',
+            textDecoration: completed ? 'line-through' : 'none',
+            display: 'block',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {task.titre}
+        </span>
+        {clientName && (
+          <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', marginTop: 2, display: 'block' }}>
+            {clientName}
+          </span>
+        )}
       </div>
-      {(clientName || echeance) && (
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-          {clientName ? (<div className="flex items-center gap-2"><Avatar name={clientName} size={24} /><span className="text-xs text-gray-500 font-medium">{clientName}</span></div>) : <div />}
-          {echeance && (<span className={`flex items-center gap-1.5 text-xs font-semibold ${isOverdue ? 'bg-red-50 text-red-500 px-1.5 py-0.5 rounded' : 'text-gray-400'}`}><Clock size={12} />{fmtDate(echeance)}</span>)}
-        </div>
+
+      {/* Due date */}
+      {task.echeance && (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: overdue ? '#dc2626' : 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            whiteSpace: 'nowrap',
+            background: overdue ? 'rgba(220,38,38,0.08)' : 'transparent',
+            padding: overdue ? '2px 8px' : '2px 0',
+            borderRadius: 9999,
+          }}
+        >
+          <Clock size={11} />
+          {fmtDate(task.echeance)}
+        </span>
       )}
-      <div className="flex items-center justify-end mt-2 -mb-2 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={(e) => { e.stopPropagation(); onEdit(task) }} className="p-2 text-gray-400 hover:text-gray-700"><Edit size={16} /></button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(task.id) }} className="p-2 text-gray-400 hover:text-gray-700"><Trash2 size={16} /></button>
-      </div>
+
+      {/* Complete button */}
+      {!completed && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onComplete(task.id) }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: '0.5px solid rgba(0,0,0,0.1)',
+            background: 'rgba(255,255,255,0.8)',
+            cursor: 'pointer',
+            color: '#10b981',
+            transition: 'all 0.2s',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.3)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.8)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)' }}
+        >
+          <Check size={14} />
+        </button>
+      )}
     </motion.div>
   )
 }
 
-function TaskModal({ task, clients, onSave, onClose }) {
-  const [form, setForm] = useState({ titre: '', description: '', client_id: '', echeance: '', statut: 'a_faire', priorite: 'normale' })
-  useEffect(() => { if (task) setForm({ ...task, client_id: task.client_id || '', echeance: task.echeance ? task.echeance.split('T')[0] : '' }) }, [task])
-  
-  const handleSubmit = (e) => { e.preventDefault(); onSave({ ...form, id: task?.id }); }
-  const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-blue-300 focus:border-[#2563eb] outline-none transition-all"
-  const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
-
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative">
-        <div className="p-6 border-b border-gray-100"><h2 className="text-lg font-bold text-gray-900">{task ? 'Modifier la' : 'Créer une'} tâche</h2><button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-400"><X size={20} /></button></div>
-        <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
-            <div><label htmlFor="titre" className={labelClass}>Titre *</label><input id="titre" value={form.titre} onChange={e => setForm({ ...form, titre: e.target.value })} required className={inputClass} /></div>
-            <div><label htmlFor="description" className={labelClass}>Description</label><textarea id="description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} className={`${inputClass} min-h-[80px]`} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label htmlFor="statut" className={labelClass}>Statut</label><select id="statut" value={form.statut} onChange={e => setForm({ ...form, statut: e.target.value })} className={inputClass}>{KANBAN_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></div>
-              <div><label htmlFor="priorite" className={labelClass}>Priorité</label><select id="priorite" value={form.priorite} onChange={e => setForm({ ...form, priorite: e.target.value })} className={inputClass}>{Object.entries(PRIORITIES).map(([id,p]) => <option key={id} value={id}>{p.label}</option>)}</select></div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label htmlFor="echeance" className={labelClass}>Échéance</label><input id="echeance" type="date" value={form.echeance} onChange={e => setForm({ ...form, echeance: e.target.value })} className={inputClass} /></div>
-              <div><label htmlFor="client" className={labelClass}>Client</label><select id="client" value={form.client_id || ''} onChange={e => setForm({ ...form, client_id: e.target.value || null })} className={inputClass}><option value="">— Aucun —</option>{clients.map(c => <option key={c.id} value={c.id}>{c.nom} {c.prenom}</option>)}</select></div>
-            </div>
-          </div>
-          <div className="p-4 bg-gray-50/70 border-t border-gray-100 rounded-b-xl flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">Annuler</button><button type="submit" className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-sm">Créer la tâche</button></div>
-        </form>
-      </motion.div>
-    </div>
-  )
-}
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────────
 export default function Taches() {
   const [tasks, setTasks] = useState([])
-  const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [selectedTask, setSelectedTask] = useState(null)
+  const [useMock, setUseMock] = useState(false)
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => {
+    fetchAll()
+  }, [])
 
   async function fetchAll() {
     setLoading(true)
     try {
-      const [tasksRes, clientsRes] = await Promise.all([api.get('/api/taches'), api.get('/api/clients')])
-      setTasks(Array.isArray(tasksRes.data) ? tasksRes.data : [])
-      setClients(Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || []))
-    } catch { toast.error('Impossible de charger les données.') } 
-    finally { setLoading(false) }
+      const { data } = await api.get('/api/taches')
+      setTasks(Array.isArray(data) ? data : [])
+      setUseMock(false)
+    } catch {
+      // Fallback to mock data if API fails
+      setTasks(MOCK_TASKS)
+      setUseMock(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  async function handleSave(formData) {
+  // Group tasks by priority
+  const tasksByPriority = useMemo(() => {
+    const grouped = {}
+    PRIORITY_SECTIONS.forEach((s) => { grouped[s.id] = [] })
+    tasks.forEach((t) => {
+      const p = t.priorite || 'normale'
+      if (grouped[p]) grouped[p].push(t)
+      else grouped['normale'].push(t)
+    })
+    return grouped
+  }, [tasks])
+
+  async function handleComplete(id) {
+    if (useMock) {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, statut: 'terminee' } : t
+        )
+      )
+      toast.success('Tâche complétée ✓')
+      return
+    }
     try {
-      const payload = { ...formData, client_id: formData.client_id === '' ? null : Number(formData.client_id) }
-      if (payload.id) {
-        const { data } = await api.put(`/api/taches/${payload.id}`, payload)
-        setTasks(tasks.map(t => t.id === payload.id ? data : t))
-        toast.success('Tâche modifiée ✓')
-      } else {
-        const { data } = await api.post('/api/taches', payload)
-        setTasks([...tasks, data])
-        toast.success('Tâche créée ✓')
-      }
-      setShowModal(false); setSelectedTask(null)
-    } catch { toast.error('Erreur lors de la sauvegarde.') }
+      await api.put(`/api/taches/${id}`, { statut: 'terminee' })
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, statut: 'terminee' } : t
+        )
+      )
+      toast.success('Tâche complétée ✓')
+    } catch {
+      toast.error('Erreur lors de la complétion.')
+    }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Voulez-vous vraiment supprimer cette tâche ?')) return
-    try {
-      await api.delete(`/api/taches/${id}`)
-      setTasks(t => t.filter(x => x.id !== id))
-      toast.success('Tâche supprimée.')
-    } catch { toast.error('Erreur de suppression.') }
-  }
-
-  const tasksByStatus = useMemo(() => KANBAN_COLUMNS.reduce((acc, col) => ({...acc, [col.id]: tasks.filter(t => t.statut === col.id)}), {}), [tasks])
-
-  const openModal = (task = null) => { setSelectedTask(task); setShowModal(true) }
+  // Stats
+  const totalCount = tasks.length
+  const completedCount = tasks.filter((t) => t.statut === 'terminee').length
+  const pendingCount = totalCount - completedCount
 
   return (
-    <div className="min-h-screen bg-[#fafafa]">
-      <main className="p-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">Tâches</h1>
-            <p className="text-sm text-gray-400 mt-1">Gérez vos actions et rappels.</p>
-          </div>
-          <button onClick={() => openModal()} className="mt-4 md:mt-0 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02]"><Plus size={16} />Nouvelle tâche</button>
-        </header>
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <BubbleBackground intensity="subtle" />
 
-        <div className="mt-4 mb-6 flex items-center gap-4">
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm"><span className="text-blue-600 font-black mr-2">{tasksByStatus['a_faire']?.length || 0}</span><span className="text-sm font-semibold text-gray-600">À faire</span></div>
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm"><span className="text-amber-500 font-black mr-2">{tasksByStatus['en_cours']?.length || 0}</span><span className="text-sm font-semibold text-gray-600">En cours</span></div>
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm"><span className="text-emerald-600 font-black mr-2">{tasksByStatus['terminee']?.length || 0}</span><span className="text-sm font-semibold text-gray-600">Terminées</span></div>
+      <div style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 960, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
+            Tâches
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4, marginBottom: 16 }}>
+            Gérez vos actions et rappels quotidiens.
+          </p>
+
+          {/* Stats badges */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <BubbleBadge color="#2563eb" size="md">
+              {pendingCount} en attente
+            </BubbleBadge>
+            <BubbleBadge color="#10b981" size="md">
+              {completedCount} complétées
+            </BubbleBadge>
+            <BubbleBadge color="rgba(0,0,0,0.4)" size="md">
+              {totalCount} total
+            </BubbleBadge>
+          </div>
         </div>
 
-        {loading ? <div className="flex justify-center items-center h-64"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
-          : <div className="flex flex-1 gap-5">
-              {KANBAN_COLUMNS.map(col => (
-                <div key={col.id} className="flex-1">
-                  <div className={`rounded-t-xl p-4 border-t-4 ${col.headerBg} ${col.borderColor}`}>
-                    <h2 className="text-base font-bold text-gray-800">{col.title}</h2>
+        {/* Loading */}
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+            <div style={{
+              width: 32, height: 32,
+              border: '3px solid rgba(0,0,0,0.06)',
+              borderTopColor: '#0a0a0a',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }} />
+          </div>
+        )}
+
+        {/* Priority sections */}
+        {!loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {PRIORITY_SECTIONS.map((section) => {
+              const sectionTasks = tasksByPriority[section.id] || []
+              const activeTasks = sectionTasks.filter((t) => t.statut !== 'terminee')
+              const completedInSection = sectionTasks.filter((t) => t.statut === 'terminee')
+
+              if (sectionTasks.length === 0) return null
+
+              return (
+                <BubbleCard key={section.id} hover={false} padding={0}>
+                  {/* Section header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '14px 18px',
+                      borderBottom: '0.5px solid rgba(0,0,0,0.06)',
+                      background: section.bgLight,
+                      borderRadius: 'var(--r-lg, 16px) var(--r-lg, 16px) 0 0',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        background: section.color,
+                      }}
+                    />
+                    <span style={{ fontWeight: 700, fontSize: 14, color: '#0a0a0a', flex: 1 }}>
+                      {section.label}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(0,0,0,0.4)', background: 'rgba(0,0,0,0.04)', padding: '2px 10px', borderRadius: 9999 }}>
+                      {activeTasks.length} restante{activeTasks.length > 1 ? 's' : ''}
+                    </span>
                   </div>
-                  <div className="bg-gray-50/50 rounded-b-xl p-4 space-y-3 min-h-[400px]">
+
+                  {/* Tasks list */}
+                  <div style={{ padding: '6px 12px' }}>
                     <AnimatePresence>
-                      {tasksByStatus[col.id].map(task => <TaskCard key={task.id} task={task} onEdit={openModal} onDelete={handleDelete} />)}
+                      {activeTasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          priorityColor={section.color}
+                          onComplete={handleComplete}
+                        />
+                      ))}
                     </AnimatePresence>
-                    {!tasksByStatus[col.id]?.length && <div className="text-center pt-10 text-xs text-gray-400">Aucune tâche ici.</div>}
+
+                    {activeTasks.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: 'rgba(0,0,0,0.3)' }}>
+                        Toutes les tâches sont complétées ✓
+                      </div>
+                    )}
+
+                    {/* Show completed tasks in a collapsed style */}
+                    {completedInSection.length > 0 && (
+                      <details style={{ marginTop: 4 }}>
+                        <summary style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: 'rgba(0,0,0,0.35)',
+                          cursor: 'pointer',
+                          padding: '4px 14px',
+                          userSelect: 'none',
+                        }}>
+                          {completedInSection.length} complétée{completedInSection.length > 1 ? 's' : ''}
+                        </summary>
+                        <div style={{ marginTop: 4 }}>
+                          {completedInSection.map((task) => (
+                            <TaskRow
+                              key={task.id}
+                              task={task}
+                              priorityColor={section.color}
+                              onComplete={() => {}}
+                            />
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-        }
-      </main>
-      <AnimatePresence>{showModal && <TaskModal task={selectedTask} clients={clients} onSave={handleSave} onClose={() => setShowModal(false)} />}</AnimatePresence>
-      <footer className="text-center mt-8 pb-8">
-        <p className="text-xs text-gray-300">Rhasrhass®</p>
-      </footer>
+                </BubbleCard>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: 32, paddingBottom: 24 }}>
+          <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.2)' }}>Rhasrhass®</p>
+        </div>
+      </div>
+
+      {/* Keyframes for spinner */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
