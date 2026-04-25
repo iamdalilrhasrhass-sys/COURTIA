@@ -12,8 +12,9 @@ import Logo from '../components/Logo'
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
 const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
 
-/* ─── Mock BubblePortfolioMap (inline SVG chart) ────────── */
+/* ─── BubblePortfolioMap (inline SVG chart with smooth bezier + floating bubbles) ── */
 function BubblePortfolioMap({ data }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null)
   const points = data || [
     { label: 'Jan', value: 120 }, { label: 'Fév', value: 145 },
     { label: 'Mar', value: 132 }, { label: 'Avr', value: 168 },
@@ -21,28 +22,110 @@ function BubblePortfolioMap({ data }) {
   ]
   const max = Math.max(...points.map(p => p.value), 1)
   const w = 600, h = 200
-  const pad = { top: 20, bottom: 30, left: 40, right: 20 }
-  const xScale = (i) => pad.left + (i / (points.length - 1)) * (w - pad.left - pad.right)
-  const yScale = (v) => pad.top + h - pad.bottom - ((v / max) * (h - pad.top - pad.bottom))
-  const lineD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(p.value)}`).join(' ')
-  const areaD = lineD + ` L${xScale(points.length - 1)},${h - pad.bottom} L${xScale(0)},${h - pad.bottom} Z`
+  const pad = { top: 20, bottom: 30, left: 44, right: 28 }
+
+  const xScale = (i) => pad.left + (i / Math.max(points.length - 1, 1)) * (w - pad.left - pad.right)
+  const yScale = (v) => pad.top + h - pad.bottom - ((v / max) * (h - pad.top - pad.bottom - 10))
+
+  /* ── build cubic bezier path through all points ───── */
+  const buildBezierPath = (pts) => {
+    if (pts.length === 0) return ''
+    let d = `M${xScale(0).toFixed(1)},${yScale(pts[0].value).toFixed(1)}`
+    for (let i = 1; i < pts.length; i++) {
+      const x1 = xScale(i - 1), y1 = yScale(pts[i - 1].value)
+      const x2 = xScale(i),     y2 = yScale(pts[i].value)
+      const dx = x2 - x1
+      const cp1x = (x1 + dx / 3).toFixed(1)
+      const cp1y = y1.toFixed(1)
+      const cp2x = (x2 - dx / 3).toFixed(1)
+      const cp2y = y2.toFixed(1)
+      d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${x2.toFixed(1)},${y2.toFixed(1)}`
+    }
+    return d
+  }
+
+  const lineD = buildBezierPath(points)
+  const lastX = xScale(points.length - 1)
+  const firstX = xScale(0)
+  const bottomY = h - pad.bottom + 2
+  const areaD = lineD + ` L${lastX.toFixed(1)},${bottomY} L${firstX.toFixed(1)},${bottomY} Z`
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto', maxHeight: 220 }}>
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto', maxHeight: 230 }}>
       <defs>
+        {/* Area fill gradient */}
         <linearGradient id="portfolioGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.02" />
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.01" />
         </linearGradient>
+
+        {/* Iridescent bubble gradient — inspired by Logo.jsx */}
+        <radialGradient id="bubbleMain" cx="35%" cy="28%" r="80%">
+          <stop offset="0%" stopColor="rgba(255,255,255,1)" />
+          <stop offset="18%" stopColor="rgba(255,255,255,0.88)" />
+          <stop offset="38%" stopColor="rgba(232,247,255,0.72)" />
+          <stop offset="60%" stopColor="rgba(186,230,253,0.55)" />
+          <stop offset="82%" stopColor="rgba(167,139,250,0.6)" />
+          <stop offset="100%" stopColor="rgba(124,58,237,0.7)" />
+        </radialGradient>
+
+        <linearGradient id="bubbleIris" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(186,230,253,0.35)" />
+          <stop offset="33%" stopColor="rgba(196,181,253,0.3)" />
+          <stop offset="66%" stopColor="rgba(253,186,116,0.25)" />
+          <stop offset="100%" stopColor="rgba(236,72,153,0.35)" />
+        </linearGradient>
+
+        <filter id="bubbleSoft"><feGaussianBlur stdDeviation="0.4" /></filter>
       </defs>
+
+      {/* Smooth filled area */}
       <path d={areaD} fill="url(#portfolioGrad)" />
-      <path d={lineD} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {points.map((p, i) => (
-        <g key={i}>
-          <circle cx={xScale(i)} cy={yScale(p.value)} r="4" fill="#2563eb" stroke="#fff" strokeWidth="2" />
-          <text x={xScale(i)} y={h - 4} textAnchor="middle" fontSize="11" fill="rgba(0,0,0,0.45)" fontFamily="Arial, sans-serif">{p.label}</text>
-        </g>
-      ))}
+
+      {/* Smooth bezier curve line */}
+      <path d={lineD} fill="none" stroke="url(#bubbleIris)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.55" style={{ mixBlendMode: 'screen' }} />
+      <path d={lineD} fill="none" stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Floating data-point bubbles */}
+      {points.map((p, i) => {
+        const cx = xScale(i)
+        const cy = yScale(p.value)
+        const isHovered = hoveredIndex === i
+        const r = isHovered ? 11 : 5.5
+
+        return (
+          <g key={i}
+            style={{ animation: `bubbleFloat${i % 3} 3.6s ease-in-out infinite`, animationDelay: `${i * 0.25}s`, transformOrigin: `${cx}px ${cy}px` }}
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            {/* Hover glow ring */}
+            {isHovered && (
+              <circle cx={cx} cy={cy} r={16} fill="none" stroke="rgba(37,99,235,0.18)" strokeWidth="6" opacity="0.5" />
+            )}
+
+            {/* Main iridescent bubble */}
+            <circle cx={cx} cy={cy} r={r} fill="url(#bubbleMain)" stroke="rgba(148,163,184,0.5)" strokeWidth="0.7" filter="url(#bubbleSoft)" />
+            <circle cx={cx} cy={cy} r={r} fill="url(#bubbleIris)" opacity="0.32" style={{ mixBlendMode: 'screen' }} />
+
+            {/* Specular highlight */}
+            <ellipse cx={cx - r * 0.28} cy={cy - r * 0.32} rx={r * 0.42} ry={r * 0.28} fill="rgba(255,255,255,0.82)" transform={`rotate(-15 ${cx - r * 0.28} ${cy - r * 0.32})`} filter="url(#bubbleSoft)" />
+
+            {/* Value label on hover */}
+            {isHovered && (
+              <g>
+                <rect x={cx - 28} y={cy - 32} width={56} height={20} rx={6} fill="rgba(15,15,15,0.85)" />
+                <text x={cx} y={cy - 18} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff" fontFamily="Arial, sans-serif">
+                  {fmtEur(p.value)}
+                </text>
+              </g>
+            )}
+
+            {/* Month label at bottom */}
+            <text x={cx} y={h - 5} textAnchor="middle" fontSize="11" fill="rgba(0,0,0,0.45)" fontFamily="Arial, sans-serif">{p.label}</text>
+          </g>
+        )
+      })}
     </svg>
   )
 }
@@ -249,6 +332,9 @@ export default function Dashboard() {
 
       {/* Mobile responsive */}
       <style>{`
+        @keyframes bubbleFloat0 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+        @keyframes bubbleFloat1 { 0%,100% { transform: translateY(-1px) } 50% { transform: translateY(2px) } }
+        @keyframes bubbleFloat2 { 0%,100% { transform: translateY(0.5px) } 55% { transform: translateY(-2.5px) } }
         @media (max-width: 768px) {
           .dashboard-kpi-row { flex-direction: column; }
         }
