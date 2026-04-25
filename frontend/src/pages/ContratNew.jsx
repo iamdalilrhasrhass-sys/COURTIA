@@ -84,6 +84,8 @@ export default function ContratNew() {
           .ct-form-card { padding: 20px 20px !important; }
           .ct-grid-2 { grid-template-columns: 1fr !important; }
           .ct-grid-3 { grid-template-columns: 1fr !important; }
+          .ct-btn-row { flex-direction: column !important; }
+          .ct-btn-row button { width: 100% !important; }
         }
       `}</style>
       {/* Header */}
@@ -184,7 +186,7 @@ export default function ContratNew() {
               </Field>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+            <div className="ct-btn-row" style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <motion.button
                 type="submit"
                 disabled={!canSubmit}
