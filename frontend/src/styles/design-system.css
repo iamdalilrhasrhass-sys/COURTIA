@@ -1,0 +1,33 @@
+:root {
+  --bg-cream: #f7f6f2;
+  --bg-cream-warm: #faf9f5;
+  --sidebar-dark: #0a0a0a;
+  --sidebar-dark-2: #111827;
+  --accent-blue: #2563eb;
+  --accent-violet: #7c3aed;
+  --accent-pink: #ec4899;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --text-primary: #0a0a0a;
+  --text-secondary: rgba(0,0,0,0.55);
+  --text-tertiary: rgba(0,0,0,0.4);
+  --text-on-dark: rgba(255,255,255,0.95);
+  --text-on-dark-2: rgba(255,255,255,0.6);
+  --text-on-dark-3: rgba(255,255,255,0.35);
+  --border-fine: 0.5px solid rgba(0,0,0,0.08);
+  --border-mid: 0.5px solid rgba(0,0,0,0.12);
+  --border-on-dark: 0.5px solid rgba(255,255,255,0.08);
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
+  --shadow-bubble: 0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.06);
+  --shadow-bubble-lg: 0 2px 4px rgba(0,0,0,0.04), 0 12px 28px rgba(0,0,0,0.07), 0 32px 60px rgba(0,0,0,0.05);
+  --shadow-bubble-pop: 0 4px 8px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.09), 0 40px 80px rgba(0,0,0,0.06);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-display: Arial, Helvetica, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans); background: var(--bg-cream); color: var(--text-primary); -webkit-font-smoothing: antialiased; }

@@ -6,6 +6,7 @@ import {
   Settings, CreditCard, LogOut, Shield
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Logo from './Logo'
 
 const getInitials = (firstName, lastName) => {
   const f = (firstName || '').charAt(0)
@@ -13,7 +14,7 @@ const getInitials = (firstName, lastName) => {
   return (f + l).toUpperCase() || '?'
 }
 
-function Logo() {
+function LogoOld() {
   return (
     <div className="flex items-center gap-3">
       <div className="relative">
@@ -77,7 +78,7 @@ export default function Sidebar() {
   return (
     <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col bg-[#080808] border-r border-white/5 z-50 font-sans">
       <div className="p-5 border-b border-white/10 h-[65px] flex items-center">
-        <Logo />
+        <Logo size={36} dark={true} textSize={15} />
       </div>
 
       <nav className="flex-1 mt-8 px-[12px] space-y-1">
