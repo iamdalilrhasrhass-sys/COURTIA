@@ -187,6 +187,21 @@ cron.schedule('0 3 * * *', async () => {
   }
 }, { timezone: 'Europe/Paris' })
 
+// ==================== WHATSAPP (Baileys) ====================
+
+const whatsappService = require('./src/services/whatsappService');
+
+(async () => {
+  if (process.env.WHATSAPP_ENABLED === 'true') {
+    console.log('📱 Initialisation WhatsApp (Baileys)...');
+    whatsappService.connectWhatsApp().catch(err => {
+      console.error('WhatsApp init error:', err.message);
+    });
+  } else {
+    console.log('📱 WhatsApp désactivé (WHATSAPP_ENABLED != true)');
+  }
+})();
+
 // ==================== ERROR HANDLERS ====================
 
 app.use((req, res) => {
