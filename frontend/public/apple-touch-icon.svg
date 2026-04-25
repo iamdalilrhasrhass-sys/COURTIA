@@ -1,0 +1,36 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="36" fill="#f7f6f2"/>
+  <defs>
+    <radialGradient id="apple-tube" cx="32%" cy="22%" r="85%">
+      <stop offset="0%" stopColor="#ffffff"/>
+      <stop offset="12%" stopColor="#fdfdfd"/>
+      <stop offset="28%" stopColor="#e8f7ff"/>
+      <stop offset="48%" stopColor="#bae6fd"/>
+      <stop offset="68%" stopColor="#c4b5fd"/>
+      <stop offset="88%" stopColor="#a78bfa"/>
+      <stop offset="100%" stopColor="#7c3aed"/>
+    </radialGradient>
+    <radialGradient id="apple-sat" cx="30%" cy="25%" r="80%">
+      <stop offset="0%" stopColor="#ffffff"/>
+      <stop offset="35%" stopColor="#e8f7ff"/>
+      <stop offset="70%" stopColor="#bae6fd"/>
+      <stop offset="100%" stopColor="#a78bfa"/>
+    </radialGradient>
+    <linearGradient id="apple-iris" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="rgba(186,230,253,0.4)"/>
+      <stop offset="33%" stopColor="rgba(196,181,253,0.35)"/>
+      <stop offset="66%" stopColor="rgba(253,186,116,0.3)"/>
+      <stop offset="100%" stopColor="rgba(236,72,153,0.4)"/>
+    </linearGradient>
+    <filter id="apple-soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+  </defs>
+  <g transform="translate(22,22)">
+    <path d="M 100 38 A 48 48 0 1 0 100 98" fill="none" stroke="url(#apple-tube)" strokeWidth="30" strokeLinecap="round"/>
+    <path d="M 100 38 A 48 48 0 1 0 100 98" fill="none" stroke="url(#apple-iris)" strokeWidth="29" strokeLinecap="round" opacity="0.32" style="mix-blend-mode:screen"/>
+    <path d="M 40 32 Q 22 43 18 62" fill="none" stroke="rgba(255,255,255,0.88)" strokeWidth="7" strokeLinecap="round" filter="url(#apple-soft)"/>
+    <ellipse cx="56" cy="22" rx="6.5" ry="4.2" fill="rgba(255,255,255,0.8)" transform="rotate(-12 56 22)" filter="url(#apple-soft)"/>
+    <ellipse cx="26" cy="88" rx="5" ry="3" fill="rgba(255,255,255,0.6)" filter="url(#apple-soft)"/>
+    <ellipse cx="88" cy="106" rx="5.5" ry="3.2" fill="rgba(255,255,255,0.55)" filter="url(#apple-soft)"/>
+    <ellipse cx="88" cy="32" rx="5" ry="3" fill="rgba(255,255,255,0.55)" filter="url(#apple-soft)"/>
+  </g>
+</svg>
