@@ -76,7 +76,7 @@ const MyUsage = () => {
       </Card>
 
       {/* Quotas */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Haiku Quota */}
         <Card className={haikuPercent >= 80 ? 'border-red-300 bg-red-50' : ''}>
           <CardHeader>
@@ -158,7 +158,7 @@ const MyUsage = () => {
           <CardTitle>Statistiques ce mois</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-500">Requêtes totales</p>
               <p className="text-2xl font-bold mt-2">{usage.totalRequests}</p>

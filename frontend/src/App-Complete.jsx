@@ -148,7 +148,7 @@ function Dashboard() {
 
           {loading ? (
             <div className="text-center py-8">
-              <p className="text-slate-400">Loading clients...</p>
+              <p className="text-slate-400">Chargement des clients...</p>
             </div>
           ) : clients.length === 0 ? (
             <div className="bg-slate-800/60 rounded-xl p-12 text-center border border-slate-700/50">

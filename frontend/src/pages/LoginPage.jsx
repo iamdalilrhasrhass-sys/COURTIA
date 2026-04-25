@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useGoogleLogin } from '@react-oauth/google'
+import axios from 'axios'
 import api from '../api'
+import Logo from '../components/Logo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
@@ -15,11 +18,11 @@ const STYLES = `
     overflow: hidden;
     font-family: -apple-system, 'Inter', BlinkMacSystemFont, sans-serif;
     background:
-      radial-gradient(ellipse at 25% 15%, rgba(200,190,255,0.55) 0%, transparent 45%),
-      radial-gradient(ellipse at 80% 85%, rgba(255,200,230,0.45) 0%, transparent 40%),
-      radial-gradient(ellipse at 65% 35%, rgba(180,225,255,0.4) 0%, transparent 40%),
-      radial-gradient(ellipse at 10% 80%, rgba(210,255,220,0.3) 0%, transparent 35%),
-      #f0ede8;
+      radial-gradient(ellipse at 20% 15%, rgba(192,170,255,0.65) 0%, transparent 40%),
+      radial-gradient(ellipse at 85% 80%, rgba(255,180,220,0.55) 0%, transparent 38%),
+      radial-gradient(ellipse at 60% 35%, rgba(160,215,255,0.5) 0%, transparent 38%),
+      radial-gradient(ellipse at 5% 75%, rgba(180,255,210,0.35) 0%, transparent 32%),
+      #ede9f5;
   }
 
   .bubble {
@@ -39,7 +42,7 @@ const STYLES = `
         rgba(255,255,255,0.12) 35%,
         transparent 65%
       );
-    border: 1.5px solid rgba(255,255,255,0.6);
+    border: 1.5px solid rgba(255,255,255,0.7);
     overflow: hidden;
   }
 
@@ -49,14 +52,14 @@ const STYLES = `
     border-radius: 50%;
     background: conic-gradient(
       from 30deg at 38% 38%,
-      rgba(168,85,247,0.22) 0deg,
-      rgba(59,130,246,0.28) 55deg,
-      rgba(16,185,129,0.18) 110deg,
-      rgba(245,158,11,0.14) 165deg,
-      rgba(239,68,68,0.16) 210deg,
-      rgba(236,72,153,0.22) 260deg,
-      rgba(139,92,246,0.2) 310deg,
-      rgba(168,85,247,0.22) 360deg
+      rgba(168,85,247,0.27) 0deg,
+      rgba(59,130,246,0.33) 55deg,
+      rgba(16,185,129,0.23) 110deg,
+      rgba(245,158,11,0.19) 165deg,
+      rgba(239,68,68,0.21) 210deg,
+      rgba(236,72,153,0.27) 260deg,
+      rgba(139,92,246,0.25) 310deg,
+      rgba(168,85,247,0.27) 360deg
     );
     mix-blend-mode: screen;
     animation: irisRotate 12s linear infinite;
@@ -69,7 +72,7 @@ const STYLES = `
     top: 8%;
     left: 12%;
     border-radius: 50%;
-    background: radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
     transform: rotate(-30deg);
     filter: blur(2px);
   }
@@ -178,9 +181,9 @@ const STYLES = `
 
   .card {
     display: flex;
-    width: 920px;
+    width: 960px;
     max-width: 96vw;
-    min-height: 580px;
+    min-height: 90vh;
     border-radius: 28px;
     overflow: hidden;
     box-shadow: 0 0 0 0.5px rgba(255,255,255,0.85), 0 8px 24px rgba(0,0,0,0.06), 0 32px 64px rgba(0,0,0,0.04);
@@ -194,7 +197,7 @@ const STYLES = `
     background: #0a0a0a;
     padding: 2.5rem;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -412,6 +415,18 @@ const STYLES = `
     .card { flex-direction: column; min-height: 100vh; max-width: 100vw; border-radius: 0; }
     .left-panel { display: none; }
     .right-panel { width: 100%; padding: 2rem 1.5rem; justify-content: center; min-height: 100vh; }
+    .b1 { width:60px; height:60px; top:2%; left:1%; }
+    .b2 { width:40px; height:40px; top:4%; right:4%; }
+    .b3 { width:28px; height:28px; top:20%; left:2%; }
+    .b4 { width:50px; height:50px; top:28%; right:1%; }
+    .b5 { width:32px; height:32px; bottom:14%; left:4%; }
+    .b6 { width:70px; height:70px; bottom:1%; right:1%; }
+    .b7 { width:22px; height:22px; top:45%; left:1%; }
+    .b8 { width:36px; height:36px; bottom:20%; right:3%; }
+    .login-root { padding: 0.5rem; }
+    .badge-founder { font-size: 9px; padding: 3px 10px; margin-bottom: 1rem; }
+    .right-panel h1, .right-panel > h1 { font-size: 18px; }
+    .right-panel > p { font-size: 12px; }
   }
 `
 
@@ -456,6 +471,31 @@ export default function Login() {
     }
   }
 
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        }).then(r => r.json())
+
+        const res = await axios.post(`${API_URL}/api/auth/google`, {
+          googleId: userInfo.sub,
+          email: userInfo.email,
+          firstName: userInfo.given_name,
+          lastName: userInfo.family_name,
+          picture: userInfo.picture
+        })
+
+        localStorage.setItem('token', res.data.token)
+        if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user))
+        navigate('/dashboard')
+      } catch (err) {
+        setError('Erreur lors de la connexion Google')
+      }
+    },
+    onError: () => setError('Connexion Google annulée ou refusée')
+  })
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
@@ -479,19 +519,13 @@ export default function Login() {
             <div className="geo-ring" style={{ width:60,height:60,top:'46%',right:-20,border:'0.5px solid rgba(255,255,255,0.05)' }} />
 
             <div style={{ position:'relative', zIndex:1 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:28 }}>
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                  <path d="M15 2L28 9V21L15 28L2 21V9L15 2Z" fill="#2563eb" opacity="0.9"/>
-                  <path d="M15 7L23 11.5V19.5L15 24L7 19.5V11.5L15 7Z" fill="#0a0a0a"/>
-                  <path d="M15 11.5L20 14.3V19.7L15 22.5L10 19.7V14.3L15 11.5Z" fill="#2563eb" opacity="0.5"/>
-                  <path d="M15 14.5L17.5 16V18.5L15 20L12.5 18.5V16L15 14.5Z" fill="rgba(255,255,255,0.18)"/>
-                </svg>
-                <span style={{ color:'#fff', fontSize:'13.5px', fontWeight:600, letterSpacing:'0.12em' }}>COURTIA</span>
+              <div style={{ marginBottom:28 }}>
+                <Logo size={48} dark={true} withText={true} textSize={18} />
               </div>
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:'10px', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:12 }}>
                 CRM · IA Native · Courtiers ORIAS
               </p>
-              <h2 style={{ color:'#fff', fontSize:'21px', fontWeight:500, lineHeight:1.38, marginBottom:8 }}>
+              <h2 style={{ color:'#fff', fontSize:'19px', fontWeight:500, lineHeight:1.38, marginBottom:8 }}>
                 Votre portefeuille, analysé en temps réel.
               </h2>
               <p style={{ color:'rgba(255,255,255,0.36)', fontSize:'12.5px', marginBottom:28 }}>
@@ -507,8 +541,11 @@ export default function Login() {
               </div>
             </div>
             <div style={{ position:'relative', zIndex:1, marginTop:'auto' }}>
-              <p style={{ color:'rgba(255,255,255,0.15)', fontSize:'10px', letterSpacing:'0.1em' }}>Rhasrhass®</p>
-            </div>
+          </div>
+          <div style={{ position:'absolute', bottom:'1.25rem', left:'2.5rem', fontFamily:'Arial, Helvetica, sans-serif', fontSize:'9.5px', fontWeight:400, letterSpacing:'0.14em', color:'rgba(255,255,255,0.18)', display:'flex', alignItems:'center', gap:'4px' }}>
+            <span>RHASRHASS</span>
+            <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:'11px', height:'11px', border:'0.5px solid rgba(255,255,255,0.22)', borderRadius:'50%', fontSize:'7px', lineHeight:1, paddingTop:'1px' }}>R</span>
+          </div>
           </div>
 
           {/* RIGHT */}
@@ -579,7 +616,7 @@ export default function Login() {
 
             <div className="divider-or"><span>ou</span></div>
 
-            <button type="button" className="btn-google">
+            <button type="button" className="btn-google" onClick={handleGoogleLogin}>
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>

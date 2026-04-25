@@ -58,14 +58,14 @@ const AdminCostsDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard Coûts API</h1>
+          <h1 className="text-3xl font-bold">Tableau de bord Coûts API</h1>
           <p className="text-gray-500 mt-1">Période: {data.period}</p>
         </div>
         <Button onClick={exportCsv} className="flex items-center gap-2">
           <Download size={18} />
-          Export CSV
+          Exporter CSV
         </Button>
       </div>
 

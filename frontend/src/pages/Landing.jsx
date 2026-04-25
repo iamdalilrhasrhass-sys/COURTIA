@@ -117,6 +117,21 @@ export default function Landing() {
         @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.25)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
         .hover-lift{transition:transform 0.2s ease}
         .hover-lift:hover{transform:translateY(-2px)}
+        @media (max-width: 768px) {
+          .landing-nav { padding: 12px 16px !important; flex-wrap: wrap; gap: 8px !important; }
+          .landing-nav > div:last-child { width: 100%; justify-content: center; margin-top: 8px; }
+          .landing-hero { grid-template-columns: 1fr !important; min-height: auto !important; }
+          .landing-hero-left { padding: 40px 16px !important; border-right: none !important; border-bottom: 0.5px solid #e8e6e0 !important; }
+          .landing-hero-left h1 { font-size: 32px !important; letter-spacing: -1px !important; }
+          .landing-hero-left > p { font-size: 13px !important; }
+          .landing-hero-stats { flex-wrap: wrap; gap: 20px !important; }
+          .landing-section { padding: 48px 16px !important; }
+          .landing-section h2 { font-size: 28px !important; letter-spacing: -0.5px !important; }
+          .landing-grid-3 { grid-template-columns: 1fr !important; max-width: 100% !important; }
+          .landing-grid-2 { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .landing-footer { padding: 24px 16px !important; flex-direction: column !important; text-align: center !important; align-items: center !important; }
+          .landing-mockup { padding: 16px !important; }
+        }
       `}</style>
 
       {/* NAVBAR */}
@@ -185,7 +200,7 @@ export default function Landing() {
                     <span style={{ fontSize: 8, fontWeight: 500, color: 'white' }}>COURTIA</span>
                   </div>
                 </div>
-                {[['Dashboard', true], ['Clients', false], ['Contrats', false], ['Rapports', false], ['Tâches', false]].map(([l, a]) => (
+                {[['Tableau de bord', true], ['Clients', false], ['Contrats', false], ['Rapports', false], ['Tâches', false]].map(([l, a]) => (
                   <div key={l} style={{ padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 8, color: a ? 'white' : '#444', background: a ? '#1a1a1a' : 'transparent' }}>
                     <div style={{ width: 3, height: 3, borderRadius: '50%', background: a ? 'white' : '#333', flexShrink: 0 }} />
                     {l}
@@ -284,7 +299,7 @@ export default function Landing() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 900, margin: '48px auto 0' }}>
           {[
-            { name: 'START', price: '39€', tag: 'Founder · Limité', feats: ['100 clients', 'ARK basique', 'Dashboard KPIs', 'Support email'], featured: false },
+            { name: 'START', price: '39€', tag: 'Founder · Limité', feats: ['100 clients', 'ARK basique', 'Tableau de bord Indicateurs', 'Support email'], featured: false },
             { name: 'PRO', price: '69€', tag: 'Le plus choisi', feats: ['500 clients', '**ARK complet**', '**Rapports avancés**', 'Support prioritaire', 'Multi-collaborateurs'], featured: true },
             { name: 'ELITE', price: '129€', tag: 'Illimité', feats: ['Clients illimités', '**ARK vocal**', '**API publique**', 'Account Manager dédié', 'Formations incluses'], featured: false },
           ].map(p => (
