@@ -1,79 +1,80 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, Euro, AlertTriangle, Zap, TrendingUp, Calendar } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Users, FileText, Activity, Euro, ArrowUpRight, Zap, ExternalLink } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import api from '../api'
-import BubbleCard from '../components/BubbleCard'
-import BubbleBadge from '../components/BubbleBadge'
-import BubbleButton from '../components/BubbleButton'
-import BubbleBackground from '../components/BubbleBackground'
-import IridescentPortfolioChart from '../components/IridescentPortfolioChart'
-import ClientBubbleTranslucent from '../components/ClientBubbleTranslucent'
+import AnimatedNumber from '../components/ui/AnimatedNumber'
 
-/* ─── tiny helpers ──────────────────────────────────────── */
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
-const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
+const Skeleton = ({ className }) => <div className={`bg-gray-100 rounded-lg animate-pulse ${className}`} />
 
-/* ─── KPI Card ──────────────────────────── */
-function KpiCard({ icon: Icon, title, value, format, accent, isCritical }) {
-  const display = format === 'currency' ? fmtEur(value) : format === 'number' ? fmtNum(value) : value
+const KPICard = ({ icon: Icon, title, value, trend, format = 'number', loading, iconBg, iconColor, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: index * 0.08, ease: 'easeOut' }}
+    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+  >
+    <div className="flex items-center justify-between mb-4">
+      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${iconBg}`}>
+        <Icon className={`w-5 h-5 ${iconColor}`} />
+      </div>
+    </div>
+    {loading ? <Skeleton className="w-3/4 h-10 mb-2" /> : (
+      <p className="text-4xl font-black text-gray-900 tracking-tight">
+        <AnimatedNumber value={value} format={format} />
+        {format === 'score' && <span className="text-2xl text-gray-400">/100</span>}
+      </p>
+    )}
+    {loading ? <Skeleton className="w-1/2 h-5" /> : trend != null && trend > 0 && (
+      <div className="flex items-center text-sm font-semibold text-emerald-500 mt-1">
+        <ArrowUpRight className="w-4 h-4 mr-1" />
+        <span>+{trend}%</span>
+      </div>
+    )}
+  </motion.div>
+)
+
+const Avatar = ({ name }) => {
+  const getHash = (str) => { let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash); return hash }
+  const getHSL = (str) => `hsl(${getHash(str) % 360}, 60%, 80%)`
+  const getInitials = (name) => {
+    const names = (name || '').trim().split(' ').filter(Boolean)
+    if (names.length === 0) return '?'
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  }
   return (
-    <BubbleCard
-      padding={0}
-      style={{
-        flex: 1,
-        minWidth: 180,
-        background: 'rgba(255,255,255,0.65)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderRadius: 14,
-        border: '0.5px solid rgba(0,0,0,0.05)',
-        padding: '1rem 1.1rem',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.01em', fontFamily: 'Arial, sans-serif' }}>{title}</span>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${accent || '#2563eb'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={18} color={accent || '#2563eb'} />
-        </div>
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', lineHeight: 1.2, fontFamily: 'Arial, sans-serif' }}>{display}</div>
-      <div style={{ marginTop: 6, fontSize: 12, color: 'rgba(0,0,0,0.4)', fontFamily: 'Arial, sans-serif' }}>
-        <span style={{ color: isCritical ? '#ef4444' : '#10b981', fontWeight: 600 }}>▲ +12%</span> vs mois dernier
-      </div>
-    </BubbleCard>
+    <div className="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
+      style={{ background: `linear-gradient(135deg, ${getHSL(name || '')} 0%, hsl(${(getHash(name || '') + 60) % 360}, 70%, 65%) 100%)` }}>
+      {getInitials(name)}
+    </div>
   )
 }
 
-/* ─── Mock data ─────────────────────────────────────────── */
-const MOCK_KPIS = [
-  { title: 'Clients actifs', value: 60, icon: Users, accent: '#2563eb' },
-  { title: 'Contrats en cours', value: 33, icon: FileText, accent: '#10b981' },
-  { title: 'Revenu mensuel récurrent', value: 45338, format: 'currency', icon: Euro, accent: '#7c3aed' },
-  { title: 'Tâches critiques', value: 7, icon: AlertTriangle, accent: '#ef4444', isCritical: true },
-]
+const ScoreBar = ({ score }) => {
+    const s = Math.min(100, Math.max(0, Number(score) || 0))
+    let color = '#10b981' // green
+    if (s > 70) color = '#ef4444' // red
+    else if (s >= 40) color = '#f59e0b' // orange
+    return (
+      <div className="flex items-center gap-2 w-[100px]">
+        <div className="w-full bg-gray-100 rounded-full h-1.5"><div className="h-1.5 rounded-full" style={{ width: `${s}%`, backgroundColor: color }}></div></div>
+        <span className="text-xs font-bold text-gray-700 w-8 text-right">{s}</span>
+      </div>
+    )
+}
 
-const MOCK_CHART_DATA = [
-  { label: 'Jan', value: 31200 }, { label: 'Fév', value: 33800 },
-  { label: 'Mar', value: 32100 }, { label: 'Avr', value: 36500 },
-  { label: 'Mai', value: 35200 }, { label: 'Juin', value: 38900 },
-  { label: 'Juil', value: 37400 }, { label: 'Août', value: 40100 },
-  { label: 'Sep', value: 41800 }, { label: 'Oct', value: 43200 },
-  { label: 'Nov', value: 44500 }, { label: 'Déc', value: 45338 },
-]
+const StatusBadge = ({ status }) => {
+  const s = (status || '').toLowerCase()
+  let config = { label: 'Inconnu', classes: 'bg-gray-100 text-gray-500' }
+  if (s === 'actif') config = { label: 'Actif', classes: 'bg-green-100 text-green-700' }
+  else if (s === 'prospect') config = { label: 'Prospect', classes: 'bg-blue-100 text-blue-700' }
+  return <span className={`px-2 py-0.5 text-xs font-semibold rounded-full inline-block ${config.classes}`}>{config.label}</span>
+}
 
-const MOCK_INSIGHTS = [
-  { dot: '#ef4444', text: "L'IA d'ARK proactive recommande : un stage de conduite pour Pierre Garcia, réduction de 12 points de risque." },
-  { dot: '#f59e0b', text: "Opportunité cross-sell détectée pour Mme Martin." },
-  { dot: '#10b981', text: '3 contrats à renouveler cette semaine.' },
-]
 
-const MOCK_ECHEANCES = [
-  { date: '25/04', label: 'Renouvellement - Martin' },
-  { date: '28/04', label: 'RDV téléphonique - Dubois' },
-  { date: '02/05', label: 'Soumission - Petit' },
-]
-
-/* ─── MAIN ──────────────────────────────────────────────── */
 export default function Dashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
@@ -90,246 +91,116 @@ export default function Dashboard() {
       console.log('Dashboard stats API response:', statsRes.data)
       setStats(statsRes.data)
       setUser(userRes.data)
-    } catch (err) { console.error("Erreur de chargement du dashboard:", err) }
+    } catch (err) { console.error("Erreur de chargement du dashboard:", err) } 
     finally { setLoading(false) }
   }, [])
 
   useEffect(() => { loadAllData() }, [loadAllData])
 
-  const kpis = useMemo(() => {
-    if (!stats) return MOCK_KPIS
-    return [
-      { title: 'Clients actifs', value: stats?.totalClients || MOCK_KPIS[0].value, icon: Users, accent: '#2563eb' },
-      { title: 'Contrats en cours', value: stats?.contratsActifs || MOCK_KPIS[1].value, icon: FileText, accent: '#10b981' },
-      { title: 'Revenu mensuel récurrent', value: stats?.primeTotale || MOCK_KPIS[2].value, format: 'currency', icon: Euro, accent: '#7c3aed' },
-      { title: 'Tâches critiques', value: 7, icon: AlertTriangle, accent: '#ef4444', isCritical: true },
-    ]
-  }, [stats])
-
   const chartData = useMemo(() => {
-    if (stats?.revenus12Mois) return stats.revenus12Mois.map(d => ({ label: d.mois, value: parseFloat(d.revenue) || 0 }))
-    return MOCK_CHART_DATA
+    if (stats?.revenus6Mois) {
+      return stats.revenus6Mois.map(d => ({ name: d.mois, Primes: parseFloat(d.revenue) || 0 }))
+    }
+    // Mock data
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
+    return Array.from({length: 12}, (_, i) => ({ name: months[i], Primes: Math.floor(Math.random() * (3500 - 1500 + 1)) + 1500 }))
   }, [stats])
-
+  
+  const clientStatusData = useMemo(() => {
+    if (!stats?.clientsParStatut || typeof stats.clientsParStatut !== 'object') return []
+    const counts = Object.entries(stats.clientsParStatut).reduce((acc, [key, value]) => {
+      acc[key.toLowerCase()] = value
+      return acc
+    }, {})
+    return [
+      { name: 'Prospects', value: counts.prospect || 0 },
+      { name: 'Actifs', value: counts.actif || 0 },
+      { name: 'Inactifs', value: (counts.inactif || 0) + (counts.résilié || 0) + (counts.resilié || 0) + (counts.perdu || 0) },
+    ].filter(item => item.value > 0);
+  }, [stats])
+  const PIE_COLORS = ['#2563eb', '#10b981', '#9ca3af']
+  
+  const clientsASurveiller = (stats?.clientsRecents || []).sort((a,b) => (b.score_risque || 0) - (a.score_risque || 0)).slice(0, 5)
   const currentDate = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', background: '#f7f6f2' }}>
-      <BubbleBackground intensity="subtle" />
-      <div style={{ position: 'relative', zIndex: 1, padding: '28px 32px', maxWidth: 1280, margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+    <>
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
-              Bonjour {user.prenom} <span role="img" aria-label="wave">👋</span>
-            </h1>
-            <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', marginTop: 4, fontFamily: 'Arial, sans-serif', fontWeight: 400 }}>{currentDate}</p>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Bonjour {user.prenom} 👋</h1>
+            <p className="text-sm text-gray-400 mt-1">{currentDate}</p>
           </div>
-          <BubbleCard padding={0} style={{ padding: '6px 6px', borderRadius: 14, background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(0,0,0,0.05)' }}>
-            <BubbleButton variant="secondary" size="sm" onClick={() => navigate('/morning-brief')}>
-              <Zap size={14} color="#2563eb" /> Brief du jour
-            </BubbleButton>
-          </BubbleCard>
+          <button onClick={() => navigate('/morning-brief')}
+            className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 bg-white text-sm font-semibold text-gray-700 rounded-xl border border-gray-200 shadow-sm cursor-pointer transition-all hover:shadow-md hover:border-blue-200">
+            <Zap size={16} className="text-[#2563eb]" />
+            Morning Brief
+          </button>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-8">
+          <KPICard title="Clients totaux" value={stats?.totalClients || 0} trend={2} icon={Users} loading={loading} index={0} iconBg="bg-blue-50" iconColor="text-[#2563eb]" />
+          <KPICard title="Contrats actifs" value={stats?.contratsActifs || 0} trend={5} icon={FileText} loading={loading} index={1} iconBg="bg-emerald-50" iconColor="text-[#10b981]" />
+          <KPICard title="Score moyen portefeuille" value={stats?.scoreRisqueMoyen || 0} format="score" icon={Activity} loading={loading} index={2} iconBg="bg-purple-50" iconColor="text-[#7c3aed]" />
+          <KPICard title="Primes totales" value={stats?.primeTotale || 0} format="currency" trend={12} icon={Euro} loading={loading} index={3} iconBg="bg-amber-50" iconColor="text-[#f59e0b]" />
         </div>
 
-        {/* KPI row */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-          {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
-        </div>
-
-        {/* Middle: Portfolio Chart + Répartition */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-          <BubbleCard
-            padding={0}
-            style={{
-              flex: 3,
-              minWidth: 340,
-              background: 'rgba(255,255,255,0.65)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderRadius: 14,
-              border: '0.5px solid rgba(0,0,0,0.05)',
-              padding: '1.25rem 1.5rem',
-              maxHeight: 360,
-            }}
-          >
-            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 2px', color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
-              Évolution du portefeuille
-            </h3>
-            <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)', margin: '0 0 16px', fontFamily: 'Arial, sans-serif' }}>
-              Les 12 derniers mois
-            </p>
-            <IridescentPortfolioChart data={chartData} />
-          </BubbleCard>
-
-          <BubbleCard
-            padding={0}
-            style={{
-              flex: 1.2,
-              minWidth: 220,
-              background: 'rgba(255,255,255,0.65)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderRadius: 14,
-              border: '0.5px solid rgba(0,0,0,0.05)',
-              padding: '1.25rem 1.25rem',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
-                Répartition clients
-              </h3>
-              <span style={{ fontSize: 10, color: 'rgba(0,0,0,0.35)', fontWeight: 500, fontFamily: 'Arial, sans-serif' }}>
-                Progression
-              </span>
+        <div className="grid grid-cols-1 lg:grid-cols-8 gap-5 mt-5">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="lg:col-span-5 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 className="text-base font-semibold text-gray-800 mb-4">Évolution du portefeuille</h3>
+            <div style={{ height: '220px' }}>
+              {loading ? <Skeleton className="w-full h-full" /> : 
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+                    <defs><linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#2563eb" stopOpacity={0.15}/><stop offset="95%" stopColor="#2563eb" stopOpacity={0}/></linearGradient></defs>
+                    <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000)}k€`} />
+                    <Tooltip contentStyle={{ background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '8px', border: 'none', padding: '8px 12px' }} formatter={(value) => [`${value.toLocaleString('fr-FR')}€`, null]} />
+                    <Area type="monotone" dataKey="Primes" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              }
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                {
-                  label: 'Prospects',
-                  value: stats?.clientsParStatut?.prospect || 18,
-                  dark: '#3b82f6',
-                  light: '#93c5fd',
-                },
-                {
-                  label: 'Actifs',
-                  value: stats?.clientsParStatut?.actif || 42,
-                  dark: '#10b981',
-                  light: '#6ee7b7',
-                },
-                {
-                  label: 'Inactifs',
-                  value: (stats?.clientsParStatut?.inactif || 0) + (stats?.clientsParStatut?.résilié || 0) + (stats?.clientsParStatut?.perdu || 0) || 5,
-                  dark: '#ef4444',
-                  light: '#fca5a5',
-                },
-              ].map((item, i) => {
-                const total = (stats?.totalClients || 65)
-                const pct = ((item.value / total) * 100).toFixed(0)
-                return (
-                  <div key={i}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4, fontFamily: 'Arial, sans-serif' }}>
-                      <span style={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)' }}>{item.label}</span>
-                      <span style={{ fontWeight: 700, color: '#0a0a0a' }}>{item.value} ({pct}%)</span>
-                    </div>
-                    <div style={{ height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${pct}%`,
-                        background: `linear-gradient(90deg, ${item.dark}, ${item.light})`,
-                        borderRadius: 3,
-                      }} />
-                    </div>
-                  </div>
-                )
-              })}
+          </motion.div>
+          
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="lg:col-span-3 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 className="text-base font-semibold text-gray-800 mb-4">Répartition clients</h3>
+            <div style={{ height: '220px' }}>
+              {loading ? <Skeleton className="w-full h-full" /> : 
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart><Pie data={clientStatusData} cx="50%" cy="50%" labelLine={false} innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={5}>{clientStatusData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="none" />)}</Pie><Tooltip formatter={(value, name) => [`${value} (${((value / (stats.totalClients || 1)) * 100).toFixed(0)}%)`, name]} /><Legend iconSize={8} iconType="circle" wrapperStyle={{fontSize: "12px"}} /></PieChart>
+                </ResponsiveContainer>
+              }
             </div>
-          </BubbleCard>
+          </motion.div>
         </div>
 
-        {/* Nouveaux clients */}
-        <div style={{ marginBottom: 24 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0a0a0a', margin: '0 0 4px', fontFamily: 'Arial, sans-serif' }}>
-            Nouveaux clients
-          </h3>
-          <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)', margin: '0 0 12px', fontFamily: 'Arial, sans-serif' }}>
-            Derniers prospects détectés par ARK
-          </p>
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 16 }}>
-            <ClientBubbleTranslucent client={{ name: 'Isabelle Petit', initials: 'IP', score: 84, status: 'Prospect' }} />
-            <ClientBubbleTranslucent client={{ name: 'Marc Durand', initials: 'MD', score: 67, status: 'Actif' }} />
-            <ClientBubbleTranslucent client={{ name: 'Sophie Leroy', initials: 'SL', score: 92, status: 'Prospect' }} />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-gray-800">Clients à surveiller</h3>
+              {!loading && <span className="px-2 py-0.5 text-xs font-semibold text-red-800 bg-red-100 rounded-full">{clientsASurveiller.length}</span>}
+            </div>
+            <button onClick={() => navigate('/clients')} className="text-sm font-semibold text-blue-600 hover:underline">Voir tous</button>
           </div>
-        </div>
-
-        {/* Bottom: Insights ARK + Échéances */}
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <BubbleCard
-            padding={0}
-            style={{
-              flex: 1.5,
-              minWidth: 260,
-              background: 'rgba(255,255,255,0.65)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderRadius: 14,
-              border: '0.5px solid rgba(0,0,0,0.05)',
-              padding: '1.25rem 1.25rem',
-            }}
-          >
-            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: '#0a0a0a', fontFamily: 'Arial, sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <TrendingUp size={16} style={{ color: '#2563eb' }} />
-              Insights ARK
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {MOCK_INSIGHTS.map((insight, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 10,
-                  background: i === 0 ? 'rgba(239,68,68,0.04)' : 'transparent',
-                  border: '0.5px solid rgba(0,0,0,0.04)',
-                  fontSize: 13, color: 'rgba(0,0,0,0.7)',
-                  fontFamily: 'Arial, sans-serif',
-                  lineHeight: 1.5,
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: insight.dot, flexShrink: 0, marginTop: 5 }} />
-                  {insight.text}
-                </div>
-              ))}
-            </div>
-          </BubbleCard>
-
-          <BubbleCard
-            padding={0}
-            style={{
-              flex: 1,
-              minWidth: 200,
-              background: 'rgba(255,255,255,0.65)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderRadius: 14,
-              border: '0.5px solid rgba(0,0,0,0.05)',
-              padding: '1.25rem 1.25rem',
-            }}
-          >
-            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: '#0a0a0a', fontFamily: 'Arial, sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Calendar size={16} style={{ color: '#7c3aed' }} />
-              Échéances
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {MOCK_ECHEANCES.map((e, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 10px',
-                  borderRadius: 8,
-                  border: '0.5px solid rgba(0,0,0,0.04)',
-                  fontSize: 12,
-                  fontFamily: 'Arial, sans-serif',
-                }}>
-                  <span style={{
-                    background: 'rgba(37,99,235,0.08)',
-                    color: '#2563eb',
-                    borderRadius: 6,
-                    padding: '2px 8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    fontFamily: 'Arial, sans-serif',
-                  }}>{e.date}</span>
-                  <span style={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>{e.label}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 12, textAlign: 'center' }}>
-              <BubbleButton variant="ghost" size="sm" onClick={() => navigate('/taches')}>
-                Voir toutes les échéances →
-              </BubbleButton>
-            </div>
-          </BubbleCard>
-        </div>
-
-      </div>
-    </div>
+          <div>
+            <table className="w-full text-sm">
+                <tbody>
+                {loading ? Array.from({ length: 5 }).map((_, i) => (<tr key={i}><td colSpan="4" className="py-3"><div className="flex items-center space-x-4"><Skeleton className="w-10 h-10 rounded-full" /><div className="flex-1 min-w-0"><Skeleton className="h-4 w-3/4 mb-1.5" /><Skeleton className="h-3 w-1/2" /></div></div></td></tr>
+                )) : clientsASurveiller.map((client) => (
+                    <tr key={client.id} className="border-b border-gray-50 last:border-0">
+                        <td className="py-3 pr-4"><div className="flex items-center space-x-4"><Avatar name={`${client.prenom} ${client.nom}`} /><div className="flex-1 min-w-0"><p className="font-semibold text-gray-900 truncate">{client.prenom} {client.nom}</p><p className="text-gray-400 truncate">{client.email}</p></div></div></td>
+                        <td className="py-3 px-4"><StatusBadge status={client.statut} /></td>
+                        <td className="py-3 px-4"><ScoreBar score={client.score_risque} /></td>
+                        <td className="py-3 pl-4 text-right"><button onClick={() => navigate(`/client/${client.id}`)} className="p-2 text-gray-400 rounded-md hover:bg-gray-100 hover:text-gray-800 transition-colors"><ExternalLink size={16} /></button></td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+          </div>
+        </motion.div>
+        <footer className="text-center mt-12">
+            <p className="text-xs text-gray-300">COURTIA®</p>
+        </footer>
+    </>
   )
 }

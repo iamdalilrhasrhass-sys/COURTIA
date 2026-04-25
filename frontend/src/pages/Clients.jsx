@@ -1,19 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle } from 'lucide-react'
+import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2 } from 'lucide-react'
 import api from '../api'
-import BubbleCard from '../components/BubbleCard'
-import BubbleBadge from '../components/BubbleBadge'
-import BubbleBackground from '../components/BubbleBackground'
-import '../styles/design-system.css'
-
-const MOCK_CLIENTS = [
-  {id:1,name:'SARL Dupont',email:'contact@dupont.fr',status:'actif',riskScore:28,premium:45000,city:'Paris'},
-  {id:2,name:'Martin Assurances',email:'m.assurances@outlook.fr',status:'actif',riskScore:65,premium:32000,city:'Lyon'},
-  {id:3,name:'BCE Courtage',email:'bce@courtage.fr',status:'opportunite',riskScore:15,premium:78000,city:'Marseille'},
-  {id:4,name:'Cabinet Lefebvre',email:'contact@lefebvre.com',status:'a_risque',riskScore:82,premium:21000,city:'Bordeaux'},
-  {id:5,name:'Groupe Axial',email:'g.axial@orange.fr',status:'actif',riskScore:42,premium:56000,city:'Lille'}
-]
 
 // HSL gradient from string
 const getHash = (str) => {
@@ -24,14 +12,13 @@ const getHash = (str) => {
 const getHSL = (str) => `hsl(${getHash(str) % 360}, 70%, 55%)`
 const getGradient = (str) => `linear-gradient(135deg, ${getHSL(str)} 0%, hsl(${(getHash(str) + 40) % 360}, 80%, 65%) 100%)`
 
-const getInitials = (name) => {
-  const names = (name || '').trim().split(' ').filter(Boolean)
-  if (names.length === 0) return '?'
-  if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
-  return (names[0][0] + names[names.length - 1][0]).toUpperCase()
-}
-
 const Avatar = ({ name }) => {
+  const getInitials = (name) => {
+    const names = (name || '').trim().split(' ').filter(Boolean)
+    if (names.length === 0) return '?'
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+  }
   return (
     <div className="w-11 h-11 rounded-full text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
       style={{ background: getGradient(name || '') }}>
@@ -42,41 +29,30 @@ const Avatar = ({ name }) => {
 
 const StatusBadge = ({ status }) => {
   const s = (status || '').toLowerCase()
-  let config = { label: 'Inconnu', color: '#6b7280' }
-  if (s === 'actif') config = { label: 'Actif', color: '#10b981' }
-  else if (s === 'prospect') config = { label: 'Prospect', color: '#3b82f6' }
-  else if (s === 'opportunite') config = { label: 'Opportunité', color: '#f59e0b' }
-  else if (s === 'a_risque') config = { label: 'À risque', color: '#ef4444' }
-  else if (['inactif'].includes(s)) config = { label: 'Inactif', color: '#9ca3af' }
-  else if (['résilié', 'resilié', 'perdu'].includes(s)) config = { label: 'Résilié', color: '#dc2626' }
-  return <BubbleBadge color={config.color} size="sm">{config.label}</BubbleBadge>
+  let config = { label: 'Inconnu', classes: 'bg-gray-50 text-gray-500 border border-gray-200' }
+  if (s === 'actif') config = { label: 'Actif', classes: 'bg-emerald-50 text-emerald-600 border border-emerald-100' }
+  else if (s === 'prospect') config = { label: 'Prospect', classes: 'bg-blue-50 text-blue-600 border border-blue-100' }
+  else if (['inactif'].includes(s)) config = { label: 'Inactif', classes: 'bg-gray-50 text-gray-500 border border-gray-200' }
+  else if (['résilié', 'resilié', 'perdu'].includes(s)) config = { label: 'Résilié', classes: 'bg-red-50 text-red-600 border border-red-100' }
+  return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-block ${config.classes}`}>{config.label}</span>
 }
 
-const ScoreGauge = ({ score }) => {
-  const s = Math.min(100, Math.max(0, Number(score) || 0))
-  let color = '#10b981'
-  if (s >= 70) color = '#10b981'
-  else if (s >= 40) color = '#f59e0b'
-  else color = '#ef4444'
-  const size = 48, strokeWidth = 4, radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference - (s / 100) * circumference
-  return (
-    <div className="flex items-center gap-2">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90 flex-shrink-0">
-        <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={strokeWidth} fill="none" />
-        <circle cx={size/2} cy={size/2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none"
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
-      </svg>
-      <span className="text-sm font-black" style={{ color }}>{s}</span>
-    </div>
-  )
+const ScoreBar = ({ score }) => {
+    const s = Math.min(100, Math.max(0, Number(score) || 0))
+    let color = '#10b981' // green
+    if (s < 40) color = '#ef4444' // red
+    else if (s < 70) color = '#f59e0b' // orange
+    return (
+      <div className="flex items-center gap-2 w-[90px]">
+        <div className="w-full bg-gray-100 rounded-full h-1.5"><div className="h-1.5 rounded-full" style={{ width: `${s}%`, backgroundColor: color }}></div></div>
+        <span className="text-xs font-bold text-gray-700 w-8 text-right">{s}</span>
+      </div>
+    )
 }
 
 const SortIcon = ({ active, dir }) => {
   if (!active) return <ChevronUp size={14} className="text-gray-300" />
-  return dir === 'asc' ? <ChevronUp size={14} style={{ color: 'var(--accent-blue)' }} /> : <ChevronDown size={14} style={{ color: 'var(--accent-blue)' }} />
+  return dir === 'asc' ? <ChevronUp size={14} className="text-[#2563eb]" /> : <ChevronDown size={14} className="text-[#2563eb]" />
 }
 
 const SkeletonRow = () => (
@@ -84,57 +60,6 @@ const SkeletonRow = () => (
 )
 
 const STATUS_FILTERS = ['tous', 'prospect', 'actif', 'inactif', 'résilié']
-
-function ClientCard({ client, onNavigate }) {
-  const badgeColor = {
-    actif: '#10b981',
-    prospect: '#3b82f6',
-    opportunite: '#f59e0b',
-    a_risque: '#ef4444',
-    inactif: '#9ca3af',
-    résilié: '#dc2626',
-    resilié: '#dc2626',
-    perdu: '#dc2626',
-  }[(client.status || client.statut || '').toLowerCase()] || '#6b7280'
-
-  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-  const email = client.email || '—'
-  const riskScore = client.riskScore ?? client.score_risque ?? 0
-  const city = client.city || '—'
-
-  return (
-    <BubbleCard hover padding={20} onClick={() => onNavigate(client.id)}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <Avatar name={name} />
-          <div>
-            <p className="text-sm font-bold text-gray-900 tracking-tight" style={{ fontFamily: 'Arial' }}>{name}</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{email}</p>
-          </div>
-        </div>
-        <BubbleBadge color={badgeColor} size="sm" pulse={(client.status || client.statut || '').toLowerCase() === 'a_risque'}>
-          {(client.status || client.statut || 'Inconnu').charAt(0).toUpperCase() + (client.status || client.statut || '').slice(1)}
-        </BubbleBadge>
-      </div>
-      <div className="flex items-center justify-between pt-3" style={{ borderTop: 'var(--border-fine)' }}>
-        <div>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)', fontFamily: 'Arial', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Risque</p>
-          <ScoreGauge score={riskScore} />
-        </div>
-        <div className="text-right">
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)', fontFamily: 'Arial', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ville</p>
-          <p className="text-sm font-semibold text-gray-700">{city}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)', fontFamily: 'Arial', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prime</p>
-          <p className="text-sm font-black text-gray-900">
-            {client.premium ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(client.premium) : '—'}
-          </p>
-        </div>
-      </div>
-    </BubbleCard>
-  )
-}
 
 export default function Clients() {
   const [clients, setClients] = useState([])
@@ -144,7 +69,6 @@ export default function Clients() {
   const [sortField, setSortField] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
-  const [viewMode, setViewMode] = useState('bulles') // 'list' | 'cards' | 'bulles'
   const navigate = useNavigate()
   const PER_PAGE = 15
 
@@ -155,10 +79,7 @@ export default function Clients() {
       setLoading(true)
       const res = await api.get('/api/clients')
       setClients(res.data?.data || [])
-    } catch (err) {
-      console.error(`Impossible de charger les clients: ${err.message}`)
-      setClients(MOCK_CLIENTS)
-    }
+    } catch (err) { console.error(`Impossible de charger les clients: ${err.message}`) } 
     finally { setLoading(false) }
   }
   
@@ -166,11 +87,10 @@ export default function Clients() {
     return (clients || []).filter(c => {
         if (!c) return false
         const s = search.toLowerCase()
-        const name = c.name || `${c.prenom || ''} ${c.nom || ''}`.toLowerCase()
-        const email = c.email || ''
-        const matchSearch = !s || name.includes(s) || email.toLowerCase().includes(s)
-        const st = (c.status || c.statut || '').toLowerCase()
+        const fullName = `${c.prenom || ''} ${c.nom || ''}`.toLowerCase()
+        const matchSearch = !s || fullName.includes(s) || (c.email || '').toLowerCase().includes(s)
         if (statusFilter === 'tous') return matchSearch
+        const st = (c.statut || '').toLowerCase()
         if (statusFilter === 'inactif') return matchSearch && ['inactif'].includes(st)
         if (statusFilter === 'résilié') return matchSearch && ['résilié', 'resilié', 'perdu'].includes(st)
         return matchSearch && st === statusFilter
@@ -185,8 +105,6 @@ export default function Clients() {
       else if (sortField === 'nom') {
         va = `${a.nom || ''} ${a.prenom || ''}`.trim().toLowerCase()
         vb = `${b.nom || ''} ${b.prenom || ''}`.trim().toLowerCase()
-      } else if (sortField === 'riskScore') {
-        va = Number(a.riskScore) || 0; vb = Number(b.riskScore) || 0
       } else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase() }
       if (va < vb) return sortDir === 'asc' ? -1 : 1
       if (va > vb) return sortDir === 'asc' ? 1 : -1
@@ -214,400 +132,55 @@ export default function Clients() {
       return `aujourd'hui`
   }
 
-  const thClass = "p-4 text-left text-[11px] font-semibold uppercase tracking-widest select-none cursor-pointer"
+  const thClass = "p-4 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-widest select-none cursor-pointer"
   const headerMapping = { Client: 'nom', Statut: 'statut', 'Score Risque': 'score_risque', 'Dernière activité': 'created_at' }
-  const VIEW_OPTIONS = [
-    { key: 'list', label: 'Liste', icon: LayoutList },
-    { key: 'cards', label: 'Cartes', icon: LayoutGrid },
-    { key: 'bulles', label: 'Bulles', icon: Circle },
-  ]
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
-      <BubbleBackground intensity="subtle" />
-      <main className="p-8 relative" style={{ zIndex: 1 }}>
+    <>
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Clients</h1>
-            <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{clients.length}</span>
-          </div>
-          <button onClick={() => navigate('/clients/new')} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:scale-[1.02]" style={{ border: '0.5px solid rgba(255,255,255,0.1)' }}><Plus size={16} />Nouveau client</button>
+          <div className="flex items-center gap-3"><h1 className="text-2xl font-black text-gray-900">Clients</h1><span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">{clients.length}</span></div>
+          <button onClick={() => navigate('/clients/new')} className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02]"><Plus size={16} />Nouveau client</button>
         </header>
         
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: 'var(--text-tertiary)' }} />
-            <input type="text" placeholder="Rechercher un client..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
-              style={{
-                background: 'rgba(255,255,255,0.75)',
-                backdropFilter: 'blur(20px)',
-                border: 'var(--border-fine)',
-                boxShadow: 'var(--shadow-bubble)',
-                color: 'var(--text-primary)',
-              }} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#2563eb] transition-colors" size={18} />
+            <input type="text" placeholder="Rechercher un client..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-black shadow-sm focus:border-[#2563eb] focus:shadow-md focus:shadow-blue-100 outline-none transition-all duration-200" />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex rounded-xl overflow-hidden" style={{ border: 'var(--border-fine)', background: 'rgba(255,255,255,0.5)' }}>
-              {VIEW_OPTIONS.map(opt => {
-                const Icon = opt.icon
-                return (
-                  <button key={opt.key} onClick={() => setViewMode(opt.key)}
-                    style={{
-                      padding: '8px 14px',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: viewMode === opt.key ? 'rgba(0,0,0,0.06)' : 'transparent',
-                      color: viewMode === opt.key ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}>
-                    <Icon size={14} />
-                    {opt.label}
-                  </button>
-                )
-              })}
-            </div>
-            {STATUS_FILTERS.map(filter => (
-              <button key={filter} onClick={() => { setStatusFilter(filter); setPage(1) }}
-                style={{
-                  padding: '6px 14px',
-                  border: statusFilter === filter ? '0.5px solid rgba(0,0,0,0.2)' : 'var(--border-fine)',
-                  borderRadius: 9999,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  transition: 'all 0.2s ease',
-                  background: statusFilter === filter ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.5)',
-                  color: statusFilter === filter ? 'var(--text-primary)' : 'var(--text-secondary)',
-                }}>
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
-            ))}
-          </div>
+          <div className="flex items-center gap-2 flex-wrap">{STATUS_FILTERS.map(filter => (<button key={filter} onClick={() => { setStatusFilter(filter); setPage(1) }} className={`px-3 py-1.5 border rounded-md cursor-pointer text-sm font-semibold transition-all duration-200 ${statusFilter === filter ? 'bg-[#2563eb] text-white border-[#2563eb] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{filter.charAt(0).toUpperCase() + filter.slice(1)}</button>))}</div>
         </div>
 
-        {/* View: Liste (table) */}
-        {viewMode === 'list' && (
-          <BubbleCard hover={false} padding={0}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
-                <thead>
-                  <tr style={{ borderBottom: 'var(--border-fine)' }}>
-                    {Object.keys(headerMapping).map(h => (
-                      <th key={h} onClick={() => toggleSort(headerMapping[h])} className={thClass} style={{ padding: '14px 16px', color: 'var(--text-tertiary)' }}>
-                        <div className="flex items-center gap-1.5">{h}<SortIcon active={sortField === headerMapping[h]} dir={sortDir} /></div>
-                      </th>
-                    ))}
-                    <th className="p-4 text-right text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>Actions</th>
+        <div className="bg-white border border-gray-100 rounded-xl overflow-x-auto shadow-sm">
+          <table className="w-full text-sm min-w-[700px]">
+            <thead className="sticky top-0 bg-gray-50/80 backdrop-blur-sm"><tr>{Object.keys(headerMapping).map(h => (<th key={h} onClick={() => toggleSort(headerMapping[h])} className={thClass}><div className="flex items-center gap-1.5">{h}<SortIcon active={sortField === headerMapping[h]} dir={sortDir} /></div></th>))}<th className="p-4 text-right text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Actions</th></tr></thead>
+            <tbody>
+              {loading ? Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />) : paginatedClients.map((client) => (
+                  <tr key={client.id} className="border-b border-gray-100 last:border-0 group hover:bg-blue-50/20 transition-colors duration-200 cursor-pointer" onClick={() => navigate(`/client/${client.id}`)}>
+                    <td className="p-4"><div className="flex items-center gap-4"><Avatar name={`${client.prenom || ''} ${client.nom || ''}`} /><div><p className="text-sm font-semibold text-gray-900 tracking-tight">{client.nom || '—'} {client.prenom || ''}</p><p className="text-xs text-gray-400">{client.email || '—'}</p></div></div></td>
+                    <td className="p-4"><StatusBadge status={client.statut} /></td>
+                    <td className="p-4"><ScoreBar score={client.score_risque} /></td>
+                    <td className="p-4 text-gray-500">{timeAgo(client.created_at)}</td>
+                    <td className="p-4">
+                      <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => navigate(`/client/${client.id}`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Voir"><Eye size={16} /></button>
+                        <button onClick={() => navigate(`/clients/${client.id}/edit`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Modifier"><Pencil size={16} /></button>
+                        <button onClick={() => alert('Suppression non implémentée')} className="p-2 rounded-md hover:bg-red-100 text-gray-500 hover:text-red-600" title="Supprimer"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {loading ? Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />) : paginatedClients.map((client) => {
-                    const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-                    return (
-                      <tr key={client.id} className="last:border-0 group cursor-pointer" style={{ borderBottom: 'var(--border-fine)', transition: 'background 0.2s' }}
-                        onClick={() => navigate(`/client/${client.id}`)}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <td className="p-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar name={name} />
-                            <div>
-                              <p className="text-sm font-bold text-gray-900 tracking-tight">{name}</p>
-                              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{client.email || '—'}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4"><StatusBadge status={client.statut || client.status} /></td>
-                        <td className="p-4"><ScoreGauge score={client.score_risque ?? client.riskScore} /></td>
-                        <td className="p-4" style={{ color: 'var(--text-secondary)' }}>{timeAgo(client.created_at)}</td>
-                        <td className="p-4">
-                          <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => navigate(`/client/${client.id}`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Voir"><Eye size={16} /></button>
-                            <button onClick={() => navigate(`/clients/${client.id}/edit`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Modifier"><Pencil size={16} /></button>
-                            <button onClick={() => alert('Suppression non implémentée')} className="p-2 rounded-md hover:bg-red-100 text-gray-500 hover:text-red-600" title="Supprimer"><Trash2 size={16} /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-              {!loading && paginatedClients.length === 0 && (<div className="text-center py-20" style={{ color: 'var(--text-secondary)' }}><p className="font-semibold">Aucun client trouvé</p><p className="mt-1 text-sm">Essayez de modifier vos filtres.</p></div>)}
-            </div>
-          </BubbleCard>
-        )}
-
-        {/* View: Cartes */}
-        {viewMode === 'cards' && (
-          loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}>
-                  <div className="flex items-center gap-3"><div className="w-11 h-11 rounded-full bg-gray-200"></div><div><div className="w-24 h-4 bg-gray-200 rounded"></div><div className="w-32 h-3 mt-1.5 bg-gray-200 rounded"></div></div></div>
-                  <div className="mt-4 pt-3 flex justify-between" style={{ borderTop: 'var(--border-fine)' }}>
-                    <div><div className="w-12 h-3 bg-gray-200 rounded mb-1"></div><div className="w-16 h-4 bg-gray-200 rounded"></div></div>
-                    <div><div className="w-12 h-3 bg-gray-200 rounded mb-1"></div><div className="w-16 h-4 bg-gray-200 rounded"></div></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : paginatedClients.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedClients.map(client => (
-                <ClientCard key={client.id} client={client} onNavigate={(id) => navigate(`/client/${id}`)} />
-              ))}
-            </div>
-          ) : (
-            <BubbleCard hover={false} padding={40}>
-              <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
-                <p className="font-semibold">Aucun client trouvé</p>
-                <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
-              </div>
-            </BubbleCard>
-          )
-        )}
-
-        {/* View: Bulles — Apple-grade glassmorphism bubbles with conic-gradient irisation */}
-        {viewMode === 'bulles' && (
-          <>
-            <style>{`
-              @keyframes bubbleFloat {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-3px); }
-              }
-            `}</style>
-            {loading ? (
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="animate-pulse rounded-full mx-auto" style={{ width: 130, height: 130, background: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.5)' }}></div>
                 ))}
-              </div>
-            ) : paginatedClients.length > 0 ? (
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
-                {paginatedClients.map((client, idx) => {
-                  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-                  const riskScore = client.riskScore ?? client.score_risque ?? 0
-                  const st = (client.status || client.statut || '').toLowerCase()
-
-                  // Radial-gradient backgrounds by status (transparent — see-through)
-                  const radialBgByStatus = {
-                    prospect:    'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(59,130,246,0.35) 60%, rgba(59,130,246,0.25))',
-                    actif:       'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(16,185,129,0.35) 60%, rgba(16,185,129,0.25))',
-                    inactif:     'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(156,163,175,0.35) 60%, rgba(156,163,175,0.25))',
-                    résilié:     'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(239,68,68,0.35) 60%, rgba(239,68,68,0.25))',
-                    resilié:     'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(239,68,68,0.35) 60%, rgba(239,68,68,0.25))',
-                    perdu:       'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(239,68,68,0.35) 60%, rgba(239,68,68,0.25))',
-                    opportunite: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(139,92,246,0.35) 60%, rgba(139,92,246,0.25))',
-                    a_risque:    'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6), rgba(236,72,153,0.35) 60%, rgba(236,72,153,0.25))',
-                  }
-                  const radialBg = radialBgByStatus[st] || radialBgByStatus.inactif
-
-                  // Status base color for badges
-                  const statusBaseColors = {
-                    prospect: '#3b82f6',
-                    actif: '#10b981',
-                    inactif: '#9ca3af',
-                    résilié: '#ef4444',
-                    resilié: '#ef4444',
-                    perdu: '#ef4444',
-                    opportunite: '#8b5cf6',
-                    a_risque: '#ec4899',
-                  }
-                  const statusBase = statusBaseColors[st] || '#9ca3af'
-
-                  // Risk score color
-                  let riskColor = '#10b981'
-                  if (riskScore >= 70) riskColor = '#ef4444'
-                  else if (riskScore >= 40) riskColor = '#f59e0b'
-
-                  const initials = getInitials(name)
-                  const floatDelay = (idx % 5) * 0.25
-
-                  return (
-                    <div
-                      key={client.id}
-                      onClick={() => navigate(`/clients/${client.id}`)}
-                      className="mx-auto cursor-pointer relative"
-                      style={{
-                        width: 130,
-                        height: 130,
-                        animation: `bubbleFloat 3s ease-in-out ${floatDelay}s infinite`,
-                        transition: 'transform 0.3s ease, filter 0.3s ease',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.12))' }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)' }}
-                    >
-                      {/* Main bubble circle — Apple-grade glassmorphism */}
-                      <div style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: '50%',
-                        opacity: 0.85,
-                        background: radialBg,
-                        border: '0.5px solid rgba(255,255,255,0.5)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.3)',
-                      }}>
-                        {/* Conic-gradient irisation overlay */}
-                        <div style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '50%',
-                          background: 'conic-gradient(from 180deg, #ff00ff, #00ffff, #ff00ff)',
-                          mixBlendMode: 'screen',
-                          opacity: 0.10,
-                          pointerEvents: 'none',
-                        }} />
-                        {/* Glass highlight — top-left specular sheen */}
-                        <div style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '50%',
-                          background: 'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.50), transparent 50%)',
-                          mixBlendMode: 'overlay',
-                          pointerEvents: 'none',
-                        }} />
-                        {/* Secondary reflection — bottom-right edge */}
-                        <div style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '50%',
-                          background: 'radial-gradient(circle at 78% 78%, rgba(255,255,255,0.18), transparent 40%)',
-                          mixBlendMode: 'overlay',
-                          pointerEvents: 'none',
-                        }} />
-                      </div>
-                      {/* Overlay content */}
-                      <div style={{
-                        position: 'absolute',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        pointerEvents: 'none',
-                      }}>
-                        {/* Risk score pill — top-right */}
-                        <div style={{
-                          position: 'absolute',
-                          top: 16,
-                          right: 12,
-                          background: riskColor,
-                          color: 'white',
-                          fontSize: 9,
-                          fontWeight: 800,
-                          padding: '1px 5px',
-                          borderRadius: 999,
-                          lineHeight: 1.3,
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                        }}>{riskScore}</div>
-                        {/* Initials */}
-                        <span style={{
-                          fontSize: 22,
-                          fontWeight: 700,
-                          color: 'white',
-                          textShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                          lineHeight: 1.1,
-                          marginBottom: 1,
-                        }}>{initials}</span>
-                        {/* Name */}
-                        <span style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: 'rgba(255,255,255,0.92)',
-                          textShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                          maxWidth: 96,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          textAlign: 'center',
-                        }}>{name}</span>
-                        {/* Status badge — bottom */}
-                        <div style={{
-                          position: 'absolute',
-                          bottom: 12,
-                          fontSize: 9,
-                          fontWeight: 700,
-                          color: 'white',
-                          background: statusBase,
-                          padding: '1px 7px',
-                          borderRadius: 999,
-                          textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                        }}>
-                          {(client.status || client.statut || 'Inconnu').charAt(0).toUpperCase() + (client.status || client.statut || '').slice(1)}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <BubbleCard hover={false} padding={40}>
-                <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
-                  <p className="font-semibold">Aucun client trouvé</p>
-                  <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
-                </div>
-              </BubbleCard>
-            )}
-          </>
-        )}
+            </tbody>
+          </table>
+          {!loading && paginatedClients.length === 0 && (<div className="text-center py-20 text-gray-500"><p className="font-semibold">Aucun client trouvé</p><p className="mt-1 text-sm">Essayez de modifier vos filtres.</p></div>)}
+        </div>
 
         {!loading && totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-8">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              style={{
-                padding: '6px 14px',
-                border: 'var(--border-fine)',
-                borderRadius: 'var(--r-sm)',
-                background: 'rgba(255,255,255,0.5)',
-                fontSize: 13,
-                fontWeight: 600,
-                color: page === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                cursor: page === 1 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}>Précédent</button>
-            {Array.from({length: totalPages > 7 ? 7 : totalPages}, (_, i) => {
-              const p = page > 4 && totalPages > 7 ? page - 3 + i : i + 1
-              if(p > totalPages) return null
-              return (
-                <button key={p} onClick={() => setPage(p)}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 'var(--r-sm)',
-                    border: p === page ? 'none' : 'var(--border-fine)',
-                    background: p === page ? '#0a0a0a' : 'rgba(255,255,255,0.5)',
-                    color: p === page ? '#ffffff' : 'var(--text-secondary)',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}>{p}</button>
-              )
-            })}
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              style={{
-                padding: '6px 14px',
-                border: 'var(--border-fine)',
-                borderRadius: 'var(--r-sm)',
-                background: 'rgba(255,255,255,0.5)',
-                fontSize: 13,
-                fontWeight: 600,
-                color: page === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}>Suivant</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 border border-gray-200 rounded-md bg-white text-sm font-semibold text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">Précédent</button>
+            {Array.from({length: totalPages > 7 ? 7 : totalPages}, (_, i) => { const p = page > 4 && totalPages > 7 ? page - 3 + i : i + 1; if(p > totalPages) return null; return(<button key={p} onClick={() => setPage(p)} className={`w-8 h-8 rounded-lg text-sm font-semibold transition-colors ${p === page ? 'bg-[#2563eb] text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>{p}</button>)})}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 border border-gray-200 rounded-md bg-white text-sm font-semibold text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">Suivant</button>
           </div>
         )}
-      </main>
-    </div>
+    </>
   )
 }
