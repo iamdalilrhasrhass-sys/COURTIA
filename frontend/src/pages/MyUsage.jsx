@@ -54,7 +54,7 @@ const MyUsage = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Mon utilisation API</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Mon utilisation API</h1>
           <p className="text-gray-500 mt-1">Mois: {usage.month}</p>
         </div>
       </div>
@@ -65,7 +65,7 @@ const MyUsage = () => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-600">Plan actuel</p>
-              <h2 className="text-3xl font-bold mt-2">{usage.tier}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mt-2">{usage.tier}</h2>
               <p className="text-sm text-gray-500 mt-2">€{usage.monthlyPrice}/mois</p>
             </div>
             <Button onClick={() => setShowUpgrade(true)} className="ml-auto">
@@ -161,15 +161,15 @@ const MyUsage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-500">Requêtes totales</p>
-              <p className="text-2xl font-bold mt-2">{usage.totalRequests}</p>
+              <p className="text-xl md:text-2xl font-bold mt-2">{usage.totalRequests}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Coût estimé</p>
-              <p className="text-2xl font-bold mt-2 text-green-600">${usage.totalCostThisMonth.toFixed(4)}</p>
+              <p className="text-xl md:text-2xl font-bold mt-2 text-green-600">${usage.totalCostThisMonth.toFixed(4)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Coût par requête</p>
-              <p className="text-2xl font-bold mt-2">${(usage.totalCostThisMonth / Math.max(usage.totalRequests, 1)).toFixed(4)}</p>
+              <p className="text-xl md:text-2xl font-bold mt-2">${(usage.totalCostThisMonth / Math.max(usage.totalRequests, 1)).toFixed(4)}</p>
             </div>
           </div>
         </CardContent>

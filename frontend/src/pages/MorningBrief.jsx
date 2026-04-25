@@ -178,7 +178,7 @@ function ActionCard({ action, index }) {
           </div>
         )}
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+        <div className="mb-action-buttons" style={{ display: 'flex', gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
           <button
             onClick={e => { e.stopPropagation(); toast.success('Action marquée comme traitée') }}
             style={{
@@ -414,6 +414,7 @@ export default function MorningBrief() {
           .mb-content { padding: 20px 16px !important; }
           .mb-main-grid { grid-template-columns: 1fr !important; }
           .mb-header-btn { align-self: flex-end; }
+          .mb-action-buttons { flex-wrap: wrap !important; }
         }
       `}</style>
 
