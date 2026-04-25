@@ -5,6 +5,7 @@ const express = require('express');
 const authController = require('../controllers/authController');
 const verifyToken = require('../middleware/authMiddleware');
 const { verifyToken: verifyTokenMiddleware } = require('../middleware/auth');
+const User = require('../models/User');
 const pool = require('../db');
 
 const router = express.Router();
@@ -100,6 +101,49 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
   } catch (err) {
     console.error('PUT /api/auth/me error:', err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/auth/google — Authentification via Google
+ */
+router.post('/google', async (req, res) => {
+  const { googleId, email, firstName, lastName, picture } = req.body;
+
+  try {
+    // Cherche si l'user existe déjà par email
+    let user = await User.findByEmail(email);
+
+    if (!user) {
+      // Nouvel utilisateur — créer le compte automatiquement
+      // No password for Google users — use a placeholder
+      const crypto = require('crypto');
+      const tempPassword = crypto.randomBytes(32).toString('hex');
+
+      user = await User.create(email, tempPassword, firstName || '', lastName || '', 'broker');
+    }
+
+    // Générer JWT standard (même fonction que login)
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'crm-assurance-secret-key-2026',
+      { expiresIn: process.env.JWT_EXPIRY || '7d' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(500).json({ message: 'Erreur serveur lors de la connexion Google' });
   }
 });
 

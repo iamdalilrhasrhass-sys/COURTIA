@@ -17,6 +17,8 @@ import Parametres from './pages/Parametres'
 import Capitia from './pages/Capitia'
 import AnalyticsExecutive from './pages/AnalyticsExecutive'
 import Abonnement from './pages/Abonnement'
+import PaiementSucces from './pages/PaiementSucces'
+import PaiementAnnule from './pages/PaiementAnnule'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -145,6 +147,8 @@ export default function App() {
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
+          <Route path="/paiement-succes" element={<PaiementSucces />} />
+          <Route path="/paiement-annule" element={<PaiementAnnule />} />
         </Route>
 
         {/* 404 */}
