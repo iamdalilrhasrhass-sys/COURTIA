@@ -134,6 +134,9 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
           .mini-chart-svg {
             max-height: 260px;
           }
+          .ae-container { padding: 24px 16px !important; }
+          .ae-bottom-grid { grid-template-columns: 1fr !important; }
+          .ae-title { font-size: 22px !important; }
         }
       `}</style>
       <svg className="mini-chart-svg" viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet">
@@ -256,7 +259,7 @@ export default function AnalyticsExecutive() {
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <BubbleBackground intensity="normal" />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 1100, margin: '0 auto' }}>
+      <div className="ae-container" style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 1100, margin: '0 auto' }}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -264,7 +267,7 @@ export default function AnalyticsExecutive() {
           transition={{ duration: 0.4 }}
           style={{ marginBottom: 28 }}
         >
-          <h1 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
+          <h1 className="ae-title" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
             Analyses dirigeants
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>
@@ -302,7 +305,7 @@ export default function AnalyticsExecutive() {
           </BubbleCard>
 
           {/* 2-column bottom section */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div className="ae-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             {/* Product repartition */}
             <BubbleCard hover={false} padding={24}>
               <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>

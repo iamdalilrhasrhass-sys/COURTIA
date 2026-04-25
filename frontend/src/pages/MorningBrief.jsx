@@ -409,6 +409,12 @@ export default function MorningBrief() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
+        @media (max-width: 767px) {
+          .mb-header { padding: 14px 16px !important; flex-direction: column !important; gap: 12px !important; align-items: flex-start !important; }
+          .mb-content { padding: 20px 16px !important; }
+          .mb-main-grid { grid-template-columns: 1fr !important; }
+          .mb-header-btn { align-self: flex-end; }
+        }
       `}</style>
 
       {/* Header */}
@@ -416,6 +422,7 @@ export default function MorningBrief() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
+        className="mb-header"
         style={{
           background: 'white',
           borderBottom: '0.5px solid #e8e6e0',
@@ -446,6 +453,7 @@ export default function MorningBrief() {
         <button
           onClick={handleRegenerate}
           disabled={regenerating}
+          className="mb-header-btn"
           style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '9px 16px', borderRadius: 8,
@@ -464,8 +472,8 @@ export default function MorningBrief() {
       </motion.div>
 
       {/* Contenu */}
-      <div style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
+      <div className="mb-content" style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
+        <div className="mb-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
 
           {/* Colonne gauche — Actions du jour */}
           <motion.div

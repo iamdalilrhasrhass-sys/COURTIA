@@ -149,7 +149,7 @@ export default function Contrats() {
     <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
       <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-8">
           <div className="flex items-center gap-3">
             <h1 className="text-xl md:text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Contrats</h1>
             <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{contrats.length}</span>

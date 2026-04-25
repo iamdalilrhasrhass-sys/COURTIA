@@ -102,12 +102,12 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-1 via-dark-2 to-dark-3">
       {/* Header */}
-      <div className="pt-20 pb-16 px-4">
+      <div className="pt-12 md:pt-20 pb-12 md:pb-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-black text-gradient mb-6">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-gradient mb-6">
             Tarification COURTIA
           </h1>
-          <p className="text-xl text-slate-400 mb-12 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl mx-auto">
             Trois formules pour transformer votre activité de courtier en assurance. 
             Sans engagement, annulable à tout moment.
           </p>
@@ -116,11 +116,11 @@ export default function Pricing() {
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 pb-20">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative rounded-2xl p-8 transition transform hover:scale-105 ${
+              className={`relative rounded-2xl p-6 md:p-8 transition transform hover:scale-105 ${
                 plan.popular
                   ? 'glass border-2 border-cyan ring-2 ring-cyan/30 scale-105 md:scale-110'
                   : 'glass border border-slate-700'
@@ -136,12 +136,12 @@ export default function Pricing() {
               )}
 
               {/* Plan name */}
-              <h3 className="text-2xl font-black text-gradient mb-2">{plan.name}</h3>
+              <h3 className="text-xl md:text-2xl font-black text-gradient mb-2">{plan.name}</h3>
               <p className="text-slate-400 text-sm mb-6">{plan.description}</p>
 
               {/* Price */}
               <div className="mb-8">
-                <span className="text-5xl font-black text-white">{plan.price}€</span>
+                <span className="text-3xl md:text-5xl font-black text-white">{plan.price}€</span>
                 <span className="text-slate-400 ml-2">{plan.period}</span>
                 <p className="text-sm text-slate-500 mt-2">TVA comprise</p>
               </div>
@@ -174,25 +174,25 @@ export default function Pricing() {
       </div>
 
       {/* FAQ */}
-      <div className="max-w-4xl mx-auto px-4 py-20">
-        <h2 className="text-4xl font-black text-gradient mb-12 text-center">
+      <div className="max-w-4xl mx-auto px-4 py-12 md:py-20">
+        <h2 className="text-2xl md:text-4xl font-black text-gradient mb-12 text-center">
           Questions fréquentes
         </h2>
         <div className="space-y-6">
           <div className="glass p-6 rounded-lg">
-            <h3 className="text-xl font-bold text-cyan mb-3">Puis-je tester gratuitement?</h3>
+            <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Puis-je tester gratuitement?</h3>
             <p className="text-slate-400">
               Oui! Demandez une démo et nous vous offrirons 14 jours d'accès complet à COURTIA.
             </p>
           </div>
           <div className="glass p-6 rounded-lg">
-            <h3 className="text-xl font-bold text-cyan mb-3">Peut-on résilier à tout moment?</h3>
+            <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Peut-on résilier à tout moment?</h3>
             <p className="text-slate-400">
               Bien sûr. Sans engagement, vous pouvez résilier quand vous le souhaitez.
             </p>
           </div>
           <div className="glass p-6 rounded-lg">
-            <h3 className="text-xl font-bold text-cyan mb-3">Et l'intégration Telegram?</h3>
+            <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Et l'intégration Telegram?</h3>
             <p className="text-slate-400">
               Incluse dans tous les plans. Vous recevrez les notifications, briefs et rappels directement sur Telegram.
             </p>
@@ -203,7 +203,7 @@ export default function Pricing() {
       {/* Demo Request Modal */}
       {showDemoForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="glass p-8 rounded-lg max-w-md w-full">
+          <div className="glass p-6 md:p-8 rounded-lg max-w-md w-full">
             <h2 className="text-2xl font-bold text-cyan mb-6">Demander une démo</h2>
             
             <div className="space-y-4">
