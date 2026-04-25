@@ -110,7 +110,7 @@ export default function Rapports() {
       `}</style>
       <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
 
-      <div style={{ padding: '24px 32px', maxWidth: 1100 }}>
+      <div className="rp-container" style={{ padding: '24px 32px', maxWidth: 1100 }}>
 
         {error && (
           <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#dc2626', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -120,7 +120,7 @@ export default function Rapports() {
         )}
 
         {/* KPIs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <div className="rp-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
           <KPICard label="Clients actifs" value={stats?.totalClients ?? '—'} sub="dans le portefeuille" />
           <KPICard label="Contrats actifs" value={stats?.contratsActifs ?? '—'} sub="en cours" />
           <KPICard label="Commission mois" value={fmtEur(stats?.commissionsMois)} sub="ce mois-ci" />
@@ -133,7 +133,7 @@ export default function Rapports() {
           {contratsByType.length === 0 ? (
             <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Aucune donnée disponible</p>
           ) : (
-            <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
+            <div className="rp-table-wrap" style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
@@ -173,7 +173,7 @@ export default function Rapports() {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+        <div className="rp-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
 
           {/* Top clients */}
           <div style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>
@@ -183,7 +183,7 @@ export default function Rapports() {
                 <p style={{ margin: 0 }}>Aucun client à afficher pour l'instant</p>
               </div>
             ) : (
-              <div style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
+              <div className="rp-table-wrap" style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
@@ -227,7 +227,7 @@ export default function Rapports() {
                 Aucune échéance urgente
               </div>
             ) : (
-              <div style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'visible' }}>
+              <div className="rp-table-wrap" style={{ border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'visible' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
@@ -280,7 +280,7 @@ export default function Rapports() {
         {/* Activité ARK */}
         <div style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>ACTIVITÉ ARK</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="rp-ark-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             {[
               { label: 'Conversations ce mois', value: arkActivity?.conversationsMois ?? '—' },
               { label: 'Clients analysés', value: arkActivity?.clientsAnalyses ?? '—' },
