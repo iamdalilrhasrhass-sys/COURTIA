@@ -42,7 +42,7 @@ function ArkScorePreview({ clientData }) {
   const scores = useMemo(() => computeScores(clientData, []), [clientData])
   if (!scores) return null
   return (
-    <div className="sticky top-8 w-64">
+    <div className="sticky top-8 w-full md:w-64 hidden md:block">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
         <div className="flex items-center gap-2 mb-4">
           <Bot size={18} className="text-blue-600" />
@@ -158,7 +158,7 @@ export default function ClientNew() {
             <div className="bg-white rounded-[18px] p-8 space-y-8">
               <section>
                 <h2 className="font-bold text-gray-800 mb-4">Identité</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className={labelClass}>Prénom *</label><input value={form.prenom} onChange={e => set('prenom', e.target.value)} required className={inputClass} /></div>
                   <div><label className={labelClass}>Nom *</label><input value={form.nom} onChange={e => set('nom', e.target.value)} required className={inputClass} /></div>
                   <div><label className={labelClass}>Email</label><input type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} /></div>
@@ -175,16 +175,16 @@ export default function ClientNew() {
                     )}
                   </AnimatePresence>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div><label className={labelClass}>Code Postal</label><input value={form.postal_code} onChange={e => set('postal_code', e.target.value)} className={inputClass} /></div>
                   <div><label className={labelClass}>Ville</label><input value={form.city} onChange={e => set('city', e.target.value)} className={inputClass} /></div>
                 </div>
-                <div className="mt-6"><label className={labelClass}>Statut</label><div className="grid grid-cols-3 gap-3">
+                <div className="mt-6"><label className={labelClass}>Statut</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <RadioButton id="statut-prospect" name="statut" value="prospect" label="Prospect" icon={User} checked={form.statut === 'prospect'} onChange={e => set('statut', e.target.value)} color="blue" />
                   <RadioButton id="statut-actif" name="statut" value="actif" label="Actif" icon={UserCheck} checked={form.statut === 'actif'} onChange={e => set('statut', e.target.value)} color="green" />
                   <RadioButton id="statut-inactif" name="statut" value="résilié" label="Inactif" icon={User} checked={form.statut === 'résilié'} onChange={e => set('statut', e.target.value)} color="gray" />
                 </div></div>
-                 <div className="mt-6"><label className={labelClass}>Segment</label><div className="grid grid-cols-3 gap-3">
+                 <div className="mt-6"><label className={labelClass}>Segment</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <RadioButton id="segment-particulier" name="segment" value="particulier" label="Particulier" icon={Users} checked={form.segment === 'particulier'} onChange={e => set('segment', e.target.value)} color="blue" />
                   <RadioButton id="segment-pro" name="segment" value="professionnel" label="Professionnel" icon={Briefcase} checked={form.segment === 'professionnel'} onChange={e => set('segment', e.target.value)} color="purple" />
                   <RadioButton id="segment-premium" name="segment" value="premium" label="Premium" icon={Gem} checked={form.segment === 'premium'} onChange={e => set('segment', e.target.value)} color="amber" />
@@ -198,7 +198,7 @@ export default function ClientNew() {
                 </button>
                 <AnimatePresence>
                   {showInsurance && <motion.div initial={{ height: 0, opacity: 0, marginTop: 0 }} animate={{ height: 'auto', opacity: 1, marginTop: '24px' }} exit={{ height: 0, opacity: 0, marginTop: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
                       <div>
                         <label className={labelClass}>Bonus-Malus ({Number(form.bonus_malus).toFixed(2)})</label>
                         <input type="range" min="0.5" max="3.5" step="0.01" value={form.bonus_malus} onChange={e => set('bonus_malus', parseFloat(e.target.value))} className="w-full" />
