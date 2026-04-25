@@ -73,12 +73,13 @@ function IridescentPortfolioChart({ data }) {
   const chartData = data && data.length ? data : DEFAULT_DATA
   const bubbleSizes = chartData.map((d) => getBubbleSize(d.value, chartData))
 
-  function renderBubbleDot(props) {
+  function FloatingBubble(props) {
     const { cx, cy, index } = props
     if (cx == null || cy == null) return null
     const r = bubbleSizes[index] / 2
     const animName = DOT_ANIM_NAMES[index % 3]
     const duration = 4 + (index % 3) * 0.8
+    const size = r * 2 + 4
     return (
       <g
         style={{
@@ -86,23 +87,26 @@ function IridescentPortfolioChart({ data }) {
           transformOrigin: `${cx}px ${cy}px`,
         }}
       >
-        <circle cx={cx} cy={cy} r={r} fill="url(#dotGrad)" />
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="url(#dotIris)"
-          opacity={0.28}
-          style={{ mixBlendMode: 'screen' }}
-        />
-        <ellipse
-          cx={cx - r * 0.28}
-          cy={cy - r * 0.28}
-          rx={r * 0.3}
-          ry={r * 0.2}
-          fill="rgba(255,255,255,0.75)"
-          transform={`rotate(-15 ${cx - r * 0.28} ${cy - r * 0.28})`}
-        />
+        <foreignObject
+          x={cx - r - 2}
+          y={cy - r - 2}
+          width={size}
+          height={size}
+        >
+          <div
+            xmlns="http://www.w3.org/1999/xhtml"
+            style={{
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              backdropFilter: 'blur(4px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(4px) saturate(180%)',
+              background:
+                'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent)',
+              border: '0.5px solid rgba(255,255,255,0.4)',
+            }}
+          />
+        </foreignObject>
       </g>
     )
   }
@@ -121,31 +125,33 @@ function IridescentPortfolioChart({ data }) {
           cursor={<CustomCursor />}
         >
           <defs>
-            <linearGradient id="irisCurve" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(147,197,253,0.20)" />
-              <stop offset="22%" stopColor="rgba(196,181,253,0.25)" />
-              <stop offset="45%" stopColor="rgba(167,243,208,0.18)" />
-              <stop offset="68%" stopColor="rgba(253,186,116,0.20)" />
-              <stop offset="100%" stopColor="rgba(236,72,153,0.22)" />
-            </linearGradient>
-            <linearGradient id="curveDepth" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
-              <stop offset="60%" stopColor="rgba(255,255,255,0.08)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-            </linearGradient>
-            <radialGradient id="dotGrad" cx="35%" cy="28%" r="80%">
-              <stop offset="0%" stopColor="rgba(255,255,255,1)" />
-              <stop offset="18%" stopColor="rgba(255,255,255,0.88)" />
-              <stop offset="38%" stopColor="rgba(232,247,255,0.72)" />
-              <stop offset="60%" stopColor="rgba(186,230,253,0.55)" />
-              <stop offset="82%" stopColor="rgba(167,139,250,0.6)" />
-              <stop offset="100%" stopColor="rgba(124,58,237,0.7)" />
+            <radialGradient
+              id="bubbleFlowFill"
+              cx="50%"
+              cy="0%"
+              r="120%"
+              fx="50%"
+              fy="0%"
+            >
+              <stop offset="0%" stopColor="rgba(37,99,235,0.40)" />
+              <stop offset="35%" stopColor="rgba(139,92,246,0.20)" />
+              <stop offset="70%" stopColor="rgba(37,99,235,0.08)" />
+              <stop offset="100%" stopColor="rgba(37,99,235,0.02)" />
             </radialGradient>
-            <radialGradient id="dotIris" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(196,181,253,0.5)" />
-              <stop offset="50%" stopColor="rgba(167,243,208,0.35)" />
-              <stop offset="100%" stopColor="rgba(236,72,153,0.4)" />
-            </radialGradient>
+            <filter
+              id="blueGlow"
+              x="-20%"
+              y="-20%"
+              width="140%"
+              height="140%"
+            >
+              <feDropShadow
+                dx="0"
+                dy="0"
+                stdDeviation="4"
+                flood-color="rgba(37,99,235,0.35)"
+              />
+            </filter>
           </defs>
           <CartesianGrid
             vertical={false}
@@ -172,19 +178,12 @@ function IridescentPortfolioChart({ data }) {
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#8b5cf6"
+            stroke="#2563eb"
             strokeWidth={2.5}
-            fill="url(#irisCurve)"
+            fill="url(#bubbleFlowFill)"
             strokeLinecap="round"
-            dot={renderBubbleDot}
-            activeDot={false}
-          />
-          <Area
-            type="monotone"
-            dataKey="value"
-            fill="url(#curveDepth)"
-            stroke="none"
-            dot={false}
+            filter="url(#blueGlow)"
+            dot={FloatingBubble}
             activeDot={false}
           />
         </AreaChart>
