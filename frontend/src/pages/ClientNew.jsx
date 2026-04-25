@@ -148,14 +148,14 @@ export default function ClientNew() {
       `}</style>
       <header className="max-w-3xl mx-auto mb-8">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors mb-4"><ArrowLeft size={16} /> Retour</button>
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">{isEditMode ? 'Modifier le client' : 'Nouveau client'}</h1>
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">{isEditMode ? 'Modifier le client' : 'Nouveau client'}</h1>
         <p className="text-gray-500 mt-1">Remplissez les informations de base. Les détails peuvent être ajoutés plus tard.</p>
       </header>
       
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start gap-8">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start gap-4 md:gap-8">
         <form onSubmit={handleSubmit} className="flex-1 max-w-3xl">
           <div className="relative animated-border rounded-2xl overflow-hidden">
-            <div className="bg-white rounded-[18px] p-8 space-y-8">
+            <div className="bg-white rounded-[18px] p-4 md:p-8 space-y-4 md:space-y-8">
               <section>
                 <h2 className="font-bold text-gray-800 mb-4">Identité</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -215,7 +215,7 @@ export default function ClientNew() {
               </section>
             </div>
           </div>
-          <div className="mt-8">
+          <div className="mt-4 md:mt-8">
             <motion.button type="submit" disabled={loading || submitState === 'success'} className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-xl text-base font-semibold transition-all shadow-lg hover:shadow-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <AnimatePresence mode="wait">
                 {submitState === 'idle' && <motion.span key="idle" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>{isEditMode ? 'Sauvegarder les modifications' : 'Créer le client'}</motion.span>}
@@ -227,7 +227,7 @@ export default function ClientNew() {
         </form>
         <ArkScorePreview clientData={form} />
       </div>
-      <footer className="text-center py-12"><p className="text-xs text-gray-300">Rhasrhass®</p></footer>
+      <footer className="text-center py-8 md:py-12"><p className="text-xs text-gray-300">Rhasrhass®</p></footer>
     </div>
   )
 }
