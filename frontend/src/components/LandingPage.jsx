@@ -1,11 +1,11 @@
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-1 via-dark-2 to-dark-3">
-      <div className="p-12 text-center">
-        <h1 className="text-5xl font-black text-gradient mb-4">COURTIA</h1>
-        <p className="text-2xl text-slate-300 mb-8">Plateforme CRM révolutionnaire pour courtiers en assurance</p>
+      <div className="p-4 md:p-12 text-center">
+        <h1 className="text-3xl md:text-5xl font-black text-gradient mb-4">COURTIA</h1>
+        <p className="text-xl md:text-2xl text-slate-300 mb-8">Plateforme CRM révolutionnaire pour courtiers en assurance</p>
         
-        <div className="grid grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
           <div className="glass p-6 rounded-lg">
             <p className="text-4xl mb-2">⚡</p>
             <p className="font-bold">Efficacité</p>
@@ -23,7 +23,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 px-8 rounded-lg">
+        <button className="w-full md:w-auto bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 px-8 rounded-lg">
           Demander une démo
         </button>
       </div>

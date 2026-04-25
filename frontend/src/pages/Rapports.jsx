@@ -100,6 +100,13 @@ export default function Rapports() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes urgentPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+        @media (max-width: 767px) {
+          .rp-container { padding: 16px !important; }
+          .rp-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .rp-2col { grid-template-columns: 1fr !important; }
+          .rp-ark-grid { grid-template-columns: 1fr !important; }
+          .rp-table-wrap { overflow-x: auto; }
+        }
       `}</style>
       <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
 

@@ -226,7 +226,7 @@ export default function Clients() {
     <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
       <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-xl md:text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Clients</h1>
             <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{clients.length}</span>
@@ -234,7 +234,7 @@ export default function Clients() {
           <button onClick={() => navigate('/clients/new')} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:scale-[1.02]" style={{ border: '0.5px solid rgba(255,255,255,0.1)' }}><Plus size={16} />Nouveau client</button>
         </header>
         
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: 'var(--text-tertiary)' }} />
             <input type="text" placeholder="Rechercher un client..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
@@ -542,7 +542,7 @@ export default function Clients() {
         )}
 
         {!loading && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+          <div className="flex justify-center items-center gap-2 mt-4 md:mt-8">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
               style={{
                 padding: '6px 14px',

@@ -67,7 +67,7 @@ export default function PricingPremium() {
   const gainWithCOURTIA = clientsCount * 250 * 12 // 250€ potentiel supplémentaire/client/an
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-1 via-dark-2 to-dark-3 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-dark-1 via-dark-2 to-dark-3 p-4 md:p-8">
       {/* Offre lancement */}
       <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-lg mb-8 text-center">
         <p className="font-bold">🎉 OFFRE DE LANCEMENT: -50% le premier mois!</p>
@@ -76,12 +76,12 @@ export default function PricingPremium() {
 
       {/* Titre */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-black text-gradient mb-4">Tarification COURTIA</h1>
-        <p className="text-slate-400 text-lg">Choisissez le plan adapté à votre cabinet</p>
+        <h1 className="text-2xl md:text-4xl font-black text-gradient mb-4">Tarification COURTIA</h1>
+        <p className="text-slate-400 text-base md:text-lg">Choisissez le plan adapté à votre cabinet</p>
       </div>
 
       {/* Calculateur ROI */}
-      <div className="max-w-2xl mx-auto glass p-8 rounded-lg mb-12">
+      <div className="max-w-2xl mx-auto glass p-5 md:p-8 rounded-lg mb-12">
         <h2 className="text-xl font-bold text-cyan mb-6">Calculateur ROI</h2>
         <div className="space-y-6">
           <div>
@@ -97,7 +97,7 @@ export default function PricingPremium() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-red-500/20 border border-red-500/50 p-4 rounded-lg">
               <p className="text-red-400 text-sm">💸 SANS COURTIA/an</p>
               <p className="text-2xl font-black text-red-400 mt-2">{lostWithoutCOURTIA.toLocaleString()}€</p>
@@ -118,11 +118,11 @@ export default function PricingPremium() {
       </div>
 
       {/* Plans */}
-      <div className="grid grid-cols-3 gap-8 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12">
         {plans.map((plan, idx) => (
           <div
             key={idx}
-            className={`glass p-8 rounded-lg relative transition transform hover:scale-105 ${
+            className={`glass p-5 md:p-8 rounded-lg relative transition transform hover:scale-105 ${
               plan.popular ? 'ring-2 ring-cyan border-cyan/50' : ''
             }`}
           >

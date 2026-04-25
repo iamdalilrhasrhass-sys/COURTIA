@@ -77,8 +77,17 @@ export default function ContratNew() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .ct-header { padding: 12px 16px !important; }
+          .ct-form-container { padding: 0 16px !important; margin: 20px auto !important; }
+          .ct-form-card { padding: 20px 20px !important; }
+          .ct-grid-2 { grid-template-columns: 1fr !important; }
+          .ct-grid-3 { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Header */}
-      <div style={{
+      <div className="ct-header" style={{
         background: 'white', borderBottom: '0.5px solid #e8e6e0',
         padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 14,
       }}>
@@ -101,11 +110,12 @@ export default function ContratNew() {
       </div>
 
       {/* Form */}
-      <div style={{ maxWidth: 640, margin: '32px auto', padding: '0 24px' }}>
+      <div className="ct-form-container" style={{ maxWidth: 640, margin: '32px auto', padding: '0 24px' }}>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
+          className="ct-form-card"
           style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 16, padding: '32px 32px' }}
         >
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -121,7 +131,7 @@ export default function ContratNew() {
               </select>
             </Field>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div className="ct-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <Field label="Type de contrat" required>
                 <input
                   value={form.type_contrat} onChange={set('type_contrat')} placeholder="Ex : Auto, Habitation, Santé"
@@ -136,7 +146,7 @@ export default function ContratNew() {
               </Field>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div className="ct-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <Field label="Numéro de contrat">
                 <input
                   value={form.numero} onChange={set('numero')} placeholder="Ex : CTR-2026-001"
@@ -152,7 +162,7 @@ export default function ContratNew() {
               </Field>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+            <div className="ct-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
               <Field label="Date d'effet">
                 <input
                   type="date" value={form.date_effet} onChange={set('date_effet')}
