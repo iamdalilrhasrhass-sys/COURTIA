@@ -286,7 +286,7 @@ export default function Landing() {
       </div>
 
       {/* PRICING */}
-      <div style={{ padding: '96px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0' }}>
+      <div className="landing-section" style={{ padding: '96px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0' }}>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <p style={{ ...s.label, marginBottom: 14 }}>TARIFICATION</p>
           <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a', marginBottom: 8 }}>50 spots. Prix garantis à vie.</h2>
@@ -339,7 +339,7 @@ export default function Landing() {
       </div>
 
       {/* ARK DÉMO */}
-      <div style={{ padding: '96px 56px', background: '#0a0a0a', borderBottom: '0.5px solid #111' }}>
+      <div className="landing-section" style={{ padding: '96px 56px', background: '#0a0a0a', borderBottom: '0.5px solid #111' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center', maxWidth: 1100, margin: '0 auto' }}>
           {/* Left */}
           <div>
