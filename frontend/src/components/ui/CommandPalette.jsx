@@ -12,7 +12,7 @@ const ACTIONS = [
   { id: 'clients',       label: 'Clients',           desc: 'Portefeuille clients',                path: '/clients',       icon: Users,           cat: 'Navigation' },
   { id: 'new-client',    label: 'Nouveau client',    desc: 'Créer une nouvelle fiche client',     path: '/clients/new',   icon: UserPlus,        cat: 'Action' },
   { id: 'contrats',      label: 'Contrats',          desc: 'Contrats actifs et à renouveler',     path: '/contrats',      icon: FileText,        cat: 'Navigation' },
-  { id: 'analytics',     label: 'Analyses',         desc: 'KPIs et performance portefeuille',    path: '/analytics',     icon: BarChart2,       cat: 'Navigation' },
+  { id: 'analytics',     label: 'Analyses dirigeants',         desc: 'KPIs et performance portefeuille',    path: '/analytics',     icon: BarChart2,       cat: 'Navigation' },
   { id: 'capitia',       label: 'CAPITIA',           desc: 'Module financement IOBSP',            path: '/capitia',       icon: Sparkles,        cat: 'Navigation' },
   { id: 'taches',        label: 'Tâches',            desc: 'Suivi des tâches en cours',           path: '/taches',        icon: CheckSquare,     cat: 'Navigation' },
   { id: 'rapports',      label: 'Rapports',          desc: 'Rapports et exports PDF',             path: '/rapports',      icon: PieChart,        cat: 'Navigation' },
