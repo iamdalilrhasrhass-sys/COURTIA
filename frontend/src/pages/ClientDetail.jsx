@@ -178,9 +178,9 @@ function ScoreSidebar({ scores, onBubbleEnter, onBubbleLeave }) {
   const globalScoreConfig = getGlobalScoreConfig(globalScore)
 
   return (
-    <aside className="w-[260px] flex-shrink-0 bg-white/70 backdrop-blur-sm border-r border-gray-100 p-4 sticky top-0 h-screen overflow-y-auto">
+    <aside className="w-full lg:w-[260px] flex-shrink-0 bg-white/70 backdrop-blur-sm lg:border-r border-gray-100 p-4 lg:sticky lg:top-0 h-auto lg:h-screen overflow-y-auto">
       <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-md flex items-center justify-center text-white"><Sparkles size={10} /></div><h2 className="font-bold text-gray-900" style={{ fontSize: 14 }}>ARK Score™</h2></div>
-      <div className="text-center my-6 cursor-pointer" onMouseEnter={() => onBubbleEnter('global')} onMouseLeave={onBubbleLeave}><p className="text-sm font-semibold text-gray-500">Score Global</p><p className="text-7xl font-black text-gray-900 tracking-tight my-1"><AnimatedNumber value={globalScore} /></p><div className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: globalScoreConfig.color, color: 'white' }}>{globalScoreConfig.label}</div><p className="mt-3 text-xs text-gray-500 leading-relaxed px-4">{globalScoreConfig.description}</p></div>
+      <div className="text-center my-6 cursor-pointer" onMouseEnter={() => onBubbleEnter('global')} onMouseLeave={onBubbleLeave}><p className="text-sm font-semibold text-gray-500">Score Global</p><p className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tight my-1"><AnimatedNumber value={globalScore} /></p><div className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: globalScoreConfig.color, color: 'white' }}>{globalScoreConfig.label}</div><p className="mt-3 text-xs text-gray-500 leading-relaxed px-4">{globalScoreConfig.description}</p></div>
       <div className="grid grid-cols-2 gap-y-8 gap-x-4"><ScoreGauge score={scores.risque} label="Risque" color="#ef4444" onHover={() => onBubbleEnter('risque')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.fidelite} label="Fidélité" color="#3b82f6" onHover={() => onBubbleEnter('fidelite')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.opportunite} label="Opportunité" color="#22c55e" onHover={() => onBubbleEnter('opportunite')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.retention} label="Rétention" color="#f59e0b" onHover={() => onBubbleEnter('retention')} onLeave={onBubbleLeave} /></div>
       <ScoreLegend /><footer className="text-center mt-8"><p className="text-xs text-gray-300">COURTIA®</p></footer>
     </aside>
@@ -410,7 +410,7 @@ export default function ClientDetail() {
         </div>
 
         {/* 4-part layout: ScoreSidebar + 3 columns */}
-        <div className="flex">
+        <div className="flex flex-col lg:flex-row">
           {/* LEFT: ScoreSidebar */}
           <ScoreSidebar
             scores={scores}
@@ -430,7 +430,7 @@ export default function ClientDetail() {
             <div className="flex-1 xl:w-[32%] lg:w-[48%] min-w-0">
               <BubbleCard hover={false} padding={0}>
                 {/* Tab navigation */}
-                <div className="flex" style={{ borderBottom: 'var(--border-fine)' }}>
+                <div className="flex overflow-x-auto" style={{ borderBottom: 'var(--border-fine)' }}>
                   {TABS_CONFIG.map(tab => {
                     const Icon = tab.icon
                     const isActive = activeTab === tab.id

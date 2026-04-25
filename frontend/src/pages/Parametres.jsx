@@ -92,7 +92,7 @@ export default function Parametres() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans">
-      <main className="p-8 max-w-6xl mx-auto">
+      <main className="p-4 md:p-8 max-w-6xl mx-auto">
         <header className="mb-10">
           <h1 className="text-3xl font-black text-gray-900">Paramètres</h1>
           <p className="text-gray-500 mt-1">Gérez votre profil, vos préférences et votre abonnement.</p>

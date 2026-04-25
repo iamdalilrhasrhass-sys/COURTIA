@@ -153,7 +153,7 @@ export default function Landing() {
       {/* HERO */}
       <div className="landing-hero" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 680, borderBottom: '0.5px solid #e8e6e0' }}>
         {/* Left */}
-        <div style={{ padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '0.5px solid #e8e6e0' }}>
+        <div className="landing-hero-left" style={{ padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '0.5px solid #e8e6e0' }}>
           {/* Badge */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 20, padding: '5px 14px', fontSize: 11, color: '#555', width: 'fit-content', marginBottom: 36, animation: 'badgePulse 2s ease infinite' }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
@@ -170,7 +170,7 @@ export default function Landing() {
             <button style={s.btnGhost}>Voir la démo</button>
           </div>
           {/* Stats */}
-          <div style={{ display: 'flex', gap: 40, paddingTop: 32, borderTop: '0.5px solid #e8e6e0' }}>
+          <div className="landing-hero-stats" style={{ display: 'flex', gap: 40, paddingTop: 32, borderTop: '0.5px solid #e8e6e0' }}>
             {[['32 000', 'courtiers ORIAS ciblés'], ['0', 'concurrent avec IA native'], ['50', 'spots Founder restants']].map(([n, l]) => (
               <div key={n}>
                 <div style={{ fontSize: 22, fontWeight: 600, color: '#0a0a0a', letterSpacing: -0.5 }}>{n}</div>
@@ -181,7 +181,7 @@ export default function Landing() {
         </div>
 
         {/* Right — Mockup */}
-        <div style={{ background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
+        <div className="landing-mockup" style={{ background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
           <div style={{ width: '100%', maxWidth: 520, background: '#1a1a1a', borderRadius: 14, overflow: 'hidden', border: '0.5px solid #2a2a2a' }}>
             {/* Window bar */}
             <div style={{ background: '#111', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '0.5px solid #2a2a2a' }}>
@@ -239,13 +239,13 @@ export default function Landing() {
       </div>
 
       {/* COMMENT ÇA MARCHE */}
-      <div style={{ padding: '96px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0' }}>
+      <div className="landing-section" style={{ padding: '96px 56px', background: '#f7f6f2', borderBottom: '0.5px solid #e8e6e0' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <p style={{ ...s.label, marginBottom: 14 }}>COMMENT ÇA MARCHE</p>
           <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a' }}>Opérationnel en 10 minutes.</h2>
           <p style={{ fontSize: 14, color: '#9ca3af', marginTop: 10 }}>Pas de formation. Pas de migration complexe.</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 900, margin: '0 auto' }}>
+        <div className="landing-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 900, margin: '0 auto' }}>
           {[
             { num: '01', icon: '📥', title: 'Importez vos clients', desc: 'Chargez votre base existante ou ajoutez vos clients manuellement. COURTIA structure chaque fiche automatiquement.' },
             { num: '02', icon: '🧠', title: 'ARK analyse votre portefeuille', desc: 'En temps réel, ARK détecte les opportunités, calcule les scores de risque et identifie les contrats à renouveler en priorité.' },
@@ -262,7 +262,7 @@ export default function Landing() {
       </div>
 
       {/* FONCTIONNALITÉS */}
-      <div style={{ padding: '96px 56px', background: 'white', borderBottom: '0.5px solid #e8e6e0' }}>
+      <div className="landing-section" style={{ padding: '96px 56px', background: 'white', borderBottom: '0.5px solid #e8e6e0' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <p style={{ ...s.label, marginBottom: 14 }}>FONCTIONNALITÉS</p>
           <h2 style={{ fontSize: 40, fontWeight: 500, letterSpacing: -1.5, color: '#0a0a0a' }}>Tout ce dont un courtier a besoin.</h2>
