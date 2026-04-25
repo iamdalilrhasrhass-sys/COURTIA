@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Clock } from 'lucide-react'
+import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Clock, MessageSquare, Send, RefreshCw } from 'lucide-react'
 import api from '../api'
 import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
 import ContratsTab from '../components/ContratsTab'
@@ -10,6 +10,7 @@ import TachesTab from '../components/TachesTab'
 import ARKChatTab from '../components/ARKChatTab'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
+import BubbleButton from '../components/BubbleButton'
 import BubbleBackground from '../components/BubbleBackground'
 import '../styles/design-system.css'
 
@@ -197,6 +198,273 @@ function InfosTab({ client }) {
   )
 }
 
+// ─── MESSAGES MOCK DATA ────────────────────────────────────────────────────
+const DOSSIER_STATUS = {
+  brouillon: { label: 'Brouillon', color: '#9ca3af' },
+  en_cours: { label: 'En cours', color: '#3b82f6' },
+  relance: { label: 'Relancé', color: '#f59e0b' },
+  reponse_recue: { label: 'Réponse reçue', color: '#10b981' },
+  valide: { label: 'Validé', color: '#8b5cf6' },
+  refuse: { label: 'Refusé', color: '#ef4444' },
+}
+
+const CANAL_ICON = {
+  email: Mail,
+  sms: MessageSquare,
+  whatsapp: Phone,
+}
+
+const CANAL_LABEL = {
+  email: 'Email',
+  sms: 'SMS',
+  whatsapp: 'WhatsApp',
+}
+
+const DIRECTION_STYLE = {
+  envoye: { color: '#10b981', bg: 'rgba(16,185,129,0.08)', label: 'Envoyé' },
+  recu: { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', label: 'Reçu' },
+}
+
+const MESSAGE_STATUS = {
+  envoye: { label: 'Envoyé', color: '#9ca3af' },
+  livre: { label: 'Livré', color: '#3b82f6' },
+  lu: { label: 'Lu', color: '#10b981' },
+  echoue: { label: 'Échoué', color: '#ef4444' },
+}
+
+const mockMessages = [
+  {
+    id: 1,
+    canal: 'email',
+    direction: 'envoye',
+    date: new Date('2026-04-24T10:30:00'),
+    contenu: 'Bonjour, votre contrat Auto arrive à échéance le 15 mai. Souhaitez-vous un rendez-vous pour en discuter ?',
+    statut: 'lu',
+    dossier_statut: 'en_cours',
+  },
+  {
+    id: 2,
+    canal: 'sms',
+    direction: 'recu',
+    date: new Date('2026-04-24T11:45:00'),
+    contenu: 'Oui je suis disponible jeudi prochain à 14h pour faire le point sur mon contrat.',
+    statut: 'lu',
+    dossier_statut: 'en_cours',
+  },
+  {
+    id: 3,
+    canal: 'whatsapp',
+    direction: 'envoye',
+    date: new Date('2026-04-23T09:15:00'),
+    contenu: '📋 Votre devis MRH est prêt ! Prime à 18,50€/mois. Je vous l\'envoie ?',
+    statut: 'livre',
+    dossier_statut: 'relance',
+  },
+  {
+    id: 4,
+    canal: 'email',
+    direction: 'recu',
+    date: new Date('2026-04-22T16:20:00'),
+    contenu: 'Merci pour le devis. Pouvez-vous m\'envoyer les garanties détaillées avant que je signe ?',
+    statut: 'lu',
+    dossier_statut: 'reponse_recue',
+  },
+]
+
+// ─── MESSAGES TAB ──────────────────────────────────────────────────────────
+function MessagesTab({ clientId }) {
+  const [messages, setMessages] = useState(mockMessages)
+  const [sendingARK, setSendingARK] = useState(false)
+  const [triggeringRelance, setTriggeringRelance] = useState(false)
+  const [dossierStatut, setDossierStatut] = useState('en_cours')
+
+  const dossierCfg = DOSSIER_STATUS[dossierStatut] || DOSSIER_STATUS.brouillon
+
+  const fmtMessageDate = (d) => {
+    const date = new Date(d)
+    const jour = String(date.getDate()).padStart(2, '0')
+    const mois = String(date.getMonth() + 1).padStart(2, '0')
+    const heures = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${jour}/${mois} ${heures}:${minutes}`
+  }
+
+  const handleEnvoyerARK = async () => {
+    setSendingARK(true)
+    try {
+      // await api.post('/api/messaging/send', { clientId })
+      await new Promise(r => setTimeout(r, 800))
+      toast.success('Message envoyé via ARK')
+    } catch {
+      toast.error('Échec de l\'envoi')
+    } finally {
+      setSendingARK(false)
+    }
+  }
+
+  const handleRelancer = async () => {
+    setTriggeringRelance(true)
+    try {
+      // await api.post('/api/messaging/relance/trigger', { clientId })
+      await new Promise(r => setTimeout(r, 800))
+      setDossierStatut('relance')
+      toast.success('Relance déclenchée')
+    } catch {
+      toast.error('Échec de la relance')
+    } finally {
+      setTriggeringRelance(false)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+    >
+      {/* Barre d'actions */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 8,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <BubbleButton
+            variant="primary"
+            size="sm"
+            onClick={handleEnvoyerARK}
+            disabled={sendingARK}
+          >
+            <Send size={12} />
+            {sendingARK ? 'Envoi...' : 'Envoyer via ARK'}
+          </BubbleButton>
+          <BubbleButton
+            variant="secondary"
+            size="sm"
+            onClick={handleRelancer}
+            disabled={triggeringRelance}
+          >
+            <RefreshCw size={12} style={triggeringRelance ? { animation: 'spin 1s linear infinite' } : {}} />
+            {triggeringRelance ? 'Relance...' : 'Relancer maintenant'}
+          </BubbleButton>
+        </div>
+        {/* Badge statut dossier */}
+        <BubbleBadge color={dossierCfg.color} size="sm">
+          Dossier : {dossierCfg.label}
+        </BubbleBadge>
+      </div>
+
+      {/* Liste des messages */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        maxHeight: 360,
+        overflowY: 'auto',
+      }}>
+        {messages.length === 0 ? (
+          <p style={{
+            color: 'var(--text-tertiary)',
+            fontSize: 12,
+            textAlign: 'center',
+            padding: '24px 0',
+          }}>
+            Aucun message pour ce client
+          </p>
+        ) : (
+          messages.map(msg => {
+            const Icon = CANAL_ICON[msg.canal] || MessageSquare
+            const dirStyle = DIRECTION_STYLE[msg.direction] || DIRECTION_STYLE.envoye
+            const statusCfg = MESSAGE_STATUS[msg.statut] || MESSAGE_STATUS.envoye
+            return (
+              <div
+                key={msg.id}
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  padding: 10,
+                  background: dirStyle.bg,
+                  borderRadius: 'var(--r-md, 12px)',
+                  border: '0.5px solid rgba(0,0,0,0.05)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                {/* Icône canal */}
+                <div style={{
+                  flexShrink: 0,
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.9)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '0.5px solid rgba(0,0,0,0.08)',
+                }}>
+                  <Icon size={13} style={{ color: dirStyle.color }} />
+                </div>
+                {/* Contenu */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: dirStyle.color,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      {dirStyle.label}
+                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+                      {CANAL_LABEL[msg.canal]}
+                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
+                      {fmtMessageDate(msg.date)}
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: 12,
+                    color: 'var(--text-primary)',
+                    margin: 0,
+                    lineHeight: 1.4,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {msg.contenu}
+                  </p>
+                  <div style={{ marginTop: 2 }}>
+                    <span style={{
+                      fontSize: 9,
+                      fontWeight: 500,
+                      color: statusCfg.color,
+                      background: `${statusCfg.color}15`,
+                      padding: '1px 6px',
+                      borderRadius: 9999,
+                    }}>
+                      {statusCfg.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── TABS CONFIG ──────────────────────────────────────────────────────────
 const TABS_CONFIG = [
   { id: 'activite', label: 'Activité', icon: Activity },
@@ -204,6 +472,7 @@ const TABS_CONFIG = [
   { id: 'taches', label: 'Tâches', icon: CheckSquare },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'historique', label: 'Historique', icon: Clock },
+  { id: 'messages', label: 'Messages', icon: MessageSquare },
 ]
 
 function PlaceholderTab({ title, icon: Icon }) {
@@ -290,6 +559,8 @@ export default function ClientDetail() {
         return <PlaceholderTab title="Documents" icon={FileText} />
       case 'historique':
         return <PlaceholderTab title="Historique" icon={Clock} />
+      case 'messages':
+        return <MessagesTab clientId={client.id} />
       default:
         return <PlaceholderTab title="Activité" icon={Activity} />
     }

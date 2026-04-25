@@ -129,6 +129,7 @@ const ddaQuizRouter        = require('./src/routes/ddaQuiz')
 const analyticsRouter      = require('./src/routes/analytics')
 const stripeRouter         = require('./src/routes/stripe')
 const plansRouter          = require('./src/routes/plans')
+const messagingRoutes      = require('./src/routes/messaging')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -156,6 +157,9 @@ app.use('/api/documents',       verifyToken, documentsRouter)
 app.use('/api/dda',             verifyToken, ddaQuizRouter)
 app.use('/api/analytics',       verifyToken, analyticsRouter)
 app.use('/api/plans',           verifyToken, plansRouter)
+
+// Messaging (auth gérée route par route — webhook inbound est public)
+app.use('/api/messaging',    messagingRoutes)
 
 // ==================== PORTFOLIO CRON (03h00 Europe/Paris) ====================
 
