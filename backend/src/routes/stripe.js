@@ -31,11 +31,12 @@ router.post('/create-checkout-session', verifyToken, async (req, res) => {
         quantity: 1
       }],
       mode: 'subscription',
-      success_url: `${frontendUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/dashboard`,
+      success_url: `${frontendUrl}/paiement-succes?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/paiement-annule`,
       client_reference_id: userId,
       metadata: {
-        userId: userId
+        userId: userId,
+        plan: plan
       }
     })
     res.json({ url: session.url })
@@ -71,8 +72,16 @@ router.post('/webhook', async (req, res) => {
 
       if (userId && planName) {
         // NOTE: La table est 'users' (basé sur le cron) et non 'courtiers'
-        await pool.query('UPDATE users SET plan = $1, updated_at = NOW() WHERE id = $2', [planName, userId])
+        await pool.query(
+          'UPDATE users SET plan=$1, stripe_customer_id=$2, stripe_subscription_id=$3, updated_at=NOW() WHERE id=$4',
+          [planName, session.customer, session.subscription, userId]
+        )
         console.log(`[Stripe] ✅ L'utilisateur ${userId} est passé au plan '${planName}'.`)
+        try {
+          const { emailNouvelAbonnement } = require('../services/emailService')
+          const customerEmail = session.customer_details?.email || session.customer_email
+          await emailNouvelAbonnement({ courtierEmail: customerEmail, plan: planName })
+        } catch(e) { console.error('Email notification error:', e.message) }
       } else {
         console.error(`[Stripe] 🛑 UserID (${userId}) ou plan (${planName} depuis priceId ${priceId}) non trouvé après paiement.`)
       }
@@ -82,7 +91,28 @@ router.post('/webhook', async (req, res) => {
     }
   }
 
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object
+    try {
+      await pool.query('UPDATE users SET plan=$1, stripe_subscription_id=NULL, updated_at=NOW() WHERE stripe_subscription_id=$2', ['starter', subscription.id])
+      console.log(`[Stripe] Subscription ${subscription.id} deleted — user downgraded to starter`)
+    } catch(err) { console.error('[Stripe] Error handling subscription.deleted:', err) }
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    console.error(`[Stripe] Payment failed for customer ${event.data.object.customer}`)
+  }
+
   res.status(200).json({ received: true })
+})
+
+router.get('/subscription-status', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT plan FROM users WHERE id = $1', [req.user.id])
+    res.json({ plan: result.rows[0]?.plan || 'starter', status: 'active' })
+  } catch(err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 module.exports = router
