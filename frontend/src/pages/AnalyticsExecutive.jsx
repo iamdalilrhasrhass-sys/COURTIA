@@ -122,7 +122,21 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
   const areaD = `${pathD} L ${xScale(data.length - 1)} ${chartH - padding.bottom} L ${xScale(0)} ${chartH - padding.bottom} Z`
 
   return (
-    <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }}>
+    <>
+      <style>{`
+        .mini-chart-svg {
+          max-height: 320px;
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        @media (max-width: 767px) {
+          .mini-chart-svg {
+            max-height: 260px;
+          }
+        }
+      `}</style>
+      <svg className="mini-chart-svg" viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet">
       {/* Grid lines */}
       {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
         <line
@@ -161,7 +175,8 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
           </text>
         )
       })}
-    </svg>
+      </svg>
+    </>
   )
 }
 
