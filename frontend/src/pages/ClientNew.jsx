@@ -138,7 +138,7 @@ export default function ClientNew() {
   if (pageLoading) return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans p-8">
+    <div className="min-h-screen bg-[#fafafa] font-sans p-4 md:p-8">
       <style>{`
         @keyframes borderRotate { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         .animated-border::before { content: ''; position: absolute; inset: -2px; z-index: -1;
@@ -152,7 +152,7 @@ export default function ClientNew() {
         <p className="text-gray-500 mt-1">Remplissez les informations de base. Les détails peuvent être ajoutés plus tard.</p>
       </header>
       
-      <div className="max-w-6xl mx-auto flex items-start gap-8">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start gap-8">
         <form onSubmit={handleSubmit} className="flex-1 max-w-3xl">
           <div className="relative animated-border rounded-2xl overflow-hidden">
             <div className="bg-white rounded-[18px] p-8 space-y-8">

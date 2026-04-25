@@ -135,7 +135,7 @@ export default function Landing() {
       `}</style>
 
       {/* NAVBAR */}
-      <nav style={s.nav}>
+      <nav className="landing-nav" style={s.nav}>
         <Logo dark />
         <div style={{ display: 'flex', gap: 32 }}>
           {['Produit', 'Tarifs', 'À propos'].map(l => (
@@ -151,7 +151,7 @@ export default function Landing() {
       </nav>
 
       {/* HERO */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 680, borderBottom: '0.5px solid #e8e6e0' }}>
+      <div className="landing-hero" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 680, borderBottom: '0.5px solid #e8e6e0' }}>
         {/* Left */}
         <div style={{ padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '0.5px solid #e8e6e0' }}>
           {/* Badge */}
