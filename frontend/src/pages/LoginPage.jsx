@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import api from '../api'
+import Logo from '../components/Logo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
 
@@ -506,14 +507,8 @@ export default function Login() {
             <div className="geo-ring" style={{ width:60,height:60,top:'46%',right:-20,border:'0.5px solid rgba(255,255,255,0.05)' }} />
 
             <div style={{ position:'relative', zIndex:1 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:28 }}>
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                  <path d="M15 2L28 9V21L15 28L2 21V9L15 2Z" fill="#2563eb" opacity="0.9"/>
-                  <path d="M15 7L23 11.5V19.5L15 24L7 19.5V11.5L15 7Z" fill="#0a0a0a"/>
-                  <path d="M15 11.5L20 14.3V19.7L15 22.5L10 19.7V14.3L15 11.5Z" fill="#2563eb" opacity="0.5"/>
-                  <path d="M15 14.5L17.5 16V18.5L15 20L12.5 18.5V16L15 14.5Z" fill="rgba(255,255,255,0.18)"/>
-                </svg>
-                <span style={{ color:'#fff', fontSize:'13.5px', fontWeight:600, letterSpacing:'0.12em' }}>COURTIA</span>
+              <div style={{ marginBottom:28 }}>
+                <Logo size={48} dark={true} withText={true} textSize={18} />
               </div>
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:'10px', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:12 }}>
                 CRM · IA Native · Courtiers ORIAS
@@ -534,6 +529,10 @@ export default function Login() {
               </div>
             </div>
             <div style={{ position:'relative', zIndex:1, marginTop:'auto' }}>
+          </div>
+          <div style={{ position:'absolute', bottom:'1.25rem', left:'2.5rem', fontFamily:'Arial, Helvetica, sans-serif', fontSize:'9.5px', fontWeight:400, letterSpacing:'0.14em', color:'rgba(255,255,255,0.18)', display:'flex', alignItems:'center', gap:'4px' }}>
+            <span>RHASRHASS</span>
+            <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:'11px', height:'11px', border:'0.5px solid rgba(255,255,255,0.22)', borderRadius:'50%', fontSize:'7px', lineHeight:1, paddingTop:'1px' }}>R</span>
           </div>
           </div>
 
