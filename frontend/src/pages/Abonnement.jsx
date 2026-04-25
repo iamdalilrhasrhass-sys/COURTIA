@@ -258,13 +258,22 @@ export default function Abonnement() {
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <BubbleBackground intensity="rich" />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 1000, margin: '0 auto' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .abo-container { padding: 24px 16px !important; }
+          .abo-title { font-size: 26px !important; }
+          .abo-plan-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .abo-testimonial-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      <div className="abo-container" style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 1000, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <BubbleBadge color="#2563eb" size="md" style={{ marginBottom: 12 }}>
             Offre Fondateur &mdash; 50 places
           </BubbleBadge>
-          <h1 style={{
+          <h1 className="abo-title" style={{
             fontFamily: 'Arial, sans-serif',
             fontWeight: 700,
             fontSize: 36,
@@ -342,7 +351,7 @@ export default function Abonnement() {
         </div>
 
         {/* Plan Cards */}
-        <div style={{
+        <div className="abo-plan-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 20,
@@ -371,7 +380,7 @@ export default function Abonnement() {
           }}>
             Ils font confiance à COURTIA
           </h2>
-          <div style={{
+          <div className="abo-testimonial-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 20,
