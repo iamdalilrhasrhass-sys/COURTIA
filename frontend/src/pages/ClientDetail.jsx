@@ -63,15 +63,15 @@ function InfoRow({ icon: Icon, label, value }) {
 // ─── OLD-STYLE CARD & DATA ITEM (for InfosTab) ────────────────────────────
 const Card = ({ title, children, className, ...props }) => (
   <div className={`bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 ${className}`} {...props}>
-    <h3 className="text-base font-bold text-gray-800 p-6 border-b border-slate-100">{title}</h3>
-    <div className="p-6">{children}</div>
+    <h3 className="font-bold text-gray-800 px-4 py-3 border-b border-slate-100" style={{ fontSize: 14 }}>{title}</h3>
+    <div style={{ padding: '0.75rem' }}>{children}</div>
   </div>
 )
 
 const DataItem = ({ icon: Icon, label, value }) => (
   <div>
     <dt className="text-xs text-gray-400 uppercase tracking-wider">{label}</dt>
-    <dd className="mt-1 flex items-center gap-2 text-sm text-gray-700 font-medium"><Icon size={14} className="text-gray-500" /> {fmt(value)}</dd>
+    <dd className="mt-1 flex items-center gap-2 text-sm text-gray-700 font-medium"><Icon size={12} className="text-gray-500" /> {fmt(value)}</dd>
   </div>
 )
 
@@ -178,8 +178,8 @@ function ScoreSidebar({ scores, onBubbleEnter, onBubbleLeave }) {
   const globalScoreConfig = getGlobalScoreConfig(globalScore)
 
   return (
-    <aside className="w-[320px] flex-shrink-0 bg-white/70 backdrop-blur-sm border-r border-gray-100 p-6 sticky top-0 h-screen overflow-y-auto">
-      <div className="flex items-center gap-2"><div className="w-5 h-5 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-md flex items-center justify-center text-white"><Sparkles size={12} /></div><h2 className="text-lg font-bold text-gray-900">ARK Score™</h2></div>
+    <aside className="w-[260px] flex-shrink-0 bg-white/70 backdrop-blur-sm border-r border-gray-100 p-4 sticky top-0 h-screen overflow-y-auto">
+      <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-md flex items-center justify-center text-white"><Sparkles size={10} /></div><h2 className="font-bold text-gray-900" style={{ fontSize: 14 }}>ARK Score™</h2></div>
       <div className="text-center my-6 cursor-pointer" onMouseEnter={() => onBubbleEnter('global')} onMouseLeave={onBubbleLeave}><p className="text-sm font-semibold text-gray-500">Score Global</p><p className="text-7xl font-black text-gray-900 tracking-tight my-1"><AnimatedNumber value={globalScore} /></p><div className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: globalScoreConfig.color, color: 'white' }}>{globalScoreConfig.label}</div><p className="mt-3 text-xs text-gray-500 leading-relaxed px-4">{globalScoreConfig.description}</p></div>
       <div className="grid grid-cols-2 gap-y-8 gap-x-4"><ScoreGauge score={scores.risque} label="Risque" color="#ef4444" onHover={() => onBubbleEnter('risque')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.fidelite} label="Fidélité" color="#3b82f6" onHover={() => onBubbleEnter('fidelite')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.opportunite} label="Opportunité" color="#22c55e" onHover={() => onBubbleEnter('opportunite')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.retention} label="Rétention" color="#f59e0b" onHover={() => onBubbleEnter('retention')} onLeave={onBubbleLeave} /></div>
       <ScoreLegend /><footer className="text-center mt-8"><p className="text-xs text-gray-300">COURTIA®</p></footer>
@@ -190,9 +190,9 @@ function ScoreSidebar({ scores, onBubbleEnter, onBubbleLeave }) {
 // ─── INFOS TAB ─────────────────────────────────────────────────────────────
 function InfosTab({ client }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <Card title="Identité"><dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5"><DataItem icon={User} label="Nom Complet" value={`${client.prenom} ${client.nom}`} /><DataItem icon={Mail} label="Email" value={client.email} /><DataItem icon={Phone} label="Téléphone" value={client.telephone} /><DataItem icon={MapPin} label="Adresse" value={client.adresse ? `${client.adresse}, ${client.postal_code || ''} ${client.city || ''}`.replace(/, $/, '') : '—'} /><DataItem icon={Building} label="Profession" value={client.profession} /><DataItem icon={User} label="Segment" value={client.segment} /></dl></Card>
-      <Card title="Profil d'assurance"><dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5"><DataItem icon={Star} label="Bonus-Malus" value={client.bonus_malus} /><DataItem icon={Shield} label="Années permis" value={client.annees_permis ? `${client.annees_permis} ans` : null} /><DataItem icon={AlertTriangle} label="Sinistres (3 ans)" value={client.nb_sinistres_3ans} /><DataItem icon={Calendar} label="Client depuis" value={fmtDate(client.created_at)} /><DataItem icon={MapPin} label="Zone" value={client.zone_geographique} /><DataItem icon={User} label="Situation" value={client.situation_familiale} /></dl></Card>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <Card title="Identité"><dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3"><DataItem icon={User} label="Nom Complet" value={`${client.prenom} ${client.nom}`} /><DataItem icon={Mail} label="Email" value={client.email} /><DataItem icon={Phone} label="Téléphone" value={client.telephone} /><DataItem icon={MapPin} label="Adresse" value={client.adresse ? `${client.adresse}, ${client.postal_code || ''} ${client.city || ''}`.replace(/, $/, '') : '—'} /><DataItem icon={Building} label="Profession" value={client.profession} /><DataItem icon={User} label="Segment" value={client.segment} /></dl></Card>
+      <Card title="Profil d'assurance"><dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3"><DataItem icon={Star} label="Bonus-Malus" value={client.bonus_malus} /><DataItem icon={Shield} label="Années permis" value={client.annees_permis ? `${client.annees_permis} ans` : null} /><DataItem icon={AlertTriangle} label="Sinistres (3 ans)" value={client.nb_sinistres_3ans} /><DataItem icon={Calendar} label="Client depuis" value={fmtDate(client.created_at)} /><DataItem icon={MapPin} label="Zone" value={client.zone_geographique} /><DataItem icon={User} label="Situation" value={client.situation_familiale} /></dl></Card>
     </motion.div>
   )
 }
@@ -316,13 +316,13 @@ export default function ClientDetail() {
       <div className="relative" style={{ zIndex: 1 }}>
 
         {/* Header bar — Bubble style */}
-        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: 'var(--border-fine)' }}>
+        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: 'var(--border-fine)' }}>
           <button onClick={() => navigate(-1)}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '8px 16px',
+              gap: 6,
+              padding: '6px 12px',
               background: 'rgba(255,255,255,0.75)',
               backdropFilter: 'blur(20px)',
               borderRadius: 'var(--r-md)',
@@ -337,18 +337,18 @@ export default function ClientDetail() {
             onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
-            <ArrowLeft size={16} /> Retour
+            <ArrowLeft size={14} /> Retour
           </button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button onClick={() => navigate(`/clients/${id}/edit`)}
               style={{
-                padding: '8px 18px',
+                padding: '6px 14px',
                 background: 'rgba(255,255,255,0.75)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: 'var(--r-md)',
                 border: 'var(--border-fine)',
                 boxShadow: 'var(--shadow-bubble)',
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 600,
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
@@ -359,12 +359,12 @@ export default function ClientDetail() {
             >Modifier</button>
             <button onClick={() => navigate(`/contrats/new?clientId=${id}`)}
               style={{
-                padding: '8px 18px',
+                padding: '6px 14px',
                 background: '#0a0a0a',
                 borderRadius: 'var(--r-md)',
                 border: '0.5px solid rgba(255,255,255,0.1)',
                 boxShadow: 'var(--shadow-bubble)',
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 600,
                 color: '#ffffff',
                 cursor: 'pointer',
@@ -377,15 +377,33 @@ export default function ClientDetail() {
         </div>
 
         {/* Avatar + Name row */}
-        <div className="px-6 py-4 flex items-center gap-6" style={{ borderBottom: 'var(--border-fine)' }}>
-          <div className="w-16 h-16 text-xl rounded-full text-white flex items-center justify-center font-black flex-shrink-0 select-none"
+        <div className="px-4 py-2 flex items-center gap-4" style={{ borderBottom: 'var(--border-fine)' }}>
+          <div className="w-12 h-12 text-lg rounded-full text-white flex items-center justify-center font-black flex-shrink-0 select-none"
             style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', boxShadow: '0 4px 20px rgba(37,99,235,0.25)' }}>
             {getInitials(client)}
           </div>
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">{client.prenom} {client.nom}</h1>
+            <h1 className="font-black text-gray-900 tracking-tight" style={{ fontSize: 16 }}>{client.prenom} {client.nom}</h1>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginTop: 4 }}>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:6, color:'rgba(0,0,0,0.6)', fontSize:13 }}>
+                <svg width="14" height="14" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="bubbleC-mini" cx="32%" cy="22%" r="85%">
+                      <stop offset="0%" stopColor="rgba(255,255,255,1)" />
+                      <stop offset="28%" stopColor="rgba(232,247,255,0.75)" />
+                      <stop offset="68%" stopColor="rgba(196,181,253,0.55)" />
+                      <stop offset="100%" stopColor="rgba(124,58,237,0.65)" />
+                    </radialGradient>
+                  </defs>
+                  <path d="M 56 22 A 22 22 0 1 0 56 46" fill="none" stroke="url(#bubbleC-mini)" strokeWidth="14" strokeLinecap="round" />
+                  <ellipse cx="34" cy="11" rx="3" ry="1.8" fill="rgba(255,255,255,0.85)" transform="rotate(-12 34 11)" />
+                  <circle cx="68" cy="20" r="6.5" fill="rgba(186,230,253,0.55)" stroke="rgba(96,165,250,0.45)" strokeWidth="0.6" />
+                </svg>
+                {client.telephone || 'N/A'}
+              </span>
+            </div>
             <div className="flex items-center gap-3 mt-1">
-              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{client.profession || 'Profession non renseignée'}</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{client.profession || 'Profession non renseignée'}</p>
               <BubbleBadge color={statusCfg.color} size="sm" pulse={statut === 'a_risque'}>{statusCfg.label}</BubbleBadge>
             </div>
           </div>
@@ -400,16 +418,16 @@ export default function ClientDetail() {
             onBubbleLeave={handleBubbleLeave}
           />
 
-          {/* MAIN CONTENT: 3 columns */}
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 min-w-0">
+          {/* MAIN CONTENT: 4 columns with responsive wrap */}
+          <div className="flex-1 flex flex-col lg:flex-row gap-3 p-3 min-w-0 xl:flex-nowrap lg:flex-wrap">
 
             {/* Column 1: InfosTab (Identité + Profil d'assurance) */}
-            <div className="lg:w-[28%] flex-shrink-0">
+            <div className="xl:w-[26%] lg:w-[48%] flex-shrink-0">
               <InfosTab client={client} />
             </div>
 
             {/* Column 2: Tabs (Activité / Contrats / Tâches / Documents / Historique) */}
-            <div className="flex-1 lg:w-[42%] min-w-0">
+            <div className="flex-1 xl:w-[32%] lg:w-[48%] min-w-0">
               <BubbleCard hover={false} padding={0}>
                 {/* Tab navigation */}
                 <div className="flex" style={{ borderBottom: 'var(--border-fine)' }}>
@@ -421,20 +439,20 @@ export default function ClientDetail() {
                         style={{
                           position: 'relative',
                           flex: 1,
-                          padding: '14px 12px',
+                          padding: '10px 8px',
                           background: 'transparent',
                           border: 'none',
                           cursor: 'pointer',
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: 600,
                           color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
                           transition: 'color 0.2s ease',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          gap: 6,
+                          gap: 4,
                         }}>
-                        <Icon size={14} />
+                        <Icon size={12} />
                         {tab.label}
                         {isActive && (
                           <motion.div layoutId="tab-underline"
@@ -453,7 +471,7 @@ export default function ClientDetail() {
                   })}
                 </div>
                 {/* Tab content */}
-                <div className="p-6 min-h-[300px]">
+                <div style={{ padding: '0.75rem', minHeight: 280 }}>
                   <AnimatePresence mode="wait">
                     {renderTabContent()}
                   </AnimatePresence>
@@ -461,13 +479,65 @@ export default function ClientDetail() {
               </BubbleCard>
             </div>
 
-            {/* Column 3: ARK Chat (INTACT — DO NOT TOUCH) */}
-            <div className="lg:w-[27%] flex-shrink-0">
+            {/* Column 3: Contracts (vertical mini cards) */}
+            <div className="xl:w-[22%] lg:w-full lg:order-last xl:order-none flex-shrink-0">
+              <BubbleCard hover={false} padding={12}>
+                <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: 'var(--border-fine)' }}>
+                  <Shield size={14} style={{ color: 'var(--accent-violet)' }} />
+                  <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>Contrats</span>
+                </div>
+                <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+                  {(!contrats || contrats.length === 0) ? (
+                    <p style={{ color: 'var(--text-tertiary)', fontSize: 12, textAlign: 'center', padding: '20px 0' }}>
+                      Aucun contrat
+                    </p>
+                  ) : (
+                    contrats.map(contrat => {
+                      const echeance = contrat.date_echeance
+                        ? new Date(contrat.date_echeance).toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' })
+                        : 'N/A'
+                      return (
+                        <div
+                          key={contrat.id}
+                          onClick={() => navigate(`/contrats/${contrat.id}`)}
+                          style={{
+                            background: 'rgba(255,255,255,0.6)',
+                            backdropFilter: 'blur(8px)',
+                            borderRadius: 'var(--r-md, 12px)',
+                            border: '0.5px solid rgba(0,0,0,0.06)',
+                            padding: 10,
+                            marginBottom: 8,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            fontSize: 12,
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
+                        >
+                          <div style={{ fontWeight: 700, color: '#0a0a0a', marginBottom: 4 }}>
+                            {contrat.type_contrat || 'Auto'} - {contrat.compagnie || 'N/A'}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
+                            Prime : {contrat.prime_annuelle ? `${contrat.prime_annuelle}€/an` : 'N/A'}
+                          </div>
+                          <div style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>
+                            Échéance : {echeance}
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </BubbleCard>
+            </div>
+
+            {/* Column 4: ARK Chat (INTACT — DO NOT TOUCH) */}
+            <div className="xl:w-[20%] lg:w-full flex-shrink-0">
               <div style={{ position: 'sticky', top: 24 }}>
-                <BubbleCard hover={false} padding={16}>
-                  <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom: 'var(--border-fine)' }}>
-                    <Bot size={16} style={{ color: 'var(--accent-violet)' }} />
-                    <span className="text-sm font-bold text-gray-900">ARK Chat</span>
+                <BubbleCard hover={false} padding={12}>
+                  <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: 'var(--border-fine)' }}>
+                    <Bot size={14} style={{ color: 'var(--accent-violet)' }} />
+                    <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>ARK Chat</span>
                   </div>
                   <ARKChatTab clientId={client.id} client={client} />
                 </BubbleCard>
