@@ -211,3 +211,24 @@ CREATE INDEX idx_prospects_stage ON prospects(stage);
 CREATE INDEX idx_appointments_start ON appointments(start_time);
 CREATE INDEX idx_documents_client ON documents(client_id);
 CREATE INDEX idx_audit_user ON audit_logs(user_id);
+
+-- ==================== MESSAGING SYSTEM ====================
+
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS preferred_canal VARCHAR(20) DEFAULT 'email';
+
+CREATE TABLE IF NOT EXISTS messages (
+    id              SERIAL PRIMARY KEY,
+    client_id       INTEGER          REFERENCES clients(id) ON DELETE SET NULL,
+    canal           VARCHAR(20)      NOT NULL,
+    direction       VARCHAR(10)      DEFAULT 'outgoing',
+    content         TEXT             NOT NULL,
+    status          VARCHAR(20)      DEFAULT 'pending',
+    external_id     VARCHAR(255),
+    error           TEXT,
+    created_at      TIMESTAMPTZ      DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_client ON messages(client_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_canal  ON messages(canal, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_status ON messages(status);
+CREATE INDEX IF NOT EXISTS idx_clients_preferred_canal ON clients(preferred_canal);
