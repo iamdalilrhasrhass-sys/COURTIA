@@ -15,11 +15,11 @@ const STYLES = `
     overflow: hidden;
     font-family: -apple-system, 'Inter', BlinkMacSystemFont, sans-serif;
     background:
-      radial-gradient(ellipse at 25% 15%, rgba(200,190,255,0.55) 0%, transparent 45%),
-      radial-gradient(ellipse at 80% 85%, rgba(255,200,230,0.45) 0%, transparent 40%),
-      radial-gradient(ellipse at 65% 35%, rgba(180,225,255,0.4) 0%, transparent 40%),
-      radial-gradient(ellipse at 10% 80%, rgba(210,255,220,0.3) 0%, transparent 35%),
-      #f0ede8;
+      radial-gradient(ellipse at 20% 15%, rgba(192,170,255,0.65) 0%, transparent 40%),
+      radial-gradient(ellipse at 85% 80%, rgba(255,180,220,0.55) 0%, transparent 38%),
+      radial-gradient(ellipse at 60% 35%, rgba(160,215,255,0.5) 0%, transparent 38%),
+      radial-gradient(ellipse at 5% 75%, rgba(180,255,210,0.35) 0%, transparent 32%),
+      #ede9f5;
   }
 
   .bubble {
@@ -39,7 +39,7 @@ const STYLES = `
         rgba(255,255,255,0.12) 35%,
         transparent 65%
       );
-    border: 1.5px solid rgba(255,255,255,0.6);
+    border: 1.5px solid rgba(255,255,255,0.7);
     overflow: hidden;
   }
 
@@ -49,14 +49,14 @@ const STYLES = `
     border-radius: 50%;
     background: conic-gradient(
       from 30deg at 38% 38%,
-      rgba(168,85,247,0.22) 0deg,
-      rgba(59,130,246,0.28) 55deg,
-      rgba(16,185,129,0.18) 110deg,
-      rgba(245,158,11,0.14) 165deg,
-      rgba(239,68,68,0.16) 210deg,
-      rgba(236,72,153,0.22) 260deg,
-      rgba(139,92,246,0.2) 310deg,
-      rgba(168,85,247,0.22) 360deg
+      rgba(168,85,247,0.27) 0deg,
+      rgba(59,130,246,0.33) 55deg,
+      rgba(16,185,129,0.23) 110deg,
+      rgba(245,158,11,0.19) 165deg,
+      rgba(239,68,68,0.21) 210deg,
+      rgba(236,72,153,0.27) 260deg,
+      rgba(139,92,246,0.25) 310deg,
+      rgba(168,85,247,0.27) 360deg
     );
     mix-blend-mode: screen;
     animation: irisRotate 12s linear infinite;
@@ -69,7 +69,7 @@ const STYLES = `
     top: 8%;
     left: 12%;
     border-radius: 50%;
-    background: radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
     transform: rotate(-30deg);
     filter: blur(2px);
   }
@@ -178,9 +178,9 @@ const STYLES = `
 
   .card {
     display: flex;
-    width: 920px;
+    width: 960px;
     max-width: 96vw;
-    min-height: 580px;
+    min-height: 90vh;
     border-radius: 28px;
     overflow: hidden;
     box-shadow: 0 0 0 0.5px rgba(255,255,255,0.85), 0 8px 24px rgba(0,0,0,0.06), 0 32px 64px rgba(0,0,0,0.04);
@@ -194,7 +194,7 @@ const STYLES = `
     background: #0a0a0a;
     padding: 2.5rem;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -491,7 +491,7 @@ export default function Login() {
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:'10px', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:12 }}>
                 CRM · IA Native · Courtiers ORIAS
               </p>
-              <h2 style={{ color:'#fff', fontSize:'21px', fontWeight:500, lineHeight:1.38, marginBottom:8 }}>
+              <h2 style={{ color:'#fff', fontSize:'19px', fontWeight:500, lineHeight:1.38, marginBottom:8 }}>
                 Votre portefeuille, analysé en temps réel.
               </h2>
               <p style={{ color:'rgba(255,255,255,0.36)', fontSize:'12.5px', marginBottom:28 }}>
@@ -507,9 +507,9 @@ export default function Login() {
               </div>
             </div>
             <div style={{ position:'relative', zIndex:1, marginTop:'auto' }}>
-              <p style={{ color:'rgba(255,255,255,0.15)', fontSize:'10px', letterSpacing:'0.1em' }}>Rhasrhass®</p>
-            </div>
           </div>
+          </div>
+
 
           {/* RIGHT */}
           <div className="right-panel">
