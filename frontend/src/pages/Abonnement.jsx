@@ -242,14 +242,13 @@ export default function Abonnement() {
   const [billingCycle, setBillingCycle] = useState('monthly')
   const [loadingPlan, setLoadingPlan] = useState(null)
 
-  const handleCheckout = async (plan) => {
+  const handleSubscribe = async (plan) => {
     setLoadingPlan(plan)
     try {
-      const { data } = await api.post('/api/stripe/create-checkout-session', { plan, billingCycle })
-      if (data.url) window.location.href = data.url
+      const { data } = await api.post('/api/stripe/create-checkout-session', { plan })
+      window.location.href = data.url
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la redirection vers Stripe.')
-    } finally {
+      toast.error('Erreur de paiement: ' + (err.response?.data?.error || err.message))
       setLoadingPlan(null)
     }
   }
@@ -354,7 +353,7 @@ export default function Abonnement() {
               plan={plan}
               billingCycle={billingCycle}
               loadingPlan={loadingPlan}
-              onSelect={handleCheckout}
+              onSelect={handleSubscribe}
             />
           ))}
         </div>

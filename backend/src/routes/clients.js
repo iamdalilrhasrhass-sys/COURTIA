@@ -141,6 +141,13 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
       ]
     );
 
+    // Notification email (non-blocking)
+    try {
+      const { emailNouveauClient } = require('../services/emailService')
+      const fullName = [req.body.prenom, req.body.nom].filter(Boolean).join(' ') || 'Nouveau client'
+      await emailNouveauClient({ courtierEmail: req.user?.email || 'arkcourtia@gmail.com', clientNom: fullName })
+    } catch(e) { console.error('Email notification skipped:', e.message) }
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('POST /api/clients error:', err.message);

@@ -8,10 +8,21 @@ import {
 import toast from 'react-hot-toast'
 import Logo from './Logo'
 
-const getInitials = (firstName, lastName) => {
-  const f = (firstName || '').charAt(0)
-  const l = (lastName || '').charAt(0)
-  return (f + l).toUpperCase() || '?'
+const getInitials = (user) => {
+  if (!user) return 'C'
+  const first = user.first_name || user.prenom || ''
+  const last = user.last_name || user.nom || ''
+  if (first && last) return (first.charAt(0) + last.charAt(0)).toUpperCase()
+  if (user.email) return user.email.charAt(0).toUpperCase()
+  return 'C'
+}
+
+const getDisplayName = (user) => {
+  if (!user) return 'Courtier'
+  if (user.first_name && user.last_name) return `${user.first_name} ${user.last_name}`
+  if (user.prenom && user.nom) return `${user.prenom} ${user.nom}`
+  if (user.prenom) return user.prenom
+  return user.email || 'Courtier'
 }
 
 function LogoOld() {
@@ -114,10 +125,10 @@ export default function Sidebar() {
       <div className="absolute bottom-0 w-full p-4 border-t border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2563eb] to-[#7c3aed] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-            {user ? getInitials(user.first_name, user.last_name) : '?'}
+            {user ? getInitials(user) : 'C'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate max-w-[140px]">{user ? `${user.first_name} ${user.last_name}` : 'Chargement...'}</p>
+            <p className="text-sm font-medium text-white truncate max-w-[140px]">{user ? getDisplayName(user) : 'Chargement...'}</p>
             <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
           </div>
           <button
