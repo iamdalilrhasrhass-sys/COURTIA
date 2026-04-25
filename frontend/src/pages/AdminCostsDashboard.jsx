@@ -60,7 +60,7 @@ const AdminCostsDashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Tableau de bord Coûts API</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Tableau de bord Coûts API</h1>
           <p className="text-gray-500 mt-1">Période: {data.period}</p>
         </div>
         <Button onClick={exportCsv} className="flex items-center gap-2">
@@ -74,7 +74,7 @@ const AdminCostsDashboard = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-gray-500">Courtiers actifs</div>
-            <div className="text-3xl font-bold mt-2">{stats.total_users}</div>
+            <div className="text-2xl md:text-3xl font-bold mt-2">{stats.total_users}</div>
             <p className="text-xs text-gray-400 mt-1">Ce mois</p>
           </CardContent>
         </Card>
@@ -82,7 +82,7 @@ const AdminCostsDashboard = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-gray-500">Requêtes totales</div>
-            <div className="text-3xl font-bold mt-2">{stats.total_requests}</div>
+            <div className="text-2xl md:text-3xl font-bold mt-2">{stats.total_requests}</div>
             <p className="text-xs text-gray-400 mt-1">Haiku: {stats.haiku_requests} | Opus: {stats.opus_requests}</p>
           </CardContent>
         </Card>
@@ -90,7 +90,7 @@ const AdminCostsDashboard = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-gray-500">Coût total</div>
-            <div className="text-3xl font-bold mt-2">${parseFloat(stats.total_cost_usd).toFixed(2)}</div>
+            <div className="text-2xl md:text-3xl font-bold mt-2">${parseFloat(stats.total_cost_usd).toFixed(2)}</div>
             <p className="text-xs text-gray-400 mt-1">USD ce mois</p>
           </CardContent>
         </Card>
@@ -98,7 +98,7 @@ const AdminCostsDashboard = () => {
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="pt-6">
             <div className="text-sm text-gray-500">Coût moyen/requête</div>
-            <div className="text-3xl font-bold mt-2">${parseFloat(stats.avg_cost_per_request).toFixed(4)}</div>
+            <div className="text-2xl md:text-3xl font-bold mt-2">${parseFloat(stats.avg_cost_per_request).toFixed(4)}</div>
             <p className="text-xs text-gray-400 mt-1">H: ${parseFloat(stats.avg_haiku_cost).toFixed(4)} | O: ${parseFloat(stats.avg_opus_cost).toFixed(4)}</p>
           </CardContent>
         </Card>
