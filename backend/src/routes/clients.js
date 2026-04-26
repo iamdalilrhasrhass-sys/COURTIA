@@ -112,10 +112,14 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
     const pool = req.app.locals.pool;
     const {
       nom, prenom, email, telephone, adresse, statut, segment,
-      notes, bonus_malus, annees_permis, nb_sinistres_3ans,
-      zone_geographique, profession, situation_familiale,
+      notes, zone_geographique, profession, situation_familiale,
       postal_code, city, civility, country
     } = req.body;
+
+    // Parser les champs numériques (le frontend peut les envoyer en string)
+    const bonus_malus        = parseFloat(req.body.bonus_malus) || 1.0;
+    const annees_permis      = parseInt(req.body.annees_permis, 10) || 0;
+    const nb_sinistres_3ans  = parseInt(req.body.nb_sinistres_3ans, 10) || 0;
 
     // Calculer le score risque
     const score = calculateRiskScore({
@@ -163,10 +167,14 @@ router.put('/:id', async (req, res) => {
     const pool = req.app.locals.pool;
     const {
       nom, prenom, email, telephone, adresse, statut, segment,
-      notes, bonus_malus, annees_permis, nb_sinistres_3ans,
-      zone_geographique, profession, situation_familiale,
+      notes, zone_geographique, profession, situation_familiale,
       postal_code, city, civility, country
     } = req.body;
+
+    // Parser les champs numériques (le frontend peut les envoyer en string)
+    const bonus_malus        = parseFloat(req.body.bonus_malus) || 1.0;
+    const annees_permis      = parseInt(req.body.annees_permis, 10) || 0;
+    const nb_sinistres_3ans  = parseInt(req.body.nb_sinistres_3ans, 10) || 0;
 
     // Recalculer le score
     const score = calculateRiskScore({

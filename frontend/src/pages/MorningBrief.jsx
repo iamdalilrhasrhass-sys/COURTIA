@@ -144,7 +144,7 @@ function ActionCard({ action, index }) {
         gap: 14
       }}
       whileHover={action.client_id ? { y: -1, boxShadow: '0 4px 16px rgba(0,0,0,0.06)' } : {}}
-      onClick={() => action.client_id && navigate(`/client/${action.client_id}`)}
+      onClick={() => action.client_id && navigate(`/clients/${action.client_id}`)}
     >
       <div style={{
         width: 8, height: 8, borderRadius: '50%',
@@ -201,7 +201,7 @@ function ActionCard({ action, index }) {
           </button>
           {action.client_id && (
             <button
-              onClick={e => { e.stopPropagation(); navigate(`/client/${action.client_id}`) }}
+              onClick={e => { e.stopPropagation(); navigate(`/clients/${action.client_id}`) }}
               style={{
                 padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                 background: 'none', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: 6,

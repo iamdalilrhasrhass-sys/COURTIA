@@ -60,8 +60,8 @@ const featureRows = [
 
 const plans = [
   {
-    name: 'Start',
-    price: '39',
+    name: "L'Essentiel",
+    price: '89',
     desc: 'Pour courtier indépendant',
     popular: false,
     features: {
@@ -83,8 +83,8 @@ const plans = [
     }
   },
   {
-    name: 'Pro',
-    price: '69',
+    name: 'Le Cabinet',
+    price: '159',
     desc: 'Pour cabinet en croissance',
     popular: true,
     features: {
@@ -106,8 +106,8 @@ const plans = [
     }
   },
   {
-    name: 'Elite',
-    price: '129',
+    name: 'Le Réseau',
+    price: '350',
     desc: 'Pour cabinet performant',
     popular: false,
     features: {
@@ -213,7 +213,7 @@ function PlanCard({ plan, index }) {
 
       <div className="mt-auto">
         <a
-          href="mailto:contact@courtia.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Start"
+          href="mailto:contact@courtia.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Essentiel"
           className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-200 ${
             plan.popular
               ? 'bg-[#534AB7] text-white hover:bg-[#4639a6] shadow-lg shadow-[#534AB7]/20'

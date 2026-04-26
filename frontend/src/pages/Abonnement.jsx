@@ -100,14 +100,14 @@ const TestimonialCard = ({ text, author, city }) => (
 
 // ─── Plan Card ────────────────────────────────────────────────────────────────
 const PLAN_FEATURES = {
-  starter: ['5 clients max', 'Tableau de bord Indicateurs', 'ARK Chat basique', 'Gestion contrats', 'Support email'],
-  pro: ['Clients illimités', 'ARK complet + analyses IA', 'Priorité support', 'ARK IA', 'Rapports avancés', '3 collaborateurs'],
+  starter: ['Clients illimités', 'Tableau de bord Indicateurs', 'ARK Chat basique', 'Gestion contrats', 'Support email'],
+  pro: ['Clients illimités', 'ARK complet + analyses IA', 'Priorité support', 'ARK IA', 'Rapports avancés', '5 collaborateurs'],
   premium: ['Tout inclus Pro', 'API publique', 'Audit RGPD', 'Onboarding dédié', 'Account Manager', 'Collaborateurs illimités'],
 }
 
 function PlanCard({ plan, billingCycle, loadingPlan, onSelect }) {
   const isMonthly = billingCycle === 'monthly'
-  const monthlyPrice = { starter: 39, pro: 79, premium: 129 }[plan]
+  const monthlyPrice = { starter: 89, pro: 159, premium: 350 }[plan]
   const yearlyPrice = Math.round(monthlyPrice * 12 * 0.8)
   const displayPrice = isMonthly ? monthlyPrice : yearlyPrice
   const perLabel = isMonthly ? '/mois' : '/an'
@@ -116,9 +116,9 @@ function PlanCard({ plan, billingCycle, loadingPlan, onSelect }) {
   const features = PLAN_FEATURES[plan]
 
   const planName = {
-    starter: 'Starter',
-    pro: 'Pro',
-    premium: 'Premium',
+    starter: "L'Essentiel",
+    pro: 'Le Cabinet',
+    premium: 'Le Réseau',
   }[plan]
 
   return (

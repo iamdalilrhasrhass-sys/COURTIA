@@ -142,7 +142,8 @@ export default function App() {
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
-          <Route path="/client/:id"    element={<ClientDetail />} />
+          <Route path="/client/:id"     element={<ClientDetail />} />
+          <Route path="/clients/:id"   element={<ClientDetail />} />
           <Route path="/clients/:id/edit" element={<ClientNew />} />
           <Route path="/contrats"      element={<Contrats />} />
           <Route path="/contrats/new"  element={<ContratNew />} />
@@ -152,6 +153,7 @@ export default function App() {
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
+          <Route path="/analyses"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
