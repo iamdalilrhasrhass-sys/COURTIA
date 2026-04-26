@@ -13,6 +13,7 @@ const path = require('path')
 const PDFDocument = require('pdfkit')
 const { verifyToken } = require('../middleware/auth')
 const { requireUnderLimit } = require('../middleware/planGuard')
+const visionService = require('../services/visionService')
 
 router.use(verifyToken)
 
@@ -312,6 +313,132 @@ router.get('/:id/download', async (req, res) => {
     return res.download(filePath, `courtia_${doc.document_type}_${docId}.pdf`)
   } catch (err) {
     console.error('[GET /api/documents/:id/download]', err.message)
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+// ── Endpoints Vision IA ──────────────────────────────────────────────────────
+
+// POST /api/documents/analyze — analyser un document (OCR + extraction)
+router.post('/analyze', async (req, res) => {
+  try {
+    const { file, mimeType, clientId } = req.body
+    if (!file || !mimeType) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: 'file (base64) et mimeType sont requis'
+      })
+    }
+    const result = await visionService.analyzeDocument(file, mimeType)
+    return res.status(200).json({
+      success: true,
+      data: {
+        type: result.type,
+        donnees_extraites: result.donnees_extraites,
+        confiance: result.confiance,
+        resume: result.resume,
+        type_document: result.type_document
+      }
+    })
+  } catch (err) {
+    console.error('[POST /api/documents/analyze]', err.message)
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+// POST /api/documents/classify — classer un document par catégorie
+router.post('/classify', async (req, res) => {
+  try {
+    const { file, mimeType } = req.body
+    if (!file || !mimeType) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: 'file (base64) et mimeType sont requis'
+      })
+    }
+    const result = await visionService.classifyDocument(file, mimeType)
+    return res.status(200).json({
+      success: true,
+      data: {
+        categorie: result.categorie,
+        confiance: result.confiance
+      }
+    })
+  } catch (err) {
+    console.error('[POST /api/documents/classify]', err.message)
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+// POST /api/documents/bulk — analyser plusieurs documents en lot (max 10)
+router.post('/bulk', async (req, res) => {
+  try {
+    const { files } = req.body
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: 'files (tableau) est requis avec au moins un fichier'
+      })
+    }
+    if (files.length > 10) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: 'Maximum 10 fichiers autorisés par requête'
+      })
+    }
+    const results = await Promise.all(
+      files.map((f) => visionService.analyzeDocument(f.file, f.mimeType, f.fileName))
+    )
+    return res.status(200).json({
+      success: true,
+      data: results,
+      total: results.length
+    })
+  } catch (err) {
+    console.error('[POST /api/documents/bulk]', err.message)
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+// GET /api/documents/client/:clientId — récupérer tous les documents indexés d'un client
+router.get('/client/:clientId', async (req, res) => {
+  try {
+    const { clientId } = req.params
+    const courtier_id = req.user.id || req.user.userId
+    const result = await pool.query(
+      `SELECT * FROM documents_indexes WHERE client_id = $1 AND user_id = $2 ORDER BY created_at DESC`,
+      [clientId, courtier_id]
+    )
+    return res.json({ success: true, data: result.rows })
+  } catch (err) {
+    console.error('[GET /api/documents/client/:clientId]', err.message)
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+// POST /api/documents/client/:clientId — indexer un document analysé
+router.post('/client/:clientId', async (req, res) => {
+  try {
+    const { clientId } = req.params
+    const courtier_id = req.user.id || req.user.userId
+    const { type, donnees_extraites, confiance, resume, source, fileName } = req.body
+
+    const result = await pool.query(
+      `INSERT INTO documents_indexes (client_id, user_id, categorie, donnees_extraites, confiance, source, fichier_nom)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [clientId, courtier_id, type || 'autre', JSON.stringify(donnees_extraites || {}), confiance || 0.5, source || 'upload', fileName || 'document']
+    )
+
+    // Mettre à jour clients.documents JSONB
+    await pool.query(
+      `UPDATE clients SET documents = COALESCE(documents, '[]'::jsonb) || $1::jsonb, updated_at = NOW() WHERE id = $2`,
+      [JSON.stringify([{ id: result.rows[0].id, categorie: type, date: new Date().toISOString(), source: source || 'upload', fileName }]), clientId]
+    )
+
+    return res.status(201).json({ success: true, data: result.rows[0] })
+  } catch (err) {
+    console.error('[POST /api/documents/client/:clientId]', err.message)
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })

@@ -19,6 +19,9 @@ import AnalyticsExecutive from './pages/AnalyticsExecutive'
 import Abonnement from './pages/Abonnement'
 import PaiementSucces from './pages/PaiementSucces'
 import PaiementAnnule from './pages/PaiementAnnule'
+import Onboarding from './pages/Onboarding'
+import LandingPublic from './pages/LandingPublic'
+import Tarifs from './pages/Tarifs'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -129,7 +132,10 @@ export default function App() {
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/landing" element={<LandingPublic />} />
+        <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/" element={<Navigate to="/landing" replace />} />
+        <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Routes privées — AppLayout monte une seule fois, pages via Outlet */}
         <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>

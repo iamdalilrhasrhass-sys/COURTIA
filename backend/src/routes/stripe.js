@@ -1,7 +1,9 @@
 require('dotenv').config()
 const express = require('express')
 const router = express.Router()
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+  : null
 const pool = require('../db')
 const verifyToken = require('../middleware/authMiddleware')
 
@@ -19,6 +21,10 @@ router.post('/create-checkout-session', verifyToken, async (req, res) => {
 
   if (!plan || !plans[plan]) {
     return res.status(400).json({ error: 'Plan non valide ou manquant.' })
+  }
+
+  if (!stripe) {
+    return res.status(400).json({ error: 'Stripe non configuré - clé API manquante.' })
   }
 
   const frontendUrl = process.env.FRONTEND_URL || 'https://courtia.vercel.app'
