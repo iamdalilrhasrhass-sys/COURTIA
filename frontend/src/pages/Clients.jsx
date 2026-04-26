@@ -311,7 +311,7 @@ export default function Clients() {
                     const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
                     return (
                       <tr key={client.id} className="last:border-0 group cursor-pointer" style={{ borderBottom: 'var(--border-fine)', transition: 'background 0.2s' }}
-                        onClick={() => navigate(`/client/${client.id}`)}
+                        onClick={() => navigate(`/clients/${client.id}`)}
                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                         <td className="p-4">
@@ -328,7 +328,7 @@ export default function Clients() {
                         <td className="p-4" style={{ color: 'var(--text-secondary)' }}>{timeAgo(client.created_at)}</td>
                         <td className="p-4">
                           <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => navigate(`/client/${client.id}`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Voir"><Eye size={16} /></button>
+                            <button onClick={() => navigate(`/clients/${client.id}`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Voir"><Eye size={16} /></button>
                             <button onClick={() => navigate(`/clients/${client.id}/edit`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Modifier"><Pencil size={16} /></button>
                             <button onClick={() => alert('Suppression non implémentée')} className="p-2 rounded-md hover:bg-red-100 text-gray-500 hover:text-red-600" title="Supprimer"><Trash2 size={16} /></button>
                           </div>
@@ -360,7 +360,7 @@ export default function Clients() {
           ) : paginatedClients.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginatedClients.map(client => (
-                <ClientCard key={client.id} client={client} onNavigate={(id) => navigate(`/client/${id}`)} />
+                <ClientCard key={client.id} client={client} onNavigate={(id) => navigate(`/clients/${id}`)} />
               ))}
             </div>
           ) : (

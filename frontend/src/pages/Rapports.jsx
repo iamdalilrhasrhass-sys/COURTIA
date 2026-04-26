@@ -200,7 +200,7 @@ export default function Rapports() {
                         key={client.id}
                         whileHover={{ x: 2 }}
                         transition={{ duration: 0.12 }}
-                        onClick={() => navigate(`/client/${client.id}`)}
+                        onClick={() => navigate(`/clients/${client.id}`)}
                         style={{ cursor: 'pointer', background: i % 2 === 0 ? 'white' : '#fafaf8' }}
                         onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
@@ -255,7 +255,7 @@ export default function Rapports() {
                             whileHover={{ x: 2 }}
                             transition={{ duration: 0.12 }}
                             onClick={() => {
-                              if (clientId) navigate(`/client/${clientId}`)
+                              if (clientId) navigate(`/clients/${clientId}`)
                               else toast('Dossier client non disponible', { icon: 'ℹ️' })
                             }}
                             style={{ cursor: 'pointer', display: 'table-row' }}

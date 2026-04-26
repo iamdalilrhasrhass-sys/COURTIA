@@ -4,9 +4,9 @@ import { ArrowRight, Check, Star, Play, ChevronDown, Shield, Zap, Clock, Smartph
 import { useNavigate } from 'react-router-dom'
 
 const plans = [
-  { name: 'Start', price: '39', description: 'Pour courtier indépendant', features: ['Morning Brief', 'Score client', 'Tags & Kanban', 'Documents générés', 'DDA Quiz'], cta: 'Démarrer gratuit 30 jours' },
-  { name: 'Pro', price: '69', description: 'Pour cabinet en croissance', popular: true, features: ['Tout Start +', 'Automations', 'Newsletters', 'Analytiques avancées', 'Email IA', 'Conformité', 'Support prioritaire'], cta: 'Démarrer gratuit 30 jours' },
-  { name: 'Elite', price: '129', description: 'Pour cabinet performant', features: ['Tout Pro +', 'Analytiques executives', 'Assistant réglementaire', 'Export avancé', 'API publique', 'Marque blanche', 'Multi-agences', 'Manager dédié'], cta: 'Contacter Dalil' }
+  { name: "L'Essentiel", price: '89', description: 'Pour courtier indépendant', features: ['Morning Brief', 'Score client', 'Tags & Kanban', 'Documents générés', 'DDA Quiz'], cta: 'Démarrer gratuit 30 jours' },
+  { name: 'Le Cabinet', price: '159', description: 'Pour cabinet en croissance', popular: true, features: ['Tout Essentiel +', 'Automations', 'Newsletters', 'Analytiques avancées', 'Email IA', 'Conformité', 'Support prioritaire'], cta: 'Démarrer gratuit 30 jours' },
+  { name: 'Le Réseau', price: '350', description: 'Pour cabinet performant', features: ['Tout Cabinet +', 'Analytiques executives', 'Assistant réglementaire', 'Export avancé', 'API publique', 'Marque blanche', 'Multi-agences', 'Manager dédié'], cta: 'Contacter Dalil' }
 ]
 
 function AnimatedSection({ children, className = '' }) {

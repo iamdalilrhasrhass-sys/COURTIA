@@ -58,6 +58,14 @@ export default function Sidebar() {
     toast.success('Déconnexion réussie');
   }
 
+  // Normalise l'utilisateur (support camelCase du login + snake_case de /me)
+  const userName = user
+    ? ((user.first_name || user.firstName || '') + ' ' + (user.last_name || user.lastName || '')).trim()
+    : 'Chargement...'
+  const userFirstName = user ? (user.first_name || user.firstName || '') : ''
+  const userLastName = user ? (user.last_name || user.lastName || '') : ''
+  const userEmail = user?.email || ''
+
   const sidebarContent = (
     <aside className="w-[240px] h-full flex flex-col bg-[#080808] border-r border-white/5 font-sans">
       <div className="p-5 border-b border-white/10 h-[65px] flex items-center justify-between">
@@ -104,11 +112,11 @@ export default function Sidebar() {
       <div className="p-4 border-t border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2563eb] to-[#7c3aed] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-            {user ? getInitials(user.first_name, user.last_name) : '?'}
+            {user ? getInitials(userFirstName, userLastName) : '?'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate max-w-[140px]">{user ? `${user.first_name} ${user.last_name}` : 'Chargement...'}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+            <p className="text-sm font-medium text-white truncate max-w-[140px]">{userName}</p>
+            <p className="text-xs text-gray-500 truncate">{userEmail}</p>
           </div>
           <button
             onClick={logout}
