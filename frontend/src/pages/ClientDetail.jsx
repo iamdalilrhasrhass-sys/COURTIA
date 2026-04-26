@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Clock, MessageSquare, Send, RefreshCw } from 'lucide-react'
+import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Upload, File, Download, RefreshCw, Clock, MessageSquare, Send } from 'lucide-react'
 import api from '../api'
 import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
 import ContratsTab from '../components/ContratsTab'
@@ -206,6 +206,175 @@ const DOSSIER_STATUS = {
   reponse_recue: { label: 'Réponse reçue', color: '#10b981' },
   valide: { label: 'Validé', color: '#8b5cf6' },
   refuse: { label: 'Refusé', color: '#ef4444' },
+}
+
+// ─── DOCUMENTS TAB ──────────────────────────────────────────────────────────
+function DocumentsTab({ client, setClient, clientId }) {
+  const fileInputRef = useRef(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
+
+  const readFileAsBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const processFile = async (file) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Le fichier dépasse 10 Mo')
+      return
+    }
+    setAnalyzing(true)
+    setAnalysisResult(null)
+    try {
+      const base64 = await readFileAsBase64(file)
+      const res = await api.post('/api/documents/analyze', {
+        file: base64,
+        mimeType: file.type
+      })
+      setAnalysisResult(res.data)
+    } catch (err) {
+      toast.error('Erreur lors de l\'analyse du document')
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file) processFile(file)
+  }
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) processFile(file)
+  }
+
+  const confirmDocument = async () => {
+    if (!analysisResult) return
+    try {
+      const res = await api.post(`/api/clients/${clientId}/documents`, {
+        ...analysisResult,
+        fileName: analysisResult.fileName || 'document'
+      })
+      setClient(prev => ({
+        ...prev,
+        documents: [...(prev.documents || []), res.data]
+      }))
+      setAnalysisResult(null)
+      toast.success('Document indexé avec succès')
+    } catch (err) {
+      toast.error('Erreur lors de l\'indexation')
+    }
+  }
+
+  const getConfidenceColor = (confiance) => {
+    if (confiance > 0.8) return 'bg-green-100 text-green-800'
+    if (confiance >= 0.5) return 'bg-orange-100 text-orange-800'
+    return 'bg-red-100 text-red-800'
+  }
+
+  const confidenceColor = analysisResult ? getConfidenceColor(analysisResult.confiance || 0) : ''
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      {/* Upload zone */}
+      <div
+        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer"
+        onDrop={handleDrop}
+        onDragOver={e => e.preventDefault()}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileSelect} />
+        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+        <p className="mt-2 text-sm text-gray-600">Glissez un document ou cliquez pour parcourir</p>
+        <p className="text-xs text-gray-400">PDF, JPG, PNG — max 10 Mo</p>
+      </div>
+
+      {/* Loading state */}
+      {analyzing && (
+        <div className="mt-4 text-center">
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto" />
+          <p className="mt-2 text-sm text-gray-500">Analyse du document en cours...</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {analysisResult && (
+        <div className="mt-6 bg-white rounded-lg shadow p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="font-semibold">Document analysé</h4>
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${confidenceColor}`}>
+              {Math.round((analysisResult.confiance || 0) * 100)}%
+            </span>
+          </div>
+          <div className="text-sm text-gray-600">
+            Type: {analysisResult.type || analysisResult.type_document || 'Inconnu'}
+          </div>
+          {analysisResult.resume && <p className="text-sm mt-1">{analysisResult.resume}</p>}
+          {analysisResult.extracted_data && (
+            <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
+              <pre className="whitespace-pre-wrap font-mono">{JSON.stringify(analysisResult.extracted_data, null, 2)}</pre>
+            </div>
+          )}
+          <button
+            onClick={confirmDocument}
+            className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+          >
+            Confirmer et indexer
+          </button>
+        </div>
+      )}
+
+      {/* Existing documents list */}
+      <div className="mt-6">
+        <h4 className="font-semibold mb-3">Documents du dossier</h4>
+        {client.documents?.length > 0 ? (
+          <div className="space-y-2">
+            {client.documents.map((doc, i) => (
+              <div key={doc.id || i} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg">
+                <File size={16} className="text-gray-400 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-700 truncate">
+            {doc.fileName || doc.name || `Document ${i + 1}`}
+          </p>
+          <p className="text-xs text-gray-400">{doc.type || doc.type_document || 'Document'}</p>
+          <div className="flex items-center gap-2 mt-1">
+            {doc.source === 'whatsapp' ? (
+              <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Reçu par WhatsApp</span>
+            ) : (
+              <span className="text-[10px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Uploadé manuellement</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {doc.confiance != null && (
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${getConfidenceColor(doc.confiance)}`}>
+              {Math.round(doc.confiance * 100)}%
+            </span>
+          )}
+          <button
+            onClick={() => {/* Téléchargement original — à implémenter avec l'URL du fichier */}}
+            title="Télécharger"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+          >
+            <Download size={14} />
+          </button>
+        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400">Aucun document indexé</p>
+        )}
+      </div>
+    </motion.div>
+  )
 }
 
 const CANAL_ICON = {
@@ -545,6 +714,8 @@ export default function ClientDetail() {
   )
 
   if (!client) return null
+  
+  const TABS = [ { id: 'infos', label: 'Informations', icon: FileText, component: <InfosTab client={client}/> }, { id: 'contrats', label: 'Contrats', icon: Shield, component: <PlaceholderTab title="Contrats"/> }, { id: 'taches', label: 'Tâches', icon: CheckSquare, component: <PlaceholderTab title="Tâches"/> }, { id: 'ark', label: 'ARK Chat', icon: Bot, component: <PlaceholderTab title="ARK Chat"/> }, { id: 'documents', label: 'Documents', icon: File, component: <DocumentsTab client={client} setClient={setClient} clientId={id} /> }]
 
   // ─── TAB CONTENT RENDERER ───────────────────────────────────────────────
   const renderTabContent = () => {
@@ -556,7 +727,7 @@ export default function ClientDetail() {
       case 'activite':
         return <PlaceholderTab title="Activité" icon={Activity} />
       case 'documents':
-        return <PlaceholderTab title="Documents" icon={FileText} />
+        return <DocumentsTab client={client} setClient={setClient} clientId={id} />
       case 'historique':
         return <PlaceholderTab title="Historique" icon={Clock} />
       case 'messages':
