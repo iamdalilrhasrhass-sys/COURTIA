@@ -1,6 +1,6 @@
 {
   "routes": [
-    { "src": "^/landing/?$", "dest": "/landing/index.html" },
+    { "src": "^/landing/?$", "dest": "/landing/page.html" },
     { "src": "^/landing/(.*)$", "dest": "/landing/$1" },
     { "src": "^/(.*)$", "dest": "/index.html" }
   ]
