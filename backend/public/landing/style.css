@@ -1,0 +1,847 @@
+/* ============================================================
+   COURTIA — Landing Page
+   Design System : Glassmorphism Premium
+   Palette      : Fond noir profond, accents violet/cyan/rose/orange
+   Auteur       : Agent IA
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. RESET & BASE
+   ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background: #000000;
+  color: #ffffff;
+  overflow-x: hidden;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------
+   2. WEBGL CANVAS (fond animé Three.js)
+   ---------------------------------------------------------- */
+#webgl {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------
+   3. HEADER — fixé, glass
+   ---------------------------------------------------------- */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 4rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.3s ease, padding 0.3s ease;
+}
+
+/* Logo avec dégradé violet → cyan */
+.logo {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  user-select: none;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.nav a {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.nav a::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+.nav a:hover {
+  color: #ffffff;
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+/* Bouton outline dans la nav */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.btn-outline:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
+
+/* ----------------------------------------------------------
+   4. HERO WRAPPER — conteneur relatif pour le hero + floating
+   ---------------------------------------------------------- */
+.hero-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ----------------------------------------------------------
+   4. HERO — pleine hauteur, centré
+   ---------------------------------------------------------- */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 2rem 80px;
+  overflow: hidden;
+}
+
+/* Titre principal — très grand, dégradé */
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  max-width: 900px;
+  margin-bottom: 1.5rem;
+}
+
+/* Sous-titre */
+.hero h2 {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 700px;
+  margin-bottom: 1rem;
+}
+
+/* Paragraphe description */
+.hero p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 700px;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+/* ----------------------------------------------------------
+   5. BADGES — pilules glass
+   ---------------------------------------------------------- */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.badge:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   6. BOUTONS — primaire, secondaire
+   ---------------------------------------------------------- */
+.cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* Bouton primaire — dégradé violet → cyan */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 24px rgba(139, 92, 246, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.45);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Bouton secondaire — glass */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
+}
+
+/* ----------------------------------------------------------
+   7. FLOATING CARDS — cartes glass autour du hero
+   ---------------------------------------------------------- */
+.floating-cards {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass-card {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.02);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  pointer-events: auto;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Positions des cartes flottantes (overridables en inline) */
+.glass-card:nth-child(1) {
+  top: 18%;
+  left: 5%;
+}
+.glass-card:nth-child(2) {
+  top: 12%;
+  right: 5%;
+}
+.glass-card:nth-child(3) {
+  bottom: 22%;
+  left: 8%;
+}
+.glass-card:nth-child(4) {
+  bottom: 18%;
+  right: 6%;
+}
+
+/* ----------------------------------------------------------
+   8. PROMISE — section promesse centrée
+   ---------------------------------------------------------- */
+.promise {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+  text-align: center;
+}
+
+.promise h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.promise p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.8;
+}
+
+/* ----------------------------------------------------------
+   9. FEATURES — grille de cartes fonctionnalités
+   ---------------------------------------------------------- */
+.features {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 2rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  color: #ffffff;
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.7;
+}
+
+/* Icône dans les feature cards */
+.feature-card .feature-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* ----------------------------------------------------------
+   10. ARK SECTION — section showcase
+   ---------------------------------------------------------- */
+.ark-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+  text-align: center;
+}
+
+.ark-section h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #ec4899, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ark-section p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 650px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+}
+
+/* ----------------------------------------------------------
+   11. FOUNDER OFFER — section offre fondateur glass
+   ---------------------------------------------------------- */
+.founder-offer {
+  max-width: 700px;
+  margin: 3rem auto 5rem;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transition: all 0.4s ease;
+}
+
+.founder-offer:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.1);
+}
+
+.founder-offer h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #f97316, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.founder-offer p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 1.5rem;
+  line-height: 1.7;
+}
+
+.founder-offer .cta-group {
+  margin-top: 1rem;
+}
+
+/* ----------------------------------------------------------
+   12. FOOTER — centré, discret
+   ---------------------------------------------------------- */
+footer {
+  text-align: center;
+  padding: 3rem 2rem 4rem;
+  opacity: 0.5;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+
+footer a {
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.3s ease;
+}
+
+footer a:hover {
+  color: #8b5cf6;
+}
+
+/* ----------------------------------------------------------
+   13. ANIMATIONS — fade-in, slide-up, stagger
+   ---------------------------------------------------------- */
+
+/* Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Classes d'animation */
+.fade-in {
+  animation: fadeIn 0.8s ease both;
+}
+
+.slide-up {
+  animation: slideUp 0.8s ease both;
+}
+
+/* Délais stagger pour les glass-cards */
+.glass-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.glass-card:nth-child(2) {
+  animation-delay: 0.25s;
+}
+.glass-card:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.glass-card:nth-child(4) {
+  animation-delay: 0.55s;
+}
+
+/* Délais stagger pour les feature cards */
+.feature-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.feature-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.feature-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.feature-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.feature-card:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.feature-card:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+/* Animation flottement léger pour les glass-cards */
+.glass-card {
+  animation: float 6s ease-in-out infinite;
+}
+.glass-card:nth-child(2) {
+  animation-delay: -1.5s;
+}
+.glass-card:nth-child(3) {
+  animation-delay: -3s;
+}
+.glass-card:nth-child(4) {
+  animation-delay: -4.5s;
+}
+
+/* ----------------------------------------------------------
+   14. RESPONSIVE — Tablettes (≤ 768px)
+   ---------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Header compact */
+  .header {
+    padding: 1rem 1.5rem;
+  }
+
+  .logo {
+    font-size: 1.3rem;
+  }
+
+  .nav {
+    gap: 1.2rem;
+  }
+
+  .nav a {
+    font-size: 0.85rem;
+  }
+
+  .btn-outline {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  /* Hero — titres réduits */
+  .hero {
+    padding: 100px 1.5rem 60px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+  }
+
+  .hero h2 {
+    font-size: 1.1rem;
+  }
+
+  .hero p {
+    font-size: 0.95rem;
+  }
+
+  /* Floating cards — masquées sur mobile */
+  .floating-cards {
+    display: none;
+  }
+
+  /* Features — 1 ou 2 colonnes */
+  .features {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    padding: 3rem 1.5rem;
+  }
+
+  /* Promise */
+  .promise {
+    padding: 3rem 1.5rem;
+  }
+
+  .promise h2 {
+    font-size: 1.6rem;
+  }
+
+  /* Ark */
+  .ark-section {
+    padding: 3rem 1.5rem;
+  }
+
+  .ark-section h2 {
+    font-size: 1.8rem;
+  }
+
+  /* Founder offer */
+  .founder-offer {
+    margin: 2rem 1.5rem;
+    padding: 2rem;
+  }
+
+  .founder-offer h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Footer */
+  footer {
+    padding: 2rem 1.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ----------------------------------------------------------
+   15. RESPONSIVE — Mobiles (≤ 480px)
+   ---------------------------------------------------------- */
+@media (max-width: 480px) {
+  /* Header très compact */
+  .header {
+    padding: 0.8rem 1rem;
+  }
+
+  .logo {
+    font-size: 1.1rem;
+  }
+
+  .nav {
+    gap: 0.8rem;
+  }
+
+  .nav a {
+    font-size: 0.78rem;
+  }
+
+  .btn-outline {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 90px 1rem 50px;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+  }
+
+  .hero h2 {
+    font-size: 1rem;
+  }
+
+  .hero p {
+    font-size: 0.9rem;
+  }
+
+  /* Badges — plus petits */
+  .badges {
+    gap: 0.5rem;
+  }
+
+  .badge {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  /* Boutons full-width sur mobile */
+  .cta-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  /* Features — 1 colonne */
+  .features {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 2rem 1rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.1rem;
+  }
+
+  /* Promise */
+  .promise {
+    padding: 2rem 1rem;
+  }
+
+  .promise h2 {
+    font-size: 1.4rem;
+  }
+
+  .promise p {
+    font-size: 0.9rem;
+  }
+
+  /* Ark */
+  .ark-section {
+    padding: 2rem 1rem;
+  }
+
+  .ark-section h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Founder offer */
+  .founder-offer {
+    margin: 1.5rem 1rem;
+    padding: 1.5rem;
+  }
+
+  .founder-offer h2 {
+    font-size: 1.3rem;
+  }
+
+  /* Footer */
+  footer {
+    padding: 1.5rem 1rem;
+  }
+}
