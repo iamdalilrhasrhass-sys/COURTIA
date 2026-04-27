@@ -1,327 +1,272 @@
-import * as THREE from 'three';
+/* ═══════════════════════════════════════
+   COURTIA — scene.js
+   Bulle de savon 3D WebGL avec Three.js r128
+   Fresnel + iridescence arc-en-ciel
+═══════════════════════════════════════ */
 
-/**
- * Initialise la scène Three.js avec une grosse bulle de savon irisée,
- * des petites bulles satellites, des particules et un éclairage coloré.
- *
- * @param {string} containerId - L'id de l'élément DOM conteneur
- * @returns {{ update: (deltaTime: number, mouseX: number, mouseY: number) => void, resize: () => void }}
- */
-export function initScene(containerId) {
-    // ──────────────────────────────────────────────
-    // 1. INITIALISATION
-    // ──────────────────────────────────────────────
-    const container = document.getElementById(containerId);
-    if (!container) {
-        throw new Error(`Conteneur #${containerId} introuvable.`);
-    }
+// Vertex Shader : déformation organique avec Simplex 3D
+const VERTEX_SHADER = `
+  // Bruit Simplex 3D (implémentation compacte)
+  vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+  vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+  float snoise(vec3 v) {
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    vec3 i  = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+    i = mod289(i);
+    vec4 p = permute(permute(permute(
+      i.z + vec4(0.0, i1.z, i2.z, 1.0)) +
+      i.y + vec4(0.0, i1.y, i2.y, 1.0)) +
+      i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+    vec4 x = x_ *ns.x + ns.yyyy;
+    vec4 y = y_ *ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+  }
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    container.appendChild(renderer.domElement);
+  uniform float u_time;
+  varying vec3 v_normal;
+  varying vec3 v_position;
+  varying vec2 v_uv;
 
-    // Scene + camera
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 50);
-    camera.position.set(0, 0, 6);
-    camera.lookAt(0, 0, 0);
+  void main() {
+    v_uv = uv;
+    vec3 pos = position;
+    // Déformation organique : bruit Simplex 3D + temps
+    float noise1 = snoise(pos * 1.8 + vec3(u_time * 0.35, u_time * 0.22, u_time * 0.18));
+    float noise2 = snoise(pos * 3.2 + vec3(u_time * 0.18 + 5.0, u_time * 0.3 + 2.0, u_time * 0.25));
+    float deform = noise1 * 0.045 + noise2 * 0.022;
+    pos += normal * deform;
+    v_normal = normalMatrix * (normal + vec3(0.0, deform * 0.5, 0.0));
+    v_position = (modelViewMatrix * vec4(pos, 1.0)).xyz;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
 
-    // ──────────────────────────────────────────────
-    // 2. LUMIÈRES
-    // ──────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+// Fragment Shader : Fresnel + iridescence arc-en-ciel
+const FRAGMENT_SHADER = `
+  uniform float u_time;
+  uniform vec3 u_camera;
+  varying vec3 v_normal;
+  varying vec3 v_position;
+  varying vec2 v_uv;
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    dirLight.position.set(5, 5, 5);
-    scene.add(dirLight);
+  // Conversion HSV → RGB
+  vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+  }
 
-    const pointLightViolet = new THREE.PointLight(0x8B5CF6, 3);
-    pointLightViolet.position.set(-4, 2, 4);
-    scene.add(pointLightViolet);
+  void main() {
+    vec3 N = normalize(v_normal);
+    vec3 V = normalize(-v_position); // vue vers la caméra
 
-    const pointLightCyan = new THREE.PointLight(0x06B6D4, 3);
-    pointLightCyan.position.set(3, -1, 3);
-    scene.add(pointLightCyan);
+    // Fresnel : bord plus réfléchissant
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.8);
 
-    const pointLightRose = new THREE.PointLight(0xEC4899, 2);
-    pointLightRose.position.set(-1, -2, 5);
-    scene.add(pointLightRose);
+    // Iridescence arc-en-ciel : teinte variant avec angle + temps
+    float hue = fract(fresnel * 0.8 + u_time * 0.08 + v_uv.y * 0.4 + v_uv.x * 0.2);
+    vec3 iridescence = hsv2rgb(vec3(hue, 0.7, 1.0));
 
-    const pointLightOrange = new THREE.PointLight(0xF97316, 1);
-    pointLightOrange.position.set(2, 3, 2);
-    scene.add(pointLightOrange);
+    // Reflet blanc spéculaire en haut-gauche
+    vec3 lightDir = normalize(vec3(-0.6, 0.8, 0.5));
+    float specular = pow(max(dot(reflect(-lightDir, N), V), 0.0), 60.0);
+    vec3 specularColor = vec3(specular * 1.5);
 
-    // ──────────────────────────────────────────────
-    // 3. SHADERS BULLE DE SAVON
-    // ──────────────────────────────────────────────
-    const bubbleVertexShader = /* glsl */ `
-        varying vec3 vNormal;
-        varying vec3 vPosition;
-        varying vec2 vUv;
-        varying vec3 vWorldPosition;
+    // Reflet violet subtil bas-droite
+    vec3 lightDir2 = normalize(vec3(0.5, -0.4, 0.3));
+    float spec2 = pow(max(dot(reflect(-lightDir2, N), V), 0.0), 40.0);
+    vec3 specColor2 = vec3(0.5, 0.4, 1.0) * spec2 * 0.6;
 
-        void main() {
-            vec4 worldPos = modelMatrix * vec4(position, 1.0);
-            vWorldPosition = worldPos.xyz;
-            vNormal = normalize(mat3(modelMatrix) * normal);
-            vPosition = position;
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `;
+    // Couleur de base de la bulle : transparent avec teinte violet
+    vec3 baseColor = vec3(0.3, 0.25, 0.6) * 0.3;
 
-    const bubbleFragmentShader = /* glsl */ `
-        varying vec3 vNormal;
-        varying vec3 vPosition;
-        varying vec2 vUv;
-        varying vec3 vWorldPosition;
-        uniform float uTime;
+    // Assemblage final
+    vec3 color = baseColor + iridescence * fresnel * 1.2 + specularColor + specColor2;
 
-        void main() {
-            // Direction de vue (de la surface vers la caméra)
-            vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+    // Alpha : transparent au centre, opaque sur les bords (Fresnel)
+    float alpha = fresnel * 0.85 + 0.05 + specular * 0.4;
+    alpha = clamp(alpha, 0.0, 0.95);
 
-            // Fresnel — fort sur les bords, faible au centre
-            float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 3.0);
-            fresnel = fresnel * 0.85 + 0.05; // léger boost
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
 
-            // Ondulation du film liquide
-            float wave = sin(vNormal.x * 12.0 + uTime * 0.6) * sin(vNormal.y * 10.0 + uTime * 0.7) * 0.08;
-            wave += sin(vNormal.z * 8.0 + uTime * 0.5) * 0.05;
-            fresnel += wave;
+// ════════════════════════════════════════
+// Création de la scène Three.js
+// ════════════════════════════════════════
 
-            // Couleurs irisées qui glissent avec le temps
-            float hue1 = sin(vNormal.x * 3.0 + uTime * 0.3) * 0.5 + 0.5;
-            float hue2 = sin(vNormal.y * 4.0 + uTime * 0.25) * 0.5 + 0.5;
-            float hue3 = sin(vNormal.z * 5.0 + uTime * 0.35) * 0.5 + 0.5;
+let scene, camera, renderer, bubble, bubbleMaterial;
+let glow, droplets = [], particles;
+const clock = new THREE.Clock();
+const isMobile = window.innerWidth < 768;
 
-            // Palette irisée : violet, cyan, rose, orange, vert
-            vec3 violet = vec3(0.545, 0.361, 0.965);  // #8B5CF6
-            vec3 cyan = vec3(0.024, 0.714, 0.831);    // #06B6D4
-            vec3 rose = vec3(0.925, 0.298, 0.600);    // #EC4899
-            vec3 orange = vec3(0.976, 0.451, 0.086);  // #F97316
-            vec3 vert = vec3(0.065, 0.725, 0.506);    // #10B981
+function createScene() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
 
-            vec3 iridescent = mix(violet, cyan, hue1);
-            iridescent = mix(iridescent, rose, hue2 * 0.5);
-            iridescent = mix(iridescent, orange, hue3 * 0.3);
-            iridescent = mix(iridescent, vert, sin(uTime * 0.2) * 0.5 + 0.5);
+  // === RENDERER ===
+  renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: true,
+    powerPreference: 'high-performance'
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
 
-            // Centre laiteux subtil
-            vec3 milky = vec3(0.95, 0.94, 0.98);
-            vec3 finalColor = mix(milky, iridescent, fresnel);
+  // === SCENE ===
+  scene = new THREE.Scene();
 
-            // Alpha : bord visible, centre quasi transparent + voile laiteux
-            float alpha = fresnel * 0.70 + 0.04;
-            alpha = clamp(alpha, 0.0, 1.0);
+  // === CAMERA ===
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 5.5);
 
-            gl_FragColor = vec4(finalColor, alpha);
-        }
-    `;
+  // === BULLE PRINCIPALE ===
+  const bubbleGeom = new THREE.SphereGeometry(1.6, 128, 128);
+  bubbleMaterial = new THREE.ShaderMaterial({
+    vertexShader: VERTEX_SHADER,
+    fragmentShader: FRAGMENT_SHADER,
+    uniforms: {
+      u_time: { value: 0.0 },
+      u_camera: { value: camera.position }
+    },
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  bubble = new THREE.Mesh(bubbleGeom, bubbleMaterial);
+  scene.add(bubble);
 
-    // Matériau shader pour la membrane irisée
-    const bubbleShaderMaterial = new THREE.ShaderMaterial({
-        vertexShader: bubbleVertexShader,
-        fragmentShader: bubbleFragmentShader,
-        uniforms: {
-            uTime: { value: 0 },
-        },
-        transparent: true,
-        depthWrite: false,
-        side: THREE.FrontSide,
+  // === GLOW (halo violet derrière) ===
+  const glowGeom = new THREE.SphereGeometry(1.9, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0x534AB7,
+    transparent: true,
+    opacity: 0.06,
+    side: THREE.BackSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  glow = new THREE.Mesh(glowGeom, glowMat);
+  scene.add(glow);
+
+  // === DROPLETS (8 petites bulles satellites) ===
+  const dropletCount = isMobile ? 4 : 8;
+  const dropletData = [
+    { size: 0.22, pos: [2.1, 0.8, 0.2], speed: 0.42 },
+    { size: 0.16, pos: [-2.0, 1.1, 0.1], speed: 0.58 },
+    { size: 0.28, pos: [1.8, -1.0, 0.3], speed: 0.35 },
+    { size: 0.12, pos: [-1.7, -0.9, 0.0], speed: 0.67 },
+    { size: 0.19, pos: [2.5, 0.1, 0.2], speed: 0.48 },
+    { size: 0.14, pos: [-2.3, 0.3, 0.1], speed: 0.55 },
+    { size: 0.10, pos: [1.5, 1.6, 0.2], speed: 0.72 },
+    { size: 0.08, pos: [-1.6, -1.5, 0.0], speed: 0.63 }
+  ].slice(0, dropletCount);
+
+  dropletData.forEach(d => {
+    const geom = new THREE.SphereGeometry(d.size, 24, 24);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: VERTEX_SHADER,
+      fragmentShader: FRAGMENT_SHADER,
+      uniforms: {
+        u_time: { value: 0.0 },
+        u_camera: { value: camera.position }
+      },
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
     });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(...d.pos);
+    mesh.userData.speed = d.speed;
+    mesh.userData.origin = mesh.position.clone();
+    droplets.push(mesh);
+    scene.add(mesh);
+  });
 
-    // ──────────────────────────────────────────────
-    // 4. GROSSE BULLE — GROUPE PRINCIPAL
-    // ──────────────────────────────────────────────
-    const bubbleGroup = new THREE.Group();
-    bubbleGroup.position.set(0.6, 0.1, 0);
-    scene.add(bubbleGroup);
+  // === PARTICULES (étoiles / poussière) ===
+  const pCount = isMobile ? 90 : 200;
+  const pGeom = new THREE.BufferGeometry();
+  const pPositions = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount * 3; i++) {
+    pPositions[i] = (Math.random() - 0.5) * 12;
+  }
+  pGeom.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+  const pMat = new THREE.PointsMaterial({
+    color: 0xAFA9EC,
+    size: 0.025,
+    transparent: true,
+    opacity: 0.5,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  particles = new THREE.Points(pGeom, pMat);
+  scene.add(particles);
 
-    // Couche 1 : membrane irisée (ShaderMaterial)
-    const membraneGeometry = new THREE.SphereGeometry(1.55, 128, 128);
-    const membrane = new THREE.Mesh(membraneGeometry, bubbleShaderMaterial);
-    bubbleGroup.add(membrane);
+  // === LUMIÈRES ===
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+  scene.add(ambient);
 
-    // Couche 2 : renfort verre (MeshPhysicalMaterial)
-    const glassGeometry = new THREE.SphereGeometry(1.58, 128, 128);
-    const glassMaterial = new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(0xffffff),
-        metalness: 0,
-        roughness: 0.05,
-        transparent: true,
-        opacity: 0.10,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.1,
-        ior: 1.33,
-        reflectivity: 0.5,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-    });
-    const glassLayer = new THREE.Mesh(glassGeometry, glassMaterial);
-    bubbleGroup.add(glassLayer);
+  const light1 = new THREE.PointLight(0x534AB7, 1.5, 10);
+  light1.position.set(-3, 3, 2);
+  scene.add(light1);
 
-    // Couche 3 : reflets blancs
-    const reflectionPositions = [
-        { pos: [1.8, 0.8, 1.0], opacity: 0.18 },
-        { pos: [-1.5, -1.0, 0.8], opacity: 0.25 },
-        { pos: [0.3, 1.6, 0.5], opacity: 0.12 },
-    ];
+  const light2 = new THREE.PointLight(0xAFA9EC, 0.8, 10);
+  light2.position.set(3, -2, 1);
+  scene.add(light2);
+}
 
-    const reflectionGeometry = new THREE.PlaneGeometry(2.5, 1.2);
-    reflectionPositions.forEach(({ pos, opacity }) => {
-        const mat = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-        });
-        const plane = new THREE.Mesh(reflectionGeometry, mat);
-        plane.position.set(...pos);
-        // Orienter les reflets vers l'extérieur
-        plane.lookAt(new THREE.Vector3(...pos).multiplyScalar(2));
-        bubbleGroup.add(plane);
-    });
+// Expose globally
+window.courtiaScene = {
+  get scene() { return scene; },
+  get camera() { return camera; },
+  get renderer() { return renderer; },
+  get bubble() { return bubble; },
+  get bubbleMaterial() { return bubbleMaterial; },
+  get glow() { return glow; },
+  get droplets() { return droplets; },
+  get particles() { return particles; },
+  get clock() { return clock; }
+};
 
-    // ──────────────────────────────────────────────
-    // 5. PETITES BULLES (28)
-    // ──────────────────────────────────────────────
-    const smallBubbles = [];
-    const smallBubbleCount = 28;
-
-    for (let i = 0; i < smallBubbleCount; i++) {
-        // Rayon aléatoire entre 0.06 et 0.28
-        const radius = 0.06 + Math.random() * 0.22;
-        const geo = new THREE.SphereGeometry(radius, 32, 32);
-
-        // Cloner le matériau shader pour chaque petite bulle (chaque instance a son propre uTime potentiellement)
-        const mat = bubbleShaderMaterial.clone();
-
-        const mesh = new THREE.Mesh(geo, mat);
-
-        // Position aléatoire autour de la grosse bulle
-        // Distance entre 1.0 et 5.5 (certaines proches : gouttelettes entre 1.0 et 2.0)
-        const isDroplet = i < 10; // 10 premières = gouttelettes proches
-        const distance = isDroplet
-            ? 1.0 + Math.random() * 1.0   // 1.0 → 2.0
-            : 2.0 + Math.random() * 3.5;  // 2.0 → 5.5
-
-        // Direction aléatoire sur la sphère
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-
-        const x = distance * Math.sin(phi) * Math.cos(theta);
-        const y = distance * Math.sin(phi) * Math.sin(theta);
-        const z = distance * Math.cos(phi);
-
-        mesh.position.set(x, y, z);
-
-        // Propriétés d'animation
-        mesh.userData = {
-            floatSpeed: 0.3 + Math.random() * 0.9,    // 0.3 → 1.2
-            floatAmplitude: 0.1 + Math.random() * 0.4, // 0.1 → 0.5
-            rotSpeed: 0.1 + Math.random() * 0.4,       // 0.1 → 0.5
-            initialY: y,
-        };
-
-        scene.add(mesh);
-        smallBubbles.push(mesh);
-    }
-
-    // ──────────────────────────────────────────────
-    // 6. PARTICULES (900)
-    // ──────────────────────────────────────────────
-    const particleCount = 900;
-    const particlePositions = new Float32Array(particleCount * 3);
-    const sphereRadius = 10;
-
-    for (let i = 0; i < particleCount; i++) {
-        // Distribution aléatoire dans une sphère de rayon 10
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const radius = Math.pow(Math.random(), 1 / 3) * sphereRadius; // distribution uniforme dans le volume
-
-        particlePositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-        particlePositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-        particlePositions[i * 3 + 2] = radius * Math.cos(phi);
-    }
-
-    const particleGeometry = new THREE.BufferGeometry();
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-
-    const particleMaterial = new THREE.PointsMaterial({
-        color: 0xaaaaff,
-        size: 0.02,
-        transparent: true,
-        opacity: 0.6,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-    });
-
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particles);
-
-    // ──────────────────────────────────────────────
-    // 7. ANIMATION
-    // ──────────────────────────────────────────────
-    let totalTime = 0;
-
-    function update(deltaTime, mouseX, mouseY) {
-        totalTime += deltaTime;
-
-        // Mise à jour du temps dans le shader
-        bubbleShaderMaterial.uniforms.uTime.value = totalTime;
-
-        // Mise à jour des clones de matériaux des petites bulles
-        for (const b of smallBubbles) {
-            if (b.material.uniforms && b.material.uniforms.uTime) {
-                b.material.uniforms.uTime.value = totalTime;
-            }
-        }
-
-        // Grosse bulle : rotation lente + flottement vertical
-        bubbleGroup.rotation.y += deltaTime * 0.12;
-        bubbleGroup.position.y = 0.1 + Math.sin(totalTime * 0.4) * 0.1;
-
-        // Petites bulles : flottement + rotation
-        for (const b of smallBubbles) {
-            const ud = b.userData;
-            b.position.y = ud.initialY + Math.sin(totalTime * ud.floatSpeed) * ud.floatAmplitude;
-            b.rotation.y += ud.rotSpeed * deltaTime;
-        }
-
-        // Particules : rotation lente
-        particles.rotation.y += deltaTime * 0.025;
-        particles.rotation.x += deltaTime * 0.015;
-
-        // Caméra : parallaxe fluide selon la souris
-        const targetX = mouseX * 0.4;
-        const targetY = mouseY * 0.3;
-        camera.position.x += (targetX - camera.position.x) * 0.03;
-        camera.position.y += (targetY - camera.position.y) * 0.03;
-        camera.lookAt(0, 0, 0);
-
-        // Rendu
-        renderer.render(scene, camera);
-    }
-
-    // ──────────────────────────────────────────────
-    // 8. RESIZE
-    // ──────────────────────────────────────────────
-    function resize() {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-    }
-
-    // ──────────────────────────────────────────────
-    // 9. RETOUR
-    // ──────────────────────────────────────────────
-    return { update, resize };
+// Init dès que le DOM est prêt
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', createScene);
+} else {
+  createScene();
 }
