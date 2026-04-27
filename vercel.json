@@ -2,7 +2,8 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/((?!landing/).*)", "destination": "/index.html" },
-    { "source": "/landing/:path*", "destination": "/landing/:path*" }
+    { "source": "/landing", "destination": "/landing/index.html" },
+    { "source": "/landing/(.*)", "destination": "/landing/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
