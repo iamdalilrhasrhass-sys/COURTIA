@@ -3,15 +3,11 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/landing/(.*)",
-      "destination": "/landing/$1"
-    },
-    {
       "source": "/pricing",
       "destination": "/index.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!landing/).*)",
       "destination": "/index.html"
     }
   ]
