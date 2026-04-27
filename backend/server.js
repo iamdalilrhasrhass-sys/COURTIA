@@ -79,6 +79,14 @@ app.get('/api/status', async (req, res) => {
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'courtia-backend' }))
 
+// ==================== STATIC FILES — Landing Page 3D ====================
+
+const path = require('path')
+app.use('/landing', express.static(path.join(__dirname, 'public/landing')))
+
+// Fallback : /landing (sans slash) et /landing/ servent index.html
+app.get('/landing', (req, res) => res.sendFile(path.join(__dirname, 'public/landing/index.html')))
+
 // ==================== SCORE REFRESH (Batch 1 — POST only, no GET writes) ====================
 
 app.post('/api/clients/:id/score/refresh', verifyToken, async (req, res) => {
