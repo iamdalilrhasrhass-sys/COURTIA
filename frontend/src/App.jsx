@@ -132,9 +132,9 @@ export default function App() {
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
-        <Route path="/landing" element={<LandingPublic />} />
+        <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
-        <Route path="/" element={<Navigate to="/landing" replace />} />
+        <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Routes privées — AppLayout monte une seule fois, pages via Outlet */}
