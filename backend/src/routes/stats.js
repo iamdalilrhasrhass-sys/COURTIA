@@ -13,12 +13,12 @@ router.get('/portfolio', verifyToken, async (req, res) => {
     // Contrats actifs par type avec prime totale
     const byTypeResult = await pool.query(`
       SELECT
-        type_contrat AS type,
+        COALESCE(quote_data->>'type_contrat', 'Autre') AS type,
         COUNT(*)::int AS count,
-        COALESCE(SUM(prime_annuelle), 0) AS prime_total
+        COALESCE(SUM(NULLIF(quote_data->>'prime_annuelle', '')::decimal), 0) AS prime_total
       FROM quotes
       WHERE status = 'actif'
-      GROUP BY type_contrat
+      GROUP BY quote_data->>'type_contrat'
       ORDER BY count DESC
     `)
 
@@ -43,19 +43,18 @@ router.get('/portfolio', verifyToken, async (req, res) => {
     const renewalResult = await pool.query(`
       SELECT
         q.id,
-        q.type_contrat,
-        q.date_echeance,
-        q.prime_annuelle,
+        q.quote_data->>'type_contrat' AS type_contrat,
+        q.quote_data->>'date_echeance' AS date_echeance,
+        NULLIF(q.quote_data->>'prime_annuelle', '')::decimal AS prime_annuelle,
         c.first_name AS nom,
         c.last_name AS prenom,
         c.id AS client_id,
-        CEIL(EXTRACT(EPOCH FROM (q.date_echeance - NOW())) / 86400)::int AS jours_restants
+        CEIL(EXTRACT(EPOCH FROM (NULLIF(q.quote_data->>'date_echeance', '')::date - NOW())) / 86400)::int AS jours_restants
       FROM quotes q
       JOIN clients c ON c.id = q.client_id
       WHERE q.status = 'actif'
-        AND q.date_echeance IS NOT NULL
-        AND q.date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days'
-      ORDER BY q.date_echeance ASC
+        AND NULLIF(q.quote_data->>'date_echeance', '')::date BETWEEN NOW() AND NOW() + INTERVAL '90 days'
+      ORDER BY NULLIF(q.quote_data->>'date_echeance', '')::date ASC
       LIMIT 50
     `)
 

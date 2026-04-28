@@ -12,9 +12,6 @@ const anthropic = new Anthropic({
 
 // Log au démarrage pour vérifier la clé
 console.log('ARK init - ANTHROPIC_API_KEY présente:', !!process.env.ANTHROPIC_API_KEY)
-if (process.env.ANTHROPIC_API_KEY) {
-  console.log('ARK init - Clé commence par:', process.env.ANTHROPIC_API_KEY.substring(0, 15))
-}
 
 /**
  * POST /api/ark/chat
