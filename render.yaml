@@ -22,7 +22,7 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://crm-assurance.vercel.app
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     healthCheckInterval: 30
 
   # PostgreSQL Database
