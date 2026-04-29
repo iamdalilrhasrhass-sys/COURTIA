@@ -116,8 +116,9 @@ router.get('/prospects/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
 
     if (dbAvailable()) {
+      const userId = getUserId(req);
       try {
-        const result = await pool.query('SELECT * FROM reach_prospects WHERE id = $1', [id]);
+        const result = await pool.query('SELECT * FROM reach_prospects WHERE id = $1 AND user_id = $2', [id, userId]);
         if (result.rows.length > 0) {
           const prospect = result.rows[0];
           const analysisRes = await pool.query('SELECT * FROM reach_analyses WHERE prospect_id = $1 ORDER BY created_at DESC LIMIT 1', [id]);
@@ -228,12 +229,15 @@ router.post('/messages/generate', verifyToken, async (req, res) => {
 router.get('/replies', verifyToken, async (req, res) => {
   try {
     if (dbAvailable()) {
+      const userId = getUserId(req);
       try {
         const result = await pool.query(
           `SELECT r.*, p.company_name, p.category, p.city
            FROM reach_replies r
            JOIN reach_prospects p ON p.id = r.prospect_id
-           ORDER BY r.received_at DESC LIMIT 50`
+           WHERE p.user_id = $1
+           ORDER BY r.received_at DESC LIMIT 50`,
+          [userId]
         );
         return res.json({ success: true, data: result.rows, count: result.rows.length });
       } catch (e) { /* table pas encore migrée */ }

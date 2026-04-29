@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Inbox, MessageSquare, ThumbsUp, AlertCircle, Clock, XCircle, ArrowRight, UserPlus, CheckSquare, Send } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
+import toast from 'react-hot-toast';
 
 const accent = '#5B4DF5';
 
@@ -109,7 +110,14 @@ export default function ReachInbox() {
                 <button className="w-full py-2.5 text-sm font-medium text-white rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2" style={{ background: accent }}>
                   <CheckSquare size={14} /> Créer une tâche
                 </button>
-                <button className="w-full py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                <button
+                  onClick={async () => {
+                    const res = await useReachStore.getState().convertToClient(selected.prospect);
+                    if (res.success) toast.success('Prospect converti en client !');
+                    else toast.error('Erreur conversion');
+                  }}
+                  className="w-full py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                >
                   <UserPlus size={14} /> Convertir en client
                 </button>
                 <button className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition flex items-center justify-center gap-1">
