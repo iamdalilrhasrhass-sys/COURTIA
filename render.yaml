@@ -15,7 +15,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: DATABASE_URL
-        sync: false
+        sync: true
       - key: JWT_SECRET
         sync: false
       - key: TELEGRAM_BOT_TOKEN
