@@ -44,12 +44,3 @@ services:
     envVars:
       - key: POSTGRES_PASSWORD
         generateValue: true
-
-  # Redis Cache (optional — comment out if not used)
-  - type: redis
-    name: crm-assurance-redis
-    plan: starter
-    region: frankfurt
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: Allow from backend
