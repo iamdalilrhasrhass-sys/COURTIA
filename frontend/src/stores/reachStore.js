@@ -149,6 +149,80 @@ const useReachStore = create((set, get) => ({
     }
   },
 
+  // Create task
+  createTask: async (id, payload) => {
+    try {
+      const { data } = await api.post(`/reach/prospects/${id}/create-task`, payload);
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Update prospect status
+  updateProspectStatus: async (id, status) => {
+    try {
+      const { data } = await api.patch(`/reach/prospects/${id}/status`, { status });
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Handle reply (mark read, archive)
+  handleReply: async (id, action) => {
+    try {
+      const { data } = await api.post(`/reach/replies/${id}/handle`, { action });
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Update campaign status
+  updateCampaignStatus: async (id, status) => {
+    try {
+      const { data } = await api.patch(`/reach/campaigns/${id}/status`, { status });
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Create campaign from template
+  createCampaignFromTemplate: async (payload) => {
+    try {
+      const { data } = await api.post('/reach/campaigns/from-template', payload);
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Fetch reporting
+  fetchReporting: async () => {
+    set({ loading: true });
+    try {
+      const { data } = await api.get('/reach/reporting');
+      if (data.success) set({ dashboard: { ...get().dashboard, ...data.data } });
+      return data;
+    } catch (err) {
+      return { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Fetch map data
+  fetchMapData: async (category) => {
+    try {
+      const { data } = await api.get(`/reach/map?category=${category || ''}`);
+      return data;
+    } catch (err) {
+      return { success: false };
+    }
+  },
+
   // Clear
   clearError: () => set({ error: null }),
 }));

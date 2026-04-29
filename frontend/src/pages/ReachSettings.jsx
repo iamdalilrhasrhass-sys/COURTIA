@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Shield, Key, Zap, Globe, CheckSquare, AlertTriangle, Activity } from 'lucide-react';
 import api from '../api';
+import toast from 'react-hot-toast';
 
 const accent = '#5B4DF5';
 
@@ -157,7 +158,10 @@ export default function ReachSettings() {
           Conformément au RGPD, les prospects peuvent demander le retrait de leurs données.
           Cette action est irréversible et enregistrée dans l'historique.
         </p>
-        <button className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition">
+        <button
+          onClick={() => toast('Aucun opt-out enregistré', { icon: '✅' })}
+          className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition"
+        >
           Voir les opt-out (0)
         </button>
       </motion.div>

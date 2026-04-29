@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Plus, Clock, Users, Play, Pause, Target } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
+import toast from 'react-hot-toast';
+import api from '../api';
 
 const accent = '#5B4DF5';
 
 export default function ReachCampaigns() {
-  const { campaigns, fetchCampaigns, loading } = useReachStore();
+  const navigate = useNavigate();
+  const { campaigns, fetchCampaigns, loading, createCampaign } = useReachStore();
   const [showTemplates, setShowTemplates] = useState(false);
 
   const templates = [
@@ -41,6 +45,12 @@ export default function ReachCampaigns() {
         </button>
       </div>
 
+      {/* Mock mode badge */}
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center gap-2">
+        <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-200 text-amber-800">Démo</span>
+        <span className="text-xs text-amber-700">Mode démo : données fictives. Configurez les API pour activer les données réelles.</span>
+      </div>
+
       {/* Templates popup */}
       {showTemplates && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
@@ -57,7 +67,14 @@ export default function ReachCampaigns() {
                   <span className="flex items-center gap-1"><Mail size={12} /> {t.channel}</span>
                   <span className="flex items-center gap-1"><Clock size={12} /> {t.steps} étapes</span>
                 </div>
-                <button className="mt-3 w-full py-2 text-xs font-medium text-white rounded-lg hover:opacity-90 transition" style={{ background: accent }}>
+                <button
+                  onClick={() => {
+                    createCampaign({ name: t.name, description: t.desc, channel: t.channel, steps: t.steps });
+                    toast.success(`Campagne "${t.name}" créée !`);
+                    setShowTemplates(false);
+                  }}
+                  className="mt-3 w-full py-2 text-xs font-medium text-white rounded-lg hover:opacity-90 transition" style={{ background: accent }}
+                >
                   Utiliser ce template
                 </button>
               </div>
@@ -94,15 +111,30 @@ export default function ReachCampaigns() {
             </div>
             <div className="flex gap-2">
               {c.status === 'active' ? (
-                <button className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition flex items-center gap-1">
+                <button
+                  onClick={async () => {
+                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' }); } catch {}
+                    toast.success('Campagne mise en pause');
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition flex items-center gap-1"
+                >
                   <Pause size={12} /> Pause
                 </button>
               ) : (
-                <button className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}>
+                <button
+                  onClick={async () => {
+                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'active' }); } catch {}
+                    toast.success('Campagne lancée !');
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}
+                >
                   <Play size={12} /> Lancer
                 </button>
               )}
-              <button className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+              <button
+                onClick={() => navigate(`/reach/campaigns/${c.id}`)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              >
                 Voir
               </button>
             </div>

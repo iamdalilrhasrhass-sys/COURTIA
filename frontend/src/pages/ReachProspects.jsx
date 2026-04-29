@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Filter, Star, TrendingUp, Target, ArrowRight, Zap, Phone, MapPin, Building } from 'lucide-react';
+import { Target, MapPin } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
 
 const accent = '#5B4DF5';
@@ -47,6 +47,12 @@ export default function ReachProspects() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">{prospects.length} prospects dans votre pipeline</p>
         </div>
+      </div>
+
+      {/* Mock mode badge */}
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center gap-2">
+        <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-200 text-amber-800">Démo</span>
+        <span className="text-xs text-amber-700">Mode démo : données fictives. Configurez les API pour activer les données réelles.</span>
       </div>
 
       {/* Quick filters */}
