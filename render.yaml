@@ -7,14 +7,21 @@ services:
     plan: starter
     buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
+    preDeployCommand: cd backend && npm run migrate
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: crm-assurance-db
+          property: connectionString
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: JWT_SECRET
+        sync: false
+      - key: GOOGLE_PLACES_API_KEY
         sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
@@ -38,11 +45,11 @@ services:
       - key: POSTGRES_PASSWORD
         generateValue: true
 
-  # Redis Cache (optional)
+  # Redis Cache (optional — comment out if not used)
   - type: redis
     name: crm-assurance-redis
-    region: frankfurt
     plan: starter
+    region: frankfurt
     ipAllowList:
       - source: 0.0.0.0/0
         description: Allow from backend
