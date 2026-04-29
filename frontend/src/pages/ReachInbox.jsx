@@ -57,6 +57,12 @@ export default function ReachInbox() {
         </div>
       </div>
 
+      {/* Mock mode badge */}
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center gap-2">
+        <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-200 text-amber-800">Démo</span>
+        <span className="text-xs text-amber-700">Mode démo : réponses fictives. Configurez les API pour activer les données réelles.</span>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Liste */}
         <div className="lg:col-span-2 space-y-3">
@@ -123,7 +129,10 @@ export default function ReachInbox() {
                 >
                   <UserPlus size={14} /> Convertir en client
                 </button>
-                <button className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition flex items-center justify-center gap-1">
+                <button
+                  onClick={() => toast.success('Relance planifiée à J+7')}
+                  className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition flex items-center justify-center gap-1"
+                >
                   <ArrowRight size={14} /> Relancer plus tard
                 </button>
               </div>

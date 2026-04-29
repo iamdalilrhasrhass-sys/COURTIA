@@ -28,7 +28,7 @@ const SCRIPT_TABS = ['Appel', 'Email', 'SMS', 'LinkedIn'];
 export default function ReachProspectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { prospectDetail, fetchProspectDetail, analyzeProspect, convertToClient } = useReachStore();
+  const { prospectDetail, fetchProspectDetail, analyzeProspect, convertToClient, createTask } = useReachStore();
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [converting, setConverting] = useState(false);
@@ -300,7 +300,13 @@ export default function ReachProspectDetail() {
           {isConverted ? <CheckSquare size={14} /> : converting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
           {isConverted ? 'Déjà client COURTIA' : 'Convertir en client'}
         </button>
-        <button className="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center gap-2">
+        <button
+          onClick={() => {
+            createTask(prospectDetail?.id || id, { title: 'Suivi ' + (data.company_name || 'prospect') });
+            toast.success('Tâche créée : Suivi ' + (data.company_name || 'prospect'));
+          }}
+          className="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center gap-2"
+        >
           <CheckSquare size={14} /> Créer une tâche
         </button>
         <button

@@ -169,6 +169,7 @@ export default function App() {
           <Route path="/reach/search"      element={<ReachSearch />} />
           <Route path="/reach/prospects/:id" element={<ReachProspectDetail />} />
           <Route path="/reach/prospects"   element={<ReachProspects />} />
+          <Route path="/reach/campaigns/:id" element={<ReachCampaigns />} />
           <Route path="/reach/campaigns"   element={<ReachCampaigns />} />
           <Route path="/reach/inbox"       element={<ReachInbox />} />
           <Route path="/reach/map"         element={<ReachMap />} />
