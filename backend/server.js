@@ -6,7 +6,7 @@ const app = express()
 const pool = require('./src/db')
 app.locals.pool = pool
 
-app.use(cors({ origin: ['https://courtia.vercel.app', 'http://localhost:5173'], credentials: true }))
+app.use(cors({ origin: ['https://courtia.vercel.app', 'http://localhost:3000', 'http://localhost:5173'], credentials: true }))
 app.use(express.json({
   // We need the raw body for Stripe webhook verification
   verify: (req, res, buf) => {
