@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Target, Loader2, Phone, Star, ExternalLink, TrendingUp, Mail } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
@@ -27,6 +28,7 @@ const NICHES = [
 ];
 
 export default function ReachSearch() {
+  const navigate = useNavigate();
   const { searchProspects, prospects, loading } = useReachStore();
   const [category, setCategory] = useState('garage');
   const [city, setCity] = useState('Sens');
@@ -132,7 +134,7 @@ export default function ReachSearch() {
                   </span>
                 )}
                 <div className="flex gap-2 pt-2 border-t border-gray-50">
-                  <button className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}>
+                  <button onClick={() => navigate('/reach/prospects')} className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}>
                     <TrendingUp size={12} /> Analyser
                   </button>
                   {p.website && (
