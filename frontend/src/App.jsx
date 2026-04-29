@@ -13,6 +13,11 @@ import ClientNew from './pages/ClientNew'
 import ContratNew from './pages/ContratNew'
 import Taches from './pages/Taches'
 import Rapports from './pages/Rapports'
+import ReachDashboard from './pages/ReachDashboard'
+import ReachSearch from './pages/ReachSearch'
+import ReachProspects from './pages/ReachProspects'
+import ReachCampaigns from './pages/ReachCampaigns'
+import ReachInbox from './pages/ReachInbox'
 import Parametres from './pages/Parametres'
 import Capitia from './pages/Capitia'
 import AnalyticsExecutive from './pages/AnalyticsExecutive'
@@ -84,7 +89,7 @@ function AppLayout() {
   }, [handleKeyDown])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <Sidebar />
       <main className="flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ background: '#f7f6f2', minHeight: '100vh' }}>
         <ImpersonationBanner />
@@ -109,7 +114,7 @@ function AppLayout() {
           background: '#080808', color: 'white',
           border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 10, cursor: 'pointer',
-          fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif',
+          fontSize: 12, fontWeight: 600,          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
           transition: 'background 0.15s',
         }}
@@ -157,6 +162,11 @@ export default function App() {
           <Route path="/abonnement"    element={<Abonnement />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
+          <Route path="/reach"             element={<ReachDashboard />} />
+          <Route path="/reach/search"      element={<ReachSearch />} />
+          <Route path="/reach/prospects"   element={<ReachProspects />} />
+          <Route path="/reach/campaigns"   element={<ReachCampaigns />} />
+          <Route path="/reach/inbox"       element={<ReachInbox />} />
         </Route>
 
         {/* 404 */}
