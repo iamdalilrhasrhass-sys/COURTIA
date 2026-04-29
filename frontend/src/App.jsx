@@ -18,6 +18,9 @@ import ReachSearch from './pages/ReachSearch'
 import ReachProspects from './pages/ReachProspects'
 import ReachCampaigns from './pages/ReachCampaigns'
 import ReachInbox from './pages/ReachInbox'
+import ReachProspectDetail from './pages/ReachProspectDetail'
+import ReachMap from './pages/ReachMap'
+import ReachSettings from './pages/ReachSettings'
 import Parametres from './pages/Parametres'
 import Capitia from './pages/Capitia'
 import AnalyticsExecutive from './pages/AnalyticsExecutive'
@@ -164,9 +167,12 @@ export default function App() {
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
           <Route path="/reach"             element={<ReachDashboard />} />
           <Route path="/reach/search"      element={<ReachSearch />} />
+          <Route path="/reach/prospects/:id" element={<ReachProspectDetail />} />
           <Route path="/reach/prospects"   element={<ReachProspects />} />
           <Route path="/reach/campaigns"   element={<ReachCampaigns />} />
           <Route path="/reach/inbox"       element={<ReachInbox />} />
+          <Route path="/reach/map"         element={<ReachMap />} />
+          <Route path="/reach/settings"    element={<ReachSettings />} />
         </Route>
 
         {/* 404 */}

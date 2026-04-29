@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
-  Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target
+  Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
+  Search, Inbox, Send, MapPin
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Logo from './Logo'
@@ -32,11 +34,21 @@ const NAV_ITEMS = [
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
   { separator: true, label: 'ACQUISITION' },
-  { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau' },
+  { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
   { separator: true, label: 'MODULES' },
   { path: '/analytics', label: 'Analyses', icon: BarChart2 },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
+]
+
+const REACH_SUB_ITEMS = [
+  { path: '/reach', label: 'Dashboard', icon: Target },
+  { path: '/reach/search', label: 'Recherche', icon: Search },
+  { path: '/reach/prospects', label: 'Prospects', icon: Users },
+  { path: '/reach/campaigns', label: 'Campagnes', icon: Send },
+  { path: '/reach/inbox', label: 'Inbox', icon: Inbox },
+  { path: '/reach/map', label: 'Carte', icon: MapPin },
+  { path: '/reach/settings', label: 'Réglages', icon: Settings },
 ]
 
 export default function Sidebar() {
@@ -138,53 +150,99 @@ export default function Sidebar() {
 
           const active = isActive(item.path)
           const Icon = item.icon
+          const isOnReach = location.pathname.startsWith('/reach')
 
           return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '8px 12px',
-                marginBottom: 2,
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: active ? 600 : 500,
-                color: active ? theme.text : theme.textMuted,
-                background: active ? theme.activeBg : 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.12s ease',
-                textAlign: 'left',
-                borderLeft: active ? `2px solid ${theme.accent}` : '2px solid transparent',
-                paddingLeft: active ? 10 : 12,
-              }}
-              onMouseEnter={e => {
-                if (!active) {
-                  e.currentTarget.style.background = theme.hoverBg
-                  e.currentTarget.style.color = theme.text
-                }
-              }}
-              onMouseLeave={e => {
-                if (!active) {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = theme.textMuted
-                }
-              }}
-            >
-              <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
-              <span>{item.label}</span>
-              {item.badge && (
-                <span style={{
-                  fontSize: 9, fontWeight: 700, marginLeft: 'auto',
-                  padding: '1px 6px', borderRadius: 6,
-                  background: theme.accent, color: '#fff',
-                }}>{item.badge}</span>
-              )}
-            </button>
+            <React.Fragment key={item.path}>
+              <button
+                onClick={() => navigate(item.path)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 12px',
+                  marginBottom: 2,
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: active ? 600 : 500,
+                  color: active ? theme.text : theme.textMuted,
+                  background: active ? theme.activeBg : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.12s ease',
+                  textAlign: 'left',
+                  borderLeft: active ? `2px solid ${theme.accent}` : '2px solid transparent',
+                  paddingLeft: active ? 10 : 12,
+                }}
+                onMouseEnter={e => {
+                  if (!active) {
+                    e.currentTarget.style.background = theme.hoverBg
+                    e.currentTarget.style.color = theme.text
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = theme.textMuted
+                  }
+                }}
+              >
+                <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, marginLeft: 'auto',
+                    padding: '1px 6px', borderRadius: 6,
+                    background: theme.accent, color: '#fff',
+                  }}>{item.badge}</span>
+                )}
+              </button>
+
+              {/* REACH sub-navigation */}
+              {item.hasSub && isOnReach && REACH_SUB_ITEMS.map(sub => {
+                const subActive = location.pathname === sub.path
+                const SubIcon = sub.icon
+                return (
+                  <button
+                    key={sub.path}
+                    onClick={() => navigate(sub.path)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 12px 6px 38px',
+                      marginBottom: 0,
+                      borderRadius: 6,
+                      fontSize: 11.5,
+                      fontWeight: subActive ? 600 : 500,
+                      color: subActive ? theme.accent : theme.textMuted,
+                      background: subActive ? theme.activeBg : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.12s ease',
+                      textAlign: 'left',
+                    }}
+                    onMouseEnter={e => {
+                      if (!subActive) {
+                        e.currentTarget.style.background = theme.hoverBg
+                        e.currentTarget.style.color = theme.text
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!subActive) {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = theme.textMuted
+                      }
+                    }}
+                  >
+                    <SubIcon size={13} strokeWidth={subActive ? 1.8 : 1.5} />
+                    <span>{sub.label}</span>
+                  </button>
+                )
+              })}
+            </React.Fragment>
           )
         })}
       </nav>
