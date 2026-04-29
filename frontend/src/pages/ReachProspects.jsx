@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Filter, Star, TrendingUp, Target, ArrowRight, Zap, Phone, MapPin, Building } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
@@ -99,7 +100,7 @@ export default function ReachProspects() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <button className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition" style={{ background: accent }}>
+                    <button onClick={() => navigate(`/reach/prospects/${p.id || i}`)} className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition" style={{ background: accent }}>
                       Voir
                     </button>
                   </td>

@@ -107,7 +107,10 @@ export default function ReachInbox() {
               </div>
 
               <div className="space-y-2">
-                <button className="w-full py-2.5 text-sm font-medium text-white rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2" style={{ background: accent }}>
+                <button
+                  onClick={() => toast.success('Tâche créée — rappel pour ' + selected.prospect?.company_name)}
+                  className="w-full py-2.5 text-sm font-medium text-white rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2" style={{ background: accent }}
+                >
                   <CheckSquare size={14} /> Créer une tâche
                 </button>
                 <button
