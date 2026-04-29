@@ -18,7 +18,7 @@
  */
 
 const cron = require('node-cron');
-const { sendEmail } = require('./emailService');
+const { sendEmail } = require('../services/emailService');
 
 // --- Schéma table relances ---
 const CREATE_RELANCES_TABLE = `

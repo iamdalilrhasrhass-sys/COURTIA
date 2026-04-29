@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const multer = require('multer')
 const pool = require('../db')
-const { verifyToken } = require('../middleware/authMiddleware')
+const verifyToken = require('../middleware/authMiddleware')
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
