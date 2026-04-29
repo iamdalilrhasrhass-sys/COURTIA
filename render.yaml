@@ -21,7 +21,7 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: FRONTEND_URL
-        value: https://crm-assurance.vercel.app
+        value: https://courtia.vercel.app
     healthCheckPath: /api/health
     healthCheckInterval: 30
 
