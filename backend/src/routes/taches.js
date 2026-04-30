@@ -37,9 +37,9 @@ router.get('/', verifyToken, async (req, res) => {
           ELSE 'basse'
         END as priorite
       FROM appointments a
-      LEFT JOIN clients c ON a.client_id = c.id
+      JOIN clients c ON a.client_id = c.id AND c.courtier_id = $1
       ORDER BY a.start_time ASC
-    `);
+    `, [req.user.id]);
 
     res.json(result.rows);
   } catch (err) {
@@ -83,8 +83,10 @@ router.put('/:id', verifyToken, async (req, res) => {
     const result = await pool.query(
       `UPDATE appointments 
        SET title = $1, description = $2, status = $3, start_time = $4
-      WHERE id = $5 RETURNING *`,
-      [titre, description, statut, echeance, req.params.id]
+      FROM clients
+      WHERE appointments.id = $5 AND appointments.client_id = clients.id AND clients.courtier_id = $6
+      RETURNING appointments.*`,
+      [titre, description, statut, echeance, req.params.id, req.user.id]
     );
 
     if (result.rows.length === 0) {
@@ -120,7 +122,11 @@ router.post('/auto-generate', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    await pool.query('DELETE FROM appointments WHERE id = $1', [req.params.id]);
+    await pool.query(
+      `DELETE FROM appointments USING clients 
+       WHERE appointments.id = $1 AND appointments.client_id = clients.id AND clients.courtier_id = $2`,
+      [req.params.id, req.user.id]
+    );
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/taches/:id error:', err.message);
