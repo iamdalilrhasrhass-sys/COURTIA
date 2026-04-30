@@ -1,10 +1,17 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const helmet = require('helmet')
 const app = express()
+
+app.use(helmet({ contentSecurityPolicy: false }))
 
 const pool = require('./src/db')
 app.locals.pool = pool
+
+// Rate limit global
+const { globalLimiter, arkLimiter, authLimiter } = require('./src/middleware/rateLimit')
+app.use(globalLimiter)
 
 app.use(cors({ origin: ['https://courtia.vercel.app', 'http://localhost:3000', 'http://localhost:5173'], credentials: true }))
 app.use(express.json({
@@ -142,7 +149,7 @@ const importRouter         = require('./src/routes/import')
 const reachRouter          = require('./src/routes/reach')
 
 // Public
-app.use('/api/auth',   authRouter)
+app.use('/api/auth',   authLimiter, authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
 
@@ -239,6 +246,12 @@ if (process.env.DISABLE_RELANCES !== 'true') {
 } else {
   console.log('🔔 Relances désactivées (DISABLE_RELANCES=true)');
 }
+
+// ==================== REACH WORKER (Campagnes) ====================
+
+const { startReachWorker } = require('./src/workers/reachWorker');
+console.log('📬 Démarrage worker REACH...');
+startReachWorker(pool);
 
 // ==================== ERROR HANDLERS ====================
 

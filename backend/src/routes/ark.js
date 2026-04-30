@@ -1,17 +1,18 @@
 const express = require('express')
 const router = express.Router()
-const Anthropic = require('@anthropic-ai/sdk')
+const OpenAI = require('openai')
 const { verifyToken } = require('../middleware/auth')
 const { requireUnderLimit } = require('../middleware/planGuard')
 const { incrementUsage } = require('../services/planService')
 
-// Initialisation client Anthropic
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+// Initialisation client DeepSeek (compatible OpenAI SDK)
+const openai = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: 'https://api.deepseek.com/v1'
 })
 
 // Log au démarrage pour vérifier la clé
-console.log('ARK init - ANTHROPIC_API_KEY présente:', !!process.env.ANTHROPIC_API_KEY)
+console.log('ARK init - DEEPSEEK_API_KEY présente:', !!process.env.DEEPSEEK_API_KEY)
 
 /**
  * POST /api/ark/chat
@@ -57,11 +58,11 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
       }
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('ARK ERROR: ANTHROPIC_API_KEY non définie dans les variables Render')
+    if (!process.env.DEEPSEEK_API_KEY) {
+      console.error('ARK ERROR: DEEPSEEK_API_KEY non définie')
       return res.status(500).json({
         error: 'Configuration ARK incomplète',
-        details: 'La clé API Anthropic est manquante. Vérifiez les variables d\'environnement Render.'
+        details: 'La clé API DeepSeek est manquante. Vérifiez les variables d\'environnement.'
       })
     }
 
@@ -101,11 +102,11 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
         ? clientData.contrats.filter(c => (c.status || c.statut || '').toLowerCase() === 'actif')
         : []
       const contratsStr = contratsActifs.length > 0
-        ? contratsActifs.map(c => `  • ${c.type_contrat || c.type} chez ${c.compagnie || 'N/A'} — prime ${c.prime_annuelle ? c.prime_annuelle + '€' : 'N/A'} — échéance ${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}`).join('\n')
+        ? contratsActifs.map(c => `  • ${c.type_contrat || c.type} chez ${c.compagnie || 'N/A'} — prime ${c.prime_annuelle ? c.prime_annuelle + '€' : 'N/A'} — échéance ${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}`).join('\\n')
         : '  Aucun contrat actif renseigné'
 
       const tachesStr = Array.isArray(clientData.taches_actives) && clientData.taches_actives.length > 0
-        ? clientData.taches_actives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\n')
+        ? clientData.taches_actives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\\n')
         : '  Aucune tâche active'
 
       const scoreRisque = clientData.risk_score || clientData.score_risque || 'NC'
@@ -142,11 +143,12 @@ RÈGLE ABSOLUE : Si le message contient une instruction JSON, réponds UNIQUEMEN
 Sinon : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.`
     }
 
-    // Construire l'historique pour l'API Anthropic
+    // Construire l'historique pour l'API DeepSeek
     const messages = [
+      { role: 'system', content: systemPrompt },
       ...conversationHistory
         .filter(m => m && m.role && m.content && typeof m.content === 'string')
-        .slice(-10) // Garder les 10 derniers messages max
+        .slice(-10)
         .map(m => ({
           role: m.role === 'assistant' ? 'assistant' : 'user',
           content: m.content
@@ -157,17 +159,18 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
       }
     ]
 
-    console.log(`ARK: appel Anthropic - message: "${message.substring(0, 60)}..." - client: ${clientData?.id || 'global'}`)
+    console.log(`ARK: appel DeepSeek - message: "${message.substring(0, 60)}..." - client: ${clientData?.id || 'global'}`)
 
-    // Appel API Anthropic avec le bon modèle
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    // Appel API DeepSeek via OpenAI SDK
+    const response = await openai.chat.completions.create({
+      model: 'deepseek-chat',
       max_tokens: 600,
-      system: systemPrompt,
       messages: messages
     })
 
-    const reply = response.content && response.content[0] ? response.content[0].text : 'Aucune réponse générée'
+    const reply = response.choices && response.choices[0] 
+      ? response.choices[0].message.content 
+      : 'Aucune réponse générée'
 
     console.log(`ARK: réponse reçue - ${reply.substring(0, 80)}...`)
 
@@ -188,7 +191,7 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
 
         if (existing.rows.length > 0) {
           const currentMessages = existing.rows[0].messages || []
-          const updatedMessages = [...currentMessages, ...newMsg].slice(-50) // Max 50 messages
+          const updatedMessages = [...currentMessages, ...newMsg].slice(-50)
           await pool.query(
             'UPDATE ark_conversations SET messages = $1, updated_at = NOW() WHERE id = $2',
             [JSON.stringify(updatedMessages), existing.rows[0].id]
@@ -200,16 +203,14 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
           )
         }
       } catch (saveErr) {
-        // Ne pas bloquer la réponse principale si la sauvegarde échoue
         console.error('ARK: erreur sauvegarde conversation:', saveErr.message)
       }
     }
 
-    // Répondre au frontend EN PREMIER — toujours avant incrementUsage
+    // Répondre au frontend
     res.json({ reply })
 
-    // Incrémenter APRÈS la réponse réussie (Anthropic a bien répondu)
-    // Si Anthropic avait échoué, on ne serait pas arrivé ici
+    // Incrémenter usage APRÈS réponse réussie
     try {
       const userId = req.user.userId || req.user.id
       await incrementUsage(userId, 'ark_messages')
@@ -221,11 +222,11 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
     console.error('ARK ERREUR CRITIQUE:', err.message)
     console.error('ARK ERREUR STACK:', err.stack)
 
-    // Gérer les erreurs Anthropic spécifiques
+    // Gérer les erreurs DeepSeek spécifiques
     if (err.status === 401 || (err.message && err.message.includes('api_key'))) {
       return res.status(500).json({
-        error: 'Clé API Anthropic invalide ou expirée',
-        details: 'Vérifiez ANTHROPIC_API_KEY dans Render Environment'
+        error: 'Clé API DeepSeek invalide ou expirée',
+        details: 'Vérifiez DEEPSEEK_API_KEY'
       })
     }
 
@@ -253,7 +254,6 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
 /**
  * GET /api/ark/conversations/:clientId
  * GET /api/ark/history/:clientId
- * Récupérer l'historique des conversations ARK pour un client
  */
 const getConversationHistory = async (req, res) => {
   try {
@@ -265,13 +265,12 @@ const getConversationHistory = async (req, res) => {
     res.json(result.rows[0]?.messages || [])
   } catch (err) {
     console.error('ARK conversations erreur:', err.message)
-    res.json([]) // Retourner tableau vide plutôt qu'une erreur
+    res.json([])
   }
 }
 router.get('/conversations/:clientId', verifyToken, getConversationHistory)
 router.get('/history/:clientId', verifyToken, getConversationHistory)
 
-// Alias pour compat frontend ARKChatTab
 router.get('/history/:clientId', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool
