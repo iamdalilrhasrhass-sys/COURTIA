@@ -9,12 +9,14 @@ import {
   Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon
 } from 'lucide-react'
 import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
+import SuperBubbleScene from '../components/landing/SuperBubbleScene'
 import AuroraBadge from '../components/AuroraBadge'
 import FloatingProductMockup from '../components/FloatingProductMockup'
 import SectionEyebrow from '../components/SectionEyebrow'
 import ScrollReveal from '../components/ScrollReveal'
 import BeforeAfterPanel from '../components/BeforeAfterPanel'
 import FAQPremium from '../components/FAQPremium'
+import '../styles/bubble-design.css'
 
 const globalStyles = `
 /* ── Section transition halos ── */
@@ -230,6 +232,7 @@ export default function LandingPublic() {
       {/* ━━━━━━━━━━━ HERO AURORA 3D ━━━━━━━━━━━ */}
       <section className="relative min-h-screen flex items-center pt-24 pb-16 lg:pb-24 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
+        <SuperBubbleScene />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0510]" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-5 w-full">
@@ -660,7 +663,10 @@ export default function LandingPublic() {
             <span className="font-bold text-sm text-white">COURTIA</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-gray-500">
+            <a href="mailto:arkcourtia@gmail.com" className="hover:text-purple-400 transition-colors">arkcourtia@gmail.com</a>
+            <span className="hidden sm:inline text-gray-600">|</span>
             <span>CRM assurance + IA native</span>
+            <span className="hidden sm:inline text-gray-600">|</span>
             <span>© 2026 COURTIA</span>
             <Link to="/legal" className="hover:text-gray-400 transition-colors">Mentions légales</Link>
           </div>
