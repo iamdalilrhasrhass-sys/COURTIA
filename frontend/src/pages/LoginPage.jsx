@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import api from '../api'
@@ -445,10 +445,14 @@ const Bubble = ({ className }) => (
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const isRegister = location.pathname === '/register'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -456,16 +460,25 @@ export default function Login() {
       setError('Veuillez renseigner votre email et votre mot de passe.')
       return
     }
+    if (isRegister && (!firstName || !lastName)) {
+      setError('Veuillez renseigner votre prénom et votre nom.')
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      const res = await api.post('/auth/login', { email, password })
+      const endpoint = isRegister ? '/auth/register' : '/auth/login'
+      const body = isRegister ? { email, password, firstName, lastName } : { email, password }
+      const res = await api.post(endpoint, body)
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
+      const msg = isRegister
+        ? (err.response?.data?.error || 'Une erreur est survenue lors de l\'inscription.')
+        : (err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -556,10 +569,10 @@ export default function Login() {
             </div>
 
             <h1 style={{ fontSize:'21px', fontWeight:500, color:'#0a0a0a', margin:0, marginBottom:4 }}>
-              Connexion
+              {isRegister ? 'Inscription' : 'Connexion'}
             </h1>
             <p style={{ fontSize:'13px', color:'rgba(0,0,0,0.42)', marginBottom:24 }}>
-              Accédez à votre espace courtier
+              {isRegister ? 'Créez votre espace courtier' : 'Accédez à votre espace courtier'}
             </p>
 
             <form onSubmit={handleSubmit} noValidate>
@@ -569,6 +582,19 @@ export default function Login() {
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
                   {error}
+                </div>
+              )}
+
+              {isRegister && (
+                <div style={{ display:'flex', gap:10, marginBottom:12 }}>
+                  <div className="field-wrap" style={{ flex:1 }}>
+                    <input id="firstName" type="text" autoComplete="given-name" required value={firstName}
+                      onChange={e => setFirstName(e.target.value)} placeholder="Prénom" />
+                  </div>
+                  <div className="field-wrap" style={{ flex:1 }}>
+                    <input id="lastName" type="text" autoComplete="family-name" required value={lastName}
+                      onChange={e => setLastName(e.target.value)} placeholder="Nom" />
+                  </div>
                 </div>
               )}
 
@@ -610,7 +636,7 @@ export default function Login() {
               </div>
 
               <button type="submit" disabled={loading} className="btn-primary">
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? (isRegister ? 'Inscription...' : 'Connexion...') : (isRegister ? 'Créer mon compte' : 'Se connecter')}
               </button>
             </form>
 
@@ -627,9 +653,9 @@ export default function Login() {
             </button>
 
             <p style={{ textAlign:'center', fontSize:'12.5px', color:'rgba(0,0,0,0.4)', marginTop:20 }}>
-              Pas encore de compte ?{' '}
-              <Link to="/register" style={{ color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
-                Inscrivez-vous gratuitement
+              {isRegister ? 'Déjà un compte ?' : 'Pas encore de compte ?'}{' '}
+              <Link to={isRegister ? '/login' : '/register'} style={{ color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
+                {isRegister ? 'Connectez-vous' : 'Inscrivez-vous gratuitement'}
               </Link>
             </p>
           </div>
