@@ -50,6 +50,15 @@ router.post('/send', verifyToken, async (req, res) => {
       });
     }
 
+    // Vérifier que le client appartient à l'utilisateur
+    const own = await pool.query(
+      'SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2',
+      [clientId, getUserId(req)]
+    );
+    if (!own.rows.length) {
+      return res.status(403).json({ success: false, error: 'client_not_owned' });
+    }
+
     const result = await messagingService.sendMessage({
       clientId,
       canal,
