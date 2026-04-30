@@ -1,6 +1,6 @@
 import create from 'zustand';
 
-const API_URL = 'https://courtia.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const authStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),

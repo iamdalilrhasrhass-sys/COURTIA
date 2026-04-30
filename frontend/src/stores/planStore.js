@@ -13,7 +13,7 @@ export const usePlanStore = create((set, get) => ({
   fetchPlanInfo: async () => {
     set({ loading: true, error: null })
     try {
-      const res = await api.get('/api/plans/info')
+      const res = await api.get('/plans/info')
       set({
         currentPlan: res.data.plan,
         limits: res.data.limits || {},
@@ -29,7 +29,7 @@ export const usePlanStore = create((set, get) => ({
 
   refreshUsage: async () => {
     try {
-      const res = await api.get('/api/plans/usage')
+      const res = await api.get('/plans/usage')
       set({ usage: res.data.usage || {} })
     } catch {}
   },
