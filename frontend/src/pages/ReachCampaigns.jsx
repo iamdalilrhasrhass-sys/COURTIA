@@ -32,7 +32,7 @@ export default function ReachCampaigns() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Mail size={22} color={accent} /> Campagnes
+            <Mail size={22} color={accent} /> ARK REACH — Campagnes
           </h1>
           <p className="text-gray-500 text-sm mt-1">Étape 3 : Approcher — Gérez vos campagnes de prospection</p>
         </div>

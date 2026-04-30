@@ -50,8 +50,9 @@ export default function ReachDashboard() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${accent}15` }}>
               <Target size={18} color={accent} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">REACH</h1>
+            <h1 className="text-2xl font-bold text-gray-900">ARK REACH</h1>
             <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-700">Démo</span>
+            <p className="text-gray-500 text-sm mt-1">Moteur d'acquisition IA pour courtiers et assureurs</p>
           </div>
           <p className="text-gray-500 mt-1">Moteur d'acquisition intelligent pour courtiers</p>
         </motion.div>

@@ -65,7 +65,7 @@ export default function ReachMap() {
     <div className="p-6 max-w-7xl mx-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <MapPin size={22} color={accent} /> Carte des prospects
+          <MapPin size={22} color={accent} /> ARK REACH — Carte
         </h1>
         <p className="text-gray-500 text-sm mt-1">
           {prospects.length} prospects dans {cities.length} villes

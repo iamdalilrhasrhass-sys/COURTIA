@@ -134,6 +134,7 @@ export default function ReachProspectDetail() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
+              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">ARK REACH — Fiche prospect</p>
               <h1 className="text-2xl font-bold text-gray-900">{data.company_name}</h1>
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-700">Démo</span>
               {isConverted && (

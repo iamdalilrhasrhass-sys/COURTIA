@@ -51,7 +51,7 @@ export default function ReachInbox() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Inbox size={22} color={accent} /> Boîte de réponses
+            <Inbox size={22} color={accent} /> ARK REACH — Inbox
           </h1>
           <p className="text-gray-500 text-sm mt-1">{unreadCount} réponses non lues</p>
         </div>

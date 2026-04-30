@@ -43,7 +43,7 @@ export default function ReachProspects() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Target size={22} color={accent} /> Prospects
+            <Target size={22} color={accent} /> ARK REACH — Prospects
           </h1>
           <p className="text-gray-500 text-sm mt-1">{prospects.length} prospects dans votre pipeline</p>
         </div>

@@ -45,7 +45,7 @@ export default function ReachSettings() {
     <div className="p-6 max-w-3xl mx-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Settings size={22} color={accent} /> Réglages REACH
+          <Settings size={22} color={accent} /> ARK REACH — Paramètres
         </h1>
         <p className="text-gray-500 text-sm mt-1">Configuration du moteur d'acquisition</p>
       </div>
