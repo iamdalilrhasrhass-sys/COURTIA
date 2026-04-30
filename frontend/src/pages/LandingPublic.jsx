@@ -16,6 +16,42 @@ import ScrollReveal from '../components/ScrollReveal'
 import BeforeAfterPanel from '../components/BeforeAfterPanel'
 import FAQPremium from '../components/FAQPremium'
 
+const globalStyles = `
+/* ── Section transition halos ── */
+#probleme::before {
+  content: ""; position: absolute; inset: auto; pointer-events: none;
+  left: 50%; top: 50%; width: min(900px, 72vw); height: min(620px, 56vw);
+  transform: translate(-50%, -50%); z-index: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(83,74,183,0.12), transparent 62%),
+              radial-gradient(circle at 70% 38%, rgba(34,211,238,0.07), transparent 58%);
+  filter: blur(58px); opacity: 0.45; mix-blend-mode: screen;
+  animation: sectionHalo 18s ease-in-out infinite alternate;
+}
+#solutions::before {
+  content: ""; position: absolute; inset: auto; pointer-events: none;
+  left: 50%; top: 50%; width: min(800px, 64vw); height: min(540px, 48vw);
+  transform: translate(-55%, -48%); z-index: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(34,211,238,0.10), transparent 60%);
+  filter: blur(64px); opacity: 0.35; mix-blend-mode: screen;
+  animation: sectionHalo 21s ease-in-out infinite alternate-reverse;
+}
+@keyframes sectionHalo {
+  0% { transform: translate(-50%, -50%) scale(0.94) rotate(-1deg); opacity: 0.35; }
+  100% { transform: translate(-50%, -50%) scale(1.06) rotate(1deg); opacity: 0.55; }
+}
+
+/* ── Card hover premium glow ── */
+.group:hover {
+  box-shadow:
+    0 0 40px rgba(175,169,236,0.08),
+    0 20px 80px rgba(0,0,0,0.30),
+    inset 0 1px 0 rgba(255,255,255,0.12) !important;
+}
+
+/* ── Smooth scroll ── */
+html { scroll-behavior: smooth; }
+`
+
 const plans = [
   {
     name: 'Starter',
@@ -114,11 +150,24 @@ export default function LandingPublic() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+
+    const onMouseMove = (e) => {
+      setMousePos({
+        x: (e.clientX / window.innerWidth - 0.5) * 2,
+        y: (e.clientY / window.innerHeight - 0.5) * 2,
+      })
+    }
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('mousemove', onMouseMove)
+    }
   }, [])
 
   const scrollTo = (id) => {
@@ -127,6 +176,7 @@ export default function LandingPublic() {
 
   return (
     <div className="bg-[#0a0510] text-white overflow-x-hidden">
+      <style>{globalStyles}</style>
       {/* ─── NAVBAR GLASS DARK ─── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0a0510]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20' : 'bg-transparent'}`}>
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
@@ -249,9 +299,14 @@ export default function LandingPublic() {
             </motion.div>
           </motion.div>
 
-          {/* Cockpit Mockup 3D */}
+          {/* Cockpit Mockup 3D avec parallaxe souris */}
           <ScrollReveal delay={0.3}>
-            <div id="cockpit" className="mt-12 lg:mt-16 max-w-5xl mx-auto">
+            <div id="cockpit" className="mt-12 lg:mt-16 max-w-5xl mx-auto"
+              style={{
+                transform: `perspective(1200px) rotateY(${mousePos.x * 1.5}deg) rotateX(${-mousePos.y * 1.2}deg)`,
+                transition: 'transform 0.15s ease-out',
+              }}
+            >
               <FloatingProductMockup />
             </div>
           </ScrollReveal>
