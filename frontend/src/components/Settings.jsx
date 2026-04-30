@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Mail, Phone, Building2, Save } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function Settings() {
   const token = useAuthStore((state) => state.token)

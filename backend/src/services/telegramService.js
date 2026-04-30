@@ -1,11 +1,21 @@
 const axios = require('axios');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
+const TELEGRAM_API_URL = TELEGRAM_BOT_TOKEN 
+  ? `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`
+  : null;
 
 const telegramService = {
+  async isAvailable() {
+    return !!TELEGRAM_BOT_TOKEN;
+  },
+  
   // Generic send message
   async sendMessage(chatId, text) {
+    if (!TELEGRAM_API_URL) {
+      console.warn('[telegram] disabled: TELEGRAM_BOT_TOKEN not configured');
+      return { success: false, reason: 'disabled' };
+    }
     try {
       await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
         chat_id: chatId,
@@ -15,12 +25,16 @@ const telegramService = {
       return { success: true };
     } catch (error) {
       console.error(`Telegram send error: ${error.message}`);
-      throw error;
+      return { success: false, error: error.message };
     }
   },
 
   // Send onboarding questionnaire
   async sendOnboardingQuestionnaire(chatId, clientName, clientId) {
+    if (!TELEGRAM_API_URL) {
+      console.warn('[telegram] disabled: TELEGRAM_BOT_TOKEN not configured');
+      return { success: false, reason: 'disabled', questionnaire_sent: false };
+    }
     const questions = [
       `📋 Questionnaire Onboarding - ${clientName}\n\n` +
       `Bonjour! Pour mieux connaître ${clientName}, peux-tu répondre à ces 5 questions rapides?\n\n` +
@@ -55,6 +69,10 @@ const telegramService = {
 
   // Send daily brief before meeting
   async sendDailyBrief(chatId, clientData) {
+    if (!TELEGRAM_API_URL) {
+      console.warn('[telegram] disabled');
+      return { success: false, reason: 'disabled' };
+    }
     const brief = this.buildDailyBrief(clientData);
     
     try {

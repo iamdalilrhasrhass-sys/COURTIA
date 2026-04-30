@@ -97,7 +97,7 @@ export default function ClientDetail() {
       return
     }
     try {
-      const response = await fetch('https://courtia.onrender.com/api/appointments', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '/api') + '/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ client_id: selectedClient.id, ...rdvData })

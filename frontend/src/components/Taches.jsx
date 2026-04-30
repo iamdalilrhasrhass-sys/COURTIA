@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, CheckCircle2, Circle } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 export default function Taches() {
   const token = useAuthStore((state) => state.token)

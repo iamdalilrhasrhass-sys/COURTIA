@@ -107,7 +107,7 @@ export default function Contrats() {
   async function fetchContrats() {
     try {
       setLoading(true)
-      const res = await api.get('/api/contrats')
+      const res = await api.get('/contrats')
       const data = Array.isArray(res.data) ? res.data : []
       setContrats(data.length > 0 ? data : MOCK_CONTRATS)
     } catch (err) {

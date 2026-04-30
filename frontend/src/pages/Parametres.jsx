@@ -47,7 +47,7 @@ export default function Parametres() {
   async function fetchProfile() {
     try {
       setLoading(true)
-      const { data } = await api.get('/api/auth/me')
+      const { data } = await api.get('/auth/me')
       setProfile(data)
       setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
       localStorage.setItem('courtia_user', JSON.stringify(data))
@@ -59,7 +59,7 @@ export default function Parametres() {
   async function handleProfileSubmit(e) {
     e.preventDefault(); setSaving(true)
     try {
-      await api.put('/api/auth/me', form)
+      await api.put('/auth/me', form)
       toast.success('Profil mis à jour ✓')
       fetchProfile()
     } catch { toast.error('Erreur lors de la sauvegarde') } 

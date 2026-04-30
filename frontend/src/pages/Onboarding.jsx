@@ -45,7 +45,7 @@ export default function Onboarding() {
     const formData = new FormData()
     formData.append('file', f)
     try {
-      const res = await api.post('/api/import/preview', formData, {
+      const res = await api.post('/import/preview', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       const d = res.data.data
@@ -88,7 +88,7 @@ export default function Onboarding() {
     formData.append('file', file)
     formData.append('mapping', JSON.stringify(mapping))
     try {
-      await api.post('/api/import/execute', formData, {
+      await api.post('/import/execute', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       setStep(3)

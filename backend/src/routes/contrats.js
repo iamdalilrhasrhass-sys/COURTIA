@@ -42,10 +42,10 @@ router.get('/', verifyToken, async (req, res) => {
         c.first_name as client_nom, c.last_name as client_prenom,
         q.created_at
       FROM quotes q
-      LEFT JOIN clients c ON q.client_id = c.id
+      JOIN clients c ON q.client_id = c.id AND c.courtier_id = $2
       WHERE q.client_id = $1
       ORDER BY (q.quote_data->>'date_echeance') ASC`;
-      params = [clientId];
+      params = [clientId, req.user.id];
     } else {
       query = `SELECT 
         q.id, q.client_id, q.status as statut,
@@ -58,9 +58,9 @@ router.get('/', verifyToken, async (req, res) => {
         c.first_name as client_nom, c.last_name as client_prenom,
         q.created_at
       FROM quotes q
-      LEFT JOIN clients c ON q.client_id = c.id
+      JOIN clients c ON q.client_id = c.id AND c.courtier_id = $1
       ORDER BY (q.quote_data->>'date_echeance') ASC`;
-      params = [];
+      params = [req.user.id];
     }
 
     const result = await pool.query(query, params);
@@ -81,6 +81,10 @@ router.post('/', verifyToken, requireUnderLimit('contracts'), async (req, res) =
       client_id, type_contrat, compagnie, numero,
       prime_annuelle, date_effet, date_echeance, statut
     } = req.body;
+
+    // Vérifier que le client appartient à l'utilisateur
+    const own = await pool.query('SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2', [client_id, req.user.id]);
+    if (!own.rows.length) return res.status(403).json({ error: 'client_not_owned' });
 
     const quoteData = {
       type_contrat,
@@ -125,8 +129,11 @@ router.put('/:id', verifyToken, async (req, res) => {
     };
 
     const result = await pool.query(
-      `UPDATE quotes SET quote_data = $1, status = $2 WHERE id = $3 RETURNING *`,
-      [JSON.stringify(quoteData), statut, req.params.id]
+      `UPDATE quotes SET quote_data = $1, status = $2 
+       FROM clients 
+       WHERE quotes.id = $3 AND quotes.client_id = clients.id AND clients.courtier_id = $4
+       RETURNING quotes.*`,
+      [JSON.stringify(quoteData), statut, req.params.id, req.user.id]
     );
 
     if (result.rows.length === 0) {
@@ -146,7 +153,11 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    await pool.query('DELETE FROM quotes WHERE id = $1', [req.params.id]);
+    await pool.query(
+      `DELETE FROM quotes USING clients 
+       WHERE quotes.id = $1 AND quotes.client_id = clients.id AND clients.courtier_id = $2`,
+      [req.params.id, req.user.id]
+    );
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/contrats/:id error:', err.message);

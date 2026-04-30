@@ -8,7 +8,7 @@ export default function PaiementSucces() {
   const navigate = useNavigate()
   
   useEffect(() => {
-    api.get('/api/stripe/subscription-status').catch(() => {})
+    api.get('/stripe/subscription-status').catch(() => {})
   }, [])
   
   return (

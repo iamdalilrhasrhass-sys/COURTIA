@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { useAuthStore } from './authStore'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 export const useClientStore = create((set, get) => ({
   clients: [],
