@@ -5,12 +5,13 @@ import { ChevronDown } from 'lucide-react'
 const faqs = [
   { q: 'COURTIA est-il réservé aux courtiers en assurance ?', a: 'Oui, COURTIA est conçu spécifiquement pour les courtiers en assurance. Notre CRM, notre IA ARK et notre module REACH sont pensés pour votre métier et vos besoins.' },
   { q: 'ARK remplace-t-il le courtier ?', a: 'Non. ARK analyse, prépare et suggère. Il ne décide jamais à votre place. Vous validez chaque action avant qu\'elle ne soit exécutée. C\'est un copilote, pas un pilote automatique.' },
-  { q: 'REACH envoie-t-il automatiquement des messages ?', a: 'Non. REACH prépare les messages, mais ne les envoie jamais sans votre validation. Le mode dry-run par défaut vous permet de tester sans aucun risque.' },
+  { q: 'ARK REACH envoie-t-il automatiquement des messages ?', a: 'Non. ARK REACH prépare les messages, mais ne les envoie jamais sans votre validation. Le mode dry-run par défaut vous permet de tester sans aucun risque.' },
   { q: 'Peut-on importer ses clients ?', a: 'Oui. L\'import CSV avec preview, mapping des colonnes et détection des doublons vous permet de transférer votre portefeuille en quelques minutes.' },
   { q: 'Les données sont-elles sécurisées ?', a: 'Absolument. COURTIA respecte la RGPD. Vos données sont hébergées en Europe, chiffrées en transit et au repos. Aucun partage avec des tiers.' },
   { q: 'Pourquoi choisir l\'offre Pro ?', a: 'L\'offre Pro débloque ARK complet, REACH, les automatisations, le scoring portefeuille et les rapports avancés. C\'est le vrai cockpit IA qui transforme votre quotidien.' },
   { q: 'Peut-on commencer seul ?', a: 'COURTIA est conçu pour être opérationnel immédiatement. L\'offre Premium inclut un accompagnement dédié si vous préférez être guidé.' },
-  { q: 'COURTIA est-il adapté aux petits cabinets ?', a: 'Oui. L\'offre Starter est parfaite pour les courtiers solo. L\'offre Pro convient aux cabinets de 2-5 personnes. Premium est pour les structures plus importantes.' },
+{ q: 'Quelle est la différence entre ARK et ARK REACH ?', a: 'ARK analyse le portefeuille et recommande les actions prioritaires. ARK REACH structure la prospection : prospects, campagnes, messages, relances et suivi commercial.' },
+  { q: 'COURTIA est-il adapté aux petits cabinets ?', a: 'Oui. L\'offre Starter est parfaite pour les courtiers solo. L\'offre Pro convient aux cabinets de 2-5 personnes. Premium est pour les structures plus importantes.' }
 ]
 
 export default function FAQPremium({ dark = false }) {
