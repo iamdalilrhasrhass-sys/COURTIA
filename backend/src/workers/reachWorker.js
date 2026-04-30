@@ -156,7 +156,6 @@ class ReachWorker {
 
     const subject = this.personalize(step.subject_template || '', prospect);
     const body = this.personalize(step.body_template || '', prospect);
-    const messageId = crypto.randomUUID().substring(0, 8);
     const dryRun = this.isDryRun();
 
     // Mode DRY-RUN : on log mais on envoie PAS réellement
@@ -165,19 +164,20 @@ class ReachWorker {
       console.log(`[reachWorker][DRY-RUN] Sujet: ${subject}`);
       console.log(`[reachWorker][DRY-RUN] Corps: ${body.substring(0, 200)}...`);
 
-      await this.pool.query(
-        `INSERT INTO reach_messages (id, prospect_id, campaign_id, direction, channel, subject, body, status, metadata)
-         VALUES ($1, $2, $3, 'outbound', $4, $5, $6, 'dry_run', $7)`,
-        [messageId, prospect.prospect_id, campaign.id, campaign.channel, subject, body, JSON.stringify({
+      const result = await this.pool.query(
+        `INSERT INTO reach_messages (prospect_id, campaign_id, direction, channel, subject, body, status, metadata)
+         VALUES ($1, $2, 'outbound', $3, $4, $5, 'dry_run', $6) RETURNING id`,
+        [prospect.prospect_id, campaign.id, campaign.channel, subject, body, JSON.stringify({
           step_order: step.step_order,
           dry_run_at: now.toISOString(),
           dry_run: true,
           note: 'BLOQUÉ par DISABLE_REACH_SENDING — définir REACH_REALLY_SEND=true pour activer'
         })]
       );
+      const dbId = result.rows[0].id;
 
       await this.pool.query(
-        "UPDATE reach_campaign_prospects SET current_step = $1, status = 'dry_run', updated_at = NOW() WHERE campaign_id = $2 AND prospect_id = $3",
+        "UPDATE reach_campaign_prospects SET current_step = $1, status = 'dry_run' WHERE campaign_id = $2 AND prospect_id = $3",
         [currentStepIdx + 1, campaign.id, prospect.prospect_id]
       );
 
@@ -192,26 +192,28 @@ class ReachWorker {
           campaign_id: campaign.id,
           step: step.step_order,
           channel: campaign.channel,
-          message_id: messageId
+          message_id: dbId
         })]
       );
 
-      console.log(`[reachWorker][DRY-RUN] ✅ Message #${messageId} simulé pour ${prospect.email}`);
+      console.log(`[reachWorker][DRY-RUN] ✅ Message #${dbId} simulé pour ${prospect.email}`);
       return;
     }
 
     // ENVOI RÉEL — seulement si REACH_REALLY_SEND=true
-    await this.pool.query(
-      `INSERT INTO reach_messages (id, prospect_id, campaign_id, direction, channel, subject, body, status, metadata)
-       VALUES ($1, $2, $3, 'outbound', $4, $5, $6, 'sent', $7)`,
-      [messageId, prospect.prospect_id, campaign.id, campaign.channel, subject, body, JSON.stringify({
+    // Note: ce code est mort tant que REACH_REALLY_SEND !== 'true'
+    const realResult = await this.pool.query(
+      `INSERT INTO reach_messages (prospect_id, campaign_id, direction, channel, subject, body, status, metadata)
+       VALUES ($1, $2, 'outbound', $3, $4, $5, 'sent', $6) RETURNING id`,
+      [prospect.prospect_id, campaign.id, campaign.channel, subject, body, JSON.stringify({
         step_order: step.step_order,
         sent_at: now.toISOString()
       })]
     );
+    const realDbId = realResult.rows[0].id;
 
     await this.pool.query(
-      "UPDATE reach_campaign_prospects SET current_step = $1, status = 'sent', updated_at = NOW() WHERE campaign_id = $2 AND prospect_id = $3",
+      "UPDATE reach_campaign_prospects SET current_step = $1, status = 'sent' WHERE campaign_id = $2 AND prospect_id = $3",
       [currentStepIdx + 1, campaign.id, prospect.prospect_id]
     );
 
@@ -226,11 +228,11 @@ class ReachWorker {
         campaign_id: campaign.id,
         step: step.step_order,
         channel: campaign.channel,
-        message_id: messageId
+        message_id: realDbId
       })]
     );
 
-    console.log(`[reachWorker] Message #${messageId} envoyé → ${prospect.email} (campagne #${campaign.id}, step ${step.step_order})`);
+    console.log(`[reachWorker] Message #${realDbId} envoyé → ${prospect.email} (campagne #${campaign.id}, step ${step.step_order})`);
   }
 
   personalize(text, prospect) {
