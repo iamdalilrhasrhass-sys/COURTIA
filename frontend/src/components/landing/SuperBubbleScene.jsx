@@ -128,15 +128,15 @@ const FRAGMENT_SHADER = `
     float spec3 = pow(max(dot(reflect(-lightDir3, N), V), 0.0), 100.0);
     vec3 specColor3 = vec3(0.3, 0.8, 1.0) * spec3 * 0.5;
 
-    // Base très sombre (presque invisible, laisse passer le fond)
-    vec3 baseColor = vec3(0.15, 0.12, 0.25) * 0.08;
+    // Couleur de base : légèrement visible la nuit (pas complètement noire)
+    vec3 baseColor = vec3(0.35, 0.25, 0.55) * 0.25;
 
     // Assemblage final
-    vec3 color = baseColor + iridescence * fresnel * 1.4 + specularColor + specColor2 + specColor3;
+    vec3 color = baseColor + iridescence * fresnel * 1.8 + specularColor * 1.5 + specColor2 + specColor3;
 
-    // Alpha : vraiment transparent au centre, vif sur les bords
-    float alpha = fresnel * 0.92 + specular * 0.5;
-    alpha = clamp(alpha, 0.0, 0.95);
+    // Alpha : toujours un minimum visible, vif sur les bords
+    float alpha = 0.12 + fresnel * 0.85 + specular * 0.5;
+    alpha = clamp(alpha, 0.0, 0.98);
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -185,7 +185,7 @@ export default function SuperBubbleScene({ intensity = 'max' }) {
       transparent: true,
       side: THREE.DoubleSide,
       depthWrite: false,
-      blending: THREE.NormalBlending
+      blending: THREE.AdditiveBlending
     })
     const bubble = new THREE.Mesh(sphereGeom, bubbleMat)
     scene.add(bubble)
@@ -253,7 +253,7 @@ export default function SuperBubbleScene({ intensity = 'max' }) {
         transparent: true,
         side: THREE.DoubleSide,
         depthWrite: false,
-        blending: THREE.NormalBlending
+        blending: THREE.AdditiveBlending
       })
       const mesh = new THREE.Mesh(geom, mat)
       mesh.position.set(...d.pos)
