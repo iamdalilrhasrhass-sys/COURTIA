@@ -21,8 +21,8 @@ import ScrollCamera3D from '../components/ScrollCamera3D'
 import BeforeAfterPanel from '../components/BeforeAfterPanel'
 import FAQPremium from '../components/FAQPremium'
 import ArkOrbSection from '../components/ArkOrbSection'
-import SuperBubbleScene from '../components/landing/SuperBubbleScene'
 import '../styles/bubble-design.css'
+import '../styles/soap-bubble.css'
 
 /* ════════════════════════════════════════════════════════════
    COURTIA — Landing V2 FINALE
@@ -443,18 +443,19 @@ export default function LandingPublic() {
         )}
       </AnimatePresence>
 
-      <ScrollCamera3D>
-      {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative min-h-screen flex items-center pt-24 pb-20 overflow-hidden">
-        {/* SuperBubble 3D WebGL en fond */}
-        <div className="hero-bubble-canvas-wrap">
-          <SuperBubbleScene />
+      {/* ═══════════════ HERO V2 — PROPER Z-INDEX BUBBLE AURORA ═══════════════ */}
+      <section className="hero">
+        {/* Aurore boréale hero */}
+        <div className="hero-aurora" />
+        <div className="hero-noise" />
+
+        {/* Bulle + orbites — z-index 1 */}
+        <div className="hero-bubble-layer">
+          <ArkAuroraOrb />
         </div>
 
-        {/* Gradient de fondu vers contenu */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#05030a] z-[1]" />
-
-        <div className="relative z-10 max-w-6xl mx-auto px-5 w-full">
+        {/* Contenu z-index 4 */}
+        <div className="hero-content max-w-6xl mx-auto px-5 w-full">
           <motion.div
             className="text-center max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
@@ -464,7 +465,7 @@ export default function LandingPublic() {
             <AuroraBadge>CRM assurance + IA native</AuroraBadge>
 
             <h1
-              className="text-4xl sm:text-[52px] lg:text-[64px] font-black tracking-tight leading-[1.05] mt-6"
+              className="hero-title text-4xl sm:text-[52px] lg:text-[64px] font-black tracking-tight leading-[1.05] mt-6"
               data-text="Le cockpit IA des courtiers qui veulent piloter leur portefeuille."
             >
               <span className="title-glow-v2">
@@ -477,7 +478,7 @@ export default function LandingPublic() {
             </h1>
 
             <motion.p
-              className="hero-sub-v2"
+              className="hero-subtitle hero-sub-v2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -490,7 +491,7 @@ export default function LandingPublic() {
             </motion.p>
 
             <motion.div
-              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+              className="hero-actions mt-8 flex flex-wrap items-center justify-center gap-3"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -505,7 +506,7 @@ export default function LandingPublic() {
             </motion.div>
 
             <motion.div
-              className="mt-8 flex flex-wrap items-center justify-center gap-2.5"
+              className="hero-badges mt-8 flex flex-wrap items-center justify-center gap-2.5"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -515,22 +516,24 @@ export default function LandingPublic() {
               ))}
             </motion.div>
           </motion.div>
+        </div>
 
-          {/* Cockpit 3D mockup */}
+        {/* Mockup z-index 2 */}
+        <div className="hero-mockup max-w-6xl mx-auto px-5 w-full mt-14">
           <ScrollReveal delay={0.4}>
-            <div
-              id="cockpit"
-              className="mt-14 max-w-5xl mx-auto sc-depth-card"
-              data-depth="0.3"
-            >
+            <div id="cockpit" className="max-w-5xl mx-auto sc-depth-card" data-depth="0.3">
               <FloatingProductMockup />
             </div>
           </ScrollReveal>
         </div>
       </section>
 
+      <ScrollCamera3D>
+
       {/* ═══════════════ PROBLÈME ═══════════════ */}
       <section id="probleme" className="section-v2" data-depth="0.15">
+        <div className="floating-bubble floating-bubble-1" />
+        <div className="floating-bubble floating-bubble-2" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Problème"
@@ -558,6 +561,8 @@ export default function LandingPublic() {
 
       {/* ═══════════════ SOLUTION 4 PILIERS ═══════════════ */}
       <section id="solutions" className="section-v2">
+        <div className="floating-bubble floating-bubble-3" />
+        <div className="floating-bubble floating-bubble-4" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Solution"
@@ -597,6 +602,8 @@ export default function LandingPublic() {
 
       {/* ═══════════════ REACH ═══════════════ */}
       <section id="reach" className="section-v2">
+        <div className="floating-bubble floating-bubble-1" />
+        <div className="floating-bubble floating-bubble-2" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="REACH — Module commercial"
@@ -637,6 +644,8 @@ export default function LandingPublic() {
 
       {/* ═══════════════ PORTEFEUILLE VIVANT ═══════════════ */}
       <section id="portefeuille" className="section-v2">
+        <div className="floating-bubble floating-bubble-3" />
+        <div className="floating-bubble floating-bubble-4" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Portefeuille vivant"
@@ -680,6 +689,8 @@ export default function LandingPublic() {
 
       {/* ═══════════════ AVANT / APRÈS ═══════════════ */}
       <section id="avant-apres" className="section-v2">
+        <div className="floating-bubble floating-bubble-1" />
+        <div className="floating-bubble floating-bubble-2" />
         <div className="relative z-10 max-w-5xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Comparaison"
@@ -729,6 +740,8 @@ export default function LandingPublic() {
 
       {/* ═══════════════ PRICING ═══════════════ */}
       <section id="pricing" className="section-v2">
+        <div className="floating-bubble floating-bubble-3" />
+        <div className="floating-bubble floating-bubble-4" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Tarifs"
