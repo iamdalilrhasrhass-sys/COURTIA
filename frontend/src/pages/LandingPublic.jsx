@@ -1,25 +1,20 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { 
-  Brain, TrendingUp, Clock, Sparkles, Zap, Shield, 
-  ChevronDown, Check, X, ArrowRight, Star, Users, 
+import {
+  Brain, TrendingUp, Clock, Sparkles, Zap, Shield,
+  ChevronDown, Check, X, ArrowRight, Star, Users,
   FileText, BarChart3, Bell, Search, RefreshCw, Target,
   Database, Globe, Lock, MessageSquare, Phone, Mail,
   Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon
 } from 'lucide-react'
 import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
-import DashboardMockup from '../components/DashboardMockup'
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
-}
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } }
-}
+import AuroraBadge from '../components/AuroraBadge'
+import FloatingProductMockup from '../components/FloatingProductMockup'
+import SectionEyebrow from '../components/SectionEyebrow'
+import ScrollReveal from '../components/ScrollReveal'
+import BeforeAfterPanel from '../components/BeforeAfterPanel'
+import FAQPremium from '../components/FAQPremium'
 
 const plans = [
   {
@@ -30,7 +25,7 @@ const plans = [
     features: [
       'CRM clients complet',
       'Gestion des contrats',
-      'Tableau de bord simple',
+      'Tableau de bord essentiel',
       'Tâches et rappels',
       'Import CSV',
       'Support email',
@@ -42,7 +37,7 @@ const plans = [
     name: 'Pro',
     price: '159',
     suffix: '/mois',
-    desc: 'Pour le cabinet qui veut passer en mode pilotage',
+    desc: 'L\'offre recommandée pour piloter votre cabinet',
     features: [
       'Tout Starter',
       'ARK — Assistant IA complet',
@@ -77,33 +72,20 @@ const plans = [
   },
 ]
 
-const faqItems = [
-  { q: 'COURTIA est-il réservé aux courtiers en assurance ?', a: 'Oui, COURTIA est conçu spécifiquement pour les courtiers en assurance. Notre CRM, notre IA ARK et notre module REACH sont pensés pour votre métier et vos besoins.' },
-  { q: 'ARK envoie-t-il des messages tout seul ?', a: 'Non. ARK prépare et suggère, mais vous validez toujours avant tout envoi. REACH est en mode dry-run par défaut. Vous gardez le contrôle à chaque étape.' },
-  { q: 'Mes données sont-elles sécurisées ?', a: 'Absolument. COURTIA respecte la réglementation RGPD. Vos données sont hébergées en Europe, chiffrées en transit et au repos. Aucun partage avec des tiers.' },
-  { q: 'Puis-je importer mes clients existants ?', a: 'Oui. L\'import CSV vous permet de transférer votre portefeuille en quelques minutes avec preview, mapping des colonnes et détection des doublons.' },
-  { q: 'Comment fonctionne REACH ?', a: 'REACH est votre module de prospection commerciale. Vous importez des prospects, créez des campagnes multi-étapes, et REACH prépare les messages. Vous validez, il envoie. En dry-run, rien ne part sans votre accord.' },
-  { q: 'Pourquoi l\'offre Pro est-elle recommandée ?', a: 'L\'offre Pro débloque ARK complet, REACH, les automatisations, le scoring portefeuille et les rapports avancés. C\'est le vrai cockpit IA qui transforme votre quotidien.' },
-  { q: 'Puis-je commencer seul ou faut-il un accompagnement ?', a: 'COURTIA est conçu pour être opérationnel immédiatement. L\'offre Premium inclut un accompagnement dédié si vous préférez être guidé.' },
-  { q: 'Y a-t-il un engagement de durée ?', a: 'Non. Vous pouvez résilier à tout moment. L\'essai gratuit de 30 jours vous permet de tester sans engagement ni carte bancaire.' },
-]
-
 const problems = [
-  { icon: FileText, title: 'Trop d\'Excel', desc: 'Vos clients, contrats et relances sont dispersés dans des fichiers que vous passez votre temps à mettre à jour.' },
+  { icon: FileText, title: 'Données dispersées', desc: 'Vos clients, contrats et relances sont éparpillés dans des fichiers Excel, votre téléphone et vos emails.' },
   { icon: Clock, title: 'Relances oubliées', desc: 'Des prospects et clients partent chez la concurrence parce que vous n\'avez pas anticipé le bon moment.' },
   { icon: AlertTriangle, title: 'Portefeuille dormant', desc: 'Vous ne savez pas quels clients sont actifs, dormants ou à risque sans ouvrir chaque dossier un par un.' },
-  { icon: Database, title: 'Données dispersées', desc: 'Entre votre téléphone, vos emails, vos post-its et votre logiciel, l\'information client est partout et nulle part.' },
-  { icon: Search, title: 'Aucun assistant métier', desc: 'Les CRM généralistes ne parlent pas assurance. Aucun ne comprend vos contrats, vos échéances, vos sinistres.' },
-  { icon: BarChart3, title: 'Aucune vision globale', desc: 'Impossible d\'avoir en un coup d\'œil la santé de votre portefeuille, les priorités du jour et les actions à mener.' },
+  { icon: Database, title: 'CRM trop généralistes', desc: 'Les outils actuels ne parlent pas assurance. Aucun ne comprend vos contrats, échéances et sinistres.' },
+  { icon: Search, title: 'Opportunités invisibles', desc: 'Les prospects multi-équipement, les clients à recontacter, les ventes croisées : tout reste dans votre tête.' },
+  { icon: BarChart3, title: 'Suivi commercial manuel', desc: 'Impossible d\'avoir en un coup d\'œil la santé de votre portefeuille et les priorités du jour.' },
 ]
 
-const solutions = [
-  { icon: Users, title: 'CRM clients', desc: 'Fiches complètes, historique, scoring risque et fidélité, préférences, documents. Tout votre portefeuille au même endroit.' },
-  { icon: Brain, title: 'ARK — IA native', desc: 'ARK analyse votre portefeuille, détecte les opportunités, prépare les relances et vous livre chaque matin vos priorités.' },
-  { icon: Zap, title: 'REACH — Prospection', desc: 'Créez des campagnes multi-canaux, importez des prospects, laissez ARK générer les messages. Vous validez, rien ne part sans vous.' },
-  { icon: RefreshCw, title: 'Automatisations', desc: 'Détection des clients dormants, opportunités multi-équipement, relances automatiques, alertes échéances.' },
-  { icon: Target, title: 'Scoring intelligent', desc: 'Chaque client noté sur 3 axes : risque, fidélité, opportunité. Priorisez naturellement vos actions.' },
-  { icon: PieChart, title: 'Rapports & pilotage', desc: 'Tableaux de bord, graphiques d\'activité, segmentation portefeuille, reporting REACH. Pilotez votre cabinet en temps réel.' },
+const pillars = [
+  { icon: Users, title: 'Centraliser', desc: 'Clients, contrats, tâches, relances et notes au même endroit. Votre cabinet en un tableau de bord.' },
+  { icon: Brain, title: 'Prioriser', desc: 'ARK détecte ce qui mérite votre attention aujourd\'hui : clients dormants, échéances, opportunités.' },
+  { icon: Zap, title: 'Relancer', desc: 'REACH prépare les messages de relance et prospection. Vous validez avant tout envoi.' },
+  { icon: RefreshCw, title: 'Automatiser', desc: 'Le portefeuille génère des actions au lieu de dormir dans un tableau. Alertes, rappels, scoring.' },
 ]
 
 const arkCapabilities = [
@@ -128,45 +110,10 @@ const reachCapabilities = [
   'Tableau de bord sécurisé',
 ]
 
-function SectionHeader({ title, subtitle, badge }) {
-  return (
-    <motion.div
-      className="text-center max-w-2xl mx-auto mb-12 lg:mb-16"
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-80px' }}
-      variants={fadeUp}
-    >
-      {badge && (
-        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-purple-600 bg-purple-50 px-4 py-1.5 rounded-full mb-4">
-          {badge}
-        </span>
-      )}
-      <h2 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-        {title}
-      </h2>
-      {subtitle && (
-        <p className="mt-4 text-base lg:text-lg text-gray-500 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-    </motion.div>
-  )
-}
-
-function GlassCard({ children, className = '', hover = true }) {
-  return (
-    <div className={`bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl shadow-black/5 ${hover ? 'hover:shadow-2xl hover:shadow-purple-500/5 hover:-translate-y-0.5 transition-all duration-300' : ''} ${className}`}>
-      {children}
-    </div>
-  )
-}
-
 export default function LandingPublic() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [openFaq, setOpenFaq] = useState(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -191,7 +138,9 @@ export default function LandingPublic() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => scrollTo('solutions')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Fonctionnalités</button>
+            <button onClick={() => scrollTo('probleme')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Problème</button>
+            <button onClick={() => scrollTo('solutions')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Solution</button>
+            <button onClick={() => scrollTo('ark')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">ARK</button>
             <button onClick={() => scrollTo('pricing')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Tarifs</button>
             <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Se connecter</Link>
             <Link to="/register?plan=pro" className="text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200">
@@ -215,7 +164,9 @@ export default function LandingPublic() {
             className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-lg md:hidden"
           >
             <div className="p-5 space-y-4">
-              <button onClick={() => { scrollTo('solutions'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">Fonctionnalités</button>
+              <button onClick={() => { scrollTo('probleme'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">Problème</button>
+              <button onClick={() => { scrollTo('solutions'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">Solution</button>
+              <button onClick={() => { scrollTo('ark'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">ARK</button>
               <button onClick={() => { scrollTo('pricing'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">Tarifs</button>
               <Link to="/login" className="block text-gray-600 py-2" onClick={() => setMenuOpen(false)}>Se connecter</Link>
               <Link to="/register?plan=pro" className="block text-center font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-3 rounded-xl" onClick={() => setMenuOpen(false)}>
@@ -226,47 +177,49 @@ export default function LandingPublic() {
         )}
       </AnimatePresence>
 
-      {/* ─── HERO ─── */}
-      <section className="relative min-h-[90vh] flex items-center pt-20 pb-16 lg:pb-24">
+      {/* ━━━━━━━━━━━ HERO AURORA 3D ━━━━━━━━━━━ */}
+      <section className="relative min-h-screen flex items-center pt-24 pb-16 lg:pb-24 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8f9fc]/50 to-[#f8f9fc]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8f9fc]/30 to-[#f8f9fc]" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-5 w-full">
           <motion.div
             className="text-center max-w-3xl mx-auto"
-            initial="hidden"
-            animate="visible"
-            variants={stagger}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <motion.span
-              variants={fadeUp}
-              className="inline-block text-xs font-semibold tracking-widest uppercase text-purple-600 bg-purple-50/80 backdrop-blur-sm px-4 py-1.5 rounded-full mb-6 border border-purple-200/50"
-            >
-              CRM assurance + IA native
-            </motion.span>
+            <AuroraBadge>CRM assurance + IA native</AuroraBadge>
 
-            <motion.h1
-              variants={fadeUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-[1.08]"
+            <h1
+              className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-gray-900"
+              data-text="Le cockpit IA des courtiers qui veulent piloter leur portefeuille."
             >
               Le cockpit IA des courtiers{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
                 qui veulent piloter
               </span>{' '}
               leur portefeuille.
-            </motion.h1>
+            </h1>
 
             <motion.p
-              variants={fadeUp}
               className="mt-6 text-base lg:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              COURTIA centralise vos clients, contrats, tâches et relances. 
-              <strong className="text-gray-700"> ARK</strong> analyse votre portefeuille,{' '}
-              <strong className="text-gray-700">REACH</strong> prépare vos actions commerciales, 
+              COURTIA centralise vos clients, contrats, tâches et relances.{' '}
+              <strong className="text-gray-700">ARK</strong> analyse votre portefeuille,{' '}
+              <strong className="text-gray-700">REACH</strong> prépare vos actions commerciales,{' '}
               vous gardez toujours la main.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <motion.div
+              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               <Link
                 to="/register?plan=pro"
                 className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-7 py-3.5 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200 text-sm"
@@ -275,14 +228,19 @@ export default function LandingPublic() {
                 <ArrowRight size={16} />
               </Link>
               <button
-                onClick={() => scrollTo('mockup')}
+                onClick={() => scrollTo('cockpit')}
                 className="inline-flex items-center gap-2 font-medium text-gray-600 bg-white/70 backdrop-blur-sm border border-gray-200 px-7 py-3.5 rounded-xl hover:bg-white hover:border-gray-300 hover:text-gray-900 transition-all duration-200 text-sm"
               >
                 Voir la démonstration
               </button>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+            <motion.div
+              className="mt-6 flex flex-wrap items-center justify-center gap-2.5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               {['Pensé courtiers', 'ARK intégré', 'REACH sécurisé', 'Validation humaine', 'Portefeuille vivant'].map((badge) => (
                 <span key={badge} className="text-xs text-gray-400 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-100">
                   {badge}
@@ -291,222 +249,251 @@ export default function LandingPublic() {
             </motion.div>
           </motion.div>
 
-          {/* Mockup */}
-          <motion.div
-            id="mockup"
-            className="mt-12 lg:mt-16 max-w-5xl mx-auto"
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.4, ease: 'easeOut' }}
-          >
-            <DashboardMockup />
-          </motion.div>
+          {/* Cockpit Mockup 3D */}
+          <ScrollReveal delay={0.3}>
+            <div id="cockpit" className="mt-12 lg:mt-16 max-w-5xl mx-auto">
+              <FloatingProductMockup />
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* ─── PROBLÈME ─── */}
-      <section className="py-20 lg:py-28 px-5">
+      {/* ━━━━━━━━━━━ SECTION PROBLÈME ━━━━━━━━━━━ */}
+      <section id="probleme" className="py-20 lg:py-28 px-5">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader
+          <SectionEyebrow
             badge="Problème"
-            title="Pourquoi les courtiers perdent 60% de leur temps"
+            title="Les courtiers perdent trop de temps sur ce qui ne vend pas."
             subtitle="Les outils actuels ne sont pas faits pour vous. Résultat : vous passez plus de temps à gérer l'administratif qu'à développer votre cabinet."
           />
-          <motion.div
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
-            variants={stagger}
-          >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
             {problems.map((p, i) => (
-              <motion.div key={i} variants={fadeUp}>
-                <GlassCard className="p-6 lg:p-7">
+              <ScrollReveal key={i} delay={i * 0.08}>
+                <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-purple-500/5 hover:-translate-y-0.5 transition-all duration-300">
                   <p.icon size={22} className="text-purple-600 mb-3" />
                   <h3 className="font-bold text-gray-900 text-sm mb-1.5">{p.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
-                </GlassCard>
-              </motion.div>
+                </div>
+              </ScrollReveal>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ─── SOLUTION ─── */}
+      {/* ━━━━━━━━━━━ SECTION SOLUTION (4 piliers) ━━━━━━━━━━━ */}
       <section id="solutions" className="py-20 lg:py-28 px-5 bg-white/40">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader
+          <SectionEyebrow
             badge="Solution"
-            title="COURTIA transforme votre cabinet"
-            subtitle="Un CRM complet, une IA qui comprend votre métier, un module commercial sécurisé."
+            title="COURTIA remet votre cabinet sous contrôle."
+            subtitle="4 piliers complémentaires pour transformer votre quotidien."
           />
-          <motion.div
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
-            variants={stagger}
-          >
-            {solutions.map((s, i) => (
-              <motion.div key={i} variants={fadeUp}>
-                <GlassCard className="p-6 lg:p-7">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-3">
-                    <s.icon size={20} className="text-purple-600" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+            {pillars.map((p, i) => (
+              <ScrollReveal key={i} delay={i * 0.1}>
+                <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-purple-500/5 hover:-translate-y-0.5 transition-all duration-300 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                    <p.icon size={24} className="text-purple-600" />
                   </div>
-                  <h3 className="font-bold text-gray-900 text-sm mb-1.5">{s.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
-                </GlassCard>
-              </motion.div>
+                  <h3 className="font-bold text-gray-900 text-base mb-2">{p.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
+                </div>
+              </ScrollReveal>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ─── ARK ─── */}
-      <section className="py-20 lg:py-28 px-5 relative overflow-hidden">
+      {/* ━━━━━━━━━━━ SECTION ARK ━━━━━━━━━━━ */}
+      <section id="ark" className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionHeader
+          <SectionEyebrow
             badge="ARK — Intelligence Artificielle"
-            title="L'IA qui travaille dans votre CRM"
-            subtitle="ARK analyse votre portefeuille en continu et transforme les données en actions concrètes."
+            title="ARK analyse votre portefeuille comme un copilote métier."
+            subtitle="ARK ne remplace pas le courtier. Il lit les signaux, prépare les actions et vous aide à décider plus vite."
           />
-          <motion.div
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
-            variants={stagger}
-          >
+
+          {/* Orb ARK visuel */}
+          <ScrollReveal>
+            <div className="flex items-center justify-center mb-10">
+              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 via-violet-500 to-blue-500 shadow-2xl shadow-purple-500/30 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400/20 to-blue-400/20 animate-pulse blur-xl" />
+                <Brain size={32} className="text-white relative z-10" />
+              </div>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {arkCapabilities.map((cap, i) => (
-              <motion.div key={i} variants={fadeUp}>
-                <GlassCard className="p-5 flex items-start gap-3">
+              <ScrollReveal key={i} delay={i * 0.06}>
+                <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg transition-all duration-300">
                   <Check size={16} className="text-purple-600 mt-0.5 shrink-0" />
                   <span className="text-sm text-gray-600">{cap}</span>
-                </GlassCard>
-              </motion.div>
+                </div>
+              </ScrollReveal>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ─── REACH ─── */}
+      {/* ━━━━━━━━━━━ SECTION REACH ━━━━━━━━━━━ */}
       <section className="py-20 lg:py-28 px-5 bg-white/40">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader
+          <SectionEyebrow
             badge="REACH — Module commercial"
-            title="Prospection IA, contrôle humain"
-            subtitle="Créez des campagnes, laissez ARK générer les messages, validez avant tout envoi."
+            title="REACH prépare la prospection, sans jamais perdre le contrôle."
+            subtitle="Aucun envoi sauvage. Les messages sont préparés, contrôlés et validés."
           />
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-            <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-              <Shield size={12} /> Dry-run par défaut
-            </span>
-            <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-              <Lock size={12} /> Validation humaine obligatoire
-            </span>
-            <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-              <Brain size={12} /> Messages générés par IA
-            </span>
-          </div>
-          <motion.div
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
-            variants={stagger}
-          >
+
+          {/* Sécurité badges */}
+          <ScrollReveal>
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+              <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <Shield size={12} /> Dry-run par défaut
+              </span>
+              <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <Lock size={12} /> Validation humaine obligatoire
+              </span>
+              <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <Brain size={12} /> Messages générés par IA
+              </span>
+              <span className="text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <Check size={12} /> Opt-out respecté
+              </span>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {reachCapabilities.map((cap, i) => (
-              <motion.div key={i} variants={fadeUp}>
-                <GlassCard className="p-5 flex items-start gap-3">
+              <ScrollReveal key={i} delay={i * 0.06}>
+                <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg transition-all duration-300">
                   <Check size={16} className="text-blue-500 mt-0.5 shrink-0" />
                   <span className="text-sm text-gray-600">{cap}</span>
-                </GlassCard>
-              </motion.div>
+                </div>
+              </ScrollReveal>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ─── AVANT / APRÈS ─── */}
-      <section className="py-20 lg:py-28 px-5">
+      {/* ━━━━━━━━━━━ SECTION PORTEFEUILLE VIVANT ━━━━━━━━━━━ */}
+      <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
+        <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <SectionEyebrow
+            badge="Portefeuille vivant"
+            title="Votre portefeuille devient vivant."
+            subtitle="Les données ne dorment plus. Les clients, contrats et opportunités s'animent pour vous guider."
+          />
+
+          <div className="grid md:grid-cols-3 gap-5">
+            <ScrollReveal delay={0}>
+              <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-4">
+                  <Users size={22} className="text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 text-sm mb-2">Clients actifs</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-gray-900">128</span>
+                  <span className="text-sm text-emerald-500">+6 ce mois</span>
+                </div>
+                <div className="mt-3 space-y-1">
+                  {['12 dormants', '7 à relancer', '3 opportunités'].map((tag, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-amber-400' : i === 1 ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.1}>
+              <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-4">
+                  <FileText size={22} className="text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 text-sm mb-2">Contrats sous gestion</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-gray-900">342</span>
+                  <span className="text-sm text-amber-500">8 échéances</span>
+                </div>
+                <div className="mt-3 space-y-1">
+                  {['2 450€ prime moyenne', 'RC Pro 42%', 'Auto 31%'].map((tag, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-blue-400' : i === 1 ? 'bg-violet-400' : 'bg-cyan-400'}`} />
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.2}>
+              <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-4">
+                  <TrendingUp size={22} className="text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 text-sm mb-2">Performance cabinet</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-gray-900">+18%</span>
+                  <span className="text-sm text-emerald-500">vs mois dernier</span>
+                </div>
+                <div className="mt-3 space-y-1">
+                  {['12 relances préparées', '5 devis en cours', 'Taux conversion 68%'].map((tag, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-purple-400' : i === 1 ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━ SECTION AVANT / APRÈS ━━━━━━━━━━━ */}
+      <section className="py-20 lg:py-28 px-5 bg-white/40">
         <div className="max-w-5xl mx-auto">
-          <SectionHeader
+          <SectionEyebrow
             badge="Comparaison"
             title="Avant COURTIA / Avec COURTIA"
             subtitle="Le changement est radical."
           />
-          <div className="grid md:grid-cols-2 gap-6">
-            <GlassCard className="p-8">
-              <h3 className="font-black text-lg text-gray-400 mb-6 flex items-center gap-2">
-                <X size={18} className="text-red-400" /> Avant COURTIA
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  'Fichiers Excel dispersés',
-                  'Relances manuelles oubliées',
-                  'Aucune vision du portefeuille',
-                  'Perte d\'opportunités',
-                  'Pas d\'assistant métier',
-                  'Administratif chronophage',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-gray-400">
-                    <X size={14} className="mt-0.5 shrink-0 text-red-300" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </GlassCard>
-            <GlassCard className="p-8 border-purple-200/50 shadow-purple-500/5">
-              <h3 className="font-black text-lg text-gray-900 mb-6 flex items-center gap-2">
-                <Check size={18} className="text-green-500" /> Avec COURTIA
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  'Cockpit centralisé en temps réel',
-                  'Relances automatiques préparées par ARK',
-                  'Portefeuille vivant et priorisé',
-                  'Opportunités détectées par l\'IA',
-                  'Assistant qui travaille avec vous',
-                  '60% de temps administratif économisé',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
-                    <Check size={14} className="mt-0.5 shrink-0 text-green-500" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </GlassCard>
-          </div>
+          <ScrollReveal>
+            <BeforeAfterPanel />
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* ─── PRICING ─── */}
-      <section id="pricing" className="py-20 lg:py-28 px-5 bg-white/40">
-        <div className="max-w-6xl mx-auto">
-          <SectionHeader
+      {/* ━━━━━━━━━━━ SECTION PRICING PREMIUM ━━━━━━━━━━━ */}
+      <section id="pricing" className="relative py-20 lg:py-28 px-5 overflow-hidden">
+        <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <SectionEyebrow
             badge="Tarifs"
-            title="Des plans pour chaque cabinet"
-            subtitle="Commencez gratuitement 30 jours. Sans carte bancaire."
+            title="Des plans pour chaque cabinet."
+            subtitle="Commencez gratuitement 30 jours. Sans carte bancaire. Sans engagement."
           />
 
-          <motion.div
-            className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
-            variants={stagger}
-          >
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map((plan, i) => (
-              <motion.div key={i} variants={fadeUp} className="relative">
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <span className="text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-4 py-1 rounded-full shadow-lg">
-                      Recommandé
-                    </span>
-                  </div>
-                )}
-                <GlassCard className={`p-7 flex flex-col h-full ${plan.popular ? 'border-purple-300/50 shadow-xl shadow-purple-500/10 scale-105 md:scale-105' : ''}`}>
+              <ScrollReveal key={i} delay={i * 0.12}>
+                <div className={`relative rounded-2xl p-7 border shadow-xl flex flex-col h-full transition-all duration-300 hover:-translate-y-1 ${
+                  plan.popular
+                    ? 'border-purple-300/50 bg-white shadow-purple-500/10 scale-105 md:scale-105'
+                    : 'border-white/20 bg-white/70 backdrop-blur-xl shadow-black/5'
+                }`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <span className="text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-4 py-1 rounded-full shadow-lg">
+                        Recommandé
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex-1">
                     <h3 className="font-black text-lg text-gray-900">{plan.name}</h3>
                     <p className="text-sm text-gray-500 mt-1 mb-4">{plan.desc}</p>
@@ -521,7 +508,7 @@ export default function LandingPublic() {
                         </div>
                       )}
                       {plan.price !== 'Sur devis' && (
-                        <p className="text-xs text-gray-400 mt-1">Soit {(parseInt(plan.price) / 30).toFixed(2)}€ / jour</p>
+                        <p className="text-xs text-gray-400 mt-1">HT — Soit {(parseInt(plan.price) / 30).toFixed(2)}€ / jour</p>
                       )}
                     </div>
 
@@ -545,85 +532,54 @@ export default function LandingPublic() {
                   >
                     {plan.cta}
                   </Link>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── FAQ ─── */}
-      <section className="py-20 lg:py-28 px-5">
-        <div className="max-w-3xl mx-auto">
-          <SectionHeader
-            badge="FAQ"
-            title="Questions fréquentes"
-          />
-          <div className="space-y-3">
-            {faqItems.map((item, i) => (
-              <GlassCard key={i} hover={false} className="overflow-hidden">
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-5 text-left"
-                >
-                  <span className="font-semibold text-sm text-gray-900 pr-4">{item.q}</span>
-                  <ChevronDown
-                    size={16}
-                    className={`text-gray-400 shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-5 pb-5 text-sm text-gray-500 leading-relaxed">{item.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </GlassCard>
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── CTA FINAL ─── */}
+      {/* ━━━━━━━━━━━ SECTION FAQ ━━━━━━━━━━━ */}
+      <section className="py-20 lg:py-28 px-5 bg-white/40">
+        <div className="max-w-3xl mx-auto">
+          <SectionEyebrow
+            badge="FAQ"
+            title="Questions fréquentes"
+          />
+          <ScrollReveal>
+            <FAQPremium />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━ CTA FINAL AURORA ━━━━━━━━━━━ */}
       <section className="relative py-24 lg:py-32 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8f9fc]/30 to-[#f8f9fc]" />
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={stagger}
-          >
-            <motion.h2
-              variants={fadeUp}
-              className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-tight"
+          <ScrollReveal>
+            <h2
+              className="text-3xl lg:text-4xl font-black tracking-tight leading-tight"
+              style={{
+                background: 'linear-gradient(115deg, #1a1a2e, #37306d, #66347f, #37306d, #1a1a2e)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
             >
-              Faites passer votre cabinet d'un portefeuille subi{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
-                à un portefeuille piloté.
-              </span>
-            </motion.h2>
+              Passez d'un portefeuille subi à un portefeuille piloté.
+            </h2>
 
-            <motion.p
-              variants={fadeUp}
-              className="mt-4 text-base text-gray-500 max-w-xl mx-auto"
-            >
-              30 jours d'essai gratuit. Sans carte bancaire. Sans engagement.
-            </motion.p>
+            <p className="mt-4 text-base text-gray-500 max-w-xl mx-auto">
+              COURTIA vous aide à voir les bonnes priorités, préparer les bonnes actions et garder le contrôle de votre croissance.
+            </p>
 
-            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 to="/register?plan=pro"
                 className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-4 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Commencer l'essai gratuit
+                Démarrer avec COURTIA
                 <ArrowRight size={16} />
               </Link>
               <Link
@@ -632,8 +588,8 @@ export default function LandingPublic() {
               >
                 J'ai déjà un compte
               </Link>
-            </motion.div>
-          </motion.div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
