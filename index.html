@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="COURTIA — Le CRM intelligent pensé pour les courtiers en assurance. Centralisez, automatisez, développez votre portefeuille avec ARK, votre IA native." />
+  <title>COURTIA — CRM intelligent pour courtiers en assurance</title>
+
+  <!-- Google Fonts : Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Three.js r128 via CDN (seule version compatible avec le code WebGL) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════ NAVIGATION ═══════════ -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <!-- Logo diamant SVG COURTIA -->
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2L26 9.5V18.5L14 26L2 18.5V9.5L14 2Z" fill="url(#diamond-grad)" />
+          <defs>
+            <linearGradient id="diamond-grad" x1="2" y1="2" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="50%" stop-color="#AFA9EC" />
+              <stop offset="100%" stop-color="#534AB7" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="nav-logo-text">COURTIA</span>
+      </div>
+      <div class="nav-links">
+        <a href="#produit" class="nav-link">Produit</a>
+        <a href="#ark" class="nav-link">ARK</a>
+        <a href="#tarifs" class="nav-link">Tarifs</a>
+        <a href="#demo" class="nav-link">Démo</a>
+      </div>
+      <div class="nav-cta">
+        <a href="https://courtia.vercel.app/login" class="btn-nav-secondary">Se connecter</a>
+        <a href="https://courtia.vercel.app/register" class="btn-nav-primary">Essai gratuit 30 jours</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════ HERO ═══════════ -->
+  <section class="hero" id="hero">
+
+    <!-- Canvas Three.js pour la bulle 3D -->
+    <canvas id="hero-canvas"></canvas>
+
+    <!-- Cartes flottantes autour de la bulle -->
+    <div class="floating-card card-tl" id="card-score">
+      <div class="card-icon">◎</div>
+      <div class="card-content">
+        <div class="card-value">82<span>/100</span></div>
+        <div class="card-label">Score client</div>
+        <div class="card-sub">Profil sain · fort potentiel</div>
+      </div>
+    </div>
+
+    <div class="floating-card card-tr" id="card-relance">
+      <div class="card-icon card-icon-red">🔴</div>
+      <div class="card-content">
+        <div class="card-label">Relance prioritaire</div>
+        <div class="card-sub">Échéance contrat dans 14 jours</div>
+      </div>
+    </div>
+
+    <div class="floating-card card-bl" id="card-opport">
+      <div class="card-icon card-icon-green">🟢</div>
+      <div class="card-content">
+        <div class="card-label">Opportunité détectée</div>
+        <div class="card-sub">Multi-équipement Mme Martin</div>
+      </div>
+    </div>
+
+    <div class="floating-card card-br" id="card-ark">
+      <div class="card-icon">🤖</div>
+      <div class="card-content">
+        <div class="card-label">ARK Assistant</div>
+        <div class="card-sub">3 actions recommandées</div>
+      </div>
+    </div>
+
+    <!-- Contenu texte centré -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        IA native pour courtiers ORIAS
+      </div>
+
+      <h1 class="hero-title">
+        Le CRM intelligent<br />
+        pensé pour les<br />
+        <span class="hero-title-accent">courtiers en assurance.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Centralisez vos clients, contrats, relances et analyses dans une interface premium, avec ARK, votre assistant IA intégré pour prioriser vos actions et développer votre portefeuille.
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://courtia.vercel.app/register" class="btn-primary">
+          Découvrir COURTIA
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#demo" class="btn-secondary">Voir la démonstration</a>
+      </div>
+
+      <div class="hero-badges">
+        <span class="feature-badge">IA native pour courtiers</span>
+        <span class="feature-badge">Portefeuille vivant</span>
+        <span class="feature-badge">Relances intelligentes</span>
+        <span class="feature-badge">Analyse client automatisée</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ STATS BAR ═══════════ -->
+  <section class="stats-bar" id="produit">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-number">32 000</div>
+        <div class="stat-label">Courtiers ORIAS ciblés</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-number">0 €</div>
+        <div class="stat-label">De frais d'installation</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-number">4h</div>
+        <div class="stat-label">Gagnées par dossier</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-number">30 j</div>
+        <div class="stat-label">Essai gratuit sans CB</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FEATURES ═══════════ -->
+  <section class="features" id="ark">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-badge">Ce que COURTIA fait pour vous</div>
+        <h2 class="section-title">Un CRM qui travaille<br />pendant que vous travaillez.</h2>
+        <p class="section-sub">ARK analyse votre portefeuille en continu, anticipe les échéances, détecte les opportunités et prépare vos rendez-vous — sans que vous ayez à demander.</p>
+      </div>
+
+      <div class="features-grid">
+
+        <div class="feature-card feature-card-large">
+          <div class="feature-icon">◎</div>
+          <h3 class="feature-title">Score de risque client</h3>
+          <p class="feature-desc">ARK calcule automatiquement un score de santé pour chaque client. Résiliation imminente, sous-assurance, opportunité cross-sell — tout est visible d'un coup d'œil.</p>
+          <div class="feature-demo">
+            <div class="score-demo">
+              <div class="score-ring">
+                <span class="score-value">82</span>
+                <span class="score-unit">/100</span>
+              </div>
+              <div class="score-details">
+                <div class="score-row"><span class="score-dot green"></span>Fidélité élevée</div>
+                <div class="score-row"><span class="score-dot orange"></span>Risque résiliation moyen</div>
+                <div class="score-row"><span class="score-dot violet"></span>3 opportunités détectées</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Relances automatisées</h3>
+          <p class="feature-desc">J-90, J-30, J-15 avant chaque échéance. ARK génère le message de relance personnalisé et l'envoie si vous le validez.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Dashboard en temps réel</h3>
+          <p class="feature-desc">Clients actifs, CA mensuel, contrats à renouveler, tâches dues. Votre portefeuille en un seul écran.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">✍️</div>
+          <h3 class="feature-title">Rédaction IA</h3>
+          <p class="feature-desc">ARK rédige vos emails commerciaux, notes de couverture et propositions — dans le ton professionnel du courtage.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3 class="feature-title">Conformité DDA/RGPD</h3>
+          <p class="feature-desc">Base de connaissance réglementaire consultable. ARK répond à vos questions ORIAS, DDA, RGPD en quelques secondes.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ ARK DEMO ═══════════ -->
+  <section class="ark-demo" id="demo">
+    <div class="section-inner">
+      <div class="section-header light">
+        <div class="section-badge-dark">Démonstration ARK en direct</div>
+        <h2 class="section-title-light">Voyez ARK analyser<br />un client en 90 secondes.</h2>
+        <p class="section-sub-light">ARK accède à la fiche client, identifie les risques, propose des actions concrètes et rédige les messages. Tout ça en temps réel.</p>
+      </div>
+
+      <div class="ark-demo-window">
+        <div class="ark-demo-header">
+          <div class="ark-demo-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="ark-demo-title">ARK — Assistant IA COURTIA</div>
+        </div>
+        <div class="ark-demo-body">
+          <div class="ark-message ark-message-user">
+            Analyse le profil de Jean-Pierre Moreau et dis-moi ce que je dois faire cette semaine.
+          </div>
+          <div class="ark-message ark-message-ark">
+            <div class="ark-message-header">
+              <div class="ark-avatar">A</div>
+              <span>ARK</span>
+            </div>
+            <p>J'ai analysé le profil de M. Moreau. Voici ce que je détecte :</p>
+            <div class="ark-insights">
+              <div class="ark-insight-item urgent">🔴 Échéance Auto dans <strong>14 jours</strong> — relance prioritaire</div>
+              <div class="ark-insight-item opportunity">🟢 Son fils vient d'obtenir son permis — opportunité assurance jeune conducteur</div>
+              <div class="ark-insight-item info">📋 Contrat MRH sous-évalué de ~15% vs valeur actuelle du bien</div>
+            </div>
+            <p>Je recommande : <strong>1)</strong> Appel aujourd'hui pour renouvellement Auto. <strong>2)</strong> Proposition jeune conducteur en fin d'appel. <strong>3)</strong> Révision MRH dans 30 jours. Voulez-vous que je rédige l'email de relance ?</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ PRICING ═══════════ -->
+  <section class="pricing" id="tarifs">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-badge">Tarifs transparents</div>
+        <h2 class="section-title">Des plans pour chaque cabinet.</h2>
+        <p class="section-sub">30 jours gratuits sur tous les plans. Sans carte bancaire. Sans engagement.</p>
+      </div>
+
+      <div class="pricing-grid">
+
+        <div class="pricing-card">
+          <div class="plan-name">L'Essentiel</div>
+          <div class="plan-tagline">Pour courtier indépendant</div>
+          <div class="plan-price">
+            <span class="price-amount">89€</span>
+            <span class="price-period">/mois</span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ Jusqu'à 100 clients</li>
+            <li>✓ ARK Chat basique</li>
+            <li>✓ Dashboard KPIs</li>
+            <li>✓ Gestion contrats</li>
+            <li>✓ Alertes échéances</li>
+            <li>✓ Support email</li>
+          </ul>
+          <a href="https://courtia.vercel.app/register" class="btn-plan">Commencer gratuitement</a>
+        </div>
+
+        <div class="pricing-card pricing-card-featured">
+          <div class="plan-popular">Le plus populaire</div>
+          <div class="plan-name">Le Cabinet</div>
+          <div class="plan-tagline">Pour cabinet en croissance</div>
+          <div class="plan-price">
+            <span class="price-amount">159€</span>
+            <span class="price-period">/mois</span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ Jusqu'à 500 clients</li>
+            <li>✓ ARK complet + analyses</li>
+            <li>✓ Automations relances</li>
+            <li>✓ Import CSV/Excel</li>
+            <li>✓ Rapports avancés</li>
+            <li>✓ Conformité DDA/RGPD</li>
+            <li>✓ Support prioritaire</li>
+          </ul>
+          <a href="https://courtia.vercel.app/register" class="btn-plan btn-plan-featured">Commencer gratuitement</a>
+        </div>
+
+        <div class="pricing-card">
+          <div class="plan-name">Le Réseau</div>
+          <div class="plan-tagline">Pour cabinet performant</div>
+          <div class="plan-price">
+            <span class="price-amount">350€</span>
+            <span class="price-period">/mois</span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ Clients illimités</li>
+            <li>✓ ARK vocal (appels IA)</li>
+            <li>✓ API publique</li>
+            <li>✓ Multi-agences</li>
+            <li>✓ Marque blanche</li>
+            <li>✓ Analytics executives</li>
+            <li>✓ Manager dédié</li>
+          </ul>
+          <a href="mailto:dalil@courtia.fr" class="btn-plan">Contacter Dalil</a>
+        </div>
+
+      </div>
+
+      <p class="pricing-note">Tous les prix HT. TVA 20% applicable. Engagement mensuel, résiliable à tout moment.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ CTA FINAL ═══════════ -->
+  <section class="cta-final">
+    <div class="section-inner">
+      <h2 class="cta-title">Prêt à transformer<br />votre cabinet ?</h2>
+      <p class="cta-sub">30 jours gratuits. Sans engagement. Sans carte bancaire.<br />Configuré en moins de 10 minutes.</p>
+      <a href="https://courtia.vercel.app/register" class="btn-cta-final">
+        Démarrer gratuitement maintenant
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3.5 9h11M10.5 5l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2L26 9.5V18.5L14 26L2 18.5V9.5L14 2Z" fill="url(#footer-diamond-grad)" />
+          <defs>
+            <linearGradient id="footer-diamond-grad" x1="2" y1="2" x2="26" y2="26">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="50%" stop-color="#AFA9EC" />
+              <stop offset="100%" stop-color="#534AB7" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>COURTIA</span>
+      </div>
+      <p class="footer-tagline">Construit pour les 32 000 courtiers ORIAS de France.</p>
+      <p class="footer-legal">© 2026 COURTIA — Tous droits réservés · contact@courtia.fr</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="scene.js"></script>
+  <script src="interactions.js"></script>
+  <script src="main.js"></script>
+
+</body>
+</html>
