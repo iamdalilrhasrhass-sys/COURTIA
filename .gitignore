@@ -36,3 +36,4 @@ out/
 *.db
 *.sql.bak
 .aider*
+.env*.local
