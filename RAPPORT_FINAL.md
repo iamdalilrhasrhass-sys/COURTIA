@@ -57,9 +57,9 @@
 | Rapports | ⚠️ Page partielle — état bientôt disponible |
 | Paramètres | ✅ Profil, sécurité (mdp), abonnement, notifications |
 | Import CSV | ⚠️ Fonctionnel via API, placeholder frontend à compléter |
-| ARK | ⚠️ Erreur propre : clé API DeepSeek expirée |
+| ARK | ✅ Fonctionnel — clé DeepSeek mise à jour, réponse complète |
 | ARK REACH | ✅ Placeholder propre dans landing + ReachSettings |
-| Verdict | ✅ APPLICATION UTILISABLE (ARK nécessite mise à jour clé) |
+| Verdict | ✅ APPLICATION UTILISABLE — ARK réactivé |
 
 ---
 
