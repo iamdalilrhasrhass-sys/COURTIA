@@ -262,7 +262,7 @@ export default function LandingPublic() {
       <section id="probleme" className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
         <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="Problème"
             title="Les courtiers perdent trop de temps sur ce qui ne vend pas."
             subtitle="Les outils actuels ne sont pas faits pour vous. Résultat : vous passez plus de temps à gérer l'administratif qu'à développer votre cabinet."
@@ -284,7 +284,7 @@ export default function LandingPublic() {
       {/* ━━━━━━━━━━━ SECTION SOLUTION 4 PILIERS (dark) ━━━━━━━━━━━ */}
       <section id="solutions" className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <div className="max-w-6xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="Solution"
             title="COURTIA remet votre cabinet sous contrôle."
             subtitle="4 piliers complémentaires pour transformer votre quotidien."
@@ -309,7 +309,7 @@ export default function LandingPublic() {
       <section id="ark" className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="ARK — Intelligence Artificielle"
             title="ARK analyse votre portefeuille comme un copilote métier."
             subtitle="ARK ne remplace pas le courtier. Il lit les signaux, prépare les actions et vous aide à décider plus vite."
@@ -342,7 +342,7 @@ export default function LandingPublic() {
       <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
         <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="REACH — Module commercial"
             title="REACH prépare la prospection, sans jamais perdre le contrôle."
             subtitle="Aucun envoi sauvage. Les messages sont préparés, contrôlés et validés."
@@ -383,7 +383,7 @@ export default function LandingPublic() {
       <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
         <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="Portefeuille vivant"
             title="Votre portefeuille devient vivant."
             subtitle="Les données ne dorment plus. Les clients, contrats et opportunités s'animent pour vous guider."
@@ -459,13 +459,13 @@ export default function LandingPublic() {
       {/* ━━━━━━━━━━━ SECTION AVANT / APRÈS (dark) ━━━━━━━━━━━ */}
       <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <div className="max-w-5xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="Comparaison"
             title="Avant COURTIA / Avec COURTIA"
             subtitle="Le changement est radical."
           />
           <ScrollReveal>
-            <BeforeAfterPanel />
+            <BeforeAfterPanel dark={true} />
           </ScrollReveal>
         </div>
       </section>
@@ -474,7 +474,7 @@ export default function LandingPublic() {
       <section id="pricing" className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="Tarifs"
             title="Des plans pour chaque cabinet."
             subtitle="Commencez gratuitement 30 jours. Sans carte bancaire. Sans engagement."
@@ -544,12 +544,12 @@ export default function LandingPublic() {
       {/* ━━━━━━━━━━━ SECTION FAQ (dark) ━━━━━━━━━━━ */}
       <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <div className="max-w-3xl mx-auto">
-          <SectionEyebrow
+          <SectionEyebrow dark={true}
             badge="FAQ"
             title="Questions fréquentes"
           />
           <ScrollReveal>
-            <FAQPremium />
+            <FAQPremium dark={true} />
           </ScrollReveal>
         </div>
       </section>
