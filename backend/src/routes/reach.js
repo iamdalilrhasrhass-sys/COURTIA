@@ -1029,4 +1029,123 @@ router.post('/messages/preview', verifyToken, async (req, res) => {
   }
 });
 
+// ━━━━━━━━━━━ PLAYBOOKS (modèles de campagnes) ━━━━━━━━━━━
+
+// GET /playbooks — liste des playbooks disponibles
+router.get('/playbooks', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM reach_playbooks
+       WHERE user_id = $1 OR is_public = true
+       ORDER BY is_default DESC, usage_count DESC, name ASC`,
+      [req.user.id]
+    );
+    res.json(wrap(result.rows));
+  } catch (e) {
+    console.error('[reach] playbooks list:', e.message);
+    res.status(500).json(err('playbooks_list_failed'));
+  }
+});
+
+// GET /playbooks/:id — détail d'un playbook
+router.get('/playbooks/:id', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM reach_playbooks
+       WHERE id = $1 AND (user_id = $2 OR is_public = true)`,
+      [req.params.id, req.user.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json(err('playbook_not_found'));
+    res.json(wrap(result.rows[0]));
+  } catch (e) {
+    console.error('[reach] playbook detail:', e.message);
+    res.status(500).json(err('playbook_detail_failed'));
+  }
+});
+
+// POST /playbooks — créer un playbook
+router.post('/playbooks', verifyToken, async (req, res) => {
+  try {
+    const { name, description, channel, steps, category } = req.body;
+    if (!name || !steps) return res.status(400).json(err('name_and_steps_required'));
+    const result = await pool.query(
+      `INSERT INTO reach_playbooks (user_id, name, description, channel, steps, category)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [req.user.id, name, description, channel || 'email', JSON.stringify(steps), category || 'general']
+    );
+    res.status(201).json(wrap(result.rows[0]));
+  } catch (e) {
+    console.error('[reach] playbook create:', e.message);
+    res.status(500).json(err('playbook_create_failed'));
+  }
+});
+
+// DELETE /playbooks/:id — supprimer un playbook (propriétaire seulement)
+router.delete('/playbooks/:id', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'DELETE FROM reach_playbooks WHERE id = $1 AND user_id = $2 RETURNING id',
+      [req.params.id, req.user.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json(err('playbook_not_found_or_not_owner'));
+    res.json(wrap({ deleted: true }));
+  } catch (e) {
+    console.error('[reach] playbook delete:', e.message);
+    res.status(500).json(err('playbook_delete_failed'));
+  }
+});
+
+// POST /playbooks/:id/use — incrémenter compteur d'utilisation
+router.post('/playbooks/:id/use', verifyToken, async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE reach_playbooks SET usage_count = usage_count + 1 WHERE id = $1',
+      [req.params.id]
+    );
+    res.json(wrap({ ok: true }));
+  } catch (e) {
+    console.error('[reach] playbook use:', e.message);
+    res.status(500).json(err('playbook_use_failed'));
+  }
+});
+
+// POST /campaigns/from-playbook/:id — créer une campagne depuis un playbook
+router.post('/campaigns/from-playbook/:id', verifyToken, async (req, res) => {
+  try {
+    const playbook = await pool.query(
+      `SELECT * FROM reach_playbooks WHERE id = $1 AND (user_id = $2 OR is_public = true)`,
+      [req.params.id, req.user.id]
+    );
+    if (playbook.rows.length === 0) return res.status(404).json(err('playbook_not_found'));
+
+    const pb = playbook.rows[0];
+    const steps = typeof pb.steps === 'string' ? JSON.parse(pb.steps) : pb.steps;
+    const { audience_id } = req.body;
+
+    // Créer la campagne
+    const campaign = await pool.query(
+      `INSERT INTO reach_campaigns (user_id, name, description, channel, status)
+       VALUES ($1, $2, $3, $4, 'draft') RETURNING *`,
+      [req.user.id, pb.name, pb.description, pb.channel]
+    );
+
+    // Créer les steps à partir du playbook
+    for (const step of steps) {
+      await pool.query(
+        `INSERT INTO reach_campaign_steps (campaign_id, step_order, delay_days, subject_template, body_template)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [campaign.rows[0].id, step.step_order, step.delay_days, step.subject_template, step.body_template]
+      );
+    }
+
+    // Incrémenter compteur
+    await pool.query('UPDATE reach_playbooks SET usage_count = usage_count + 1 WHERE id = $1', [pb.id]);
+
+    res.status(201).json(wrap(campaign.rows[0]));
+  } catch (e) {
+    console.error('[reach] from-playbook:', e.message);
+    res.status(500).json(err('from_playbook_failed'));
+  }
+});
+
 module.exports = router;

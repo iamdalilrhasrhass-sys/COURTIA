@@ -154,6 +154,39 @@ class ReachWorker {
       return;
     }
 
+    // Vérifier validation humaine requise
+    const needsValidation = await this.pool.query(
+      'SELECT human_validation_required FROM reach_prospects WHERE id = $1',
+      [prospect.prospect_id]
+    );
+    if (needsValidation.rows.length > 0 && needsValidation.rows[0].human_validation_required === true) {
+      console.log(`[reachWorker] Prospect #${prospect.prospect_id} nécessite validation humaine — skip envoi automatique`);
+      await this.pool.query(
+        "UPDATE reach_campaign_prospects SET status = 'pending_validation' WHERE campaign_id = $1 AND prospect_id = $2",
+        [campaign.id, prospect.prospect_id]
+      );
+      await this.pool.query(
+        'INSERT INTO reach_activity_log (prospect_id, user_id, action, details) VALUES ($1, $2, $3, $4)',
+        [prospect.prospect_id, campaign.user_id, 'blocked_validation_required', JSON.stringify({
+          campaign_id: campaign.id,
+          step: step.step_order,
+          note: 'Envoi automatique bloqué — validation humaine requise'
+        })]
+      );
+      return;
+    }
+
+    // Vérifier rate limit : max 50 messages/heure/utilisateur
+    const rateCheck = await this.pool.query(
+      `SELECT COUNT(*) as c FROM reach_send_log
+       WHERE user_id = $1 AND sent_at > NOW() - INTERVAL '1 hour'`,
+      [campaign.user_id]
+    );
+    if (parseInt(rateCheck.rows[0].c) >= 50) {
+      console.log(`[reachWorker] Rate limit atteint pour user #${campaign.user_id} — ${rateCheck.rows[0].c} messages/heure`);
+      return; // On réessaiera au prochain cycle
+    }
+
     const subject = this.personalize(step.subject_template || '', prospect);
     const body = this.personalize(step.body_template || '', prospect);
     const dryRun = this.isDryRun();
@@ -211,6 +244,13 @@ class ReachWorker {
       })]
     );
     const realDbId = realResult.rows[0].id;
+
+    // Logguer dans reach_send_log pour le rate limiting
+    await this.pool.query(
+      `INSERT INTO reach_send_log (campaign_id, prospect_id, user_id, channel, message_id)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [campaign.id, prospect.prospect_id, campaign.user_id, campaign.channel, realDbId]
+    );
 
     await this.pool.query(
       "UPDATE reach_campaign_prospects SET current_step = $1, status = 'sent' WHERE campaign_id = $2 AND prospect_id = $3",
