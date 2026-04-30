@@ -27,7 +27,7 @@ export default function ImpersonationBanner() {
 
   const handleStop = async () => {
     try {
-      const res = await api.post('/api/admin/impersonate/stop', {
+      const res = await api.post('/admin/impersonate/stop', {
         log_id: impersonation.log_id
       })
       if (res.data.token) {

@@ -183,8 +183,8 @@ export default function Dashboard() {
     try {
       setLoading(true)
       const [statsRes, userRes] = await Promise.all([
-        api.get('/api/dashboard/stats'),
-        api.get('/api/auth/me').catch(() => ({ data: { prenom: 'Admin' } }))
+        api.get('/dashboard/stats'),
+        api.get('/auth/me').catch(() => ({ data: { prenom: 'Admin' } }))
       ])
       console.log('Dashboard stats API response:', statsRes.data)
       setStats(statsRes.data)

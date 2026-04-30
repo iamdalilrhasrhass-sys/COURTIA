@@ -167,7 +167,7 @@ export default function Taches() {
   async function fetchAll() {
     setLoading(true)
     try {
-      const { data } = await api.get('/api/taches')
+      const { data } = await api.get('/taches')
       setTasks(Array.isArray(data) ? data : [])
       setUseMock(false)
     } catch {

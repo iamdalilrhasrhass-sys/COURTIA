@@ -123,7 +123,7 @@ export default function ClientNew() {
     try {
       const { data } = isEditMode
         ? await api.put(`/api/clients/${id}`, form)
-        : await api.post('/api/clients', form)
+        : await api.post('/clients', form)
       setSubmitState('success')
       toast.success(`Client ${isEditMode ? 'mis à jour' : 'créé'} !`)
       setTimeout(() => navigate(isEditMode ? `/client/${id}` : `/client/${data.id}`), 1200)

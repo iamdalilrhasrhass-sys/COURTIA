@@ -127,7 +127,7 @@ export default function ARKChatTab({ clientId, client }) {
     setIsSending(true);
 
     try {
-      const { data } = await api.post('/api/ark/chat', {
+      const { data } = await api.post('/ark/chat', {
         message: msg,
         clientData: client,
         conversationHistory: optimisticMessages,

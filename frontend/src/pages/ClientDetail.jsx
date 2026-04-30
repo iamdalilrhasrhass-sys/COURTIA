@@ -232,7 +232,7 @@ function DocumentsTab({ client, setClient, clientId }) {
     setAnalysisResult(null)
     try {
       const base64 = await readFileAsBase64(file)
-      const res = await api.post('/api/documents/analyze', {
+      const res = await api.post('/documents/analyze', {
         file: base64,
         mimeType: file.type
       })
@@ -461,7 +461,7 @@ function MessagesTab({ clientId }) {
   const handleEnvoyerARK = async () => {
     setSendingARK(true)
     try {
-      // await api.post('/api/messaging/send', { clientId })
+      // await api.post('/messaging/send', { clientId })
       await new Promise(r => setTimeout(r, 800))
       toast.success('Message envoyé via ARK')
     } catch {
@@ -474,7 +474,7 @@ function MessagesTab({ clientId }) {
   const handleRelancer = async () => {
     setTriggeringRelance(true)
     try {
-      // await api.post('/api/messaging/relance/trigger', { clientId })
+      // await api.post('/messaging/relance/trigger', { clientId })
       await new Promise(r => setTimeout(r, 800))
       setDossierStatut('relance')
       toast.success('Relance déclenchée')
