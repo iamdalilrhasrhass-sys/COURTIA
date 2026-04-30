@@ -27,13 +27,14 @@ router.get('/', async (req, res) => {
         zone_geographique, profession, situation_familiale,
         notes, created_at, company_name, type as segment
       FROM clients 
+      WHERE courtier_id = $3
       ORDER BY created_at DESC
       LIMIT $1 OFFSET $2`,
-      [limit, offset]
+      [limit, offset, req.user.id]
     );
 
     // Compter le total
-    const countResult = await pool.query('SELECT COUNT(*) as count FROM clients');
+    const countResult = await pool.query('SELECT COUNT(*) as count FROM clients WHERE courtier_id = $1', [req.user.id]);
     const total = parseInt(countResult.rows[0].count);
 
     res.json({
@@ -64,8 +65,8 @@ router.get('/:id', async (req, res) => {
         zone_geographique, profession, situation_familiale,
         notes, created_at, company_name, type as segment,
         loyalty_score, lifetime_value, civility, postal_code, city, country
-      FROM clients WHERE id = $1`,
-      [req.params.id]
+      FROM clients WHERE id = $1 AND courtier_id = $2`,
+      [req.params.id, req.user.id]
     );
 
     if (result.rows.length === 0) {
@@ -134,14 +135,14 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
       (first_name, last_name, email, phone, address, status, type,
        risk_score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
        zone_geographique, profession, situation_familiale,
-       postal_code, city, civility, country, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
+       postal_code, city, civility, country, courtier_id, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
       RETURNING *`,
       [
         prenom, nom, email, telephone, adresse, statut || 'prospect', segment || 'particulier',
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
-        postal_code, city, civility, country
+        postal_code, city, civility, country, req.user.id
       ]
     );
 
@@ -193,12 +194,12 @@ router.put('/:id', async (req, res) => {
        profession = $14, situation_familiale = $15,
        postal_code = $16, city = $17, civility = $18, country = $19,
        updated_at = NOW()
-      WHERE id = $20 RETURNING *`,
+      WHERE id = $20 AND courtier_id = $21 RETURNING *`,
       [
         prenom, nom, email, telephone, adresse, statut, segment,
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
-        postal_code, city, civility, country, req.params.id
+        postal_code, city, civility, country, req.params.id, req.user.id
       ]
     );
 
@@ -219,7 +220,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    await pool.query('DELETE FROM clients WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM clients WHERE id = $1 AND courtier_id = $2', [req.params.id, req.user.id]);
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/clients/:id error:', err.message);
@@ -235,7 +236,7 @@ router.delete('/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/:id/score', async (req, res) => {
   try {
-    const courtierId = req.user.id || req.user.userId;
+    const courtierId = req.user.id || req.user.id;
     const clientId   = parseInt(req.params.id);
     if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
 
@@ -278,7 +279,7 @@ router.get('/:id/score', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/:id/ark-action-plan', async (req, res) => {
   try {
-    const courtierId = req.user.id || req.user.userId;
+    const courtierId = req.user.id || req.user.id;
     const clientId   = parseInt(req.params.id);
     if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
 

@@ -4,12 +4,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify('https://courtia.onrender.com')
+    'import.meta.env.VITE_API_URL': JSON.stringify('')
   },
   server: {
     port: 3000,
     proxy: {
-      '/api': 'https://courtia.onrender.com'
+      '/api': '/api'
     }
   },
   build: {

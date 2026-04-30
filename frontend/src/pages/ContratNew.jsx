@@ -40,7 +40,7 @@ export default function ContratNew() {
   })
 
   useEffect(() => {
-    api.get('/api/clients')
+    api.get('/clients')
       .then(r => {
         const arr = Array.isArray(r.data) ? r.data : (r.data?.data || r.data?.clients || [])
         setClients(arr)
@@ -65,7 +65,7 @@ export default function ContratNew() {
         client_id: parseInt(form.client_id, 10),
         prime_annuelle: form.prime_annuelle ? parseFloat(form.prime_annuelle) : null,
       }
-      await api.post('/api/contrats', payload)
+      await api.post('/contrats', payload)
       toast.success('Contrat créé avec succès !')
       navigate('/contrats')
     } catch (err) {

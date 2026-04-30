@@ -343,13 +343,13 @@ export default function MorningBrief() {
   const [currentPlan, setCurrentPlan] = useState(null)
 
   useEffect(() => {
-    api.get('/api/auth/me')
+    api.get('/auth/me')
       .then(res => {
         if (res.data?.first_name) setFirstName(res.data.first_name)
         if (res.data?.plan) setCurrentPlan(res.data.plan)
       })
       .catch(() => {
-        api.get('/api/plans/info').then(r => { if (r.data?.plan) setCurrentPlan(r.data.plan) }).catch(() => {})
+        api.get('/plans/info').then(r => { if (r.data?.plan) setCurrentPlan(r.data.plan) }).catch(() => {})
       })
   }, [])
 
@@ -357,9 +357,9 @@ export default function MorningBrief() {
     setBriefLoading(true)
     try {
       const [clientsRes, contratsRes, tachesRes] = await Promise.all([
-        api.get('/api/clients?limit=1000').catch(() => ({ data: [] })),
-        api.get('/api/contrats').catch(() => ({ data: [] })),
-        api.get('/api/taches').catch(() => ({ data: [] })),
+        api.get('/clients?limit=1000').catch(() => ({ data: [] })),
+        api.get('/contrats').catch(() => ({ data: [] })),
+        api.get('/taches').catch(() => ({ data: [] })),
       ])
       const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
       const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
@@ -376,7 +376,7 @@ export default function MorningBrief() {
     setScoreLoading(true)
     setScoreError(null)
     try {
-      const res = await api.get('/api/portfolio/health-score')
+      const res = await api.get('/portfolio/health-score')
       setScore(res.data?.data || res.data)
     } catch (err) {
       setScoreError(err.response?.data?.message || 'Score indisponible')

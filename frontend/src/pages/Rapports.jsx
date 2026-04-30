@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Topbar from '../components/Topbar'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 
 function fmtEur(v) {

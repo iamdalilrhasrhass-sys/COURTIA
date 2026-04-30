@@ -245,7 +245,7 @@ export default function Abonnement() {
   const handleCheckout = async (plan) => {
     setLoadingPlan(plan)
     try {
-      const { data } = await api.post('/api/stripe/create-checkout-session', { plan, billingCycle })
+      const { data } = await api.post('/stripe/create-checkout-session', { plan, billingCycle })
       if (data.url) window.location.href = data.url
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur lors de la redirection vers Stripe.')

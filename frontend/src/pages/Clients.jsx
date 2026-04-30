@@ -153,7 +153,7 @@ export default function Clients() {
   async function fetchClients() {
     try {
       setLoading(true)
-      const res = await api.get('/api/clients')
+      const res = await api.get('/clients')
       setClients(res.data?.data || [])
     } catch (err) {
       console.error(`Impossible de charger les clients: ${err.message}`)

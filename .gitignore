@@ -36,3 +36,9 @@ out/
 *.db
 *.sql.bak
 .aider*
+.env*.local
+
+# Vercel build artifacts
+.vercel/
+landing/.vercel/
+frontend/.vercel/

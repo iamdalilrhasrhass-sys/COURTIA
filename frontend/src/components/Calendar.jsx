@@ -3,7 +3,7 @@ import { Calendar, Plus, Clock, MapPin, X, Edit2, Trash2, ChevronLeft, ChevronRi
 import { useAuthStore } from '../stores/authStore'
 import { useClientStore } from '../stores/clientStore'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const TYPE_COLORS = {
   'meeting': 'bg-blue-500/20 text-blue-400 border-blue-500',

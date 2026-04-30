@@ -115,7 +115,7 @@ function StateA({ onSuccess }) {
     if (!canSubmit) return
     setLoading(true)
     try {
-      await api.post('/api/financing/iobsp/submit', {
+      await api.post('/financing/iobsp/submit', {
         orias_number: orias,
         certif_uploaded: fileDataUrl,
         has_dda_certification: certif,
@@ -497,7 +497,7 @@ function StateD() {
   async function handleCheckout() {
     setLoading(true)
     try {
-      const res = await api.post('/api/financing/iobsp/reactivate')
+      const res = await api.post('/financing/iobsp/reactivate')
       window.location.href = res.data.url
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erreur lors du paiement')
@@ -599,7 +599,7 @@ function SimulatorModal({ onClose }) {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await api.post('/api/financing/tools/simulate', {
+      const res = await api.post('/financing/tools/simulate', {
         type, capital: parseFloat(capital),
         taux_nominal: parseFloat(taux),
         duree_mois: parseInt(duree, 10)
@@ -683,7 +683,7 @@ function LeadModal({ onClose }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    api.get('/api/clients?limit=50').then(r => setClients(r.data?.data || r.data?.clients || [])).catch(() => {})
+    api.get('/clients?limit=50').then(r => setClients(r.data?.data || r.data?.clients || [])).catch(() => {})
   }, [])
 
   async function handleSubmit(e) {
@@ -691,7 +691,7 @@ function LeadModal({ onClose }) {
     if (!clientId || !amount || !duration) return
     setLoading(true)
     try {
-      await api.post('/api/financing/tools/leads', {
+      await api.post('/financing/tools/leads', {
         client_id: parseInt(clientId, 10),
         partner_id: parseInt(partnerId, 10),
         amount: parseFloat(amount),
@@ -777,14 +777,14 @@ function StateC({ data, onRefresh }) {
   const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
-    api.get('/api/financing/tools/simulators').then(r => setSimulators(r.data || [])).catch(() => {})
-    api.get('/api/financing/tools/partners').then(r => setPartners(r.data?.partners || [])).catch(() => {})
+    api.get('/financing/tools/simulators').then(r => setSimulators(r.data || [])).catch(() => {})
+    api.get('/financing/tools/partners').then(r => setPartners(r.data?.partners || [])).catch(() => {})
   }, [])
 
   async function handleCancel() {
     setCancelling(true)
     try {
-      await api.post('/api/financing/iobsp/cancel')
+      await api.post('/financing/iobsp/cancel')
       toast.success('Add-on CAPITIA annulé. Accès actif jusqu\'à fin de période.')
       setShowCancelConfirm(false)
       if (onRefresh) onRefresh()
@@ -983,7 +983,7 @@ export default function Capitia() {
 
   async function fetchStatus() {
     try {
-      const res = await api.get('/api/financing/iobsp/status')
+      const res = await api.get('/financing/iobsp/status')
       setStatusData(res.data)
       setStateKey(res.data?.state || 'A')
     } catch {

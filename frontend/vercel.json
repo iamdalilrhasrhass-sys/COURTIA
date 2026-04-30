@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "http://72.62.187.63/api/$1" },
+    { "source": "/landing", "destination": "/landing/page.html" },
+    { "source": "/landing/(.*)", "destination": "/landing/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
