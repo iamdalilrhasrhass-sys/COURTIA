@@ -147,6 +147,7 @@ const plansRouter          = require('./src/routes/plans')
 const messagingRoutes      = require('./src/routes/messaging')
 const importRouter         = require('./src/routes/import')
 const reachRouter          = require('./src/routes/reach')
+const billingRouter        = require('./src/routes/billing')
 
 // Public
 app.use('/api/auth',   authLimiter, authRouter)
@@ -176,6 +177,7 @@ app.use('/api/analytics',       verifyToken, analyticsRouter)
 app.use('/api/plans',           verifyToken, plansRouter)
 app.use('/api/import',          verifyToken, importRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
+app.use('/api/billing',        verifyToken, billingRouter)
 
 // Messaging (auth gérée route par route — webhook inbound est public)
 app.use('/api/messaging',    messagingRoutes)

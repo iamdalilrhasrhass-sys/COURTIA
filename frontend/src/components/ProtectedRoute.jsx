@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
+import Paywall from './Paywall'
 
 export default function ProtectedRoute({ children, requireFeature }) {
   const loc = useLocation()
