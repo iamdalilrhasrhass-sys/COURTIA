@@ -525,8 +525,8 @@ export default function LandingPublic() {
         <div className="max-w-5xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Comparaison"
-            title="Avant COURTIA / Avec COURTIA"
-            subtitle="Avant : fichiers dispersés, relances manuelles, aucune priorité. Après : cockpit centralisé, priorités du jour, relances prêtes."
+            title="Avant COURTIA, vous subissez. Avec COURTIA, vous pilotez."
+            subtitle="Fichiers dispersés, relances oubliées, clients dormants : COURTIA transforme le désordre quotidien en priorités claires, actions prêtes et opportunités visibles."
           />
           <ScrollReveal>
             <BeforeAfterPanel dark={true} />
@@ -691,7 +691,7 @@ export default function LandingPublic() {
                 to="/register?plan=pro"
                 className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-4 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Démarrer gratuitement
+                Essai gratuit 30 jours
                 <ArrowRight size={16} />
               </Link>
               <Link
