@@ -58,11 +58,20 @@ router.post('/', verifyToken, async (req, res) => {
       titre, description, client_id, echeance, statut
     } = req.body;
 
+    // Vérifier que le client appartient à l'utilisateur
+    if (client_id) {
+      const own = await pool.query(
+        'SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2',
+        [client_id, req.user.userId]
+      );
+      if (!own.rows.length) return res.status(403).json({ error: 'client_not_owned' });
+    }
+
     const result = await pool.query(
       `INSERT INTO appointments 
        (title, description, client_id, start_time, status, user_id, created_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *`,
-      [titre, description, client_id, echeance, statut || 'a_faire', req.user?.id || 3]
+      [titre, description, client_id, echeance, statut || 'a_faire', req.user.userId]
     );
 
     res.status(201).json(result.rows[0]);

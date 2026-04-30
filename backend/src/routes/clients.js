@@ -94,9 +94,11 @@ router.get('/:id/contrats', async (req, res) => {
               status as statut,
               (quote_data->>'date_effet')::date as date_effet,
               (quote_data->>'date_echeance')::date as date_echeance
-       FROM quotes WHERE client_id = $1
-       ORDER BY (quote_data->>'date_echeance')::date ASC NULLS LAST`,
-      [req.params.id]
+       FROM quotes q
+       JOIN clients c ON q.client_id = c.id AND c.courtier_id = $2
+       WHERE q.client_id = $1
+       ORDER BY (q.quote_data->>'date_echeance')::date ASC NULLS LAST`,
+      [req.params.id, req.user.id]
     )
     res.json(result.rows)
   } catch (err) {
