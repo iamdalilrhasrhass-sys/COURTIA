@@ -6,7 +6,8 @@ import {
   ChevronDown, Check, X, ArrowRight, Star, Users,
   FileText, BarChart3, Bell, Search, RefreshCw, Target,
   Database, Globe, Lock, MessageSquare, Phone, Mail,
-  Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon
+  Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon,
+  Calendar
 } from 'lucide-react'
 import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
 import AuroraBadge from '../components/AuroraBadge'
@@ -66,7 +67,7 @@ const plans = [
       'Import CSV',
       'Support email',
     ],
-    cta: "Démarrer l'essai gratuit",
+    cta: "Essai gratuit 30 jours",
     popular: false,
   },
   {
@@ -77,7 +78,7 @@ const plans = [
     features: [
       'Tout Starter',
       'ARK — Assistant IA complet',
-      'REACH — Module prospection',
+      'ARK REACH — Module prospection',
       'Automatisations intelligentes',
       'Rapports avancés',
       'Scoring portefeuille',
@@ -85,7 +86,7 @@ const plans = [
       'Morning Brief quotidien',
       'Support prioritaire',
     ],
-    cta: "Démarrer avec l'offre Pro",
+    cta: "Démarrer avec Pro",
     popular: true,
   },
   {
@@ -120,7 +121,7 @@ const problems = [
 const pillars = [
   { icon: Users, title: 'Centraliser', desc: 'Clients, contrats, tâches, relances et notes au même endroit. Votre cabinet en un tableau de bord.' },
   { icon: Brain, title: 'Prioriser', desc: "ARK détecte ce qui mérite votre attention aujourd'hui : clients dormants, échéances, opportunités." },
-  { icon: Zap, title: 'Relancer', desc: 'REACH prépare les messages de relance et prospection. Vous validez avant tout envoi.' },
+  { icon: Zap, title: 'Relancer', desc: 'ARK REACH prépare les messages de relance et prospection. Vous validez avant tout envoi.' },
   { icon: RefreshCw, title: 'Automatiser', desc: 'Le portefeuille génère des actions au lieu de dormir dans un tableau. Alertes, rappels, scoring.' },
 ]
 
@@ -191,6 +192,7 @@ export default function LandingPublic() {
             <button onClick={() => scrollTo('probleme')} className="text-sm text-gray-400 hover:text-white transition-colors">Problème</button>
             <button onClick={() => scrollTo('solutions')} className="text-sm text-gray-400 hover:text-white transition-colors">Solution</button>
             <button onClick={() => scrollTo('ark')} className="text-sm text-gray-400 hover:text-white transition-colors">ARK</button>
+            <button onClick={() => scrollTo('ark-reach')} className="text-sm text-gray-400 hover:text-white transition-colors">ARK REACH</button>
             <button onClick={() => scrollTo('pricing')} className="text-sm text-gray-400 hover:text-white transition-colors">Tarifs</button>
             <Link to="/login" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Se connecter</Link>
             <Link to="/register?plan=pro" className="text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200">
@@ -217,6 +219,7 @@ export default function LandingPublic() {
               <button onClick={() => { scrollTo('probleme'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Problème</button>
               <button onClick={() => { scrollTo('solutions'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Solution</button>
               <button onClick={() => { scrollTo('ark'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">ARK</button>
+              <button onClick={() => { scrollTo('ark-reach'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">ARK REACH</button>
               <button onClick={() => { scrollTo('pricing'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Tarifs</button>
               <Link to="/login" className="block text-gray-400 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Se connecter</Link>
               <Link to="/register?plan=pro" className="block text-center font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-3 rounded-xl" onClick={() => setMenuOpen(false)}>
@@ -271,7 +274,7 @@ export default function LandingPublic() {
                 to="/register?plan=pro"
                 className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-7 py-3.5 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200 text-sm"
               >
-                Démarrer avec l'offre Pro
+                Essai gratuit 30 jours
                 <ArrowRight size={16} />
               </Link>
               <button
@@ -294,6 +297,15 @@ export default function LandingPublic() {
                 </span>
               ))}
             </motion.div>
+
+            <motion.p
+              className="mt-4 text-xs text-gray-500 text-center max-w-xl mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              Pensé pour les cabinets de courtage français : auto, habitation, santé, pro et multi-équipement.
+            </motion.p>
           </motion.div>
 
           {/* Cockpit Mockup 3D avec parallaxe souris */}
@@ -311,7 +323,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION PROBLÈME (dark) ━━━━━━━━━━━ */}
-      <section id="probleme" className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section id="probleme" className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -334,7 +346,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION SOLUTION 4 PILIERS (dark) ━━━━━━━━━━━ */}
-      <section id="solutions" className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section id="solutions" className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Solution"
@@ -358,7 +370,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION ARK (dark + aurora) ━━━━━━━━━━━ */}
-      <section id="ark" className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section id="ark" className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -390,14 +402,14 @@ export default function LandingPublic() {
         </div>
       </section>
 
-      {/* ━━━━━━━━━━━ SECTION REACH (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      {/* ━━━━━━━━━━━ SECTION ARK REACH (dark) ━━━━━━━━━━━ */}
+      <section id="ark-reach" className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
-            badge="REACH — Module commercial"
-            title="REACH structure votre prospection de A à Z."
-            subtitle="Prospects, campagnes, messages préparés, suivi réponses, validation humaine. La prospection sans l'improvisation."
+            badge="ARK REACH — Module commercial"
+            title="ARK REACH structure votre prospection de A à Z."
+            subtitle="ARK REACH : prospects, campagnes, messages préparés, suivi réponses, validation humaine. La prospection sans l'improvisation."
           />
 
           {/* Sécurité badges */}
@@ -432,7 +444,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION PORTEFEUILLE VIVANT (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -509,7 +521,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION AVANT / APRÈS (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <div className="max-w-5xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Comparaison"
@@ -522,8 +534,54 @@ export default function LandingPublic() {
         </div>
       </section>
 
+      {/* ━━━━━━━━━━━ SECTION PREUVE MÉTIER (dark) ━━━━━━━━━━━ */}
+      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <SectionEyebrow dark={true}
+            badge="Crédibilité métier"
+            title="Pensé pour les courtiers français."
+            subtitle="COURTIA comprend les vrais sujets d'un cabinet : clients, contrats, échéances, relances, sinistres, multi-équipement, conformité et développement commercial."
+          />
+          <div className="grid md:grid-cols-3 gap-5">
+            <ScrollReveal delay={0}>
+              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
+                  <Users size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
+                </div>
+                <h3 className="font-bold text-white text-sm mb-2 text-center">Portefeuille client</h3>
+                <p className="text-sm text-gray-400 leading-relaxed text-center">
+                  Contrats, échéances, sinistres, relances, multi-équipement. Votre portefeuille devient un tableau de bord vivant.
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={0.1}>
+              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
+                  <Calendar size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
+                </div>
+                <h3 className="font-bold text-white text-sm mb-2 text-center">Échéances et relances</h3>
+                <p className="text-sm text-gray-400 leading-relaxed text-center">
+                  ARK détecte les échéances, prépare les relances et priorise les actions. Plus aucun client laissé sans suivi.
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={0.2}>
+              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
+                </div>
+                <h3 className="font-bold text-white text-sm mb-2 text-center">Développement commercial</h3>
+                <p className="text-sm text-gray-400 leading-relaxed text-center">
+                  ARK REACH structure la prospection. Opportunités détectées, messages préparés, validation humaine obligatoire.
+                </p>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* ━━━━━━━━━━━ SECTION PRICING PREMIUM (dark) ━━━━━━━━━━━ */}
-      <section id="pricing" className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section id="pricing" className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -594,7 +652,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION FAQ (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-20 lg:py-28 px-5 overflow-hidden">
+      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <div className="max-w-3xl mx-auto">
           <SectionEyebrow dark={true}
             badge="FAQ"
@@ -607,7 +665,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ CTA FINAL AURORA (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-24 lg:py-32 px-5 overflow-hidden">
+      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0510]" />
         <div className="relative z-10 max-w-3xl mx-auto text-center">
