@@ -9,6 +9,12 @@ const useReachStore = create((set, get) => ({
   replies: [],
   prospectDetail: null,
   analysis: null,
+  settings: null,
+  mapData: [],
+  reporting: null,
+  playbooks: [],
+  arkRouterStatus: null,
+  mockMode: true,
   loading: false,
   error: null,
 
@@ -204,7 +210,9 @@ const useReachStore = create((set, get) => ({
     set({ loading: true });
     try {
       const { data } = await api.get('/reach/reporting');
-      if (data.success) set({ dashboard: { ...get().dashboard, ...data.data } });
+      if (data.success) {
+        set({ reporting: data.data, dashboard: { ...get().dashboard, ...data.data } });
+      }
       return data;
     } catch (err) {
       return { success: false };
@@ -215,11 +223,112 @@ const useReachStore = create((set, get) => ({
 
   // Fetch map data
   fetchMapData: async (category) => {
+    set({ loading: true });
     try {
       const { data } = await api.get(`/reach/map?category=${category || ''}`);
+      if (data.success) set({ mapData: data.data });
       return data;
     } catch (err) {
       return { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Fetch settings
+  fetchSettings: async () => {
+    set({ loading: true, error: null });
+    try {
+      const { data } = await api.get('/reach/settings');
+      if (data.success) set({ settings: data.data });
+      return data;
+    } catch (err) {
+      set({ error: 'Erreur chargement paramètres' });
+      return { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Update settings
+  updateSettings: async (payload) => {
+    set({ loading: true, error: null });
+    try {
+      const { data } = await api.patch('/reach/settings', payload);
+      if (data.success) set({ settings: data.data });
+      return data;
+    } catch (err) {
+      set({ error: 'Erreur mise à jour paramètres' });
+      return { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Fetch playbooks
+  fetchPlaybooks: async () => {
+    set({ loading: true });
+    try {
+      const { data } = await api.get('/reach/playbooks');
+      if (data.success) set({ playbooks: data.data });
+      return data;
+    } catch (err) {
+      return { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Fetch ARK Router status
+  fetchArkRouterStatus: async () => {
+    set({ loading: true });
+    try {
+      const { data } = await api.get('/reach/ark-router/status');
+      if (data.success) set({ arkRouterStatus: data.data });
+      return data;
+    } catch (err) {
+      return { success: false };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Add prospect to campaign
+  addProspectToCampaign: async (campaignId, prospectIds) => {
+    set({ loading: true });
+    try {
+      const { data } = await api.post(`/reach/campaigns/${campaignId}/prospects`, { prospectIds });
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Generate reply
+  generateReply: async (replyId, context) => {
+    set({ loading: true });
+    try {
+      const { data } = await api.post(`/reach/replies/${replyId}/generate-response`, { context });
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Opt-out prospect
+  optOut: async (prospectId, reason) => {
+    set({ loading: true });
+    try {
+      const { data } = await api.post('/reach/opt-out', { prospectId, reason });
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    } finally {
+      set({ loading: false });
     }
   },
 

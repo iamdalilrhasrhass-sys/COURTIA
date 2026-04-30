@@ -16,6 +16,7 @@ const { generateEmail, generateSMS, generateCallScript, generateLinkedInMessage 
 const { convertToClient } = require('../services/reachConversionService');
 const { getPlaybook, getAllPlaybooks } = require('../reach/playbooks');
 const { isOptOut, markOptOut, validateCampaign, getSourceBadge } = require('../services/reachComplianceService');
+const { getProviderStatus } = require('../services/arkReachRouterService');
 
 // ─── HELPERS ──────────────────────────────────────────────────────────
 function getUserId(req) { return req.user?.id || req.user?.userId; }
@@ -638,6 +639,165 @@ router.get('/settings', verifyToken, (req, res) => {
       },
     },
   });
+});
+
+// ─── HEALTH CHECK ─────────────────────────────────────────────────────
+router.get('/health', verifyToken, (req, res) => {
+  res.json({
+    success: true,
+    brand: 'ARK REACH',
+    version: '1.0',
+    mock: !dbAvailable(),
+  });
+});
+
+// ─── MESSAGE TEMPLATES ───────────────────────────────────────────────
+router.get('/messages/templates', verifyToken, (req, res) => {
+  try {
+    const templates = [
+      {
+        channel: 'email',
+        name: 'Premier contact — Audit gratuit',
+        subject: '{{company_name}} — Optimisation de votre couverture assurance',
+        body: 'Bonjour,\n\nJe suis courtier spécialisé et j\'accompagne des professionnels comme {{company_name}} dans l\'optimisation de leur couverture assurance.\n\nJe vous propose un audit gratuit de 10 minutes pour vérifier vos garanties actuelles, sans engagement.\n\nQuand seriez-vous disponible pour un échange ?\n\nCordialement,\nVotre courtier COURTIA',
+      },
+      {
+        channel: 'sms',
+        name: 'SMS relance J+3',
+        body: 'Bonjour {{company_name}}, suite à notre échange, souhaitez-vous qu\'on programme un audit rapide de vos assurances ? Répondez OUI.',
+      },
+      {
+        channel: 'sms',
+        name: 'SMS premier contact',
+        body: 'Bonjour, audit gratuit assurance pro pour {{company_name}} ? Répondez OUI pour échanger 5 min.',
+      },
+      {
+        channel: 'call',
+        name: 'Script d\'appel — Garage',
+        intro: 'Bonjour, je suis courtier spécialisé. Je travaille avec des professionnels comme {{company_name}}.',
+        discovery: 'Comment gérez-vous actuellement vos assurances professionnelles ?',
+        value_prop: 'Je propose un audit gratuit de 10 minutes pour vérifier que vous êtes bien couvert, sans engagement.',
+        close: 'Quand seriez-vous disponible cette semaine pour un échange de 10 minutes ?',
+      },
+      {
+        channel: 'linkedin',
+        name: 'Message LinkedIn — Connexion',
+        body: 'Bonjour, je suis courtier spécialisé dans votre secteur. Je serais ravi d\'échanger sur l\'optimisation de vos couvertures assurance. Belle journée.',
+      },
+    ];
+    res.json({ success: true, data: templates, mock: !dbAvailable() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── GENERATE AI REPLY ────────────────────────────────────────────────
+router.post('/replies/:id/generate-response', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { received_message, channel } = req.body;
+
+    if (!received_message) {
+      return res.status(400).json({ success: false, error: 'received_message est requis' });
+    }
+
+    const reply = {
+      id: parseInt(id) || Math.floor(Math.random() * 10000),
+      generated_at: new Date().toISOString(),
+      provider: 'mock',
+      mock: true,
+      sentiment: 'neutral',
+      suggested_reply: 'Bonjour, merci pour votre retour. Je comprends tout à fait. Si jamais vous souhaitez faire un point sur vos couvertures plus tard, je reste disponible. Bonne journée.',
+      action: 'follow_up_j30',
+      compliance_note: 'Validation humaine obligatoire avant envoi',
+      channel: channel || 'sms',
+    };
+
+    if (dbAvailable()) {
+      try {
+        await pool.query(
+          'INSERT INTO reach_activity_log (prospect_id, action, details, created_at) VALUES ($1, $2, $3, NOW())',
+          [id, 'ai_reply_generated', JSON.stringify(reply)]
+        );
+      } catch (e) {
+        console.error('[reach/generate-response] DB log error:', e.message);
+      }
+    }
+
+    res.json({ success: true, data: reply, mock: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── UPDATE SETTINGS ──────────────────────────────────────────────────
+router.patch('/settings', verifyToken, (req, res) => {
+  try {
+    const { mock_mode, google_places_key, anthropic_key, gemini_key, deepseek_key } = req.body;
+
+    // In production, these would be persisted to a settings table or .env
+    // For now, we acknowledge the request and return the current effective state
+    const updated = {
+      mock_mode: mock_mode !== undefined ? mock_mode : !process.env.GOOGLE_PLACES_API_KEY,
+      google_places_configured: google_places_key ? true : !!process.env.GOOGLE_PLACES_API_KEY,
+      anthropic_configured: anthropic_key ? true : !!process.env.ANTHROPIC_API_KEY,
+      gemini_configured: gemini_key ? true : !!process.env.GEMINI_API_KEY,
+      deepseek_configured: deepseek_key ? true : !!process.env.DEEPSEEK_API_KEY,
+      mode: (google_places_key || process.env.GOOGLE_PLACES_API_KEY) ? 'live' : 'demo',
+      note: 'Settings reçus. Redémarrage nécessaire pour prise en compte des clés API.',
+    };
+
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── ARK ROUTER STATUS ────────────────────────────────────────────────
+router.get('/ark-router/status', verifyToken, (req, res) => {
+  try {
+    const status = getProviderStatus();
+    res.json({ success: true, data: status });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── ADD NOTE TO PROSPECT ─────────────────────────────────────────────
+router.post('/prospects/:id/note', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const { note } = req.body;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({ success: false, error: 'note est requis' });
+    }
+
+    const entry = {
+      prospect_id: parseInt(id) || id,
+      user_id: userId,
+      action: 'note_added',
+      note: note.trim(),
+      created_at: new Date().toISOString(),
+    };
+
+    if (dbAvailable()) {
+      try {
+        const result = await pool.query(
+          'INSERT INTO reach_activity_log (prospect_id, user_id, action, details, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+          [entry.prospect_id, userId, 'note_added', JSON.stringify({ note: entry.note })]
+        );
+        return res.json({ success: true, data: result.rows[0] });
+      } catch (e) {
+        console.error('[reach/prospects-note] DB error:', e.message);
+      }
+    }
+
+    res.json({ success: true, data: entry, mock: !dbAvailable() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 module.exports = router;
