@@ -9,13 +9,14 @@ import {
   Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon
 } from 'lucide-react'
 import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
-import SuperBubbleScene from '../components/landing/SuperBubbleScene'
+import ArkAuroraOrb from '../components/landing/ArkAuroraOrb'
 import AuroraBadge from '../components/AuroraBadge'
 import FloatingProductMockup from '../components/FloatingProductMockup'
 import SectionEyebrow from '../components/SectionEyebrow'
 import ScrollReveal from '../components/ScrollReveal'
 import BeforeAfterPanel from '../components/BeforeAfterPanel'
 import FAQPremium from '../components/FAQPremium'
+import ArkOrbSection from '../components/ArkOrbSection'
 import '../styles/bubble-design.css'
 
 const globalStyles = `
@@ -52,6 +53,22 @@ const globalStyles = `
 
 /* ── Smooth scroll ── */
 html { scroll-behavior: smooth; }
+
+/* ── Mobile responsive landing ── */
+@media (max-width: 640px) {
+  .landing-hero h1 { font-size: clamp(36px, 12vw, 48px) !important; }
+  .landing-hero-subtitle { font-size: 15px !important; }
+  .landing-section { padding: 48px 0 !important; }
+  .morning-card, .pricing-card { border-radius: 20px; }
+  .landing-metrics, .feature-grid { grid-template-columns: 1fr !important; }
+  .landing-trust-row div { width: 100% !important; }
+}
+
+@media (max-width: 480px) {
+  .landing-nav { top: 6px; width: calc(100% - 16px); margin-top: 6px; padding: 8px; }
+  .landing-hero { width: calc(100% - 16px); padding-top: 40px; gap: 20px; }
+  .landing-hero-visual { min-height: 340px; }
+}
 `
 
 const plans = [
@@ -124,17 +141,6 @@ const pillars = [
   { icon: Brain, title: 'Prioriser', desc: "ARK détecte ce qui mérite votre attention aujourd'hui : clients dormants, échéances, opportunités." },
   { icon: Zap, title: 'Relancer', desc: 'REACH prépare les messages de relance et prospection. Vous validez avant tout envoi.' },
   { icon: RefreshCw, title: 'Automatiser', desc: 'Le portefeuille génère des actions au lieu de dormir dans un tableau. Alertes, rappels, scoring.' },
-]
-
-const arkCapabilities = [
-  'Résumé instantané de chaque client',
-  'Analyse du portefeuille en temps réel',
-  'Suggestions de relance personnalisées',
-  "Détection d'opportunités multi-équipement",
-  'Alertes clients dormants ou à risque',
-  'Aide à la conformité et à la documentation',
-  'Morning Brief quotidien avec priorités',
-  'Génération de messages commerciaux',
 ]
 
 const reachCapabilities = [
@@ -232,7 +238,9 @@ export default function LandingPublic() {
       {/* ━━━━━━━━━━━ HERO AURORA 3D ━━━━━━━━━━━ */}
       <section className="relative min-h-screen flex items-center pt-24 pb-16 lg:pb-24 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
-        <SuperBubbleScene />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
+          <ArkAuroraOrb />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0510]" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-5 w-full">
@@ -363,7 +371,7 @@ export default function LandingPublic() {
         </div>
       </section>
 
-      {/* ━━━━━━━━━━━ SECTION ARK (dark + aurora) ━━━━━━━━━━━ */}
+      {/* ━━━━━━━━━━━ SECTION ARK PREMIUM (dark + aurora + orb 3D) ━━━━━━━━━━━ */}
       <section id="ark" className="relative py-20 lg:py-28 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
@@ -373,26 +381,8 @@ export default function LandingPublic() {
             subtitle="ARK ne remplace pas le courtier. Il lit les signaux, prépare les actions et vous aide à décider plus vite."
           />
 
-          {/* Orb ARK visuel */}
-          <ScrollReveal>
-            <div className="flex items-center justify-center mb-10">
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 via-violet-500 to-blue-500 shadow-2xl shadow-purple-500/30 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400/20 to-blue-400/20 animate-pulse blur-xl" />
-                <Brain size={32} className="text-white relative z-10" />
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {arkCapabilities.map((cap, i) => (
-              <ScrollReveal key={i} delay={i * 0.06}>
-                <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg hover:border-white/[0.12] transition-all duration-300">
-                  <Check size={16} className="text-purple-400 group-hover:text-purple-300 mt-0.5 shrink-0 transition-colors" />
-                  <span className="text-sm text-gray-400">{cap}</span>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
+          {/* Orb ARK premium — bubble 3D + anneaux orbitaux + cartes flottantes */}
+          <ArkOrbSection />
         </div>
       </section>
 

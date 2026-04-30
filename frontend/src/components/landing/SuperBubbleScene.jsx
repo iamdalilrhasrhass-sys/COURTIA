@@ -102,16 +102,18 @@ const FRAGMENT_SHADER = `
     // Fresnel ×2 plus prononcé
     float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.5);
 
-    // ×10 harmoniques iridescence (au lieu de 5)
-    float hue = fract(
-      fresnel * 1.2 +
-      u_time * 0.04 +
-      v_uv.y * 0.6 +
-      v_uv.x * 0.3 +
-      sin(v_uv.x * 12.0 + u_time * 0.5) * 0.05 +
-      cos(v_uv.y * 8.0 + u_time * 0.35) * 0.04
+    // Iridescence bleu/violet uniquement (pas de rainbow)
+    float hueBase = fract(
+      fresnel * 0.9 +
+      u_time * 0.025 +
+      v_uv.y * 0.4 +
+      v_uv.x * 0.2 +
+      sin(v_uv.x * 10.0 + u_time * 0.4) * 0.03 +
+      cos(v_uv.y * 6.0 + u_time * 0.3) * 0.03
     );
-    vec3 iridescence = hsv2rgb(vec3(hue, 0.85, 1.15));
+    // Remap 0-1 → 0.62-0.82 (violet profond → bleu-violet)
+    float hue = 0.62 + hueBase * 0.20;
+    vec3 iridescence = hsv2rgb(vec3(hue, 0.70, 0.9));
 
     // Reflet spéculaire principal (blanc pur, brillant)
     vec3 lightDir = normalize(vec3(-0.65, 0.85, 0.55));
@@ -128,14 +130,14 @@ const FRAGMENT_SHADER = `
     float spec3 = pow(max(dot(reflect(-lightDir3, N), V), 0.0), 100.0);
     vec3 specColor3 = vec3(0.3, 0.8, 1.0) * spec3 * 0.5;
 
-    // Couleur de base : légèrement visible la nuit (pas complètement noire)
-    vec3 baseColor = vec3(0.35, 0.25, 0.55) * 0.25;
+    // Couleur de base : violet profond, discret
+    vec3 baseColor = vec3(0.20, 0.10, 0.40) * 0.20;
 
-    // Assemblage final
-    vec3 color = baseColor + iridescence * fresnel * 1.8 + specularColor * 1.5 + specColor2 + specColor3;
+    // Assemblage final — plus subtil, plus dark
+    vec3 color = baseColor + iridescence * fresnel * 1.2 + specularColor * 1.0 + specColor2 * 0.5 + specColor3 * 0.3;
 
-    // Alpha : toujours un minimum visible, vif sur les bords
-    float alpha = 0.12 + fresnel * 0.85 + specular * 0.5;
+    // Alpha : subtil, visible sur les bords seulement
+    float alpha = 0.08 + fresnel * 0.65 + specular * 0.3;
     alpha = clamp(alpha, 0.0, 0.98);
 
     gl_FragColor = vec4(color, alpha);
@@ -193,9 +195,9 @@ export default function SuperBubbleScene({ intensity = 'max' }) {
     // ─── HALO VIOLET ×2 plus lumineux ───
     const glowGeom = new THREE.SphereGeometry(2.8, 48, 48)
     const glowMat = new THREE.MeshBasicMaterial({
-      color: 0x7B6EDB,
+      color: 0x534AB7,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.06,
       side: THREE.BackSide,
       depthWrite: false,
       blending: THREE.AdditiveBlending
@@ -208,7 +210,7 @@ export default function SuperBubbleScene({ intensity = 'max' }) {
     const glow2Mat = new THREE.MeshBasicMaterial({
       color: 0x22D3EE,
       transparent: true,
-      opacity: 0.05,
+      opacity: 0.02,
       side: THREE.BackSide,
       depthWrite: false,
       blending: THREE.AdditiveBlending
@@ -286,8 +288,8 @@ export default function SuperBubbleScene({ intensity = 'max' }) {
     particleTexture.needsUpdate = true
 
     const pMat = new THREE.PointsMaterial({
-      color: 0xB0A8F0,
-      size: isMobile ? 0.03 : 0.04,
+      color: 0x534AB7,
+      size: isMobile ? 0.025 : 0.03,
       transparent: true,
       opacity: 0.5,
       depthWrite: false,
@@ -329,9 +331,9 @@ export default function SuperBubbleScene({ intensity = 'max' }) {
       glow2.rotation.x = -elapsed * 0.02
       glow2.rotation.y = -elapsed * 0.04
 
-      // Halo pulse
-      glowMat.opacity = 0.10 + Math.sin(elapsed * 0.4) * 0.04
-      glow2Mat.opacity = 0.04 + Math.sin(elapsed * 0.3 + 1.5) * 0.025
+      // Halo pulse subtil
+      glowMat.opacity = 0.05 + Math.sin(elapsed * 0.4) * 0.025
+      glow2Mat.opacity = 0.018 + Math.sin(elapsed * 0.3 + 1.5) * 0.012
 
       // Particules tournent lentement
       particles.rotation.y = elapsed * 0.015
