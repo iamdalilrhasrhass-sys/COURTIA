@@ -229,7 +229,7 @@ export default function AnalyticsExecutive() {
     async function fetchStats() {
       try {
         setLoading(true)
-        const { data } = await api.get('/api/dashboard/stats')
+        const { data } = await api.get('/dashboard/stats')
         setStats(data)
       } catch (err) {
         console.error('Impossible de charger les statistiques:', err)

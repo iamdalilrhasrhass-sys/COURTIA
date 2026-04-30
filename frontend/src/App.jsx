@@ -25,6 +25,7 @@ import Parametres from './pages/Parametres'
 import Capitia from './pages/Capitia'
 import AnalyticsExecutive from './pages/AnalyticsExecutive'
 import Abonnement from './pages/Abonnement'
+import Billing from './pages/Billing'
 import PaiementSucces from './pages/PaiementSucces'
 import PaiementAnnule from './pages/PaiementAnnule'
 import Onboarding from './pages/Onboarding'
@@ -36,6 +37,7 @@ import Sidebar from './components/Sidebar'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -145,8 +147,8 @@ export default function App() {
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
-        {/* Routes privées — AppLayout monte une seule fois, pages via Outlet */}
-        <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+        {/* Routes privées — ProtectedRoute avec plan gating */}
+        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
@@ -163,6 +165,7 @@ export default function App() {
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
           <Route path="/analyses"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
+          <Route path="/billing"       element={<Billing />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
           <Route path="/reach"             element={<ReachDashboard />} />

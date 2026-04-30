@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 function Logo({ dark = false }) {
   return (

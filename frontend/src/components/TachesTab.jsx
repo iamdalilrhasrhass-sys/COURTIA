@@ -107,7 +107,7 @@ export default function TachesTab({ taches: initialTaches = [], clientId, naviga
         setTaches(taches.map(t => t.id === payload.id ? data : t))
         toast.success('Tâche modifiée ✓')
       } else {
-        const { data } = await api.post('/api/taches', payload)
+        const { data } = await api.post('/taches', payload)
         setTaches([...taches, data])
         toast.success('Tâche créée ✓')
       }

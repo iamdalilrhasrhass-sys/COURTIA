@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const STYLES = `
   .login-root {
@@ -456,7 +456,7 @@ export default function Login() {
     setLoading(true)
     setError('')
     try {
-      const res = await api.post('/api/auth/login', { email, password })
+      const res = await api.post('/auth/login', { email, password })
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))

@@ -5,7 +5,7 @@ import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 import { formatNomClient } from '../utils/format'
 
-const API_URL = 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const mockChartData = [
   { month: 'Jan', revenue: 4000, clients: 24 },
