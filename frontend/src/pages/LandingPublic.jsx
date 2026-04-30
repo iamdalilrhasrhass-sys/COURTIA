@@ -1,504 +1,655 @@
-import { useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
 import { 
-  ArrowRight, Check, Star, Play, ChevronDown, Shield, Zap, Clock, 
-  Smartphone, Mail, Send, CheckCircle, AlertCircle, TrendingUp, 
-  Users, FileText, BarChart3, Brain, Sparkles, RefreshCw, Target,
-  MessageSquare, Bell, PieChart, Activity, Layers, Download,
-  ChevronRight, X, Menu
+  Brain, TrendingUp, Clock, Sparkles, Zap, Shield, 
+  ChevronDown, Check, X, ArrowRight, Star, Users, 
+  FileText, BarChart3, Bell, Search, RefreshCw, Target,
+  Database, Globe, Lock, MessageSquare, Phone, Mail,
+  Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
+import DashboardMockup from '../components/DashboardMockup'
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
+}
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } }
+}
 
 const plans = [
-  { 
-    name: "Starter", price: '89', description: 'Pour le courtier solo',
+  {
+    name: 'Starter',
+    price: '89',
+    suffix: '/mois',
+    desc: 'Pour le courtier solo qui veut se structurer',
     features: [
-      'Gestion clients & contrats',
-      'Tableau de bord portefeuille',
-      'Tâches et échéances',
-      'Scoring client',
-      'ARK assistant (10 sessions/mois)',
-      'Support email'
-    ], 
-    cta: 'Démarrer gratuit 30 jours' 
+      'CRM clients complet',
+      'Gestion des contrats',
+      'Tableau de bord simple',
+      'Tâches et rappels',
+      'Import CSV',
+      'Support email',
+    ],
+    cta: 'Démarrer l\'essai gratuit',
+    popular: false,
   },
-  { 
-    name: 'Pro', price: '159', description: 'Pour le cabinet en croissance', 
-    popular: true, 
+  {
+    name: 'Pro',
+    price: '159',
+    suffix: '/mois',
+    desc: 'Pour le cabinet qui veut passer en mode pilotage',
     features: [
-      'Tout Starter +',
-      'ARK illimité',
+      'Tout Starter',
+      'ARK — Assistant IA complet',
+      'REACH — Module prospection',
+      'Automatisations intelligentes',
+      'Rapports avancés',
+      'Scoring portefeuille',
+      'Messages IA personnalisés',
       'Morning Brief quotidien',
-      'Relances automatiques',
-      'Détection opportunités',
-      'Analytiques avancées',
-      'Import portefeuille complet',
-      'Support prioritaire'
-    ], 
-    cta: 'Démarrer gratuit 30 jours' 
+      'Support prioritaire',
+    ],
+    cta: 'Démarrer avec l\'offre Pro',
+    popular: true,
   },
-  { 
-    name: 'Premium', price: '—', description: 'Pour cabinets performants', 
+  {
+    name: 'Premium',
+    price: 'Sur devis',
+    suffix: '',
+    desc: 'Pour les cabinets performants et les groupes',
     features: [
-      'Tout Pro +',
-      'Automatisations sur mesure',
-      'Marque blanche possible',
-      'Multi-agences',
-      'API dédiée',
-      'Manager compte dédié',
-      'Formation équipe',
-      'Accompagnement transformation'
-    ], 
-    cta: 'Nous contacter' 
-  }
+      'Tout Pro',
+      'Multi-utilisateurs',
+      'Accompagnement dédié',
+      'Intégrations sur mesure',
+      'Volume élevé',
+      'Support prioritaire 24/7',
+      'Personnalisation',
+      'SLA garanti',
+    ],
+    cta: 'Nous contacter',
+    popular: false,
+  },
+]
+
+const faqItems = [
+  { q: 'COURTIA est-il réservé aux courtiers en assurance ?', a: 'Oui, COURTIA est conçu spécifiquement pour les courtiers en assurance. Notre CRM, notre IA ARK et notre module REACH sont pensés pour votre métier et vos besoins.' },
+  { q: 'ARK envoie-t-il des messages tout seul ?', a: 'Non. ARK prépare et suggère, mais vous validez toujours avant tout envoi. REACH est en mode dry-run par défaut. Vous gardez le contrôle à chaque étape.' },
+  { q: 'Mes données sont-elles sécurisées ?', a: 'Absolument. COURTIA respecte la réglementation RGPD. Vos données sont hébergées en Europe, chiffrées en transit et au repos. Aucun partage avec des tiers.' },
+  { q: 'Puis-je importer mes clients existants ?', a: 'Oui. L\'import CSV vous permet de transférer votre portefeuille en quelques minutes avec preview, mapping des colonnes et détection des doublons.' },
+  { q: 'Comment fonctionne REACH ?', a: 'REACH est votre module de prospection commerciale. Vous importez des prospects, créez des campagnes multi-étapes, et REACH prépare les messages. Vous validez, il envoie. En dry-run, rien ne part sans votre accord.' },
+  { q: 'Pourquoi l\'offre Pro est-elle recommandée ?', a: 'L\'offre Pro débloque ARK complet, REACH, les automatisations, le scoring portefeuille et les rapports avancés. C\'est le vrai cockpit IA qui transforme votre quotidien.' },
+  { q: 'Puis-je commencer seul ou faut-il un accompagnement ?', a: 'COURTIA est conçu pour être opérationnel immédiatement. L\'offre Premium inclut un accompagnement dédié si vous préférez être guidé.' },
+  { q: 'Y a-t-il un engagement de durée ?', a: 'Non. Vous pouvez résilier à tout moment. L\'essai gratuit de 30 jours vous permet de tester sans engagement ni carte bancaire.' },
 ]
 
 const problems = [
-  { icon: Users, title: 'Clients non relancés', desc: 'Des prospects oubliés qui partent chez la concurrence.' },
-  { icon: Clock, title: 'Contrats proche échéance', desc: 'Vous perdez des clients faute d\'avoir anticipé le renouvellement.' },
-  { icon: TrendingUp, title: 'Opportunités oubliées', desc: 'Le multi-équipement reste votre plus gros levier inexploité.' },
-  { icon: Layers, title: 'Tâches dispersées', desc: 'Post-its, Excel, emails : vos actions sont éparpillées.' },
-  { icon: BarChart3, title: 'Données mal exploitées', desc: 'Vous avez un portefeuille, pas un tableau de bord.' },
-  { icon: FileText, title: 'Administratif trop lourd', desc: 'La paperasse mange 60% de votre temps commercial.' }
+  { icon: FileText, title: 'Trop d\'Excel', desc: 'Vos clients, contrats et relances sont dispersés dans des fichiers que vous passez votre temps à mettre à jour.' },
+  { icon: Clock, title: 'Relances oubliées', desc: 'Des prospects et clients partent chez la concurrence parce que vous n\'avez pas anticipé le bon moment.' },
+  { icon: AlertTriangle, title: 'Portefeuille dormant', desc: 'Vous ne savez pas quels clients sont actifs, dormants ou à risque sans ouvrir chaque dossier un par un.' },
+  { icon: Database, title: 'Données dispersées', desc: 'Entre votre téléphone, vos emails, vos post-its et votre logiciel, l\'information client est partout et nulle part.' },
+  { icon: Search, title: 'Aucun assistant métier', desc: 'Les CRM généralistes ne parlent pas assurance. Aucun ne comprend vos contrats, vos échéances, vos sinistres.' },
+  { icon: BarChart3, title: 'Aucune vision globale', desc: 'Impossible d\'avoir en un coup d\'œil la santé de votre portefeuille, les priorités du jour et les actions à mener.' },
 ]
 
 const solutions = [
-  { icon: Bell, title: 'Clients à rappeler', desc: 'Votre quotidien listé, priorisé, prêt à traiter dès l\'ouverture.' },
-  { icon: AlertCircle, title: 'Contrats à surveiller', desc: 'Échéances visibles à J+30, J+60, J+90. Fin des mauvaises surprises.' },
-  { icon: Send, title: 'Relances prêtes', desc: 'ARK prépare vos messages. Vous validez, il envoie.' },
-  { icon: Sparkles, title: 'Opportunités détectées', desc: 'Multi-équipement, surchage, avenants : repérez ce qui rapporte.' },
-  { icon: CheckCircle, title: 'Tâches priorisées', desc: 'Ce qui est important aujourd\'hui. Pas de dispersion.' },
-  { icon: Brain, title: 'Résumés ARK', desc: 'Un clic = l\'essentiel du client : contrats, risques, prochaine action.' }
+  { icon: Users, title: 'CRM clients', desc: 'Fiches complètes, historique, scoring risque et fidélité, préférences, documents. Tout votre portefeuille au même endroit.' },
+  { icon: Brain, title: 'ARK — IA native', desc: 'ARK analyse votre portefeuille, détecte les opportunités, prépare les relances et vous livre chaque matin vos priorités.' },
+  { icon: Zap, title: 'REACH — Prospection', desc: 'Créez des campagnes multi-canaux, importez des prospects, laissez ARK générer les messages. Vous validez, rien ne part sans vous.' },
+  { icon: RefreshCw, title: 'Automatisations', desc: 'Détection des clients dormants, opportunités multi-équipement, relances automatiques, alertes échéances.' },
+  { icon: Target, title: 'Scoring intelligent', desc: 'Chaque client noté sur 3 axes : risque, fidélité, opportunité. Priorisez naturellement vos actions.' },
+  { icon: PieChart, title: 'Rapports & pilotage', desc: 'Tableaux de bord, graphiques d\'activité, segmentation portefeuille, reporting REACH. Pilotez votre cabinet en temps réel.' },
 ]
 
-const arkFeatures = [
-  { icon: FileText, title: 'Résumé client', desc: 'ARK lit le dossier complet et vous donne l\'essentiel en une phrase.' },
-  { icon: MessageSquare, title: 'Relance prête à envoyer', desc: 'Un message personnalisé préparé selon le contexte client.' },
-  { icon: Shield, title: 'Détection risque', desc: 'ARK signale les clients vulnérables : impayés, résiliation, sinistre.' },
-  { icon: Zap, title: 'Opportunité multi-équipement', desc: 'Il repère les besoins non couverts de votre portefeuille.' },
-  { icon: Bell, title: 'Morning Brief', desc: 'Chaque matin, votre briefing : urgences, relances, priorités.' },
-  { icon: Target, title: 'Priorisation quotidienne', desc: 'Les 5 actions qui comptent vraiment aujourd\'hui.' }
+const arkCapabilities = [
+  'Résumé instantané de chaque client',
+  'Analyse du portefeuille en temps réel',
+  'Suggestions de relance personnalisées',
+  'Détection d\'opportunités multi-équipement',
+  'Alertes clients dormants ou à risque',
+  'Aide à la conformité et à la documentation',
+  'Morning Brief quotidien avec priorités',
+  'Génération de messages commerciaux',
 ]
 
-const faqs = [
-  { q: 'COURTIA remplace-t-il mon CRM actuel ?', r: 'Oui. COURTIA importe votre portefeuille et centralise clients, contrats, tâches et relances. Vous n\'avez plus besoin d\'Excel, d\'un CRM générique ou d\'un outil de relance séparé.' },
-  { q: 'ARK envoie-t-il des messages automatiquement ?', r: 'Non. ARK prépare les messages, les priorités et les résumés. Vous restez maître de l\'envoi. Pas de risque d\'automatisation incontrôlée.' },
-  { q: 'Est-ce adapté aux petits cabinets ?', r: 'COURTIA a été pensé pour le courtier indépendant comme pour le cabinet de 10 personnes. Le plan Starter est fait pour solo, le plan Pro pour les équipes.' },
-  { q: 'Mes données sont-elles sécurisées ?', r: 'Oui. Serveurs français, chiffrement TLS, authentification JWT, isolation multi-tenant. Conforme RGPD. Vos données restent vos données.' },
-  { q: 'Puis-je commencer sans importer tout mon portefeuille ?', r: 'Oui. Créez vos premiers clients en 30 secondes et importez le reste plus tard. Rien ne bloque votre démarrage.' },
-  { q: 'Est-ce fait pour les courtiers français ?', r: 'Oui. COURTIA est conçu spécifiquement pour le marché français de l\'assurance : ORIAS, conventions, produits, usages. Pas un CRM américain adapté.' }
+const reachCapabilities = [
+  'Import et gestion de prospects',
+  'Création de campagnes multi-étapes',
+  'Génération de messages par IA',
+  'Validation humaine obligatoire',
+  'Mode dry-run pour tester sans envoyer',
+  'Opt-out et contrôle anti-spam',
+  'Reporting et statistiques',
+  'Tableau de bord sécurisé',
 ]
 
-const features = [
-  { icon: Users, title: 'CRM clients', desc: 'Fiches clients complètes, historique, documents, scoring, préférences.' },
-  { icon: FileText, title: 'Contrats', desc: 'Gestion des polices, échéances, avenants, résiliations automatiques.' },
-  { icon: CheckCircle, title: 'Tâches', desc: 'Suivi des actions, rappels, priorisation quotidienne par ARK.' },
-  { icon: Send, title: 'Relances', desc: 'Email, SMS, WhatsApp préparés par ARK. Vous validez, ça part.' },
-  { icon: TrendingUp, title: 'Scoring', desc: 'Score fidélité, risque, opportunité. Chaque client noté et priorisé.' },
-  { icon: Clock, title: 'Historique', desc: 'Tout l\'historiel client : appels, messages, rendez-vous, notes.' },
-  { icon: Download, title: 'Import portefeuille', desc: 'Import CSV, mise en correspondance automatique, nettoyage.' },
-  { icon: BarChart3, title: 'Pilotage', desc: 'Tableaux de bord, objectifs, commissions, performances équipe.' }
-]
-
-// Mock dashboard data
-function MockDashboard() {
+function SectionHeader({ title, subtitle, badge }) {
   return (
-    <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
-      {/* Top bar */}
-      <div className="bg-[#1a1a2e] px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#7c3aed] flex items-center justify-center text-white font-bold text-sm">C</div>
-          <span className="text-white font-semibold text-sm">COURTIA</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex -space-x-2">
-            {[1,2,3].map(i => (
-              <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 border-2 border-[#1a1a2e]" />
-            ))}
-          </div>
-          <div className="text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg">Bonjour, David</div>
-        </div>
-      </div>
-      {/* Dashboard grid */}
-      <div className="bg-[#f8f7f4] p-4 grid grid-cols-3 gap-3 text-[10px]">
-        {/* Score card */}
-        <div className="col-span-1 bg-white rounded-xl p-4 shadow-sm">
-          <p className="text-gray-400 font-medium mb-1">Score Portefeuille</p>
-          <p className="text-2xl font-black text-gray-900">87<span className="text-sm font-medium text-green-500">/100</span></p>
-          <div className="w-full h-2 bg-gray-100 rounded-full mt-2 overflow-hidden">
-            <div className="h-full w-[87%] bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" />
-          </div>
-          <p className="text-[9px] text-green-600 mt-1">+5 pts ce mois</p>
-        </div>
-        {/* Morning Brief */}
-        <div className="col-span-2 bg-gradient-to-br from-[#1a1a2e] to-[#2d1b69] rounded-xl p-4 text-white shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <Brain size={12} className="text-purple-300" />
-            <p className="font-semibold text-[11px] text-purple-200">Morning Brief ARK</p>
-          </div>
-          <p className="text-[10px] opacity-80 leading-relaxed">3 clients à relancer aujourd'hui — 2 contrats expirent dans 30 jours — 1 opportunité multi-équipement détectée</p>
-        </div>
-        {/* Action cards */}
-        <div className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-l-red-400">
-          <p className="text-gray-400 font-medium mb-0.5">À relancer</p>
-          <p className="text-lg font-bold text-gray-900">4</p>
-          <p className="text-[9px] text-gray-400">urgent</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-l-amber-400">
-          <p className="text-gray-400 font-medium mb-0.5">Échéances J+30</p>
-          <p className="text-lg font-bold text-gray-900">7</p>
-          <p className="text-[9px] text-gray-400">3 450 € en jeu</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-l-emerald-400">
-          <p className="text-gray-400 font-medium mb-0.5">Opportunités</p>
-          <p className="text-lg font-bold text-gray-900">5</p>
-          <p className="text-[9px] text-gray-400">+ 2 800 € estimé</p>
-        </div>
-        {/* Bottom row */}
-        <div className="col-span-3 bg-white rounded-xl p-3 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-gray-400 font-medium">Clients à contacter</p>
-            <p className="text-[9px] text-purple-600 font-semibold">Voir tout →</p>
-          </div>
-          {[
-            { name: 'SARL Dubois Construction', reason: 'Renouvellement RC Pro', priority: 'haute' },
-            { name: 'Mme Petit', reason: 'Devis multirisque habitation', priority: 'moyenne' },
-            { name: 'EARL Martin', reason: 'Proposition flotte agricole', priority: 'basse' }
-          ].map((c, i) => (
-            <div key={i} className="flex items-center justify-between py-1.5 border-t border-gray-50 first:border-t-0">
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${c.priority === 'haute' ? 'bg-red-400' : c.priority === 'moyenne' ? 'bg-amber-400' : 'bg-blue-400'}`} />
-                <p className="text-[10px] text-gray-700 font-medium">{c.name}</p>
-              </div>
-              <p className="text-[9px] text-gray-400">{c.reason}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <motion.div
+      className="text-center max-w-2xl mx-auto mb-12 lg:mb-16"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-80px' }}
+      variants={fadeUp}
+    >
+      {badge && (
+        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-purple-600 bg-purple-50 px-4 py-1.5 rounded-full mb-4">
+          {badge}
+        </span>
+      )}
+      <h2 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+        {title}
+      </h2>
+      {subtitle && (
+        <p className="mt-4 text-base lg:text-lg text-gray-500 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+    </motion.div>
   )
 }
 
-function AnimatedSection({ children, className = '' }) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-80px' })
+function GlassCard({ children, className = '', hover = true }) {
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 40 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className={className}>
+    <div className={`bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl shadow-black/5 ${hover ? 'hover:shadow-2xl hover:shadow-purple-500/5 hover:-translate-y-0.5 transition-all duration-300' : ''} ${className}`}>
       {children}
-    </motion.div>
+    </div>
   )
 }
 
 export default function LandingPublic() {
   const navigate = useNavigate()
-  const demoRef = useRef(null)
+  const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openFaq, setOpenFaq] = useState(null)
 
-  const scrollToDemo = () => demoRef.current?.scrollIntoView({ behavior: 'smooth' })
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   return (
-    <div className="bg-[#f8f7f4] text-[#0a0a0a] font-sans overflow-x-hidden">
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
+    <div className="bg-[#f8f9fc] text-gray-900 overflow-x-hidden">
+      {/* ─── NAVBAR ─── */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100/50 shadow-sm' : 'bg-transparent'}`}>
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <span className="text-white font-black text-sm">C</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">COURTIA</span>
-            <span className="hidden sm:inline text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium ml-2">CRM assurance + IA native</span>
-          </div>
-          
-          {/* Desktop nav */}
+            <span className="font-bold text-lg tracking-tight text-gray-900">COURTIA</span>
+          </Link>
+
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => navigate('/login')} className="text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Se connecter</button>
-            <button onClick={() => navigate('/register')} className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-200 transition-all">
+            <button onClick={() => scrollTo('solutions')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Fonctionnalités</button>
+            <button onClick={() => scrollTo('pricing')} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Tarifs</button>
+            <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Se connecter</Link>
+            <Link to="/register?plan=pro" className="text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200">
               Essai gratuit 30 jours
-            </button>
+            </Link>
           </div>
-          
-          {/* Mobile menu button */}
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2">
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+
+          <button className="md:hidden p-2 text-gray-500" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <XIcon size={22} /> : <Menu size={22} />}
           </button>
         </div>
-        
-        {/* Mobile nav */}
-        {menuOpen && (
-          <div className="md:hidden px-6 pb-4 space-y-3">
-            <button onClick={() => { navigate('/login'); setMenuOpen(false) }} className="w-full text-left text-sm font-semibold text-gray-500 py-2">Se connecter</button>
-            <button onClick={() => { navigate('/register'); setMenuOpen(false) }} className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm font-bold rounded-xl text-center">
-              Essai gratuit 30 jours
-            </button>
-          </div>
-        )}
       </nav>
 
-      {/* HERO */}
-      <section className="relative px-6 pt-20 pb-24 max-w-6xl mx-auto text-center overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-b from-purple-100/60 to-transparent rounded-full blur-3xl pointer-events-none" />
-        
-        <AnimatedSection>
-          <span className="inline-block text-[11px] bg-purple-50 text-purple-700 px-3 py-1 rounded-full font-medium mb-6 border border-purple-100">
-            CRM assurance + IA native
-          </span>
-          
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] max-w-4xl mx-auto">
-            Le cockpit IA des courtiers<br />
-            <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">qui veulent avancer plus vite.</span>
-          </h1>
-          
-          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto mt-6 leading-relaxed">
-            COURTIA centralise vos clients, contrats, tâches et relances. 
-            ARK analyse votre portefeuille et vous indique les actions prioritaires à traiter.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-            <button onClick={() => navigate('/register')} className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-bold rounded-xl text-base sm:text-lg hover:shadow-xl hover:shadow-purple-200 transition-all flex items-center gap-2 justify-center shadow-lg">
-              Démarrer l'essai gratuit <ArrowRight size={20} />
-            </button>
-            <button onClick={scrollToDemo} className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl text-base sm:text-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all flex items-center gap-2 justify-center">
-              Voir la démonstration <Play size={18} />
-            </button>
-          </div>
-          
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-6 mt-12 text-xs text-gray-400">
-            <span className="flex items-center gap-1.5"><Users size={14} /> Pensé pour les courtiers</span>
-            <span className="flex items-center gap-1.5"><Brain size={14} /> IA intégrée</span>
-            <span className="flex items-center gap-1.5"><RefreshCw size={14} /> Relances et priorités</span>
-            <span className="flex items-center gap-1.5"><PieChart size={14} /> Portefeuille sous contrôle</span>
-          </div>
-        </AnimatedSection>
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-lg md:hidden"
+          >
+            <div className="p-5 space-y-4">
+              <button onClick={() => { scrollTo('solutions'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">Fonctionnalités</button>
+              <button onClick={() => { scrollTo('pricing'); setMenuOpen(false) }} className="block w-full text-left text-gray-600 py-2">Tarifs</button>
+              <Link to="/login" className="block text-gray-600 py-2" onClick={() => setMenuOpen(false)}>Se connecter</Link>
+              <Link to="/register?plan=pro" className="block text-center font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-3 rounded-xl" onClick={() => setMenuOpen(false)}>
+                Essai gratuit 30 jours
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── HERO ─── */}
+      <section className="relative min-h-[90vh] flex items-center pt-20 pb-16 lg:pb-24">
+        <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8f9fc]/50 to-[#f8f9fc]" />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-5 w-full">
+          <motion.div
+            className="text-center max-w-3xl mx-auto"
+            initial="hidden"
+            animate="visible"
+            variants={stagger}
+          >
+            <motion.span
+              variants={fadeUp}
+              className="inline-block text-xs font-semibold tracking-widest uppercase text-purple-600 bg-purple-50/80 backdrop-blur-sm px-4 py-1.5 rounded-full mb-6 border border-purple-200/50"
+            >
+              CRM assurance + IA native
+            </motion.span>
+
+            <motion.h1
+              variants={fadeUp}
+              className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-[1.08]"
+            >
+              Le cockpit IA des courtiers{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
+                qui veulent piloter
+              </span>{' '}
+              leur portefeuille.
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUp}
+              className="mt-6 text-base lg:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed"
+            >
+              COURTIA centralise vos clients, contrats, tâches et relances. 
+              <strong className="text-gray-700"> ARK</strong> analyse votre portefeuille,{' '}
+              <strong className="text-gray-700">REACH</strong> prépare vos actions commerciales, 
+              vous gardez toujours la main.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/register?plan=pro"
+                className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-7 py-3.5 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200 text-sm"
+              >
+                Démarrer avec l'offre Pro
+                <ArrowRight size={16} />
+              </Link>
+              <button
+                onClick={() => scrollTo('mockup')}
+                className="inline-flex items-center gap-2 font-medium text-gray-600 bg-white/70 backdrop-blur-sm border border-gray-200 px-7 py-3.5 rounded-xl hover:bg-white hover:border-gray-300 hover:text-gray-900 transition-all duration-200 text-sm"
+              >
+                Voir la démonstration
+              </button>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              {['Pensé courtiers', 'ARK intégré', 'REACH sécurisé', 'Validation humaine', 'Portefeuille vivant'].map((badge) => (
+                <span key={badge} className="text-xs text-gray-400 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-100">
+                  {badge}
+                </span>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Mockup */}
+          <motion.div
+            id="mockup"
+            className="mt-12 lg:mt-16 max-w-5xl mx-auto"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.4, ease: 'easeOut' }}
+          >
+            <DashboardMockup />
+          </motion.div>
+        </div>
       </section>
 
-      {/* MOCKUP SECTION */}
-      <AnimatedSection className="px-6 max-w-5xl mx-auto -mt-8 mb-24">
-        <MockDashboard />
-        <p className="text-center text-xs text-gray-400 mt-3">Interface réelle — données de démonstration</p>
-      </AnimatedSection>
-
-      {/* PROBLEM SECTION */}
-      <section className="py-20 px-6 bg-white">
-        <AnimatedSection className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-center max-w-3xl mx-auto leading-tight">
-            Votre cabinet perd du temps dans les relances,<br />
-            <span className="text-gray-400">les suivis et les dossiers incomplets.</span>
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
-            {problems.map((item, i) => (
-              <div key={i} className="p-6 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
-                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4">
-                  <item.icon className="w-5 h-5 text-red-400" />
-                </div>
-                <h3 className="text-sm font-bold mb-2">{item.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
+      {/* ─── PROBLÈME ─── */}
+      <section className="py-20 lg:py-28 px-5">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeader
+            badge="Problème"
+            title="Pourquoi les courtiers perdent 60% de leur temps"
+            subtitle="Les outils actuels ne sont pas faits pour vous. Résultat : vous passez plus de temps à gérer l'administratif qu'à développer votre cabinet."
+          />
+          <motion.div
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={stagger}
+          >
+            {problems.map((p, i) => (
+              <motion.div key={i} variants={fadeUp}>
+                <GlassCard className="p-6 lg:p-7">
+                  <p.icon size={22} className="text-purple-600 mb-3" />
+                  <h3 className="font-bold text-gray-900 text-sm mb-1.5">{p.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
+                </GlassCard>
+              </motion.div>
             ))}
-          </div>
-        </AnimatedSection>
+          </motion.div>
+        </div>
       </section>
 
-      {/* SOLUTION SECTION */}
-      <section className="py-20 px-6 bg-gradient-to-b from-white to-gray-50">
-        <AnimatedSection className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="text-[11px] bg-purple-50 text-purple-700 px-3 py-1 rounded-full font-medium border border-purple-100">La solution</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-center max-w-3xl mx-auto leading-tight mb-16">
-            COURTIA transforme votre portefeuille<br />
-            <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">en plan d'action quotidien.</span>
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {solutions.map((item, i) => (
-              <div key={i} className="p-6 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-purple-100 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center mb-4">
-                  <item.icon className="w-5 h-5 text-purple-600" />
-                </div>
-                <h3 className="text-sm font-bold mb-2">{item.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </AnimatedSection>
-      </section>
-
-      {/* ARK SECTION */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#1e1b4b] to-[#0f0f1a]" />
-        <div className="absolute top-[-300px] right-[-200px] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-[-300px] left-[-200px] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl" />
-        
-        <AnimatedSection className="max-w-5xl mx-auto relative z-10">
-          <div className="text-center mb-6">
-            <span className="text-[11px] bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full font-medium border border-purple-500/20">L'IA native</span>
-          </div>
-          <div className="flex items-center gap-3 justify-center mb-4">
-            <Brain className="w-8 h-8 text-purple-400" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
-              ARK, l'assistant IA qui travaille dans votre CRM.
-            </h2>
-          </div>
-          <p className="text-base text-gray-400 max-w-3xl mx-auto text-center leading-relaxed mb-16">
-            ARK ne se contente pas de répondre à des questions. Il lit le contexte client, 
-            résume les dossiers, propose les prochaines actions et prépare vos messages.
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {arkFeatures.map((item, i) => (
-              <div key={i} className="p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                    <item.icon className="w-4 h-4 text-purple-300" />
+      {/* ─── SOLUTION ─── */}
+      <section id="solutions" className="py-20 lg:py-28 px-5 bg-white/40">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeader
+            badge="Solution"
+            title="COURTIA transforme votre cabinet"
+            subtitle="Un CRM complet, une IA qui comprend votre métier, un module commercial sécurisé."
+          />
+          <motion.div
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={stagger}
+          >
+            {solutions.map((s, i) => (
+              <motion.div key={i} variants={fadeUp}>
+                <GlassCard className="p-6 lg:p-7">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-3">
+                    <s.icon size={20} className="text-purple-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-white">{item.title}</h3>
-                </div>
-                <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
-              </div>
+                  <h3 className="font-bold text-gray-900 text-sm mb-1.5">{s.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+                </GlassCard>
+              </motion.div>
             ))}
-          </div>
-        </AnimatedSection>
+          </motion.div>
+        </div>
       </section>
 
-      {/* FEATURES SECTION */}
-      <section className="py-20 px-6 bg-white">
-        <AnimatedSection className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-4">Tout ce dont vous avez besoin</h2>
-          <p className="text-sm text-gray-500 text-center mb-12 max-w-xl mx-auto">Un CRM complet, pensé pour le métier de courtier en assurance.</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((item, i) => (
-              <div key={i} className="p-5 rounded-xl bg-gray-50 border border-gray-100 hover:border-purple-100 hover:bg-purple-50/30 transition-all">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center mb-3">
-                  <item.icon className="w-4 h-4 text-purple-600" />
-                </div>
-                <h3 className="text-sm font-bold mb-1.5">{item.title}</h3>
-                <p className="text-[11px] text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
+      {/* ─── ARK ─── */}
+      <section className="py-20 lg:py-28 px-5 relative overflow-hidden">
+        <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <SectionHeader
+            badge="ARK — Intelligence Artificielle"
+            title="L'IA qui travaille dans votre CRM"
+            subtitle="ARK analyse votre portefeuille en continu et transforme les données en actions concrètes."
+          />
+          <motion.div
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={stagger}
+          >
+            {arkCapabilities.map((cap, i) => (
+              <motion.div key={i} variants={fadeUp}>
+                <GlassCard className="p-5 flex items-start gap-3">
+                  <Check size={16} className="text-purple-600 mt-0.5 shrink-0" />
+                  <span className="text-sm text-gray-600">{cap}</span>
+                </GlassCard>
+              </motion.div>
             ))}
-          </div>
-        </AnimatedSection>
+          </motion.div>
+        </div>
       </section>
 
-      {/* PRICING */}
-      <section className="py-20 px-6 bg-gray-50">
-        <AnimatedSection className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-center mb-4">Des plans pour chaque cabinet</h2>
-          <p className="text-sm text-gray-500 text-center mb-12 max-w-xl mx-auto">Commencez gratuitement 30 jours. Sans carte bancaire.</p>
-          <div className="grid md:grid-cols-3 gap-6 items-start">
-            {plans.map((plan, i) => (
-              <div key={i} className={`rounded-2xl p-8 ${plan.popular 
-                ? 'bg-white border-2 border-purple-500 shadow-xl shadow-purple-100 relative scale-[1.02]' 
-                : 'bg-white border border-gray-100 shadow-sm'}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg">
-                    Le plus populaire
-                  </div>
-                )}
-                <h3 className="text-lg font-bold">{plan.name}</h3>
-                <p className="text-xs text-gray-500 mb-4 mt-1">{plan.description}</p>
-                <p className="text-3xl sm:text-4xl font-black mb-1">
-                  {plan.price === '—' ? 'Sur devis' : <>{plan.price}€ <span className="text-sm font-normal text-gray-400">/mois</span></>}
-                </p>
-                {plan.price !== '—' && (
-                  <p className="text-[11px] text-gray-400 mb-6">Soit {plan.price === '89' ? '2,97' : '5,30'}€ / jour</p>
-                )}
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2 text-xs text-gray-600">
-                      <Check size={14} className="text-green-500 flex-shrink-0 mt-0.5" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={() => plan.price === '—' ? scrollToDemo() : navigate('/register')} 
-                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-                    plan.popular 
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white hover:shadow-lg hover:shadow-purple-200' 
-                      : plan.price === '—'
-                        ? 'border-2 border-purple-200 text-purple-700 hover:border-purple-300'
-                        : 'border-2 border-gray-200 text-gray-700 hover:border-gray-300'
-                  }`}>
-                  {plan.cta}
-                </button>
-              </div>
+      {/* ─── REACH ─── */}
+      <section className="py-20 lg:py-28 px-5 bg-white/40">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeader
+            badge="REACH — Module commercial"
+            title="Prospection IA, contrôle humain"
+            subtitle="Créez des campagnes, laissez ARK générer les messages, validez avant tout envoi."
+          />
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+            <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <Shield size={12} /> Dry-run par défaut
+            </span>
+            <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <Lock size={12} /> Validation humaine obligatoire
+            </span>
+            <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <Brain size={12} /> Messages générés par IA
+            </span>
+          </div>
+          <motion.div
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={stagger}
+          >
+            {reachCapabilities.map((cap, i) => (
+              <motion.div key={i} variants={fadeUp}>
+                <GlassCard className="p-5 flex items-start gap-3">
+                  <Check size={16} className="text-blue-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-gray-600">{cap}</span>
+                </GlassCard>
+              </motion.div>
             ))}
-          </div>
-        </AnimatedSection>
+          </motion.div>
+        </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 px-6 bg-white">
-        <AnimatedSection className="max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-center mb-12">Questions fréquentes</h2>
-          <div className="space-y-3">
-            {faqs.map((item, i) => (
-              <details key={i} className="group rounded-xl border border-gray-100 open:border-purple-100 open:bg-purple-50/20 transition-all">
-                <summary className="flex items-center justify-between p-5 cursor-pointer text-sm font-semibold text-gray-800 list-none">
-                  {item.q}
-                  <ChevronDown size={16} className="text-gray-400 group-open:rotate-180 transition-transform" />
-                </summary>
-                <div className="px-5 pb-5 text-xs text-gray-500 leading-relaxed">
-                  {item.r}
-                </div>
-              </details>
-            ))}
-          </div>
-        </AnimatedSection>
-      </section>
-
-      {/* CTA FINAL */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-700 via-purple-600 to-blue-600" />
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_rgba(255,255,255,0.1)_0%,_transparent_50%)]" />
-        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_right,_rgba(255,255,255,0.05)_0%,_transparent_50%)]" />
-        
-        <AnimatedSection className="relative z-10 text-center max-w-2xl mx-auto px-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-6">
-            Reprenez le contrôle<br />
-            de votre portefeuille.
-          </h2>
-          <p className="text-white/70 text-base mb-10 max-w-lg mx-auto">
-            30 jours gratuits. Sans engagement. Sans carte bancaire.
-          </p>
-          <button onClick={() => navigate('/register')} className="px-10 py-4 bg-white text-purple-700 font-bold rounded-xl text-lg hover:shadow-2xl hover:scale-[1.02] transition-all shadow-xl inline-flex items-center gap-2">
-            Démarrer gratuitement <ArrowRight size={20} />
-          </button>
-        </AnimatedSection>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-[#0a0a0f] text-gray-500 py-16 px-6">
+      {/* ─── AVANT / APRÈS ─── */}
+      <section className="py-20 lg:py-28 px-5">
         <div className="max-w-5xl mx-auto">
-          <div className="grid sm:grid-cols-4 gap-8 mb-12">
-            <div className="sm:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-[10px]">C</span>
-                </div>
-                <span className="text-white font-bold">COURTIA</span>
-              </div>
-              <p className="text-xs leading-relaxed">Le cockpit IA des courtiers en assurance. CRM, IA, relances et pilotage.</p>
-            </div>
-            <div>
-              <p className="text-white text-xs font-semibold mb-4">Produit</p>
-              <div className="space-y-2 text-xs">
-                <p>Fonctionnalités</p>
-                <p>Tarifs</p>
-                <p>ARK</p>
-                <p>API</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-white text-xs font-semibold mb-4">Légal</p>
-              <div className="space-y-2 text-xs">
-                <p>Mentions légales</p>
-                <p>Confidentialité</p>
-                <p>CGV</p>
-                <p>Contact</p>
-              </div>
-            </div>
+          <SectionHeader
+            badge="Comparaison"
+            title="Avant COURTIA / Avec COURTIA"
+            subtitle="Le changement est radical."
+          />
+          <div className="grid md:grid-cols-2 gap-6">
+            <GlassCard className="p-8">
+              <h3 className="font-black text-lg text-gray-400 mb-6 flex items-center gap-2">
+                <X size={18} className="text-red-400" /> Avant COURTIA
+              </h3>
+              <ul className="space-y-3">
+                {[
+                  'Fichiers Excel dispersés',
+                  'Relances manuelles oubliées',
+                  'Aucune vision du portefeuille',
+                  'Perte d\'opportunités',
+                  'Pas d\'assistant métier',
+                  'Administratif chronophage',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-400">
+                    <X size={14} className="mt-0.5 shrink-0 text-red-300" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </GlassCard>
+            <GlassCard className="p-8 border-purple-200/50 shadow-purple-500/5">
+              <h3 className="font-black text-lg text-gray-900 mb-6 flex items-center gap-2">
+                <Check size={18} className="text-green-500" /> Avec COURTIA
+              </h3>
+              <ul className="space-y-3">
+                {[
+                  'Cockpit centralisé en temps réel',
+                  'Relances automatiques préparées par ARK',
+                  'Portefeuille vivant et priorisé',
+                  'Opportunités détectées par l\'IA',
+                  'Assistant qui travaille avec vous',
+                  '60% de temps administratif économisé',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                    <Check size={14} className="mt-0.5 shrink-0 text-green-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </GlassCard>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-xs text-center">
-            <p>© 2026 COURTIA. Construit pour les 32 000 courtiers ORIAS de France.</p>
+        </div>
+      </section>
+
+      {/* ─── PRICING ─── */}
+      <section id="pricing" className="py-20 lg:py-28 px-5 bg-white/40">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeader
+            badge="Tarifs"
+            title="Des plans pour chaque cabinet"
+            subtitle="Commencez gratuitement 30 jours. Sans carte bancaire."
+          />
+
+          <motion.div
+            className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={stagger}
+          >
+            {plans.map((plan, i) => (
+              <motion.div key={i} variants={fadeUp} className="relative">
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-4 py-1 rounded-full shadow-lg">
+                      Recommandé
+                    </span>
+                  </div>
+                )}
+                <GlassCard className={`p-7 flex flex-col h-full ${plan.popular ? 'border-purple-300/50 shadow-xl shadow-purple-500/10 scale-105 md:scale-105' : ''}`}>
+                  <div className="flex-1">
+                    <h3 className="font-black text-lg text-gray-900">{plan.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1 mb-4">{plan.desc}</p>
+
+                    <div className="mb-6">
+                      {plan.price === 'Sur devis' ? (
+                        <span className="text-3xl font-black text-gray-900">Sur devis</span>
+                      ) : (
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-3xl font-black text-gray-900">{plan.price}</span>
+                          <span className="text-sm text-gray-400">€{plan.suffix}</span>
+                        </div>
+                      )}
+                      {plan.price !== 'Sur devis' && (
+                        <p className="text-xs text-gray-400 mt-1">Soit {(parseInt(plan.price) / 30).toFixed(2)}€ / jour</p>
+                      )}
+                    </div>
+
+                    <ul className="space-y-2.5 mb-8">
+                      {plan.features.map((f, j) => (
+                        <li key={j} className="flex items-start gap-2.5 text-sm text-gray-600">
+                          <Check size={14} className="mt-0.5 shrink-0 text-green-500" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <Link
+                    to={plan.popular ? '/register?plan=pro' : plan.name === 'Premium' ? '/contact' : '/register'}
+                    className={`block text-center font-semibold text-sm py-3 rounded-xl transition-all duration-200 ${
+                      plan.popular
+                        ? 'text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:shadow-lg hover:shadow-purple-500/25'
+                        : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    {plan.cta}
+                  </Link>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── */}
+      <section className="py-20 lg:py-28 px-5">
+        <div className="max-w-3xl mx-auto">
+          <SectionHeader
+            badge="FAQ"
+            title="Questions fréquentes"
+          />
+          <div className="space-y-3">
+            {faqItems.map((item, i) => (
+              <GlassCard key={i} hover={false} className="overflow-hidden">
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between p-5 text-left"
+                >
+                  <span className="font-semibold text-sm text-gray-900 pr-4">{item.q}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`text-gray-400 shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-5 pb-5 text-sm text-gray-500 leading-relaxed">{item.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA FINAL ─── */}
+      <section className="relative py-24 lg:py-32 px-5 overflow-hidden">
+        <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8f9fc]/30 to-[#f8f9fc]" />
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            <motion.h2
+              variants={fadeUp}
+              className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-tight"
+            >
+              Faites passer votre cabinet d'un portefeuille subi{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
+                à un portefeuille piloté.
+              </span>
+            </motion.h2>
+
+            <motion.p
+              variants={fadeUp}
+              className="mt-4 text-base text-gray-500 max-w-xl mx-auto"
+            >
+              30 jours d'essai gratuit. Sans carte bancaire. Sans engagement.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/register?plan=pro"
+                className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-4 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
+              >
+                Commencer l'essai gratuit
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 font-medium text-gray-600 bg-white/70 backdrop-blur-sm border border-gray-200 px-8 py-4 rounded-xl hover:bg-white hover:border-gray-300 transition-all duration-200"
+              >
+                J'ai déjà un compte
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── FOOTER ─── */}
+      <footer className="border-t border-gray-100 bg-white/50 py-10 px-5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+              <span className="text-white font-black text-[10px]">C</span>
+            </div>
+            <span className="font-bold text-sm text-gray-900">COURTIA</span>
+          </div>
+          <div className="flex items-center gap-6 text-xs text-gray-400">
+            <span>CRM assurance + IA native</span>
+            <span>© 2026 COURTIA</span>
+            <Link to="/legal" className="hover:text-gray-600 transition-colors">Mentions légales</Link>
           </div>
         </div>
       </footer>
