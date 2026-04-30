@@ -16,14 +16,14 @@ export default function ReachDashboard() {
     try {
       const [aud, pro, seq, st] = await Promise.all([
         api.get('/reach/audiences'),
-        api.get('/reach/prospects'),
-        api.get('/reach/sequences'),
-        api.get('/reach/stats')
+        api.get('/reach/prospects?limit=50'),
+        api.get('/reach/campaigns'),
+        api.get('/reach/dashboard')
       ])
-      setAudiences(aud.data.items || [])
-      setProspects(pro.data.items || [])
-      setSequences(seq.data.items || [])
-      setStats(st.data || {})
+      setAudiences(aud.data?.data || aud.data || [])
+      setProspects(pro.data?.data || pro.data || [])
+      setSequences(seq.data?.data || seq.data || [])
+      setStats(st.data?.data || st.data || {})
     } catch (e) { console.error('Reach load error:', e) }
     setLoading(false)
   }
@@ -39,7 +39,7 @@ export default function ReachDashboard() {
 
   const startSequence = async (id) => {
     try {
-      await api.post(`/reach/sequences/${id}/start`)
+      await api.patch(`/reach/campaigns/${id}/status`, { status: 'running' })
       loadData()
     } catch (e) { console.error('Start sequence error:', e) }
   }
@@ -55,7 +55,7 @@ export default function ReachDashboard() {
         {[
           { label: 'Prospects', value: stats.total_prospects, color: 'text-blue-600' },
           { label: 'Audiences', value: stats.total_audiences, color: 'text-green-600' },
-          { label: 'Séquences', value: stats.total_sequences, color: 'text-purple-600' },
+          { label: 'Campagnes', value: stats.total_campaigns, color: 'text-purple-600' },
           { label: 'Messages', value: stats.total_messages, color: 'text-amber-600' },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
