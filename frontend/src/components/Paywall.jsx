@@ -45,7 +45,7 @@ export default function Paywall({ feature, plan }) {
             {loading === 'premium' ? 'Redirection...' : 'Premium — sur devis'}
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-4">30 jours d'essai gratuits. Sans engagement.</p>
+        <p className="text-xs text-gray-400 mt-4">7 jours d'essai gratuits. Sans engagement.</p>
       </div>
     </div>
   )

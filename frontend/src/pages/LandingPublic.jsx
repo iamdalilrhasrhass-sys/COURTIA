@@ -67,7 +67,7 @@ const plans = [
       'Import CSV',
       'Support email',
     ],
-    cta: "Essai gratuit 30 jours",
+    cta: "Essai gratuit 7 jours",
     popular: false,
   },
   {
@@ -196,7 +196,7 @@ export default function LandingPublic() {
             <button onClick={() => scrollTo('pricing')} className="text-sm text-gray-400 hover:text-white transition-colors">Tarifs</button>
             <Link to="/login" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Se connecter</Link>
             <Link to="/register?plan=pro" className="text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200">
-              Essai gratuit 30 jours
+              Essai gratuit 7 jours
             </Link>
           </div>
 
@@ -223,7 +223,7 @@ export default function LandingPublic() {
               <button onClick={() => { scrollTo('pricing'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Tarifs</button>
               <Link to="/login" className="block text-gray-400 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Se connecter</Link>
               <Link to="/register?plan=pro" className="block text-center font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-3 rounded-xl" onClick={() => setMenuOpen(false)}>
-                Essai gratuit 30 jours
+                Essai gratuit 7 jours
               </Link>
             </div>
           </motion.div>
@@ -274,7 +274,7 @@ export default function LandingPublic() {
                 to="/register?plan=pro"
                 className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-7 py-3.5 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200 text-sm"
               >
-                Essai gratuit 30 jours
+                Essai gratuit 7 jours
                 <ArrowRight size={16} />
               </Link>
               <button
@@ -587,7 +587,7 @@ export default function LandingPublic() {
           <SectionEyebrow dark={true}
             badge="Tarifs"
             title="Des plans pour chaque cabinet."
-            subtitle="Commencez gratuitement 30 jours. Sans carte bancaire. Sans engagement."
+            subtitle="Commencez gratuitement 7 jours. Sans carte bancaire. Sans engagement."
           />
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -691,7 +691,7 @@ export default function LandingPublic() {
                 to="/register?plan=pro"
                 className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-4 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Essai gratuit 30 jours
+                Essai gratuit 7 jours
                 <ArrowRight size={16} />
               </Link>
               <Link
