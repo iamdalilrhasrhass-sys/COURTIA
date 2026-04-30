@@ -3,7 +3,7 @@ import * as prompts from './prompts.js'
 import { validateArkResponse } from './schema.js'
 import { arkCache } from './cache.js'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://courtia.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 
 /**
