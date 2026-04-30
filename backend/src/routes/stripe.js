@@ -225,4 +225,66 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
+// ==================== STATUS ABONNEMENT (protégé) ====================
+
+router.get('/status', verifyToken, async (req, res) => {
+  try {
+    const user = (await pool.query(`
+      SELECT plan, subscription_status, stripe_customer_id, stripe_subscription_id,
+             current_period_end, trial_ends_at, updated_at
+      FROM users WHERE id = $1
+    `, [req.user.id || req.user.userId])).rows[0];
+
+    if (!user) return res.status(401).json({ error: 'user_not_found' });
+
+    res.json({
+      plan: user.plan,
+      status: user.subscription_status,
+      period_end: user.current_period_end,
+      trial_ends: user.trial_ends_at,
+      has_subscription: !!user.stripe_subscription_id,
+      updated_at: user.updated_at,
+    });
+  } catch (err) {
+    console.error('[stripe status]', err.message);
+    res.status(500).json({ error: 'status_error', detail: err.message });
+  }
+});
+
+// ==================== PORTAIL DE GESTION (protégé) ====================
+
+router.post('/portal', verifyToken, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'stripe_not_configured' });
+  try {
+    const user = (await pool.query(`
+      SELECT id, email, first_name, stripe_customer_id
+      FROM users WHERE id = $1
+    `, [req.user.id || req.user.userId])).rows[0];
+
+    if (!user) return res.status(401).json({ error: 'user_not_found' });
+
+    // Crée un customer Stripe si pas encore
+    let customerId = user.stripe_customer_id;
+    if (!customerId) {
+      const c = await stripe.customers.create({
+        email: user.email,
+        name: `${user.first_name || ''}`.trim() || undefined,
+        metadata: { user_id: String(user.id) }
+      });
+      customerId = c.id;
+      await pool.query('UPDATE users SET stripe_customer_id=$1 WHERE id=$2', [customerId, user.id]);
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${FRONTEND_URL}/billing`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[stripe portal]', err.message);
+    res.status(500).json({ error: 'portal_failed', detail: err.message });
+  }
+});
+
 module.exports = router;
