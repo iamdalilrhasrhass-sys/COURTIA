@@ -36,8 +36,19 @@ import BrowserPilot from './pages/BrowserPilot'
 import Tarifs from './pages/Tarifs'
 import PublicDocumentUpload from './pages/PublicDocumentUpload'
 
+// Admin pages
+import AdminOverview from './pages/AdminOverview'
+import AdminUsers from './pages/AdminUsers'
+import AdminUserDetail from './pages/AdminUserDetail'
+import AdminSubscriptions from './pages/AdminSubscriptions'
+import AdminSystem from './pages/AdminSystem'
+import AdminLogs from './pages/AdminLogs'
+import AdminSupport from './pages/AdminSupport'
+
 // Components
 import Sidebar from './components/Sidebar'
+import AdminRoute from './components/AdminRoute'
+import AdminLayout from './components/AdminLayout'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
@@ -186,6 +197,17 @@ export default function App() {
           <Route path="/reach/inbox"       element={<ReachInbox />} />
           <Route path="/reach/map"         element={<ReachMap />} />
           <Route path="/reach/settings"    element={<ReachSettings />} />
+        </Route>
+
+        {/* Routes Admin — protégées par AdminRoute (super_admin uniquement) */}
+        <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route path="/admin" element={<AdminOverview />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+          <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/system" element={<AdminSystem />} />
+          <Route path="/admin/logs" element={<AdminLogs />} />
+          <Route path="/admin/support" element={<AdminSupport />} />
         </Route>
 
         {/* 404 */}
