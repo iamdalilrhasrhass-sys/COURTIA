@@ -16,6 +16,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { AlertCircle, Download, TrendingUp } from 'lucide-react';
+import { getAuthToken } from '@/api/sessionPolicy';
 
 const AdminCostsDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ const AdminCostsDashboard = () => {
   const fetchCostData = async () => {
     try {
       const response = await fetch('/api/admin/costs', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
       const result = await response.json();
       setData(result);

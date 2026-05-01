@@ -1,5 +1,26 @@
 # COURTIA — Changelog Mission 2M
 
+## Stabilisation auth/session — Pré-commercialisation 500 adhérents (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : fix: harden Courtia auth session handling for commercial QA
+
+### Changements
+- Ajout d'une politique frontend centralisée pour distinguer session réellement expirée et erreur API secondaire.
+- Les tokens `courtia_token` et `token` sont désormais lus de manière cohérente sur les helpers critiques.
+- Les anciens appels fetch legacy évitent le double préfixe `/api/api`.
+- `ProtectedRoute` n'efface plus la session sur une erreur réseau/serveur non-401 ; il affiche un écran de récupération.
+- Correction de l'appel ARK legacy `fetch`.
+- Rate limit auth backend ajusté pour ignorer les connexions réussies et éviter de bloquer trop vite les parcours légitimes.
+- Aucun changement Stripe, checkout, DB, impersonation ou JWT d'impersonation.
+
+### Tests
+- `npm run test -- src/api/sessionPolicy.test.js` : 4 tests OK.
+- `npm run test` : 33 tests OK.
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `node -c backend/server.js` : OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+
 ## Reprise architecture visuelle — Cockpit Aurora global (1er mai 2026)
 
 **Commit** : à créer  

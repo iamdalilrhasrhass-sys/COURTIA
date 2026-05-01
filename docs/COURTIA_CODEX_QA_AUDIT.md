@@ -1,8 +1,8 @@
 # COURTIA — Audit QA Python
 
-- Date : 2026-05-01 23:27:15
+- Date : 2026-05-01 23:34:59
 - Statut : OK
-- Fichiers scannés : 162
+- Fichiers scannés : 164
 
 ## Synthèse
 
@@ -75,7 +75,7 @@
 | P2 | Loader générique | `frontend/src/components/Sidebar.jsx` | 93 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
 | P2 | Loader générique | `frontend/src/components/Taches.jsx` | 121 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/Academy.jsx` | 125 | Motif loader générique : `\banimate-spin\b` |
-| P2 | Loader générique | `frontend/src/pages/AdminCostsDashboard.jsx` | 48 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
+| P2 | Loader générique | `frontend/src/pages/AdminCostsDashboard.jsx` | 49 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/AdminOverview.jsx` | 19 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
 | P2 | Loader générique | `frontend/src/pages/AdminSubscriptions.jsx` | 18 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
 | P2 | Message technique | `frontend/src/pages/AdminSupport.jsx` | 57 | Motif technique détecté : `PostgreSQL` |
@@ -85,7 +85,7 @@
 | P2 | Loader générique | `frontend/src/pages/ClientDetail.jsx` | 302 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/ClientDetail.jsx` | 704 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/ClientNew.jsx` | 138 | Motif loader générique : `\banimate-spin\b` |
-| P2 | Loader générique | `frontend/src/pages/MyUsage.jsx` | 41 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
+| P2 | Loader générique | `frontend/src/pages/MyUsage.jsx` | 42 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/Onboarding.jsx` | 227 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/Parametres.jsx` | 91 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Message technique | `frontend/src/pages/PublicDocumentUpload.jsx` | 71 | Motif technique détecté : `err\.message` |

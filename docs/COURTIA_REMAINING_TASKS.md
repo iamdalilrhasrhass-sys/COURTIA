@@ -20,6 +20,9 @@
 - [x] Hotfix final — Message 429 auth propre en français
 - [x] Phase H Codex — Rapport final et QA finale documentés
 - [x] Hotfix final — `/rapports` réparé et logo canonique documenté
+- [x] Stabilisation auth/session — une erreur API secondaire ne supprime plus automatiquement la session
+- [x] Stabilisation auth/session — helpers token `courtia_token` / `token` harmonisés
+- [x] Stabilisation auth/session — rate limit auth backend adouci sans supprimer la sécurité
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -34,6 +37,8 @@
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
 
 - [x] Admin Center API mismatch — frontend aligné sur `/api/admin/super/*`, écran broker refusé propre, suppression de `/app/dashboard`.
+
+- [x] Session frontend trop agressive sur tous les `401` — politique de session centralisée ajoutée.
 
 ## P1 — Important
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
@@ -55,6 +60,7 @@
   - statut abonnement dans Admin Center
   - ne pas faire de faux paiement 0 EUR ni collecter la carte directement dans COURTIA
 - [ ] Token super_admin → tests Admin Center E2E
+- [ ] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
 - [ ] AuroraPageHeader → Rapports, Paramètres
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres
