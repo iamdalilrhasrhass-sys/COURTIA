@@ -9,12 +9,16 @@
 | Audit landing Python | ✅ OK | `python3 scripts/courtia_landing_audit.py` | Sections, CTA, anciens logos, routes OK |
 | Hero local | ✅ OK | Browser in-app | CTA visible, console 0 erreur |
 | Pricing local | ✅ OK | Browser in-app | Starter et Pro retravaillés, console 0 erreur |
+| Production `/` | ✅ OK | Browser in-app Vercel | Commit Phase B servi, hero visible, console 0 erreur |
+| Production `/register?plan=pro` | ✅ OK | Browser in-app Vercel | CTA Pro et bloc 0 EUR visibles |
+| Production `/register` | ✅ OK | Browser in-app Vercel | Funnel Starter visible |
+| Production `/login` | ✅ OK | Browser in-app Vercel | Page login visible |
 | Ancien logo texte | ✅ OK | Audit statique | Aucun `>C<` dans les mockups cibles |
 | Liens landing | ✅ OK | Audit statique | `/register`, `/register?plan=pro`, `/login`, mailto |
 
 ### Décision Phase B
 - P0 bloquant : non.
-- Prochaine étape : pousser/déployer puis validation production landing, avant Phase C Auth ou Phase D cockpit selon priorité.
+- Prochaine étape : Phase C Auth si finition funnel, ou Phase D cockpit si priorité plateforme interne.
 
 ---
 

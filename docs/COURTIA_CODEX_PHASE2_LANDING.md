@@ -79,6 +79,10 @@ Aucun lien `/contact` restant dans la landing.
 - Navigateur local `/login` : page visible, console sans erreur.
 - Navigateur local `/register` : page visible, console sans erreur.
 - Navigateur local `/register?plan=pro` : badge Pro visible, console sans erreur.
+- Production Vercel Phase B `/` : commit servi, hero visible, nouveaux textes Starter/Pro détectés, console 0 erreur.
+- Production Vercel Phase B `/register?plan=pro` : CTA Pro et bloc 0 EUR visibles, console 0 erreur.
+- Production Vercel Phase B `/register` : funnel Starter visible, console 0 erreur.
+- Production Vercel Phase B `/login` : page visible, console 0 erreur.
 
 ## 8. Build
 - `npm run build` : OK.
@@ -87,8 +91,7 @@ Aucun lien `/contact` restant dans la landing.
 - Warnings Vitest/Vite existants : options `esbuild` dépréciées par le plugin React/Babel.
 
 ## 9. Risques restants
-- La production Vercel n’est pas modifiée tant que le commit n’est pas poussé.
-- Test production post-déploiement encore requis après push.
+- Production Vercel validée après push du commit Phase B.
 - Admin Center toujours désaligné avec le backend : frontend `/api/admin/analytics` et `/api/admin/users`, backend réel `/api/admin/super/*`.
 - Le hero et les sections ont été vérifiés dans l’in-app browser ; un contrôle desktop large est encore recommandé avant push.
 - Le wording billing est commercial et non juridique. Les CGV et le checkout devront être validés avant encaissement réel.
