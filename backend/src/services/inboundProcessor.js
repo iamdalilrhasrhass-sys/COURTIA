@@ -250,6 +250,29 @@ async function processInboundEmail(pool, { from, subject, body, attachments }) {
       }
     }
 
+    // 4.5. Sauvegarder les pieces jointes dans document_uploads si client trouve
+    if (client && attachments && attachments.length > 0 && analysis.type === 'piece_jointe') {
+      try {
+        const inboxService = require('./documentInboxService');
+        for (const att of attachments) {
+          if (att.filename && att.contentType) {
+            const category = inboxService.guessCategory(att.filename);
+            await pool.query(
+              `INSERT INTO document_uploads (user_id, client_id, file_name, file_size, mime_type, storage_path, document_category, status, source, extracted_data)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, 're\u00e7u', 'email', $8)`,
+              [client.user_id || 1, client.id, att.filename, att.size || 0, att.contentType || 'application/octet-stream',
+               `email/${client.id}/${Date.now()}_${att.filename}`, category,
+               JSON.stringify({ subject, from: senderEmail })]
+            );
+            console.log('[inboundProcessor] Piece jointe sauvegardee:', att.filename);
+          }
+        }
+        await inboxService.updateChecklistAfterUpload(client.user_id || 1, client.id);
+      } catch (e) {
+        console.error('[inboundProcessor] Erreur sauvegarde piece jointe:', e.message);
+      }
+    }
+
     // 5. Sauvegarder le message
     await saveMessage(pool, {
       clientId: client?.id || null,

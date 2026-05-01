@@ -59,6 +59,21 @@ const useDocumentInboxStore = create((set, get) => ({
     }
   },
 
+  updateDocumentStatus: async (id, status) => {
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('courtia_token');
+      const res = await fetch(`/api/document-inbox/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Erreur mise à jour');
+      get().fetchDocuments();
+    } catch (err) {
+      set({ error: err.message });
+    }
+  },
+
   deleteDocument: async (id) => {
     try {
       await apiDelete(`/api/document-inbox/${id}`)
