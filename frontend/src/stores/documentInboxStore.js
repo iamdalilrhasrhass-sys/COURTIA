@@ -20,7 +20,7 @@ const useDocumentInboxStore = create((set, get) => ({
       const res = await apiGet(path)
       set({ documents: res.data || [], loading: false })
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: "Impossible de charger les documents reçus.", loading: false })
     }
   },
 
@@ -30,7 +30,7 @@ const useDocumentInboxStore = create((set, get) => ({
       const res = await apiGet(`/api/document-inbox/client/${clientId}`)
       set({ documents: res.data || [], loading: false })
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: "Impossible de charger les documents du client.", loading: false })
     }
   },
 
@@ -54,7 +54,7 @@ const useDocumentInboxStore = create((set, get) => ({
       get().fetchDocuments()
       return data
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: "Le fichier n'a pas pu être traité. Vérifiez le format puis réessayez.", loading: false })
       throw err
     }
   },
@@ -70,7 +70,7 @@ const useDocumentInboxStore = create((set, get) => ({
       if (!res.ok) throw new Error('Erreur mise à jour');
       get().fetchDocuments();
     } catch (err) {
-      set({ error: err.message });
+      set({ error: "Impossible de mettre à jour le statut du document." });
     }
   },
 
@@ -79,7 +79,7 @@ const useDocumentInboxStore = create((set, get) => ({
       await apiDelete(`/api/document-inbox/${id}`)
       get().fetchDocuments()
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de supprimer ce document." })
     }
   },
 
@@ -91,7 +91,7 @@ const useDocumentInboxStore = create((set, get) => ({
       const res = await apiGet(path)
       set({ requests: res.data || [] })
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de charger les demandes de documents." })
     }
   },
 
@@ -108,7 +108,7 @@ const useDocumentInboxStore = create((set, get) => ({
       get().fetchRequests()
       return res.data
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: "Impossible de créer la demande de documents.", loading: false })
       throw err
     }
   },
@@ -118,7 +118,7 @@ const useDocumentInboxStore = create((set, get) => ({
       await apiPost(`/api/document-inbox/request/${id}/send`, {})
       get().fetchRequests()
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible d'envoyer la demande de documents." })
     }
   },
 
@@ -127,7 +127,7 @@ const useDocumentInboxStore = create((set, get) => ({
       const res = await apiGet(`/api/document-inbox/checklist/${clientId}`)
       set((s) => ({ checklists: { ...s.checklists, [clientId]: res.data } }))
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de charger la checklist." })
     }
   },
 
@@ -142,7 +142,7 @@ const useDocumentInboxStore = create((set, get) => ({
       set((s) => ({ checklists: { ...s.checklists, [clientId]: res.data } }))
       return res.data
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de créer la checklist du dossier." })
     }
   },
 
@@ -161,7 +161,7 @@ const useDocumentInboxStore = create((set, get) => ({
       get().fetchSubmissions()
       return res.data
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: "Impossible de préparer l'envoi à l'assureur.", loading: false })
       throw err
     }
   },
@@ -172,7 +172,7 @@ const useDocumentInboxStore = create((set, get) => ({
       get().fetchSubmissions()
       return res.data
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible d'envoyer le dossier à l'assureur." })
     }
   },
 
@@ -184,7 +184,7 @@ const useDocumentInboxStore = create((set, get) => ({
       const res = await apiGet(path)
       set({ submissions: res.data || [] })
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de charger les envois." })
     }
   },
 
@@ -193,7 +193,7 @@ const useDocumentInboxStore = create((set, get) => ({
       const res = await apiGet('/api/document-inbox/stats')
       set({ stats: res.data || { documents: {}, requests: {} } })
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de charger les statistiques de documents." })
     }
   },
 

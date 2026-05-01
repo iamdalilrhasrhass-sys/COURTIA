@@ -145,7 +145,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.post('/reach/convert-to-client', { prospect });
       return data;
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Impossible de convertir ce prospect en client." };
     }
   },
 
@@ -155,7 +155,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.post(`/reach/prospects/${id}/create-task`, payload);
       return data;
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Impossible de créer cette tâche." };
     }
   },
 
@@ -165,7 +165,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.patch(`/reach/prospects/${id}/status`, { status });
       return data;
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Impossible de mettre à jour le statut du prospect." };
     }
   },
 
@@ -175,7 +175,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.post(`/reach/replies/${id}/handle`, { action });
       return data;
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Impossible de traiter cette réponse." };
     }
   },
 
@@ -185,7 +185,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.patch(`/reach/campaigns/${id}/status`, { status });
       return data;
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Impossible de mettre à jour la campagne." };
     }
   },
 
@@ -195,7 +195,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.post('/reach/campaigns/from-template', payload);
       return data;
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Impossible de créer la campagne depuis le template." };
     }
   },
 

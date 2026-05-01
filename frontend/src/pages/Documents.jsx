@@ -305,7 +305,7 @@ function UploadModal({ onClose, onUpload }) {
       toast.success('Document ajouté')
       onClose()
     } catch (err) {
-      toast.error(err.message)
+      toast.error("Impossible d'ajouter ce document. Vérifiez le format et réessayez.")
     }
     setLoading(false)
   }
@@ -377,7 +377,7 @@ function RequestModal({ onClose }) {
       setGeneratedLink(result.upload_url)
       toast.success('Lien généré !')
     } catch (err) {
-      toast.error(err.message)
+      toast.error("Impossible de générer le lien de dépôt. Vérifiez le client et les pièces demandées.")
     }
     setLoading(false)
   }

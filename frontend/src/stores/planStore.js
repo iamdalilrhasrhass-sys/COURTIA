@@ -186,7 +186,7 @@ export const usePlanStore = create((set, get) => ({
           loading: false,
         })
       } catch (fallbackErr) {
-        set({ loading: false, error: err.message || fallbackErr.message })
+        set({ loading: false, error: "Impossible de charger votre offre pour le moment." })
       }
     }
   },
