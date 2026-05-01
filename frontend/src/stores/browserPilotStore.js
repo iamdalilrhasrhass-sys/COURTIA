@@ -21,7 +21,7 @@ const useBrowserPilotStore = create((set, get) => ({
       get().fetchTasks()
       return res.data
     } catch (err) {
-      set({ error: err.message, loading: false, status: 'failed' })
+      set({ error: "Impossible de lancer la tâche de navigation.", loading: false, status: 'failed' })
       throw err
     }
   },
@@ -31,7 +31,7 @@ const useBrowserPilotStore = create((set, get) => ({
       const res = await apiGet(`/api/browser-pilot/task?limit=${limit}`)
       set({ tasks: res.data || [] })
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de charger l'historique des tâches." })
     }
   },
 
@@ -42,7 +42,7 @@ const useBrowserPilotStore = create((set, get) => ({
       set({ currentTask: res.data, status: res.data.status, loading: false })
       return res.data
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: "Impossible de récupérer les détails de la tâche.", loading: false })
       throw err
     }
   },
@@ -55,7 +55,7 @@ const useBrowserPilotStore = create((set, get) => ({
       get().fetchTasks()
       return res.data
     } catch (err) {
-      set({ error: err.message, loading: false, status: 'failed' })
+      set({ error: "Impossible d'approuver la tâche de navigation.", loading: false, status: 'failed' })
       throw err
     }
   },
@@ -66,7 +66,7 @@ const useBrowserPilotStore = create((set, get) => ({
       if (get().currentTask?.taskId === id) set({ currentTask: null, status: 'idle' })
       get().fetchTasks()
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de supprimer la tâche de navigation." })
     }
   },
 
@@ -75,7 +75,7 @@ const useBrowserPilotStore = create((set, get) => ({
       const res = await apiGet('/api/browser-pilot/status')
       set({ serviceStatus: res.data })
     } catch (err) {
-      set({ error: err.message })
+      set({ error: "Impossible de vérifier l'état du service de navigation." })
     }
   },
 

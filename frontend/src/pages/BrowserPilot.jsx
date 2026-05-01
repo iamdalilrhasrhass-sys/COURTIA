@@ -206,7 +206,7 @@ export default function BrowserPilot() {
       await createTask(actions, dryRun, true)
       toast.success('Tâche lancée')
     } catch (err) {
-      toast.error(err.message)
+      toast.error("Impossible de lancer la tâche de navigation.")
     }
   }
 
@@ -216,7 +216,7 @@ export default function BrowserPilot() {
       toast.success('Tâche exécutée !')
       setShowApproval(null)
     } catch (err) {
-      toast.error(err.message)
+      toast.error("Impossible d'exécuter la tâche de navigation.")
     }
   }
 
@@ -227,7 +227,7 @@ export default function BrowserPilot() {
       await createTask(preset.actions, true, true)
       toast.success(`Préréglage "${preset.name}" lancé`)
     } catch (err) {
-      toast.error(err.message)
+      toast.error("Impossible de lancer le préréglage de navigation.")
     }
   }
 

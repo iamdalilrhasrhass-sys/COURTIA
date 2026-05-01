@@ -77,7 +77,7 @@ export default function PublicDocumentUpload() {
           throw new Error('Erreur lors du chargement')
         }
       } catch (err) {
-        setError(err.message)
+        setError("Ce lien de dépôt n'est plus valide. Contactez votre courtier pour en obtenir un nouveau.")
       }
       setLoading(false)
     }
@@ -149,7 +149,7 @@ export default function PublicDocumentUpload() {
         }])
         toast.success(`${file.name} envoyé avec succès !`)
       } catch (err) {
-        toast.error(`${file.name} : ${err.message}`)
+        toast.error(`${file.name} : impossible de transmettre ce fichier. Vérifiez qu'il n'est pas corrompu puis réessayez.`)
       }
     }
 

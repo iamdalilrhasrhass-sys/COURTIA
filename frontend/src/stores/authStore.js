@@ -27,7 +27,7 @@ const authStore = create((set) => ({
       return data;
     } catch (error) {
       console.error('Login error:', error);
-      set({ loading: false, error: error.message });
+      set({ loading: false, error: "Impossible de vous connecter. Vérifiez vos identifiants." });
       throw error;
     }
   },
@@ -50,7 +50,7 @@ const authStore = create((set) => ({
       return data;
     } catch (error) {
       console.error('Register error:', error);
-      set({ loading: false, error: error.message });
+      set({ loading: false, error: "Impossible de créer votre compte pour le moment." });
       throw error;
     }
   },
