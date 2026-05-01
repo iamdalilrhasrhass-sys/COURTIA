@@ -7,13 +7,13 @@ import React, { useEffect, useRef } from 'react'
  */
 
 // ─── SVG GRADIENTS (définis une seule fois) ───
-const Gradients = () => (
+const Gradients = ({ animated = true }) => (
   <defs>
     {/* Liquid film filter */}
     <filter id="liquidFilm" x="-15%" y="-15%" width="130%" height="130%">
       <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="3" seed="7" result="noise">
-        <animate attributeName="baseFrequency" values="0.008;0.014;0.008" dur="18s" repeatCount="indefinite" />
-        <animate attributeName="seed" values="7;25;7" dur="22s" repeatCount="indefinite" />
+        {animated && <animate attributeName="baseFrequency" values="0.008;0.014;0.008" dur="18s" repeatCount="indefinite" />}
+        {animated && <animate attributeName="seed" values="7;25;7" dur="22s" repeatCount="indefinite" />}
       </feTurbulence>
       <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" />
     </filter>
@@ -30,7 +30,7 @@ const Gradients = () => (
       <stop offset="72%" stopColor="#fff080" stopOpacity="0.95" />
       <stop offset="90%" stopColor="#ff80b0" stopOpacity="0.95" />
       <stop offset="100%" stopColor="#ff80e0" stopOpacity="0.95" />
-      <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="20s" repeatCount="indefinite" />
+      {animated && <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="20s" repeatCount="indefinite" />}
     </linearGradient>
 
     <linearGradient id="iris2" x1="0%" y1="100%" x2="100%" y2="0%">
@@ -38,7 +38,7 @@ const Gradients = () => (
       <stop offset="33%" stopColor="#ff80c0" stopOpacity="0.7" />
       <stop offset="66%" stopColor="#a080ff" stopOpacity="0.7" />
       <stop offset="100%" stopColor="#ffd080" stopOpacity="0.7" />
-      <animateTransform attributeName="gradientTransform" type="rotate" from="360 0.5 0.5" to="0 0.5 0.5" dur="28s" repeatCount="indefinite" />
+      {animated && <animateTransform attributeName="gradientTransform" type="rotate" from="360 0.5 0.5" to="0 0.5 0.5" dur="28s" repeatCount="indefinite" />}
     </linearGradient>
 
     <linearGradient id="iris3" x1="50%" y1="0%" x2="50%" y2="100%">
@@ -46,7 +46,7 @@ const Gradients = () => (
       <stop offset="40%" stopColor="#ffb0e8" stopOpacity="0.5" />
       <stop offset="70%" stopColor="#a0c8ff" stopOpacity="0.5" />
       <stop offset="100%" stopColor="#80ffd0" stopOpacity="0.4" />
-      <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="-360 0.5 0.5" dur="35s" repeatCount="indefinite" />
+      {animated && <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="-360 0.5 0.5" dur="35s" repeatCount="indefinite" />}
     </linearGradient>
 
     <radialGradient id="membrane" cx="40%" cy="40%" r="60%">
@@ -114,7 +114,7 @@ export default function CourtiaBubbleLogo({
 
       {/* Main SVG Bubble C */}
       <svg viewBox="0 0 600 600" style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}>
-        <Gradients />
+        <Gradients animated={animated} />
 
         {/* Layer 0 — Outer iridescent halo (behind) */}
         <path d={C_PATH} fill="url(#iris1)" opacity="0.4" filter="url(#hardBlur)" transform="scale(1.08) translate(-22,-22)" />

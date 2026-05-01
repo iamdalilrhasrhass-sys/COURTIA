@@ -1,5 +1,25 @@
 # COURTIA — Rapport QA
 
+## QA Reprise critique — Landing cinematic Aurora (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1 |
+| Ancien logo `>C<` | ✅ OK | `rg` ciblé | Aucun ancien logo texte dans la landing/mockups cibles |
+| Liens cassés landing | ✅ OK | `rg` ciblé | Pas de `/contact`, pas de `/app/` dans la landing |
+| Local `/` DOM | ✅ OK | In-app browser | Hero, CTA Pro, pricing et `0 €` détectés |
+| Screenshot local | ⚠️ Partiel | In-app browser | Timeout CDP sur capture ; DOM, build et tests OK |
+| Scène Aurora continue | ✅ OK | Revue code + build | Ciel Aurora fixe et Bubble C canonique en filigrane permanent |
+| Logo performance | ✅ OK | Revue code | Animations internes désactivées quand `animated=false` |
+
+### Décision
+- P0 bloquant : non.
+- Recommandation : pousser ce batch, puis valider Vercel production `/` après déploiement.
+
+---
+
 ## QA Phase D — Cockpit interne (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

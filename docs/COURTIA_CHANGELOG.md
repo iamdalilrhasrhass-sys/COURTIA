@@ -1,5 +1,30 @@
 # COURTIA — Changelog Mission 2M
 
+## Reprise critique Codex — Landing cinematic Aurora (1er mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : feat: rebuild Courtia landing around canonical Aurora logo
+
+### Changements
+- Landing publique reconstruite autour du logo canonique Aurora Bubble C fourni par Dalil.
+- Hero simplifié et renforcé : promesse métier, CTA Pro visible, réassurance `0 € aujourd’hui / 7 jours / annulation en ligne`.
+- Suppression de l’effet “pile de sections SaaS” au profit d’un flux plus continu : halos, rails, panneaux glass, narration courtier.
+- Pricing Starter/Pro/Premium reconstruit pour vendre la valeur avant le prix, avec Pro comme choix évident.
+- Cockpit preview remplacé par une version compacte, explicitement marketing, sans données client réelles.
+- Aucun changement backend, Stripe, auth, DB ou impersonation.
+- Reprise finale après feedback : landing transformée en une seule scène continue avec ciel d’aurore boréale fixe et Bubble C canonique en filigrane permanent.
+- Optimisation `CourtiaBubbleLogo` : animations internes désactivées sur les logos statiques pour préserver la fluidité.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+- In-app browser local `/` : DOM OK, hero/CTA/pricing détectés.
+- Capture screenshot in-app browser : timeout CDP, non bloquant fonctionnellement.
+- Reprise finale : `npm run build` OK.
+- Reprise finale : `npm run test` 29 OK.
+- Reprise finale : audit Python 0 P0/P1.
+
 ## Phase D Codex — Cockpit interne (1er mai 2026)
 
 **Commit** : à créer

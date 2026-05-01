@@ -16,6 +16,12 @@ Transformer la landing COURTIA en page SaaS verticale plus commerciale, plus lon
 - Reprise Phase B : structure visuelle jugée encore trop simple et trop “template”.
 - Reprise Phase B : transitions entre sections rendues plus continues, suppression des ruptures de bande trop visibles.
 - Reprise Phase B : pricing Starter et Pro retravaillés pour paraître plus premium, moins “prix blanc banal”.
+- Reprise critique du 1er mai 2026 : landing jugée encore trop faible visuellement.
+- Nouvelle structure : moins de blocs collés, plus de narration continue, plus de rôle central pour le logo Aurora Bubble C.
+- Hero recentré sur l’impact immédiat : logo comme source de lumière, titre lisible, CTA Pro visible, réassurance `0 € aujourd’hui / 7 jours / annulation en ligne`.
+- Pricing reconstruit pour vendre la valeur avant le prix et pousser Pro comme choix évident.
+- Reprise finale après feedback : la landing devient une seule scène continue, avec ciel d’aurore boréale fixe et Bubble C canonique en filigrane permanent.
+- Suppression de la sensation de “pages cassées” : les sections ne sont plus séparées par de grosses ruptures mais traversent un même univers visuel.
 
 ## 3. Sections ajoutées
 - Hero premium.
@@ -48,6 +54,19 @@ Transformer la landing COURTIA en page SaaS verticale plus commerciale, plus lon
 - Hero cockpit enrichi par des signaux flottants : relances, échéances, opportunité.
 - Tarifs : Starter reçoit le même soin premium que Pro, avec essai 7 jours, 0 EUR aujourd’hui, puis 89 EUR HT/mois après le 7e jour.
 - Tarifs : Pro conserve le wording obligatoire “0 € aujourd’hui, puis 159 € HT/mois après le 7e jour” et l’annulation en ligne.
+
+### Reprise critique — Landing cinematic simplifiée
+- Suppression de l’ancienne pile très longue de sections/cartes au profit d’un flux plus premium et plus lisible.
+- Ajout d’un système visuel autour du logo canonique : orb central, rails, halos, panneaux glass et signaux métier.
+- Ajout d’un hero plus dense mais plus maîtrisé sur mobile : CTA principal visible rapidement, réassurance en trois blocs, mockup lourd remplacé par une scène logo plus stable.
+- Cockpit produit remplacé par une preview compacte, assumée comme marketing, sans données client réelles.
+- FAQ et réassurance conservées mais resserrées pour réduire l’effet “template”.
+
+### Reprise finale — Une seule scène Aurora
+- Ajout d’un ciel Aurora fixe (`aurora-sky`) couvrant toute la landing.
+- Ajout d’un Bubble C canonique en watermark permanent, derrière le contenu, pour que tout l’écosystème tourne visuellement autour du logo officiel.
+- Remplacement des ruptures de section par des halos continus et subtils.
+- Optimisation du composant `CourtiaBubbleLogo` : quand `animated=false`, les animations SVG internes sont désactivées pour réduire le coût visuel sur les mini-logos.
 
 ## 5. Ancien logo supprimé
 Audit statique OK :
@@ -83,6 +102,14 @@ Aucun lien `/contact` restant dans la landing.
 - Production Vercel Phase B `/register?plan=pro` : CTA Pro et bloc 0 EUR visibles, console 0 erreur.
 - Production Vercel Phase B `/register` : funnel Starter visible, console 0 erreur.
 - Production Vercel Phase B `/login` : page visible, console 0 erreur.
+- Reprise critique locale : `npm run build` OK.
+- Reprise critique locale : `npm run test` OK, 29 tests passés.
+- Reprise critique locale : `python3 scripts/courtia_qa_audit.py` OK, 0 P0/P1.
+- Reprise critique locale : in-app browser DOM OK sur `/`, hero/CTA/pricing/0 EUR détectés.
+- Limite reprise critique : capture screenshot in-app browser indisponible par timeout CDP ; le contrôle DOM, build et tests sont OK.
+- Reprise finale : `npm run build` OK.
+- Reprise finale : `npm run test` OK, 29 tests passés.
+- Reprise finale : `python3 scripts/courtia_qa_audit.py` OK, 0 P0/P1.
 
 ## 8. Build
 - `npm run build` : OK.
