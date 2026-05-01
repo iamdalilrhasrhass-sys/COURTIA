@@ -12,61 +12,48 @@ const intensityMap = {
   strong: { opacity: 0.55, blur: 60 },
 }
 
-/**
- * AuroraBorealisBackground — 3 nappes lumineuses animées violet/bleu/cyan
- * Style aurore boréale premium, subtile, élégante
- */
+function getLayers(isMobile) {
+  const base = [{
+    gradient: auroraColors.layer1,
+    style: {
+      top: '-8%', left: '-10%',
+      width: isMobile ? '100vw' : '70vw',
+      height: isMobile ? '30vh' : '40vh',
+    },
+    animate: {
+      x: ['-2%', '4%'],
+      y: ['-1%', '3%'],
+      rotate: [-4, 5],
+      scale: [1, 1.08],
+    },
+    duration: isMobile ? 24 : 16,
+  }]
+  if (isMobile) return base
+  return [
+    ...base,
+    {
+      gradient: auroraColors.layer2,
+      style: { top: '8%', right: '-18%', width: '65vw', height: '38vh' },
+      animate: { x: ['3%', '-3%'], y: ['-2%', '4%'], rotate: [3, -4], scale: [0.96, 1.06] },
+      duration: 21,
+    },
+    {
+      gradient: auroraColors.layer3,
+      style: { bottom: '15%', left: '22%', width: '62vw', height: '36vh' },
+      animate: { x: ['-3%', '3%'], y: ['2%', '-3%'], rotate: [-2, 6], scale: [1, 1.10] },
+      duration: 24,
+    },
+  ]
+}
+
 export default function AuroraBorealisBackground({
   intensity = 'soft',
   className = '',
   children,
 }) {
   const cfg = intensityMap[intensity] || intensityMap.soft
-
-  const layers = [
-    {
-      gradient: auroraColors.layer1,
-      style: {
-        top: '-8%', left: '-10%',
-        width: '70vw', height: '40vh',
-      },
-      animate: {
-        x: ['-2%', '4%'],
-        y: ['-1%', '3%'],
-        rotate: [-4, 5],
-        scale: [1, 1.08],
-      },
-      duration: 16,
-    },
-    {
-      gradient: auroraColors.layer2,
-      style: {
-        top: '8%', right: '-18%',
-        width: '65vw', height: '38vh',
-      },
-      animate: {
-        x: ['3%', '-3%'],
-        y: ['-2%', '4%'],
-        rotate: [3, -4],
-        scale: [0.96, 1.06],
-      },
-      duration: 21,
-    },
-    {
-      gradient: auroraColors.layer3,
-      style: {
-        bottom: '15%', left: '22%',
-        width: '62vw', height: '36vh',
-      },
-      animate: {
-        x: ['-3%', '3%'],
-        y: ['2%', '-3%'],
-        rotate: [-2, 6],
-        scale: [1, 1.10],
-      },
-      duration: 24,
-    },
-  ]
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  const layers = getLayers(isMobile)
 
   return (
     <div
@@ -95,7 +82,7 @@ export default function AuroraBorealisBackground({
         />
       ))}
 
-      {/* Overlay radial doux pour fondre l'aurore */}
+      {/* Overlay radial */}
       <div
         className="absolute inset-0"
         style={{
