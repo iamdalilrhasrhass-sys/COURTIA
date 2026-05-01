@@ -29,9 +29,12 @@ Les metas pointent vers `https://courtia.vercel.app/`, car `courtiark.fr` reste 
 | Manifest icons | OK | `sips` : 192x192, 512x512 |
 | Apple icon | OK | `sips` : 180x180 |
 | Meta tags | OK | `rg` sur `frontend/index.html` |
+| Production metas | OK | `curl https://courtia.vercel.app` | canonical, manifest, OG/Twitter PNG visibles |
+| Production OG PNG | OK | `curl -I` | HTTP 200, `content-type: image/png` |
+| Production icons | OK | `curl -I` | `icon-192.png` et `apple-touch-icon.png` en HTTP 200 |
 
 ## 5. Risques restants
-- LinkedIn preview réel non testé via l'outil LinkedIn, mais l'asset PNG et les metas attendues sont présents.
+- LinkedIn preview réel non testé via l'outil LinkedIn, mais l'asset PNG et les metas attendues sont servis en production.
 - Quand `courtiark.fr` sera propagé, il faudra remplacer canonical, og:url et og:image par le domaine final.
 
 ## 6. Prochaine phase
