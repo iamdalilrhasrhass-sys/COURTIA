@@ -333,17 +333,23 @@ const STYLES = `
     .auth-left {
       display: block;
       flex: none;
-      padding: 1.35rem 1.5rem 1rem;
+      padding: 0.85rem 1.35rem 0.7rem;
       border-right: 0;
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .auth-left h2 { font-size: 17px !important; margin-bottom: 4px !important; }
-    .auth-left p { margin-bottom: 10px !important; }
+    .auth-left-content > div:first-child { margin-bottom: 8px !important; }
+    .auth-left-content > p:first-of-type { font-size: 9px !important; margin-bottom: 5px !important; }
+    .auth-left-content > p:nth-of-type(2) { display: none; }
+    .auth-left h2 { font-size: 16px !important; line-height: 1.18 !important; margin-bottom: 0 !important; }
     .auth-benefit { display: none; }
     .auth-preview { display: none; }
-    .auth-right { width: 100%; padding: 1.25rem 1.35rem 1.75rem; justify-content: flex-start; min-height: auto; }
+    .auth-right { width: 100%; padding: 0.9rem 1.35rem 1.35rem; justify-content: flex-start; min-height: auto; }
     .auth-right-inner { max-width: none; }
-    .auth-form-shell { padding: 13px; }
+    .auth-right-inner > h1 { font-size: 20px !important; margin-bottom: 2px !important; }
+    .auth-right-inner > p { margin-bottom: 12px !important; }
+    .auth-plan-badge { margin-bottom: 12px; }
+    .auth-trial-panel { padding: 10px; margin-bottom: 12px; }
+    .auth-form-shell { padding: 10px; }
     .auth-root { padding: 0; }
     .auth-trial-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .auth-trial-cell { padding: 8px 6px; }
@@ -555,7 +561,7 @@ export default function Login() {
                   </div>
                 </div>
                 <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
-                  Votre carte sera demandée dans l’étape de paiement sécurisée dédiée. 0 € aujourd’hui, puis {planPrice} après 7 jours si vous continuez. COURTIA ne collecte pas vos coordonnées bancaires ici.
+                  Carte demandée à l’étape sécurisée. 0 € aujourd’hui, puis {planPrice} après 7 jours. Annulation en ligne.
                 </p>
               </div>
             )}

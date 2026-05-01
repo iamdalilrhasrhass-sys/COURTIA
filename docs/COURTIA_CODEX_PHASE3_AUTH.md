@@ -32,6 +32,7 @@ Rendre le register/login plus premium et plus vendeur, sans casser l’auth vali
 - `npm run test` : 29 tests OK.
 - Browser local `/register?plan=pro` : nouveau titre, panneau essai, console 0 erreur.
 - Browser local `/register?plan=pro` après restructuration : CTA “Activer mon essai Pro” visible dans le premier écran mobile, console 0 erreur.
+- Browser local `/register?plan=pro` après compactage mobile : CTA visible sans scroll à la hauteur de l’in-app browser.
 - Browser local `/register` : funnel Starter visible, 0 EUR aujourd’hui, 89 EUR HT/mois après essai, console 0 erreur.
 - Browser local `/#pricing` : pricing Pro premium, annulation en ligne visible, console 0 erreur.
 
