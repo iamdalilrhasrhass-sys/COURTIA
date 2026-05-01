@@ -448,6 +448,7 @@ export default function Login() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
+  const [errorLink, setErrorLink] = useState(null)
   const [loading, setLoading] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const navigate = useNavigate()
@@ -475,9 +476,16 @@ export default function Login() {
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
       navigate('/dashboard')
     } catch (err) {
+      const data = err.response?.data || {}
+      // Duplicate email → show friendly message with login link
+      if (data.error === 'duplicate_email' || data.message?.includes('déjà utilisée')) {
+        setError(data.message || 'Cette adresse email est déjà utilisée.')
+        setErrorLink('/login')
+        return
+      }
       const msg = isRegister
-        ? (err.response?.data?.error || 'Une erreur est survenue lors de l\'inscription.')
-        : (err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
+        ? (data.message || 'Une erreur est survenue lors de l\'inscription.')
+        : (data.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
       setError(msg)
     } finally {
       setLoading(false)
@@ -581,7 +589,12 @@ export default function Login() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
-                  {error}
+                  <span>{error}</span>
+                  {errorLink && (
+                    <Link to={errorLink} style={{ marginLeft: 8, color: '#a78bfa', fontWeight: 600, fontSize: 'inherit', textDecoration: 'underline' }}>
+                      Connectez-vous
+                    </Link>
+                  )}
                 </div>
               )}
 
