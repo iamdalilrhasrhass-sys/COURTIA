@@ -13,6 +13,9 @@ Transformer la landing COURTIA en page SaaS verticale plus commerciale, plus lon
 - Anciens logos texte `C` supprimés dans les mockups.
 - Première passe Phase 2 jugée visuellement trop faible : hero mobile retravaillé avec fond plus noir, CTA visibles, badge lisible et mini-cockpit au-dessus de la ligne de flottaison.
 - Discours essai Pro clarifié : 0 EUR aujourd’hui, carte demandée pour activer l’essai et sécuriser l’accès, annulation en ligne avant la fin des 7 jours.
+- Reprise Phase B : structure visuelle jugée encore trop simple et trop “template”.
+- Reprise Phase B : transitions entre sections rendues plus continues, suppression des ruptures de bande trop visibles.
+- Reprise Phase B : pricing Starter et Pro retravaillés pour paraître plus premium, moins “prix blanc banal”.
 
 ## 3. Sections ajoutées
 - Hero premium.
@@ -36,6 +39,15 @@ Transformer la landing COURTIA en page SaaS verticale plus commerciale, plus lon
 - `frontend/src/components/FloatingProductMockup.jsx`
 - `frontend/src/components/DashboardMockup.jsx`
 - `scripts/courtia_landing_audit.py`
+
+### Reprise Phase B — Landing 3D scroll
+- Ajout d’un fond `courtia-flow` continu sur toute la page.
+- Ajout d’un rail Aurora vertical subtil pour donner une narration au scroll.
+- Ajout d’un indicateur de progression discret.
+- Cartes `GlassCard` enrichies avec bordure liquide et hover 3D léger.
+- Hero cockpit enrichi par des signaux flottants : relances, échéances, opportunité.
+- Tarifs : Starter reçoit le même soin premium que Pro, avec essai 7 jours, 0 EUR aujourd’hui, puis 89 EUR HT/mois après le 7e jour.
+- Tarifs : Pro conserve le wording obligatoire “0 € aujourd’hui, puis 159 € HT/mois après le 7e jour” et l’annulation en ligne.
 
 ## 5. Ancien logo supprimé
 Audit statique OK :
@@ -62,6 +74,8 @@ Aucun lien `/contact` restant dans la landing.
 ## 7. Tests
 - `python3 scripts/courtia_landing_audit.py` : OK.
 - Navigateur local `http://127.0.0.1:5174/` : landing visible, hero visible, mini-cockpit visible, console sans erreur.
+- Navigateur local Phase B : hero mobile/current viewport relu après animation, CTA visible, console 0 erreur.
+- Navigateur local Phase B : section tarifs relue via navigation mobile, Starter et Pro visibles, console 0 erreur.
 - Navigateur local `/login` : page visible, console sans erreur.
 - Navigateur local `/register` : page visible, console sans erreur.
 - Navigateur local `/register?plan=pro` : badge Pro visible, console sans erreur.
@@ -78,6 +92,7 @@ Aucun lien `/contact` restant dans la landing.
 - Admin Center toujours désaligné avec le backend : frontend `/api/admin/analytics` et `/api/admin/users`, backend réel `/api/admin/super/*`.
 - Le hero et les sections ont été vérifiés dans l’in-app browser ; un contrôle desktop large est encore recommandé avant push.
 - Le wording billing est commercial et non juridique. Les CGV et le checkout devront être validés avant encaissement réel.
+- La landing utilise davantage de motion Framer. Le rendu reste léger, mais une passe performance P2 pourra découper le bundle principal.
 
 ## 10. Prochaine phase
 Phase 3 Auth : ne modifier que si un écart visuel ou UX est confirmé, sans casser le login/register validé en Phase 1.

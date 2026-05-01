@@ -1,5 +1,27 @@
 # COURTIA — Changelog Mission 2M
 
+## Phase B Codex — Landing 3D scroll premium (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: deliver premium 3D scroll Courtia landing experience
+
+### Changements
+- Landing enrichie avec fond continu `courtia-flow`, rail Aurora au scroll et progress line discrète.
+- Sections rendues plus fluides, sans grosse cassure visuelle entre les blocs.
+- Cartes Glass/Aurora améliorées avec bordure liquide et hover 3D sobre.
+- Hero rendu plus cinématique avec signaux flottants métier autour du cockpit.
+- Pricing Starter retravaillé avec le même niveau premium que Pro : essai 7 jours, 0 EUR aujourd’hui, puis 89 EUR HT/mois après le 7e jour.
+- Pricing Pro renforcé : valeur journalière, 0 EUR aujourd’hui, puis 159 EUR HT/mois après le 7e jour, annulation en ligne.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- `python3 scripts/courtia_landing_audit.py` : OK.
+- Browser local `/` : hero visible, CTA visible, console 0 erreur.
+- Browser local `/#pricing` via navigation mobile : tarifs visibles, console 0 erreur.
+
+---
+
 ## Phase A Codex — Validation production funnel Pro (1er mai 2026)
 
 **Commit** : à créer
