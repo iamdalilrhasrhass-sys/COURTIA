@@ -16,6 +16,7 @@
 - [x] Phase E Codex — Admin Center aligné localement sur `/api/admin/super/*`
 - [x] Phase E Codex — Admin Center validé en production broker : refus propre, console 0 erreur
 - [x] Phase F Codex — Audit QA Python ajouté, 0 P0/P1 détecté
+- [x] Phase G Codex — SEO/social corrigé avec OG PNG, manifest et icônes réelles
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -60,6 +61,6 @@
 - [ ] AuroraDivider sur toutes les transitions
 - [ ] AuroraButton → harmoniser toutes les pages
 - [ ] Test mobile responsive complet (toutes les pages app)
-- [ ] Compression og:image → PNG pour LinkedIn
+- [x] Compression og:image → PNG pour LinkedIn
 - [ ] Vérifier apple-touch-icon rendu mobile
 - [ ] Optimiser le chunk frontend principal supérieur à 500 kB

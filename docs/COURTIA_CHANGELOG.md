@@ -180,6 +180,33 @@
 
 ---
 
+## Phase G — SEO / social / image de marque (1er mai 2026)
+
+**Commit prévu** : feat: polish Courtia SEO and social assets
+
+### Fichiers modifiés
+- `frontend/index.html` — canonical, manifest, theme-color, OG/Twitter PNG
+- `frontend/public/manifest.json` — icônes PNG existantes
+- `frontend/public/og-courtia.png` — image sociale 1200x630
+- `frontend/public/icon-192.png`
+- `frontend/public/icon-512.png`
+- `frontend/public/apple-touch-icon.png`
+- `frontend/public/og-courtia.svg`
+- `docs/COURTIA_CODEX_PHASE7_SEO.md`
+
+### Résumé
+Les previews sociales utilisent maintenant un PNG 1200x630 et pointent vers l'URL de production fonctionnelle `courtia.vercel.app`.
+Le manifest ne référence plus d'icônes manquantes.
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 29 passés
+- Dimensions OG : 1200x630
+- Icônes manifest : 192x192, 512x512
+- Apple icon : 180x180
+
+---
+
 ## Phase F — QA Python et contrôle qualité (1er mai 2026)
 
 **Commit prévu** : test: add Courtia Python QA audit
