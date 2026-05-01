@@ -6,9 +6,9 @@ services:
     region: frankfurt
     plan: starter
     buildCommand: cd backend && npm install
-    preDeployCommand: cd backend && npm run migrate
     startCommand: cd backend && node server.js
     healthCheckPath: /api/health
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
