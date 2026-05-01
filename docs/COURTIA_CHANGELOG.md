@@ -1,5 +1,25 @@
 # COURTIA — Changelog Mission 2M
 
+## Phase A Codex — Validation production funnel Pro (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : docs: document Pro funnel production QA
+
+### Changements
+- Documentation de la validation production du funnel Pro Vercel.
+- Vérification de `/register?plan=pro`, `/register`, `/login` et `/dashboard`.
+- Confirmation que le CTA `Activer mon essai Pro` et le bloc `0 € / 7 jours / annulation en ligne` sont visibles en production.
+- Confirmation que le login démo redirige vers `/dashboard` et survit à un refresh.
+
+### Tests
+- Browser in-app production : `/register?plan=pro` OK, console 0 erreur.
+- Browser in-app production : `/register` Starter OK, console 0 erreur.
+- Browser in-app production : `/login` OK, console 0 erreur.
+- Login démo production : OK vers `/dashboard`.
+- Refresh dashboard production : OK.
+
+---
+
 ## Phase 3 Codex — Auth et pricing conversion premium (1er mai 2026)
 
 **Commit** : à créer

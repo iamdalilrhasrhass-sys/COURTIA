@@ -6,6 +6,7 @@
 - [x] Phase 2 Codex — Landing premium étendue, audit Python, build et tests locaux
 - [x] Phase 3 Codex — Register Pro / pricing conversion premium sans toucher Stripe
 - [x] Phase 3 Codex — Register Starter premium aligné avec le funnel Pro
+- [x] Phase A Codex — Funnel Pro validé en production Vercel
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -42,7 +43,7 @@
   - ne pas faire de faux paiement 0 EUR ni collecter la carte directement dans COURTIA
 - [ ] Token super_admin → tests Admin Center E2E
 - [ ] AuroraPageHeader → Clients, Tâches, Parametres
-- [ ] Retester la landing en production après push Vercel
+- [ ] Landing 3D scroll premium — prochaine refonte à livrer et tester en production après push Vercel
 - [ ] Message 429 auth rate limit à rendre plus clair côté interface
 
 ## P2 — Finition

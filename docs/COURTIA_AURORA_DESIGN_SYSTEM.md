@@ -53,6 +53,12 @@
 - Les funnels Starter et Pro doivent partager la même qualité visuelle ; Starter ne doit pas paraître low-cost, seulement plus simple.
 - Les transitions entre sections doivent être continues : éviter les gros séparateurs ou bandes qui donnent l’impression de pages collées.
 
+## Phase A — Validation production funnel
+- Le premier écran du funnel Pro doit afficher rapidement la valeur : logo Aurora, titre cockpit, essai Pro, `0 €`, `7 jours`, annulation en ligne et CTA visible.
+- Le CTA principal Pro reste `Activer mon essai Pro`.
+- Le register classique conserve un niveau premium aligné via le funnel Starter.
+- Le wording de collecte carte reste commercial et clair, mais l’intégration Stripe reste réservée à une phase Billing dédiée.
+
 ## Interdictions
 - Ancien logo violet
 - Pastels excessifs
