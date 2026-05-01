@@ -194,6 +194,7 @@
 - Build frontend : OK
 - Tests frontend : 29 passés
 - Audit Python : 0 P0/P1
+- Production `/rapports` : page visible après login demo, plus de page blanche
 
 ---
 
