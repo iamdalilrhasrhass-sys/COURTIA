@@ -1,233 +1,680 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
-  Brain, TrendingUp, Clock, Sparkles, Zap, Shield,
-  ChevronDown, Check, X, ArrowRight, Star, Users,
-  FileText, BarChart3, Bell, Search, RefreshCw, Target,
-  Database, Globe, Lock, MessageSquare, Phone, Mail,
-  Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon,
-  Calendar, GraduationCap, BookOpen, Award, Share2
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  Bell,
+  Brain,
+  Building,
+  Calendar,
+  Check,
+  ChevronDown,
+  Clock,
+  Database,
+  FileText,
+  Globe,
+  Lock,
+  Mail,
+  Menu,
+  MessageSquare,
+  PieChart,
+  RefreshCw,
+  Search,
+  Shield,
+  Sparkles,
+  Star,
+  Target,
+  TrendingUp,
+  Users,
+  X as CloseIcon,
+  Zap,
 } from 'lucide-react'
 import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
 import AuroraBadge from '../components/AuroraBadge'
 import FloatingProductMockup from '../components/FloatingProductMockup'
 import SectionEyebrow from '../components/SectionEyebrow'
 import ScrollReveal from '../components/ScrollReveal'
-import BeforeAfterPanel from '../components/BeforeAfterPanel'
-import FAQPremium from '../components/FAQPremium'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import AuroraHalo from '../components/brand/AuroraHalo'
-import AuroraBackground from '../components/brand/AuroraBackground'
 import AuroraButton from '../components/brand/AuroraButton'
-import AuroraTransition from '../components/brand/AuroraTransition'
 import AuroraDivider from '../components/brand/AuroraDivider'
 
 const globalStyles = `
-/* ── Section transition halos ── */
-#probleme::before {
-  content: ""; position: absolute; inset: auto; pointer-events: none;
-  left: 50%; top: 50%; width: min(900px, 72vw); height: min(620px, 56vw);
-  transform: translate(-50%, -50%); z-index: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(83,74,183,0.12), transparent 62%),
-              radial-gradient(circle at 70% 38%, rgba(34,211,238,0.07), transparent 58%);
-  filter: blur(58px); opacity: 0.45; mix-blend-mode: screen;
-  animation: sectionHalo 18s ease-in-out infinite alternate;
-}
-#solutions::before {
-  content: ""; position: absolute; inset: auto; pointer-events: none;
-  left: 50%; top: 50%; width: min(800px, 64vw); height: min(540px, 48vw);
-  transform: translate(-55%, -48%); z-index: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(34,211,238,0.10), transparent 60%);
-  filter: blur(64px); opacity: 0.35; mix-blend-mode: screen;
-  animation: sectionHalo 21s ease-in-out infinite alternate-reverse;
-}
-@keyframes sectionHalo {
-  0% { transform: translate(-50%, -50%) scale(0.94) rotate(-1deg); opacity: 0.35; }
-  100% { transform: translate(-50%, -50%) scale(1.06) rotate(1deg); opacity: 0.55; }
-}
-
-/* ── Card hover premium glow ── */
-.group:hover {
-  box-shadow:
-    0 0 40px rgba(175,169,236,0.08),
-    0 20px 80px rgba(0,0,0,0.30),
-    inset 0 1px 0 rgba(255,255,255,0.12) !important;
-}
-
-/* ── Smooth scroll ── */
 html { scroll-behavior: smooth; }
+html, body, #root { background: #02040c; }
+body { overscroll-behavior-y: none; }
+.landing-section { scroll-margin-top: 88px; }
+.aurora-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, transparent, black 14%, black 78%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 `
 
-const plans = [
+const toneClasses = {
+  violet: {
+    wrap: 'bg-violet-500/10 border-violet-400/20',
+    icon: 'text-violet-200',
+    text: 'text-violet-200',
+    line: 'bg-violet-400',
+  },
+  cyan: {
+    wrap: 'bg-cyan-500/10 border-cyan-400/20',
+    icon: 'text-cyan-200',
+    text: 'text-cyan-200',
+    line: 'bg-cyan-400',
+  },
+  emerald: {
+    wrap: 'bg-emerald-500/10 border-emerald-400/20',
+    icon: 'text-emerald-200',
+    text: 'text-emerald-200',
+    line: 'bg-emerald-400',
+  },
+  amber: {
+    wrap: 'bg-amber-500/10 border-amber-400/20',
+    icon: 'text-amber-200',
+    text: 'text-amber-200',
+    line: 'bg-amber-400',
+  },
+  rose: {
+    wrap: 'bg-rose-500/10 border-rose-400/20',
+    icon: 'text-rose-200',
+    text: 'text-rose-200',
+    line: 'bg-rose-400',
+  },
+  blue: {
+    wrap: 'bg-blue-500/10 border-blue-400/20',
+    icon: 'text-blue-200',
+    text: 'text-blue-200',
+    line: 'bg-blue-400',
+  },
+}
+
+const credibilityItems = [
+  { icon: Building, label: 'CRM métier courtage' },
+  { icon: Brain, label: 'IA native ARK' },
+  { icon: Bell, label: 'Relances centralisées' },
+  { icon: Calendar, label: 'Échéances surveillées' },
+  { icon: PieChart, label: 'Cockpit portefeuille' },
+]
+
+const proofPills = [
+  'Pensé pour courtiers',
+  'Relances intelligentes',
+  'Portefeuille vivant',
+  'ARK intégré',
+]
+
+const problemCards = [
+  {
+    icon: Bell,
+    title: 'Relances oubliées',
+    desc: 'Un prospect chaud disparaît parce que personne ne l’a repris au bon moment.',
+    tone: 'rose',
+  },
+  {
+    icon: Calendar,
+    title: 'Échéances non anticipées',
+    desc: 'Les renouvellements importants se découvrent trop tard, souvent dans l’urgence.',
+    tone: 'amber',
+  },
+  {
+    icon: AlertTriangle,
+    title: 'Dossiers incomplets',
+    desc: 'Une pièce manque, le dossier traîne, le courtier perd du temps à reconstituer le contexte.',
+    tone: 'cyan',
+  },
+  {
+    icon: Database,
+    title: 'Contrats dispersés',
+    desc: 'Les informations vivent entre emails, tableurs, fichiers et mémoire individuelle.',
+    tone: 'violet',
+  },
+  {
+    icon: Target,
+    title: 'Multi-équipement perdu',
+    desc: 'Une famille ou une entreprise reste mono-équipée faute de signal clair au bon moment.',
+    tone: 'emerald',
+  },
+  {
+    icon: Clock,
+    title: 'Suivi manuel trop lourd',
+    desc: 'Chaque matin commence par retrouver ce qu’il fallait déjà faire hier.',
+    tone: 'blue',
+  },
+]
+
+const invisibleCosts = [
+  'Un prospect chaud oublié',
+  'Un client silencieux jamais relancé',
+  'Une échéance non exploitée',
+  'Une famille mono-équipée jamais travaillée',
+  'Un dossier incomplet qui traîne',
+  'Une opportunité commerciale invisible',
+]
+
+const solutionPillars = [
+  {
+    icon: Database,
+    title: 'Centraliser',
+    desc: 'Clients, contrats, tâches et notes vivent dans un seul cockpit métier.',
+    tone: 'violet',
+  },
+  {
+    icon: Target,
+    title: 'Prioriser',
+    desc: 'Échéances, relances et opportunités remontent avant de devenir des urgences.',
+    tone: 'cyan',
+  },
+  {
+    icon: Zap,
+    title: 'Agir',
+    desc: 'Actions rapides, ARK et suivi commercial donnent une prochaine étape claire.',
+    tone: 'emerald',
+  },
+]
+
+const arkSignals = [
+  'Ce client arrive à échéance dans 18 jours.',
+  'Ce prospect chaud n’a pas été relancé.',
+  'Ce dossier manque une pièce.',
+  'Cette famille peut être multi-équipée.',
+  'Ce contrat peut générer une opportunité de rebond.',
+  'Ce client silencieux mérite une relance.',
+]
+
+const dailyWorkflow = [
+  {
+    time: '08h30',
+    title: 'ARK prépare le brief du matin',
+    desc: 'Le cockpit met en haut les priorités, échéances et dossiers à risque.',
+  },
+  {
+    time: '09h00',
+    title: 'Relances prioritaires',
+    desc: 'Le courtier traite les prospects chauds et clients silencieux sans refaire sa liste.',
+  },
+  {
+    time: '11h00',
+    title: 'Dossiers incomplets',
+    desc: 'Les pièces manquantes et tâches administratives sont regroupées par urgence.',
+  },
+  {
+    time: '14h00',
+    title: 'Opportunités multi-équipement',
+    desc: 'ARK signale les familles et entreprises qui peuvent être mieux couvertes.',
+  },
+  {
+    time: '17h00',
+    title: 'Suivi du portefeuille',
+    desc: 'Le cabinet termine avec une vision claire des actions réalisées et restantes.',
+  },
+]
+
+const cockpitKpis = [
+  { label: 'Priorités ARK', value: '4', detail: 'à traiter ce matin', tone: 'violet' },
+  { label: 'Échéances', value: '2', detail: 'à anticiper', tone: 'amber' },
+  { label: 'Opportunités', value: '1', detail: 'rebond détecté', tone: 'emerald' },
+]
+
+const featureCards = [
+  { icon: Users, title: 'CRM clients', desc: 'Une fiche claire par client, avec historique, statut et prochaines actions.', tone: 'violet' },
+  { icon: FileText, title: 'Contrats', desc: 'Type, compagnie, prime, date d’effet, échéance et statut accessibles rapidement.', tone: 'cyan' },
+  { icon: Check, title: 'Tâches', desc: 'Retards, priorités, échéances du jour et actions liées aux clients.', tone: 'emerald' },
+  { icon: Brain, title: 'Brief du matin', desc: 'ARK synthétise les signaux importants pour commencer la journée avec clarté.', tone: 'violet' },
+  { icon: Activity, title: 'Scoring portefeuille', desc: 'Une lecture simple de la santé commerciale et du niveau d’attention requis.', tone: 'blue' },
+  { icon: MessageSquare, title: 'ARK Reach', desc: 'Prospection et relances préparées, avec validation humaine avant action.', tone: 'cyan' },
+  { icon: FileText, title: 'Documents clients', desc: 'Centralisation des pièces et suivi des documents attendus par dossier.', tone: 'amber' },
+  { icon: Shield, title: 'Admin Center', desc: 'Console propriétaire pour utilisateurs, abonnement et support quand l’accès admin est activé.', tone: 'emerald' },
+  { icon: BarChart3, title: 'Rapports', desc: 'Vue portefeuille, activité, opportunités, échéances et rétention.', tone: 'blue' },
+  { icon: RefreshCw, title: 'Relances intelligentes', desc: 'Les relances sont visibles, priorisées et rattachées au contexte client.', tone: 'rose' },
+]
+
+const beforeItems = [
+  'Informations dispersées',
+  'Relances dans la tête',
+  'Échéances suivies à la main',
+  'Peu de visibilité',
+  'Opportunités perdues',
+]
+
+const afterItems = [
+  'Cockpit centralisé',
+  'Priorités claires',
+  'ARK remonte les signaux',
+  'Relances organisées',
+  'Portefeuille plus vivant',
+]
+
+const genericCrmReasons = [
+  'COURTIA parle clients, contrats, échéances et portefeuille.',
+  'ARK raisonne en relance, rebond, dossier incomplet et multi-équipement.',
+  'Les écrans sont pensés pour décider vite, pas pour remplir un CRM générique.',
+]
+
+const pricingPlans = [
   {
     name: 'Starter',
-    price: '89',
-    suffix: '/mois',
-    desc: 'Pour le courtier solo qui veut se structurer',
+    price: '89 € HT/mois',
+    desc: 'Pour démarrer proprement, sans alourdir le cabinet.',
+    position: 'Entrée structurante',
+    cta: 'Commencer Starter',
+    href: '/register',
+    featured: false,
     features: [
-      'CRM clients complet',
-      'Gestion des contrats',
+      'CRM clients et contrats',
+      'Tâches et relances manuelles',
       'Tableau de bord essentiel',
-      'Tâches et rappels',
-      'Import CSV',
       'Support email',
     ],
-    cta: "Essai gratuit 7 jours",
-    popular: false,
   },
   {
     name: 'Pro',
-    price: '159',
-    suffix: '/mois',
-    desc: "L'offre recommandée pour piloter votre cabinet",
+    price: '159 € HT/mois',
+    desc: 'Essayez COURTIA Pro pendant 7 jours. 0 € aujourd’hui, puis 159 € HT/mois après l’essai si vous continuez.',
+    position: 'Recommandé',
+    cta: 'Essai gratuit 7 jours',
+    href: '/register?plan=pro',
+    featured: true,
+    trialNote: 'Carte demandée pour activer l’essai et sécuriser l’accès. Annulation possible en ligne avant la fin des 7 jours.',
     features: [
-      'Tout Starter',
-      'ARK — Assistant IA complet',
-      'ARK REACH — Module prospection',
-      'Automatisations intelligentes',
-      'Rapports avancés',
+      'Cockpit portefeuille complet',
+      'Brief du matin ARK',
+      'Relances et priorités intelligentes',
       'Scoring portefeuille',
-      'Messages IA personnalisés',
-      'Morning Brief quotidien',
-      'COURTIA Academy — Cours & cartes compétence',
-      'Support prioritaire',
+      'ARK Reach et opportunités',
+      'Rapports avancés',
     ],
-    cta: "Démarrer avec Pro",
-    popular: true,
   },
   {
     name: 'Premium',
     price: 'Sur devis',
-    suffix: '',
-    desc: 'Pour les cabinets performants et les groupes',
+    desc: 'Pour cabinets structurés, équipes et besoins d’accompagnement avancés.',
+    position: 'Cabinets équipes',
+    cta: 'Parler à COURTIA',
+    externalHref: 'mailto:contact@courtia.fr?subject=COURTIA%20Premium',
+    featured: false,
     features: [
       'Tout Pro',
       'Multi-utilisateurs',
-      'Accompagnement dédié',
-      'Intégrations sur mesure',
-      'Volume élevé',
-      'Support prioritaire 24/7',
-      'Personnalisation',
-      'SLA garanti',
+      'Accompagnement de déploiement',
+      'Besoins avancés étudiés avec le cabinet',
     ],
-    cta: 'Nous contacter',
-    popular: false,
   },
 ]
 
-const problems = [
-  { icon: FileText, title: 'Données dispersées', desc: 'Vos clients, contrats et relances sont éparpillés dans des fichiers Excel, votre téléphone et vos emails.' },
-  { icon: Clock, title: 'Relances oubliées', desc: "Des prospects et clients partent chez la concurrence parce que vous n'avez pas anticipé le bon moment." },
-  { icon: AlertTriangle, title: 'Portefeuille dormant', desc: 'Vous ne savez pas quels clients sont actifs, dormants ou à risque sans ouvrir chaque dossier un par un.' },
-  { icon: Database, title: 'CRM trop généralistes', desc: 'Les outils actuels ne parlent pas assurance. Aucun ne comprend vos contrats, échéances et sinistres.' },
-  { icon: Search, title: 'Opportunités invisibles', desc: 'Les prospects multi-équipement, les clients à recontacter, les ventes croisées : tout reste dans votre tête.' },
-  { icon: BarChart3, title: 'Suivi commercial manuel', desc: "Impossible d'avoir en un coup d'œil la santé de votre portefeuille et les priorités du jour." },
+const reassuranceCards = [
+  { icon: Building, title: 'Conçu pour courtiers français', desc: 'Le vocabulaire, les priorités et les écrans parlent courtage.', tone: 'violet' },
+  { icon: Database, title: 'Données centralisées', desc: 'Clients, contrats, tâches et documents ne vivent plus dans des silos.', tone: 'cyan' },
+  { icon: Lock, title: 'Approche RGPD', desc: 'Le produit privilégie contrôle, accès protégés et transparence des traitements.', tone: 'emerald' },
+  { icon: MessageSquare, title: 'Support', desc: 'Un outil métier doit rester compréhensible et accompagné.', tone: 'blue' },
+  { icon: Sparkles, title: 'Amélioration continue', desc: 'COURTIA évolue autour des usages réels des cabinets.', tone: 'amber' },
+  { icon: Check, title: 'Essai gratuit 7 jours', desc: 'Tester le cockpit avant de s’engager dans une offre.', tone: 'emerald' },
+  { icon: Globe, title: 'Pas un CRM générique', desc: 'Le produit est vertical, orienté portefeuille assurance.', tone: 'violet' },
 ]
 
-const pillars = [
-  { icon: Users, title: 'Centraliser', desc: 'Clients, contrats, tâches, relances et notes au même endroit. Votre cabinet en un tableau de bord.' },
-  { icon: Brain, title: 'Prioriser', desc: "ARK détecte ce qui mérite votre attention aujourd'hui : clients dormants, échéances, opportunités." },
-  { icon: Zap, title: 'Relancer', desc: 'ARK REACH prépare les messages de relance et prospection. Vous validez avant tout envoi.' },
-  { icon: RefreshCw, title: 'Automatiser', desc: 'Le portefeuille génère des actions au lieu de dormir dans un tableau. Alertes, rappels, scoring.' },
+const faqItems = [
+  {
+    question: 'COURTIA remplace-t-il mon logiciel actuel ?',
+    answer: 'COURTIA est pensé comme cockpit de pilotage et de suivi commercial. Selon votre organisation, il peut compléter votre logiciel métier ou devenir le centre de suivi de portefeuille.',
+  },
+  {
+    question: 'ARK agit-il automatiquement à ma place ?',
+    answer: 'Non. ARK fait remonter les signaux, prépare des pistes d’action et aide à prioriser. Le courtier garde la décision.',
+  },
+  {
+    question: 'Mes données sont-elles protégées ?',
+    answer: 'COURTIA privilégie des accès protégés, une centralisation maîtrisée et une approche RGPD. Les secrets et accès sensibles ne sont jamais exposés dans l’interface publique.',
+  },
+  {
+    question: 'Puis-je commencer seul ?',
+    answer: 'Oui. Starter permet de structurer un usage solo. Pro est recommandé si vous voulez exploiter ARK et piloter votre portefeuille avec plus de profondeur.',
+  },
+  {
+    question: 'Pourquoi choisir l’offre Pro ?',
+    answer: 'Pro concentre la valeur métier : brief ARK, scoring, relances intelligentes, opportunités et cockpit complet. C’est l’offre conçue pour un courtier sérieux.',
+  },
+  {
+    question: 'COURTIA convient-il à une équipe ?',
+    answer: 'Oui, l’offre Premium est prévue pour les cabinets structurés et les équipes avec besoins d’accompagnement ou d’organisation avancée.',
+  },
+  {
+    question: 'Puis-je importer mes clients ?',
+    answer: 'L’import de données fait partie du périmètre produit. Les modalités dépendent de votre fichier et de votre organisation actuelle.',
+  },
+  {
+    question: 'Les documents clients seront-ils traités par ARK ?',
+    answer: 'La centralisation et le suivi des documents sont au cœur du produit. Le traitement avancé par ARK doit rester encadré et est présenté comme une évolution progressive.',
+  },
 ]
 
-const arkCapabilities = [
-  'Résumé instantané de chaque client',
-  'Analyse du portefeuille en temps réel',
-  'Suggestions de relance personnalisées',
-  "Détection d'opportunités multi-équipement",
-  'Alertes clients dormants ou à risque',
-  'Aide à la conformité et à la documentation',
-  'Morning Brief quotidien avec priorités',
-  'Génération de messages commerciaux',
-]
+function getTone(tone = 'violet') {
+  return toneClasses[tone] || toneClasses.violet
+}
 
-const reachCapabilities = [
-  'Import et gestion de prospects',
-  'Création de campagnes multi-étapes',
-  'Génération de messages par IA',
-  'Validation humaine obligatoire',
-  'Mode dry-run pour tester sans envoyer',
-  'Opt-out et contrôle anti-spam',
-  'Reporting et statistiques',
-  'Tableau de bord sécurisé',
-]
+function GlassCard({ children, className = '' }) {
+  return (
+    <div className={`rounded-lg border border-white/[0.08] bg-white/[0.045] shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+function IconTile({ icon: Icon, title, desc, tone = 'violet' }) {
+  const colors = getTone(tone)
+
+  return (
+    <GlassCard className="h-full p-5 transition duration-300 hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-white/[0.065]">
+      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-lg border ${colors.wrap}`}>
+        <Icon size={19} className={colors.icon} />
+      </div>
+      <h3 className="text-sm font-bold text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-white/55">{desc}</p>
+    </GlassCard>
+  )
+}
+
+function ArkBriefMockup() {
+  const rows = [
+    { label: '4 priorités', color: 'bg-violet-400' },
+    { label: '2 échéances', color: 'bg-amber-400' },
+    { label: '1 opportunité', color: 'bg-emerald-400' },
+    { label: '1 dossier incomplet', color: 'bg-cyan-400' },
+  ]
+
+  return (
+    <GlassCard className="relative overflow-hidden p-5">
+      <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-violet-300/20 bg-violet-500/10">
+            <Brain size={20} className="text-violet-200" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-white/45">Brief du matin ARK</p>
+            <p className="text-sm font-bold text-white">Aperçu de vos priorités</p>
+          </div>
+        </div>
+        <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+          Portefeuille sous contrôle
+        </span>
+      </div>
+      <div className="relative mt-5 space-y-3">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-black/15 px-3 py-2">
+            <span className="flex items-center gap-2 text-sm text-white/70">
+              <span className={`h-2 w-2 rounded-full ${row.color}`} />
+              {row.label}
+            </span>
+            <ChevronDown size={14} className="text-white/35" />
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  )
+}
+
+function HeroCockpitPanel() {
+  const priorities = [
+    { label: 'Client à échéance dans 18 jours', tone: 'amber' },
+    { label: 'Prospect chaud non relancé', tone: 'rose' },
+    { label: 'Opportunité multi-équipement', tone: 'emerald' },
+  ]
+
+  return (
+    <div className="relative mx-auto w-full max-w-[560px]">
+      <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-violet-500/18 via-cyan-400/10 to-emerald-400/10 blur-2xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.10] bg-[#070b18]/86 shadow-2xl shadow-black/45 backdrop-blur-2xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.12),transparent_22%),radial-gradient(circle_at_84%_20%,rgba(34,211,238,0.13),transparent_28%)]" />
+        <div className="relative flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <CourtiaBubbleLogo size={34} animated={false} showHalo={false} showFoam={false} />
+            <div>
+              <p className="text-xs font-black tracking-wide text-white">COURTIA</p>
+              <p className="text-[11px] text-white/42">Cockpit portefeuille</p>
+            </div>
+          </div>
+          <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold text-emerald-200">
+            ARK actif
+          </span>
+        </div>
+
+        <div className="relative grid gap-3 p-4 sm:grid-cols-[0.92fr_1.08fr]">
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.045] p-4">
+            <div className="flex items-center gap-2">
+              <Brain size={16} className="text-violet-200" />
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-100/75">Brief ARK</p>
+            </div>
+            <p className="mt-3 text-2xl font-black text-white">4 priorités</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/52">
+              À traiter avant que le portefeuille ne perde de la valeur.
+            </p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                ['2', 'échéances'],
+                ['1', 'rebond'],
+                ['1', 'dossier'],
+              ].map(([value, label]) => (
+                <div key={label} className="rounded-lg border border-white/[0.07] bg-black/20 px-2 py-2 text-center">
+                  <p className="text-lg font-black text-white">{value}</p>
+                  <p className="text-[10px] text-white/38">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {priorities.map((priority) => {
+              const colors = getTone(priority.tone)
+              return (
+                <div key={priority.label} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.045] p-3">
+                  <span className={`h-2.5 w-2.5 rounded-full ${colors.line} shadow-[0_0_18px_currentColor]`} />
+                  <p className="min-w-0 flex-1 text-sm font-medium text-white/70">{priority.label}</p>
+                  <ArrowRight size={14} className="text-white/34" />
+                </div>
+              )
+            })}
+            <div className="rounded-xl border border-cyan-300/[0.16] bg-cyan-400/[0.08] p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-cyan-100/75">Score portefeuille</span>
+                <span className="text-xs font-black text-cyan-100">87/100</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                <div className="h-full w-[87%] rounded-full bg-gradient-to-r from-violet-400 to-cyan-300" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CockpitPreview() {
+  return (
+    <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <ScrollReveal>
+        <div className="relative">
+          <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-r from-violet-500/10 via-cyan-500/10 to-emerald-500/10 blur-2xl" />
+          <FloatingProductMockup className="relative" />
+          <p className="mt-4 text-center text-xs text-white/35">
+            Aperçu marketing du cockpit, avec données de démonstration.
+          </p>
+        </div>
+      </ScrollReveal>
+
+      <div className="space-y-4">
+        {cockpitKpis.map((kpi, index) => {
+          const colors = getTone(kpi.tone)
+          return (
+            <ScrollReveal key={kpi.label} delay={index * 0.08}>
+              <GlassCard className="p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold text-white/40">{kpi.label}</p>
+                    <p className="mt-1 text-sm text-white/60">{kpi.detail}</p>
+                  </div>
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-lg border text-2xl font-black ${colors.wrap} ${colors.text}`}>
+                    {kpi.value}
+                  </div>
+                </div>
+              </GlassCard>
+            </ScrollReveal>
+          )
+        })}
+        <ScrollReveal delay={0.24}>
+          <GlassCard className="p-5">
+            <p className="text-sm font-bold text-white">Actions rapides</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {['Ajouter client', 'Créer tâche', 'Voir contrats', 'Ouvrir ARK'].map((action) => (
+                <span key={action} className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/60">
+                  {action}
+                </span>
+              ))}
+            </div>
+          </GlassCard>
+        </ScrollReveal>
+      </div>
+    </div>
+  )
+}
+
+function PricingCard({ plan }) {
+  return (
+    <GlassCard className={`relative flex h-full flex-col p-6 ${plan.featured ? 'border-violet-300/35 bg-white/[0.07] shadow-violet-500/15' : ''}`}>
+      {plan.featured && (
+        <div className="absolute -top-3 left-6 flex items-center gap-1 rounded-full border border-violet-300/30 bg-violet-500 px-3 py-1 text-xs font-bold text-white shadow-lg shadow-violet-500/25">
+          <Star size={12} />
+          Recommandé
+        </div>
+      )}
+      <div className="flex-1">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold text-white/40">{plan.position}</p>
+            <h3 className="mt-1 text-xl font-black text-white">{plan.name}</h3>
+          </div>
+          {plan.featured && <CourtiaMiniLogo size={28} />}
+        </div>
+        <p className="mt-4 text-3xl font-black text-white">{plan.price}</p>
+        <p className="mt-3 text-sm leading-relaxed text-white/55">{plan.desc}</p>
+        {plan.trialNote && (
+          <div className="mt-4 rounded-lg border border-emerald-300/16 bg-emerald-400/[0.07] p-3">
+            <p className="text-xs font-semibold leading-relaxed text-emerald-100/78">
+              {plan.trialNote}
+            </p>
+          </div>
+        )}
+        <ul className="mt-6 space-y-3">
+          {plan.features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2 text-sm text-white/62">
+              <Check size={15} className="mt-0.5 shrink-0 text-emerald-300" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {plan.externalHref ? (
+        <a
+          href={plan.externalHref}
+          className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:border-white/[0.16] hover:bg-white/[0.08]"
+        >
+          {plan.cta}
+        </a>
+      ) : (
+        <AuroraButton href={plan.href} variant={plan.featured ? 'primary' : 'secondary'} size="md" className="mt-7 w-full">
+          {plan.cta}
+        </AuroraButton>
+      )}
+    </GlassCard>
+  )
+}
 
 export default function LandingPublic() {
-  const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
+    const onScroll = () => setScrolled(window.scrollY > 32)
     window.addEventListener('scroll', onScroll, { passive: true })
-
-    const onMouseMove = (e) => {
-      setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 2,
-        y: (e.clientY / window.innerHeight - 0.5) * 2,
-      })
-    }
-    window.addEventListener('mousemove', onMouseMove, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('mousemove', onMouseMove)
-    }
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setMenuOpen(false)
   }
 
+  const navItems = [
+    ['probleme', 'Problème'],
+    ['ark', 'ARK'],
+    ['cockpit', 'Cockpit'],
+    ['pricing', 'Tarifs'],
+  ]
+
   return (
-    <div className="bg-[#0a0510] text-white overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-[#02040c] text-white">
       <style>{globalStyles}</style>
-      {/* ─── NAVBAR GLASS DARK ─── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0a0510]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20' : 'bg-transparent'}`}>
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <CourtiaMiniLogo size={28} />
+
+      <nav className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${scrolled ? 'border-b border-white/[0.06] bg-[#02040c]/88 shadow-lg shadow-black/20 backdrop-blur-xl' : 'bg-transparent'}`}>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
+          <Link to="/" className="flex items-center gap-2.5" aria-label="COURTIA">
+            <CourtiaMiniLogo size={30} />
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => scrollTo('probleme')} className="text-sm text-gray-400 hover:text-white transition-colors">Problème</button>
-            <button onClick={() => scrollTo('solutions')} className="text-sm text-gray-400 hover:text-white transition-colors">Solution</button>
-            <button onClick={() => scrollTo('ark')} className="text-sm text-gray-400 hover:text-white transition-colors">ARK</button>
-            <button onClick={() => scrollTo('ark-reach')} className="text-sm text-gray-400 hover:text-white transition-colors">ARK REACH</button>
-            <button onClick={() => scrollTo('pricing')} className="text-sm text-gray-400 hover:text-white transition-colors">Tarifs</button>
-            <Link to="/login" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Se connecter</Link>
+          <div className="hidden items-center gap-6 md:flex">
+            {navItems.map(([id, label]) => (
+              <button key={id} type="button" onClick={() => scrollTo(id)} className="text-sm text-white/55 transition hover:text-white">
+                {label}
+              </button>
+            ))}
+            <Link to="/login" className="text-sm font-medium text-white/58 transition hover:text-white">
+              Se connecter
+            </Link>
             <AuroraButton href="/register?plan=pro" variant="primary" size="sm">
               Essai gratuit 7 jours
             </AuroraButton>
           </div>
 
-          <button className="md:hidden p-2 text-gray-400" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <XIcon size={22} /> : <Menu size={22} />}
+          <button
+            type="button"
+            className="rounded-lg border border-white/[0.08] bg-white/[0.04] p-2 text-white/70 md:hidden"
+            onClick={() => setMenuOpen((value) => !value)}
+            aria-label="Ouvrir le menu"
+          >
+            {menuOpen ? <CloseIcon size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile menu dark */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-16 left-0 right-0 z-40 bg-[#0a0510]/95 backdrop-blur-xl border-b border-white/5 shadow-lg md:hidden"
+            exit={{ opacity: 0, y: -8 }}
+            className="fixed inset-x-0 top-16 z-40 border-b border-white/[0.06] bg-[#02040c]/96 p-5 backdrop-blur-xl md:hidden"
           >
-            <div className="p-5 space-y-4">
-              <button onClick={() => { scrollTo('probleme'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Problème</button>
-              <button onClick={() => { scrollTo('solutions'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Solution</button>
-              <button onClick={() => { scrollTo('ark'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">ARK</button>
-              <button onClick={() => { scrollTo('ark-reach'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">ARK REACH</button>
-              <button onClick={() => { scrollTo('pricing'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Tarifs</button>
-              <Link to="/login" className="block text-gray-400 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Se connecter</Link>
-              <AuroraButton href="/register?plan=pro" variant="primary" size="sm" className="w-full mt-2">
+            <div className="space-y-2">
+              {navItems.map(([id, label]) => (
+                <button key={id} type="button" onClick={() => scrollTo(id)} className="block w-full rounded-lg px-3 py-3 text-left text-sm text-white/70 hover:bg-white/[0.05] hover:text-white">
+                  {label}
+                </button>
+              ))}
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-3 text-sm text-white/70 hover:bg-white/[0.05] hover:text-white">
+                Se connecter
+              </Link>
+              <AuroraButton href="/register?plan=pro" variant="primary" size="sm" className="mt-3 w-full">
                 Essai gratuit 7 jours
               </AuroraButton>
             </div>
@@ -235,632 +682,429 @@ export default function LandingPublic() {
         )}
       </AnimatePresence>
 
-      {/* ━━━━━━━━━━━ HERO AURORA 3D ━━━━━━━━━━━ */}
-      <section className="relative min-h-screen flex items-center pt-24 pb-16 lg:pb-24 overflow-hidden">
-        <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0510]" />
+      <main>
+        <section id="hero" className="landing-section relative overflow-hidden px-4 pb-10 pt-20 sm:px-5 lg:pb-16 lg:pt-24">
+          <div className="absolute inset-0 bg-[#02040c]" />
+          <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-25" />
+          <div className="aurora-grid absolute inset-0 opacity-20" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(124,58,237,0.24),transparent_24%),radial-gradient(circle_at_86%_20%,rgba(34,211,238,0.16),transparent_22%),radial-gradient(circle_at_60%_90%,rgba(16,185,129,0.10),transparent_26%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#02040c]/22 via-[#02040c]/74 to-[#02040c]" />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-5 w-full">
-          <motion.div
-            className="text-center max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <AuroraBadge>CRM assurance connecté à ARK</AuroraBadge>
-
-            <div className="flex justify-center mt-4 mb-6">
-              <CourtiaBubbleLogo size={140} animated={true} showHalo={true} showFoam={false} />
-            </div>
-
-            <h1
-              className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-white"
-            >
-              Le cockpit intelligent{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                des courtiers en assurance.
-              </span>
-            </h1>
-
-            <motion.p
-              className="mt-6 text-base lg:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              COURTIA centralise vos clients, contrats, tâches et relances.{' '}
-              <strong className="text-purple-300">ARK</strong> analyse votre portefeuille,{' '}
-              détecte les priorités et transforme vos données en actions commerciales concrètes.
-            </motion.p>
-
-            <motion.div
-              className="mt-8 flex flex-wrap items-center justify-center gap-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <AuroraButton
-                href="/register?plan=pro"
-                variant="primary"
-                size="lg"
-                icon={<ArrowRight size={16} />}
-              >
-                Essai gratuit 7 jours
-              </AuroraButton>
-              <AuroraButton
-                onClick={() => scrollTo('cockpit')}
-                variant="secondary"
-                size="lg"
-              >
-                Voir le cockpit
-              </AuroraButton>
-            </motion.div>
-
-            <motion.div
-              className="mt-6 flex flex-wrap items-center justify-center gap-2.5"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              {['Pensé courtiers', 'Portefeuille vivant', 'Relances intelligentes', 'ARK intégré'].map((badge) => (
-                <span key={badge} className="text-xs text-gray-400 bg-white/5 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
-                  {badge}
+          <div className="relative z-10 mx-auto grid max-w-7xl gap-7 lg:min-h-[760px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <motion.div className="min-w-0" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
+              <div className="mb-5 inline-flex max-w-full items-center gap-2.5 rounded-full border border-white/[0.10] bg-white/[0.045] px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-xl">
+                <CourtiaBubbleLogo size={32} animated={false} showHalo={false} showFoam={false} />
+                <span className="text-[10px] font-bold uppercase tracking-[0.10em] text-cyan-100/78 sm:text-[11px] sm:tracking-[0.16em]">
+                  CRM assurance connecté à ARK
                 </span>
-              ))}
+              </div>
+
+              <h1 className="max-w-3xl text-[1.95rem] font-black leading-[1.06] text-white sm:text-5xl lg:text-6xl">
+                Le cockpit IA des courtiers qui veulent reprendre le contrôle de leur portefeuille.
+              </h1>
+
+              <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-white/66 lg:text-lg">
+                COURTIA centralise vos clients, contrats, relances et priorités. ARK détecte ce qui mérite votre attention avant que l’opportunité ne vous échappe.
+              </p>
+
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:hidden">
+                {[
+                  ['4', 'priorités'],
+                  ['2', 'échéances'],
+                  ['1', 'rebond'],
+                ].map(([value, label]) => (
+                  <div key={label} className="rounded-lg border border-white/[0.08] bg-white/[0.045] px-2 py-2 text-center backdrop-blur-xl">
+                    <p className="text-lg font-black text-white">{value}</p>
+                    <p className="text-[10px] text-white/48">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <AuroraButton href="/register?plan=pro" variant="primary" size="lg" icon={<ArrowRight size={16} />} className="w-full px-5 sm:w-auto">
+                  Essai gratuit 7 jours
+                </AuroraButton>
+                <AuroraButton onClick={() => scrollTo('cockpit')} variant="secondary" size="lg" className="w-full px-5 sm:w-auto">
+                  Voir le cockpit
+                </AuroraButton>
+              </div>
+              <p className="mt-3 text-center text-xs font-medium text-white/46 sm:text-left">
+                Essai gratuit 7 jours — 0 € aujourd’hui — annulation en ligne.
+              </p>
+
+              <div className="mt-5 hidden max-w-md grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                {proofPills.map((pill) => (
+                  <span key={pill} className="rounded-full border border-white/[0.08] bg-white/[0.045] px-2.5 py-1.5 text-center text-[11px] font-semibold text-white/62 backdrop-blur-xl">
+                    {pill}
+                  </span>
+                ))}
+              </div>
+
+              <p className="mt-4 hidden max-w-xl text-sm leading-relaxed text-white/42 sm:block">
+                Pensé pour les courtiers français qui veulent structurer leurs relances, leurs échéances et leur développement commercial sans adopter un CRM généraliste.
+              </p>
             </motion.div>
 
-            <motion.p
-              className="mt-4 text-xs text-gray-500 text-center max-w-xl mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              Pensé pour les cabinets de courtage français : auto, habitation, santé, pro et multi-équipement.
-            </motion.p>
-          </motion.div>
-
-          {/* Cockpit Mockup 3D avec parallaxe souris */}
-          <ScrollReveal delay={0.3}>
-            <div id="cockpit" className="mt-12 lg:mt-16 max-w-5xl mx-auto"
-              style={{
-                transform: `perspective(1200px) rotateY(${mousePos.x * 1.5}deg) rotateX(${-mousePos.y * 1.2}deg)`,
-                transition: 'transform 0.15s ease-out',
-              }}
-            >
-              <FloatingProductMockup />
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* ─── TRANSITION HERO → PROBLÈME ─── */}
-      <AuroraTransition 
-        variant="glow" 
-        height={160}
-        phrase="Les courtiers ne manquent pas de clients. Ils manquent de temps, de visibilité et de suivi."
-        position="both"
-      />
-
-      {/* ━━━━━━━━━━━ SECTION PROBLÈME (dark) ━━━━━━━━━━━ */}
-      <section id="probleme" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="Problème"
-            title="Votre portefeuille dort."
-            subtitle="Vos clients sont déjà dans votre portefeuille. COURTIA vous aide à ne plus laisser dormir votre chiffre d'affaires."
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-            {problems.map((p, i) => (
-              <ScrollReveal key={i} delay={i * 0.08}>
-                <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
-                  <p.icon size={22} className="text-purple-400 group-hover:text-purple-300 mb-3 transition-colors" />
-                  <h3 className="font-bold text-white text-sm mb-1.5">{p.title}</h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">{p.desc}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ SECTION SOLUTION 4 PILIERS (dark) ━━━━━━━━━━━ */}
-      <section id="solutions" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraHalo size={500} color="rgba(120,60,255,0.06)" position="top-left" blur={100} />
-        <div className="max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="Solution"
-            title="COURTIA transforme les données en priorités."
-            subtitle="Centraliser, prioriser, relancer, développer — votre cabinet en un tableau de bord."
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-            {pillars.map((p, i) => (
-              <ScrollReveal key={i} delay={i * 0.1}>
-                <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
-                    <p.icon size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
-                  </div>
-                  <h3 className="font-bold text-white text-base mb-2">{p.title}</h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">{p.desc}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ SECTION ARK (dark + aurora) ━━━━━━━━━━━ */}
-      <section id="ark" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraHalo size={600} color="rgba(100,200,255,0.05)" position="top-right" blur={100} />
-        <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="ARK — Moteur intelligent du cabinet"
-            title="ARK n'est pas un chatbot. C'est le moteur intelligent du cabinet."
-            subtitle="ARK propose. Le courtier décide. Analyse client, résumé instantané, relances préparées, risques et opportunités détectés."
-          />
-
-          {/* Orb ARK visuel */}
-          <ScrollReveal>
-            <div className="flex items-center justify-center mb-10">
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 via-violet-500 to-blue-500 shadow-2xl shadow-purple-500/30 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400/20 to-blue-400/20 animate-pulse blur-xl" />
-                <Brain size={32} className="text-white relative z-10" />
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {arkCapabilities.map((cap, i) => (
-              <ScrollReveal key={i} delay={i * 0.06}>
-                <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg hover:border-white/[0.12] transition-all duration-300">
-                  <Check size={16} className="text-purple-400 group-hover:text-purple-300 mt-0.5 shrink-0 transition-colors" />
-                  <span className="text-sm text-gray-400">{cap}</span>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ SECTION ARK REACH (dark) ━━━━━━━━━━━ */}
-      <section id="ark-reach" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="ARK REACH — Module commercial"
-            title="ARK REACH structure votre prospection de A à Z."
-            subtitle="ARK REACH : prospects, campagnes, messages préparés, suivi réponses, validation humaine. La prospection sans l'improvisation."
-          />
-
-          {/* Sécurité badges */}
-          <ScrollReveal>
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-              <span className="text-xs font-semibold text-green-300 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <Shield size={12} /> Dry-run par défaut
-              </span>
-              <span className="text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <Lock size={12} /> Validation humaine obligatoire
-              </span>
-              <span className="text-xs font-semibold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <Brain size={12} /> Messages générés par IA
-              </span>
-              <span className="text-xs font-semibold text-violet-300 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <Check size={12} /> Opt-out respecté
-              </span>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {reachCapabilities.map((cap, i) => (
-              <ScrollReveal key={i} delay={i * 0.06}>
-                <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg hover:border-white/[0.12] transition-all duration-300">
-                  <Check size={16} className="text-blue-400 group-hover:text-blue-300 mt-0.5 shrink-0 transition-colors" />
-                  <span className="text-sm text-gray-400">{cap}</span>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ SECTION PORTEFEUILLE VIVANT (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="Portefeuille vivant"
-            title="Votre portefeuille devient vivant."
-            subtitle="Chaque client devient une opportunité suivie : score, historique, échéance, prochaine action, potentiel commercial."
-          />
-
-          <div className="grid md:grid-cols-3 gap-5">
-            <ScrollReveal delay={0}>
-              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/[0.12] transition-all duration-300">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mb-4">
-                  <Users size={22} className="text-purple-400" />
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2">Clients actifs</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">128</span>
-                  <span className="text-sm text-emerald-400">+6 ce mois</span>
-                </div>
-                <div className="mt-3 space-y-1">
-                  {['12 dormants', '7 à relancer', '3 opportunités'].map((tag, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-amber-400' : i === 1 ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                      {tag}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.1}>
-              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/[0.12] transition-all duration-300">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mb-4">
-                  <FileText size={22} className="text-purple-400" />
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2">Contrats sous gestion</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">342</span>
-                  <span className="text-sm text-amber-400">8 échéances</span>
-                </div>
-                <div className="mt-3 space-y-1">
-                  {['2 450€ prime moyenne', 'RC Pro 42%', 'Auto 31%'].map((tag, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-blue-400' : i === 1 ? 'bg-violet-400' : 'bg-cyan-400'}`} />
-                      {tag}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.2}>
-              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/[0.12] transition-all duration-300">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mb-4">
-                  <TrendingUp size={22} className="text-purple-400" />
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2">Performance cabinet</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">+18%</span>
-                  <span className="text-sm text-emerald-400">vs mois dernier</span>
-                </div>
-                <div className="mt-3 space-y-1">
-                  {['12 relances préparées', '5 devis en cours', 'Taux conversion 68%'].map((tag, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-purple-400' : i === 1 ? 'bg-blue-400' : 'bg-emerald-400'}`} />
-                      {tag}
-                    </div>
-                  ))}
-                </div>
+            <ScrollReveal delay={0.12}>
+              <div className="relative mt-1 lg:mt-0">
+                <HeroCockpitPanel />
+                <p className="mt-3 text-center text-xs text-white/36">
+                  Aperçu produit, données illustratives.
+                </p>
               </div>
             </ScrollReveal>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ━━━━━━━━━━━ SECTION ACADEMY (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="COURTIA Academy"
-            title="Développez vos compétences de courtier au fil de votre utilisation."
-            subtitle="Accédez à des cours courts, débloquez des cartes compétence, montez en niveau et valorisez votre progression professionnelle."
-          />
+        <section id="credibilite" className="landing-section relative border-y border-white/[0.06] bg-white/[0.025] px-5 py-5">
+          <div className="mx-auto grid max-w-7xl gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {credibilityItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <div key={item.label} className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-black/18 px-4 py-3 backdrop-blur-xl">
+                  <Icon size={17} className="text-cyan-200" />
+                  <span className="text-sm font-semibold text-white/68">{item.label}</span>
+                </div>
+              )
+            })}
+          </div>
+        </section>
 
-          <p className="text-center text-sm text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed -mt-4">
-            COURTIA ne fait pas que gérer votre cabinet. Il vous aide à structurer vos méthodes, renforcer votre suivi commercial et progresser chaque semaine.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {/* LEFT — Bénéfices */}
-            <div className="space-y-5">
-              {[
-                {
-                  icon: <BookOpen size={18} />,
-                  title: 'Cours métier courts',
-                  desc: 'Techniques de vente, relances, objections, gestion de portefeuille, bases métier et conformité.'
-                },
-                {
-                  icon: <Award size={18} />,
-                  title: 'Cartes compétence',
-                  desc: 'Débloquez des cartes Bronze, Argent, Or, Diamant et Épiques selon vos actions et votre progression.'
-                },
-                {
-                  icon: <Share2 size={18} />,
-                  title: 'Progression partageable',
-                  desc: 'Valorisez vos compétences sur LinkedIn avec des textes prêts à publier, toujours avec validation manuelle.'
-                },
-              ].map((item, i) => (
-                <ScrollReveal key={i} delay={i * 0.08}>
-                  <div className="flex items-start gap-4 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 hover:bg-white/[0.05] hover:border-white/[0.10] transition-all duration-300 group">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400/15 to-blue-400/10 flex items-center justify-center shrink-0 group-hover:from-purple-400/20 group-hover:to-blue-400/15 transition-all">
-                      <span className="text-purple-400/80">{item.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{item.title}</h4>
-                      <p className="text-xs text-white/35 mt-1 leading-relaxed group-hover:text-white/45 transition-colors">{item.desc}</p>
-                    </div>
-                  </div>
+        <section id="probleme" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraHalo size={520} color="rgba(244,63,94,0.08)" position="top-left" blur={100} />
+          <div className="relative z-10 mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Problème courtier"
+              title="Les courtiers ne manquent pas de clients. Ils manquent de temps, de visibilité et de suivi."
+              subtitle="La valeur est souvent déjà dans le portefeuille. Le risque, c’est de ne pas voir le bon signal assez tôt."
+            />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {problemCards.map((problem, index) => (
+                <ScrollReveal key={problem.title} delay={index * 0.05}>
+                  <IconTile {...problem} />
                 </ScrollReveal>
               ))}
             </div>
-
-            {/* RIGHT — Cartes compétence visuelles */}
-            <ScrollReveal delay={0.15}>
-              <div className="relative">
-                {/* Mini-dashboard */}
-                <div className="relative z-10 mb-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] to-purple-500/[0.02] backdrop-blur-xl p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <GraduationCap size={16} className="text-purple-400" />
-                    <span className="text-xs text-white/40 uppercase tracking-wider">Votre progression type</span>
-                  </div>
-                  <p className="text-base font-bold text-white">
-                    Niveau <span className="text-purple-400">4</span>
-                    <span className="text-white/50 text-sm font-normal ml-2">— Pilote de Portefeuille</span>
-                  </p>
-                  <div className="mt-2 mb-2">
-                    <div className="flex justify-between text-xs text-white/30 mb-1">
-                      <span>1 280 XP</span>
-                      <span>2 000 XP</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                      <div className="w-[64%] h-full bg-gradient-to-r from-purple-500 to-amber-400 rounded-full" />
-                    </div>
-                  </div>
-                  <p className="text-xs text-white/30 italic">Votre progression vous place parmi les profils les plus avancés de COURTIA.</p>
-                </div>
-
-                {/* Cartes empilées */}
-                <div className="relative h-[280px] md:h-[320px]">
-                  {[
-                    { name: 'Premier client créé', rarity: 'bronze', color: 'from-amber-700/30 to-amber-900/20', border: 'border-amber-500/20', text: 'text-amber-300', x: '0%', y: '0%', rotate: '-3deg' },
-                    { name: 'Relance propre', rarity: 'argent', color: 'from-slate-300/20 to-slate-400/10', border: 'border-slate-300/20', text: 'text-slate-200', x: '12%', y: '8%', rotate: '2deg' },
-                    { name: 'Prospection structurée', rarity: 'or', color: 'from-yellow-400/25 to-yellow-600/10', border: 'border-yellow-400/25', text: 'text-yellow-300', x: '24%', y: '16%', rotate: '-1deg' },
-                    { name: 'Pilote de portefeuille', rarity: 'diamant', color: 'from-cyan-300/25 to-blue-500/15', border: 'border-cyan-300/25', text: 'text-cyan-200', x: '36%', y: '24%', rotate: '1deg' },
-                    { name: 'Courtier augmenté', rarity: 'épique', color: 'from-purple-400/30 via-pink-400/15 to-blue-400/15', border: 'border-purple-400/25', text: 'text-purple-200', x: '48%', y: '32%', rotate: '-2deg' },
-                  ].map((card, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.3 + i * 0.08, duration: 0.5 }}
-                      whileHover={{ scale: 1.03, rotate: '0deg' }}
-                      className={`absolute rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} backdrop-blur-xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-default group/card`}
-                      style={{ left: card.x, top: card.y, transform: `rotate(${card.rotate})`, width: '52%', zIndex: 10 - i }}
-                    >
-                      <div className={`text-[10px] font-medium mb-1.5 ${card.text}`}>{card.rarity}</div>
-                      <h5 className="text-xs font-semibold text-white/80 leading-tight">{card.name}</h5>
-                      <div className="mt-2 flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                        <span className="text-[9px] text-white/30">Déblocable</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* CTAs */}
-                <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
-                  <AuroraButton
-                    href="/register"
-                    variant="primary"
-                    size="sm"
-                  >
-                    Découvrir COURTIA Academy
-                  </AuroraButton>
-                  <AuroraButton
-                    href="/academy"
-                    variant="ghost"
-                    size="sm"
-                  >
-                    Voir dans l'app →
-                  </AuroraButton>
-                </div>
-              </div>
-            </ScrollReveal>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ━━━━━━━━━━━ SECTION AVANT / APRÈS (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <div className="max-w-5xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="Comparaison"
-            title="Avant COURTIA, vous subissez. Avec COURTIA, vous pilotez."
-            subtitle="Fichiers dispersés, relances oubliées, clients dormants : COURTIA transforme le désordre quotidien en priorités claires, actions prêtes et opportunités visibles."
-          />
-          <ScrollReveal>
-            <BeforeAfterPanel dark={true} />
-          </ScrollReveal>
-        </div>
-      </section>
+        <AuroraDivider variant="gradient" width={760} />
 
-      {/* ━━━━━━━━━━━ SECTION PREUVE MÉTIER (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="Crédibilité métier"
-            title="Pensé pour les courtiers français."
-            subtitle="COURTIA comprend les vrais sujets d'un cabinet : clients, contrats, échéances, relances, sinistres, multi-équipement, conformité et développement commercial."
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <ScrollReveal delay={0}>
-              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
-                  <Users size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2 text-center">Portefeuille client</h3>
-                <p className="text-sm text-gray-400 leading-relaxed text-center">
-                  Contrats, échéances, sinistres, relances, multi-équipement. Votre portefeuille devient un tableau de bord vivant.
+        <section id="cout-invisible" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-35" />
+          <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <ScrollReveal>
+              <div>
+                <AuroraBadge>Coût invisible</AuroraBadge>
+                <h2 className="text-3xl font-black leading-tight text-white lg:text-5xl">
+                  Les pertes invisibles ne viennent pas d’un manque d’effort.
+                </h2>
+                <p className="mt-5 text-base leading-relaxed text-white/60">
+                  Elles viennent d’un suivi trop dispersé. COURTIA ne se positionne pas comme une dépense de plus, mais comme un cockpit pour récupérer les opportunités qui sortent du radar.
                 </p>
               </div>
             </ScrollReveal>
-            <ScrollReveal delay={0.1}>
-              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
-                  <Calendar size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2 text-center">Échéances et relances</h3>
-                <p className="text-sm text-gray-400 leading-relaxed text-center">
-                  ARK détecte les échéances, prépare les relances et priorise les actions. Plus aucun client laissé sans suivi.
-                </p>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal delay={0.2}>
-              <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp size={24} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2 text-center">Développement commercial</h3>
-                <p className="text-sm text-gray-400 leading-relaxed text-center">
-                  ARK REACH structure la prospection. Opportunités détectées, messages préparés, validation humaine obligatoire.
-                </p>
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ SECTION PRICING PREMIUM (dark) ━━━━━━━━━━━ */}
-      <section id="pricing" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="Tarifs"
-            title="Des plans pour chaque cabinet."
-            subtitle="Commencez gratuitement 7 jours. Sans carte bancaire. Sans engagement."
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {plans.map((plan, i) => (
-              <ScrollReveal key={i} delay={i * 0.12}>
-                <div className={`relative rounded-2xl p-7 border shadow-xl flex flex-col h-full transition-all duration-300 hover:-translate-y-1 ${
-                  plan.popular
-                    ? 'border-purple-400/30 bg-white/[0.06] shadow-purple-500/20 scale-100 md:scale-105'
-                    : 'border-white/[0.06] bg-white/[0.03] backdrop-blur-xl shadow-black/20'
-                }`}>
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <span className="text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-4 py-1 rounded-full shadow-lg">
-                        Recommandé
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex-1">
-                    <h3 className="font-black text-lg text-white">{plan.name}</h3>
-                    <p className="text-sm text-gray-400 mt-1 mb-4">{plan.desc}</p>
-
-                    <div className="mb-6">
-                      {plan.price === 'Sur devis' ? (
-                        <span className="text-3xl font-black text-white">Sur devis</span>
-                      ) : (
-                        <div className="flex items-baseline gap-0.5">
-                          <span className="text-3xl font-black text-white">{plan.price}</span>
-                          <span className="text-sm text-gray-400">€{plan.suffix}</span>
-                        </div>
-                      )}
-                      {plan.price !== 'Sur devis' && (
-                        <p className="text-xs text-gray-500 mt-1">HT — Soit {(parseInt(plan.price) / 30).toFixed(2)}€ / jour</p>
-                      )}
-                    </div>
-
-                    <ul className="space-y-2.5 mb-8">
-                      {plan.features.map((f, j) => (
-                        <li key={j} className="flex items-start gap-2.5 text-sm text-gray-400">
-                          <Check size={14} className="mt-0.5 shrink-0 text-emerald-400" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <AuroraButton
-                    href={plan.popular ? '/register?plan=pro' : plan.name === 'Premium' ? '/contact' : '/register'}
-                    variant={plan.popular ? 'primary' : 'secondary'}
-                    size="sm"
-                    className="w-full"
-                  >
-                    {plan.cta}
-                  </AuroraButton>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ SECTION FAQ (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <div className="max-w-3xl mx-auto">
-          <SectionEyebrow dark={true}
-            badge="FAQ"
-            title="Questions fréquentes"
-          />
-          <ScrollReveal>
-            <FAQPremium dark={true} />
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* ━━━━━━━━━━━ CTA FINAL AURORA (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
-        <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0510]" />
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <ScrollReveal>
-            <h2
-              className="text-3xl lg:text-4xl font-black tracking-tight leading-tight"
-              style={{
-                background: 'linear-gradient(115deg, #ffffff, #c4b5fd, #a78bfa, #c4b5fd, #ffffff)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              Ne laissez plus dormir votre portefeuille.
-            </h2>
-
-            <p className="mt-4 text-base text-gray-400 max-w-xl mx-auto">
-              COURTIA transforme vos données clients en priorités commerciales. ARK propose. Le courtier décide.
-            </p>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <AuroraButton
-                href="/register?plan=pro"
-                variant="primary"
-                size="lg"
-                icon={<ArrowRight size={16} />}
-              >
-                Essai gratuit 7 jours
-              </AuroraButton>
-              <AuroraButton
-                href="/login"
-                variant="secondary"
-                size="lg"
-              >
-                J'ai déjà un compte
-              </AuroraButton>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {invisibleCosts.map((cost, index) => (
+                <ScrollReveal key={cost} delay={index * 0.04}>
+                  <GlassCard className="flex items-center gap-3 p-4">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-400/20 bg-amber-500/10 text-sm font-black text-amber-200">
+                      {index + 1}
+                    </span>
+                    <span className="text-sm font-semibold text-white/72">{cost}</span>
+                  </GlassCard>
+                </ScrollReveal>
+              ))}
             </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* ─── FOOTER DARK ─── */}
-      <footer className="border-t border-white/5 bg-[#0a0510]/80 py-10 px-5">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <CourtiaMiniLogo size={24} />
           </div>
-          <div className="flex items-center gap-6 text-xs text-gray-500">
-            <span>CRM assurance + IA native</span>
+        </section>
+
+        <section id="solution" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraHalo size={640} color="rgba(34,211,238,0.08)" position="top-right" blur={110} />
+          <div className="relative z-10 mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Solution COURTIA"
+              title="COURTIA transforme votre portefeuille en cockpit d'actions."
+              subtitle="Vos clients sont centralisés, vos contrats sont suivis, vos tâches sont priorisées et ARK fait remonter ce qui mérite votre attention."
+            />
+            <div className="grid gap-4 lg:grid-cols-3">
+              {solutionPillars.map((pillar, index) => (
+                <ScrollReveal key={pillar.title} delay={index * 0.08}>
+                  <IconTile {...pillar} />
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="ark" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
+          <div className="relative z-10 mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="ARK, l’IA métier"
+              title="ARK ne remplace pas le courtier. Il lui évite d’oublier ce qui compte."
+              subtitle="ARK n’est pas vendu comme une IA magique. Il agit comme un assistant métier concret : il signale, synthétise et prépare les prochaines actions."
+            />
+
+            <div className="grid gap-6 lg:grid-cols-[1fr_0.95fr] lg:items-start">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {arkSignals.map((signal, index) => (
+                  <ScrollReveal key={signal} delay={index * 0.04}>
+                    <GlassCard className="flex min-h-[92px] items-start gap-3 p-4">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-300/20 bg-violet-500/10">
+                        <Brain size={15} className="text-violet-200" />
+                      </div>
+                      <p className="text-sm leading-relaxed text-white/72">“{signal}”</p>
+                    </GlassCard>
+                  </ScrollReveal>
+                ))}
+              </div>
+              <ScrollReveal delay={0.16}>
+                <ArkBriefMockup />
+              </ScrollReveal>
+            </div>
+          </div>
+        </section>
+
+        <section id="workflow" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <div className="mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Workflow quotidien"
+              title="Une journée plus claire, dès l’ouverture du cockpit."
+              subtitle="COURTIA rend visible le rythme naturel du cabinet : prioriser, relancer, compléter, développer, suivre."
+            />
+            <div className="grid gap-4 lg:grid-cols-5">
+              {dailyWorkflow.map((step, index) => (
+                <ScrollReveal key={step.time} delay={index * 0.06}>
+                  <GlassCard className="h-full p-5">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-200">{step.time}</span>
+                      <span className="h-px flex-1 bg-white/[0.08]" />
+                    </div>
+                    <h3 className="mt-4 text-sm font-bold text-white">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-white/55">{step.desc}</p>
+                  </GlassCard>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="cockpit" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraHalo size={720} color="rgba(16,185,129,0.07)" position="bottom-left" blur={120} />
+          <div className="relative z-10 mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Cockpit produit"
+              title="Aperçu produit : un cockpit qui aide à décider."
+              subtitle="La preview ci-dessous utilise des données de démonstration. Elle illustre la logique produit : KPIs, Morning Brief, échéances, clients à relancer et opportunités."
+            />
+            <CockpitPreview />
+          </div>
+        </section>
+
+        <section id="fonctionnalites" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <div className="mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Fonctionnalités"
+              title="Tout ce qu’un courtier attend d’un cockpit métier."
+              subtitle="COURTIA rassemble les surfaces de travail quotidiennes au lieu de les éparpiller entre plusieurs outils."
+            />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {featureCards.map((feature, index) => (
+                <ScrollReveal key={feature.title} delay={index * 0.035}>
+                  <IconTile {...feature} />
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="avant-apres" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
+          <div className="relative z-10 mx-auto max-w-6xl">
+            <SectionEyebrow
+              dark
+              badge="Avant / Après"
+              title="Avant COURTIA, le suivi dépend de la mémoire. Après COURTIA, il dépend d’un cockpit."
+              subtitle="L’objectif n’est pas de travailler plus, mais de faire remonter les bonnes actions au bon moment."
+            />
+            <div className="grid gap-5 md:grid-cols-2">
+              <ScrollReveal>
+                <GlassCard className="p-6">
+                  <div className="mb-5 flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-400/20 bg-rose-500/10">
+                      <CloseIcon size={18} className="text-rose-200" />
+                    </span>
+                    <h3 className="text-lg font-black text-white">Avant COURTIA</h3>
+                  </div>
+                  <ul className="space-y-3">
+                    {beforeItems.map((item) => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-white/58">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-300" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </GlassCard>
+              </ScrollReveal>
+              <ScrollReveal delay={0.08}>
+                <GlassCard className="p-6">
+                  <div className="mb-5 flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-500/10">
+                      <Check size={18} className="text-emerald-200" />
+                    </span>
+                    <h3 className="text-lg font-black text-white">Après COURTIA</h3>
+                  </div>
+                  <ul className="space-y-3">
+                    {afterItems.map((item) => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-white/72">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </GlassCard>
+              </ScrollReveal>
+            </div>
+          </div>
+        </section>
+
+        <section id="crm-metier" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraHalo size={520} color="rgba(59,130,246,0.08)" position="top-left" blur={100} />
+          <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <ScrollReveal>
+              <div>
+                <AuroraBadge>Pas un CRM généraliste</AuroraBadge>
+                <h2 className="text-3xl font-black leading-tight text-white lg:text-5xl">
+                  Un courtier n’a pas besoin d’un CRM généraliste. Il a besoin d’un cockpit métier.
+                </h2>
+                <p className="mt-5 text-base leading-relaxed text-white/60">
+                  COURTIA est orienté portefeuille assurance : contrats, échéances, relances, multi-équipement, dossiers incomplets et recommandations ARK.
+                </p>
+              </div>
+            </ScrollReveal>
+            <div className="space-y-3">
+              {genericCrmReasons.map((reason, index) => (
+                <ScrollReveal key={reason} delay={index * 0.06}>
+                  <GlassCard className="flex items-start gap-3 p-5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-500/10 text-sm font-black text-cyan-200">
+                      {index + 1}
+                    </span>
+                    <p className="text-sm leading-relaxed text-white/68">{reason}</p>
+                  </GlassCard>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="landing-section relative overflow-hidden bg-[#02040c] px-5 py-16 lg:py-20">
+          <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.16),transparent_30%),linear-gradient(to_bottom,#02040c_0%,rgba(2,4,12,0.82)_45%,#02040c_100%)]" />
+          <div className="relative z-10 mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Tarifs"
+              title="Une offre Pro à 159 € HT/mois qui porte la vraie valeur."
+              subtitle="Starter structure le démarrage. Pro concentre le cockpit, ARK, les relances intelligentes et le pilotage quotidien. L’essai Pro est clair : 0 € aujourd’hui, carte pour activer l’accès, annulation en ligne avant la fin des 7 jours."
+            />
+            <div className="grid gap-5 lg:grid-cols-3">
+              {pricingPlans.map((plan, index) => (
+                <ScrollReveal key={plan.name} delay={index * 0.08}>
+                  <PricingCard plan={plan} />
+                </ScrollReveal>
+              ))}
+            </div>
+            <div className="mx-auto mt-6 flex max-w-3xl flex-col items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 py-4 text-center backdrop-blur-xl sm:flex-row sm:text-left">
+              <Shield size={17} className="shrink-0 text-emerald-200" />
+              <p className="text-sm font-medium text-white/62">
+                Essai gratuit 7 jours — 0 € aujourd’hui — annulation en ligne avant la fin de l’essai.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="reassurance" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <div className="mx-auto max-w-7xl">
+            <SectionEyebrow
+              dark
+              badge="Réassurance"
+              title="Une base SaaS sérieuse, verticale et démontrable."
+              subtitle="La promesse reste concrète : mieux suivre le portefeuille, mieux prioriser, mieux agir."
+            />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {reassuranceCards.map((card, index) => (
+                <ScrollReveal key={card.title} delay={index * 0.035}>
+                  <IconTile {...card} />
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="faq" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraHalo size={480} color="rgba(124,58,237,0.08)" position="bottom-right" blur={100} />
+          <div className="relative z-10 mx-auto max-w-4xl">
+            <SectionEyebrow dark badge="FAQ" title="Questions fréquentes" />
+            <div className="space-y-3">
+              {faqItems.map((item) => (
+                <details key={item.question} className="group rounded-lg border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-white">
+                    {item.question}
+                    <ChevronDown size={18} className="shrink-0 text-white/40 transition group-open:rotate-180" />
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-white/58">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="cta-final" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+          <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#060712]/70 to-[#060712]" />
+          <div className="relative z-10 mx-auto max-w-4xl text-center">
+            <ScrollReveal>
+              <CourtiaBubbleLogo size={96} animated showHalo showFoam={false} className="mx-auto mb-6" />
+              <h2 className="text-3xl font-black leading-tight text-white lg:text-5xl">
+                Reprenez le contrôle de votre portefeuille avec COURTIA.
+              </h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/62">
+                Commencez avec un cockpit clair, des priorités visibles et un assistant métier pensé pour les courtiers.
+              </p>
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                <AuroraButton href="/register?plan=pro" variant="primary" size="lg" icon={<ArrowRight size={16} />}>
+                  Essai gratuit 7 jours
+                </AuroraButton>
+                <AuroraButton href="/login" variant="secondary" size="lg">
+                  Se connecter
+                </AuroraButton>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-white/[0.06] bg-[#060712] px-5 py-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <CourtiaMiniLogo size={28} />
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-white/45">
+            <button type="button" onClick={() => scrollTo('pricing')} className="transition hover:text-white">Tarifs</button>
+            <Link to="/register?plan=pro" className="transition hover:text-white">Essai gratuit</Link>
+            <Link to="/login" className="transition hover:text-white">Connexion</Link>
+            <a href="mailto:contact@courtia.fr" className="inline-flex items-center gap-1 transition hover:text-white">
+              <Mail size={13} />
+              contact@courtia.fr
+            </a>
             <span>© 2026 COURTIA</span>
-            <Link to="/legal" className="hover:text-gray-400 transition-colors">Mentions légales</Link>
           </div>
         </div>
       </footer>

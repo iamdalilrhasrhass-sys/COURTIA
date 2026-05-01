@@ -1,5 +1,34 @@
 # COURTIA — Changelog Mission 2M
 
+## Phase 2 Codex — Landing premium 60x (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: extend Courtia landing into premium 2M SaaS experience
+
+### Fichiers modifiés / créés
+- `frontend/src/pages/LandingPublic.jsx` — Refonte landing étendue en 15 sections.
+- `frontend/src/components/FloatingProductMockup.jsx` — Ancien `C` texte remplacé par Aurora Bubble C.
+- `frontend/src/components/DashboardMockup.jsx` — Ancien `C` texte remplacé par Aurora Bubble C.
+- `scripts/courtia_landing_audit.py` — Audit statique landing.
+- `docs/COURTIA_CODEX_LANDING_AUDIT.md` — Rapport généré.
+- `docs/COURTIA_CODEX_PHASE2_LANDING.md` — Rapport Phase 2.
+
+### Changements produit
+- Hero repositionné sur la promesse : cockpit IA des courtiers qui veulent reprendre le contrôle de leur portefeuille.
+- Ajout d’une narration complète : problème, coût invisible, solution, ARK, workflow quotidien, cockpit, fonctionnalités, avant/après, CRM métier, tarifs, réassurance, FAQ, CTA final.
+- Offre Pro à 159 EUR HT/mois mise en avant comme offre principale.
+- Discours essai Pro intégré : 0 EUR aujourd’hui, carte pour activer l’essai, annulation en ligne avant la fin des 7 jours.
+- Lien `/contact` supprimé car la route n’existe pas.
+- Première passe visuelle rejetée puis reprise : hero mobile plus noir, CTA visibles, badge non tronqué, mini-cockpit visible.
+
+### Tests
+- Audit Python landing : OK
+- Build frontend : OK
+- Tests Vitest : 29 OK
+- Navigateur local : `/`, `/login`, `/register`, `/register?plan=pro` visibles, console 0 erreur bloquante
+
+---
+
 ## Auth Pages Premium Redesign (1er mai 2026)
 
 **Commit** : 99d1f76

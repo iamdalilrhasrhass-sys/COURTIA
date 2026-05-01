@@ -34,10 +34,17 @@
 - Admin Center : style cockpit propriétaire (pas marketing)
 
 ## Pages harmonisées (Batch 3)
-- Landing ✅ (déjà fait avant mission)
+- Landing ✅ (Phase 2 Codex : landing étendue 15 sections, hero mobile repris, pricing Pro clarifié)
 - Login ✅ (Aurora déjà présent)
 - Dashboard ✅ (cockpit Aurora)
 - À faire : Clients, Contrats, Tâches, Rapports, Paramètres
+
+## Landing Phase 2 — Règles ajoutées
+- Le hero doit rester lisible sur mobile : CTA visibles, badge non tronqué, pas de mockup trop lourd avant le contenu principal.
+- Le cockpit produit peut utiliser des données illustratives uniquement si elles sont indiquées comme aperçu ou démonstration.
+- Le pricing Pro doit être clair : 159 EUR HT/mois, essai gratuit 7 jours, 0 EUR aujourd’hui, annulation en ligne.
+- Aucun wording de piège commercial : pas de recommandé obligatoire, pas de fausse friction à la résiliation.
+- La carte bancaire sera collectée uniquement via un checkout sécurisé dans une phase Billing dédiée, jamais directement par COURTIA.
 
 ## Interdictions
 - Ancien logo violet

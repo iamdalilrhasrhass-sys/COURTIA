@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Brain, TrendingUp, Sparkles, Bell, Clock, Zap, Shield } from 'lucide-react'
+import CourtiaBubbleLogo from './brand/CourtiaBubbleLogo'
 
 /**
  * FloatingProductMockup — Mockup cockpit 3D premium du dashboard COURTIA
@@ -35,12 +36,12 @@ export default function FloatingProductMockup({ className = '' }) {
         {/* Top bar */}
         <div className="relative px-6 py-4 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <span className="text-white font-black text-sm">C</span>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <CourtiaBubbleLogo size={30} animated={false} showHalo={false} showFoam={false} />
             </div>
             <div>
               <span className="text-white font-bold text-sm tracking-tight">COURTIA</span>
-              <span className="text-[9px] text-white/40 ml-2">cockpit</span>
+              <span className="text-[9px] text-white/40 ml-2">aperçu démo</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
