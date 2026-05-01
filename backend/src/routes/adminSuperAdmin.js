@@ -93,7 +93,7 @@ router.get('/users', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/users error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs.' });
   }
 });
 
@@ -187,7 +187,7 @@ router.get('/users/:id', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/users/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur lors de la récupération du profil utilisateur.' });
   }
 });
 
@@ -219,7 +219,7 @@ router.post('/impersonate/stop', async (req, res) => {
 
   } catch (err) {
     console.error('POST /admin/impersonate/stop error:', err.message);
-    res.status(err.status || 500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: 'Erreur lors de l\'arrêt de l\'impersonation.' });
   }
 });
 
@@ -268,7 +268,7 @@ router.post('/impersonate/:userId', async (req, res) => {
 
   } catch (err) {
     console.error('POST /admin/impersonate/:userId error:', err.message);
-    res.status(err.status || 500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: 'Erreur lors du démarrage de l\'impersonation.' });
   }
 });
 
@@ -324,7 +324,7 @@ router.get('/impersonation/logs', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/impersonation/logs error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur lors de la récupération des logs d\'impersonation.' });
   }
 });
 
@@ -435,7 +435,7 @@ router.get('/analytics', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/analytics error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur lors de la récupération des analyses.' });
   }
 });
 
@@ -465,7 +465,7 @@ router.get('/iobsp/pending', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/iobsp/pending error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur lors de la récupération des demandes IOBSP.' });
   }
 });
 
@@ -541,7 +541,7 @@ router.patch('/iobsp/:userId', async (req, res) => {
 
   } catch (err) {
     console.error('PATCH /admin/iobsp/:userId error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur lors de la validation IOBSP.' });
   }
 });
 
