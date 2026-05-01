@@ -39,6 +39,25 @@
 
 ---
 
+## QA Phase F — Audit Python (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Script QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | Rapport généré dans `docs/COURTIA_CODEX_QA_AUDIT.md` |
+| P0/P1 statiques | ✅ OK | Audit Python | 0 P0/P1 |
+| P2 statiques | ⚠️ À suivre | Audit Python | 38 signaux de finition : loaders génériques, `err.message`, libellés techniques admin |
+| Composants Aurora | ✅ OK | Audit Python | Tous les composants requis détectés |
+| Routes React | ✅ OK | Audit Python | Routes réelles listées, pas de P1 `/app/*` |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+
+### Décision Phase F
+- P0 bloquant : non.
+- P1 bloquant : non.
+- Les P2 sont documentés comme finitions futures, pas comme blocage de livraison.
+
+---
+
 ## QA Phase E — Admin Center aligné (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
