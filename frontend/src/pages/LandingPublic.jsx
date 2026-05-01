@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   Activity,
@@ -47,6 +47,55 @@ html { scroll-behavior: smooth; }
 html, body, #root { background: #02040c; }
 body { overscroll-behavior-y: none; }
 .landing-section { scroll-margin-top: 88px; }
+.courtia-flow {
+  background:
+    radial-gradient(circle at 16% 4%, rgba(124, 58, 237, 0.20), transparent 26rem),
+    radial-gradient(circle at 88% 18%, rgba(34, 211, 238, 0.14), transparent 28rem),
+    radial-gradient(circle at 42% 48%, rgba(16, 185, 129, 0.08), transparent 36rem),
+    linear-gradient(180deg, #02040c 0%, #050713 30%, #02040c 62%, #060712 100%);
+}
+.cinematic-section::before {
+  content: "";
+  position: absolute;
+  inset: -1px 0 auto 0;
+  height: 160px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.055), transparent 64%),
+    linear-gradient(180deg, rgba(2,4,12,0.72), transparent);
+  opacity: 0.68;
+}
+.aurora-thread {
+  background:
+    linear-gradient(180deg, transparent, rgba(167,139,250,0.42), rgba(34,211,238,0.34), rgba(16,185,129,0.20), transparent);
+  filter: drop-shadow(0 0 18px rgba(34,211,238,0.36));
+}
+.premium-tilt {
+  transform-style: preserve-3d;
+  transition: transform 320ms ease, border-color 320ms ease, background 320ms ease, box-shadow 320ms ease;
+}
+.premium-tilt:hover {
+  transform: translateY(-4px) rotateX(1deg) rotateY(-1deg);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.34), 0 0 42px rgba(34,211,238,0.08);
+}
+.liquid-border {
+  position: relative;
+}
+.liquid-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.24), rgba(167,139,250,0.20), rgba(34,211,238,0.18), rgba(255,255,255,0.05));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.aurora-price {
+  text-shadow: 0 0 34px rgba(34,211,238,0.18);
+}
 .aurora-grid {
   background-image:
     linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
@@ -265,28 +314,31 @@ const pricingPlans = [
   {
     name: 'Starter',
     price: '89 € HT/mois',
-    desc: 'Pour démarrer proprement, sans alourdir le cabinet.',
+    desc: 'Essayez Starter pendant 7 jours. 0 € aujourd’hui, puis 89 € HT/mois après le 7e jour si vous continuez.',
+    priceStory: 'L’entrée premium pour structurer clients, contrats et relances sans démarrer trop large.',
     position: 'Entrée structurante',
-    cta: 'Commencer Starter',
+    cta: 'Activer mon essai Starter',
     href: '/register',
     featured: false,
+    trialNote: '0 € aujourd’hui, puis 89 € HT/mois après le 7e jour. Annulation possible en ligne avant la fin de l’essai.',
     features: [
       'CRM clients et contrats',
       'Tâches et relances manuelles',
       'Tableau de bord essentiel',
+      'Essai gratuit 7 jours',
       'Support email',
     ],
   },
   {
     name: 'Pro',
     price: '159 € HT/mois',
-    desc: 'Essayez COURTIA Pro pendant 7 jours. 0 € aujourd’hui, puis 159 € HT/mois après l’essai si vous continuez.',
-    priceStory: 'Moins de 6 € HT par jour pour garder vos relances, échéances et opportunités sous contrôle.',
+    desc: 'Essayez COURTIA Pro pendant 7 jours. 0 € aujourd’hui, puis 159 € HT/mois après le 7e jour si vous continuez.',
+    priceStory: 'Moins de 6 € HT par jour pour garder relances, échéances et opportunités sous contrôle.',
     position: 'Recommandé',
     cta: 'Essai gratuit 7 jours',
     href: '/register?plan=pro',
     featured: true,
-    trialNote: 'Carte demandée pour activer l’essai et sécuriser l’accès. Annulation possible en ligne avant la fin des 7 jours.',
+    trialNote: '0 € aujourd’hui, puis 159 € HT/mois après le 7e jour. Carte demandée pour activer l’essai et sécuriser l’accès. Annulation possible en ligne avant la fin de l’essai.',
     features: [
       'Cockpit portefeuille complet',
       'Brief du matin ARK',
@@ -364,7 +416,7 @@ function getTone(tone = 'violet') {
 
 function GlassCard({ children, className = '' }) {
   return (
-    <div className={`rounded-lg border border-white/[0.08] bg-white/[0.045] shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
+    <div className={`liquid-border premium-tilt rounded-lg border border-white/[0.08] bg-white/[0.045] shadow-xl shadow-black/20 backdrop-blur-xl ${className}`}>
       {children}
     </div>
   )
@@ -430,11 +482,16 @@ function HeroCockpitPanel() {
     { label: 'Prospect chaud non relancé', tone: 'rose' },
     { label: 'Opportunité multi-équipement', tone: 'emerald' },
   ]
+  const floatingSignals = [
+    { label: '3 relances prioritaires', className: '-right-4 top-12', tone: 'rose' },
+    { label: '2 échéances à surveiller', className: '-left-5 bottom-16', tone: 'amber' },
+    { label: '1 opportunité détectée', className: 'right-6 -bottom-5', tone: 'emerald' },
+  ]
 
   return (
     <div className="relative mx-auto w-full max-w-[560px]">
       <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-violet-500/18 via-cyan-400/10 to-emerald-400/10 blur-2xl" />
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.10] bg-[#070b18]/86 shadow-2xl shadow-black/45 backdrop-blur-2xl">
+      <div className="liquid-border relative overflow-hidden rounded-2xl border border-white/[0.10] bg-[#070b18]/86 shadow-2xl shadow-black/45 backdrop-blur-2xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.12),transparent_22%),radial-gradient(circle_at_84%_20%,rgba(34,211,238,0.13),transparent_28%)]" />
         <div className="relative flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
           <div className="flex items-center gap-3">
@@ -496,6 +553,20 @@ function HeroCockpitPanel() {
           </div>
         </div>
       </div>
+
+      {floatingSignals.map((signal, index) => {
+        const colors = getTone(signal.tone)
+        return (
+          <motion.div
+            key={signal.label}
+            className={`absolute hidden rounded-xl border px-3 py-2 text-xs font-bold shadow-2xl backdrop-blur-xl sm:flex ${signal.className} ${colors.wrap} ${colors.text}`}
+            animate={{ y: [0, index % 2 === 0 ? -8 : 8, 0], rotate: [0, index % 2 === 0 ? 1.2 : -1.2, 0] }}
+            transition={{ duration: 4.8 + index * 0.7, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            {signal.label}
+          </motion.div>
+        )
+      })}
     </div>
   )
 }
@@ -552,9 +623,12 @@ function CockpitPreview() {
 function PricingCard({ plan }) {
   const [amount, ...suffixParts] = plan.price.split(' ')
   const suffix = suffixParts.join(' ')
+  const hasRecurringPrice = plan.price.includes('€')
 
   return (
-    <GlassCard className={`relative flex h-full flex-col p-6 ${plan.featured ? 'border-violet-300/35 bg-[linear-gradient(145deg,rgba(124,58,237,0.18),rgba(7,11,24,0.92)_42%,rgba(34,211,238,0.08))] shadow-2xl shadow-violet-500/20' : ''}`}>
+    <GlassCard className={`relative flex h-full flex-col overflow-hidden p-6 ${plan.featured ? 'scale-[1.015] border-violet-300/35 bg-[linear-gradient(145deg,rgba(124,58,237,0.20),rgba(7,11,24,0.94)_38%,rgba(34,211,238,0.10))] shadow-2xl shadow-violet-500/20' : 'bg-[linear-gradient(145deg,rgba(255,255,255,0.055),rgba(7,11,24,0.78))]'}`}>
+      <div className={`absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent ${plan.featured ? 'via-cyan-200/60' : 'via-white/18'} to-transparent`} />
+      <div className={`absolute -right-16 -top-16 h-44 w-44 rounded-full blur-3xl ${plan.featured ? 'bg-violet-400/20' : 'bg-cyan-400/10'}`} />
       {plan.featured && (
         <div className="absolute -top-3 left-6 flex items-center gap-1 rounded-full border border-violet-300/30 bg-gradient-to-r from-violet-500 to-cyan-500 px-3 py-1 text-xs font-bold text-white shadow-lg shadow-violet-500/25">
           <Star size={12} />
@@ -569,10 +643,10 @@ function PricingCard({ plan }) {
           </div>
           {plan.featured && <CourtiaMiniLogo size={28} />}
         </div>
-        {plan.featured ? (
-          <div className="mt-5 rounded-xl border border-white/[0.10] bg-black/20 p-4">
+        {hasRecurringPrice ? (
+          <div className={`mt-5 rounded-xl border p-4 ${plan.featured ? 'border-white/[0.10] bg-black/20' : 'border-cyan-200/[0.10] bg-cyan-400/[0.045]'}`}>
             <div className="flex items-end gap-2">
-              <span className="bg-gradient-to-r from-white via-violet-100 to-cyan-100 bg-clip-text text-5xl font-black tracking-tight text-transparent">
+              <span className={`aurora-price bg-gradient-to-r ${plan.featured ? 'from-white via-violet-100 to-cyan-100 text-5xl' : 'from-white via-cyan-100 to-violet-100 text-4xl'} bg-clip-text font-black tracking-tight text-transparent`}>
                 {amount}
               </span>
               <span className="pb-1 text-sm font-bold text-white/58">{suffix}</span>
@@ -580,7 +654,9 @@ function PricingCard({ plan }) {
             <p className="mt-2 text-xs font-semibold text-cyan-100/72">{plan.priceStory}</p>
           </div>
         ) : (
-          <p className="mt-4 text-3xl font-black text-white">{plan.price}</p>
+          <div className="mt-5 rounded-xl border border-white/[0.10] bg-white/[0.04] p-4">
+            <p className="bg-gradient-to-r from-white via-violet-100 to-cyan-100 bg-clip-text text-3xl font-black text-transparent">{plan.price}</p>
+          </div>
         )}
         <p className="mt-3 text-sm leading-relaxed text-white/55">{plan.desc}</p>
         {plan.trialNote && (
@@ -618,6 +694,8 @@ function PricingCard({ plan }) {
 export default function LandingPublic() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { scrollYProgress } = useScroll()
+  const threadY = useTransform(scrollYProgress, [0, 1], ['-8%', '18%'])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32)
@@ -638,8 +716,12 @@ export default function LandingPublic() {
   ]
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#02040c] text-white">
+    <div className="courtia-flow min-h-screen overflow-x-hidden bg-[#02040c] text-white">
       <style>{globalStyles}</style>
+      <motion.div
+        className="fixed left-0 top-0 z-[70] h-[2px] w-full origin-left bg-gradient-to-r from-violet-400 via-cyan-300 to-emerald-300 shadow-[0_0_24px_rgba(34,211,238,0.45)]"
+        style={{ scaleX: scrollYProgress }}
+      />
 
       <nav className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${scrolled ? 'border-b border-white/[0.06] bg-[#02040c]/88 shadow-lg shadow-black/20 backdrop-blur-xl' : 'bg-transparent'}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
@@ -697,8 +779,12 @@ export default function LandingPublic() {
         )}
       </AnimatePresence>
 
-      <main>
-        <section id="hero" className="landing-section relative overflow-hidden px-4 pb-10 pt-20 sm:px-5 lg:pb-16 lg:pt-24">
+      <main className="relative">
+        <motion.div
+          className="aurora-thread pointer-events-none absolute left-1/2 top-[520px] z-0 hidden h-[calc(100%-760px)] w-px -translate-x-1/2 lg:block"
+          style={{ y: threadY }}
+        />
+        <section id="hero" className="landing-section cinematic-section relative overflow-hidden px-4 pb-10 pt-20 sm:px-5 lg:pb-16 lg:pt-24">
           <div className="absolute inset-0 bg-[#02040c]" />
           <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-25" />
           <div className="aurora-grid absolute inset-0 opacity-20" />
@@ -771,8 +857,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="credibilite" className="landing-section relative bg-gradient-to-b from-[#02040c] via-[#050816] to-[#02040c] px-5 py-6">
-          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+        <section id="credibilite" className="landing-section cinematic-section relative px-5 py-7">
           <div className="mx-auto grid max-w-7xl gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {credibilityItems.map((item) => {
               const Icon = item.icon
@@ -786,7 +871,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="probleme" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="probleme" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraHalo size={520} color="rgba(244,63,94,0.08)" position="top-left" blur={100} />
           <div className="relative z-10 mx-auto max-w-7xl">
             <SectionEyebrow
@@ -805,7 +890,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="cout-invisible" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="cout-invisible" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-35" />
           <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <ScrollReveal>
@@ -834,7 +919,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="solution" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="solution" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraHalo size={640} color="rgba(34,211,238,0.08)" position="top-right" blur={110} />
           <div className="relative z-10 mx-auto max-w-7xl">
             <SectionEyebrow
@@ -853,7 +938,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="ark" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="ark" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
           <div className="relative z-10 mx-auto max-w-7xl">
             <SectionEyebrow
@@ -883,7 +968,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="workflow" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="workflow" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <SectionEyebrow
               dark
@@ -908,7 +993,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="cockpit" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="cockpit" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraHalo size={720} color="rgba(16,185,129,0.07)" position="bottom-left" blur={120} />
           <div className="relative z-10 mx-auto max-w-7xl">
             <SectionEyebrow
@@ -921,7 +1006,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="fonctionnalites" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="fonctionnalites" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <SectionEyebrow
               dark
@@ -939,7 +1024,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="avant-apres" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="avant-apres" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
           <div className="relative z-10 mx-auto max-w-6xl">
             <SectionEyebrow
@@ -989,7 +1074,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="crm-metier" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="crm-metier" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraHalo size={520} color="rgba(59,130,246,0.08)" position="top-left" blur={100} />
           <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <ScrollReveal>
@@ -1018,7 +1103,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="pricing" className="landing-section relative overflow-hidden bg-[#02040c] px-5 py-16 lg:py-20">
+        <section id="pricing" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.16),transparent_30%),linear-gradient(to_bottom,#02040c_0%,rgba(2,4,12,0.82)_45%,#02040c_100%)]" />
           <div className="relative z-10 mx-auto max-w-7xl">
@@ -1044,7 +1129,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="reassurance" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="reassurance" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <div className="mx-auto max-w-7xl">
             <SectionEyebrow
               dark
@@ -1062,7 +1147,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="faq" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="faq" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraHalo size={480} color="rgba(124,58,237,0.08)" position="bottom-right" blur={100} />
           <div className="relative z-10 mx-auto max-w-4xl">
             <SectionEyebrow dark badge="FAQ" title="Questions fréquentes" />
@@ -1080,7 +1165,7 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="cta-final" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
+        <section id="cta-final" className="landing-section cinematic-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#060712]/70 to-[#060712]" />
           <div className="relative z-10 mx-auto max-w-4xl text-center">

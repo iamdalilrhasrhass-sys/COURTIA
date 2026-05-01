@@ -59,6 +59,14 @@
 - Le register classique conserve un niveau premium aligné via le funnel Starter.
 - Le wording de collecte carte reste commercial et clair, mais l’intégration Stripe reste réservée à une phase Billing dédiée.
 
+## Phase B — Landing 3D scroll premium
+- La landing doit se lire comme une seule expérience continue, pas comme une pile de pages séparées.
+- Les sections utilisent un fond `courtia-flow`, des halos progressifs et un rail Aurora subtil pour créer une narration au scroll.
+- Les cartes utilisent une bordure liquide et un hover 3D léger ; l’effet doit rester sobre et lisible.
+- Le hero peut afficher des signaux flottants métier, mais ils ne doivent jamais masquer le titre ni les CTA.
+- Le pricing Starter reçoit un traitement premium, tout en restant une entrée volontairement plus simple que Pro.
+- Pro reste l’offre poussée : plus lumineuse, badge recommandé, valeur journalière et wording essai clair.
+
 ## Interdictions
 - Ancien logo violet
 - Pastels excessifs

@@ -1,5 +1,23 @@
 # COURTIA — Rapport QA
 
+## QA Phase B — Landing 3D scroll premium (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Audit landing Python | ✅ OK | `python3 scripts/courtia_landing_audit.py` | Sections, CTA, anciens logos, routes OK |
+| Hero local | ✅ OK | Browser in-app | CTA visible, console 0 erreur |
+| Pricing local | ✅ OK | Browser in-app | Starter et Pro retravaillés, console 0 erreur |
+| Ancien logo texte | ✅ OK | Audit statique | Aucun `>C<` dans les mockups cibles |
+| Liens landing | ✅ OK | Audit statique | `/register`, `/register?plan=pro`, `/login`, mailto |
+
+### Décision Phase B
+- P0 bloquant : non.
+- Prochaine étape : pousser/déployer puis validation production landing, avant Phase C Auth ou Phase D cockpit selon priorité.
+
+---
+
 ## QA Phase A — Production funnel Pro (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
