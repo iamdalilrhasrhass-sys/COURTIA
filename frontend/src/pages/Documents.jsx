@@ -162,7 +162,7 @@ export default function Documents() {
             tabContent['a-traiter'].length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
                 <FileText size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                <p style={{ fontSize: 14, fontWeight: 500 }}>Aucun document à traiter</p>
+                <AuroraEmptyState icon={FileText} title="Aucun document à traiter" subtitle="Les documents uploadés par vos clients apparaîtront ici." />
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -247,7 +247,7 @@ export default function Documents() {
             tabContent['envoyes'].length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
                 <Send size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                <p style={{ fontSize: 14, fontWeight: 500 }}>Aucune soumission envoyée</p>
+                <AuroraEmptyState icon={Send} title="Aucune soumission envoyée" subtitle="Préparez et envoyez des dossiers aux assureurs." />
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

@@ -212,9 +212,7 @@ export default function Contrats() {
                         />
                       </div>
                     )) : (
-                      <div className="text-center py-8 text-xs rounded-2xl" style={{ color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.3)', border: 'var(--border-fine)' }}>
-                        Aucun contrat
-                      </div>
+                      <AuroraEmptyState icon={FileText} title="Aucun contrat" subtitle="Créez votre premier contrat pour commencer à suivre votre portefeuille." />
                     )}
                   </div>
                 </div>
