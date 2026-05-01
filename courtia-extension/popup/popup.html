@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COURTIA ARK</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Non connecte -->
+    <div id="login-view" class="view">
+      <div class="logo">
+        <div class="logo-icon">A</div>
+        <div class="logo-text">
+          <strong>COURTIA</strong>
+          <span>ARK Assistant</span>
+        </div>
+      </div>
+      <p class="subtitle">Connectez-vous pour activer ARK</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="votre@email.com">
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="login-password" placeholder="Votre mot de passe">
+      </div>
+      <p class="security-note">
+        &#128274; Mot de passe jamais stocke ni transmis a un tiers
+      </p>
+      <button id="login-btn" class="btn-primary">Se connecter</button>
+      <div id="login-error" class="error-msg"></div>
+    </div>
+
+    <!-- Connecte -->
+    <div id="connected-view" class="view hidden">
+      <div class="logo">
+        <div class="logo-icon connecte">A</div>
+        <div class="logo-text">
+          <strong>COURTIA</strong>
+          <span id="user-name">Connecte</span>
+        </div>
+        <button id="logout-btn" class="btn-icon" title="Se deconnecter">&times;</button>
+      </div>
+
+      <div class="status-bar">
+        <span class="status-dot"></span>
+        <span>ARK actif sur cette page</span>
+      </div>
+
+      <div class="section">
+        <h3>Formulaires detectes</h3>
+        <p id="form-count" class="stat-value">0</p>
+        <p class="stat-label">formulaire(s) sur cette page</p>
+      </div>
+
+      <div class="actions">
+        <button id="analyze-btn" class="btn-primary">
+          &#9889; Analyser la page
+        </button>
+        <button id="open-courtia-btn" class="btn-secondary">
+          Ouvrir COURTIA
+        </button>
+      </div>
+
+      <div id="result-area"></div>
+
+      <p class="security-note">
+        &#128274; Validation humaine obligatoire avant toute action
+      </p>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

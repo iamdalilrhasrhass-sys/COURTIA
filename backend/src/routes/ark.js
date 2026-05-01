@@ -285,4 +285,126 @@ router.get('/history/:clientId', verifyToken, async (req, res) => {
   }
 })
 
+// ── Extension Chrome: analyser une page web ────────────────────────
+router.post('/extension/analyze', verifyToken, async (req, res) => {
+  try {
+    const { url, title, text, forms } = req.body.pageData || req.body;
+    if (!text && (!forms || forms.length === 0)) {
+      return res.status(400).json({ error: 'Donnees de page requises' });
+    }
+
+    const pageContext = `URL: ${url || 'inconnue'}
+Titre: ${title || ''}
+
+Contenu de la page:
+${(text || '').substring(0, 3000)}
+
+Formulaires detectes:
+${(forms || []).map((f, i) =>
+  `Formulaire #${i + 1}: ${f.title || f.action || 'sans titre'}
+  ${(f.fields || []).map(fd =>
+    `  - ${fd.label || fd.name || '?'} (${fd.type || 'text'})${fd.required ? ' *requis' : ''}`
+  ).join('\n')}`
+).join('\n\n')}`;
+
+    const systemPrompt = `Tu es ARK, l'assistant intelligent de COURTIA, un logiciel pour courtiers en assurances.
+Analyse le contenu de la page web et les formulaires detectes.
+
+Reponds UNIQUEMENT avec un objet JSON valide :
+{
+  "analysis": "analyse concise de la page en 2-3 phrases (en francais)",
+  "suggestions": [
+    {
+      "field_name": "nom du champ",
+      "field_label": "label du champ",
+      "suggested_value": "valeur suggeree",
+      "selector": "selecteur CSS du champ si disponible",
+      "confidence": 0.0 a 1.0,
+      "reason": "pourquoi cette valeur"
+    }
+  ]
+}
+
+Regles de securite ABSOLUES :
+- NE JAMAIS suggerer de mots de passe
+- NE JAMAIS suggerer d'informations bancaires
+- NE JAMAIS suggerer de donnees personnelles reelles
+- Les suggestions doivent etre des valeurs par defaut ou des aides (ex: type d'assurance, civilité)
+- Si le formulaire est inconnu ou sans rapport avec l'assurance, reponds {"analysis": "Aucune suggestion pertinente pour cette page.", "suggestions": []}`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: pageContext }
+      ],
+      max_tokens: 2000,
+      temperature: 0.3,
+    });
+
+    const raw = completion.choices[0]?.message?.content || '{}';
+    let cleaned = raw.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    }
+
+    let result;
+    try { result = JSON.parse(cleaned); }
+    catch { result = { analysis: raw.substring(0, 500), suggestions: [] }; }
+
+    return res.json(result);
+  } catch (err) {
+    console.error('[ARK EXTENSION ANALYZE]', err.message);
+    return res.status(500).json({ error: err.message, analysis: 'Erreur analyse', suggestions: [] });
+  }
+});
+
+// ── Extension Chrome: suggestion de remplissage pour un champ ────────
+router.post('/extension/fill', verifyToken, async (req, res) => {
+  try {
+    const { field_name, field_label, form_title, page_title } = req.body;
+
+    const prompt = `Tu es ARK, assistant pour courtiers en assurances COURTIA.
+Un courtier remplit un formulaire et a besoin d'une suggestion pour un champ.
+
+Champ: ${field_label || field_name || 'inconnu'}
+Formulaire: ${form_title || 'inconnu'}
+Page: ${page_title || 'inconnue'}
+
+Suggestions:
+1. Si le champ est un type d'assurance: "Auto", "Moto", "Habitation", "Sante", "Professionnelle", "MRH"
+2. Si le champ est une civilite: "M.", "Mme", "Mlle"
+3. Si le champ est un pays: "France"
+4. Si le champ est une date: la date courante approximee
+5. Sinon, une valeur par defaut pertinente
+
+REGLES DE SECURITE:
+- Ne jamais suggerer de mot de passe, numero de carte, ou donnees personnelles
+- Si le champ est sensible, reponds {"suggestion": null, "raison": "Champ sensible, remplissage manuel requis"}
+
+Reponds UNIQUEMENT avec ce JSON:
+{"suggestion": "valeur ou null", "confiance": 0.0-1.0, "raison": "explication courte"}`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'deepseek-chat',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 300,
+      temperature: 0.3,
+    });
+
+    const raw = completion.choices[0]?.message?.content || '{"suggestion":null,"confiance":0,"raison":"Erreur"}';
+    let cleaned = raw.trim();
+    if (cleaned.startsWith('```')) cleaned = cleaned.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+
+    let result;
+    try { result = JSON.parse(cleaned); }
+    catch { result = { suggestion: null, confiance: 0, raison: 'Erreur de parsing' }; }
+
+    return res.json(result);
+  } catch (err) {
+    console.error('[ARK EXTENSION FILL]', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router
