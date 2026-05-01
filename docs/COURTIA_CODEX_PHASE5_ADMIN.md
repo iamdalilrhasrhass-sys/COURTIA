@@ -48,6 +48,8 @@ Ce désalignement rendait l'Admin Center visuellement présent mais fonctionnell
 | Scan route cassée | OK | `rg` ciblé | Plus de `/app/dashboard` dans `AdminRoute.jsx` |
 | Backend health | OK | `curl https://api.courtiark.fr/api/health` | HTTP 200 |
 | `/admin` local non connecté | OK | Browser in-app | Redirection vers `/login`, console 0 erreur |
+| `/admin` production broker | OK | Browser in-app Vercel | Écran "Admin Center protégé", console 0 erreur |
+| Endpoint super admin sans token | OK | `curl /api/admin/super/analytics` | HTTP 401 attendu |
 
 ## 6. Build
 `npm run build` : OK.
@@ -57,8 +59,8 @@ Ce désalignement rendait l'Admin Center visuellement présent mais fonctionnell
 
 ## 8. Limites
 - Aucun token super_admin réel disponible dans cette mission : les vues super_admin chargées avec données réelles restent à tester avec un compte propriétaire.
-- Test broker production à réaliser après déploiement Vercel du commit.
+- Test broker production exécuté après déploiement Vercel : accès refusé propre.
 - Les endpoints coûts `/api/admin/costs` restent séparés car le backend les monte volontairement sous `/api/admin`.
 
 ## 9. Prochaine phase
-Validation production Admin, puis Phase F QA Python.
+Phase F QA Python.

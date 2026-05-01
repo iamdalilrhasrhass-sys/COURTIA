@@ -14,6 +14,7 @@
 - [x] Phase D Codex — Cockpit interne batch 1, build/test OK
 - [x] Phase D Codex — Cockpit interne validé en production Vercel
 - [x] Phase E Codex — Admin Center aligné localement sur `/api/admin/super/*`
+- [x] Phase E Codex — Admin Center validé en production broker : refus propre, console 0 erreur
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -30,7 +31,6 @@
 - [x] Admin Center API mismatch — frontend aligné sur `/api/admin/super/*`, écran broker refusé propre, suppression de `/app/dashboard`.
 
 ## P1 — Important
-- [ ] Validation production Admin Center post-déploiement — broker connecté, non connecté, console, absence d'appel infini
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] Billing / Onboarding Stripe :

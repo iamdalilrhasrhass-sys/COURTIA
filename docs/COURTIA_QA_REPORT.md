@@ -49,11 +49,13 @@
 | Route `/app/dashboard` | ✅ OK | `rg` ciblé | Suppression de la redirection cassée |
 | Backend health | ✅ OK | `curl https://api.courtiark.fr/api/health` | HTTP 200 |
 | `/admin` local non connecté | ✅ OK | Browser in-app | Redirection vers `/login`, console 0 erreur |
+| `/admin` production broker | ✅ OK | Browser in-app Vercel | Écran "Admin Center protégé", console 0 erreur |
+| Endpoint `/api/admin/super/analytics` sans token | ✅ OK | `curl` | HTTP 401 attendu |
 | Impersonation | ✅ OK | Revue code | Aucun bouton ni JWT d'impersonation ajouté |
 
 ### Limites Phase E
 - Test super_admin réel non exécuté : token super_admin absent.
-- Test broker production à exécuter après déploiement Vercel.
+- Non connecté en production non retesté dans une session vierge, car le navigateur in-app partage la session broker ; le code et le test local redirigent bien vers `/login`.
 
 ---
 
