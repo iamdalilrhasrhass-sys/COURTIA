@@ -5,7 +5,9 @@
 
 - **Wordmark** : "courtia." (minuscules, point dégradé)
 - **Tagline** : "Une bulle d'intelligence pour celui qui protège."
-- **Fichier source** : `courtia_bubble_C.html`
+- **Fichier source canonique** : `frontend/public/courtia-bubble-C-reference.html`
+- **Fichier fourni** : `/Users/dalilrhasrhass/Desktop/courtia_bubble_C.html`
+- **Règle** : tout l'écosystème COURTIA doit tourner autour de cette bulle C, pas autour d'un C générique.
 
 ## Composants Aurora créés
 
@@ -28,6 +30,7 @@
 
 ## Règles visuelles
 - Pas d'ancien logo violet (banni définitivement)
+- Toute nouvelle surface doit réutiliser `CourtiaBubbleLogo`, `CourtiaMiniLogo`, `CourtiaLogoLoader` ou une déclinaison issue du fichier canonique.
 - Pas de surcharge — un seul rappel Aurora par page
 - Pas d'animations lourdes
 - Palette : fonds sombres, accents iridescents

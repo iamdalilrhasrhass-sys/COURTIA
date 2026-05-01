@@ -39,6 +39,34 @@
 
 ---
 
+## QA Hotfix final — Rapports + logo canonique (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Logo canonique | ✅ OK | `cmp` | Le fichier Desktop est identique à la référence repo |
+| Crash `/rapports` | ✅ Corrigé local | Build Vite | Imports manquants ajoutés |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1 |
+
+---
+
+## QA Phase H — Final (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend final | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend final | ✅ OK | `npm run test` | 29 tests passés |
+| Audit Python final | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 38 P2 |
+| Backend health final | ✅ OK | `curl https://api.courtiark.fr/api/health` | HTTP 200 |
+| Mauvais mot de passe UI | ✅ OK | Browser in-app | Message français propre |
+| Login demo UI | ✅ OK | Browser in-app | Redirection `/dashboard` validée avant rate limit |
+| Dashboard final | ✅ OK | Browser in-app | Page visible |
+| Admin broker final | ✅ OK | Browser in-app | Accès refusé propre |
+| Routes privées finales | ⚠️ Partiel | Browser in-app | Retest interrompu par rate limit après tentatives répétées ; Phase D prod validée |
+
+---
+
 ## QA Hotfix final — Auth rate limit (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

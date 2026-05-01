@@ -180,6 +180,36 @@
 
 ---
 
+## Hotfix final — Rapports + logo canonique (1er mai 2026)
+
+**Commit prévu** : fix: restore rapports page and document canonical logo
+
+### Résumé
+- Correction du crash production `/rapports` : imports `AuroraEmptyState` et `BarChart3` rétablis.
+- Documentation du logo canonique : le fichier Desktop `courtia_bubble_C.html` est identique à `frontend/public/courtia-bubble-C-reference.html`.
+- Clarification : tout l'écosystème visuel doit partir de `CourtiaBubbleLogo.jsx` ou de ses variantes.
+
+### Vérifications
+- `cmp` fichier Desktop / référence repo : identique
+- Build frontend : OK
+- Tests frontend : 29 passés
+- Audit Python : 0 P0/P1
+
+---
+
+## Phase H — Tests finaux et documentation (1er mai 2026)
+
+**Commit prévu** : docs: add final Courtia 2M delivery and QA report
+
+### Fichiers créés
+- `docs/COURTIA_CODEX_FINAL_REPORT.md`
+- `docs/COURTIA_CODEX_FINAL_QA_REPORT.md`
+
+### Résumé
+Rapport final honnête : prêt pour démo produit, partiel pour commercialisation payante, P1 Billing/DNS/super_admin encore ouverts.
+
+---
+
 ## Hotfix final — Message auth rate limit (1er mai 2026)
 
 **Commit prévu** : fix: improve Courtia auth rate limit messaging
