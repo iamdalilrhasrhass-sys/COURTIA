@@ -1,5 +1,23 @@
 # COURTIA — Rapport QA
 
+## QA Phase 2 — Landing premium Codex (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Audit landing Python | ✅ OK | `python3 scripts/courtia_landing_audit.py` | 15 sections détectées, CTA valides, aucun ancien `C` texte |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB non bloquant |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| `/` local | ✅ OK | Browser in-app `http://127.0.0.1:5174/` | Hero refait après rejet design, console 0 erreur |
+| `/login` local | ✅ OK | Browser in-app | Page visible, console 0 erreur |
+| `/register` local | ✅ OK | Browser in-app | Page visible, console 0 erreur |
+| `/register?plan=pro` local | ✅ OK | Browser in-app | Badge Pro visible, console 0 erreur |
+| Wording essai Pro | ✅ OK | Audit Python | `0 € aujourd’hui`, carte pour activer l’essai, annulation en ligne |
+
+### Notes Phase 2
+- Production non modifiée tant que le commit n’est pas poussé.
+- Test production post-déploiement requis avant validation définitive Vercel.
+- Admin Center non corrigé en Phase 2 : mismatch API documenté séparément.
+
 ## QA finale (1er mai 2026)
 
 | Page | Desktop | Console | Logo | Erreurs | Statut |
