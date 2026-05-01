@@ -18,11 +18,11 @@ Faire passer COURTIA d'une interface SaaS sympathique à un produit sérieux, pr
 |-------|-------------|--------|
 | 0 | Vérification état de départ | ✅ Terminé |
 | 1 | Suppression erreurs techniques visibles | ✅ Terminé |
-| 2 | Admin Center frontend | 🔄 En cours |
-| 3 | Écosystème Aurora partout | ⏳ En attente |
-| 4 | SEO / favicon / og:image | ⏳ En attente |
-| 5 | QA desktop/mobile/prod | ⏳ En attente |
-| 6 | Rapport final | ⏳ En attente |
+| 2 | Admin Center frontend | ✅ Terminé |
+| 3 | Écosystème Aurora partout | ✅ Terminé |
+| 4 | SEO / favicon / og:image | ✅ Terminé |
+| 5 | QA desktop/mobile/prod | ✅ Terminé |
+| 6 | Rapport final | ✅ Terminé |
 
 ## Décisions importantes
 - Pas d'impersonation réelle (désactivée)

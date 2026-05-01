@@ -2,35 +2,27 @@
 
 ## Terminé
 - [x] Batch 0 — Vérification état de départ
-- [x] Batch 1 — Erreurs techniques supprimées
-- [ ] Batch 2 — Admin Center frontend (en cours)
+- [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
+- [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
+- [x] Batch 3 — Aurora (spinners, empty states)
+- [x] Batch 4 — SEO / favicon / og:image
+- [x] Batch 5 — QA desktop + production
+- [x] Batch 6 — Rapport final
+- [x] Documentation /docs/ (7 fichiers)
+- [x] Telegram après chaque batch
 
 ## P0 — Bloquant
-*Aucun pour le moment*
+*Aucun*
 
 ## P1 — Important
-- [ ] Finaliser Admin Center (build, commit, push, vérification prod)
-- [ ] Écosystème Aurora sur toutes les pages internes
-- [ ] SEO / favicon / og:image LinkedIn
-- [ ] QA complète desktop + mobile
-- [ ] Rapport final honnête
+- [ ] DNS courtiark.fr → propager nameservers Hostinger
+- [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
+- [ ] Token super_admin → tests Admin Center E2E
+- [ ] AuroraPageHeader → Clients, Tâches, Parametres
 
 ## P2 — Finition
-- [ ] Remplacer loaders basiques par CourtiaLogoLoader
-- [ ] Remplacer états vides par AuroraEmptyState
-- [ ] Harmoniser boutons (AuroraButton)
-- [ ] Harmoniser badges (AuroraBadge)
-- [ ] Ajouter AuroraDivider aux transitions brutales
-- [ ] Vérifier absence ancien logo violet partout
-- [ ] Apple touch icon
-- [ ] Twitter Card
-- [ ] Tests /admin non connecté
-- [ ] Tests /admin avec broker
-- [ ] Documentation complète dans /docs
-
-## Ordre recommandé
-1. Terminer Batch 2 → build, commit, push
-2. Batch 3 → Aurora partout
-3. Batch 4 → SEO/Social
-4. Batch 5 → QA
-5. Batch 6 → Rapport final
+- [ ] AuroraDivider sur toutes les transitions
+- [ ] AuroraButton → harmoniser toutes les pages
+- [ ] Test mobile responsive complet (toutes les pages app)
+- [ ] Compression og:image → PNG pour LinkedIn
+- [ ] Vérifier apple-touch-icon rendu mobile

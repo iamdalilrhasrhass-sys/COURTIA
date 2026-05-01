@@ -1,14 +1,15 @@
 # COURTIA — Rapport QA
 
-## QA initiale (1er mai 2026, avant mission)
+## QA finale (1er mai 2026)
 
-| Page | Desktop | Mobile | Console | Logo | Erreurs | Statut |
-|------|---------|--------|---------|------|---------|--------|
-| / | ✅ | ✅ | ✅ | ✅ | 0 | OK |
-| /login | ✅ | ✅ | ✅ | ✅ | 0 | OK |
-| /register | ✅ | ✅ | ✅ | ✅ | 0 | OK |
-| /app/dashboard | ✅ | ⚠️ | ✅ | ✅ | 0 | OK |
-| /admin | ❌ | ❌ | - | - | 404 | En construction |
+| Page | Desktop | Console | Logo | Erreurs | Statut |
+|------|---------|---------|------|---------|--------|
+| / (landing) | ✅ | 0 | ✅ | 0 | OK |
+| /login | ✅ | 0 | ✅ | 0 | OK |
+| /register?plan=pro | ✅ | 0 | ✅ | 0 | OK |
+| /admin | ✅ (→login) | 0 | ✅ | 0 | Protégé |
+| /admin/users | ✅ (→login) | 0 | ✅ | 0 | Protégé |
+| /admin/system | ✅ (→login) | 0 | ✅ | 0 | Protégé |
 
 ### Routes backend testées
 - `/api/health` → ✅ 200 OK
@@ -16,8 +17,20 @@
 - `/api/admin/analytics` → ✅ 401 (protégé)
 
 ### Production
-- Vercel : ✅ Déployé
-- VPS : ✅ PM2 online
-- API : ✅ Répond
+- Vercel : ✅ Déployé (courtia.vercel.app)
+- VPS : ✅ PM2 online (courtia-api, hermes-gateway)
+- API : ✅ Répond (health OK)
+- DNS : ⚠️ courtiark.fr en parking Hostinger
 
-*Ce rapport sera mis à jour après chaque batch.*
+### Console
+- 0 erreur JavaScript sur toutes les pages testées
+
+### Mobile responsive
+- Landing : ✅ Pas de scroll horizontal
+- Login : ✅ Formulaire lisible
+- Register : ✅ Formulaire lisible
+
+### Problèmes restants
+- P1 : DNS courtiark.fr non propagé
+- P1 : Stripe LIVE non finalisé
+- P2 : Tests admin E2E impossibles sans token super_admin
