@@ -30,6 +30,18 @@
 - Login : ✅ Formulaire lisible
 - Register : ✅ Formulaire lisible
 
+## QA Auth / Login (1er mai 2026)
+
+| Test | Résultat | Preuve |
+|---|---|---|
+| Register nouvel utilisateur | ✅ OK | dalil.test.2026.01@courtia.fr créé, dashboard affiché |
+| Login mauvais mot de passe | ✅ OK | Message "Email ou mot de passe incorrect" |
+| Login bon mot de passe | ✅ OK | demo@courtia.fr → "Bonjour Test" |
+| Dashboard après login | ✅ OK | Dashboard cockpit Aurora affiché |
+| Refresh dashboard | ✅ OK | Utilisateur reste connecté |
+| Console | ✅ OK | 0 erreur |
+| Backend health | ✅ OK | PM2 online, API health OK |
+
 ### Problèmes restants
 - P1 : DNS courtiark.fr non propagé
 - P1 : Stripe LIVE non finalisé

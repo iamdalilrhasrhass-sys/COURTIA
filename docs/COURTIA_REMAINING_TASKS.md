@@ -12,7 +12,9 @@
 - [x] Telegram après chaque batch
 
 ## P0 — Bloquant
-*Aucun*
+- [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
+
+*Aucun autre P0*
 
 ## P1 — Important
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
