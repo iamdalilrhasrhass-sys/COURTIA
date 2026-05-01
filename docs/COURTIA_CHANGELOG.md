@@ -1,5 +1,25 @@
 # COURTIA — Changelog Mission 2M
 
+## Hotfix portfolio — Morning Brief compatible schéma production (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : fix: make portfolio morning brief resilient to timestamp schema
+
+### Changements
+- Détection dynamique de la colonne temporelle disponible sur `portfolio_insights`.
+- `/api/portfolio/morning-brief`, `/health-score`, `/regenerate` et `/insights/history` ne supposent plus obligatoirement `generated_at`.
+- `portfolioAnalyzer` ne force plus l'insertion dans `generated_at` si la colonne est absente.
+- Aucune migration DB, aucun Stripe, aucune impersonation.
+
+### Tests
+- `node -c backend/server.js` : OK.
+- `node -c backend/src/routes/portfolio.js` : OK.
+- `node -c backend/src/services/portfolioAnalyzer.js` : OK.
+- `node -c backend/src/utils/portfolioSchema.js` : OK.
+- `npm run build` : OK.
+- `npm run test` : 33 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+
 ## Landing Aurora — Rebuild en 3 actes continus (1er mai 2026)
 
 **Commit** : à créer
