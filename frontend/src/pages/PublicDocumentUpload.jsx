@@ -6,6 +6,7 @@ import {
   Shield, Lock, X, File, FileImage, FileSpreadsheet,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -169,10 +170,7 @@ export default function PublicDocumentUpload() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f6f2', fontFamily: "'Inter', sans-serif" }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 32, height: 32, border: '3px solid #E5E7EB', borderTopColor: '#5B4DF5', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <p style={{ fontSize: 14, color: '#6B7280' }}>Chargement de votre espace...</p>
-        </div>
+        <CourtiaLogoLoader size={40} text="Chargement de votre espace..." />
       </div>
     )
   }
@@ -345,7 +343,7 @@ export default function PublicDocumentUpload() {
                 }}>
                 {uploading ? (
                   <>
-                    <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    <CourtiaLogoLoader size={16} text="" />
                     Envoi en cours...
                   </>
                 ) : (

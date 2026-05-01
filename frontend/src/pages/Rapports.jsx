@@ -132,7 +132,7 @@ export default function Rapports() {
         <div className="rp-card" style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>RÉPARTITION DU PORTEFEUILLE</h2>
           {contratsByType.length === 0 ? (
-            <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Aucune donnée disponible</p>
+            <AuroraEmptyState icon={BarChart3} title="Aucune donnée disponible" subtitle="Importez vos premiers contrats pour voir apparaître la répartition de votre portefeuille." />
           ) : (
             <div className="rp-table-wrap" style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
