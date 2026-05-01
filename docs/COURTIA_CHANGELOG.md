@@ -1,5 +1,25 @@
 # COURTIA — Changelog Mission 2M
 
+## Phase C Codex — Auth / Funnel final premium (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: polish Courtia auth and Pro funnel experience
+
+### Changements
+- Login : titre renforcé en `Accédez à votre cockpit COURTIA`.
+- Register Starter : titre renforcé en `Activez votre cockpit Starter`.
+- Register Pro : funnel conservé avec `Activez votre cockpit Pro`.
+- Carte auth enrichie : reflets Aurora, bordure liquide, halo et bouton principal plus premium.
+- Strip de valeur desktop ajouté sans casser le mobile.
+- Aucun changement backend, Stripe, DB ou JWT.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- Browser local `/register?plan=pro`, `/register`, `/login` : visibles, console 0 erreur.
+
+---
+
 ## Phase B Codex — Landing 3D scroll premium (1er mai 2026)
 
 **Commit** : à créer

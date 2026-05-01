@@ -66,6 +66,28 @@ const STYLES = `
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.10), transparent 22%, transparent 76%, rgba(34,211,238,0.07)),
+      radial-gradient(circle at 78% 18%, rgba(124,58,237,0.12), transparent 32%);
+    opacity: 0.72;
+  }
+  .auth-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(167,139,250,0.18), rgba(34,211,238,0.14), rgba(255,255,255,0.05));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
 
   .auth-kicker {
     display: inline-flex;
@@ -91,11 +113,16 @@ const STYLES = `
     justify-content: center;
     padding: 56px 52px;
     background:
-      linear-gradient(145deg, rgba(124,58,237,0.15), rgba(2,4,12,0.25) 42%, rgba(34,211,238,0.08)),
+      linear-gradient(145deg, rgba(124,58,237,0.18), rgba(2,4,12,0.25) 42%, rgba(34,211,238,0.10)),
       rgba(255,255,255,0.015);
     border-right: 1px solid rgba(255,255,255,0.07);
     position: relative;
     overflow: hidden;
+  }
+  .auth-left,
+  .auth-right {
+    position: relative;
+    z-index: 1;
   }
 
   .auth-left-halo {
@@ -150,6 +177,18 @@ const STYLES = `
     position: relative;
     box-shadow: 0 20px 70px rgba(0,0,0,0.28);
   }
+  .auth-preview::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 42%, rgba(34,211,238,0.06));
+  }
+  .auth-preview > * {
+    position: relative;
+    z-index: 1;
+  }
 
   .auth-right {
     flex: 0.88;
@@ -172,6 +211,31 @@ const STYLES = `
     border-radius: 18px;
     padding: 16px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .auth-activation-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .auth-activation-item {
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.035);
+    border-radius: 12px;
+    padding: 9px 8px;
+  }
+  .auth-activation-item strong {
+    display: block;
+    color: rgba(255,255,255,0.86);
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .auth-activation-item span {
+    display: block;
+    margin-top: 3px;
+    color: rgba(255,255,255,0.36);
+    font-size: 9.5px;
+    line-height: 1.2;
   }
 
   .auth-input {
@@ -201,7 +265,9 @@ const STYLES = `
     padding: 13px 20px;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, #7c3aed, #8b5cf6 48%, #22d3ee);
+    background:
+      radial-gradient(circle at 16% 0%, rgba(255,255,255,0.28), transparent 28%),
+      linear-gradient(135deg, #7c3aed, #8b5cf6 48%, #22d3ee);
     color: #fff;
     font-size: 14px;
     font-weight: 800;
@@ -212,7 +278,7 @@ const STYLES = `
   }
   .auth-btn:hover {
     background: linear-gradient(135deg, #8b5cf6, #9b6dff 48%, #38bdf8);
-    box-shadow: 0 10px 28px rgba(139,92,246,0.28);
+    box-shadow: 0 14px 34px rgba(139,92,246,0.32), 0 0 26px rgba(34,211,238,0.16);
   }
   .auth-btn:disabled {
     opacity: 0.5;
@@ -303,6 +369,16 @@ const STYLES = `
     border-radius: 18px;
     padding: 14px;
     margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-trial-panel::after {
+    content: '';
+    position: absolute;
+    inset: auto -20% -35% 22%;
+    height: 120px;
+    background: radial-gradient(circle, rgba(34,211,238,0.12), transparent 68%);
+    pointer-events: none;
   }
   .auth-trial-grid {
     display: grid;
@@ -349,6 +425,7 @@ const STYLES = `
     .auth-right-inner > p { margin-bottom: 12px !important; }
     .auth-plan-badge { margin-bottom: 12px; }
     .auth-trial-panel { padding: 10px; margin-bottom: 12px; }
+    .auth-activation-strip { display: none; }
     .auth-form-shell { padding: 10px; }
     .auth-root { padding: 0; }
     .auth-trial-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -375,7 +452,7 @@ export default function Login() {
   const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
   const planName = planKey === 'pro' ? 'Pro' : 'Starter'
   const planPrice = planKey === 'pro' ? '159 € HT/mois' : '89 € HT/mois'
-  const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Démarrez votre cockpit Starter'
+  const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
   const planSubtitle = planKey === 'pro'
     ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
     : '7 jours pour structurer vos clients, contrats et relances dans un cockpit clair.'
@@ -536,7 +613,7 @@ export default function Login() {
             <h1 style={{ fontSize: 22, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 4, letterSpacing: '-0.02em' }}>
               {isRegister
                 ? planTitle
-                : 'Ouvrez votre cockpit'}
+                : 'Accédez à votre cockpit COURTIA'}
             </h1>
             <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)', marginBottom: 24 }}>
               {isRegister
@@ -565,6 +642,26 @@ export default function Login() {
                 </p>
               </div>
             )}
+
+            <div className="auth-activation-strip" aria-hidden="true">
+              {(isRegister
+                ? [
+                    ['0 €', 'aujourd’hui'],
+                    ['7 jours', 'pour juger la valeur'],
+                    ['En ligne', 'annulation simple'],
+                  ]
+                : [
+                    ['ARK', 'brief métier'],
+                    ['Clients', 'portefeuille centralisé'],
+                    ['Sécurisé', 'accès protégé'],
+                  ]
+              ).map(([value, label]) => (
+                <div key={`${value}-${label}`} className="auth-activation-item">
+                  <strong>{value}</strong>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
 
             <div className="auth-form-shell">
             <form onSubmit={handleSubmit} noValidate>

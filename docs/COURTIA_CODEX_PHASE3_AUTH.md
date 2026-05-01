@@ -13,6 +13,10 @@ Rendre le register/login plus premium et plus vendeur, sans casser l’auth vali
 - Mention claire : la carte sera demandée dans une étape de paiement sécurisée dédiée, pas collectée dans le formulaire COURTIA actuel.
 - Login renommé “Ouvrez votre cockpit”.
 - Mobile : panneau essai compact en trois cellules pour éviter un formulaire trop bas.
+- Reprise Phase C : login renommé “Accédez à votre cockpit COURTIA”.
+- Reprise Phase C : register Starter renommé “Activez votre cockpit Starter”.
+- Reprise Phase C : carte auth renforcée avec halo, bordure Aurora, reflets doux et bouton plus premium.
+- Reprise Phase C : ajout d’un strip de valeur desktop pour donner plus de densité commerciale sans alourdir le mobile.
 
 ## 3. Landing / Pricing polish associé
 - Suppression de la transition visuelle trop brute entre sections.
@@ -35,6 +39,9 @@ Rendre le register/login plus premium et plus vendeur, sans casser l’auth vali
 - Browser local `/register?plan=pro` après compactage mobile : CTA visible sans scroll à la hauteur de l’in-app browser.
 - Browser local `/register` : funnel Starter visible, 0 EUR aujourd’hui, 89 EUR HT/mois après essai, console 0 erreur.
 - Browser local `/#pricing` : pricing Pro premium, annulation en ligne visible, console 0 erreur.
+- Browser local Phase C `/register?plan=pro` : titre Pro, CTA Pro, strip valeur, console 0 erreur.
+- Browser local Phase C `/register` : titre Starter, CTA Starter, console 0 erreur.
+- Browser local Phase C `/login` : titre cockpit COURTIA, bouton login, console 0 erreur.
 
 ## 6. Non fait volontairement
 - Pas de checkout Stripe.
