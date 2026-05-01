@@ -1,5 +1,24 @@
 # COURTIA — Changelog Mission 2M
 
+## Landing Aurora — Rebuild en 3 actes continus (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: rebuild Courtia landing as continuous Aurora sales story
+
+### Changements
+- Landing publique restructurée en 3 actes : promesse, portefeuille/ARK/cockpit, conversion.
+- Ajout d'un sol perspectif Aurora et d'un rideau lumineux pour relier toute la page.
+- Hero renforcé autour de la Bubble C officielle avec scène liquide, halo, orbites et signaux métier.
+- Pricing, réassurance et FAQ regroupés dans un flux de conversion plus premium.
+- Correction préventive des largeurs mobile du hero et des CTA.
+- Aucun changement backend, auth, Stripe, DB ou impersonation.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 33 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+- Captures Chrome headless desktop/mobile locales : desktop OK, mobile headless partiel car media queries non fiables dans ce mode.
+
 ## Stabilisation auth/session — Pré-commercialisation 500 adhérents (1er mai 2026)
 
 **Commit** : à créer

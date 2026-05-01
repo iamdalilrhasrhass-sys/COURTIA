@@ -1,5 +1,22 @@
 # COURTIA — Rapport QA
 
+## QA Landing Aurora — 3 actes continus (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 33 tests passés |
+| Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 38 P2 |
+| Desktop local | ✅ OK | Chrome headless screenshot | Hero, CTA, Bubble C et scène cockpit visibles |
+| Mobile local | ⚠️ Partiel | Chrome headless screenshot | Outil headless ne déclenche pas fidèlement le rendu mobile ; CSS renforcé contre l'overflow |
+| Stripe / auth / backend | ✅ Non touché | Revue diff | Aucun checkout, aucune DB, aucune impersonation |
+
+### Décision
+- P0 bloquant : non détecté par build/tests/audit.
+- À vérifier après push : rendu Vercel réel dans l'in-app browser mobile et desktop.
+
+---
+
 ## QA Stabilisation auth/session — Pré-commercialisation (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

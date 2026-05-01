@@ -23,6 +23,7 @@
 - [x] Stabilisation auth/session — une erreur API secondaire ne supprime plus automatiquement la session
 - [x] Stabilisation auth/session — helpers token `courtia_token` / `token` harmonisés
 - [x] Stabilisation auth/session — rate limit auth backend adouci sans supprimer la sécurité
+- [x] Landing Aurora — refonte en 3 actes continus autour de la Bubble C officielle
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -70,6 +71,7 @@
 - [ ] AuroraDivider sur toutes les transitions
 - [ ] AuroraButton → harmoniser toutes les pages
 - [ ] Test mobile responsive complet (toutes les pages app)
+- [ ] Valider visuellement la landing Vercel dans un vrai viewport mobile après déploiement
 - [x] Compression og:image → PNG pour LinkedIn
 - [ ] Vérifier apple-touch-icon rendu mobile
 - [ ] Optimiser le chunk frontend principal supérieur à 500 kB
