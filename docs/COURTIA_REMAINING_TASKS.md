@@ -13,6 +13,7 @@
 - [x] Phase C Codex — Auth / funnel final validé en production Vercel
 - [x] Phase D Codex — Cockpit interne batch 1, build/test OK
 - [x] Phase D Codex — Cockpit interne validé en production Vercel
+- [x] Phase E Codex — Admin Center aligné localement sur `/api/admin/super/*`
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -26,9 +27,10 @@
 ## P0 — Bloquant plateforme complète
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
 
-- [ ] Admin Center API mismatch — frontend appelle `/api/admin/analytics`, `/api/admin/users`, `/api/admin/impersonation/logs` alors que le backend réel expose `/api/admin/super/*`. Ne bloque pas landing/login/dashboard, mais bloque une déclaration "Admin Center fonctionnel à 100%".
+- [x] Admin Center API mismatch — frontend aligné sur `/api/admin/super/*`, écran broker refusé propre, suppression de `/app/dashboard`.
 
 ## P1 — Important
+- [ ] Validation production Admin Center post-déploiement — broker connecté, non connecté, console, absence d'appel infini
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] Billing / Onboarding Stripe :

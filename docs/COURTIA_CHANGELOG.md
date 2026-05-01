@@ -180,6 +180,34 @@
 
 ---
 
+## Phase E — Admin Center aligné et protégé (1er mai 2026)
+
+**Commit prévu** : fix: align and stabilize Courtia Admin Center
+
+### Fichiers modifiés
+- `frontend/src/lib/adminApi.js` — client admin centralisé vers `/api/admin/super/*`
+- `frontend/src/components/AdminRoute.jsx` — garde super_admin et refus broker propre
+- `frontend/src/pages/AdminOverview.jsx`
+- `frontend/src/pages/AdminUsers.jsx`
+- `frontend/src/pages/AdminUserDetail.jsx`
+- `frontend/src/pages/AdminSubscriptions.jsx`
+- `frontend/src/pages/AdminSystem.jsx`
+- `frontend/src/pages/AdminLogs.jsx`
+- `docs/COURTIA_CODEX_PHASE5_ADMIN.md`
+
+### Résumé
+L'Admin Center n'appelle plus les anciennes routes `/api/admin/analytics` ou `/api/admin/users`.
+Les pages actives utilisent les routes backend réelles `/api/admin/super/*`.
+La redirection cassée `/app/dashboard` est supprimée et remplacée par un écran d'accès refusé premium.
+
+### Vérifications locales
+- Build frontend : OK
+- Tests frontend : 29 passés
+- Backend health : HTTP 200
+- `/admin` local non connecté : redirection `/login`, console 0 erreur
+
+---
+
 ## Batch 5 — QA (1er mai 2026)
 - Landing ✅ | Login ✅ | Register ✅ | Admin protégé ✅
 - Console 0 erreur | Backend VPS online | PM2 OK

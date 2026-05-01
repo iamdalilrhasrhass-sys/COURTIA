@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { Users, TrendingUp, DollarSign, Activity, AlertTriangle, Sparkles } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { adminFetch } from '../lib/adminApi'
 
 export default function AdminOverview() {
   const [data, setData] = useState(null)
@@ -11,11 +10,10 @@ export default function AdminOverview() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-    fetch(`${API_URL}/api/admin/analytics`, { headers: { Authorization: `Bearer ${token}` } })
+    adminFetch('/analytics')
       .then(r => { if (!r.ok) throw new Error('Accès refusé'); return r.json() })
       .then(d => { setData(d); setLoading(false) })
-      .catch(err => { setError(err.message); setLoading(false) })
+      .catch(() => { setError('Données admin indisponibles'); setLoading(false) })
   }, [])
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><CourtiaLogoLoader size={40} text="Chargement..." /></div>

@@ -3,8 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Mail, Calendar, Building, FileText, CheckSquare, Shield, Clock } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { adminFetch } from '../lib/adminApi'
 
 const STATUS_LABELS = { active: 'Actif', trialing: 'Essai', suspended: 'Suspendu', cancelled: 'Résilié' }
 
@@ -14,8 +13,7 @@ export default function AdminUserDetail() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-    fetch(`${API_URL}/api/admin/users/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+    adminFetch(`/users/${id}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))

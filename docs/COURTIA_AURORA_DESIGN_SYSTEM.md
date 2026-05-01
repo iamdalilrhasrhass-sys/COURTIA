@@ -79,6 +79,12 @@
 - Les fallbacks mock doivent être explicitement signalés à l’utilisateur.
 - Les loaders métier doivent privilégier `CourtiaLogoLoader`.
 
+## Phase E — Admin Center
+- Le refus d'accès admin doit rester un état produit premium, pas une redirection cassée.
+- Les comptes broker connectés doivent voir un message clair : droits super admin requis, retour possible au cockpit.
+- Les routes admin actives doivent passer par le préfixe backend réel `/api/admin/super/*`.
+- L'impersonation reste non exposée côté interface.
+
 ## Interdictions
 - Ancien logo violet
 - Pastels excessifs

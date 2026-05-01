@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { FileText, Shield, Clock } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { adminFetch } from '../lib/adminApi'
 
 export default function AdminLogs() {
   const [logs, setLogs] = useState([])
@@ -12,11 +11,8 @@ export default function AdminLogs() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
     setLoading(true)
-    fetch(`${API_URL}/api/admin/impersonation/logs?page=${page}&limit=20`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    adminFetch(`/impersonation/logs?page=${page}&limit=20`)
       .then(r => r.json())
       .then(d => { setLogs(d.logs || []); setTotal(d.total || 0); setLoading(false) })
       .catch(() => setLoading(false))
