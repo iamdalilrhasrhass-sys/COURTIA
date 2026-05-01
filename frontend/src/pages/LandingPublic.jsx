@@ -20,6 +20,9 @@ import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import AuroraHalo from '../components/brand/AuroraHalo'
 import AuroraBackground from '../components/brand/AuroraBackground'
+import AuroraButton from '../components/brand/AuroraButton'
+import AuroraTransition from '../components/brand/AuroraTransition'
+import AuroraDivider from '../components/brand/AuroraDivider'
 
 const globalStyles = `
 /* ── Section transition halos ── */
@@ -197,9 +200,9 @@ export default function LandingPublic() {
             <button onClick={() => scrollTo('ark-reach')} className="text-sm text-gray-400 hover:text-white transition-colors">ARK REACH</button>
             <button onClick={() => scrollTo('pricing')} className="text-sm text-gray-400 hover:text-white transition-colors">Tarifs</button>
             <Link to="/login" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Se connecter</Link>
-            <Link to="/register?plan=pro" className="text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200">
+            <AuroraButton href="/register?plan=pro" variant="primary" size="sm">
               Essai gratuit 7 jours
-            </Link>
+            </AuroraButton>
           </div>
 
           <button className="md:hidden p-2 text-gray-400" onClick={() => setMenuOpen(!menuOpen)}>
@@ -224,9 +227,9 @@ export default function LandingPublic() {
               <button onClick={() => { scrollTo('ark-reach'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">ARK REACH</button>
               <button onClick={() => { scrollTo('pricing'); setMenuOpen(false) }} className="block w-full text-left text-gray-400 hover:text-white py-2">Tarifs</button>
               <Link to="/login" className="block text-gray-400 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Se connecter</Link>
-              <Link to="/register?plan=pro" className="block text-center font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-5 py-3 rounded-xl" onClick={() => setMenuOpen(false)}>
+              <AuroraButton href="/register?plan=pro" variant="primary" size="sm" className="w-full mt-2">
                 Essai gratuit 7 jours
-              </Link>
+              </AuroraButton>
             </div>
           </motion.div>
         )}
@@ -276,19 +279,21 @@ export default function LandingPublic() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <Link
-                to="/register?plan=pro"
-                className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-7 py-3.5 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200 text-sm"
+              <AuroraButton
+                href="/register?plan=pro"
+                variant="primary"
+                size="lg"
+                icon={<ArrowRight size={16} />}
               >
                 Essai gratuit 7 jours
-                <ArrowRight size={16} />
-              </Link>
-              <button
+              </AuroraButton>
+              <AuroraButton
                 onClick={() => scrollTo('cockpit')}
-                className="inline-flex items-center gap-2 font-medium text-gray-300 bg-white/5 backdrop-blur-sm border border-white/10 px-7 py-3.5 rounded-xl hover:bg-white/10 hover:border-white/20 hover:text-white transition-all duration-200 text-sm"
+                variant="secondary"
+                size="lg"
               >
                 Voir le cockpit
-              </button>
+              </AuroraButton>
             </motion.div>
 
             <motion.div
@@ -327,6 +332,14 @@ export default function LandingPublic() {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* ─── TRANSITION HERO → PROBLÈME ─── */}
+      <AuroraTransition 
+        variant="glow" 
+        height={160}
+        phrase="Les courtiers ne manquent pas de clients. Ils manquent de temps, de visibilité et de suivi."
+        position="both"
+      />
 
       {/* ━━━━━━━━━━━ SECTION PROBLÈME (dark) ━━━━━━━━━━━ */}
       <section id="probleme" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
@@ -632,19 +645,20 @@ export default function LandingPublic() {
 
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center gap-2 font-semibold text-sm text-white bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-3 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
+                  <AuroraButton
+                    href="/register"
+                    variant="primary"
+                    size="sm"
                   >
                     Découvrir COURTIA Academy
-                    <ArrowRight size={14} />
-                  </Link>
-                  <Link
-                    to="/academy"
-                    className="text-sm text-white/30 hover:text-white/60 transition-colors"
+                  </AuroraButton>
+                  <AuroraButton
+                    href="/academy"
+                    variant="ghost"
+                    size="sm"
                   >
-                    Voir dans l&apos;app →
-                  </Link>
+                    Voir dans l'app →
+                  </AuroraButton>
                 </div>
               </div>
             </ScrollReveal>
@@ -766,16 +780,14 @@ export default function LandingPublic() {
                     </ul>
                   </div>
 
-                  <Link
-                    to={plan.popular ? '/register?plan=pro' : plan.name === 'Premium' ? '/contact' : '/register'}
-                    className={`block text-center font-semibold text-sm py-3 rounded-xl transition-all duration-200 ${
-                      plan.popular
-                        ? 'text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:shadow-lg hover:shadow-purple-500/25'
-                        : 'text-gray-300 bg-white/5 hover:bg-white/10'
-                    }`}
+                  <AuroraButton
+                    href={plan.popular ? '/register?plan=pro' : plan.name === 'Premium' ? '/contact' : '/register'}
+                    variant={plan.popular ? 'primary' : 'secondary'}
+                    size="sm"
+                    className="w-full"
                   >
                     {plan.cta}
-                  </Link>
+                  </AuroraButton>
                 </div>
               </ScrollReveal>
             ))}
@@ -819,19 +831,21 @@ export default function LandingPublic() {
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/register?plan=pro"
-                className="inline-flex items-center gap-2 font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-4 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
+              <AuroraButton
+                href="/register?plan=pro"
+                variant="primary"
+                size="lg"
+                icon={<ArrowRight size={16} />}
               >
                 Essai gratuit 7 jours
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 font-medium text-gray-300 bg-white/5 backdrop-blur-sm border border-white/10 px-8 py-4 rounded-xl hover:bg-white/10 hover:border-white/20 hover:text-white transition-all duration-200"
+              </AuroraButton>
+              <AuroraButton
+                href="/login"
+                variant="secondary"
+                size="lg"
               >
                 J'ai déjà un compte
-              </Link>
+              </AuroraButton>
             </div>
           </ScrollReveal>
         </div>
