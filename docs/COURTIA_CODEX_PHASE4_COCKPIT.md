@@ -30,9 +30,13 @@ Renforcer l’intérieur COURTIA sans inventer de données réelles et sans cass
 | Build frontend | OK | Warning chunk > 500 kB connu |
 | Tests Vitest | OK | 29 tests passés |
 | Browser local auth/cockpit | Partiel | Login local bloqué par proxy Vite dev, à valider en production |
+| `/dashboard` production | OK | Command Center visible, console 0 erreur |
+| `/clients` production | OK | Header `Portefeuille clients`, console 0 erreur |
+| `/contrats` production | OK | Header `Portefeuille contrats`, console 0 erreur |
+| `/taches` production | OK | Header `Pilotage quotidien`, console 0 erreur |
 
 ## 5. Risques restants
 
-- Production cockpit à tester après push.
+- Production cockpit validée après push sur les routes principales.
 - Rapports et Paramètres restent à harmoniser plus profondément en P2 si l’on veut une refonte totale de toutes les pages internes.
 - Admin Center reste une phase séparée à cause du mismatch `/api/admin/analytics` vs `/api/admin/super/*`.

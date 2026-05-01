@@ -12,6 +12,7 @@
 - [x] Phase C Codex — Auth / funnel final local, build/test OK
 - [x] Phase C Codex — Auth / funnel final validé en production Vercel
 - [x] Phase D Codex — Cockpit interne batch 1, build/test OK
+- [x] Phase D Codex — Cockpit interne validé en production Vercel
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -49,7 +50,6 @@
 - [ ] Token super_admin → tests Admin Center E2E
 - [ ] AuroraPageHeader → Rapports, Paramètres
 - [ ] Message 429 auth rate limit à rendre plus clair côté interface
-- [ ] Phase D cockpit — validation production après push
 - [ ] Harmonisation profonde Rapports / Paramètres
 
 ## P2 — Finition

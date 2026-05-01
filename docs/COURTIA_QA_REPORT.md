@@ -7,10 +7,14 @@
 | Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
 | Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
 | Browser local cockpit | ⚠️ Partiel | In-app browser | Login local bloqué par proxy Vite dev, pas par production |
+| `/dashboard` production | ✅ OK | Browser in-app Vercel | Command Center visible, console 0 erreur |
+| `/clients` production | ✅ OK | Browser in-app Vercel | Header Portefeuille clients visible, console 0 erreur |
+| `/contrats` production | ✅ OK | Browser in-app Vercel | Header Portefeuille contrats visible, console 0 erreur |
+| `/taches` production | ✅ OK | Browser in-app Vercel | Header Pilotage quotidien visible, console 0 erreur |
 
 ### Décision Phase D
 - P0 local produit : non détecté par build/tests.
-- Validation production cockpit : requise après push.
+- Validation production cockpit : OK sur les routes principales.
 
 ---
 
