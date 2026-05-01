@@ -136,7 +136,7 @@ export default function Dashboard() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]" style={{ background: '#f7f6f2' }}>
+      <div className="flex items-center justify-center min-h-[60vh]">
         <CourtiaLogoLoader fullScreen={false} message="COURTIA analyse votre portefeuille…" />
       </div>
     )
@@ -146,7 +146,7 @@ export default function Dashboard() {
   const isEmpty = !stats || (stats.totalClients === 0 && stats.contratsActifs === 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <div className="px-4 md:px-8 py-6 md:py-8" style={{ maxWidth: 1280, margin: '0 auto' }}>
         
         {/* Header cockpit */}
@@ -154,6 +154,7 @@ export default function Dashboard() {
           title="Dashboard"
           subtitle="Pilotage quotidien, priorités ARK et portefeuille courtage."
           badge="Cockpit"
+          dark
           actions={
             <AuroraButton variant="primary" size="sm" icon={<Zap size={14} />} onClick={() => navigate('/morning-brief')}>
               Morning Brief

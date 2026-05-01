@@ -1,5 +1,23 @@
 # COURTIA — Changelog Mission 2M
 
+## Reprise architecture visuelle — Cockpit Aurora global (1er mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : feat: install global Aurora cockpit shell
+
+### Changements
+- Application connectée enveloppée dans un shell Aurora global : aurore fixe, grille subtile, Bubble C canonique en filigrane.
+- Fond beige global retiré du layout privé pour éviter la cassure entre landing, auth et cockpit.
+- Dashboard adapté au shell sombre : chargement transparent et header en mode dark.
+- `CourtiaBubbleLogo` optimisé : les animations internes SVG sont désactivées sur les usages statiques.
+- Aucun changement backend, auth, Stripe, DB ou impersonation.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- In-app browser local `/` : landing détectée.
+- In-app browser local `/dashboard` non connecté : redirection `/login?next=%2Fdashboard` propre.
+
 ## Reprise critique Codex — Landing cinematic Aurora (1er mai 2026)
 
 **Commit** : à créer  
