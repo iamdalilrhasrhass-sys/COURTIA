@@ -1,7 +1,14 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
+import {
+  buildApiUrl,
+  clearStoredSession,
+  getAuthToken,
+  shouldClearSessionOnUnauthorized
+} from '../api/sessionPolicy'
+
 function getToken() {
-  return localStorage.getItem('token')
+  return getAuthToken()
 }
 
 function buildHeaders() {
@@ -14,10 +21,22 @@ function buildHeaders() {
 
 async function handleResponse(res) {
   if (res.status === 401) {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    window.location.href = '/login'
-    throw new Error('Session expirée — veuillez vous reconnecter')
+    let body = {}
+    try {
+      body = await res.clone().json()
+    } catch {
+      body = {}
+    }
+
+    if (shouldClearSessionOnUnauthorized(res.url, body)) {
+      clearStoredSession()
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        window.location.href = '/login?reason=expired'
+      }
+      throw new Error('Session expirée — veuillez vous reconnecter')
+    }
+
+    throw new Error(body.message || body.error || 'Accès refusé sur ce module COURTIA.')
   }
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`
@@ -39,7 +58,7 @@ async function handleResponse(res) {
 }
 
 export async function apiGet(path) {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(buildApiUrl(path, API_URL), {
     method: 'GET',
     headers: buildHeaders()
   })
@@ -47,7 +66,7 @@ export async function apiGet(path) {
 }
 
 export async function apiPost(path, body) {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(buildApiUrl(path, API_URL), {
     method: 'POST',
     headers: buildHeaders(),
     body: JSON.stringify(body)
@@ -56,7 +75,7 @@ export async function apiPost(path, body) {
 }
 
 export async function apiPut(path, body) {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(buildApiUrl(path, API_URL), {
     method: 'PUT',
     headers: buildHeaders(),
     body: JSON.stringify(body)
@@ -65,7 +84,7 @@ export async function apiPut(path, body) {
 }
 
 export async function apiDelete(path) {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(buildApiUrl(path, API_URL), {
     method: 'DELETE',
     headers: buildHeaders()
   })

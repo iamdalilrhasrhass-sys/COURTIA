@@ -1,5 +1,23 @@
 # COURTIA — Rapport QA
 
+## QA Stabilisation auth/session — Pré-commercialisation (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Test unitaire session policy | ✅ OK | `npm run test -- src/api/sessionPolicy.test.js` | 4 tests passés |
+| Tests frontend complets | ✅ OK | `npm run test` | 33 tests passés |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Syntax backend | ✅ OK | `node -c backend/server.js` | Aucun output, exit 0 |
+| Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 38 P2 |
+| Stripe / impersonation | ✅ Non touché | Revue diff | Aucun checkout, aucune génération JWT impersonation |
+
+### Décision
+- P0 session frontend identifié : corrigé localement.
+- P0 commercialisation restant : aucun nouveau P0 détecté par build/tests/audit.
+- Point de vigilance : déployer le backend sur VPS/PM2 si le rate limit backend n'est pas auto-déployé depuis `main`.
+
+---
+
 ## QA Reprise architecture visuelle — Cockpit Aurora global (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

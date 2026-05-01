@@ -476,7 +476,9 @@ export default function Login() {
       const res = await api.post(endpoint, body)
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
+      localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
+      if (user) localStorage.setItem('user', JSON.stringify(user))
       navigate('/dashboard')
     } catch (err) {
       const data = err.response?.data || {}
@@ -525,7 +527,9 @@ export default function Login() {
         })
 
         localStorage.setItem('courtia_token', res.data.token)
+        localStorage.setItem('token', res.data.token)
         if (res.data.user) localStorage.setItem('courtia_user', JSON.stringify(res.data.user))
+        if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user))
         navigate('/dashboard')
       } catch (err) {
         setError('Erreur lors de la connexion Google.')

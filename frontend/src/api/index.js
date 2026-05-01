@@ -1,4 +1,9 @@
 import axios from 'axios'
+import {
+  clearStoredSession,
+  isAuthScreen,
+  shouldClearSessionOnUnauthorized
+} from './sessionPolicy'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -36,12 +41,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expiré ou invalide
-      localStorage.removeItem('courtia_token')
-      localStorage.removeItem('token')
-      // Redirige vers la page de connexion, en évitant les boucles
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+      const shouldClearSession = shouldClearSessionOnUnauthorized(
+        error.config?.url,
+        error.response?.data
+      )
+
+      if (shouldClearSession) {
+        clearStoredSession()
+        if (!isAuthScreen()) {
+          window.location.href = '/login?reason=expired'
+        }
       }
     }
 
