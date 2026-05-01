@@ -5,10 +5,12 @@ const { verifyToken } = require('../middleware/auth')
 /**
  * GET /api/stats/portfolio
  * Données analytiques du portefeuille : répartition contrats, top 10 clients, fenêtres renouvellement, activité ARK
+ * Toutes les requêtes sont filtrées par courtier_id (multi-tenant)
  */
 router.get('/portfolio', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const userId = req.user.id || req.user.userId
 
     // Contrats actifs par type avec prime totale
     const byTypeResult = await pool.query(`
@@ -16,11 +18,12 @@ router.get('/portfolio', verifyToken, async (req, res) => {
         COALESCE(quote_data->>'type_contrat', 'Autre') AS type,
         COUNT(*)::int AS count,
         COALESCE(SUM(NULLIF(quote_data->>'prime_annuelle', '')::decimal), 0) AS prime_total
-      FROM quotes
-      WHERE status = 'actif'
+      FROM quotes q
+      JOIN clients c ON q.client_id = c.id AND c.courtier_id = $1
+      WHERE q.status = 'actif'
       GROUP BY quote_data->>'type_contrat'
       ORDER BY count DESC
-    `)
+    `, [userId])
 
     // Top 10 clients par loyalty_score
     const top10Result = await pool.query(`
@@ -34,10 +37,11 @@ router.get('/portfolio', verifyToken, async (req, res) => {
         COUNT(q.id)::int AS nb_contrats
       FROM clients c
       LEFT JOIN quotes q ON q.client_id = c.id AND q.status = 'actif'
+      WHERE c.courtier_id = $1
       GROUP BY c.id
       ORDER BY c.loyalty_score DESC NULLS LAST
       LIMIT 10
-    `)
+    `, [userId])
 
     // Contrats expirant dans les 90 prochains jours
     const renewalResult = await pool.query(`
@@ -51,12 +55,12 @@ router.get('/portfolio', verifyToken, async (req, res) => {
         c.id AS client_id,
         CEIL(EXTRACT(EPOCH FROM (NULLIF(q.quote_data->>'date_echeance', '')::date - NOW())) / 86400)::int AS jours_restants
       FROM quotes q
-      JOIN clients c ON c.id = q.client_id
+      JOIN clients c ON c.id = q.client_id AND c.courtier_id = $1
       WHERE q.status = 'actif'
         AND NULLIF(q.quote_data->>'date_echeance', '')::date BETWEEN NOW() AND NOW() + INTERVAL '90 days'
       ORDER BY NULLIF(q.quote_data->>'date_echeance', '')::date ASC
       LIMIT 50
-    `)
+    `, [userId])
 
     // Activité ARK ce mois
     let arkActivity = { conversationsMois: 0, clientsAnalyses: 0, recommandations: '—' }
@@ -66,8 +70,8 @@ router.get('/portfolio', verifyToken, async (req, res) => {
           COUNT(*)::int AS total_conversations,
           COUNT(DISTINCT client_id)::int AS clients_analyses
         FROM ark_conversations
-        WHERE updated_at >= NOW() - INTERVAL '30 days'
-      `)
+        WHERE user_id = $1 AND updated_at >= NOW() - INTERVAL '30 days'
+      `, [userId])
       if (arkResult.rows.length > 0) {
         arkActivity = {
           conversationsMois: arkResult.rows[0].total_conversations || 0,
