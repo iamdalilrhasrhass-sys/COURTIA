@@ -30,6 +30,7 @@ import PaiementSucces from './pages/PaiementSucces'
 import PaiementAnnule from './pages/PaiementAnnule'
 import Onboarding from './pages/Onboarding'
 import LandingPublic from './pages/LandingPublic'
+import Academy from './pages/Academy'
 import Tarifs from './pages/Tarifs'
 
 // Components
@@ -160,6 +161,8 @@ export default function App() {
           <Route path="/taches"        element={<Taches />} />
           <Route path="/rapports"      element={<Rapports />} />
           <Route path="/parametres"    element={<Parametres />} />
+          <Route path="/academy"       element={<Academy />} />
+          <Route path="/academy/*"     element={<Academy />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
