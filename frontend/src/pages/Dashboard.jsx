@@ -6,7 +6,7 @@ import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
 import BubbleBackground from '../components/BubbleBackground'
-import Logo from '../components/Logo'
+
 
 /* ─── tiny helpers ──────────────────────────────────────── */
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
