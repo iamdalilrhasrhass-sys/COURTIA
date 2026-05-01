@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { BarChart3 } from 'lucide-react'
 import Topbar from '../components/Topbar'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
+import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
@@ -132,7 +134,7 @@ export default function Rapports() {
         <div className="rp-card" style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>RÉPARTITION DU PORTEFEUILLE</h2>
           {contratsByType.length === 0 ? (
-            <AuroraEmptyState icon={BarChart3} title="Aucune donnée disponible" subtitle="Importez vos premiers contrats pour voir apparaître la répartition de votre portefeuille." />
+            <AuroraEmptyState icon={<BarChart3 size={34} />} title="Aucune donnée disponible" description="Importez vos premiers contrats pour voir apparaître la répartition de votre portefeuille." />
           ) : (
             <div className="rp-table-wrap" style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>

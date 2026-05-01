@@ -18,6 +18,8 @@
 - [x] Phase F Codex — Audit QA Python ajouté, 0 P0/P1 détecté
 - [x] Phase G Codex — SEO/social corrigé avec OG PNG, manifest et icônes réelles
 - [x] Hotfix final — Message 429 auth propre en français
+- [x] Phase H Codex — Rapport final et QA finale documentés
+- [x] Hotfix final — `/rapports` réparé et logo canonique documenté
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
