@@ -46,6 +46,12 @@
 - Aucun wording de piège commercial : pas de recommandé obligatoire, pas de fausse friction à la résiliation.
 - La carte bancaire sera collectée uniquement via un checkout sécurisé dans une phase Billing dédiée, jamais directement par COURTIA.
 
+## Phase 3 — Conversion premium
+- Le pricing Pro doit vendre la valeur avant le prix : coût journalier, contrôle du portefeuille, essai clair.
+- Le prix ne doit pas apparaître comme une simple ligne blanche froide ; utiliser un traitement Aurora premium sur l’offre principale.
+- Les formulaires auth doivent parler cockpit et valeur métier, pas “compte” générique.
+- Les transitions entre sections doivent être continues : éviter les gros séparateurs ou bandes qui donnent l’impression de pages collées.
+
 ## Interdictions
 - Ancien logo violet
 - Pastels excessifs

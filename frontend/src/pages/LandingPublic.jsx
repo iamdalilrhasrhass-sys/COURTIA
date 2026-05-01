@@ -41,7 +41,6 @@ import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import AuroraHalo from '../components/brand/AuroraHalo'
 import AuroraButton from '../components/brand/AuroraButton'
-import AuroraDivider from '../components/brand/AuroraDivider'
 
 const globalStyles = `
 html { scroll-behavior: smooth; }
@@ -282,6 +281,7 @@ const pricingPlans = [
     name: 'Pro',
     price: '159 € HT/mois',
     desc: 'Essayez COURTIA Pro pendant 7 jours. 0 € aujourd’hui, puis 159 € HT/mois après l’essai si vous continuez.',
+    priceStory: 'Moins de 6 € HT par jour pour garder vos relances, échéances et opportunités sous contrôle.',
     position: 'Recommandé',
     cta: 'Essai gratuit 7 jours',
     href: '/register?plan=pro',
@@ -550,12 +550,15 @@ function CockpitPreview() {
 }
 
 function PricingCard({ plan }) {
+  const [amount, ...suffixParts] = plan.price.split(' ')
+  const suffix = suffixParts.join(' ')
+
   return (
-    <GlassCard className={`relative flex h-full flex-col p-6 ${plan.featured ? 'border-violet-300/35 bg-white/[0.07] shadow-violet-500/15' : ''}`}>
+    <GlassCard className={`relative flex h-full flex-col p-6 ${plan.featured ? 'border-violet-300/35 bg-[linear-gradient(145deg,rgba(124,58,237,0.18),rgba(7,11,24,0.92)_42%,rgba(34,211,238,0.08))] shadow-2xl shadow-violet-500/20' : ''}`}>
       {plan.featured && (
-        <div className="absolute -top-3 left-6 flex items-center gap-1 rounded-full border border-violet-300/30 bg-violet-500 px-3 py-1 text-xs font-bold text-white shadow-lg shadow-violet-500/25">
+        <div className="absolute -top-3 left-6 flex items-center gap-1 rounded-full border border-violet-300/30 bg-gradient-to-r from-violet-500 to-cyan-500 px-3 py-1 text-xs font-bold text-white shadow-lg shadow-violet-500/25">
           <Star size={12} />
-          Recommandé
+          Offre la plus logique
         </div>
       )}
       <div className="flex-1">
@@ -566,10 +569,22 @@ function PricingCard({ plan }) {
           </div>
           {plan.featured && <CourtiaMiniLogo size={28} />}
         </div>
-        <p className="mt-4 text-3xl font-black text-white">{plan.price}</p>
+        {plan.featured ? (
+          <div className="mt-5 rounded-xl border border-white/[0.10] bg-black/20 p-4">
+            <div className="flex items-end gap-2">
+              <span className="bg-gradient-to-r from-white via-violet-100 to-cyan-100 bg-clip-text text-5xl font-black tracking-tight text-transparent">
+                {amount}
+              </span>
+              <span className="pb-1 text-sm font-bold text-white/58">{suffix}</span>
+            </div>
+            <p className="mt-2 text-xs font-semibold text-cyan-100/72">{plan.priceStory}</p>
+          </div>
+        ) : (
+          <p className="mt-4 text-3xl font-black text-white">{plan.price}</p>
+        )}
         <p className="mt-3 text-sm leading-relaxed text-white/55">{plan.desc}</p>
         {plan.trialNote && (
-          <div className="mt-4 rounded-lg border border-emerald-300/16 bg-emerald-400/[0.07] p-3">
+          <div className="mt-4 rounded-lg border border-emerald-300/20 bg-emerald-400/[0.08] p-3">
             <p className="text-xs font-semibold leading-relaxed text-emerald-100/78">
               {plan.trialNote}
             </p>
@@ -756,7 +771,8 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="credibilite" className="landing-section relative border-y border-white/[0.06] bg-white/[0.025] px-5 py-5">
+        <section id="credibilite" className="landing-section relative bg-gradient-to-b from-[#02040c] via-[#050816] to-[#02040c] px-5 py-6">
+          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
           <div className="mx-auto grid max-w-7xl gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {credibilityItems.map((item) => {
               const Icon = item.icon
@@ -788,8 +804,6 @@ export default function LandingPublic() {
             </div>
           </div>
         </section>
-
-        <AuroraDivider variant="gradient" width={760} />
 
         <section id="cout-invisible" className="landing-section relative overflow-hidden px-5 py-16 lg:py-20">
           <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-35" />

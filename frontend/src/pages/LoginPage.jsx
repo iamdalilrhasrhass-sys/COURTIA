@@ -63,6 +63,23 @@ const STYLES = `
     -webkit-backdrop-filter: blur(20px);
   }
 
+  .auth-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(167,139,250,0.22);
+    background: rgba(139,92,246,0.10);
+    color: #ddd6fe;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
   .auth-left {
     flex: 1;
     display: flex;
@@ -246,11 +263,43 @@ const STYLES = `
     margin-bottom: 20px;
   }
 
+  .auth-trial-panel {
+    border: 1px solid rgba(110,231,183,0.18);
+    background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(139,92,246,0.06));
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 18px;
+  }
+  .auth-trial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .auth-trial-cell {
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0.16);
+    border-radius: 10px;
+    padding: 9px 8px;
+  }
+  .auth-trial-value {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .auth-trial-label {
+    color: rgba(255,255,255,0.40);
+    font-size: 9.5px;
+    margin-top: 3px;
+    line-height: 1.25;
+  }
+
   @media (max-width: 768px) {
     .auth-card { flex-direction: column; min-height: 100vh; max-width: 100vw; border-radius: 0; }
     .auth-left { display: none; }
-    .auth-right { width: 100%; padding: 2rem 1.5rem; justify-content: center; min-height: 100vh; }
+    .auth-right { width: 100%; padding: 1.75rem 1.5rem; justify-content: center; min-height: 100vh; }
     .auth-root { padding: 0; }
+    .auth-trial-grid { grid-template-columns: 1fr; }
   }
 `
 
@@ -421,11 +470,41 @@ export default function Login() {
             )}
 
             <h1 style={{ fontSize: 22, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 4, letterSpacing: '-0.02em' }}>
-              {isRegister ? 'Créer votre espace courtier' : 'Connexion'}
+              {isRegister
+                ? selectedPlan === 'pro'
+                  ? 'Activez votre cockpit Pro'
+                  : 'Créez votre cockpit courtier'
+                : 'Ouvrez votre cockpit'}
             </h1>
             <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)', marginBottom: 24 }}>
-              {isRegister ? 'Lancez votre cockpit IA en quelques minutes.' : 'Accédez à votre cockpit COURTIA.'}
+              {isRegister
+                ? selectedPlan === 'pro'
+                  ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
+                  : 'Démarrez avec un espace sérieux pour piloter votre portefeuille.'
+                : 'Retrouvez vos priorités, vos clients et votre brief ARK.'}
             </p>
+
+            {isRegister && selectedPlan === 'pro' && (
+              <div className="auth-trial-panel">
+                <div className="auth-trial-grid">
+                  <div className="auth-trial-cell">
+                    <div className="auth-trial-value">0 €</div>
+                    <div className="auth-trial-label">aujourd’hui</div>
+                  </div>
+                  <div className="auth-trial-cell">
+                    <div className="auth-trial-value">7 jours</div>
+                    <div className="auth-trial-label">pour tester Pro</div>
+                  </div>
+                  <div className="auth-trial-cell">
+                    <div className="auth-trial-value">En ligne</div>
+                    <div className="auth-trial-label">annulation simple</div>
+                  </div>
+                </div>
+                <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
+                  Votre carte sera demandée dans l’étape de paiement sécurisée dédiée. COURTIA ne collecte pas vos coordonnées bancaires ici.
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} noValidate>
               {/* Error */}
@@ -519,7 +598,11 @@ export default function Login() {
                     {isRegister ? 'Création...' : 'Connexion...'}
                   </span>
                 ) : (
-                  isRegister ? 'Créer mon compte' : 'Se connecter'
+                  isRegister
+                    ? selectedPlan === 'pro'
+                      ? 'Activer mon essai Pro'
+                      : 'Créer mon cockpit'
+                    : 'Ouvrir mon cockpit'
                 )}
               </button>
             </form>

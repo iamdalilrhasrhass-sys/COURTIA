@@ -1,6 +1,6 @@
 # COURTIA — Audit Landing Phase 2
 
-- Date : 2026-05-01 17:38:34
+- Date : 2026-05-01 17:50:05
 - Statut : OK
 - Fichier landing : `frontend/src/pages/LandingPublic.jsx`
 
