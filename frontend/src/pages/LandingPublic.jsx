@@ -18,6 +18,8 @@ import BeforeAfterPanel from '../components/BeforeAfterPanel'
 import FAQPremium from '../components/FAQPremium'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
+import AuroraHalo from '../components/brand/AuroraHalo'
+import AuroraBackground from '../components/brand/AuroraBackground'
 
 const globalStyles = `
 /* ── Section transition halos ── */
@@ -351,6 +353,7 @@ export default function LandingPublic() {
 
       {/* ━━━━━━━━━━━ SECTION SOLUTION 4 PILIERS (dark) ━━━━━━━━━━━ */}
       <section id="solutions" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
+        <AuroraHalo size={500} color="rgba(120,60,255,0.06)" position="top-left" blur={100} />
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Solution"
@@ -375,6 +378,7 @@ export default function LandingPublic() {
 
       {/* ━━━━━━━━━━━ SECTION ARK (dark + aurora) ━━━━━━━━━━━ */}
       <section id="ark" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
+        <AuroraHalo size={600} color="rgba(100,200,255,0.05)" position="top-right" blur={100} />
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
