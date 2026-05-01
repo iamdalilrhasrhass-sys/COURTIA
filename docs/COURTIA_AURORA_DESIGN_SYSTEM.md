@@ -67,6 +67,12 @@
 - Le pricing Starter reçoit un traitement premium, tout en restant une entrée volontairement plus simple que Pro.
 - Pro reste l’offre poussée : plus lumineuse, badge recommandé, valeur journalière et wording essai clair.
 
+## Phase C — Auth / funnel final
+- Le login doit être un accès au cockpit, pas une simple page de formulaire.
+- Les titres auth doivent vendre l’activation du cockpit : `Accédez à votre cockpit COURTIA`, `Activez votre cockpit Pro`, `Activez votre cockpit Starter`.
+- Les panneaux d’essai doivent rester lisibles sur mobile : 0 EUR, 7 jours, annulation en ligne, CTA visible.
+- Les champs SIRET / ORIAS et la carte bancaire restent hors formulaire actuel tant que le backend Billing/Onboarding n’est pas prêt.
+
 ## Interdictions
 - Ancien logo violet
 - Pastels excessifs

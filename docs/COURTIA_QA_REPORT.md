@@ -1,5 +1,22 @@
 # COURTIA — Rapport QA
 
+## QA Phase C — Auth / Funnel final premium (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| `/register?plan=pro` local | ✅ OK | Browser in-app | Titre Pro, CTA Pro, console 0 erreur |
+| `/register` local | ✅ OK | Browser in-app | Titre Starter, CTA Starter, console 0 erreur |
+| `/login` local | ✅ OK | Browser in-app | Titre cockpit COURTIA, bouton login, console 0 erreur |
+| Messages techniques auth | ✅ OK | `rg` ciblé | Pas de `err.message`, SQL, PostgreSQL, stack |
+
+### Décision Phase C
+- P0 bloquant : non.
+- Prochaine étape : push puis validation production auth, ensuite Phase D cockpit.
+
+---
+
 ## QA Phase B — Landing 3D scroll premium (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
