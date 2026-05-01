@@ -1,5 +1,27 @@
 # COURTIA — Rapport QA
 
+## QA Hotfix portfolio — Morning Brief (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Tour API production | ⚠️ P0 détecté | `/api/portfolio/morning-brief` | `500 column "generated_at" does not exist` |
+| Login demo API | ✅ OK | `POST /api/auth/login` | Status 200, token présent non affiché |
+| Auth me API | ✅ OK | `GET /api/auth/me` | Status 200 |
+| Dashboard stats API | ✅ OK | `GET /api/dashboard/stats` | Status 200 |
+| Clients / contrats / tâches | ✅ OK | API production | Status 200 |
+| Reach dashboard | ✅ OK | API production | Status 200 |
+| Admin broker | ✅ OK | `GET /api/admin/super/analytics` | Status 403 propre |
+| Syntax backend | ✅ OK | `node -c` ciblé | server, route, service, util OK |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 33 tests passés |
+| Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1 |
+
+### Décision
+- P0 code identifié et corrigé localement.
+- P0 production restant tant que le VPS / PM2 n'est pas redéployé avec le correctif.
+
+---
+
 ## QA Landing Aurora — 3 actes continus (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

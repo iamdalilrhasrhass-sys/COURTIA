@@ -21,6 +21,11 @@
 
 const pool      = require('../db');
 const Anthropic = require('@anthropic-ai/sdk');
+const {
+  getPortfolioInsightTimestampColumn,
+  getPortfolioTimestampOrder,
+  getPortfolioTimestampSelect,
+} = require('../utils/portfolioSchema');
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -469,12 +474,15 @@ async function calculateHealthScore(userId) {
 
 async function analyzePortfolio(userId) {
   console.log(`[portfolioAnalyzer] Début analyse user ${userId}`);
+  const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+  const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
+  const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
 
   // 1. Vérifier dernière analyse < 6h (protection double-exécution cron)
   const lastInsight = await pool.query(
-    `SELECT generated_at FROM portfolio_insights
+    `SELECT ${timestampSelect} FROM portfolio_insights
      WHERE user_id = $1 AND status = 'completed'
-     ORDER BY generated_at DESC LIMIT 1`,
+     ORDER BY ${timestampOrder} DESC LIMIT 1`,
     [userId]
   );
   if (lastInsight.rows.length > 0) {
@@ -486,9 +494,11 @@ async function analyzePortfolio(userId) {
   }
 
   // 2. Créer l'entrée insight en statut 'processing'
+  const insertColumns = timestampColumn ? `user_id, status, ${timestampColumn}` : 'user_id, status';
+  const insertValues = timestampColumn ? "$1, 'processing', NOW()" : "$1, 'processing'";
   const insightRow = await pool.query(
-    `INSERT INTO portfolio_insights (user_id, status, generated_at)
-     VALUES ($1, 'processing', NOW())
+    `INSERT INTO portfolio_insights (${insertColumns})
+     VALUES (${insertValues})
      RETURNING id`,
     [userId]
   );

@@ -21,6 +21,11 @@ const router   = express.Router();
 const { verifyToken }     = require('../middleware/auth');
 const { getUserPlanInfo } = require('../services/planService');
 const { calculateHealthScore, analyzePortfolio, scoreToRange } = require('../services/portfolioAnalyzer');
+const {
+  getPortfolioInsightTimestampColumn,
+  getPortfolioTimestampOrder,
+  getPortfolioTimestampSelect,
+} = require('../utils/portfolioSchema');
 const pool = require('../db');
 
 // ─── HELPER : plan de l'utilisateur ────────────────────────────────────────
@@ -40,14 +45,17 @@ router.get('/morning-brief', verifyToken, async (req, res) => {
     const userId = req.user.userId || req.user.id;
     const plan   = await getUserPlan(userId);
     const isStart = plan === 'start';
+    const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
+    const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
 
     // Récupérer le dernier insight complété
     const insightRes = await pool.query(
-      `SELECT id, generated_at, total_clients, total_contracts, total_premium,
+      `SELECT id, ${timestampSelect}, total_clients, total_contracts, total_premium,
               health_score, health_breakdown, raw_analysis, status
        FROM portfolio_insights
        WHERE user_id = $1 AND status = 'completed'
-       ORDER BY generated_at DESC
+       ORDER BY ${timestampOrder} DESC
        LIMIT 1`,
       [userId]
     );
@@ -221,13 +229,16 @@ router.get('/health-score', verifyToken, async (req, res) => {
     const userId = req.user.userId || req.user.id;
     const plan   = await getUserPlan(userId);
     const isStart = plan === 'start';
+    const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
+    const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
 
     // D'abord tenter le dernier insight sauvegardé (rapide)
     const savedRes = await pool.query(
-      `SELECT health_score, health_breakdown, raw_analysis, generated_at
+      `SELECT health_score, health_breakdown, raw_analysis, ${timestampSelect}
        FROM portfolio_insights
        WHERE user_id = $1 AND status = 'completed'
-       ORDER BY generated_at DESC LIMIT 1`,
+       ORDER BY ${timestampOrder} DESC LIMIT 1`,
       [userId]
     );
 
@@ -288,12 +299,15 @@ router.get('/health-score', verifyToken, async (req, res) => {
 router.post('/regenerate', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
+    const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
+    const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
 
     // Vérifier si une analyse récente existe (< 1h)
     const recentRes = await pool.query(
-      `SELECT generated_at FROM portfolio_insights
+      `SELECT ${timestampSelect} FROM portfolio_insights
        WHERE user_id = $1 AND status IN ('completed','processing')
-       ORDER BY generated_at DESC LIMIT 1`,
+       ORDER BY ${timestampOrder} DESC LIMIT 1`,
       [userId]
     );
 
@@ -424,16 +438,19 @@ router.get('/insights/history', verifyToken, async (req, res) => {
     const { page = 1, limit = 30 } = req.query;
     const offset   = (Math.max(1, parseInt(page)) - 1) * Math.min(90, parseInt(limit));
     const pageSize = Math.min(90, parseInt(limit));
+    const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
+    const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
 
     const [histRes, countRes] = await Promise.all([
       pool.query(
-        `SELECT id, generated_at, total_clients, total_contracts, total_premium,
+        `SELECT id, ${timestampSelect}, total_clients, total_contracts, total_premium,
                 health_score, status,
                 CASE WHEN $2 THEN NULL ELSE health_breakdown END AS health_breakdown,
                 CASE WHEN $2 THEN NULL ELSE raw_analysis      END AS raw_analysis
          FROM portfolio_insights
          WHERE user_id = $1 AND status = 'completed'
-         ORDER BY generated_at DESC
+         ORDER BY ${timestampOrder} DESC
          LIMIT $3 OFFSET $4`,
         [userId, isStart, pageSize, offset]
       ),
