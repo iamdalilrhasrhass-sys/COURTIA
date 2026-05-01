@@ -172,12 +172,26 @@ export default function Documents() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#111', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.file_name}</p>
                       <p style={{ fontSize: 11, color: '#6B7280', margin: '2px 0 0' }}>
-                        {CATEGORY_LABELS[doc.document_category] || doc.document_category} • {formatDate(doc.created_at)}
+                        <strong>{doc.client_name || '#' + doc.client_id}</strong> {' '}
+                        {CATEGORY_LABELS[doc.document_category] || doc.document_category} {' '}
+                        {formatDate(doc.created_at)}
                       </p>
                     </div>
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: STATUS_COLORS[doc.status]?.bg || '#F3F4F6', color: STATUS_COLORS[doc.status]?.text || '#6B7280', fontWeight: 500 }}>
+                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: STATUS_COLORS[doc.status]?.bg || '#F3F4F6', color: STATUS_COLORS[doc.status]?.text || '#6B7280', fontWeight: 500, marginRight: 4 }}>
                       {doc.status}
                     </span>
+                    {doc.status !== 'accepte' && doc.status !== 'rejete' && (
+                      <>
+                        <button onClick={() => updateDocumentStatus(doc.id, 'accepte')}
+                          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #D1FAE5', background: '#F0FDF4', color: '#065F46', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                          <Check size={12} style={{ marginRight: 3, display: 'inline' }} />Accepter
+                        </button>
+                        <button onClick={() => updateDocumentStatus(doc.id, 'rejete')}
+                          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #FEE2E2', background: '#FEF2F2', color: '#991B1B', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                          <X size={12} style={{ marginRight: 3, display: 'inline' }} />Rejeter
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

@@ -34,6 +34,7 @@ import Academy from './pages/Academy'
 import Documents from './pages/Documents'
 import BrowserPilot from './pages/BrowserPilot'
 import Tarifs from './pages/Tarifs'
+import PublicDocumentUpload from './pages/PublicDocumentUpload'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -147,6 +148,7 @@ export default function App() {
         <Route path="/register" element={<LoginPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
 

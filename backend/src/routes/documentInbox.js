@@ -63,7 +63,14 @@ router.get('/', async (req, res) => {
     if (limit) { query += ` LIMIT $${paramIdx}`; params.push(parseInt(limit)); }
 
     const result = await pool.query(query, params);
-    return res.json({ success: true, data: result.rows, total: result.rows.length });
+    // Enrichir avec les noms des clients
+    const enriched = await Promise.all(result.rows.map(async (doc) => {
+      try {
+        const client = await pool.query('SELECT first_name, last_name FROM clients WHERE id = $1', [doc.client_id]);
+        return { ...doc, client_name: client.rows[0] ? `${client.rows[0].first_name || ''} ${client.rows[0].last_name || ''}`.trim() : `#${doc.client_id}` };
+      } catch { return { ...doc, client_name: `#${doc.client_id}` }; }
+    }));
+    return res.json({ success: true, data: enriched, total: enriched.length });
   } catch (err) {
     console.error('[GET /api/document-inbox]', err.message);
     return res.status(500).json({ error: 'server_error', message: err.message });
@@ -79,7 +86,13 @@ router.get('/client/:clientId', async (req, res) => {
       `SELECT * FROM document_uploads WHERE user_id = $1 AND client_id = $2 ORDER BY created_at DESC`,
       [userId, clientId]
     );
-    return res.json({ success: true, data: result.rows });
+    const enriched = await Promise.all(result.rows.map(async (doc) => {
+      try {
+        const client = await pool.query('SELECT first_name, last_name FROM clients WHERE id = $1', [doc.client_id]);
+        return { ...doc, client_name: client.rows[0] ? `${client.rows[0].first_name || ''} ${client.rows[0].last_name || ''}`.trim() : `#${doc.client_id}` };
+      } catch { return { ...doc, client_name: `#${doc.client_id}` }; }
+    }));
+    return res.json({ success: true, data: enriched });
   } catch (err) {
     console.error('[GET /api/document-inbox/client/:clientId]', err.message);
     return res.status(500).json({ error: 'server_error', message: err.message });
@@ -103,6 +116,34 @@ router.post('/upload', (req, res, next) => {
       return res.status(400).json({ error: 'upload_error', message: err.message });
     }
   });
+});
+
+// PATCH /:id/status — mettre à jour le statut d'un document
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { status } = req.body;
+    if (!['accepté', 'rejeté', 'à_vérifier', 'en_analyse'].includes(status)) {
+      return res.status(400).json({ error: 'validation_error', message: 'Statut invalide' });
+    }
+    const result = await pool.query(
+      `UPDATE document_uploads SET status = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3 RETURNING *`,
+      [status, req.params.id, userId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'not_found' });
+
+    await pool.query(
+      `INSERT INTO document_actions (user_id, document_id, action, metadata)
+       VALUES ($1, $2, 'status_update', $3)`,
+      [userId, req.params.id, JSON.stringify({ newStatus: status })]
+    );
+
+    await docInboxService.updateChecklistAfterUpload(userId, result.rows[0].client_id);
+    return res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error('[PATCH /api/document-inbox/:id/status]', err.message);
+    return res.status(500).json({ error: 'server_error', message: err.message });
+  }
 });
 
 // DELETE /:id — supprimer un document
@@ -408,6 +449,18 @@ router.get('/public/request/:token', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /api/document-inbox/public/request/:token]', err.message);
+    return res.status(500).json({ error: 'server_error', message: err.message });
+  }
+});
+
+// GET /email-status — statut du watcher IMAP
+router.get('/email-status', async (req, res) => {
+  try {
+    const imapService = require('../services/imapService');
+    const status = imapService.getIMAPStatus();
+    return res.json({ success: true, data: status });
+  } catch (err) {
+    console.error('[GET /api/document-inbox/email-status]', err.message);
     return res.status(500).json({ error: 'server_error', message: err.message });
   }
 });
