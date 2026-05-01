@@ -1,5 +1,34 @@
 # COURTIA — Changelog Mission 2M
 
+## Auth Pages Premium Redesign (1er mai 2026)
+
+**Commit** : 99d1f76
+**Message** : feat: redesign auth pages with premium Courtia landing style
+
+### Fichiers modifiés (1)
+- `frontend/src/pages/LoginPage.jsx` — Refonte complète (343 ajouts, 462 suppressions)
+
+### Changements visuels
+- Fond sombre profond (#050510) remplace pastel
+- Suppression des 8 bulles CSS décoratives (b1-b8, bubble-iris, bubble-shine)
+- Ajout halo Aurora discret
+- Glassmorphism premium (backdrop-filter)
+- Left panel : logo Aurora Bubble C, baseline, bénéfices, mini product preview
+- Right panel : formulaire épuré, inputs premium (focus states violet)
+- Badge plan visible sur /register?plan=pro
+- Messages d'erreur contextuels (401, 403, 500, réseau)
+- Google OAuth conservé
+- Responsive : left panel masqué sur mobile
+
+### Tests
+- Login demo@courtia.fr → dashboard OK ✅
+- Mauvais mot de passe → "Email ou mot de passe incorrect." ✅
+- Register /register?plan=pro → badge Pro + formulaire OK ✅
+- Console 0 erreur ✅
+- Build OK (1884 modules)
+
+---
+
 ## P0 Login — Résolution (1er mai 2026)
 
 **Problème** : Login impossible avec demo@courtia.fr — "Une erreur est survenue"
