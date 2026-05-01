@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COURTIA ARK — Parametres</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, Arial, sans-serif;
+      background: #f7f6f2;
+      padding: 40px;
+      color: #111;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 20px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    h1 span { background: #5B4DF5; color: white; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; }
+    .subtitle { font-size: 13px; color: #6B7280; margin-bottom: 24px; }
+    .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #f0f0f0; margin-bottom: 16px; }
+    .card h3 { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 12px; }
+    label { display: block; font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+    input { width: 100%; padding: 8px 10px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 10px; }
+    input:focus { border-color: #5B4DF5; }
+    .status { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; }
+    .status.ok { background: #F0FDF4; color: #065F46; }
+    .status.ko { background: #FEF2F2; color: #991B1B; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.green { background: #10B981; }
+    .dot.red { background: #EF4444; }
+    button { padding: 8px 16px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: #5B4DF5; color: white; }
+    .btn-secondary { background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; }
+    .btn-danger { background: #FEF2F2; color: #991B1B; border: 1px solid #FEE2E2; }
+    .info { font-size: 11px; color: #6B7280; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1><span>A</span> COURTIA ARK</h1>
+  <p class="subtitle">Parametres de l'extension</p>
+
+  <div class="card">
+    <h3>Connexion</h3>
+    <div id="connection-status" class="status ko">
+      <span class="dot red"></span>
+      <span id="status-text">Non connecte</span>
+    </div>
+    <button id="check-connection" class="btn-secondary">Verifier la connexion</button>
+    <button id="logout-options-btn" class="btn-danger" style="margin-left:6px">Deconnecter</button>
+  </div>
+
+  <div class="card">
+    <h3>API COURTIA</h3>
+    <label>URL du backend</label>
+    <input type="text" id="api-url" placeholder="https://api.courtia.fr">
+    <button id="save-settings" class="btn-primary">Enregistrer</button>
+  </div>
+
+  <div class="card">
+    <h3>Securite</h3>
+    <p class="info">
+      &#128274; L'extension COURTIA ARK ne capture jamais les mots de passe.<br>
+      &#128274; Aucune action automatique sans validation humaine.<br>
+      &#128274; Les donnees sont chiffrees en transit (HTTPS).<br>
+      &#128274; Vous pouvez vous deconnecter a tout moment.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>A propos</h3>
+    <p class="info">
+      Version 1.0.0<br>
+      COURTIA — Logiciel de gestion pour courtiers en assurances<br>
+      Rhasrhass&reg;
+    </p>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
