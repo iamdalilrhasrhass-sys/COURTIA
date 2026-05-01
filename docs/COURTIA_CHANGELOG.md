@@ -1,29 +1,17 @@
 # COURTIA — Changelog Mission 2M
 
-## Batch 1 — Erreurs techniques (1er mai 2026)
+## P0 Login — Résolution (1er mai 2026)
 
-**Commit** : ef7f4bb
-**Message** : fix: replace remaining technical frontend errors with friendly French messages
+**Problème** : Login impossible avec demo@courtia.fr — "Une erreur est survenue"
+**Cause** : Mot de passe demo incorrect (compte existait, flux auth fonctionnel)
+**Correction** : Reset password_hash sur VPS (bcryptjs, rounds=10)
+**Tests** : Inscription OK, login demo OK, dashboard OK, console 0
+**Commit** : À venir (docs)
 
-### Fichiers modifiés (9)
-- `frontend/src/stores/planStore.js`
-- `frontend/src/stores/documentInboxStore.js`
-- `frontend/src/stores/reachStore.js`
-- `frontend/src/stores/authStore.js`
-- `frontend/src/stores/browserPilotStore.js`
-- `frontend/src/pages/PublicDocumentUpload.jsx`
-- `frontend/src/pages/Documents.jsx`
-- `frontend/src/pages/BrowserPilot.jsx`
-- `frontend/src/components/Settings.jsx`
-
-### Résumé
-37 remplacements de `err.message` brut par des messages français contextualisés.
-3 occurrences restantes avec fallback français sécurisé.
-
-### Build : ✅ OK
-### Production : ✅ Vercel OK
+---
 
 ## Batch 6 — Rapport final (1er mai 2026)
+ — Rapport final (1er mai 2026)
 - Rapport final complet livré
 - Documentation exhaustive dans /docs/
 - 6 commits, 0 erreur console, build OK
