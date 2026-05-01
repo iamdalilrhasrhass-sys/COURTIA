@@ -16,6 +16,8 @@ import SectionEyebrow from '../components/SectionEyebrow'
 import ScrollReveal from '../components/ScrollReveal'
 import BeforeAfterPanel from '../components/BeforeAfterPanel'
 import FAQPremium from '../components/FAQPremium'
+import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
+import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 
 const globalStyles = `
 /* ── Section transition halos ── */
@@ -183,10 +185,7 @@ export default function LandingPublic() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0a0510]/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20' : 'bg-transparent'}`}>
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <span className="text-white font-black text-sm">C</span>
-            </div>
-            <span className="font-bold text-lg tracking-tight text-white">COURTIA</span>
+            <CourtiaMiniLogo size={28} />
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
@@ -244,6 +243,10 @@ export default function LandingPublic() {
             transition={{ duration: 0.6 }}
           >
             <AuroraBadge>CRM assurance connecté à ARK</AuroraBadge>
+
+            <div className="flex justify-center mt-4 mb-6">
+              <CourtiaBubbleLogo size={140} animated={true} showHalo={true} showFoam={false} />
+            </div>
 
             <h1
               className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-white"
@@ -834,10 +837,7 @@ export default function LandingPublic() {
       <footer className="border-t border-white/5 bg-[#0a0510]/80 py-10 px-5">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-              <span className="text-white font-black text-[10px]">C</span>
-            </div>
-            <span className="font-bold text-sm text-white">COURTIA</span>
+            <CourtiaMiniLogo size={24} />
           </div>
           <div className="flex items-center gap-6 text-xs text-gray-500">
             <span>CRM assurance + IA native</span>
