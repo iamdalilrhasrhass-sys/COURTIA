@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Logo from './Logo'
+import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 
 const theme = {
   accent: '#5B4DF5',
@@ -119,7 +120,7 @@ export default function Sidebar() {
         justifyContent: 'space-between',
         borderBottom: `1px solid ${theme.borderLight}`,
       }}>
-        <Logo size={32} dark={true} textSize={13} />
+        <CourtiaMiniLogo size={28} />
         <button
           onClick={() => setMobileOpen(false)}
           style={{

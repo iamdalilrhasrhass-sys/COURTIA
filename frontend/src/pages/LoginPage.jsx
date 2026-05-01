@@ -4,6 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import api from '../api'
 import Logo from '../components/Logo'
+import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -533,7 +534,7 @@ export default function Login() {
 
             <div style={{ position:'relative', zIndex:1 }}>
               <div style={{ marginBottom:28 }}>
-                <Logo size={48} dark={true} withText={true} textSize={18} />
+                <CourtiaMiniLogo size={36} />
               </div>
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:'10px', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:12 }}>
                 CRM · IA Native · Courtiers ORIAS
