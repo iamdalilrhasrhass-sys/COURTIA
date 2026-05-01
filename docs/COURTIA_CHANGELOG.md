@@ -180,6 +180,26 @@
 
 ---
 
+## Phase F — QA Python et contrôle qualité (1er mai 2026)
+
+**Commit prévu** : test: add Courtia Python QA audit
+
+### Fichiers modifiés
+- `scripts/courtia_qa_audit.py` — audit statique QA produit
+- `docs/COURTIA_CODEX_QA_AUDIT.md` — rapport généré
+- `frontend/src/components/brand/AuroraBadge.jsx` — export brand aligné avec la documentation Aurora
+
+### Résumé
+Ajout d'un audit Python simple pour détecter anciens logos, routes `/app/*`, endpoints Admin suspects, messages techniques, loaders génériques, docs manquantes et composants Aurora manquants.
+L'audit ressort à 0 P0/P1 et 38 P2 de finition à traiter progressivement.
+
+### Vérifications
+- `python3 scripts/courtia_qa_audit.py` : OK, rapport généré
+- Build frontend : OK
+- Tests frontend : 29 passés
+
+---
+
 ## Phase E — Admin Center aligné et protégé (1er mai 2026)
 
 **Commit prévu** : fix: align and stabilize Courtia Admin Center

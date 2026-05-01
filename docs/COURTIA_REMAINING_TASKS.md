@@ -15,6 +15,7 @@
 - [x] Phase D Codex — Cockpit interne validé en production Vercel
 - [x] Phase E Codex — Admin Center aligné localement sur `/api/admin/super/*`
 - [x] Phase E Codex — Admin Center validé en production broker : refus propre, console 0 erreur
+- [x] Phase F Codex — Audit QA Python ajouté, 0 P0/P1 détecté
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -55,6 +56,7 @@
 - [ ] Harmonisation profonde Rapports / Paramètres
 
 ## P2 — Finition
+- [ ] Résorber les 38 signaux P2 du rapport `COURTIA_CODEX_QA_AUDIT.md`
 - [ ] AuroraDivider sur toutes les transitions
 - [ ] AuroraButton → harmoniser toutes les pages
 - [ ] Test mobile responsive complet (toutes les pages app)
