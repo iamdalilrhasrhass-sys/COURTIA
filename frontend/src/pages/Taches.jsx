@@ -5,11 +5,11 @@ import toast from 'react-hot-toast'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
-import BubbleButton from '../components/BubbleButton'
 import BubbleBackground from '../components/BubbleBackground'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
+import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
 const PRIORITY_SECTIONS = [
   { id: 'urgente',   label: 'Urgentes',   color: '#dc2626', bgLight: 'rgba(220,38,38,0.04)', border: '0.5px solid rgba(220,38,38,0.15)' },
@@ -228,39 +228,33 @@ export default function Taches() {
 
       <div className="px-4 md:px-10 taches-container" style={{ position: 'relative', zIndex: 1, padding: '24px 16px', maxWidth: 960, margin: '0 auto' }}>
         <style>{`@media (min-width: 768px) { .taches-container { padding: 32px 40px !important; } }`}</style>
-        {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 className="text-2xl md:text-3xl" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
-            Tâches
-          </h1>
-          <p className="text-xs md:text-sm" style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4, marginBottom: 16 }}>
-            Gérez vos actions et rappels quotidiens.
-          </p>
+        <AuroraPageHeader
+          title="Tâches"
+          subtitle="Priorisez les relances, pièces manquantes, échéances et actions commerciales."
+          badge="Pilotage quotidien"
+          actions={
+            <AuroraButton variant="secondary" size="sm" icon={<Plus size={16} />} onClick={fetchAll}>
+              Rafraîchir
+            </AuroraButton>
+          }
+        />
 
-          {/* Stats badges */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <BubbleBadge color="#2563eb" size="md">
-              {pendingCount} en attente
-            </BubbleBadge>
-            <BubbleBadge color="#10b981" size="md">
-              {completedCount} complétées
-            </BubbleBadge>
-            <BubbleBadge color="rgba(0,0,0,0.4)" size="md">
-              {totalCount} total
-            </BubbleBadge>
-          </div>
+        <div className="mb-5 flex flex-wrap gap-3">
+          <BubbleBadge color="#2563eb" size="md">{pendingCount} en attente</BubbleBadge>
+          <BubbleBadge color="#10b981" size="md">{completedCount} complétées</BubbleBadge>
+          <BubbleBadge color="rgba(0,0,0,0.4)" size="md">{totalCount} total</BubbleBadge>
         </div>
+
+        {useMock && (
+          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
+            Aperçu démonstration : les tâches affichées sont fictives car l’API tâches n’a pas répondu.
+          </div>
+        )}
 
         {/* Loading */}
         {loading && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-            <div style={{
-              width: 32, height: 32,
-              border: '3px solid rgba(0,0,0,0.06)',
-              borderTopColor: '#0a0a0a',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }} />
+            <CourtiaLogoLoader fullScreen={false} message="Chargement des tâches..." />
           </div>
         )}
 
@@ -353,6 +347,14 @@ export default function Taches() {
               )
             })}
           </div>
+        )}
+
+        {!loading && tasks.length === 0 && (
+          <AuroraEmptyState
+            title="Aucune tâche pour le moment."
+            description="Ajoutez vos clients et contrats pour faire remonter les relances, pièces manquantes et échéances dans le cockpit."
+            action={{ label: 'Voir les clients', href: '/clients' }}
+          />
         )}
 
         {/* Footer */}

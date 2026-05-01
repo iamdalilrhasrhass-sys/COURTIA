@@ -1,5 +1,19 @@
 # COURTIA — Rapport QA
 
+## QA Phase D — Cockpit interne (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Browser local cockpit | ⚠️ Partiel | In-app browser | Login local bloqué par proxy Vite dev, pas par production |
+
+### Décision Phase D
+- P0 local produit : non détecté par build/tests.
+- Validation production cockpit : requise après push.
+
+---
+
 ## QA Phase C — Auth / Funnel final premium (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

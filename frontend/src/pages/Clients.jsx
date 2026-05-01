@@ -142,6 +142,7 @@ function ClientCard({ client, onNavigate }) {
 export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [useMock, setUseMock] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
   const [sortField, setSortField] = useState('created_at')
@@ -158,9 +159,11 @@ export default function Clients() {
       setLoading(true)
       const res = await api.get('/clients')
       setClients(res.data?.data || [])
+      setUseMock(false)
     } catch (err) {
-      console.error(`Impossible de charger les clients: ${err.message}`)
+      console.error('Impossible de charger les clients.')
       setClients(MOCK_CLIENTS)
+      setUseMock(true)
     }
     finally { setLoading(false) }
   }
@@ -229,13 +232,22 @@ export default function Clients() {
     <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
       <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl md:text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Clients</h1>
-            <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{clients.length}</span>
+        <AuroraPageHeader
+          title="Clients"
+          subtitle={`${clients.length} contacts dans le cockpit. Recherche, statut, risque et prochaine action en un seul endroit.`}
+          badge="Portefeuille clients"
+          actions={
+            <AuroraButton variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => navigate('/clients/new')}>
+              Nouveau client
+            </AuroraButton>
+          }
+        />
+
+        {useMock && (
+          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
+            Aperçu démonstration : l’API clients n’a pas répondu, les lignes affichées sont des données fictives réalistes.
           </div>
-          <button onClick={() => navigate('/clients/new')} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:scale-[1.02]" style={{ border: '0.5px solid rgba(255,255,255,0.1)' }}><Plus size={16} />Nouveau client</button>
-        </header>
+        )}
         
         <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative flex-1 group">
