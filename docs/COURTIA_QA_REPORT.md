@@ -1,5 +1,22 @@
 # COURTIA — Rapport QA
 
+## QA Reprise architecture visuelle — Cockpit Aurora global (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Shell privé Aurora | ✅ OK | Revue code | Aurore fixe + Bubble C canonique en filigrane |
+| `/dashboard` non connecté | ✅ OK | In-app browser local | Redirection propre vers `/login?next=%2Fdashboard` |
+| Landing locale | ✅ OK | In-app browser local | Hero et CTA détectés |
+| Auth/backend/Stripe | ✅ OK | Revue diff | Aucun changement |
+
+### Décision
+- P0 bloquant : non.
+- Prochaine étape recommandée : harmoniser les pages métier encore trop claires (`Clients`, `Contrats`, `Tâches`, `Rapports`, `Paramètres`) avec le shell Aurora.
+
+---
+
 ## QA Reprise critique — Landing cinematic Aurora (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

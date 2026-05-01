@@ -80,6 +80,12 @@
 - La landing publique doit être ressentie comme une seule scène : ciel Aurora continu, Bubble C canonique en profondeur, aucun séparateur grossier entre les contenus.
 - Les mini-logos utilisent `CourtiaBubbleLogo animated={false}` : aucune animation SVG interne ne doit tourner inutilement sur les logos statiques.
 
+## Cockpit connecté — Socle Aurora global
+- Le layout privé doit partager la même atmosphère que la landing : fond sombre, aurore subtile, Bubble C canonique en profondeur.
+- Le cockpit ne doit plus retomber sur un fond beige générique en arrière-plan global.
+- Les pages internes peuvent garder des surfaces de travail claires si nécessaire, mais elles doivent flotter dans un shell propriétaire COURTIA.
+- Les surfaces prioritaires à harmoniser ensuite sont : Dashboard, Clients, Contrats, Tâches, Rapports, Paramètres.
+
 ## Phase C — Auth / funnel final
 - Le login doit être un accès au cockpit, pas une simple page de formulaire.
 - Les titres auth doivent vendre l’activation du cockpit : `Accédez à votre cockpit COURTIA`, `Activez votre cockpit Pro`, `Activez votre cockpit Starter`.

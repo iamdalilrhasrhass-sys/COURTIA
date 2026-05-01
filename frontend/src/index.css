@@ -4,11 +4,107 @@
 
 @layer base {
   body {
-    background-color: #fafafa;
+    background-color: #02040c;
     font-family: 'Inter', sans-serif;
     color: #111827; /* text-gray-900 */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .courtia-cockpit-shell {
+    position: relative;
+    isolation: isolate;
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255,128,224,0.14), transparent 26rem),
+      radial-gradient(circle at 86% 8%, rgba(34,211,238,0.14), transparent 30rem),
+      radial-gradient(circle at 50% 72%, rgba(128,240,216,0.08), transparent 36rem),
+      linear-gradient(180deg, #02040c 0%, #050716 48%, #02040c 100%);
+  }
+
+  .courtia-cockpit-aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .courtia-cockpit-aurora::before {
+    content: "";
+    position: absolute;
+    left: -16%;
+    right: -16%;
+    top: -14%;
+    height: 52vh;
+    background:
+      linear-gradient(105deg, transparent 4%, rgba(255,128,224,0.18) 19%, rgba(160,128,255,0.14) 36%, rgba(128,240,216,0.16) 55%, rgba(34,211,238,0.12) 72%, transparent 92%),
+      linear-gradient(82deg, transparent 18%, rgba(255,255,255,0.09) 42%, transparent 70%);
+    filter: blur(38px);
+    transform: skewY(-7deg);
+    opacity: 0.82;
+    animation: courtiaCockpitAurora 22s ease-in-out infinite;
+  }
+
+  .courtia-cockpit-aurora::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px);
+    background-size: 74px 74px;
+    mask-image: radial-gradient(circle at 50% 14%, black, transparent 74%);
+    opacity: 0.56;
+  }
+
+  .courtia-cockpit-watermark {
+    position: fixed;
+    right: max(-160px, -10vw);
+    top: 14vh;
+    z-index: -2;
+    width: min(48vw, 680px);
+    height: min(48vw, 680px);
+    pointer-events: none;
+    opacity: 0.11;
+    filter: saturate(1.18);
+  }
+
+  .courtia-cockpit-main {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+  }
+
+  .courtia-cockpit-main::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 0 240px;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(circle at 52% 0%, rgba(255,255,255,0.045), transparent 26rem);
+  }
+
+  @keyframes courtiaCockpitAurora {
+    0%, 100% { transform: translate3d(0,0,0) skewY(-7deg) scale(1); opacity: 0.64; }
+    50% { transform: translate3d(4%,7%,0) skewY(-5deg) scale(1.08); opacity: 0.94; }
+  }
+
+  @media (max-width: 768px) {
+    .courtia-cockpit-main::before { inset: 0; }
+    .courtia-cockpit-watermark {
+      width: 520px;
+      height: 520px;
+      right: -280px;
+      top: 12vh;
+      opacity: 0.09;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .courtia-cockpit-aurora::before { animation: none; }
   }
 }
 

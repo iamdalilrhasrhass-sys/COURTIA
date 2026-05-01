@@ -53,6 +53,7 @@ import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
 import ProtectedRoute from './components/ProtectedRoute'
+import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -109,9 +110,13 @@ function AppLayout() {
   }, [handleKeyDown])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div className="courtia-cockpit-shell" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <div className="courtia-cockpit-aurora" aria-hidden="true" />
+      <div className="courtia-cockpit-watermark" aria-hidden="true">
+        <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
+      </div>
       <Sidebar />
-      <main className="flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ background: '#f7f6f2', minHeight: '100vh' }}>
+      <main className="courtia-cockpit-main flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh' }}>
         <ImpersonationBanner />
         <Outlet />
       </main>
@@ -218,5 +223,4 @@ export default function App() {
 }
 // Trigger Vercel rebuild
 /* Build trigger 2 */
-
 
