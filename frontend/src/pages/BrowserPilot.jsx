@@ -27,7 +27,7 @@ const PRESETS = [
     name: 'Test de connexion',
     description: 'Navigue vers COURTIA et vérifie le chargement',
     actions: [
-      { type: 'navigate', url: 'https://courtia.vercel.app' },
+      { type: 'navigate', url: 'https://courtiark.fr' },
       { type: 'wait', timeout: 3000 },
       { type: 'screenshot' },
       { type: 'extract' },
@@ -160,7 +160,7 @@ function ActionForm({ action, index, onChange, onRemove }) {
 export default function BrowserPilot() {
   const [activeMode, setActiveMode] = useState('builder')
   const [actions, setActions] = useState([
-    { type: 'navigate', url: 'https://courtia.vercel.app' },
+    { type: 'navigate', url: 'https://courtiark.fr' },
     { type: 'screenshot' },
   ])
   const [dryRun, setDryRun] = useState(true)

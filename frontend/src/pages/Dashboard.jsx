@@ -219,7 +219,8 @@ export default function Dashboard() {
   return (
     <div style={{ position: 'relative', minHeight: '100vh', background: '#f7f6f2' }}>
       <BubbleBackground intensity="subtle" />
-      <div className="px-4 md:px-8" style={{ position: 'relative', zIndex: 1, padding: '28px 32px', maxWidth: 1280 }}>
+      <div className="px-4 md:px-8 dash-container" style={{ position: 'relative', zIndex: 1, padding: '24px 16px', maxWidth: 1280 }}>
+        <style>{`@media (min-width: 768px) { .dash-container { padding: 28px 32px !important; } }`}</style>
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 md:gap-0" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>

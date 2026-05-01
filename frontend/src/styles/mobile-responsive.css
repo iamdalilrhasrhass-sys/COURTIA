@@ -1,0 +1,148 @@
+/* ════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — COURTIA
+   Classes utilitaires responsive, pas de !important sauf nécessité
+   ════════════════════════════════════════════════════════ */
+
+html { 
+  -webkit-text-size-adjust: 100%; 
+}
+
+body, #root {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ─── Responsive Grid Helpers ─── */
+.grid-2-mobile {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .grid-2-mobile { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid-2-mobile { grid-template-columns: repeat(4, 1fr); }
+}
+
+.grid-3-mobile {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .grid-3-mobile { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid-3-mobile { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ─── Table scroll horizontal ─── */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* ─── Mobile padding container ─── */
+.container-premium {
+  padding: 24px 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+@media (min-width: 768px) {
+  .container-premium {
+    padding: 28px 32px;
+  }
+}
+
+/* ─── Hide on mobile / desktop ─── */
+.mobile-only {
+  display: block;
+}
+.desktop-only {
+  display: none;
+}
+@media (min-width: 768px) {
+  .mobile-only { display: none; }
+  .desktop-only { display: block; }
+}
+
+/* ─── Flex responsive ─── */
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .flex-responsive {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+/* ─── Section spacing ─── */
+.section-premium {
+  padding: 24px 16px;
+}
+@media (min-width: 768px) {
+  .section-premium { padding: 28px 32px; }
+}
+@media (min-width: 1024px) {
+  .section-premium { padding: 32px 40px; }
+}
+
+/* ─── Typography responsive ─── */
+.text-responsive-xl {
+  font-size: 20px;
+  font-weight: 700;
+}
+@media (min-width: 768px) {
+  .text-responsive-xl {
+    font-size: 26px;
+  }
+}
+
+.text-responsive-lg {
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  .text-responsive-lg {
+    font-size: 18px;
+  }
+}
+
+/* ─── Card grid (KPI, stats) ─── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ─── Overflow fix for specific pages ─── */
+.rp-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rp-2col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .rp-2col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ─── Mobile bottom safe area ─── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

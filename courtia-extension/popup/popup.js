@@ -1,7 +1,7 @@
 // COURTIA ARK — Popup
 
 const API_BASE = 'https://api.courtia.fr';
-const FRONTEND_URL = 'https://courtia.vercel.app';
+const FRONTEND_URL = 'https://courtiark.fr';
 
 let currentTabId = null;
 

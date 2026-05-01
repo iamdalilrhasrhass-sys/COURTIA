@@ -63,7 +63,7 @@ export default function Academy() {
         method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       })
     } catch {}
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcourtia.vercel.app&text=${encodeURIComponent(text)}`
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://courtiark.fr')}&text=${encodeURIComponent(text)}`
     window.open(linkedinUrl, '_blank')
     toast.success('Texte copié – publication LinkedIn ouverte.')
   }

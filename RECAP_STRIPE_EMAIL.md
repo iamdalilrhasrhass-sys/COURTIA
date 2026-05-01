@@ -54,7 +54,7 @@
 
 ### Sur Render (Backend)
 ```
-STRIPE_SECRET_KEY=sk_live_xxx        ← depuis dashboard.stripe.com
+STRIPE_SECRET_KEY=sk_live_ROTATE_ME_IN_STRIPE_DASHBOARD        ← depuis dashboard.stripe.com
 STRIPE_WEBHOOK_SECRET=whsec_xxx      ← depuis dashboard.stripe.com > Webhooks
 STRIPE_STARTER_PRICE_ID=price_xxx    ← après création produits Stripe
 STRIPE_PRO_PRICE_ID=price_xxx

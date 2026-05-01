@@ -1,6 +1,6 @@
 const apiGatewayService = {
   validateApiKey(apiKey) {
-    return apiKey && apiKey.startsWith('sk_live_')
+    return apiKey && apiKey.startsWith('sk_live_PLACEHOLDER')
   },
 
   logWebhookEvent(event, data) {
