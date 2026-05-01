@@ -7,6 +7,9 @@ import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
 import BubbleBackground from '../components/BubbleBackground'
+import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import AuroraEmptyState from '../components/brand/AuroraEmptyState'
+import AuroraButton from '../components/brand/AuroraButton'
 
 const PRIORITY_SECTIONS = [
   { id: 'urgente',   label: 'Urgentes',   color: '#dc2626', bgLight: 'rgba(220,38,38,0.04)', border: '0.5px solid rgba(220,38,38,0.15)' },
