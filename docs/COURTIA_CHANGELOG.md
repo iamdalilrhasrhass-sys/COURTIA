@@ -8,6 +8,7 @@
 ### Changements
 - Auth structure : écran register Pro transformé en funnel premium avec panneau marque, surface d’activation et CTA visible plus tôt sur mobile.
 - Register Pro : titre “Activez votre cockpit Pro”.
+- Register Starter : `/register` transformé en funnel premium avec essai 7 jours, 0 EUR aujourd’hui et 89 EUR HT/mois après essai.
 - Register Pro : panneau essai 0 EUR aujourd’hui / 7 jours / annulation en ligne.
 - CTA register Pro : “Activer mon essai Pro”.
 - Login : “Ouvrez votre cockpit”.
