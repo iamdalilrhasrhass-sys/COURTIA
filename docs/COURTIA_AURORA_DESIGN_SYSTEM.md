@@ -85,6 +85,8 @@
 - Le cockpit ne doit plus retomber sur un fond beige générique en arrière-plan global.
 - Les pages internes peuvent garder des surfaces de travail claires si nécessaire, mais elles doivent flotter dans un shell propriétaire COURTIA.
 - Les surfaces prioritaires à harmoniser ensuite sont : Dashboard, Clients, Contrats, Tâches, Rapports, Paramètres.
+- Batch pages métier : `Clients`, `Contrats`, `Tâches`, `Rapports` et `Paramètres` ne doivent plus imposer un fond global beige/blanc qui coupe l’aurore.
+- Les formulaires et tableaux peuvent rester clairs pour la lisibilité, mais le niveau page doit rester dans l’univers cockpit.
 
 ## Phase C — Auth / funnel final
 - Le login doit être un accès au cockpit, pas une simple page de formulaire.

@@ -89,7 +89,7 @@ export default function Rapports() {
   const tdStyle = { padding: '11px 16px', fontSize: 13, borderBottom: '0.5px solid #f7f6f2' }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
         <div style={{ width: 28, height: 28, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -98,7 +98,7 @@ export default function Rapports() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent', fontFamily: 'Arial, sans-serif' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes urgentPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }

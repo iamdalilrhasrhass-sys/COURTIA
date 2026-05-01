@@ -232,6 +232,7 @@ export default function Taches() {
           title="Tâches"
           subtitle="Priorisez les relances, pièces manquantes, échéances et actions commerciales."
           badge="Pilotage quotidien"
+          dark
           actions={
             <AuroraButton variant="secondary" size="sm" icon={<Plus size={16} />} onClick={fetchAll}>
               Rafraîchir
