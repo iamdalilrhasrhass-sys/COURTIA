@@ -53,7 +53,17 @@ exports.register = async (req, res) => {
     });
   } catch (err) {
     console.error('Register error:', err.message);
-    res.status(500).json({ error: err.message });
+    // Duplicate email — friendly message
+    if (err.code === '23505' || err.constraint === 'users_email_key') {
+      return res.status(409).json({
+        error: 'duplicate_email',
+        message: 'Cette adresse email est déjà utilisée. Connectez-vous ou utilisez une autre adresse.'
+      });
+    }
+    res.status(500).json({
+      error: 'registration_failed',
+      message: 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.'
+    });
   }
 };
 

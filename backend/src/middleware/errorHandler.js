@@ -17,10 +17,14 @@ const errorHandler = (err, req, res, next) => {
 
   // Database errors
   if (err.code === '23505') {
+    const field = err.constraint || '';
+    const msg = field.includes('email')
+      ? 'Cette adresse email est déjà utilisée.'
+      : 'Cette ressource existe déjà.';
     return res.status(409).json({
       success: false,
       error: 'ConflictError',
-      message: 'Resource already exists'
+      message: msg
     });
   }
 
