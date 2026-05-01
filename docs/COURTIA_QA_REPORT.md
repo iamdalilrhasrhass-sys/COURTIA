@@ -9,11 +9,15 @@
 | `/register?plan=pro` local | ✅ OK | Browser in-app | Titre Pro, CTA Pro, console 0 erreur |
 | `/register` local | ✅ OK | Browser in-app | Titre Starter, CTA Starter, console 0 erreur |
 | `/login` local | ✅ OK | Browser in-app | Titre cockpit COURTIA, bouton login, console 0 erreur |
+| `/register?plan=pro` production | ✅ OK | Browser in-app Vercel | CTA Pro visible, console 0 erreur |
+| `/register` production | ✅ OK | Browser in-app Vercel | Starter visible, console 0 erreur |
+| `/login` production | ✅ OK | Browser in-app Vercel | Login visible, console 0 erreur |
+| Login démo production | ✅ OK | Browser in-app Vercel | `/dashboard`, refresh OK |
 | Messages techniques auth | ✅ OK | `rg` ciblé | Pas de `err.message`, SQL, PostgreSQL, stack |
 
 ### Décision Phase C
 - P0 bloquant : non.
-- Prochaine étape : push puis validation production auth, ensuite Phase D cockpit.
+- Prochaine étape : Phase D cockpit.
 
 ---
 

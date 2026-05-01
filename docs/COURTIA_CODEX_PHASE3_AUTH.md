@@ -42,6 +42,8 @@ Rendre le register/login plus premium et plus vendeur, sans casser l’auth vali
 - Browser local Phase C `/register?plan=pro` : titre Pro, CTA Pro, strip valeur, console 0 erreur.
 - Browser local Phase C `/register` : titre Starter, CTA Starter, console 0 erreur.
 - Browser local Phase C `/login` : titre cockpit COURTIA, bouton login, console 0 erreur.
+- Production Phase C `/register?plan=pro`, `/register`, `/login` : visibles, console 0 erreur.
+- Production Phase C login démo : redirection `/dashboard`, refresh OK.
 
 ## 6. Non fait volontairement
 - Pas de checkout Stripe.
@@ -50,5 +52,5 @@ Rendre le register/login plus premium et plus vendeur, sans casser l’auth vali
 - Ces champs restent dans la Phase Billing / Onboarding P1.
 
 ## 7. Risques restants
-- Auth production à retester après push.
+- Auth production validée après push.
 - Le flux billing réel devra passer par Stripe Checkout subscription, webhooks et portail client.
