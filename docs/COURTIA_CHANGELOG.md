@@ -200,11 +200,12 @@ L'Admin Center n'appelle plus les anciennes routes `/api/admin/analytics` ou `/a
 Les pages actives utilisent les routes backend réelles `/api/admin/super/*`.
 La redirection cassée `/app/dashboard` est supprimée et remplacée par un écran d'accès refusé premium.
 
-### Vérifications locales
+### Vérifications
 - Build frontend : OK
 - Tests frontend : 29 passés
 - Backend health : HTTP 200
 - `/admin` local non connecté : redirection `/login`, console 0 erreur
+- `/admin` production broker : écran "Admin Center protégé", console 0 erreur
 
 ---
 
