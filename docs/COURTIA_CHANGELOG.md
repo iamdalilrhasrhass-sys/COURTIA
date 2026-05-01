@@ -1,5 +1,26 @@
 # COURTIA — Changelog Mission 2M
 
+## Phase 3 Codex — Auth et pricing conversion premium (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: polish Courtia pricing and auth conversion experience
+
+### Changements
+- Register Pro : titre “Activez votre cockpit Pro”.
+- Register Pro : panneau essai 0 EUR aujourd’hui / 7 jours / annulation en ligne.
+- CTA register Pro : “Activer mon essai Pro”.
+- Login : “Ouvrez votre cockpit”.
+- Pricing Pro : prix rendu plus premium, badge “Offre la plus logique”, phrase de valeur “moins de 6 EUR HT par jour”.
+- Landing : suppression de transitions trop brutes entre sections.
+
+### Tests
+- Audit landing Python : OK
+- Build frontend : OK
+- Tests Vitest : 29 OK
+- Browser local `/register?plan=pro` et `/#pricing` : console 0 erreur
+
+---
+
 ## Phase 2 Codex — Landing premium 60x (1er mai 2026)
 
 **Commit** : à créer
