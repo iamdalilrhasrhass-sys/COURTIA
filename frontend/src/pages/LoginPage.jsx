@@ -492,6 +492,8 @@ export default function Login() {
         setError('Email ou mot de passe incorrect.')
       } else if (status === 403) {
         setError('Votre compte est suspendu. Contactez le support COURTIA.')
+      } else if (status === 429) {
+        setError('Trop de tentatives de connexion. Réessayez dans quelques minutes.')
       } else if (status >= 500) {
         setError('Connexion impossible pour le moment. Réessayez dans quelques instants.')
       } else if (!err.response) {

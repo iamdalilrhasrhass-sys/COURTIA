@@ -17,6 +17,7 @@
 - [x] Phase E Codex — Admin Center validé en production broker : refus propre, console 0 erreur
 - [x] Phase F Codex — Audit QA Python ajouté, 0 P0/P1 détecté
 - [x] Phase G Codex — SEO/social corrigé avec OG PNG, manifest et icônes réelles
+- [x] Hotfix final — Message 429 auth propre en français
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -53,7 +54,7 @@
   - ne pas faire de faux paiement 0 EUR ni collecter la carte directement dans COURTIA
 - [ ] Token super_admin → tests Admin Center E2E
 - [ ] AuroraPageHeader → Rapports, Paramètres
-- [ ] Message 429 auth rate limit à rendre plus clair côté interface
+- [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres
 
 ## P2 — Finition

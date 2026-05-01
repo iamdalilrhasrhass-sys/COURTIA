@@ -180,6 +180,20 @@
 
 ---
 
+## Hotfix final — Message auth rate limit (1er mai 2026)
+
+**Commit prévu** : fix: improve Courtia auth rate limit messaging
+
+### Résumé
+Après les tests finaux répétés, le backend a correctement renvoyé un 429 de protection.
+L'interface affiche désormais un message français propre : `Trop de tentatives de connexion. Réessayez dans quelques minutes.`
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 29 passés
+
+---
+
 ## Phase G — SEO / social / image de marque (1er mai 2026)
 
 **Commit prévu** : feat: polish Courtia SEO and social assets

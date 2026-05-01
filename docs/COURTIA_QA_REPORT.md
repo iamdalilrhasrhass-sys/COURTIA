@@ -39,6 +39,16 @@
 
 ---
 
+## QA Hotfix final — Auth rate limit (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Message 429 auth | ✅ OK | Revue code `LoginPage.jsx` | Message français propre ajouté |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+
+---
+
 ## QA Phase G — SEO / Social (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
