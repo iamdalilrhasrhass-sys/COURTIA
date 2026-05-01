@@ -9,6 +9,7 @@
 | Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
 | `/register?plan=pro` local | ✅ OK | Browser in-app | “Activez votre cockpit Pro”, 0 EUR aujourd’hui, console 0 erreur |
 | `/register?plan=pro` structure mobile | ✅ OK | Browser in-app | Panneau marque + essai compact + CTA visible dans le premier écran |
+| `/register` local | ✅ OK | Browser in-app | “Démarrez votre cockpit Starter”, 0 EUR aujourd’hui, 89 EUR HT/mois après essai |
 | `/#pricing` local | ✅ OK | Browser in-app | Prix Pro premium, annulation en ligne visible, console 0 erreur |
 
 ## QA Phase 2 — Landing premium Codex (1er mai 2026)

@@ -366,6 +366,14 @@ export default function Login() {
   const isRegister = location.pathname === '/register'
   const params = new URLSearchParams(location.search)
   const selectedPlan = params.get('plan')
+  const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
+  const planName = planKey === 'pro' ? 'Pro' : 'Starter'
+  const planPrice = planKey === 'pro' ? '159 € HT/mois' : '89 € HT/mois'
+  const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Démarrez votre cockpit Starter'
+  const planSubtitle = planKey === 'pro'
+    ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
+    : '7 jours pour structurer vos clients, contrats et relances dans un cockpit clair.'
+  const planCta = planKey === 'pro' ? 'Activer mon essai Pro' : 'Activer mon essai Starter'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -512,29 +520,25 @@ export default function Login() {
           <div className="auth-right">
             <div className="auth-right-inner">
             {/* Plan badge for register */}
-            {isRegister && selectedPlan && (
+            {isRegister && (
               <div className="auth-plan-badge">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-                Offre {selectedPlan === 'pro' ? 'Pro' : selectedPlan} sélectionnée — Essai gratuit 7 jours
+                Offre {planName} sélectionnée — Essai gratuit 7 jours
               </div>
             )}
 
             <h1 style={{ fontSize: 22, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 4, letterSpacing: '-0.02em' }}>
               {isRegister
-                ? selectedPlan === 'pro'
-                  ? 'Activez votre cockpit Pro'
-                  : 'Créez votre cockpit courtier'
+                ? planTitle
                 : 'Ouvrez votre cockpit'}
             </h1>
             <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)', marginBottom: 24 }}>
               {isRegister
-                ? selectedPlan === 'pro'
-                  ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
-                  : 'Démarrez avec un espace sérieux pour piloter votre portefeuille.'
+                ? planSubtitle
                 : 'Retrouvez vos priorités, vos clients et votre brief ARK.'}
             </p>
 
-            {isRegister && selectedPlan === 'pro' && (
+            {isRegister && (
               <div className="auth-trial-panel">
                 <div className="auth-trial-grid">
                   <div className="auth-trial-cell">
@@ -543,7 +547,7 @@ export default function Login() {
                   </div>
                   <div className="auth-trial-cell">
                     <div className="auth-trial-value">7 jours</div>
-                    <div className="auth-trial-label">pour tester Pro</div>
+                    <div className="auth-trial-label">pour tester {planName}</div>
                   </div>
                   <div className="auth-trial-cell">
                     <div className="auth-trial-value">En ligne</div>
@@ -551,7 +555,7 @@ export default function Login() {
                   </div>
                 </div>
                 <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
-                  Votre carte sera demandée dans l’étape de paiement sécurisée dédiée. COURTIA ne collecte pas vos coordonnées bancaires ici.
+                  Votre carte sera demandée dans l’étape de paiement sécurisée dédiée. 0 € aujourd’hui, puis {planPrice} après 7 jours si vous continuez. COURTIA ne collecte pas vos coordonnées bancaires ici.
                 </p>
               </div>
             )}
@@ -650,9 +654,7 @@ export default function Login() {
                   </span>
                 ) : (
                   isRegister
-                    ? selectedPlan === 'pro'
-                      ? 'Activer mon essai Pro'
-                      : 'Créer mon cockpit'
+                    ? planCta
                     : 'Ouvrir mon cockpit'
                 )}
               </button>

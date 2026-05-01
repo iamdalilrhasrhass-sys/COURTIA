@@ -50,6 +50,7 @@
 - Le pricing Pro doit vendre la valeur avant le prix : coût journalier, contrôle du portefeuille, essai clair.
 - Le prix ne doit pas apparaître comme une simple ligne blanche froide ; utiliser un traitement Aurora premium sur l’offre principale.
 - Les formulaires auth doivent parler cockpit et valeur métier, pas “compte” générique.
+- Les funnels Starter et Pro doivent partager la même qualité visuelle ; Starter ne doit pas paraître low-cost, seulement plus simple.
 - Les transitions entre sections doivent être continues : éviter les gros séparateurs ou bandes qui donnent l’impression de pages collées.
 
 ## Interdictions
