@@ -1,0 +1,3 @@
+# Render auto-deploy disabled - backend runs on VPS (72.62.187.63)
+# This file stops Render from deploying anything
+*
