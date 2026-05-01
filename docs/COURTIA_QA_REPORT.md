@@ -1,5 +1,25 @@
 # COURTIA — Rapport QA
 
+## QA Phase A — Production funnel Pro (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Vercel `/register?plan=pro` | ✅ OK | Browser in-app production | Page visible, titre Pro et CTA détectés |
+| CTA Pro mobile/current viewport | ✅ OK | Screenshot production | `Activer mon essai Pro` visible dans le premier écran actuel |
+| Bloc essai Pro | ✅ OK | Browser in-app production | `0 €`, `7 jours`, `annulation en ligne` visibles |
+| Console Pro | ✅ OK | `tab.dev.logs` | 0 erreur |
+| Vercel `/register` | ✅ OK | Browser in-app production | Funnel Starter premium visible |
+| Vercel `/login` | ✅ OK | Browser in-app production | Page login visible, console 0 erreur |
+| Login démo production | ✅ OK | Browser in-app production | Redirection vers `/dashboard` |
+| Refresh dashboard | ✅ OK | Browser in-app production | Session conservée sur `/dashboard` |
+
+### Décision Phase A
+- P0 bloquant : non.
+- Autorisation produit : passage à la landing premium 3D scroll.
+- Limite restante : Admin Center à aligner séparément avec le backend `/api/admin/super/*`.
+
+---
+
 ## QA Phase 3 — Auth / Pricing conversion (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
