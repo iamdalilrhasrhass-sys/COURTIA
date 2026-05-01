@@ -10,6 +10,7 @@
 - [x] Phase B Codex — Landing 3D scroll premium locale, build/test/audit OK
 - [x] Phase B Codex — Landing 3D scroll validée en production Vercel
 - [x] Phase C Codex — Auth / funnel final local, build/test OK
+- [x] Phase C Codex — Auth / funnel final validé en production Vercel
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -47,7 +48,6 @@
 - [ ] Token super_admin → tests Admin Center E2E
 - [ ] AuroraPageHeader → Clients, Tâches, Parametres
 - [ ] Message 429 auth rate limit à rendre plus clair côté interface
-- [ ] Auth Phase C — validation production Vercel après push
 
 ## P2 — Finition
 - [ ] AuroraDivider sur toutes les transitions

@@ -33,8 +33,13 @@ Renforcer le portail login/register sans toucher au backend, à Stripe, à la DB
 | `/register` local | OK, Starter visible, console 0 erreur |
 | `/login` local | OK, login visible, console 0 erreur |
 | Scan messages techniques auth | OK |
+| `/register?plan=pro` production | OK, CTA Pro visible, console 0 erreur |
+| `/register` production | OK, Starter visible, console 0 erreur |
+| `/login` production | OK, console 0 erreur |
+| Login démo production | OK, redirection `/dashboard` |
+| Refresh dashboard production | OK |
 
 ## 5. Risques restants
 
-- Production auth à retester après push.
+- Production auth validée après push.
 - Billing / Onboarding P1 reste nécessaire pour SIRET, ORIAS, Stripe Checkout, webhooks, portail client et annulation en ligne réelle.
