@@ -70,6 +70,16 @@
 - Le pricing Starter reçoit un traitement premium, tout en restant une entrée volontairement plus simple que Pro.
 - Pro reste l’offre poussée : plus lumineuse, badge recommandé, valeur journalière et wording essai clair.
 
+## Reprise critique — Landing cinematic Aurora
+- Le logo canonique Aurora Bubble C devient la source de lumière de la landing, pas un simple élément de navbar.
+- Le hero doit être plus direct : promesse métier, CTA Pro, réassurance essai, puis narration produit.
+- Les transitions entre sections doivent être fondues par fond continu, halos et panneaux glass ; éviter les grosses lignes ou ruptures de page.
+- Le pricing doit vendre une décision business, pas afficher un prix blanc banal : Starter structure, Pro pilote, Premium accompagne.
+- Les données montrées dans la preview cockpit restent explicitement illustratives.
+- La capture visuelle doit rester performante ; limiter le nombre de grands logos animés et éviter les effets WebGL lourds.
+- La landing publique doit être ressentie comme une seule scène : ciel Aurora continu, Bubble C canonique en profondeur, aucun séparateur grossier entre les contenus.
+- Les mini-logos utilisent `CourtiaBubbleLogo animated={false}` : aucune animation SVG interne ne doit tourner inutilement sur les logos statiques.
+
 ## Phase C — Auth / funnel final
 - Le login doit être un accès au cockpit, pas une simple page de formulaire.
 - Les titres auth doivent vendre l’activation du cockpit : `Accédez à votre cockpit COURTIA`, `Activez votre cockpit Pro`, `Activez votre cockpit Starter`.
