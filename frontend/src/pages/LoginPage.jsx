@@ -3,7 +3,6 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import api from '../api'
-import Logo from '../components/Logo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'

@@ -6,7 +6,7 @@ import {
   Shield, Lock, X, File, FileImage, FileSpreadsheet,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import Logo from '../components/Logo'
+import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
@@ -197,7 +197,7 @@ export default function PublicDocumentUpload() {
     <div style={{ minHeight: '100vh', background: '#f7f6f2', fontFamily: "'Inter', sans-serif" }}>
       {/* Header minimal */}
       <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #f0f0f0', background: '#fff' }}>
-        <Logo size={28} textSize={11} />
+        <CourtiaMiniLogo size={28} />
         <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500 }}>Espace client sécurisé</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#10B981' }}>
           <Lock size={12} /> Chiffré

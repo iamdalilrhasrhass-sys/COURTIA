@@ -8,7 +8,6 @@ import {
   Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import Logo from './Logo'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 
 const theme = {
