@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, Filter, ChevronRight } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { adminFetch } from '../lib/adminApi'
 
 const STATUS_LABELS = { active: 'Actif', trialing: 'Essai', suspended: 'Suspendu', cancelled: 'Résilié' }
 const STATUS_COLORS = { active: '#10b981', trialing: '#3b82f6', suspended: '#ef4444', cancelled: '#6b7280' }
@@ -21,12 +20,11 @@ export default function AdminUsers() {
 
   const fetchUsers = (p = 1) => {
     setLoading(true)
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
     const params = new URLSearchParams({ page: p, limit: 20 })
     if (search) params.set('search', search)
     if (planFilter) params.set('plan', planFilter)
     if (statusFilter) params.set('status', statusFilter)
-    fetch(`${API_URL}/api/admin/users?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+    adminFetch(`/users?${params}`)
       .then(r => r.json())
       .then(d => { setUsers(d.users || []); setTotal(d.total || 0); setLoading(false) })
       .catch(() => setLoading(false))

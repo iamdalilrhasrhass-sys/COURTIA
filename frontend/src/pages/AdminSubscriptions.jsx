@@ -2,18 +2,14 @@ import { useState, useEffect } from 'react'
 import { CreditCard, TrendingUp, AlertTriangle } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
-
-const PLAN_PRICES = { start: 49, pro: 99, elite: 199 }
+import { adminFetch } from '../lib/adminApi'
 
 export default function AdminSubscriptions() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-    fetch(`${API_URL}/api/admin/analytics`, { headers: { Authorization: `Bearer ${token}` } })
+    adminFetch('/analytics')
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))

@@ -39,6 +39,24 @@
 
 ---
 
+## QA Phase E — Admin Center aligné (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Routes admin frontend | ✅ OK | `rg` ciblé | Pages actives alignées sur `/api/admin/super/*` |
+| Route `/app/dashboard` | ✅ OK | `rg` ciblé | Suppression de la redirection cassée |
+| Backend health | ✅ OK | `curl https://api.courtiark.fr/api/health` | HTTP 200 |
+| `/admin` local non connecté | ✅ OK | Browser in-app | Redirection vers `/login`, console 0 erreur |
+| Impersonation | ✅ OK | Revue code | Aucun bouton ni JWT d'impersonation ajouté |
+
+### Limites Phase E
+- Test super_admin réel non exécuté : token super_admin absent.
+- Test broker production à exécuter après déploiement Vercel.
+
+---
+
 ## QA Phase B — Landing 3D scroll premium (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
