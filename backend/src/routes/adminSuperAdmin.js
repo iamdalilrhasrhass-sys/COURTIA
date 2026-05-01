@@ -23,10 +23,22 @@ const {
   startImpersonation,
   stopImpersonation,
 } = require('../services/impersonationService');
+const {
+  getPortfolioInsightColumns,
+  getPortfolioInsightTimestampColumn,
+  getPortfolioTimestampOrder,
+  getPortfolioTimestampSelect,
+  selectPortfolioColumn,
+} = require('../utils/portfolioSchema');
 const pool = require('../db');
 
 // Prix mensuels par plan (HT, €) — à synchroniser avec les prix Stripe
 const PLAN_PRICES_EUR = { start: 49, pro: 99, elite: 199 };
+
+function adminCompletedFilter(columns, alias = '') {
+  const prefix = alias ? `${alias}.` : '';
+  return columns.has('status') ? `AND ${prefix}status = 'completed'` : '';
+}
 
 // Appliquer verifyToken + superAdminGuard sur tout le routeur
 router.use(verifyToken, superAdminGuard);
@@ -107,6 +119,12 @@ router.get('/users/:id', async (req, res) => {
     if (isNaN(targetId)) {
       return res.status(400).json({ error: 'ID invalide' });
     }
+    const insightColumns = await getPortfolioInsightColumns(pool);
+    const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
+    const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
+    const statusWhere = adminCompletedFilter(insightColumns, 'pi');
+    const gradeSelect = insightColumns.has('raw_analysis') ? "pi.raw_analysis->>'grade' AS grade" : 'NULL::text AS grade';
 
     const [userRes, metricsRes, arkRes, insightRes] = await Promise.all([
       pool.query(
@@ -145,13 +163,12 @@ router.get('/users/:id', async (req, res) => {
         [targetId]
       ),
       pool.query(
-        `SELECT health_score, grade, generated_at
+        `SELECT ${selectPortfolioColumn(insightColumns, 'health_score', 'NULL::integer')},
+                ${gradeSelect},
+                ${timestampSelect}
          FROM portfolio_insights pi
-         CROSS JOIN LATERAL (
-           SELECT pi.raw_analysis->>'grade' AS grade
-         ) g
-         WHERE pi.user_id = $1 AND pi.status = 'completed'
-         ORDER BY pi.generated_at DESC LIMIT 1`,
+         WHERE pi.user_id = $1 ${statusWhere}
+         ORDER BY ${timestampOrder} DESC LIMIT 1`,
         [targetId]
       ),
     ]);
@@ -334,6 +351,18 @@ router.get('/impersonation/logs', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/analytics', async (req, res) => {
   try {
+    const insightColumns = await getPortfolioInsightColumns(pool);
+    const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const portfolioWhere = [];
+    if (insightColumns.has('status')) portfolioWhere.push("status = 'completed'");
+    if (timestampColumn) portfolioWhere.push(`${timestampColumn} > NOW() - INTERVAL '30 days'`);
+    const portfolioWhereSql = portfolioWhere.length ? `WHERE ${portfolioWhere.join(' AND ')}` : '';
+    const portfolioScoreStats = insightColumns.has('health_score')
+      ? `ROUND(AVG(health_score), 1) AS avg_health_score,
+         COUNT(*) FILTER (WHERE health_score >= 70) AS portfolios_healthy`
+      : `0::numeric AS avg_health_score,
+         0::integer AS portfolios_healthy`;
+
     const [planDist, signups30, churn30, arkUsage, portfolioStats] = await Promise.all([
       // Distribution des plans actifs
       pool.query(
@@ -380,11 +409,9 @@ router.get('/analytics', async (req, res) => {
       pool.query(
         `SELECT
            COUNT(*) AS total_analyses,
-           ROUND(AVG(health_score), 1) AS avg_health_score,
-           COUNT(*) FILTER (WHERE health_score >= 70) AS portfolios_healthy
+           ${portfolioScoreStats}
          FROM portfolio_insights
-         WHERE status = 'completed'
-           AND generated_at > NOW() - INTERVAL '30 days'`
+         ${portfolioWhereSql}`
       ),
     ]);
 

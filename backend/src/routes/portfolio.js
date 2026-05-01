@@ -22,9 +22,11 @@ const { verifyToken }     = require('../middleware/auth');
 const { getUserPlanInfo } = require('../services/planService');
 const { calculateHealthScore, analyzePortfolio, scoreToRange } = require('../services/portfolioAnalyzer');
 const {
+  getPortfolioInsightColumns,
   getPortfolioInsightTimestampColumn,
   getPortfolioTimestampOrder,
   getPortfolioTimestampSelect,
+  selectPortfolioColumn,
 } = require('../utils/portfolioSchema');
 const pool = require('../db');
 
@@ -33,6 +35,31 @@ const pool = require('../db');
 async function getUserPlan(userId) {
   const info = await getUserPlanInfo(userId);
   return info ? (info.plan || 'start') : 'start';
+}
+
+function parseJsonObject(value) {
+  if (!value) return null;
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function completedFilter(columns) {
+  return columns.has('status') ? "AND status = 'completed'" : '';
+}
+
+function completedStatusSelect(columns) {
+  return selectPortfolioColumn(columns, 'status', "'completed'::text");
+}
+
+function sendPortfolioUnavailable(res) {
+  return res.status(503).json({
+    error: 'portfolio_unavailable',
+    message: 'Le cockpit portefeuille est momentanément indisponible. Réessayez dans quelques instants.',
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,15 +73,27 @@ router.get('/morning-brief', verifyToken, async (req, res) => {
     const plan   = await getUserPlan(userId);
     const isStart = plan === 'start';
     const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const insightColumns = await getPortfolioInsightColumns(pool);
     const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
     const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
+    const statusWhere = completedFilter(insightColumns);
+    const insightSelect = [
+      'id',
+      timestampSelect,
+      selectPortfolioColumn(insightColumns, 'total_clients', '0::integer'),
+      selectPortfolioColumn(insightColumns, 'total_contracts', '0::integer'),
+      selectPortfolioColumn(insightColumns, 'total_premium', '0::numeric'),
+      selectPortfolioColumn(insightColumns, 'health_score', 'NULL::integer'),
+      selectPortfolioColumn(insightColumns, 'health_breakdown', 'NULL::jsonb'),
+      selectPortfolioColumn(insightColumns, 'raw_analysis', 'NULL::jsonb'),
+      completedStatusSelect(insightColumns),
+    ].join(', ');
 
     // Récupérer le dernier insight complété
     const insightRes = await pool.query(
-      `SELECT id, ${timestampSelect}, total_clients, total_contracts, total_premium,
-              health_score, health_breakdown, raw_analysis, status
+      `SELECT ${insightSelect}
        FROM portfolio_insights
-       WHERE user_id = $1 AND status = 'completed'
+       WHERE user_id = $1 ${statusWhere}
        ORDER BY ${timestampOrder} DESC
        LIMIT 1`,
       [userId]
@@ -70,6 +109,7 @@ router.get('/morning-brief', verifyToken, async (req, res) => {
     }
 
     const insight = insightRes.rows[0];
+    const rawAnalysis = parseJsonObject(insight.raw_analysis);
 
     // Récupérer les actions pending, triées par priorité
     const PRIORITY_ORDER = "CASE priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END";
@@ -104,7 +144,7 @@ router.get('/morning-brief', verifyToken, async (req, res) => {
         total_contracts:  insight.total_contracts,
         total_premium:    parseFloat(insight.total_premium || 0),
         health_score:     isStart ? scoreToRange(insight.health_score) : insight.health_score,
-        grade:            isStart ? null : (insight.raw_analysis?.grade || null),
+        grade:            isStart ? null : (rawAnalysis?.grade || null),
         status:           insight.status,
       },
       actions,
@@ -117,15 +157,15 @@ router.get('/morning-brief', verifyToken, async (req, res) => {
       response.upgrade_message  = `${hiddenActions} actions supplémentaires disponibles avec le plan Pro ou Elite.`;
     } else {
       response.insight.health_breakdown = insight.health_breakdown;
-      response.insight.benchmark        = insight.raw_analysis?.benchmark || null;
-      response.insight.confidence       = insight.raw_analysis?.confidence || null;
+      response.insight.benchmark        = rawAnalysis?.benchmark || null;
+      response.insight.confidence       = rawAnalysis?.confidence || null;
     }
 
     res.json(response);
 
   } catch (err) {
     console.error('GET /portfolio/morning-brief error:', err.message);
-    res.status(500).json({ error: err.message });
+    sendPortfolioUnavailable(res);
   }
 });
 
@@ -230,14 +270,22 @@ router.get('/health-score', verifyToken, async (req, res) => {
     const plan   = await getUserPlan(userId);
     const isStart = plan === 'start';
     const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const insightColumns = await getPortfolioInsightColumns(pool);
     const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
     const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
+    const statusWhere = completedFilter(insightColumns);
+    const savedSelect = [
+      selectPortfolioColumn(insightColumns, 'health_score', 'NULL::integer'),
+      selectPortfolioColumn(insightColumns, 'health_breakdown', 'NULL::jsonb'),
+      selectPortfolioColumn(insightColumns, 'raw_analysis', 'NULL::jsonb'),
+      timestampSelect,
+    ].join(', ');
 
     // D'abord tenter le dernier insight sauvegardé (rapide)
     const savedRes = await pool.query(
-      `SELECT health_score, health_breakdown, raw_analysis, ${timestampSelect}
+      `SELECT ${savedSelect}
        FROM portfolio_insights
-       WHERE user_id = $1 AND status = 'completed'
+       WHERE user_id = $1 ${statusWhere}
        ORDER BY ${timestampOrder} DESC LIMIT 1`,
       [userId]
     );
@@ -247,16 +295,23 @@ router.get('/health-score', verifyToken, async (req, res) => {
 
     if (savedRes.rows.length > 0) {
       const row = savedRes.rows[0];
+      const rawAnalysis = parseJsonObject(row.raw_analysis);
       scoreData = {
         health_score:     row.health_score,
         health_breakdown: row.health_breakdown,
-        grade:            row.raw_analysis?.grade || null,
-        confidence_level: row.raw_analysis?.confidence || null,
-        sector_benchmark: row.raw_analysis?.benchmark || null,
-        flags:            row.raw_analysis?.flags || null,
+        grade:            rawAnalysis?.grade || null,
+        confidence_level: rawAnalysis?.confidence || null,
+        sector_benchmark: rawAnalysis?.benchmark || null,
+        flags:            rawAnalysis?.flags || null,
         generated_at:     row.generated_at,
       };
       fromCache = true;
+      if (scoreData.health_score == null) {
+        const result = await calculateHealthScore(userId);
+        const { data, score_range, ...rest } = result;
+        scoreData = { ...rest, generated_at: new Date() };
+        fromCache = false;
+      }
     } else {
       // Calcul à la volée si aucun insight sauvegardé
       const result = await calculateHealthScore(userId);
@@ -287,7 +342,7 @@ router.get('/health-score', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('GET /portfolio/health-score error:', err.message);
-    res.status(500).json({ error: err.message });
+    sendPortfolioUnavailable(res);
   }
 });
 
@@ -439,23 +494,37 @@ router.get('/insights/history', verifyToken, async (req, res) => {
     const offset   = (Math.max(1, parseInt(page)) - 1) * Math.min(90, parseInt(limit));
     const pageSize = Math.min(90, parseInt(limit));
     const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
+    const insightColumns = await getPortfolioInsightColumns(pool);
     const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
     const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
+    const statusWhere = completedFilter(insightColumns);
+    const histSelect = [
+      'id',
+      timestampSelect,
+      selectPortfolioColumn(insightColumns, 'total_clients', '0::integer'),
+      selectPortfolioColumn(insightColumns, 'total_contracts', '0::integer'),
+      selectPortfolioColumn(insightColumns, 'total_premium', '0::numeric'),
+      selectPortfolioColumn(insightColumns, 'health_score', 'NULL::integer'),
+      completedStatusSelect(insightColumns),
+      insightColumns.has('health_breakdown')
+        ? 'CASE WHEN $2 THEN NULL ELSE health_breakdown END AS health_breakdown'
+        : 'NULL::jsonb AS health_breakdown',
+      insightColumns.has('raw_analysis')
+        ? 'CASE WHEN $2 THEN NULL ELSE raw_analysis END AS raw_analysis'
+        : 'NULL::jsonb AS raw_analysis',
+    ].join(', ');
 
     const [histRes, countRes] = await Promise.all([
       pool.query(
-        `SELECT id, ${timestampSelect}, total_clients, total_contracts, total_premium,
-                health_score, status,
-                CASE WHEN $2 THEN NULL ELSE health_breakdown END AS health_breakdown,
-                CASE WHEN $2 THEN NULL ELSE raw_analysis      END AS raw_analysis
+        `SELECT ${histSelect}
          FROM portfolio_insights
-         WHERE user_id = $1 AND status = 'completed'
+         WHERE user_id = $1 ${statusWhere}
          ORDER BY ${timestampOrder} DESC
          LIMIT $3 OFFSET $4`,
         [userId, isStart, pageSize, offset]
       ),
       pool.query(
-        `SELECT COUNT(*) FROM portfolio_insights WHERE user_id = $1 AND status = 'completed'`,
+        `SELECT COUNT(*) FROM portfolio_insights WHERE user_id = $1 ${statusWhere}`,
         [userId]
       ),
     ]);
@@ -477,7 +546,7 @@ router.get('/insights/history', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('GET /portfolio/insights/history error:', err.message);
-    res.status(500).json({ error: err.message });
+    sendPortfolioUnavailable(res);
   }
 });
 

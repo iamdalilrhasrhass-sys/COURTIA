@@ -1,5 +1,30 @@
 # COURTIA — Changelog Mission 2M
 
+## Hotfix portfolio — Schéma ancien VPS + fallback Morning Brief (2 mai 2026)
+
+**Commit** : à créer
+**Message attendu** : fix: harden Courtia portfolio schema compatibility
+
+### Changements
+- Confirmation production d'un second P0 : `/api/portfolio/health-score` retourne `500` car `health_score` est absent du schéma VPS.
+- `portfolio_insights` est maintenant introspecté avant les requêtes sensibles.
+- Routes portfolio durcies : `morning-brief`, `health-score`, `regenerate`, `insights/history`.
+- `portfolioAnalyzer` écrit seulement dans les colonnes disponibles.
+- Admin super admin ne suppose plus obligatoirement `generated_at` / `health_score`.
+- Les erreurs portfolio renvoient un message propre, sans exposer de SQL.
+- `MorningBrief.jsx` affiche un score local estimé si l'API portfolio score est temporairement indisponible.
+- Aucun Stripe, aucune DB migration, aucune impersonation.
+
+### Tests
+- `node -c backend/server.js` : OK.
+- `node -c backend/src/routes/portfolio.js` : OK.
+- `node -c backend/src/routes/adminSuperAdmin.js` : OK.
+- `node -c backend/src/services/portfolioAnalyzer.js` : OK.
+- `node -c backend/src/utils/portfolioSchema.js` : OK.
+- `npm run build` : OK.
+- `npm run test` : 33 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+
 ## Hotfix portfolio — Morning Brief compatible schéma production (1er mai 2026)
 
 **Commit** : à créer

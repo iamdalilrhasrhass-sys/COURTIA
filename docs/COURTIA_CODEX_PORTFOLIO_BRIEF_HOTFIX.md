@@ -14,18 +14,20 @@ Le tour API production a confirmé :
 - `/api/taches` : OK,
 - `/api/reach/dashboard` : OK,
 - `/api/portfolio/morning-brief` : KO `500`.
+- `/api/portfolio/health-score` : KO `500`.
 
 Erreur retournée :
 
 ```text
 column "generated_at" does not exist
+column "health_score" does not exist
 ```
 
 ## 2. Cause
 
 Le code du module portefeuille supposait que la table `portfolio_insights` possédait une colonne `generated_at`.
 
-La base production semble avoir un schéma différent ou plus ancien.
+La base production semble avoir un schéma différent ou plus ancien, sans certaines colonnes attendues par le module Portfolio avancé.
 
 ## 3. Correction réalisée
 
@@ -37,6 +39,7 @@ La base production semble avoir un schéma différent ou plus ancien.
   - sinon fallback `NOW()` / tri par `id`.
 - Patch de `backend/src/routes/portfolio.js`.
 - Patch de `backend/src/services/portfolioAnalyzer.js`.
+- Patch complémentaire : détection de colonnes métier manquantes (`health_score`, `health_breakdown`, `raw_analysis`, totaux), messages d'erreur propres et fallback score local dans `MorningBrief`.
 - Aucune migration DB appliquée.
 - Aucun changement Stripe, auth, impersonation ou JWT.
 

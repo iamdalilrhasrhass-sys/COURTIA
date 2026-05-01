@@ -25,6 +25,7 @@
 - [x] Stabilisation auth/session — rate limit auth backend adouci sans supprimer la sécurité
 - [x] Landing Aurora — refonte en 3 actes continus autour de la Bubble C officielle
 - [x] Hotfix code — Morning Brief portfolio compatible avec schéma DB sans `generated_at`
+- [x] Hotfix code — Portfolio schema hardening pour `generated_at` / `health_score` absents et fallback Morning Brief local
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -42,7 +43,7 @@
 
 - [x] Session frontend trop agressive sur tous les `401` — politique de session centralisée ajoutée.
 
-- [ ] Déployer le backend VPS / PM2 avec le hotfix Morning Brief portfolio.
+- [ ] Déployer le backend VPS / PM2 avec le hotfix Portfolio schema hardening.
 
 ## P1 — Important
 - [ ] DNS courtiark.fr → propager nameservers Hostinger

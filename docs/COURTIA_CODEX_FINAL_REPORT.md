@@ -2,9 +2,9 @@
 
 ## 1. Résumé exécutif
 - État initial : SaaS prometteur, landing/auth déjà améliorés, Admin Center présent mais API désalignée, cockpit à harmoniser.
-- État final : landing premium 3D scroll, funnel Starter/Pro renforcé, cockpit interne batch 1 harmonisé, Admin Center aligné `/api/admin/super/*`, QA Python, SEO social PNG, docs complètes.
+- État final : landing premium 3D scroll, funnel Starter/Pro renforcé, cockpit interne batch 1 harmonisé, Admin Center aligné `/api/admin/super/*`, QA Python, SEO social PNG, docs complètes, hotfix portfolio prêt dans le dépôt.
 - Niveau de valeur perçue : nettement supérieur, présentable à un courtier ou un partenaire pour une démo produit.
-- Livrable commercialement : partiel. Présentable et démontrable, mais Billing Stripe LIVE, DNS final et tests super_admin restent P1.
+- Livrable commercialement : partiel. Présentable et démontrable, mais Billing Stripe LIVE, DNS final, tests super_admin et redéploiement backend VPS du hotfix portfolio restent nécessaires avant commercialisation large.
 
 ## 2. Travaux réalisés
 - Landing : page longue, continue, premium, structurée autour du problème courtier, ARK, workflow, cockpit, tarifs, FAQ et CTA final.
@@ -12,6 +12,7 @@
 - Dashboard : centre de commande cockpit, données de démonstration assumées, KPIs moins trompeurs, Aurora plus présent.
 - Pages métier : Clients, Contrats, Tâches harmonisés en batch 1 avec headers, loaders, empty states et bannières mock.
 - Admin : routes frontend alignées avec `/api/admin/super/*`, refus broker propre, plus de `/app/dashboard`.
+- Portfolio : compatibilité renforcée avec l'ancien schéma VPS `portfolio_insights`, fallback score local dans le Morning Brief, erreurs SQL masquées côté utilisateur.
 - SEO : OG PNG 1200x630, icons PNG, manifest corrigé, metas Vercel fiables.
 - Logo : le fichier `courtia_bubble_C.html` fourni est confirmé comme source canonique ; `CourtiaBubbleLogo.jsx` en reprend la structure.
 - QA : build/tests/audit Python, production QA par phases.
@@ -37,6 +38,7 @@
 ## 4. Tests
 - Build : OK, `npm run build`.
 - Tests : OK, `npm run test`, 29 tests passés.
+- Tests hotfix portfolio : OK, `npm run test`, 33 tests passés ; `node -c` backend ciblé OK ; audit Python 0 P0/P1.
 - Login : OK avant déclenchement du rate limit final.
 - Mauvais mot de passe : OK, message français propre.
 - Register : OK en production Phase C.
@@ -45,20 +47,21 @@
 - Admin : OK broker refusé proprement, super_admin non testé faute de token.
 - Mobile : partiel, funnels et landing vérifiés en phases précédentes ; pas de viewport mobile complet final toutes pages.
 - Console : 0 erreur bloquante sur les pages testées.
-- Backend : health HTTP 200.
+- Backend : health HTTP 200. `/api/portfolio/morning-brief` et `/api/portfolio/health-score` restent KO sur le VPS tant que PM2 n'est pas redéployé avec le dernier commit.
 
 ## 5. Ce qui est réellement prêt
 - Prêt : landing, login/register, funnel Pro/Starter, dashboard démo, clients/contrats/tâches batch 1, rapports réparés, admin protection broker, SEO social, docs.
 - Partiel : paramètres, ARK Reach complet, mobile toutes pages, super_admin réel.
-- Non prêt : Stripe LIVE/Billing, DNS final `courtiark.fr`, production commerciale encaissable.
+- Non prêt : Stripe LIVE/Billing, DNS final `courtiark.fr`, redéploiement backend VPS du hotfix portfolio, production commerciale encaissable.
 
 ## 6. P0 restants
-Aucun P0 produit confirmé à la fin de cette mission.
+- Production backend VPS : redéployer / redémarrer PM2 avec le hotfix portfolio schema. Le dépôt est corrigé, mais la production renvoie encore `500` sur `/api/portfolio/morning-brief` et `/api/portfolio/health-score` tant que le VPS tourne sur l'ancienne version.
 
 ## 7. P1 restants
 - DNS `courtiark.fr`.
 - Stripe LIVE / Billing / Onboarding.
 - Token super_admin réel pour QA propriétaire.
+- Accès SSH/PM2 ou pipeline backend fiable pour déployer les correctifs critiques.
 - Retest final privé après expiration rate limit si preuve stricte souhaitée.
 - Harmonisation profonde Rapports / Paramètres.
 
@@ -70,8 +73,8 @@ Aucun P0 produit confirmé à la fin de cette mission.
 - Prévisualisation LinkedIn réelle.
 
 ## 9. Conclusion honnête
-- COURTIA est-il présentable à un courtier ? Oui, surtout landing, auth, dashboard et pages métier principales.
+- COURTIA est-il présentable à un courtier ? Oui pour la landing, auth, dashboard et pages métier principales ; le module portfolio avancé doit être redéployé côté VPS avant une démo sans réserve.
 - COURTIA est-il prêt à encaisser ? Non, Stripe LIVE/Billing n'est pas codé dans cette mission.
-- COURTIA est-il prêt pour une démo investisseur ? Oui pour une démo produit/vision, avec transparence sur P1.
+- COURTIA est-il prêt pour une démo investisseur ? Oui pour une démo produit/vision, avec transparence sur le P0 déploiement backend portfolio et les P1 billing/DNS.
 - COURTIA vaut-il visuellement plus qu’avant ? Oui, la perception marque/produit est nettement plus premium.
-- Que manque-t-il pour devenir vraiment commercial ? Billing Stripe, DNS final, super_admin réel testé, mobile complet, durcissement des P2 QA.
+- Que manque-t-il pour devenir vraiment commercial ? Déployer le hotfix backend portfolio, Billing Stripe, DNS final, super_admin réel testé, mobile complet, durcissement des P2 QA.
