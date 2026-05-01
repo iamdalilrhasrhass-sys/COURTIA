@@ -44,7 +44,7 @@
 | Test | Résultat | Preuve | Commentaire |
 |---|---|---|---|
 | Logo canonique | ✅ OK | `cmp` | Le fichier Desktop est identique à la référence repo |
-| Crash `/rapports` | ✅ Corrigé local | Build Vite | Imports manquants ajoutés |
+| Crash `/rapports` | ✅ Corrigé | Browser in-app production | Page visible après login demo, plus de page blanche |
 | Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
 | Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
 | Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1 |

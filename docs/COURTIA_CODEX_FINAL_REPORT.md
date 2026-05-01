@@ -41,14 +41,15 @@
 - Mauvais mot de passe : OK, message français propre.
 - Register : OK en production Phase C.
 - Dashboard : OK en production final.
+- Rapports : OK après hotfix, page visible en production.
 - Admin : OK broker refusé proprement, super_admin non testé faute de token.
 - Mobile : partiel, funnels et landing vérifiés en phases précédentes ; pas de viewport mobile complet final toutes pages.
 - Console : 0 erreur bloquante sur les pages testées.
 - Backend : health HTTP 200.
 
 ## 5. Ce qui est réellement prêt
-- Prêt : landing, login/register, funnel Pro/Starter, dashboard démo, clients/contrats/tâches batch 1, admin protection broker, SEO social, docs.
-- Partiel : rapports, paramètres, ARK Reach complet, mobile toutes pages, super_admin réel.
+- Prêt : landing, login/register, funnel Pro/Starter, dashboard démo, clients/contrats/tâches batch 1, rapports réparés, admin protection broker, SEO social, docs.
+- Partiel : paramètres, ARK Reach complet, mobile toutes pages, super_admin réel.
 - Non prêt : Stripe LIVE/Billing, DNS final `courtiark.fr`, production commerciale encaissable.
 
 ## 6. P0 restants

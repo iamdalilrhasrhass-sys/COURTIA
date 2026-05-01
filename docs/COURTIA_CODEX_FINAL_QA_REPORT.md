@@ -22,7 +22,7 @@ Date : 1er mai 2026
 | `/clients` | OK Phase D | Partiel | 0 erreur Phase D | Broker demo | Aurora | OK Phase D |
 | `/contrats` | OK Phase D | Partiel | 0 erreur Phase D | Broker demo | Aurora | OK Phase D |
 | `/taches` | OK Phase D | Partiel | 0 erreur Phase D | Broker demo | Aurora | OK Phase D |
-| `/rapports` | Corrigé local | Partiel | Build OK | Broker demo | Aurora | À retester prod après push |
+| `/rapports` | OK | Partiel | Console polluée par ancien bundle | Broker demo | Aurora | OK |
 | `/parametres` | Non retesté final | Partiel | Non retesté final | Rate limit final | Aurora | À retester |
 | `/admin` | OK | Partiel | 0 erreur | Broker refusé | Aurora | Protégé |
 
@@ -37,6 +37,7 @@ Date : 1er mai 2026
 | Mauvais mot de passe UI | OK | Browser in-app | Message français : `Email ou mot de passe incorrect.` |
 | Login demo UI | OK | Browser in-app | Redirection `/dashboard`, dashboard visible |
 | Auth 429 | OK | Bundle prod | Message français présent dans le bundle Vercel |
+| Rapports production | OK | Browser in-app | Login demo accepté, `/rapports` visible, pas de page blanche |
 | Admin broker | OK | Browser in-app | `Admin Center protégé`, console 0 erreur |
 | SEO OG PNG | OK | `curl -I` | HTTP 200, `content-type: image/png` |
 | Manifest / icons | OK | `curl` + `sips` | Icônes réelles servies |
@@ -49,7 +50,8 @@ Impact :
 - Le login demo a été validé avant le déclenchement du rate limit.
 - Le dashboard a été validé après login.
 - Les routes internes `/clients`, `/contrats`, `/taches` ont été validées en production en Phase D.
-- `/rapports` a ensuite révélé un crash `AuroraEmptyState is not defined` ; le hotfix local ajoute les imports manquants et repasse build/tests.
+- `/rapports` a ensuite révélé un crash `AuroraEmptyState is not defined` ; le hotfix ajoute les imports manquants, repasse build/tests, puis la production affiche bien la page après login.
+- La console Browser gardait deux erreurs anciennes pointant vers l'ancien bundle `index-qzAA-pRS.js`; le bundle courant servi après hotfix est `index-B6YI8bAw.js` et la page n'est plus blanche.
 
 ## Risques restants
 - Token super_admin absent : pas de test E2E propriétaire complet.
