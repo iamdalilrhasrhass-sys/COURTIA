@@ -14,6 +14,22 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'vendor-react';
+            if (id.includes('zustand')) return 'vendor-state';
+            if (id.includes('recharts')) return 'vendor-charts';
+            if (id.includes('axios')) return 'vendor-axios';
+            if (id.includes('date-fns') || id.includes('dayjs') || id.includes('moment')) return 'vendor-date';
+            if (id.includes('@mui') || id.includes('@emotion')) return 'vendor-mui';
+            if (id.includes('three')) return 'vendor-three';
+            return 'vendor-other';
+          }
+        }
+      }
+    }
   }
 })
