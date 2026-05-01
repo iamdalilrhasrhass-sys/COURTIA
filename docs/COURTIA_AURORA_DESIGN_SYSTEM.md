@@ -73,6 +73,12 @@
 - Les panneaux d’essai doivent rester lisibles sur mobile : 0 EUR, 7 jours, annulation en ligne, CTA visible.
 - Les champs SIRET / ORIAS et la carte bancaire restent hors formulaire actuel tant que le backend Billing/Onboarding n’est pas prêt.
 
+## Phase D — Cockpit interne
+- Le dashboard doit distinguer clairement les données réelles des aperçus de démonstration.
+- Les pages métier doivent utiliser `AuroraPageHeader` et des CTA cohérents quand possible.
+- Les fallbacks mock doivent être explicitement signalés à l’utilisateur.
+- Les loaders métier doivent privilégier `CourtiaLogoLoader`.
+
 ## Interdictions
 - Ancien logo violet
 - Pastels excessifs

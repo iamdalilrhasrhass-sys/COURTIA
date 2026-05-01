@@ -1,5 +1,24 @@
 # COURTIA — Changelog Mission 2M
 
+## Phase D Codex — Cockpit interne (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: enhance Courtia cockpit and internal platform experience
+
+### Changements
+- Dashboard : Command Center Aurora ajouté.
+- Dashboard : KPI tâches retiré du hardcoding, fallback à 0 si aucune donnée statistique.
+- Dashboard : graphiques / échéances de démo explicitement signalés.
+- Clients / Contrats / Tâches : headers harmonisés, CTA Aurora, messages de fallback mock propres.
+- Tâches : loader Courtia et empty state premium.
+
+### Tests
+- `npm run build` : OK.
+- `npm run test` : 29 tests OK.
+- Local cockpit browser : login bloqué par proxy Vite dev, validation production requise après push.
+
+---
+
 ## Phase C Codex — Auth / Funnel final premium (1er mai 2026)
 
 **Commit** : à créer
