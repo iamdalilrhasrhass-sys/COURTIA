@@ -246,7 +246,7 @@ export default function LandingPublic() {
             <AuroraBadge>CRM assurance connecté à ARK</AuroraBadge>
 
             <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-white"
+              className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-white"
             >
               Le cockpit intelligent{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
@@ -324,7 +324,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION PROBLÈME (dark) ━━━━━━━━━━━ */}
-      <section id="probleme" className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section id="probleme" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -332,7 +332,7 @@ export default function LandingPublic() {
             title="Votre portefeuille dort."
             subtitle="Vos clients sont déjà dans votre portefeuille. COURTIA vous aide à ne plus laisser dormir votre chiffre d'affaires."
           />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
             {problems.map((p, i) => (
               <ScrollReveal key={i} delay={i * 0.08}>
                 <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
@@ -347,14 +347,14 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION SOLUTION 4 PILIERS (dark) ━━━━━━━━━━━ */}
-      <section id="solutions" className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section id="solutions" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Solution"
             title="COURTIA transforme les données en priorités."
             subtitle="Centraliser, prioriser, relancer, développer — votre cabinet en un tableau de bord."
           />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
             {pillars.map((p, i) => (
               <ScrollReveal key={i} delay={i * 0.1}>
                 <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300 text-center">
@@ -371,7 +371,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION ARK (dark + aurora) ━━━━━━━━━━━ */}
-      <section id="ark" className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section id="ark" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -390,7 +390,7 @@ export default function LandingPublic() {
             </div>
           </ScrollReveal>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {arkCapabilities.map((cap, i) => (
               <ScrollReveal key={i} delay={i * 0.06}>
                 <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg hover:border-white/[0.12] transition-all duration-300">
@@ -404,7 +404,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION ARK REACH (dark) ━━━━━━━━━━━ */}
-      <section id="ark-reach" className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section id="ark-reach" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -431,7 +431,7 @@ export default function LandingPublic() {
             </div>
           </ScrollReveal>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {reachCapabilities.map((cap, i) => (
               <ScrollReveal key={i} delay={i * 0.06}>
                 <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 flex items-start gap-3 shadow-md hover:shadow-lg hover:border-white/[0.12] transition-all duration-300">
@@ -445,7 +445,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION PORTEFEUILLE VIVANT (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-40" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -522,7 +522,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION ACADEMY (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
         <div className="relative z-10 max-w-5xl mx-auto">
           <SectionEyebrow dark={true}
@@ -535,7 +535,7 @@ export default function LandingPublic() {
             COURTIA ne fait pas que gérer votre cabinet. Il vous aide à structurer vos méthodes, renforcer votre suivi commercial et progresser chaque semaine.
           </p>
 
-          <div className="grid md:grid-cols-2 gap-8 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
             {/* LEFT — Bénéfices */}
             <div className="space-y-5">
               {[
@@ -646,7 +646,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION AVANT / APRÈS (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <div className="max-w-5xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Comparaison"
@@ -660,14 +660,14 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION PREUVE MÉTIER (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
             badge="Crédibilité métier"
             title="Pensé pour les courtiers français."
             subtitle="COURTIA comprend les vrais sujets d'un cabinet : clients, contrats, échéances, relances, sinistres, multi-équipement, conformité et développement commercial."
           />
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <ScrollReveal delay={0}>
               <div className="group bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 lg:p-7 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-white/[0.12] transition-all duration-300">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400/10 to-blue-400/10 flex items-center justify-center mx-auto mb-4">
@@ -706,7 +706,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION PRICING PREMIUM (dark) ━━━━━━━━━━━ */}
-      <section id="pricing" className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section id="pricing" className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
         <div className="relative z-10 max-w-6xl mx-auto">
           <SectionEyebrow dark={true}
@@ -715,12 +715,12 @@ export default function LandingPublic() {
             subtitle="Commencez gratuitement 7 jours. Sans carte bancaire. Sans engagement."
           />
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map((plan, i) => (
               <ScrollReveal key={i} delay={i * 0.12}>
                 <div className={`relative rounded-2xl p-7 border shadow-xl flex flex-col h-full transition-all duration-300 hover:-translate-y-1 ${
                   plan.popular
-                    ? 'border-purple-400/30 bg-white/[0.06] shadow-purple-500/20 scale-105 md:scale-105'
+                    ? 'border-purple-400/30 bg-white/[0.06] shadow-purple-500/20 scale-100 md:scale-105'
                     : 'border-white/[0.06] bg-white/[0.03] backdrop-blur-xl shadow-black/20'
                 }`}>
                   {plan.popular && (
@@ -777,7 +777,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ SECTION FAQ (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <div className="max-w-3xl mx-auto">
           <SectionEyebrow dark={true}
             badge="FAQ"
@@ -790,7 +790,7 @@ export default function LandingPublic() {
       </section>
 
       {/* ━━━━━━━━━━━ CTA FINAL AURORA (dark) ━━━━━━━━━━━ */}
-      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+      <section className="relative py-12 md:py-16 lg:py-20 px-5 overflow-hidden">
         <AuroraBorealisBackground intensity="medium" className="absolute inset-0" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0510]" />
         <div className="relative z-10 max-w-3xl mx-auto text-center">
