@@ -19,7 +19,7 @@ export const useClientStore = create((set, get) => ({
       const data = await res.json()
       set({ clients: data.clients || [], loading: false })
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: 'Impossible de charger la liste des clients.', loading: false })
     }
   },
 
@@ -43,7 +43,7 @@ export const useClientStore = create((set, get) => ({
       set({ selectedClient: enriched, loading: false })
       return enriched
     } catch (err) {
-      set({ error: err.message, loading: false })
+      set({ error: 'Impossible de charger les détails du client.', loading: false })
       throw err
     }
   },
@@ -62,7 +62,7 @@ export const useClientStore = create((set, get) => ({
       set((state) => ({ clients: [data.client, ...state.clients] }))
       return data.client
     } catch (err) {
-      set({ error: err.message })
+      set({ error: 'Impossible de créer le client. Vérifiez les informations saisies.' })
       throw err
     }
   },
@@ -83,7 +83,7 @@ export const useClientStore = create((set, get) => ({
       }))
       return data.client
     } catch (err) {
-      set({ error: err.message })
+      set({ error: 'Impossible de modifier le client pour le moment.' })
       throw err
     }
   },
@@ -99,7 +99,7 @@ export const useClientStore = create((set, get) => ({
       set((state) => ({ clients: state.clients.filter((c) => c.id !== id) }))
       return true
     } catch (err) {
-      set({ error: err.message })
+      set({ error: 'Impossible de supprimer le client.' })
       return false
     }
   },
@@ -126,7 +126,7 @@ export const useClientStore = create((set, get) => ({
       }
       return data
     } catch (err) {
-      set({ error: err.message })
+      set({ error: 'Impossible de rafraîchir le score client.' })
       throw err
     }
   },
