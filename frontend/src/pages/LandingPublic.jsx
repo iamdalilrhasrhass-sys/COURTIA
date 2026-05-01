@@ -7,7 +7,7 @@ import {
   FileText, BarChart3, Bell, Search, RefreshCw, Target,
   Database, Globe, Lock, MessageSquare, Phone, Mail,
   Building, PieChart, Activity, AlertTriangle, Menu, X as XIcon,
-  Calendar
+  Calendar, GraduationCap, BookOpen, Award, Share2
 } from 'lucide-react'
 import AuroraBorealisBackground from '../components/AuroraBorealisBackground'
 import AuroraBadge from '../components/AuroraBadge'
@@ -84,6 +84,7 @@ const plans = [
       'Scoring portefeuille',
       'Messages IA personnalisés',
       'Morning Brief quotidien',
+      'COURTIA Academy — Cours & cartes compétence',
       'Support prioritaire',
     ],
     cta: "Démarrer avec Pro",
@@ -513,6 +514,130 @@ export default function LandingPublic() {
                       {tag}
                     </div>
                   ))}
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━ SECTION ACADEMY (dark) ━━━━━━━━━━━ */}
+      <section className="relative py-16 lg:py-20 px-5 overflow-hidden">
+        <AuroraBorealisBackground intensity="soft" className="absolute inset-0 opacity-30" />
+        <div className="relative z-10 max-w-5xl mx-auto">
+          <SectionEyebrow dark={true}
+            badge="COURTIA Academy"
+            title="Développez vos compétences de courtier au fil de votre utilisation."
+            subtitle="Accédez à des cours courts, débloquez des cartes compétence, montez en niveau et valorisez votre progression professionnelle."
+          />
+
+          <p className="text-center text-sm text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed -mt-4">
+            COURTIA ne fait pas que gérer votre cabinet. Il vous aide à structurer vos méthodes, renforcer votre suivi commercial et progresser chaque semaine.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            {/* LEFT — Bénéfices */}
+            <div className="space-y-5">
+              {[
+                {
+                  icon: <BookOpen size={18} />,
+                  title: 'Cours métier courts',
+                  desc: 'Techniques de vente, relances, objections, gestion de portefeuille, bases métier et conformité.'
+                },
+                {
+                  icon: <Award size={18} />,
+                  title: 'Cartes compétence',
+                  desc: 'Débloquez des cartes Bronze, Argent, Or, Diamant et Épiques selon vos actions et votre progression.'
+                },
+                {
+                  icon: <Share2 size={18} />,
+                  title: 'Progression partageable',
+                  desc: 'Valorisez vos compétences sur LinkedIn avec des textes prêts à publier, toujours avec validation manuelle.'
+                },
+              ].map((item, i) => (
+                <ScrollReveal key={i} delay={i * 0.08}>
+                  <div className="flex items-start gap-4 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5 hover:bg-white/[0.05] hover:border-white/[0.10] transition-all duration-300 group">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400/15 to-blue-400/10 flex items-center justify-center shrink-0 group-hover:from-purple-400/20 group-hover:to-blue-400/15 transition-all">
+                      <span className="text-purple-400/80">{item.icon}</span>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{item.title}</h4>
+                      <p className="text-xs text-white/35 mt-1 leading-relaxed group-hover:text-white/45 transition-colors">{item.desc}</p>
+                    </div>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+
+            {/* RIGHT — Cartes compétence visuelles */}
+            <ScrollReveal delay={0.15}>
+              <div className="relative">
+                {/* Mini-dashboard */}
+                <div className="relative z-10 mb-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] to-purple-500/[0.02] backdrop-blur-xl p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap size={16} className="text-purple-400" />
+                    <span className="text-xs text-white/40 uppercase tracking-wider">Votre progression type</span>
+                  </div>
+                  <p className="text-base font-bold text-white">
+                    Niveau <span className="text-purple-400">4</span>
+                    <span className="text-white/50 text-sm font-normal ml-2">— Pilote de Portefeuille</span>
+                  </p>
+                  <div className="mt-2 mb-2">
+                    <div className="flex justify-between text-xs text-white/30 mb-1">
+                      <span>1 280 XP</span>
+                      <span>2 000 XP</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div className="w-[64%] h-full bg-gradient-to-r from-purple-500 to-amber-400 rounded-full" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-white/30 italic">Votre progression vous place parmi les profils les plus avancés de COURTIA.</p>
+                </div>
+
+                {/* Cartes empilées */}
+                <div className="relative h-[280px] md:h-[320px]">
+                  {[
+                    { name: 'Premier client créé', rarity: 'bronze', color: 'from-amber-700/30 to-amber-900/20', border: 'border-amber-500/20', text: 'text-amber-300', x: '0%', y: '0%', rotate: '-3deg' },
+                    { name: 'Relance propre', rarity: 'argent', color: 'from-slate-300/20 to-slate-400/10', border: 'border-slate-300/20', text: 'text-slate-200', x: '12%', y: '8%', rotate: '2deg' },
+                    { name: 'Prospection structurée', rarity: 'or', color: 'from-yellow-400/25 to-yellow-600/10', border: 'border-yellow-400/25', text: 'text-yellow-300', x: '24%', y: '16%', rotate: '-1deg' },
+                    { name: 'Pilote de portefeuille', rarity: 'diamant', color: 'from-cyan-300/25 to-blue-500/15', border: 'border-cyan-300/25', text: 'text-cyan-200', x: '36%', y: '24%', rotate: '1deg' },
+                    { name: 'Courtier augmenté', rarity: 'épique', color: 'from-purple-400/30 via-pink-400/15 to-blue-400/15', border: 'border-purple-400/25', text: 'text-purple-200', x: '48%', y: '32%', rotate: '-2deg' },
+                  ].map((card, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3 + i * 0.08, duration: 0.5 }}
+                      whileHover={{ scale: 1.03, rotate: '0deg' }}
+                      className={`absolute rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} backdrop-blur-xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-default group/card`}
+                      style={{ left: card.x, top: card.y, transform: `rotate(${card.rotate})`, width: '52%', zIndex: 10 - i }}
+                    >
+                      <div className={`text-[10px] font-medium mb-1.5 ${card.text}`}>{card.rarity}</div>
+                      <h5 className="text-xs font-semibold text-white/80 leading-tight">{card.name}</h5>
+                      <div className="mt-2 flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                        <span className="text-[9px] text-white/30">Déblocable</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* CTAs */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center gap-2 font-semibold text-sm text-white bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-3 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    Découvrir COURTIA Academy
+                    <ArrowRight size={14} />
+                  </Link>
+                  <Link
+                    to="/academy"
+                    className="text-sm text-white/30 hover:text-white/60 transition-colors"
+                  >
+                    Voir dans l&apos;app →
+                  </Link>
                 </div>
               </div>
             </ScrollReveal>
