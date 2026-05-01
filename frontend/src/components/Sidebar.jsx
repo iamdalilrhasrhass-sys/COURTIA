@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
   Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap
+  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Logo from './Logo'
@@ -37,6 +37,8 @@ const NAV_ITEMS = [
   { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
   { separator: true, label: 'MODULES' },
   { path: '/academy', label: 'Academy', icon: GraduationCap, badge: 'Nouveau' },
+  { path: '/documents', label: 'Documents', icon: FolderOpen },
+  { path: '/browser-pilot', label: 'Browser Pilot', icon: Globe, badge: 'Bêta' },
   { path: '/analytics', label: 'Analyses', icon: BarChart2 },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
