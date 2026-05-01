@@ -152,13 +152,14 @@ export default function Contrats() {
   )
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
+    <div className="min-h-screen" style={{ background: 'transparent', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
       <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
         <AuroraPageHeader
           title="Contrats"
           subtitle={`${contrats.length} contrats suivis par statut, échéance et prime annuelle.`}
           badge="Portefeuille contrats"
+          dark
           actions={
             <AuroraButton variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => navigate('/contrats/new')}>
               Nouveau contrat

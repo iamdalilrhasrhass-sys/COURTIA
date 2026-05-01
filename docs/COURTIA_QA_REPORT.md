@@ -17,6 +17,21 @@
 
 ---
 
+## QA Reprise pages métier — Harmonisation Aurora cockpit (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| Pages métier | ✅ OK | Revue diff | Clients, Contrats, Tâches, Rapports, Paramètres alignés sur le shell |
+| Auth/backend/Stripe | ✅ OK | Revue diff | Aucun changement |
+
+### Décision
+- P0 bloquant : non.
+- Prochaine étape recommandée : QA production après déploiement Vercel, puis optimisation P2 du bundle.
+
+---
+
 ## QA Reprise critique — Landing cinematic Aurora (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

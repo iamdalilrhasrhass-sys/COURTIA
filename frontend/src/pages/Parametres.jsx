@@ -76,7 +76,7 @@ export default function Parametres() {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const inputClass = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-black shadow-sm focus:border-[#2563eb] focus:shadow-md focus:shadow-blue-100 outline-none transition-all duration-200"
+  const inputClass = "w-full px-3 py-2 bg-white/85 border border-gray-200 rounded-lg text-sm text-black shadow-sm focus:border-[#2563eb] focus:shadow-md focus:shadow-blue-100 outline-none transition-all duration-200"
   const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
 
   const planConfig = {
@@ -88,14 +88,14 @@ export default function Parametres() {
   const tier = (profile?.pricing_tier || '').toLowerCase()
   const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', price: 0, features: [] }
 
-  if (loading) return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
+  if (loading) return <div className="flex justify-center items-center h-screen bg-transparent"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans">
+    <div className="min-h-screen bg-transparent font-sans">
       <main className="p-4 md:p-8 max-w-6xl mx-auto">
         <header className="mb-10">
-          <h1 className="text-3xl font-black text-gray-900">Paramètres</h1>
-          <p className="text-gray-500 mt-1">Gérez votre profil, vos préférences et votre abonnement.</p>
+          <h1 className="text-3xl font-black text-white">Paramètres</h1>
+          <p className="text-white/50 mt-1">Gérez votre profil, vos préférences et votre abonnement.</p>
         </header>
 
         <div className="flex flex-col md:flex-row gap-12">
@@ -104,7 +104,7 @@ export default function Parametres() {
               {NAV_ITEMS.map(item => (
                 <button key={item.id} onClick={() => handleNavClick(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                    ${activeSection === item.id ? 'bg-white text-[#2563eb] shadow-sm border border-gray-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                    ${activeSection === item.id ? 'bg-white text-[#2563eb] shadow-sm border border-gray-200' : 'text-white/50 hover:bg-white/10 hover:text-white'}`}>
                   <item.icon size={18} />
                   <span>{item.label}</span>
                 </button>
@@ -114,8 +114,8 @@ export default function Parametres() {
           
           <div className="flex-1 space-y-12">
             <section id="profil" className="scroll-mt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Profil</h2>
-              <p className="text-sm text-gray-500 mb-5">Informations publiques et coordonnées.</p>
+              <h2 className="text-xl font-bold text-white mb-1">Profil</h2>
+              <p className="text-sm text-white/50 mb-5">Informations publiques et coordonnées.</p>
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handleProfileSubmit}>
                   <div className="p-6 space-y-5">
@@ -141,8 +141,8 @@ export default function Parametres() {
             </section>
 
             <section id="securite" className="scroll-mt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Sécurité</h2>
-              <p className="text-sm text-gray-500 mb-5">Changez votre mot de passe.</p>
+              <h2 className="text-xl font-bold text-white mb-1">Sécurité</h2>
+              <p className="text-sm text-white/50 mb-5">Changez votre mot de passe.</p>
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handlePasswordSubmit}>
                     <div className="p-6 space-y-5">
@@ -161,8 +161,8 @@ export default function Parametres() {
             </section>
 
             <section id="abonnement" className="scroll-mt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Abonnement</h2>
-              <p className="text-sm text-gray-500 mb-5">Gérez votre abonnement et consultez vos factures.</p>
+              <h2 className="text-xl font-bold text-white mb-1">Abonnement</h2>
+              <p className="text-sm text-white/50 mb-5">Gérez votre abonnement et consultez vos factures.</p>
               <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
@@ -181,8 +181,8 @@ export default function Parametres() {
             </section>
 
             <section id="notifications" className="scroll-mt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Notifications</h2>
-              <p className="text-sm text-gray-500 mb-5">Choisissez comment nous pouvons vous contacter.</p>
+              <h2 className="text-xl font-bold text-white mb-1">Notifications</h2>
+              <p className="text-sm text-white/50 mb-5">Choisissez comment nous pouvons vous contacter.</p>
               <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
                 <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} setEnabled={() => { setNotifications({...notifications, echeances: !notifications.echeances}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>

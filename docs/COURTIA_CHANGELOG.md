@@ -18,6 +18,21 @@
 - In-app browser local `/` : landing détectée.
 - In-app browser local `/dashboard` non connecté : redirection `/login?next=%2Fdashboard` propre.
 
+## Reprise pages métier — Harmonisation Aurora cockpit (1er mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : feat: harmonize business pages with Aurora cockpit shell
+
+### Changements
+- Pages `Clients`, `Contrats`, `Tâches` : fond générique remplacé par transparence sur le shell Aurora et headers en mode dark.
+- Pages `Rapports`, `Paramètres` : suppression des fonds globaux beige/blanc pour conserver l’univers cockpit.
+- Paramètres : correction des champs et panneaux pour préserver la lisibilité sur surfaces claires.
+- Aucun changement API, auth, Stripe, DB ou impersonation.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+
 ## Reprise critique Codex — Landing cinematic Aurora (1er mai 2026)
 
 **Commit** : à créer  
