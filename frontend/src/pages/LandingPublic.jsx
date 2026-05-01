@@ -79,6 +79,31 @@ body { overscroll-behavior-y: none; }
   background-size: 180px 180px, 240px 240px, 210px 210px;
   opacity: 0.6;
 }
+.aurora-floor {
+  position: fixed;
+  left: 50%;
+  bottom: -8vh;
+  width: 150vw;
+  height: 58vh;
+  pointer-events: none;
+  transform: translateX(-50%) perspective(900px) rotateX(68deg);
+  background-image:
+    linear-gradient(rgba(180,100,255,0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,238,0.052) 1px, transparent 1px);
+  background-size: 74px 74px;
+  mask-image: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 78%);
+  opacity: 0.72;
+  z-index: 0;
+}
+.aurora-curtain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(2,4,12,0.88), transparent 24%, transparent 76%, rgba(2,4,12,0.88)),
+    linear-gradient(180deg, rgba(2,4,12,0.20), transparent 18%, rgba(2,4,12,0.72));
+  z-index: 1;
+}
 @keyframes auroraDrift {
   0%, 100% { transform: translate3d(0,0,0) skewY(-7deg) scale(1); opacity: 0.72; }
   50% { transform: translate3d(4%,8%,0) skewY(-5deg) scale(1.08); opacity: 1; }
@@ -97,6 +122,104 @@ body { overscroll-behavior-y: none; }
 .stream-shell {
   position: relative;
   z-index: 10;
+}
+.landing-act {
+  position: relative;
+  min-height: 100vh;
+  padding: 7.5rem 1.25rem;
+  overflow: hidden;
+}
+.landing-act::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,128,224,0.10), transparent 28rem),
+    radial-gradient(circle at 82% 20%, rgba(34,211,238,0.09), transparent 30rem),
+    radial-gradient(circle at 50% 82%, rgba(128,240,216,0.055), transparent 34rem);
+}
+.act-shell {
+  position: relative;
+  z-index: 10;
+  width: min(100%, 1240px);
+  max-width: 1240px;
+  margin: 0 auto;
+  min-width: 0;
+}
+.cinema-title {
+  font-size: clamp(2.55rem, 7vw, 6.8rem);
+  line-height: 0.94;
+  font-weight: 950;
+  letter-spacing: -0.045em;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+.scene-title {
+  font-size: clamp(2rem, 4.5vw, 4.7rem);
+  line-height: 0.98;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+.scene-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(207,250,254,0.68);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.scene-kicker::before {
+  content: "";
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff80e0, #80f0d8);
+  box-shadow: 0 0 24px rgba(34,211,238,0.68);
+}
+.liquid-stage {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.095);
+  background:
+    radial-gradient(circle at 30% 12%, rgba(255,255,255,0.11), transparent 16rem),
+    linear-gradient(135deg, rgba(255,255,255,0.078), rgba(255,255,255,0.026));
+  box-shadow: 0 44px 120px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10);
+  backdrop-filter: blur(28px);
+}
+.liquid-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,0.20), transparent 18%, transparent 72%, rgba(128,240,216,0.12)),
+    radial-gradient(circle at 78% 78%, rgba(160,128,255,0.15), transparent 18rem);
+  opacity: 0.76;
+}
+.signal-lane {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.075);
+  background: rgba(255,255,255,0.036);
+  backdrop-filter: blur(18px);
+}
+.signal-lane::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.14), transparent);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+.signal-lane:hover::before { opacity: 1; }
+.conversion-strip {
+  background:
+    linear-gradient(90deg, rgba(255,128,224,0.10), rgba(34,211,238,0.10), rgba(128,240,216,0.08)),
+    rgba(255,255,255,0.035);
 }
 .aurora-mesh {
   background:
@@ -163,8 +286,13 @@ body { overscroll-behavior-y: none; }
   filter: drop-shadow(0 0 22px rgba(34,211,238,0.30));
 }
 @media (max-width: 640px) {
+  .landing-act { min-height: auto; padding: 5.6rem 1rem; }
+  .cinema-title { width: min(100%, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); font-size: clamp(1.95rem, 9.6vw, 2.75rem); line-height: 1.02; letter-spacing: -0.025em; text-wrap: wrap; }
+  .scene-title { font-size: clamp(2rem, 10vw, 3.1rem); }
+  .conversion-strip { grid-template-columns: 1fr !important; }
   .hero-logo-orbit { transform: scale(0.72); transform-origin: top center; }
   .canonical-watermark { width: 520px; height: 520px; right: -260px; top: 12vh; opacity: 0.11; }
+  .aurora-floor { opacity: 0.42; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -475,6 +603,8 @@ export default function LandingPublic() {
     <div className="courtia-landing min-h-screen overflow-x-hidden text-white">
       <style>{styles}</style>
       <div className="aurora-sky" aria-hidden="true" />
+      <div className="aurora-floor" aria-hidden="true" />
+      <div className="aurora-curtain" aria-hidden="true" />
       <div className="canonical-watermark" aria-hidden="true">
         <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
       </div>
@@ -519,25 +649,21 @@ export default function LandingPublic() {
       </AnimatePresence>
 
       <main className="stream-shell">
-        <motion.div className="soft-rail pointer-events-none absolute left-1/2 top-[620px] z-0 hidden h-[calc(100%-900px)] w-px -translate-x-1/2 lg:block" style={{ y: railY }} />
+        <motion.div className="soft-rail pointer-events-none absolute left-1/2 top-[92vh] z-0 hidden h-[210vh] w-px -translate-x-1/2 lg:block" style={{ y: railY }} />
 
-        <section className="landing-section relative overflow-hidden px-5 pb-10 pt-20 sm:pb-16 lg:min-h-[860px] lg:pt-24">
+        <section id="story" className="landing-section landing-act pt-24 lg:pt-28">
           <div className="aurora-mesh absolute inset-0 opacity-95" />
-          <div className="aurora-noise absolute inset-0 opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#02040c]/72 to-[#02040c]" />
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-              <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/[0.10] bg-white/[0.055] px-3 py-2 shadow-2xl shadow-black/20 backdrop-blur-xl">
-                <CourtiaBubbleLogo size={32} animated={false} showHalo={false} showFoam={false} />
-                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-cyan-100/78">CRM assurance connecté à ARK</span>
-              </div>
-              <h1 className="max-w-4xl text-[2.28rem] font-black leading-[1.01] tracking-tight text-white sm:text-6xl lg:text-[4.75rem]">
+          <div className="aurora-noise absolute inset-0 opacity-55" />
+          <div className="act-shell grid min-w-0 gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-center">
+            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }} className="min-w-0">
+              <p className="scene-kicker">COURTIA · cockpit métier assurance</p>
+              <h1 className="cinema-title mt-6 max-w-5xl break-words text-white">
                 Le cockpit IA des courtiers qui veulent reprendre le contrôle de leur portefeuille.
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/66 sm:text-lg">
+              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/68">
                 COURTIA centralise vos clients, contrats, relances et priorités. ARK détecte ce qui mérite votre attention avant que l’opportunité ne vous échappe.
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <AuroraButton href="/register?plan=pro" size="lg" icon={<ArrowRight size={17} />} className="w-full sm:w-auto">
                   Activer mon essai Pro
                 </AuroraButton>
@@ -545,27 +671,46 @@ export default function LandingPublic() {
                   Voir le cockpit
                 </AuroraButton>
               </div>
-              <div className="mt-4 grid max-w-xl grid-cols-3 gap-2">
+              <div className="conversion-strip mt-5 grid max-w-2xl grid-cols-1 gap-2 rounded-2xl border border-white/[0.08] p-2 backdrop-blur-2xl sm:grid-cols-3">
                 {['0 € aujourd’hui', '7 jours d’essai', 'Annulation en ligne'].map((item) => (
-                  <div key={item} className="rounded-xl border border-white/[0.08] bg-white/[0.045] px-3 py-3 text-center text-xs font-bold text-white/70 backdrop-blur-xl">
+                  <div key={item} className="rounded-xl border border-white/[0.07] bg-black/20 px-3 py-3 text-center text-xs font-black text-white/76">
                     {item}
                   </div>
                 ))}
               </div>
-              <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/44">
-                Pensé pour les courtiers français qui veulent suivre relances, échéances et rebonds avec un outil métier, pas un CRM généraliste.
-              </p>
+              <div className="mt-6 grid max-w-2xl gap-2 sm:grid-cols-4">
+                {['Pensé courtiers', 'Relances intelligentes', 'Portefeuille vivant', 'ARK intégré'].map((item) => (
+                  <span key={item} className="rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-center text-[11px] font-bold text-white/52 backdrop-blur-xl">
+                    {item}
+                  </span>
+                ))}
+              </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.65, delay: 0.12 }}>
-              <HeroLogoSystem />
+            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.65, delay: 0.12 }} className="liquid-stage min-w-0 rounded-[2rem] p-4 sm:p-6">
+              <div className="relative z-10 min-h-[470px] overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-black/20">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.20),transparent_24rem)]" />
+                <HeroLogoSystem />
+                <div className="absolute bottom-4 left-4 right-4 grid gap-2 sm:grid-cols-3">
+                  {[
+                    ['3', 'relances prioritaires'],
+                    ['2', 'échéances surveillées'],
+                    ['1', 'rebond détecté'],
+                  ].map(([value, label]) => (
+                    <div key={label} className="rounded-2xl border border-white/[0.08] bg-[#030712]/70 p-3 text-center backdrop-blur-xl">
+                      <p className="aurora-text text-2xl font-black">{value}</p>
+                      <p className="mt-1 text-[11px] font-bold text-white/50">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </div>
         </section>
 
-        <section className="flow-band relative px-5 py-8">
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="relative px-5 py-4">
+          <div className="act-shell grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {credibility.map(({ icon: Icon, label }) => (
-              <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-4 backdrop-blur-xl">
+              <div key={label} className="rounded-2xl border border-white/[0.055] bg-white/[0.028] px-4 py-4 backdrop-blur-xl">
                 <Icon size={18} className="mb-3 text-cyan-100/74" />
                 <p className="text-sm font-bold text-white/70">{label}</p>
               </div>
@@ -573,212 +718,160 @@ export default function LandingPublic() {
           </div>
         </section>
 
-        <section id="story" className="landing-section flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto max-w-7xl">
-            <SectionIntro label="Le vrai problème" title="Le courtier ne perd pas par manque de clients. Il perd par manque de signaux visibles.">
-              COURTIA transforme le portefeuille en système d’attention : ce qui compte remonte, ce qui traîne devient visible, ce qui peut générer du rebond ne reste plus caché.
-            </SectionIntro>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {problems.map(([title, desc, Icon]) => (
-                <Card key={title} className="p-5">
-                  <Icon size={22} className="mb-5 text-cyan-100/70" />
-                  <h3 className="text-base font-black text-white">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/55">{desc}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(244,114,182,0.10),transparent_30rem)]" />
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
-            <SectionIntro label="Coût invisible" title="Les pertes invisibles coûtent plus cher qu’un outil bien piloté." align="left">
-              Un prospect chaud oublié, une échéance non exploitée, une famille mono-équipée jamais retravaillée : c’est rarement spectaculaire, mais c’est là que la valeur fuit.
-            </SectionIntro>
-            <Card className="p-5">
-              <div className="space-y-3">
-                {['Prospect chaud oublié', 'Client silencieux jamais relancé', 'Échéance non exploitée', 'Dossier incomplet qui traîne', 'Opportunité commerciale invisible'].map((item, index) => (
-                  <div key={item} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/18 px-4 py-3">
-                    <span className="flex items-center gap-3 text-sm font-bold text-white/72">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-300/18 bg-rose-400/10 text-rose-100">{index + 1}</span>
-                      {item}
-                    </span>
-                    <AlertTriangle size={16} className="text-amber-100/50" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </section>
-
-        <section id="ark" className="landing-section flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_14%,rgba(34,211,238,0.12),transparent_30rem)]" />
-          <div className="relative z-10 mx-auto max-w-7xl">
-            <SectionIntro label="ARK, IA métier" title="ARK ne remplace pas le courtier. Il lui évite d’oublier ce qui compte.">
-              Une IA utile ne fait pas de magie. Elle transforme un portefeuille dispersé en priorités concrètes que le courtier peut décider et traiter.
-            </SectionIntro>
-            <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
-              <div className="grid gap-3 sm:grid-cols-2">
-                {arkSignals.map((signal) => (
-                  <Card key={signal} className="min-h-[104px] p-4">
-                    <Brain size={18} className="mb-4 text-violet-100/72" />
-                    <p className="text-sm font-semibold leading-relaxed text-white/72">“{signal}”</p>
-                  </Card>
-                ))}
-              </div>
-              <Card className="p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <CourtiaBubbleLogo size={42} animated={false} showHalo={false} showFoam={false} />
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-100/70">Brief du matin ARK</p>
-                      <p className="mt-1 text-lg font-black text-white">Ce que le cabinet doit voir maintenant</p>
-                    </div>
-                  </div>
-                  <ChevronDown size={18} className="text-white/35" />
-                </div>
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  {['4 priorités', '2 échéances', '1 opportunité', '1 dossier incomplet'].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/[0.06] bg-black/20 px-4 py-4 text-center text-sm font-black text-white/72">
-                      {item}
+        <section id="ark" className="landing-section landing-act">
+          <div className="act-shell">
+            <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+              <div>
+                <p className="scene-kicker">Acte 2 · portefeuille vivant</p>
+                <h2 className="scene-title mt-5 text-white">Le courtier ne manque pas d’activité. Il manque d’un système qui fait remonter les bons signaux.</h2>
+                <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/60">
+                  Les pertes invisibles viennent d’un prospect chaud oublié, d’une échéance non exploitée, d’un dossier incomplet qui traîne, d’une famille mono-équipée jamais travaillée.
+                </p>
+                <div className="mt-7 space-y-3">
+                  {problems.map(([title, desc, Icon]) => (
+                    <div key={title} className="signal-lane rounded-2xl p-4">
+                      <div className="relative z-10 flex gap-4">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/15 bg-cyan-300/10 text-cyan-100">
+                          <Icon size={19} />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-black text-white">{title}</h3>
+                          <p className="mt-1 text-sm leading-relaxed text-white/52">{desc}</p>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </Card>
+              </div>
+              <div className="space-y-5">
+                <div className="liquid-stage rounded-[2rem] p-5">
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3">
+                      <CourtiaBubbleLogo size={56} animated={false} showHalo={false} showFoam={false} />
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-100/70">ARK, IA métier</p>
+                        <h3 className="mt-1 text-2xl font-black text-white">Il n’agit pas à votre place. Il vous évite d’oublier.</h3>
+                      </div>
+                    </div>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                      {arkSignals.map((signal) => (
+                        <div key={signal} className="rounded-2xl border border-white/[0.07] bg-black/22 p-4">
+                          <Brain size={18} className="mb-3 text-violet-100/72" />
+                          <p className="text-sm font-semibold leading-relaxed text-white/72">“{signal}”</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      {['4 priorités', '2 échéances', '1 opportunité', '1 dossier incomplet'].map((item) => (
+                        <div key={item} className="rounded-2xl border border-cyan-200/12 bg-cyan-300/[0.055] px-4 py-4 text-center text-sm font-black text-cyan-50/78">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-5">
+                  {workflow.map(([time, title, desc]) => (
+                    <div key={time} className="rounded-2xl border border-white/[0.06] bg-white/[0.032] p-4 backdrop-blur-xl">
+                      <p className="text-sm font-black text-cyan-100">{time}</p>
+                      <h3 className="mt-3 text-sm font-black text-white">{title}</h3>
+                      <p className="mt-2 text-xs leading-relaxed text-white/46">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div id="cockpit" className="mt-12 grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+              <div>
+                <p className="scene-kicker">Cockpit produit</p>
+                <h2 className="scene-title mt-5 text-white">Un vrai cockpit d’actions, pas un CRM généraliste maquillé.</h2>
+                <p className="mt-5 text-base leading-relaxed text-white/60">
+                  Clients, contrats, tâches, échéances, relances, documents et rapports restent dans le même univers. Les chiffres ci-contre sont une preview marketing, pas des données client réelles.
+                </p>
+              </div>
+              <CockpitMockup />
             </div>
           </div>
         </section>
 
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto max-w-7xl">
-            <SectionIntro label="Journée courtier" title="Une journée plus claire, dès l’ouverture du cockpit.">
-              COURTIA n’ajoute pas une couche de bruit. Il ordonne la journée autour des actions qui protègent la valeur du portefeuille.
-            </SectionIntro>
-            <div className="grid gap-4 lg:grid-cols-5">
-              {workflow.map(([time, title, desc]) => (
-                <Card key={time} className="p-5">
-                  <p className="text-sm font-black text-cyan-100">{time}</p>
-                  <h3 className="mt-5 text-base font-black text-white">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/52">{desc}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="cockpit" className="landing-section flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_26%,rgba(16,185,129,0.10),transparent_34rem)]" />
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
-            <SectionIntro label="Cockpit produit" title="Un aperçu produit qui ressemble à un outil que l’on utilise vraiment." align="left">
-              KPIs, Morning Brief, échéances, relances et opportunités sont présentés comme une preview marketing avec données illustratives, pas comme de fausses données client.
-            </SectionIntro>
-            <CockpitMockup />
-          </div>
-        </section>
-
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto max-w-7xl">
-            <SectionIntro label="Plateforme" title="Tout ce qu’un courtier attend d’un cockpit métier.">
-              COURTIA rassemble les surfaces quotidiennes : clients, contrats, tâches, documents, ARK, rapports et pilotage.
-            </SectionIntro>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {features.map(([title, desc, Icon]) => (
-                <Card key={title} className="p-5">
-                  <Icon size={19} className="mb-4 text-cyan-100/70" />
-                  <h3 className="text-sm font-black text-white">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/52">{desc}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-5 lg:grid-cols-2">
-            <Card className="p-6">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-100/60">Avant COURTIA</p>
-              <h2 className="mt-4 text-3xl font-black text-white">Le portefeuille dépend de la mémoire.</h2>
-              <div className="mt-6 space-y-3">
-                {['Informations dispersées', 'Relances dans la tête', 'Échéances suivies à la main', 'Opportunités perdues', 'Peu de visibilité dirigeant'].map((item) => (
-                  <p key={item} className="rounded-xl border border-white/[0.06] bg-black/18 px-4 py-3 text-sm font-semibold text-white/58">{item}</p>
+        <section id="pricing" className="landing-section landing-act">
+          <div className="act-shell">
+            <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
+              <div>
+                <p className="scene-kicker">Acte 3 · décision</p>
+                <h2 className="scene-title mt-5 text-white">Le prix devient logique quand le courtier voit ce qu’il arrête de perdre.</h2>
+                <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/60">
+                  Starter structure. Pro pilote. Premium accompagne les cabinets. La carte bancaire sera gérée uniquement via Stripe Checkout dans la phase Billing dédiée.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ['Avant COURTIA', 'Informations dispersées, relances dans la tête, échéances suivies à la main, opportunités perdues.'],
+                  ['Après COURTIA', 'Cockpit centralisé, priorités claires, signaux ARK, relances organisées, portefeuille vivant.'],
+                ].map(([title, desc]) => (
+                  <div key={title} className="liquid-stage rounded-3xl p-5">
+                    <div className="relative z-10">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-white/44">{title}</p>
+                      <p className="mt-4 text-sm font-semibold leading-relaxed text-white/66">{desc}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </Card>
-            <Card className="p-6">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-100/70">Après COURTIA</p>
-              <h2 className="mt-4 text-3xl font-black text-white">Le portefeuille devient un cockpit vivant.</h2>
-              <div className="mt-6 space-y-3">
-                {['Cockpit centralisé', 'Priorités claires', 'ARK remonte les signaux', 'Relances organisées', 'Portefeuille plus vivant'].map((item) => (
-                  <p key={item} className="rounded-xl border border-emerald-200/[0.10] bg-emerald-400/[0.055] px-4 py-3 text-sm font-semibold text-emerald-50/72">{item}</p>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </section>
+            </div>
 
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto max-w-5xl text-center">
-            <CourtiaBubbleLogo size={112} animated showHalo showFoam={false} className="mx-auto mb-2" />
-            <h2 className="aurora-text text-3xl font-black leading-tight sm:text-5xl">Un courtier n’a pas besoin d’un CRM généraliste. Il a besoin d’un cockpit métier.</h2>
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-relaxed text-white/60">
-              COURTIA parle clients, contrats, échéances, multi-équipement, relances et portefeuille. ARK ne vend pas une promesse floue : il remonte les signaux qui aident un cabinet à agir.
-            </p>
-          </div>
-        </section>
-
-        <section id="pricing" className="landing-section flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(168,85,247,0.16),transparent_34rem)]" />
-          <div className="relative z-10 mx-auto max-w-7xl">
-            <SectionIntro label="Tarifs" title="Un prix qui se comprend quand le courtier voit ce qu’il récupère.">
-              Starter démarre proprement. Pro est l’offre évidente pour un cabinet qui veut vraiment piloter relances, échéances et opportunités avec ARK.
-            </SectionIntro>
-            <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch">
+            <div className="mt-10 grid gap-5 lg:grid-cols-3 lg:items-stretch">
               {pricing.map((plan) => <PricingCard key={plan.name} plan={plan} />)}
             </div>
-            <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-white/44">
-              Carte bancaire demandée dans la phase Billing/Stripe dédiée, via un parcours sécurisé. COURTIA ne collecte pas directement les coordonnées bancaires.
-            </p>
-          </div>
-        </section>
 
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto max-w-7xl">
-            <SectionIntro label="Réassurance" title="Un SaaS sérieux se vend par la confiance, pas par le piège.">
-              L’essai doit être clair, l’annulation en ligne, les données protégées et la promesse centrée sur le métier du courtier.
-            </SectionIntro>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {reassurance.map(([title, desc, Icon]) => (
-                <Card key={title} className="p-5">
-                  <Icon size={20} className="mb-4 text-cyan-100/70" />
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {features.map(([title, desc, Icon]) => (
+                <div key={title} className="rounded-2xl border border-white/[0.06] bg-white/[0.032] p-4 backdrop-blur-xl">
+                  <Icon size={18} className="mb-4 text-cyan-100/70" />
                   <h3 className="text-sm font-black text-white">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/54">{desc}</p>
-                </Card>
+                  <p className="mt-2 text-xs leading-relaxed text-white/48">{desc}</p>
+                </div>
               ))}
+            </div>
+
+            <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+              <div className="liquid-stage rounded-[2rem] p-6">
+                <div className="relative z-10">
+                  <CourtiaBubbleLogo size={96} animated showHalo showFoam={false} className="mb-2" />
+                  <h2 className="aurora-text text-3xl font-black leading-tight sm:text-5xl">Un courtier n’a pas besoin d’un CRM généraliste. Il a besoin d’un cockpit métier.</h2>
+                  <p className="mt-5 text-sm leading-relaxed text-white/58">
+                    COURTIA parle clients, contrats, échéances, multi-équipement, relances et portefeuille. ARK remonte les signaux qui aident le cabinet à agir.
+                  </p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {reassurance.slice(0, 4).map(([title, desc, Icon]) => (
+                      <div key={title} className="rounded-2xl border border-white/[0.06] bg-black/18 p-4">
+                        <Icon size={18} className="mb-3 text-cyan-100/70" />
+                        <h3 className="text-sm font-black text-white">{title}</h3>
+                        <p className="mt-2 text-xs leading-relaxed text-white/48">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {faq.map(([question, answer]) => (
+                  <details key={question} className="group rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 backdrop-blur-xl">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-black text-white">
+                      {question}
+                      <ChevronDown size={18} className="shrink-0 text-white/40 transition group-open:rotate-180" />
+                    </summary>
+                    <p className="mt-4 text-sm leading-relaxed text-white/56">{answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="flow-band relative overflow-hidden px-5 py-16 lg:py-24">
-          <div className="relative z-10 mx-auto max-w-5xl">
-            <SectionIntro label="FAQ" title="Les réponses claires avant de créer un espace courtier." />
-            <div className="space-y-3">
-              {faq.map(([question, answer]) => (
-                <details key={question} className="group rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 backdrop-blur-xl">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-black text-white">
-                    {question}
-                    <ChevronDown size={18} className="shrink-0 text-white/40 transition group-open:rotate-180" />
-                  </summary>
-                  <p className="mt-4 text-sm leading-relaxed text-white/56">{answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="relative overflow-hidden px-5 pb-12 pt-12 lg:pb-16">
+        <section className="relative overflow-hidden px-5 pb-12 pt-4 lg:pb-16">
           <div className="aurora-mesh absolute inset-0 opacity-80" />
-          <div className="relative z-10 mx-auto max-w-6xl rounded-[2rem] border border-white/[0.10] bg-white/[0.05] px-6 py-10 text-center shadow-2xl shadow-black/30 backdrop-blur-2xl sm:px-10 lg:py-14">
+          <div className="liquid-stage relative z-10 mx-auto max-w-6xl rounded-[2rem] px-6 py-10 text-center sm:px-10 lg:py-14">
+            <div className="relative z-10">
             <CourtiaBubbleLogo size={130} animated showHalo showFoam={false} className="mx-auto mb-1" />
             <h2 className="aurora-text mx-auto max-w-4xl text-3xl font-black leading-tight sm:text-5xl">Reprenez le contrôle de votre portefeuille avec COURTIA.</h2>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/62">
@@ -791,6 +884,7 @@ export default function LandingPublic() {
               <AuroraButton href="/login" variant="secondary" size="lg" className="w-full sm:w-auto">
                 Se connecter
               </AuroraButton>
+            </div>
             </div>
           </div>
         </section>
