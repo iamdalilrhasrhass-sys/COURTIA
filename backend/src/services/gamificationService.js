@@ -216,9 +216,10 @@ async function getReferralInfo(userId) {
   const statsMap = { envoye: 0, inscrit: 0, converti: 0 };
   for (const s of stats.rows) statsMap[s.status] = parseInt(s.count);
 
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'https://courtiark.fr';
   return {
     referralCode: code,
-    shareUrl: `https://courtia.vercel.app/register?ref=${code}`,
+    shareUrl: `${FRONTEND_URL}/register?ref=${code}`,
     stats: statsMap,
   };
 }
@@ -230,7 +231,8 @@ async function createReferral(referrerUserId, referredEmail) {
      VALUES ($1, $2, $3, 'envoye')`,
     [referrerUserId, referredEmail, code]
   );
-  return { referralCode: code, shareUrl: `https://courtia.vercel.app/register?ref=${code}` };
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'https://courtiark.fr';
+  return { referralCode: code, shareUrl: `${FRONTEND_URL}/register?ref=${code}` };
 }
 
 async function markCardShared(userId, cardId) {

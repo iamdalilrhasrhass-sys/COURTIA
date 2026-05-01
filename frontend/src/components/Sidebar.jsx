@@ -337,7 +337,6 @@ export default function Sidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         style={{
-          display: 'none',
           position: 'fixed',
           top: 10,
           left: 10,
@@ -350,7 +349,7 @@ export default function Sidebar() {
           cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
         }}
-        className="md:hidden"
+        className="flex md:hidden"
         aria-label="Ouvrir le menu"
       >
         <Menu size={20} />
@@ -366,7 +365,6 @@ export default function Sidebar() {
             transition={{ duration: 0.15 }}
             onClick={() => setMobileOpen(false)}
             style={{
-              display: 'none',
               position: 'fixed',
               inset: 0,
               background: 'rgba(0,0,0,0.5)',
@@ -391,7 +389,6 @@ export default function Sidebar() {
             exit={{ x: -280 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             style={{
-              display: 'none',
               position: 'fixed',
               top: 0,
               left: 0,

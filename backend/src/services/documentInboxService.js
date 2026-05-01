@@ -164,7 +164,8 @@ async function createDocumentRequest(userId, clientId, requiredDocs, message, re
     );
   }
 
-  return { ...result.rows[0], upload_url: `https://courtia.vercel.app/upload/${token}` };
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'https://courtiark.fr';
+  return { ...result.rows[0], upload_url: `${FRONTEND_URL}/upload/${token}` };
 }
 
 async function processPublicUpload(token, file) {

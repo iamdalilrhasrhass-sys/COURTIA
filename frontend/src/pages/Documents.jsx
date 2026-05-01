@@ -82,7 +82,8 @@ export default function Documents() {
   }
 
   return (
-    <div style={{ padding: '28px 32px', fontFamily: "'Inter', sans-serif", maxWidth: 1200, margin: '0 auto' }}>
+    <div className="docs-container" style={{ padding: '24px 16px', fontFamily: "'Inter', sans-serif", maxWidth: 1200, margin: '0 auto' }}>
+      <style>{`@media (min-width: 768px) { .docs-container { padding: 28px 32px !important; } }`}</style>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
         <div>
@@ -106,7 +107,8 @@ export default function Documents() {
       </div>
 
       {/* Stats bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="docs-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
+        <style>{`@media (min-width: 768px) { .docs-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }`}</style>
         {[
           { label: 'Total documents', value: stats?.documents?.total || 0, color: '#5B4DF5' },
           { label: 'En attente', value: (parseInt(stats?.documents?.recu || 0) + parseInt(stats?.documents?.a_verifier || 0)), color: '#F59E0B' },
@@ -200,6 +202,7 @@ export default function Documents() {
 
           {activeTab === 'classes' && (
             <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+              <div className="overflow-x-auto">
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #f0f0f0', background: '#F9FAFB' }}>
@@ -228,6 +231,7 @@ export default function Documents() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 

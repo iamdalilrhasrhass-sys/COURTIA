@@ -223,7 +223,8 @@ export default function Taches() {
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <BubbleBackground intensity="subtle" />
 
-      <div className="px-4 md:px-10" style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 960, margin: '0 auto' }}>
+      <div className="px-4 md:px-10 taches-container" style={{ position: 'relative', zIndex: 1, padding: '24px 16px', maxWidth: 960, margin: '0 auto' }}>
+        <style>{`@media (min-width: 768px) { .taches-container { padding: 32px 40px !important; } }`}</style>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <h1 className="text-2xl md:text-3xl" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>

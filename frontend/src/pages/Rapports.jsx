@@ -174,7 +174,8 @@ export default function Rapports() {
           )}
         </div>
 
-        <div className="rp-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+        <div className="rp-2col" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, marginBottom: 16 }}>
+        <style>{`@media (min-width: 768px) { .rp-2col { grid-template-columns: 1fr 1fr !important; } }`}</style>
 
           {/* Top clients */}
           <div className="rp-card" style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px' }}>

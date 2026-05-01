@@ -24,7 +24,7 @@ Dans Stripe Dashboard → Produits → Nouveau produit :
 
 ## Étape 3 — Récupérer les clés API
 Dans Stripe Dashboard → Développeurs → Clés API :
-- Copier `sk_live_xxx` → `STRIPE_SECRET_KEY` (à mettre sur Render)
+- Copier `sk_live_ROTATE_ME_IN_STRIPE_DASHBOARD` → `STRIPE_SECRET_KEY` (à mettre sur Render)
 - Copier `pk_live_xxx` → `VITE_STRIPE_PUBLISHABLE_KEY` (à mettre sur Vercel)
 
 ## Étape 4 — Configurer le webhook Stripe
@@ -41,7 +41,7 @@ Dashboard Render → courtia-backend → Environment → Ajouter :
 
 | Variable | Valeur |
 |----------|--------|
-| `STRIPE_SECRET_KEY` | `sk_live_xxx` |
+| `STRIPE_SECRET_KEY` | `sk_live_ROTATE_ME_IN_STRIPE_DASHBOARD` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_xxx` |
 | `STRIPE_STARTER_PRICE_ID` | `price_xxx` |
 | `STRIPE_PRO_PRICE_ID` | `price_xxx` |
