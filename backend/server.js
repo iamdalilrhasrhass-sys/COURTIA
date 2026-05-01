@@ -148,6 +148,8 @@ const messagingRoutes      = require('./src/routes/messaging')
 const importRouter         = require('./src/routes/import')
 const reachRouter          = require('./src/routes/reach')
 const academyRouter        = require('./src/routes/academy')
+const documentInboxRouter  = require('./src/routes/documentInbox')
+const browserPilotRouter   = require('./src/routes/browserPilot')
 
 // Public
 app.use('/api/auth',   authLimiter, authRouter)
@@ -178,6 +180,8 @@ app.use('/api/plans',           verifyToken, plansRouter)
 app.use('/api/import',          verifyToken, importRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
 app.use('/api/academy',        verifyToken, academyRouter)
+app.use('/api/document-inbox', verifyToken, documentInboxRouter)
+app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 
 // Messaging (auth gérée route par route — webhook inbound est public)
 app.use('/api/messaging',    messagingRoutes)

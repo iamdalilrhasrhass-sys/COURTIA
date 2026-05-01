@@ -31,6 +31,8 @@ import PaiementAnnule from './pages/PaiementAnnule'
 import Onboarding from './pages/Onboarding'
 import LandingPublic from './pages/LandingPublic'
 import Academy from './pages/Academy'
+import Documents from './pages/Documents'
+import BrowserPilot from './pages/BrowserPilot'
 import Tarifs from './pages/Tarifs'
 
 // Components
@@ -163,6 +165,8 @@ export default function App() {
           <Route path="/parametres"    element={<Parametres />} />
           <Route path="/academy"       element={<Academy />} />
           <Route path="/academy/*"     element={<Academy />} />
+          <Route path="/documents"     element={<Documents />} />
+          <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />

@@ -12,7 +12,6 @@ const globalLimiter = rateLimit({
 const arkLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
-  keyGenerator: (req) => (req.user ? `u:${req.user.id}` : `ip:${req.ip}`),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'ark_rate_limit', details: '20 appels ARK max par minute' }
