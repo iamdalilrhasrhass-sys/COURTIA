@@ -22,6 +22,7 @@
 const pool      = require('../db');
 const Anthropic = require('@anthropic-ai/sdk');
 const {
+  getPortfolioInsightColumns,
   getPortfolioInsightTimestampColumn,
   getPortfolioTimestampOrder,
   getPortfolioTimestampSelect,
@@ -474,14 +475,16 @@ async function calculateHealthScore(userId) {
 
 async function analyzePortfolio(userId) {
   console.log(`[portfolioAnalyzer] Début analyse user ${userId}`);
+  const insightColumns = await getPortfolioInsightColumns(pool);
   const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
   const timestampSelect = getPortfolioTimestampSelect(timestampColumn);
   const timestampOrder = getPortfolioTimestampOrder(timestampColumn);
+  const statusWhere = insightColumns.has('status') ? "AND status = 'completed'" : '';
 
   // 1. Vérifier dernière analyse < 6h (protection double-exécution cron)
   const lastInsight = await pool.query(
     `SELECT ${timestampSelect} FROM portfolio_insights
-     WHERE user_id = $1 AND status = 'completed'
+     WHERE user_id = $1 ${statusWhere}
      ORDER BY ${timestampOrder} DESC LIMIT 1`,
     [userId]
   );
@@ -494,11 +497,19 @@ async function analyzePortfolio(userId) {
   }
 
   // 2. Créer l'entrée insight en statut 'processing'
-  const insertColumns = timestampColumn ? `user_id, status, ${timestampColumn}` : 'user_id, status';
-  const insertValues = timestampColumn ? "$1, 'processing', NOW()" : "$1, 'processing'";
+  const insertColumns = ['user_id'];
+  const insertValues = ['$1'];
+  if (insightColumns.has('status')) {
+    insertColumns.push('status');
+    insertValues.push("'processing'");
+  }
+  if (timestampColumn) {
+    insertColumns.push(timestampColumn);
+    insertValues.push('NOW()');
+  }
   const insightRow = await pool.query(
-    `INSERT INTO portfolio_insights (${insertColumns})
-     VALUES (${insertValues})
+    `INSERT INTO portfolio_insights (${insertColumns.join(', ')})
+     VALUES (${insertValues.join(', ')})
      RETURNING id`,
     [userId]
   );
@@ -598,26 +609,34 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
     }
 
     // 6. Mettre à jour portfolio_insights avec le score
-    await pool.query(
-      `UPDATE portfolio_insights
-       SET total_clients    = $1,
-           total_contracts  = $2,
-           total_premium    = $3,
-           health_score     = $4,
-           health_breakdown = $5,
-           status           = 'completed',
-           raw_analysis     = $6
-       WHERE id = $7`,
-      [
-        scoreData.total_clients,
-        scoreData.total_contracts,
-        scoreData.total_premium,
-        scoreData.health_score,
-        JSON.stringify(scoreData.breakdown),
-        JSON.stringify({ grade: scoreData.grade, confidence: scoreData.confidence_level, benchmark: scoreData.sector_benchmark, flags: scoreData.flags }),
-        insightId,
-      ]
-    );
+    const updates = [];
+    const params = [];
+    const addUpdate = (column, value) => {
+      if (!insightColumns.has(column)) return;
+      params.push(value);
+      updates.push(`${column} = $${params.length}`);
+    };
+
+    addUpdate('total_clients', scoreData.total_clients);
+    addUpdate('total_contracts', scoreData.total_contracts);
+    addUpdate('total_premium', scoreData.total_premium);
+    addUpdate('health_score', scoreData.health_score);
+    addUpdate('health_breakdown', JSON.stringify(scoreData.breakdown));
+    addUpdate('raw_analysis', JSON.stringify({
+      grade: scoreData.grade,
+      confidence: scoreData.confidence_level,
+      benchmark: scoreData.sector_benchmark,
+      flags: scoreData.flags,
+    }));
+    if (insightColumns.has('status')) updates.push("status = 'completed'");
+
+    if (updates.length > 0) {
+      params.push(insightId);
+      await pool.query(
+        `UPDATE portfolio_insights SET ${updates.join(', ')} WHERE id = $${params.length}`,
+        params
+      );
+    }
 
     // 7. Insérer les actions dans portfolio_actions
     const actions = Array.isArray(actionsData.actions) ? actionsData.actions : [];
@@ -651,10 +670,12 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
 
   } catch (err) {
     // Marquer l'insight en erreur
-    await pool.query(
-      `UPDATE portfolio_insights SET status = 'error' WHERE id = $1`,
-      [insightId]
-    );
+    if (insightColumns.has('status')) {
+      await pool.query(
+        `UPDATE portfolio_insights SET status = 'error' WHERE id = $1`,
+        [insightId]
+      );
+    }
     console.error(`[portfolioAnalyzer] Erreur analyse user ${userId}:`, err.message);
     throw err;
   }

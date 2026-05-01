@@ -1,5 +1,25 @@
 # COURTIA — Rapport QA
 
+## QA Hotfix portfolio schema — Pré-commercialisation (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Tour API production | ⚠️ P0 backend VPS | `/api/portfolio/morning-brief`, `/api/portfolio/health-score` | `generated_at` et `health_score` absents du schéma VPS |
+| Login demo API | ✅ OK | `POST /api/auth/login` | Status 200, token présent non affiché |
+| Auth me API | ✅ OK | `GET /api/auth/me` | Status 200 |
+| Dashboard stats API | ✅ OK | `GET /api/dashboard/stats` | Status 200 |
+| Clients / contrats / tâches | ✅ OK | API production | Status 200 |
+| Admin broker | ✅ OK | `/api/admin/super/analytics` | Status 403 propre |
+| Syntax backend | ✅ OK | `node -c` ciblé | server, portfolio, admin, analyzer, util OK |
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 33 tests passés |
+| Audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1 |
+
+### Décision
+- P0 code corrigé dans le dépôt : oui.
+- P0 production supprimé : non, tant que le VPS / PM2 n'est pas redéployé avec ce commit.
+- Mitigation frontend : `MorningBrief` affiche un score local estimé si l'API portfolio score est indisponible.
+
 ## QA Hotfix portfolio — Morning Brief (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

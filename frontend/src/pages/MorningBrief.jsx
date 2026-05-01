@@ -40,6 +40,62 @@ function priorityLabel(p) {
   return 'Normal'
 }
 
+function dateValue(...values) {
+  for (const value of values) {
+    if (!value) continue
+    const time = new Date(value).getTime()
+    if (!Number.isNaN(time)) return time
+  }
+  return null
+}
+
+function buildLocalPortfolioScore(clients = [], contrats = [], taches = []) {
+  const now = Date.now()
+  const totalClients = clients.length
+  const activeContracts = contrats.filter(c => ['actif', 'active', 'en_cours'].includes(String(c.status || c.statut || '').toLowerCase())).length
+  const clientsWithContact = clients.filter(c => c.email || c.phone || c.telephone || c.mobile).length
+  const overdueTasks = taches.filter(t => {
+    const due = dateValue(t.echeance, t.due_date, t.date_echeance)
+    return due && due < now && !['terminee', 'done', 'completed'].includes(String(t.statut || t.status || '').toLowerCase())
+  }).length
+  const upcomingRenewals = contrats.filter(c => {
+    const due = dateValue(c.date_echeance, c.echeance, c.end_date, c.renewal_date)
+    if (!due) return false
+    const days = Math.ceil((due - now) / 86400000)
+    return days >= 0 && days <= 45
+  }).length
+
+  const contactScore = totalClients ? Math.round((clientsWithContact / totalClients) * 100) : 72
+  const coverageScore = totalClients ? Math.min(100, Math.round((activeContracts / Math.max(totalClients, 1)) * 65 + 25)) : 70
+  const taskScore = Math.max(45, 92 - overdueTasks * 9)
+  const renewalScore = Math.max(45, 88 - upcomingRenewals * 6)
+  const healthScore = Math.round((contactScore * 0.25) + (coverageScore * 0.25) + (taskScore * 0.25) + (renewalScore * 0.25))
+
+  return {
+    health_score: Math.max(45, Math.min(92, healthScore)),
+    breakdown: {
+      contacts: contactScore,
+      contrats: coverageScore,
+      taches: taskScore,
+      echeances: renewalScore,
+    },
+    grade: null,
+    generated_at: new Date().toISOString(),
+    source: 'local_fallback',
+  }
+}
+
+function getBreakdownValue(value) {
+  if (typeof value === 'number') return value
+  if (value && typeof value === 'object' && typeof value.score === 'number') return value.score
+  return 0
+}
+
+function getBreakdownLabel(key, value) {
+  if (value && typeof value === 'object' && value.label) return value.label
+  return key.replace(/_/g, ' ')
+}
+
 // ─── Skeletons ─────────────────────────────────────────────────────────────────
 
 function Shimmer({ w = '100%', h = 20, r = 8, mb = 0 }) {
@@ -80,7 +136,7 @@ function ScoreSkeleton() {
 // ─── Composants ────────────────────────────────────────────────────────────────
 
 function ScoreRing({ score, plan }) {
-  const isExact = plan === 'pro' || plan === 'elite'
+  const isExact = ['pro', 'elite', 'premium', 'trial'].includes(plan)
   const displayScore = isExact ? score : null
   const displayRange = !isExact ? '60-80' : null
   const size = 96
@@ -379,7 +435,19 @@ export default function MorningBrief() {
       const res = await api.get('/portfolio/health-score')
       setScore(res.data?.data || res.data)
     } catch (err) {
-      setScoreError(err.response?.data?.message || 'Score indisponible')
+      try {
+        const [clientsRes, contratsRes, tachesRes] = await Promise.all([
+          api.get('/clients?limit=1000').catch(() => ({ data: [] })),
+          api.get('/contrats').catch(() => ({ data: [] })),
+          api.get('/taches').catch(() => ({ data: [] })),
+        ])
+        const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
+        const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
+        const taches   = Array.isArray(tachesRes.data) ? tachesRes.data : (tachesRes.data?.data || [])
+        setScore(buildLocalPortfolioScore(clients, contrats, taches))
+      } catch {
+        setScoreError(err.response?.data?.message || 'Score indisponible')
+      }
     } finally {
       setScoreLoading(false)
     }
@@ -396,6 +464,7 @@ export default function MorningBrief() {
   }
 
   const totalPriorities = priorities ? (priorities.critiques.length + priorities.importantes.length + priorities.suggerees.length) : 0
+  const scoreBreakdown = score?.breakdown || score?.health_breakdown
 
   return (
     <PageTransition>
@@ -580,29 +649,38 @@ export default function MorningBrief() {
                     plan={currentPlan}
                   />
 
+                  {score?.source === 'local_fallback' && (
+                    <p style={{ fontSize: 11, color: '#6b7280', textAlign: 'center', margin: '-4px 0 0', lineHeight: 1.5 }}>
+                      Score estimé localement pendant l'actualisation du moteur portefeuille.
+                    </p>
+                  )}
+
                   {/* Breakdown si Pro/Elite */}
-                  {(currentPlan === 'pro' || currentPlan === 'elite') && score?.breakdown && (
+                  {(['pro', 'elite', 'premium', 'trial'].includes(currentPlan)) && scoreBreakdown && (
                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {Object.entries(score.breakdown).slice(0, 3).map(([key, val]) => (
-                        <PremiumTooltip key={key} content={`${key.replace(/_/g, ' ')} : ${val}/100`} position="top">
+                      {Object.entries(scoreBreakdown).slice(0, 3).map(([key, val]) => {
+                        const numericValue = getBreakdownValue(val)
+                        const label = getBreakdownLabel(key, val)
+                        return (
+                        <PremiumTooltip key={key} content={`${label} : ${numericValue}/100`} position="top">
                           <div style={{ width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
                               <span style={{ fontSize: 11, color: '#6b7280', textTransform: 'capitalize' }}>
-                                {key.replace(/_/g, ' ')}
+                                {label}
                               </span>
-                              <span style={{ fontSize: 11, fontWeight: 600, color: '#0a0a0a' }}>{val}</span>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: '#0a0a0a' }}>{numericValue}</span>
                             </div>
                             <div style={{ height: 3, background: '#f7f6f2', borderRadius: 2 }}>
                               <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: Math.min(val, 100) + '%' }}
+                                animate={{ width: Math.min(numericValue, 100) + '%' }}
                                 transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
                                 style={{ height: '100%', background: '#0a0a0a', borderRadius: 2 }}
                               />
                             </div>
                           </div>
                         </PremiumTooltip>
-                      ))}
+                      )})}
                     </div>
                   )}
 
