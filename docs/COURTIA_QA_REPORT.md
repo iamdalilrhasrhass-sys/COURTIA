@@ -39,6 +39,25 @@
 
 ---
 
+## QA Phase G — SEO / Social (1er mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Warning chunk > 500 kB connu |
+| Tests frontend | ✅ OK | `npm run test` | 29 tests passés |
+| OG image PNG | ✅ OK | `sips` | 1200x630 |
+| Manifest icons | ✅ OK | `sips` | 192x192 et 512x512 |
+| Apple icon | ✅ OK | `sips` | 180x180 |
+| Meta title | ✅ OK | `frontend/index.html` | `COURTIA — Le cockpit IA des courtiers` |
+| Meta description | ✅ OK | `frontend/index.html` | Description courtier conforme |
+| OG/Twitter image | ✅ OK | `frontend/index.html` | `https://courtia.vercel.app/og-courtia.png` |
+
+### Limite Phase G
+- Preview LinkedIn réelle non testée dans l'outil LinkedIn.
+- Metas volontairement pointées vers Vercel tant que le DNS `courtiark.fr` reste P1.
+
+---
+
 ## QA Phase F — Audit Python (1er mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
