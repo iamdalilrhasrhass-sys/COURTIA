@@ -51,6 +51,8 @@
 | Meta title | ✅ OK | `frontend/index.html` | `COURTIA — Le cockpit IA des courtiers` |
 | Meta description | ✅ OK | `frontend/index.html` | Description courtier conforme |
 | OG/Twitter image | ✅ OK | `frontend/index.html` | `https://courtia.vercel.app/og-courtia.png` |
+| Production metas | ✅ OK | `curl https://courtia.vercel.app` | OG/Twitter PNG, manifest, canonical visibles |
+| Production assets | ✅ OK | `curl -I` | OG PNG, icon 192, apple icon en HTTP 200 |
 
 ### Limite Phase G
 - Preview LinkedIn réelle non testée dans l'outil LinkedIn.

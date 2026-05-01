@@ -204,6 +204,7 @@ Le manifest ne référence plus d'icônes manquantes.
 - Dimensions OG : 1200x630
 - Icônes manifest : 192x192, 512x512
 - Apple icon : 180x180
+- Production Vercel : metas et assets PNG servis en HTTP 200
 
 ---
 
