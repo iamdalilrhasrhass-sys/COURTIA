@@ -4,12 +4,14 @@
 Rendre le register/login plus premium et plus vendeur, sans casser l’auth validée en Phase 1 et sans coder Stripe.
 
 ## 2. Changements réalisés
+- Structure auth reprise après feedback : écran transformé en funnel premium avec panneau marque, surface d’activation et CTA visible plus tôt sur mobile.
 - Titre register Pro remplacé par “Activez votre cockpit Pro”.
 - Sous-titre register Pro orienté valeur : priorités, relances, portefeuille sous contrôle.
 - CTA register Pro remplacé par “Activer mon essai Pro”.
 - Ajout d’un panneau essai Pro : 0 EUR aujourd’hui, 7 jours, annulation en ligne.
 - Mention claire : la carte sera demandée dans une étape de paiement sécurisée dédiée, pas collectée dans le formulaire COURTIA actuel.
 - Login renommé “Ouvrez votre cockpit”.
+- Mobile : panneau essai compact en trois cellules pour éviter un formulaire trop bas.
 
 ## 3. Landing / Pricing polish associé
 - Suppression de la transition visuelle trop brute entre sections.
@@ -28,6 +30,7 @@ Rendre le register/login plus premium et plus vendeur, sans casser l’auth vali
 - `npm run build` : OK.
 - `npm run test` : 29 tests OK.
 - Browser local `/register?plan=pro` : nouveau titre, panneau essai, console 0 erreur.
+- Browser local `/register?plan=pro` après restructuration : CTA “Activer mon essai Pro” visible dans le premier écran mobile, console 0 erreur.
 - Browser local `/#pricing` : pricing Pro premium, annulation en ligne visible, console 0 erreur.
 
 ## 6. Non fait volontairement

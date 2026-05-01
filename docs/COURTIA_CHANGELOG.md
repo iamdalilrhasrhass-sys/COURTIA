@@ -6,6 +6,7 @@
 **Message attendu** : feat: polish Courtia pricing and auth conversion experience
 
 ### Changements
+- Auth structure : écran register Pro transformé en funnel premium avec panneau marque, surface d’activation et CTA visible plus tôt sur mobile.
 - Register Pro : titre “Activez votre cockpit Pro”.
 - Register Pro : panneau essai 0 EUR aujourd’hui / 7 jours / annulation en ligne.
 - CTA register Pro : “Activer mon essai Pro”.
