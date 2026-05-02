@@ -1,5 +1,27 @@
 # COURTIA — Rapport QA
 
+## QA Mission Finale 500% (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Code-splitting actif, build vert |
+| Tests frontend | ✅ OK | `npm run test` | 33/33 |
+| QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 37 P2 |
+| API health prod | ✅ OK | `curl -i https://api.courtiark.fr/api/health` | HTTP 200 |
+| Frontend prod | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
+| Login demo | ✅ OK | `POST /api/auth/login` | HTTP 200 |
+| Mauvais mot de passe | ✅ OK | `POST /api/auth/login` | HTTP 401 |
+| Auth me | ✅ OK | `GET /api/auth/me` | HTTP 200 |
+| Dashboard stats | ✅ OK | `GET /api/dashboard/stats` | HTTP 200 |
+| Clients/Contrats/Tâches | ✅ OK | `GET /api/clients|contrats|taches` | HTTP 200 |
+| Portfolio endpoints | ✅ OK | `GET /api/portfolio/morning-brief|health-score` | HTTP 200 |
+| Admin broker | ✅ OK | `GET /api/admin/super/analytics` | HTTP 403 |
+
+### Décision
+- Socle technique stable pour démo commerciale.
+- P0/P1 bloquant non détecté sur la chaîne officielle Vercel + VPS.
+- Stripe test mode et validation juridique restent la prochaine phase.
+
 ## QA Clôture Render (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

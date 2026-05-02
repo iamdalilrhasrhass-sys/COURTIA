@@ -5,6 +5,7 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 // Générer un JWT token
 function generateToken(user) {
@@ -15,7 +16,7 @@ function generateToken(user) {
       email: user.email,
       role: user.role
     },
-    process.env.JWT_SECRET || 'crm-assurance-secret-key-2026',
+    getJwtSecret(),
     {
       expiresIn: process.env.JWT_EXPIRY || '7d'
     }
@@ -30,7 +31,7 @@ exports.register = async (req, res) => {
     // Validation
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({
-        error: 'Email, password, firstName, and lastName are required'
+        error: 'Champs requis manquants'
       });
     }
 
@@ -41,7 +42,7 @@ exports.register = async (req, res) => {
     const token = generateToken(user);
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'Compte créé avec succès',
       user: {
         id: user.id,
         email: user.email,
@@ -74,7 +75,7 @@ exports.login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        error: 'Email and password are required'
+        error: 'Email et mot de passe requis'
       });
     }
 
@@ -83,7 +84,7 @@ exports.login = async (req, res) => {
 
     if (!user) {
       return res.status(401).json({
-        error: 'Invalid email or password'
+        error: 'Email ou mot de passe incorrect'
       });
     }
 
@@ -91,7 +92,7 @@ exports.login = async (req, res) => {
     const token = generateToken(user);
 
     res.json({
-      message: 'Login successful',
+      message: 'Connexion réussie',
       user: {
         id: user.id,
         email: user.email,
@@ -103,7 +104,7 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Connexion impossible pour le moment' });
   }
 };
 
@@ -113,10 +114,10 @@ exports.verify = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
+      return res.status(401).json({ error: 'Token manquant' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'crm-assurance-secret-key-2026');
+    const decoded = jwt.verify(token, getJwtSecret());
     const user = await User.findById(decoded.id);
 
     res.json({
@@ -126,7 +127,7 @@ exports.verify = async (req, res) => {
   } catch (err) {
     res.status(401).json({
       valid: false,
-      error: 'Invalid or expired token'
+      error: 'Token invalide ou expiré'
     });
   }
 };
@@ -137,26 +138,26 @@ exports.refresh = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
+      return res.status(401).json({ error: 'Token manquant' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'crm-assurance-secret-key-2026', {
+    const decoded = jwt.verify(token, getJwtSecret(), {
       ignoreExpiration: true
     });
 
     const user = await User.findById(decoded.id);
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
 
     const newToken = generateToken(user);
 
     res.json({
-      message: 'Token refreshed',
+      message: 'Session actualisée',
       token: newToken
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Actualisation de session impossible' });
   }
 };

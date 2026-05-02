@@ -451,7 +451,7 @@ export default function Login() {
   const selectedPlan = params.get('plan')
   const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
   const planName = planKey === 'pro' ? 'Pro' : 'Starter'
-  const planPrice = planKey === 'pro' ? '159 € HT/mois' : '89 € HT/mois'
+  const planPrice = planKey === 'pro' ? '159 € / mois' : '89 € / mois'
   const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
   const planSubtitle = planKey === 'pro'
     ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
@@ -644,7 +644,7 @@ export default function Login() {
                   </div>
                 </div>
                 <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
-                  Carte demandée à l’étape sécurisée. 0 € aujourd’hui, puis {planPrice} après 7 jours. Annulation en ligne.
+                  Carte demandée à l’étape sécurisée. 0 € aujourd’hui, puis {planPrice} après 7 jours. Annulation en ligne. Affichage fiscal selon votre configuration.
                 </p>
               </div>
             )}

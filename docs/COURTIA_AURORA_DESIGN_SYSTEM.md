@@ -36,6 +36,12 @@
 - Palette : fonds sombres, accents iridescents
 - Admin Center : style cockpit propriétaire (pas marketing)
 
+## Mise à jour finale (2 mai 2026)
+- Landing : wording tarifaire aligné avec fiscalité configurable (`/ mois`, mention de configuration).
+- Auth funnels : wording Starter/Pro aligné avec réassurance essai.
+- Rapports et Paramètres : `AuroraPageHeader` + loaders Aurora harmonisés.
+- Performance UX : routes secondaires lazy-loadées pour préserver la fluidité malgré les effets Aurora.
+
 ## Pages harmonisées (Batch 3)
 - Landing ✅ (Phase 2 Codex : landing étendue 15 sections, hero mobile repris, pricing Pro clarifié)
 - Login ✅ (Aurora déjà présent)

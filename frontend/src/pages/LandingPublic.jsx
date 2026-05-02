@@ -370,10 +370,10 @@ const pricing = [
   {
     name: 'Starter',
     price: '89 €',
-    period: 'HT / mois',
+    period: '/ mois',
     label: 'Entrée structurée',
     headline: 'Pour arrêter le bricolage sans lancer un gros chantier.',
-    note: '0 € aujourd’hui, puis 89 € HT/mois après le 7e jour.',
+    note: '0 € aujourd’hui, puis 89 € / mois après le 7e jour.',
     href: '/register?plan=starter',
     cta: 'Activer mon essai Starter',
     featured: false,
@@ -382,10 +382,10 @@ const pricing = [
   {
     name: 'Pro',
     price: '159 €',
-    period: 'HT / mois',
+    period: '/ mois',
     label: 'Recommandé',
     headline: 'L’offre logique pour piloter un portefeuille sérieusement.',
-    note: '0 € aujourd’hui, puis 159 € HT/mois après le 7e jour. Annulation possible en ligne avant la fin de l’essai.',
+    note: '0 € aujourd’hui, puis 159 € / mois après le 7e jour. Annulation possible en ligne avant la fin de l’essai.',
     href: '/register?plan=pro',
     cta: 'Activer mon essai Pro',
     featured: true,
@@ -824,6 +824,9 @@ export default function LandingPublic() {
                 <h2 className="scene-title mt-5 text-white">Le prix devient logique quand le courtier voit ce qu’il arrête de perdre.</h2>
                 <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/60">
                   Starter structure. Pro pilote. Premium accompagne les cabinets. La carte bancaire sera gérée uniquement via Stripe Checkout dans la phase Billing dédiée.
+                </p>
+                <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/42">
+                  Affichage fiscal selon votre configuration de facturation (micro-entreprise, TVA, mentions légales).
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles } from 'lucide-react'
 import api from '../api'
+import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -88,15 +90,33 @@ export default function Parametres() {
   const tier = (profile?.pricing_tier || '').toLowerCase()
   const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', price: 0, features: [] }
 
-  if (loading) return <div className="flex justify-center items-center h-screen bg-transparent"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-transparent">
+        <main className="p-4 md:p-8 max-w-6xl mx-auto">
+          <AuroraPageHeader
+            title="Paramètres"
+            subtitle="Profil, sécurité, notifications et abonnement."
+            badge="Configuration"
+            dark
+          />
+          <div className="flex justify-center items-center py-24">
+            <CourtiaLogoLoader fullScreen={false} message="Chargement des paramètres…" />
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-transparent font-sans">
       <main className="p-4 md:p-8 max-w-6xl mx-auto">
-        <header className="mb-10">
-          <h1 className="text-3xl font-black text-white">Paramètres</h1>
-          <p className="text-white/50 mt-1">Gérez votre profil, vos préférences et votre abonnement.</p>
-        </header>
+        <AuroraPageHeader
+          title="Paramètres"
+          subtitle="Gérez votre profil, vos préférences et votre abonnement."
+          badge="Espace cabinet"
+          dark
+        />
 
         <div className="flex flex-col md:flex-row gap-12">
           <aside className="md:w-1/4">
