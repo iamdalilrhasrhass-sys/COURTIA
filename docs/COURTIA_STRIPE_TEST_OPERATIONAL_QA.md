@@ -26,6 +26,7 @@ Validation opérationnelle du tunnel billing test mode:
 
 ## Notes
 - Le backend prod est bien en mode défensif: sans variables `_TEST`, il refuse checkout/portal sans crash.
-- Variables manquantes côté VPS: `STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL`.
+- Variables manquantes côté VPS: `STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`.
+- Variables test non secrètes configurées: `BILLING_MODE=test`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`.
 - Présence d'une clé legacy `STRIPE_SECRET_KEY` de type live détectée; non utilisée dans cette mission.
 - Stripe test complet ne peut pas être déclaré tant que les variables test réelles ne sont pas configurées et retestées.

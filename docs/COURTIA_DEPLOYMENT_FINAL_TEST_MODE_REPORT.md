@@ -34,12 +34,14 @@ Date: 2 mai 2026
 
 ### Cause exacte du blocage Stripe E2E
 Variables Stripe `_TEST` absentes côté VPS:
-- `BILLING_MODE`
 - `STRIPE_SECRET_KEY_TEST`
 - `STRIPE_WEBHOOK_SECRET_TEST`
 - `STRIPE_STARTER_PRICE_ID_TEST`
 - `STRIPE_PRO_PRICE_ID_TEST`
-- `STRIPE_CUSTOMER_PORTAL_RETURN_URL`
+
+Variables test non secrètes configurées côté VPS:
+- `BILLING_MODE=test`
+- `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`
 
 Variables legacy présentes:
 - `STRIPE_SECRET_KEY` détectée en format live (`sk_live_...`) -> non utilisable dans cette mission.
