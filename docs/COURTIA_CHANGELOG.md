@@ -1,5 +1,29 @@
 # COURTIA — Changelog Mission 2M
 
+## P0 Vercel — Deployment Failed diagnostiqué et résolu (2 mai 2026)
+
+**Commit docs** : à créer
+**Message attendu** : docs: document Vercel deployment failed root cause and recovery
+
+### Cause exacte (prouvée logs Vercel)
+- Déploiement failed : `dpl_akzhe2qmDNMKdFQiddC4Cqe6K6QQ` (commit `7294a4326078e39e67a18f677627cc9bb7c21449`).
+- Build error :
+  - `Could not resolve "../components/brand/AuroraTransition" from "src/pages/LandingPublic.jsx"`.
+  - `Command "npm run build" exited with 1`.
+
+### Résolution confirmée
+- Le composant manquant est bien présent : `frontend/src/components/brand/AuroraTransition.jsx`.
+- Déploiement production actuel `Ready` :
+  - `dpl_46a3j754h6h6HWzXUJLKFigea93T`
+  - commit `1a749f12b6e81c8680246795042857cfd369bfba`
+  - alias `https://courtia.vercel.app`.
+
+### Vérifications
+- `npm ci` : OK
+- `npm run build` : OK
+- `npm run test` : 33 tests OK
+- Routes frontend critiques : `/`, `/login`, `/register?plan=pro`, `/dashboard` -> HTTP 200.
+
 ## Hotfix portfolio — Schéma ancien VPS + fallback Morning Brief (2 mai 2026)
 
 **Commit** : à créer
