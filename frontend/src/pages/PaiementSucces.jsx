@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBackground from '../components/BubbleBackground'
 import api from '../api'
-import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 export default function PaiementSucces() {
   const navigate = useNavigate()
@@ -45,9 +44,6 @@ export default function PaiementSucces() {
         }}>
           Ouvrir Billing
         </button>
-        <div style={{ marginTop: 18 }}>
-          <RhasrhassSignature compact />
-        </div>
       </BubbleCard>
     </div>
   )

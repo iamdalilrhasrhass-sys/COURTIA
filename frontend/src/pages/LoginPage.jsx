@@ -439,6 +439,7 @@ const STYLES = `
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
@@ -471,8 +472,17 @@ export default function Login() {
       setError('Veuillez renseigner votre prénom et votre nom.')
       return
     }
+    if (isRegister && !confirmPassword) {
+      setError('Veuillez confirmer votre mot de passe.')
+      return
+    }
+    if (isRegister && password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.')
+      return
+    }
     setLoading(true)
     setError('')
+    setErrorLink(null)
     try {
       const endpoint = isRegister ? '/auth/register' : '/auth/login'
       const body = isRegister ? { email, password, firstName, lastName } : { email, password }
@@ -751,6 +761,21 @@ export default function Login() {
                 </button>
               </div>
 
+              {isRegister && (
+                <div style={{ marginBottom: 14, position: 'relative' }}>
+                  <input
+                    className="auth-input"
+                    type={showPw ? 'text' : 'password'}
+                    placeholder="Confirmer le mot de passe"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    style={{ paddingRight: 40 }}
+                  />
+                </div>
+              )}
+
               {/* Remember me (login only) */}
               {!isRegister && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
@@ -804,12 +829,12 @@ export default function Login() {
                 </Link>
               )}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
+              <RhasrhassSignature compact />
+            </div>
             </div>
             </div>
           </div>
-        </div>
-        <div style={{ position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)', zIndex: 3 }}>
-          <RhasrhassSignature compact />
         </div>
       </div>
     </>

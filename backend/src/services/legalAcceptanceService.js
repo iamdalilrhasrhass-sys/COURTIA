@@ -7,6 +7,14 @@ const DEFAULT_DOC_VERSIONS = {
 };
 
 function ensureRequiredConsents(payload = {}) {
+  const normalized = {
+    accept_cgv: payload.accept_cgv ?? payload.accepted_cgv,
+    accept_privacy: payload.accept_privacy ?? payload.accepted_privacy,
+    accept_dpa: payload.accept_dpa ?? payload.accepted_dpa,
+    accept_trial: payload.accept_trial ?? payload.accepted_trial,
+    accept_renewal: payload.accept_renewal ?? payload.accepted_renewal,
+  };
+
   const checks = [
     ['accept_cgv', 'CGV'],
     ['accept_privacy', 'Politique de confidentialité'],
@@ -16,12 +24,14 @@ function ensureRequiredConsents(payload = {}) {
   ];
 
   for (const [key, label] of checks) {
-    if (!payload[key]) {
+    if (!normalized[key]) {
       const err = new Error(`Consentement obligatoire manquant: ${label}`);
       err.code = 'CONSENT_REQUIRED';
       throw err;
     }
   }
+
+  return normalized;
 }
 
 async function ensureLegalDocumentSeed() {
@@ -48,7 +58,7 @@ async function recordLegalAcceptance({
   userAgent,
   planCode,
 }) {
-  ensureRequiredConsents(payload);
+  const normalizedConsents = ensureRequiredConsents(payload);
   await ensureLegalDocumentSeed();
 
   const cgvVersion = payload.cgv_version || DEFAULT_DOC_VERSIONS.cgv;
@@ -57,8 +67,11 @@ async function recordLegalAcceptance({
 
   const ctx = {
     plan_code: planCode,
-    accepted_trial: true,
-    accepted_renewal: true,
+    accepted_trial: !!normalizedConsents.accept_trial,
+    accepted_renewal: !!normalizedConsents.accept_renewal,
+    accepted_cgv: !!normalizedConsents.accept_cgv,
+    accepted_privacy: !!normalizedConsents.accept_privacy,
+    accepted_dpa: !!normalizedConsents.accept_dpa,
     billing_mode: process.env.BILLING_MODE || 'test',
     accepted_at: new Date().toISOString(),
   };

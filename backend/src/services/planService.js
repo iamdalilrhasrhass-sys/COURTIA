@@ -8,8 +8,8 @@ const BILLING_MODE = process.env.BILLING_MODE || 'test';
 
 function stripePriceFor(planCode) {
   if (BILLING_MODE === 'test') {
-    if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
-    if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
+    if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || null;
+    if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || null;
     if (planCode === 'premium') return null;
   }
   if (planCode === 'starter') return process.env.STRIPE_PRICE_STARTER || null;

@@ -2,7 +2,7 @@ const pool = require('../db');
 const planService = require('./planService');
 
 const TRIAL_DAYS = Number(process.env.BILLING_TRIAL_DAYS || 7);
-const FISCAL_LABEL = process.env.BILLING_FISCAL_LABEL || 'Affichage fiscal selon votre configuration.';
+const FISCAL_LABEL = process.env.BILLING_FISCAL_LABEL || 'Prix indiqués hors taxes. TVA applicable au taux en vigueur.';
 
 let foundationReady = false;
 
@@ -214,6 +214,11 @@ function normalizePlanCode(code) {
 function getPlans() {
   const all = planService.getAllPlans();
   return all.map((p) => ({
+    display_price_ht: p.price ? `${Number(p.price).toFixed(0)} € HT / mois` : 'Sur devis',
+    display_price_ttc:
+      p.price
+        ? `${(Number(p.price) * 1.2).toFixed(2).replace('.', ',')} € TTC / mois avec TVA 20 %`
+        : null,
     code: p.id,
     name: p.name,
     price: p.price,

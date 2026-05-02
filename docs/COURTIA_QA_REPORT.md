@@ -1,5 +1,35 @@
 # COURTIA — Rapport QA
 
+## QA Finalisation Stripe / Branding / Import V1 (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | Build vert |
+| Tests frontend | ✅ OK | `npm run test` | 33/33 |
+| Syntax backend billing/stripe/import | ✅ OK | `node -c` ciblé | routes/services OK |
+| QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 37 P2 |
+| Secret audit | ✅ P0=0 | `python3 scripts/courtia_secret_audit.py` | P1 legacy docs toujours présents |
+| API prod health | ✅ OK | `curl -i https://api.courtiark.fr/api/health` | HTTP 200 |
+| Front prod health | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
+| Billing plans | ✅ OK | `GET /api/billing/plans` | 200 + starter/pro/premium |
+| Billing status anon | ✅ OK | `GET /api/billing/status` | 401 propre |
+| Billing status auth | ✅ OK | `GET /api/billing/status` | 200 |
+| Onboarding billing | ✅ OK | `POST /api/billing/onboarding` | 200 |
+| Legal acceptance (`accepted_*`) | ⚠️ KO deploy actuel | `POST /api/billing/legal-acceptance` | 400 sur backend prod actuel (patch compatibilité ajouté dans repo) |
+| Checkout Starter | ⚠️ Partiel | `POST /api/billing/create-checkout-session` | bloqué sans acceptance id dans test actuel |
+| Checkout Pro | ✅ OK (deploy actuel) | `POST /api/billing/create-checkout-session` | 200 + checkout URL |
+| Premium sur devis | ✅ OK | `POST /api/billing/create-checkout-session` | 409 `premium_contact_required` |
+| Customer Portal | ✅ OK | `POST /api/billing/create-portal-session` | 200 + URL |
+| Webhook sans signature | ✅ OK | `POST /api/stripe/webhook` | 400 `missing_signature` |
+| Admin billing anon/broker | ✅ OK | `/api/admin/super/billing` | 401 / 403 propres |
+| Variables `_TEST` VPS | ⚠️ manquantes | vérif backend VPS | `_TEST` absentes, fallback historique utilisait clé live |
+| Guard test-only (repo) | ✅ ajouté | `stripeService` / `planService` | test mode n’accepte plus fallback live |
+
+### Décision
+- Tunnel Stripe test: **partiel opérationnel** sur backend déployé actuel.
+- Le repo est durci pour forcer un vrai test mode (`*_TEST`) après prochain déploiement backend.
+- Action impérative avant validation “Stripe test complet”: renseigner les variables `_TEST` sur VPS + redeploy backend + rejouer QA checkout/webhooks signés.
+
 ## QA Pré-live légal / TVA / branding (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

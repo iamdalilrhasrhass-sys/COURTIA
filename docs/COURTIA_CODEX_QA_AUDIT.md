@@ -1,13 +1,13 @@
 # COURTIA — Audit QA Python
 
-- Date : 2026-05-02 11:38:24
+- Date : 2026-05-02 12:29:17
 - Statut : OK
-- Fichiers scannés : 166
+- Fichiers scannés : 167
 
 ## Synthèse
 
 - P0/P1 : 0
-- P2 : 36
+- P2 : 37
 
 ## Documentation
 
@@ -51,7 +51,7 @@
 
 ## Routes React détectées
 
-`*`, `/`, `/abonnement`, `/academy`, `/academy/*`, `/admin`, `/admin/logs`, `/admin/subscriptions`, `/admin/support`, `/admin/system`, `/admin/users`, `/admin/users/:id`, `/analyses`, `/analytics`, `/billing`, `/billing/cancel`, `/billing/success`, `/browser-pilot`, `/capitia`, `/client/:id`, `/clients`, `/clients/:id`, `/clients/:id/edit`, `/clients/new`, `/contrats`, `/contrats/new`, `/dashboard`, `/documents`, `/landing`, `/login`, `/morning-brief`, `/onboarding`, `/onboarding/import`, `/paiement-annule`, `/paiement-succes`, `/parametres`, `/rapports`, `/reach`, `/reach/campaigns`, `/reach/campaigns/:id`, `/reach/inbox`, `/reach/map`, `/reach/prospects`, `/reach/prospects/:id`, `/reach/search`, `/reach/settings`, `/register`, `/taches`, `/tarifs`, `/upload/:token`
+`*`, `/`, `/abonnement`, `/academy`, `/academy/*`, `/admin`, `/admin/logs`, `/admin/subscriptions`, `/admin/support`, `/admin/system`, `/admin/users`, `/admin/users/:id`, `/analyses`, `/analytics`, `/billing`, `/billing/cancel`, `/billing/success`, `/browser-pilot`, `/capitia`, `/client/:id`, `/clients`, `/clients/:id`, `/clients/:id/edit`, `/clients/new`, `/contrats`, `/contrats/new`, `/dashboard`, `/documents`, `/import`, `/landing`, `/login`, `/morning-brief`, `/onboarding`, `/onboarding/import`, `/paiement-annule`, `/paiement-succes`, `/parametres`, `/rapports`, `/reach`, `/reach/campaigns`, `/reach/campaigns/:id`, `/reach/inbox`, `/reach/map`, `/reach/prospects`, `/reach/prospects/:id`, `/reach/search`, `/reach/settings`, `/register`, `/taches`, `/tarifs`, `/upload/:token`
 
 ## Résultats détaillés
 
@@ -72,7 +72,7 @@
 | P2 | Message technique | `frontend/src/components/PaywallModal.jsx` | 33 | Motif technique détecté : `error\.message` |
 | P2 | Loader générique | `frontend/src/components/PremiumButton.jsx` | 51 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/components/Settings.jsx` | 121 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
-| P2 | Loader générique | `frontend/src/components/Sidebar.jsx` | 94 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
+| P2 | Loader générique | `frontend/src/components/Sidebar.jsx` | 93 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
 | P2 | Loader générique | `frontend/src/components/Taches.jsx` | 121 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/Academy.jsx` | 125 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/AdminCostsDashboard.jsx` | 49 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
@@ -84,6 +84,7 @@
 | P2 | Loader générique | `frontend/src/pages/ClientDetail.jsx` | 302 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/ClientDetail.jsx` | 704 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/ClientNew.jsx` | 138 | Motif loader générique : `\banimate-spin\b` |
+| P2 | Loader générique | `frontend/src/pages/ImportPortfolio.jsx` | 238 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/MyUsage.jsx` | 42 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/Onboarding.jsx` | 227 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Message technique | `frontend/src/pages/PublicDocumentUpload.jsx` | 71 | Motif technique détecté : `err\.message` |

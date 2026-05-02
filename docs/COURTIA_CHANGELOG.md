@@ -1,5 +1,63 @@
 # COURTIA — Changelog Mission 2M
 
+## Finalisation Stripe / Branding / Import V1 (2 mai 2026)
+
+### Branding RHASRHASS™ global
+- Signature unifiée via layout privé + layout admin:
+  - `frontend/src/App.jsx`
+  - `frontend/src/components/AdminLayout.jsx`
+- Signature explicite conservée sur surfaces publiques:
+  - `frontend/src/pages/LandingPublic.jsx`
+  - `frontend/src/pages/LoginPage.jsx` (`/login`, `/register`, `/register?plan=pro`)
+- Suppression des anciens footers texte `Rhasrhass®` sur pages legacy.
+
+### Register Starter/Pro — confirmation mot de passe
+- Ajout du champ `Confirmer le mot de passe` sur les funnels register (Starter et Pro).
+- Validation frontend:
+  - blocage si confirmation vide,
+  - blocage si mismatch (`Les mots de passe ne correspondent pas.`).
+- `confirmPassword` non envoyé au backend.
+- Login inchangé.
+
+### Pricing HT/TTC et wording fiscal
+- Harmonisation HT/TTC confirmée sur landing, auth et billing.
+- Mise à jour du setup Stripe test:
+  - `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md` (Starter/Pro avec référence TTC claire).
+
+### Stripe test safety hardening
+- Sécurisation clé Stripe:
+  - en `BILLING_MODE=test`, le backend n’accepte plus de fallback implicite sur les variables live.
+  - fichiers:
+    - `backend/src/services/stripeService.js`
+    - `backend/src/services/planService.js`
+- Fallback légal:
+  - `legal-acceptance` supporte désormais `accept_*` et `accepted_*`.
+  - fichier: `backend/src/services/legalAcceptanceService.js`
+
+### Import portefeuille V1
+- Migration non destructive:
+  - `backend/migrations/20260502_import_jobs.sql`
+- Nouveaux services:
+  - `backend/src/services/importMappingService.js`
+  - `backend/src/services/importValidationService.js`
+  - `backend/src/services/importService.js`
+- Nouvelle route API:
+  - `backend/src/routes/imports.js`
+  - montée via `backend/server.js` sur `/api/imports`
+- Nouvelle UI:
+  - `frontend/src/pages/ImportPortfolio.jsx`
+  - route privée `/import`
+  - bouton d’accès ajouté dans `Paramètres`.
+- Documentation:
+  - `docs/COURTIA_PORTFOLIO_IMPORT_STRATEGY.md`
+
+### Validation technique locale
+- Build frontend: ✅
+- Tests frontend: ✅ (33/33)
+- Syntax backend (billing/stripe/import): ✅
+- QA Python: ✅ 0 P0/P1 (37 P2)
+- Secret audit: ✅ P0=0
+
 ## Pré-live légal / TVA / branding RHASRHASS™ (2 mai 2026)
 
 ### Légal / conformité documentaire

@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, CreditCard, Sparkles } from 'lucide-react'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
-import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 const BILLING_TEST_UI_ENABLED = import.meta.env.VITE_BILLING_TEST_MODE !== 'false'
 
@@ -209,9 +208,6 @@ export default function BillingOnboarding() {
         <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: 12, marginTop: 2 }}>
           Prix indiqués hors taxes. TVA applicable au taux en vigueur.
         </p>
-        <div style={{ marginTop: 2 }}>
-          <RhasrhassSignature compact />
-        </div>
       </div>
     </div>
   )

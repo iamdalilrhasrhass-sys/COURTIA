@@ -16,6 +16,7 @@ Mettre en place un tunnel d’encaissement propre en Stripe test mode (sans live
 - Templates d’emails transactionnels préparés.
 - Déploiement backend VPS/PM2 effectué (service `courtia-api` redémarré).
 - Endpoint public `GET https://api.courtiark.fr/api/billing/plans` actif.
+- Guard sécurité ajouté dans le code: en `BILLING_MODE=test`, plus de fallback implicite vers clé live.
 
 ## 3. Documents légaux
 Base draft:
@@ -43,6 +44,7 @@ Version pré-live à relire/valider:
 - Valeurs réelles non commitées.
 
 ## 6. Limites actuelles
+- Variables Stripe test `_TEST` absentes sur le backend VPS actuel (à configurer avant validation complète).
 - Stripe test E2E complet dépend des clés test réelles + config webhook Stripe Dashboard.
 - Validation juridique/comptable des textes non terminée.
 - Validation fiscale finale (paramétrage HT/TTC/TVA Stripe) à confirmer avec comptable.
@@ -52,7 +54,7 @@ Version pré-live à relire/valider:
 ## 7. Go / No-Go
 - Démo produit: **GO**
 - Stripe test mode (code): **GO**
-- Stripe test mode (opérationnel complet): **GO conditionnel** après config env Stripe
+- Stripe test mode (opérationnel complet): **GO conditionnel** après config env `_TEST` + redeploy backend
 - Stripe live: **NO GO**
 - Commercialisation payante live: **NO GO** tant que validation juridique/comptable n’est pas signée.
 
