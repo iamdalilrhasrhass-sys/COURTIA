@@ -68,8 +68,9 @@
   - statut abonnement dans Admin Center
   - ne pas faire de faux paiement 0 EUR ni collecter la carte directement dans COURTIA
 - [ ] Token super_admin → tests Admin Center E2E
-- [ ] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
-- [ ] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production (job/snapshot portefeuille à initialiser)
+- [x] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
+- [x] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production
+- [ ] Uniformiser les messages d'erreur API auth en français (le backend login expose encore `Invalid email or password` en brut API)
 - [ ] AuroraPageHeader → Rapports, Paramètres
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres

@@ -278,6 +278,8 @@ router.get('/health-score', verifyToken, async (req, res) => {
       selectPortfolioColumn(insightColumns, 'health_score', 'NULL::integer'),
       selectPortfolioColumn(insightColumns, 'health_breakdown', 'NULL::jsonb'),
       selectPortfolioColumn(insightColumns, 'raw_analysis', 'NULL::jsonb'),
+      selectPortfolioColumn(insightColumns, 'total_clients', 'NULL::integer'),
+      selectPortfolioColumn(insightColumns, 'total_contracts', 'NULL::integer'),
       timestampSelect,
     ].join(', ');
 
@@ -299,6 +301,8 @@ router.get('/health-score', verifyToken, async (req, res) => {
       scoreData = {
         health_score:     row.health_score,
         health_breakdown: row.health_breakdown,
+        total_clients:    row.total_clients,
+        total_contracts:  row.total_contracts,
         grade:            rawAnalysis?.grade || null,
         confidence_level: rawAnalysis?.confidence || null,
         sector_benchmark: rawAnalysis?.benchmark || null,
@@ -319,13 +323,32 @@ router.get('/health-score', verifyToken, async (req, res) => {
       scoreData = { ...rest, generated_at: new Date() };
     }
 
+    const totalClients = Number.isFinite(Number(scoreData.total_clients))
+      ? Number(scoreData.total_clients)
+      : null;
+    const totalContracts = Number.isFinite(Number(scoreData.total_contracts))
+      ? Number(scoreData.total_contracts)
+      : null;
+    const isEmptyPortfolio = totalClients === 0 && totalContracts === 0;
+    const status = isEmptyPortfolio ? 'portfolio_empty' : (fromCache ? 'available' : 'computed');
+    const source = fromCache ? 'snapshot' : 'computed_live';
+
     if (isStart) {
       return res.json({
+        success: true,
         health_score:    scoreToRange(scoreData.health_score),
         grade:           null,
         confidence_level: null,
         sector_benchmark: null,
         health_breakdown: null,
+        score:           scoreData.health_score,
+        status,
+        source,
+        total_clients:   totalClients,
+        total_contracts: totalContracts,
+        message:         isEmptyPortfolio
+          ? 'Ajoutez vos premiers clients et contrats pour générer un score portefeuille.'
+          : null,
         generated_at:    scoreData.generated_at,
         from_cache:      fromCache,
         plan,
@@ -335,7 +358,13 @@ router.get('/health-score', verifyToken, async (req, res) => {
     }
 
     res.json({
+      success: true,
       ...scoreData,
+      status,
+      source,
+      message: isEmptyPortfolio
+        ? 'Ajoutez vos premiers clients et contrats pour générer un score portefeuille.'
+        : null,
       from_cache: fromCache,
       plan,
     });

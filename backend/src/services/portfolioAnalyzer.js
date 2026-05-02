@@ -363,7 +363,12 @@ function calcGrowthScore(data) {
 
   if (prev30 === 0) {
     const score = clamp(50 + last30 * 5, 0, 100);
-    return { score: Math.round(score), last_30, prev_30, growth_rate: null };
+    return {
+      score: Math.round(score),
+      last_30: last30,
+      prev_30: prev30,
+      growth_rate: null,
+    };
   }
 
   const rate = (last30 - prev30) / prev30;
@@ -376,8 +381,8 @@ function calcGrowthScore(data) {
 
   return {
     score:       clamp(Math.round(score)),
-    last_30,
-    prev_30,
+    last_30:     last30,
+    prev_30:     prev30,
     growth_rate: Math.round(rate * 1000) / 10,
   };
 }

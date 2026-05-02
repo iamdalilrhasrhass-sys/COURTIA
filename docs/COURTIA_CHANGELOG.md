@@ -1,5 +1,39 @@
 # COURTIA — Changelog Mission 2M
 
+## Functional Readiness — Portfolio score 200 + parcours complet (2 mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : fix: complete Courtia functional readiness after VPS redeploy
+
+### Changements backend
+- Correction d'un bug runtime dans `portfolioAnalyzer` (`last_30 is not defined`) qui provoquait le fallback `503` sur `/api/portfolio/health-score`.
+- Route `GET /api/portfolio/health-score` enrichie :
+  - ajout de `success`, `status`, `source`, `message`,
+  - retour explicite `portfolio_empty` si aucun client/contrat,
+  - conservation de la compatibilité frontend existante.
+
+### Déploiement backend VPS
+- Sync backend vers `/srv/courtia/backend`.
+- `npm install --omit=dev` exécuté.
+- `pm2 restart courtia-api` exécuté, process online.
+
+### Résultats production
+- `GET /api/portfolio/morning-brief` : `200`.
+- `GET /api/portfolio/health-score` : `200` (plus de `503` pour le compte demo).
+- `GET /api/health` : `200` local VPS et public.
+
+### Vérification fonctionnelle globale
+- Frontend : build OK, tests OK (33/33).
+- Routes publiques/front privées SPA : HTTP 200 (`/`, `/login`, `/register`, `/register?plan=pro`, `/dashboard`, `/clients`, `/contrats`, `/taches`, `/rapports`, `/parametres`, `/admin`).
+- Auth API :
+  - login demo OK (`200`),
+  - mauvais mot de passe OK (`401`),
+  - register email existant `409` propre,
+  - register nouvel utilisateur `201`.
+- Admin API :
+  - non connecté `401`,
+  - broker connecté `403` propre.
+
 ## P0 Backend VPS / PM2 — Redeploy portfolio hotfix (2 mai 2026)
 
 **Commit docs** : à créer  
