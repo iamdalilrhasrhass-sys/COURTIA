@@ -1,5 +1,45 @@
 # COURTIA — Changelog Mission 2M
 
+## Déploiement final test mode / Stripe E2E / Import runtime (2 mai 2026)
+
+### Merge + déploiement
+- Merge production effectué sur `main` via commit `fcf70c3` (inclut `a2558a9`).
+- Push GitHub: `c75b80e..fcf70c3`.
+- Déploiement backend VPS synchronisé depuis `/root/courtia_new` vers `/srv/courtia/backend` avec backup préalable.
+- `pm2 restart courtia-api --update-env` et `pm2 save` exécutés.
+
+### Vérifications production
+- Frontend Vercel: `200` sur `/`, `/login`, `/register?plan=pro`, `/onboarding`, `/billing`, `/import`.
+- Backend VPS: `200` sur `/api/health` en local et en public.
+- Migrations non destructives appliquées:
+  - `backend/migrations/20260502_billing_legal_foundation.sql`
+  - `backend/migrations/20260502_import_jobs.sql`
+
+### Stripe test mode (état réel)
+- API billing validées:
+  - plans/status/onboarding/legal-acceptance OK.
+  - premium correctement bloqué en `409 premium_contact_required`.
+- Checkout starter/pro + portal: bloqués proprement par absence de config test (`billing_test_mode_not_configured`).
+- Cause identifiée: variables `_TEST` absentes sur VPS.
+- Variables legacy détectées, dont `STRIPE_SECRET_KEY` au format live (non utilisée dans cette mission).
+- Webhooks signés/idempotence non prouvés (non testables sans secret webhook test configuré).
+
+### Import portefeuille V1 runtime
+- Preview CSV: OK (`import_job_id` renvoyé).
+- Commit CSV: OK (`status: completed` + `summary`).
+- History import: OK.
+- Rejeu CSV: détection de doublons clients observée; consolidation contrats/tâches à affiner en P2.
+
+### Documentation
+- Ajout de `docs/COURTIA_DEPLOYMENT_FINAL_TEST_MODE_REPORT.md`.
+- Mise à jour:
+  - `docs/COURTIA_STRIPE_TEST_OPERATIONAL_QA.md`
+  - `docs/COURTIA_STRIPE_WEBHOOK_SIGNED_QA.md`
+  - `docs/COURTIA_TRANSACTIONAL_EMAILS_QA.md`
+  - `docs/COURTIA_BILLING_TEST_MODE_FINAL_REPORT.md`
+  - `docs/COURTIA_QA_REPORT.md`
+  - `docs/COURTIA_REMAINING_TASKS.md`
+
 ## Finalisation Stripe / Branding / Import V1 (2 mai 2026)
 
 ### Branding RHASRHASS™ global

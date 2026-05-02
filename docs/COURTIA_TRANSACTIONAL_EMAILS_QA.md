@@ -27,7 +27,13 @@ Date: 2 mai 2026
 - J5/J7: nécessite scheduler/cron opérationnel + règles d’envoi
 
 ## État actuel (à compléter)
-- Provider configuré: ⚠️ non confirmé dans ce run
-- Envoi réel test: ⚠️ non validé (pas d’envoi live requis)
-- Mode fallback sans provider: ✅ prévu dans le service (email non bloquant)
-- Blocage webhook en cas d’échec email: ✅ attendu non bloquant (à valider E2E après setup provider)
+- Provider configuré: ⚠️ non validé pour billing test mode (logs runtime montrent encore des erreurs SMTP legacy `Missing credentials for "PLAIN"` sur scheduler relance)
+- Envoi réel test: ❌ non validé (aucun envoi de facturation Stripe testé en réel)
+- Mode fallback sans provider: ✅ service prévu pour ne pas bloquer le flux billing
+- Blocage webhook en cas d’échec email: ⚠️ non prouvé E2E webhook signé (Stripe test non configuré côté VPS)
+
+## Conclusion QA email (mission actuelle)
+- Templates: ✅ présents
+- J0: prêt côté template/service
+- J5/J7: ⚠️ orchestration scheduler dédiée à finaliser avant live
+- Décision: **email billing prêt côté fondation, non validé bout-en-bout en test mode signé**
