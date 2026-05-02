@@ -1,5 +1,34 @@
 # COURTIA — Changelog Mission 2M
 
+## Render P0 + Landing 3D Repair + Billing Architecture (2 mai 2026)
+
+**Commits**
+- `1b92a3f` — fix: restore Render backend deploy after auth duplicate email handling
+- à créer — fix: restore premium 3D scroll landing experience
+- à créer — docs: define Courtia billing contracts and signature architecture
+
+### Render (stabilisation deploy)
+- Cause probable et reproductible couverte : service Render root échoue si `npm start` est exécuté à la racine sans script.
+- `package.json` racine renforcé avec scripts Render-safe :
+  - `postinstall` -> installation backend prod deps,
+  - `build` -> installation backend prod deps,
+  - `start` -> `node backend/server.js`.
+
+### Landing 3D repair
+- Rail vertical central agressif atténué et déplacé hors centre.
+- Barre de progression scroll adoucie.
+- Profondeur 3D subtile restaurée sur panneaux clés (perspective/tilt/hover).
+- Build/tests frontend conservés en succès.
+
+### Billing / contrats / signature (architecture)
+- Document d’architecture complet ajouté :
+  - parcours onboarding/billing,
+  - consentements et preuves légales,
+  - distinction Starter/Pro/Premium,
+  - contraintes micro-entreprise / TVA configurable,
+  - tables cibles billing/legal/signature,
+  - plan d’implémentation en phases.
+
 ## Functional Readiness — Portfolio score 200 + parcours complet (2 mai 2026)
 
 **Commit** : à créer  

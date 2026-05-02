@@ -36,6 +36,8 @@
 - [x] Batch 6 — Rapport final
 - [x] Documentation /docs/ (7 fichiers)
 - [x] Telegram après chaque batch
+- [x] Architecture billing/contrats/signature/micro-entreprise documentée
+- [x] Landing 3D repair (rail central agressif atténué + profondeur restaurée)
 
 ## P0 — Bloquant plateforme complète
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
@@ -47,10 +49,12 @@
 - [x] P0 Vercel frontend — build failed corrigé dans l'historique ; déploiement production actuel `Ready` sur `1a749f1`.
 
 - [x] Déployer le backend VPS / PM2 avec le hotfix Portfolio schema hardening.
+- [ ] Valider le statut exact du deploy Render `srv-d7561hsr85hc73a9c6i0` avec logs dashboard (non accessibles depuis Codex), puis confirmer que l'instance active est alignée avec `main`.
 
 ## P1 — Important
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
+- [ ] Corriger la configuration DB de l'instance Render actuellement observable (`courtia.onrender.com`) qui retourne `getaddrinfo ENOTFOUND` sur register.
 - [ ] Billing / Onboarding Stripe :
   - onboarding cabinet avec SIRET / ORIAS
   - nom du cabinet, adresse de facturation, téléphone optionnel

@@ -1,5 +1,26 @@
 # COURTIA — Rapport QA
 
+## QA Mission unique — Render + Landing 3D + Architecture billing (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Git état de départ | ✅ OK | `git status --short` | Worktree clean au lancement |
+| Commit Render ciblé | ✅ OK | `git show f1ce9d1...` | Diff confirmé sur auth/errorHandler/login |
+| Backend syntax (Render scope) | ✅ OK | `node -c server.js`, `authController.js`, `errorHandler.js` | Aucun défaut syntaxe |
+| Root start simulation | ✅ Corrigé | `npm start` échouait avant patch racine | Scripts root ajoutés pour compatibilité Render |
+| Front build après fix Render | ✅ OK | `npm run build` | Succès |
+| Front tests après fix Render | ✅ OK | `npm run test` | 33/33 |
+| Landing 3D build | ✅ OK | `npm run build` | Succès |
+| Landing 3D tests | ✅ OK | `npm run test` | 33/33 |
+| Routes preview locales | ✅ OK | `vite preview` + curl | `/`, `/login`, `/register`, `/register?plan=pro` en 200 |
+| Render endpoint observable | ⚠️ Partiel | `https://courtia.onrender.com/api/health` | Health 200, mais logs Render non accessibles via Codex |
+| Register Render observable | ⚠️ Partiel | `POST /api/auth/register` | Retour 500 `ENOTFOUND` sur host DB côté instance Render actuelle |
+
+### Décision
+- Correctif code/deploy Render appliqué côté repo.
+- Validation finale du statut “Deploy Success” Render requiert le log dashboard du service `srv-d7561hsr85hc73a9c6i0` (non exposé à Codex).
+- Landing 3D réparée sans régression build/tests.
+
 ## QA Functional Readiness — Démo commerciale (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
