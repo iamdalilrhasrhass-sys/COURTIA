@@ -31,7 +31,8 @@ const Abonnement = lazy(() => import('./pages/Abonnement'))
 const Billing = lazy(() => import('./pages/Billing'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
-const Onboarding = lazy(() => import('./pages/Onboarding'))
+const Onboarding = lazy(() => import('./pages/BillingOnboarding'))
+const DataOnboarding = lazy(() => import('./pages/Onboarding'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
@@ -176,10 +177,11 @@ export default function App() {
         <Route path="/tarifs" element={<Tarifs />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
-        <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route path="/onboarding"    element={<Onboarding />} />
+          <Route path="/onboarding/import" element={<DataOnboarding />} />
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
@@ -201,6 +203,8 @@ export default function App() {
           <Route path="/analyses"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
           <Route path="/billing"       element={<Billing />} />
+          <Route path="/billing/success" element={<PaiementSucces />} />
+          <Route path="/billing/cancel" element={<PaiementAnnule />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
           <Route path="/reach"             element={<ReachDashboard />} />

@@ -479,7 +479,11 @@ export default function Login() {
       localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
       if (user) localStorage.setItem('user', JSON.stringify(user))
-      navigate('/dashboard')
+      if (isRegister) {
+        navigate(`/onboarding?plan=${planKey || 'starter'}`)
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       const data = err.response?.data || {}
       const status = err.response?.status

@@ -38,6 +38,10 @@
 - [x] Telegram après chaque batch
 - [x] Architecture billing/contrats/signature/micro-entreprise documentée
 - [x] Landing 3D repair (rail central agressif atténué + profondeur restaurée)
+- [x] Foundation Stripe test mode backend/frontend implémentée (onboarding, consentements, checkout session, webhook, status, portal)
+- [x] Brouillons légaux minimum créés (`docs/legal-drafts/*`)
+- [x] Migration SQL non destructive billing/legal créée (non appliquée prod auto)
+- [x] Script d’audit secrets + runbook rotation ajoutés
 
 ## P0 — Bloquant plateforme complète
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
@@ -55,22 +59,20 @@
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
-- [ ] Billing / Onboarding Stripe :
-  - onboarding cabinet avec SIRET / ORIAS
-  - nom du cabinet, adresse de facturation, téléphone optionnel
-  - Stripe Checkout subscription
-  - `trial_period_days: 7`
-  - affichage “0 € aujourd’hui puis 159 € HT/mois”
-  - consentement explicite avant checkout
-  - webhook Stripe pour activer/désactiver le plan
-  - portail client Stripe pour gérer / annuler
-  - bouton “Annuler mon essai” dans COURTIA
-  - email J0 confirmation essai
-  - email J5 rappel avant facturation
-  - email J7 confirmation démarrage abonnement ou annulation
-  - gestion paiement échoué
-  - statut abonnement dans Admin Center
-  - ne pas faire de faux paiement 0 EUR ni collecter la carte directement dans COURTIA
+- [ ] Stripe test mode — validation opérationnelle finale :
+  - créer les produits/prices test Stripe (Starter/Pro),
+  - configurer `STRIPE_*_TEST` et `BILLING_MODE=test` dans l’environnement backend,
+  - configurer endpoint webhook Stripe test + `whsec`,
+  - exécuter campagne de tests Stripe CLI/dashboard (checkout/session/webhooks/portal).
+- [ ] Rotation opérationnelle des secrets :
+  - révoquer/régénérer JWT secret prod,
+  - régénérer credentials DB si exposition historique confirmée,
+  - révoquer anciennes clés Render/Stripe éventuellement exposées,
+  - nettoyer les anciennes docs legacy contenant des exemples sensibles.
+- [ ] Légal/compliance avant encaissement live :
+  - validation juriste des CGV/Privacy/DPA/Cookies/Mentions légales,
+  - validation comptable du libellé fiscal (micro-entreprise / TVA),
+  - publication versionnée des docs légales finales.
 - [ ] Token super_admin → tests Admin Center E2E
 - [x] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
 - [x] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production
@@ -78,8 +80,7 @@
 - [x] AuroraPageHeader → Rapports, Paramètres
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres (batch final micro-interactions)
-- [ ] Rotation opérationnelle des secrets (JWT/DB/Render/Stripe) après validation sécurité
-- [ ] Stripe test mode + documents légaux (CGV, confidentialité, DPA, consentements essai) avant encaissement.
+- [x] Stripe test mode + documents légaux (draft) implémentés côté code/docs
 
 ## P2 — Finition
 - [ ] Résorber les 37 signaux P2 du rapport `COURTIA_CODEX_QA_AUDIT.md`
