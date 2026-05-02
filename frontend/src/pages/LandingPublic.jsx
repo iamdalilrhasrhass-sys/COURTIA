@@ -257,7 +257,7 @@ body { overscroll-behavior-y: none; }
   transition: transform 260ms ease, border-color 260ms ease, background 260ms ease, box-shadow 260ms ease;
 }
 .premium-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px) perspective(920px) rotateX(4deg) rotateY(-3deg);
   border-color: rgba(255,255,255,0.18);
   background: linear-gradient(145deg, rgba(255,255,255,0.092), rgba(255,255,255,0.034));
   box-shadow: 0 28px 80px rgba(0,0,0,0.34), 0 0 44px rgba(34,211,238,0.08);
@@ -282,8 +282,20 @@ body { overscroll-behavior-y: none; }
   opacity: 1;
 }
 .soft-rail {
-  background: linear-gradient(180deg, transparent, rgba(167,139,250,0.45), rgba(34,211,238,0.30), rgba(16,185,129,0.22), transparent);
-  filter: drop-shadow(0 0 22px rgba(34,211,238,0.30));
+  background: linear-gradient(180deg, transparent, rgba(168,85,247,0.16), rgba(34,211,238,0.13), rgba(16,185,129,0.09), transparent);
+  opacity: 0.28;
+  filter: blur(0.4px) drop-shadow(0 0 12px rgba(34,211,238,0.16));
+}
+.parallax-stage {
+  transform-style: preserve-3d;
+}
+.depth-panel {
+  transform: perspective(1100px) rotateX(3deg) rotateY(-2deg);
+  transition: transform 280ms ease, box-shadow 280ms ease;
+}
+.depth-panel:hover {
+  transform: perspective(1100px) rotateX(6deg) rotateY(-4deg) translateY(-4px);
+  box-shadow: 0 34px 96px rgba(0,0,0,0.38), 0 0 48px rgba(34,211,238,0.09);
 }
 @media (max-width: 640px) {
   .landing-act { min-height: auto; padding: 5.6rem 1rem; }
@@ -587,6 +599,9 @@ export default function LandingPublic() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { scrollYProgress } = useScroll()
   const railY = useTransform(scrollYProgress, [0, 1], ['-6%', '18%'])
+  const heroLift = useTransform(scrollYProgress, [0, 0.35], [0, -36])
+  const heroTiltX = useTransform(scrollYProgress, [0, 0.35], [0, -4])
+  const heroTiltY = useTransform(scrollYProgress, [0, 0.35], [0, 3])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -608,7 +623,7 @@ export default function LandingPublic() {
       <div className="canonical-watermark" aria-hidden="true">
         <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
       </div>
-      <motion.div className="fixed left-0 top-0 z-[80] h-[2px] w-full origin-left bg-gradient-to-r from-fuchsia-300 via-cyan-200 to-emerald-200 shadow-[0_0_26px_rgba(34,211,238,0.5)]" style={{ scaleX: scrollYProgress }} />
+      <motion.div className="fixed left-0 top-0 z-[80] h-px w-full origin-left bg-gradient-to-r from-fuchsia-300/55 via-cyan-200/50 to-emerald-200/45 shadow-[0_0_12px_rgba(34,211,238,0.24)]" style={{ scaleX: scrollYProgress }} />
 
       <nav className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${scrolled ? 'border-b border-white/[0.06] bg-[#02040c]/86 shadow-xl shadow-black/20 backdrop-blur-2xl' : 'bg-transparent'}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
@@ -649,7 +664,7 @@ export default function LandingPublic() {
       </AnimatePresence>
 
       <main className="stream-shell">
-        <motion.div className="soft-rail pointer-events-none absolute left-1/2 top-[92vh] z-0 hidden h-[210vh] w-px -translate-x-1/2 lg:block" style={{ y: railY }} />
+        <motion.div className="soft-rail pointer-events-none absolute left-[67%] top-[98vh] z-0 hidden h-[165vh] w-[2px] -translate-x-1/2 xl:block" style={{ y: railY }} />
 
         <section id="story" className="landing-section landing-act pt-24 lg:pt-28">
           <div className="aurora-mesh absolute inset-0 opacity-95" />
@@ -686,7 +701,13 @@ export default function LandingPublic() {
                 ))}
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.65, delay: 0.12 }} className="liquid-stage min-w-0 rounded-[2rem] p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.65, delay: 0.12 }}
+              style={{ y: heroLift, rotateX: heroTiltX, rotateY: heroTiltY }}
+              className="liquid-stage parallax-stage depth-panel min-w-0 rounded-[2rem] p-4 sm:p-6"
+            >
               <div className="relative z-10 min-h-[470px] overflow-hidden rounded-[1.5rem] border border-white/[0.07] bg-black/20">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.20),transparent_24rem)]" />
                 <HeroLogoSystem />
@@ -744,7 +765,7 @@ export default function LandingPublic() {
                 </div>
               </div>
               <div className="space-y-5">
-                <div className="liquid-stage rounded-[2rem] p-5">
+                <div className="liquid-stage depth-panel rounded-[2rem] p-5">
                   <div className="relative z-10">
                     <div className="flex items-center gap-3">
                       <CourtiaBubbleLogo size={56} animated={false} showHalo={false} showFoam={false} />
@@ -810,7 +831,7 @@ export default function LandingPublic() {
                   ['Avant COURTIA', 'Informations dispersées, relances dans la tête, échéances suivies à la main, opportunités perdues.'],
                   ['Après COURTIA', 'Cockpit centralisé, priorités claires, signaux ARK, relances organisées, portefeuille vivant.'],
                 ].map(([title, desc]) => (
-                  <div key={title} className="liquid-stage rounded-3xl p-5">
+                  <div key={title} className="liquid-stage depth-panel rounded-3xl p-5">
                     <div className="relative z-10">
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-white/44">{title}</p>
                       <p className="mt-4 text-sm font-semibold leading-relaxed text-white/66">{desc}</p>
@@ -835,7 +856,7 @@ export default function LandingPublic() {
             </div>
 
             <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="liquid-stage rounded-[2rem] p-6">
+              <div className="liquid-stage depth-panel rounded-[2rem] p-6">
                 <div className="relative z-10">
                   <CourtiaBubbleLogo size={96} animated showHalo showFoam={false} className="mb-2" />
                   <h2 className="aurora-text text-3xl font-black leading-tight sm:text-5xl">Un courtier n’a pas besoin d’un CRM généraliste. Il a besoin d’un cockpit métier.</h2>
