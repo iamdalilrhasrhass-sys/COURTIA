@@ -1,5 +1,22 @@
 # COURTIA — Rapport QA
 
+## QA P0 — Vercel Deployment Failed (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Historique Vercel `ERROR` | ✅ Cause trouvée | `vercel api /v6/deployments?...state=ERROR` | Fail sur commit `7294a43` |
+| Log build failed | ✅ Cause exacte | `vercel inspect ... --logs` | Import non résolu `AuroraTransition` depuis `LandingPublic.jsx` |
+| Rebuild local strict | ✅ OK | `npm ci && npm run build` | Build frontend reproduit en succès |
+| Tests frontend | ✅ OK | `npm run test` | 33 tests passés |
+| Déploiement production actuel | ✅ Ready | `dpl_46a3j754h6h6HWzXUJLKFigea93T` | Commit `1a749f1` en production |
+| Routes frontend critiques | ✅ OK | `curl -I` | `/`, `/login`, `/register?plan=pro`, `/dashboard` -> 200 |
+| API login de contrôle | ✅ OK | `POST /api/auth/login`, `GET /api/auth/me` | 200/200 |
+
+### Décision
+- P0 Vercel frontend : résolu.
+- Aucun changement code produit nécessaire dans ce batch (diagnostic + preuve).
+- P0 restant global hors Vercel : backend VPS/PM2 portefeuille à redéployer.
+
 ## QA Hotfix portfolio schema — Pré-commercialisation (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

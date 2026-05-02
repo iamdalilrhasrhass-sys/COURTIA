@@ -26,6 +26,7 @@
 - [x] Landing Aurora — refonte en 3 actes continus autour de la Bubble C officielle
 - [x] Hotfix code — Morning Brief portfolio compatible avec schéma DB sans `generated_at`
 - [x] Hotfix code — Portfolio schema hardening pour `generated_at` / `health_score` absents et fallback Morning Brief local
+- [x] P0 Vercel — Deployment Failed diagnostiqué (import AuroraTransition manquant sur ancien commit) et production revenue en `Ready`
 - [x] Batch 0 — Vérification état de départ
 - [x] Batch 1 — Erreurs techniques supprimées (37 remplacements)
 - [x] Batch 2 — Admin Center frontend (7 pages + 3 composants)
@@ -42,6 +43,8 @@
 - [x] Admin Center API mismatch — frontend aligné sur `/api/admin/super/*`, écran broker refusé propre, suppression de `/app/dashboard`.
 
 - [x] Session frontend trop agressive sur tous les `401` — politique de session centralisée ajoutée.
+
+- [x] P0 Vercel frontend — build failed corrigé dans l'historique ; déploiement production actuel `Ready` sur `1a749f1`.
 
 - [ ] Déployer le backend VPS / PM2 avec le hotfix Portfolio schema hardening.
 
