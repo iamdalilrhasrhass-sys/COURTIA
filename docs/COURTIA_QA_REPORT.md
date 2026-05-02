@@ -1,5 +1,24 @@
 # COURTIA — Rapport QA
 
+## QA Pré-live légal / TVA / branding (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | 1878 modules, build vert |
+| Tests frontend | ✅ OK | `npm run test` | 33/33 |
+| Syntax backend billing | ✅ OK | `node -c server.js` + routes/services billing | Aucun défaut syntaxe |
+| API prod health | ✅ OK | `curl -i https://api.courtiark.fr/api/health` | HTTP 200 |
+| Front prod health | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
+| QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 36 P2 |
+| Secret audit | ⚠️ P1 legacy docs | `python3 scripts/courtia_secret_audit.py` | P0=0, P1=52, P2=3 |
+| Wording fiscal visible | ✅ OK | Revue landing/auth/billing | HT + TTC + mention TVA en vigueur |
+| Mention R’ASSUREZ VOUS en légal | ✅ Absente | `rg` docs/legal-drafts | Non détectée dans CGV/mentions COURTIA |
+| Mention `TVA non applicable art. 293 B` active | ✅ Supprimée | `rg` docs/frontend | Non détectée dans wording actif |
+
+### Décision
+- Version pré-live cohérente livrée (juridique/fiscal/branding).
+- Validation juriste + comptable reste obligatoire avant publication contractuelle finale et avant Stripe live.
+
 ## QA Stripe Test Mode + Légal (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

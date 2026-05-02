@@ -5,6 +5,7 @@ import axios from 'axios'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
+import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -451,7 +452,9 @@ export default function Login() {
   const selectedPlan = params.get('plan')
   const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
   const planName = planKey === 'pro' ? 'Pro' : 'Starter'
-  const planPrice = planKey === 'pro' ? '159 € / mois' : '89 € / mois'
+  const planPrice = planKey === 'pro'
+    ? '159 € HT / mois (190,80 € TTC avec TVA 20 %)'
+    : '89 € HT / mois (106,80 € TTC avec TVA 20 %)'
   const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
   const planSubtitle = planKey === 'pro'
     ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
@@ -648,7 +651,7 @@ export default function Login() {
                   </div>
                 </div>
                 <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
-                  Carte demandée à l’étape sécurisée. 0 € aujourd’hui, puis {planPrice} après 7 jours. Annulation en ligne. Affichage fiscal selon votre configuration.
+                  Carte demandée à l’étape sécurisée Stripe. 0 € aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement à {planPrice}. Annulation en ligne via le portail sécurisé.
                 </p>
               </div>
             )}
@@ -804,6 +807,9 @@ export default function Login() {
             </div>
             </div>
           </div>
+        </div>
+        <div style={{ position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)', zIndex: 3 }}>
+          <RhasrhassSignature compact />
         </div>
       </div>
     </>

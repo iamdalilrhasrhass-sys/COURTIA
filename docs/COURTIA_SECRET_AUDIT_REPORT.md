@@ -153,9 +153,9 @@ Date: 2026-05-02
   - Action: Vérifier l'usage et révoquer les anciennes valeurs.
 
 ### `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md`
-- [P1] Stripe Test Key ligne 10 — `sk_t***xxx`
+- [P1] Stripe Test Key ligne 21 — `sk_t***xxx`
   - Action: Régénérer si exposée hors canal sécurisé.
-- [P1] Stripe Webhook Secret ligne 11 — `wh***`
+- [P1] Stripe Webhook Secret ligne 22 — `wh***`
   - Action: Créer un nouveau webhook secret et invalider l'ancien.
 
 ### `docs/SETUP.md`

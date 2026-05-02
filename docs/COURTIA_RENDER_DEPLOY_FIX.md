@@ -20,6 +20,7 @@ Conséquence technique :
 - Aucun paiement Render effectué.
 - Aucune recréation de DB Render.
 - Aucune migration prod vers Render.
+- Aucune dépendance runtime prod à `courtia.onrender.com`.
 
 Backend production officiel :
 - `https://api.courtiark.fr`

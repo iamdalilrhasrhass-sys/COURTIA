@@ -1,8 +1,8 @@
 # COURTIA — Audit QA Python
 
-- Date : 2026-05-02 10:58:07
+- Date : 2026-05-02 11:38:24
 - Statut : OK
-- Fichiers scannés : 165
+- Fichiers scannés : 166
 
 ## Synthèse
 
@@ -72,7 +72,7 @@
 | P2 | Message technique | `frontend/src/components/PaywallModal.jsx` | 33 | Motif technique détecté : `error\.message` |
 | P2 | Loader générique | `frontend/src/components/PremiumButton.jsx` | 51 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/components/Settings.jsx` | 121 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
-| P2 | Loader générique | `frontend/src/components/Sidebar.jsx` | 93 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
+| P2 | Loader générique | `frontend/src/components/Sidebar.jsx` | 94 | Motif loader générique : `['\"]Chargement\.\.\.['\"]` |
 | P2 | Loader générique | `frontend/src/components/Taches.jsx` | 121 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/Academy.jsx` | 125 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/AdminCostsDashboard.jsx` | 49 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
