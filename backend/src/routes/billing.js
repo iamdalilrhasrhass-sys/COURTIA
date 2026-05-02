@@ -657,14 +657,18 @@ router.post('/webhook', async (req, res) => {
       const metadata = session.metadata || {};
       const userId = Number(metadata.user_id || 0) || null;
       const planCode = metadata.plan_code || metadata.plan || null;
-      const emailTo = (await pool.query('SELECT email, first_name FROM users WHERE id=$1', [userId])).rows[0];
-      if (emailTo && planCode) {
-        await emailService.sendBillingEmail('trial_activated_j0', {
-          to: emailTo.email,
-          firstName: emailTo.first_name || '',
-          planName: cleanPlanLabel(planCode),
-          trialDays: billingService.TRIAL_DAYS,
-        });
+      try {
+        const emailTo = (await pool.query('SELECT email, first_name FROM users WHERE id=$1', [userId])).rows[0];
+        if (emailTo && planCode) {
+          await emailService.sendBillingEmail('trial_activated_j0', {
+            to: emailTo.email,
+            firstName: emailTo.first_name || '',
+            planName: cleanPlanLabel(planCode),
+            trialDays: billingService.TRIAL_DAYS,
+          });
+        }
+      } catch (_emailErr) {
+        // non bloquant — l'event est déjà persisté
       }
     }
 
