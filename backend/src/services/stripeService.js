@@ -53,10 +53,20 @@ function getStripeClient() {
 }
 
 async function createOrReuseCustomer({ existingCustomerId, email, name, metadata = {} }) {
-  if (existingCustomerId) {
-    return existingCustomerId;
-  }
   const stripe = getStripeClient();
+  if (existingCustomerId) {
+    try {
+      const existing = await stripe.customers.retrieve(existingCustomerId);
+      if (!existing?.deleted) {
+        return existingCustomerId;
+      }
+    } catch (err) {
+      const isMissingCustomer = err?.code === 'resource_missing' || err?.statusCode === 404;
+      if (!isMissingCustomer) {
+        throw err;
+      }
+    }
+  }
   const customer = await stripe.customers.create({
     email,
     name: name || undefined,
