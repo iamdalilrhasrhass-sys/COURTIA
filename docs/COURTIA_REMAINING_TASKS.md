@@ -42,6 +42,13 @@
 - [x] Brouillons légaux minimum créés (`docs/legal-drafts/*`)
 - [x] Migration SQL non destructive billing/legal créée (non appliquée prod auto)
 - [x] Script d’audit secrets + runbook rotation ajoutés
+- [x] Revue officielle pré-live (Service-Public / impots.gouv / CNIL) documentée
+- [x] Documents légaux pré-live COURTIA créés (`*_PRELIVE.md`)
+- [x] Wording pricing HT/TTC harmonisé sur landing/auth/billing
+- [x] Signature premium discrète `COURTIA — une création RHASRHASS™` intégrée sur surfaces clés
+- [x] Signature RHASRHASS™ harmonisée globalement via layouts privés/admin + surfaces publiques clés
+- [x] Register Starter/Pro: champ confirmation mot de passe + validation frontend
+- [x] Import portefeuille V1: fondation API `/api/imports` + UI `/import` + stratégie documentée
 
 ## P0 — Bloquant plateforme complète
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
@@ -60,6 +67,8 @@
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
 - [ ] Stripe test mode — validation opérationnelle finale :
+  - configurer les variables `_TEST` côté VPS (`STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE=test`, portal return URL),
+  - redéployer backend VPS/PM2 avec les guards test-only activés,
   - rejouer les webhooks signés via Stripe CLI/dashboard (idempotence réelle),
   - valider le scénario `invoice.payment_failed` en test contrôlé,
   - valider le rappel fin d’essai J5/J7 (orchestration email/job).
@@ -68,10 +77,10 @@
   - régénérer credentials DB si exposition historique confirmée,
   - révoquer anciennes clés Render/Stripe éventuellement exposées,
   - nettoyer les anciennes docs legacy contenant des exemples sensibles.
-- [ ] Légal/compliance avant encaissement live :
-  - validation juriste des CGV/Privacy/DPA/Cookies/Mentions légales,
-  - validation comptable du libellé fiscal (micro-entreprise / TVA),
-  - publication versionnée des docs légales finales.
+- [ ] Validation pré-live avant encaissement live :
+  - validation juriste des versions `*_PRELIVE.md` (CGV/Privacy/DPA/Cookies/Mentions légales),
+  - validation comptable finale du paramétrage TVA/HT/TTC Stripe,
+  - publication des versions légales finales signées.
 - [ ] Token super_admin → tests Admin Center E2E
 - [x] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
 - [x] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production

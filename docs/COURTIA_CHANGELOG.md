@@ -1,5 +1,95 @@
 # COURTIA — Changelog Mission 2M
 
+## Finalisation Stripe / Branding / Import V1 (2 mai 2026)
+
+### Branding RHASRHASS™ global
+- Signature unifiée via layout privé + layout admin:
+  - `frontend/src/App.jsx`
+  - `frontend/src/components/AdminLayout.jsx`
+- Signature explicite conservée sur surfaces publiques:
+  - `frontend/src/pages/LandingPublic.jsx`
+  - `frontend/src/pages/LoginPage.jsx` (`/login`, `/register`, `/register?plan=pro`)
+- Suppression des anciens footers texte `Rhasrhass®` sur pages legacy.
+
+### Register Starter/Pro — confirmation mot de passe
+- Ajout du champ `Confirmer le mot de passe` sur les funnels register (Starter et Pro).
+- Validation frontend:
+  - blocage si confirmation vide,
+  - blocage si mismatch (`Les mots de passe ne correspondent pas.`).
+- `confirmPassword` non envoyé au backend.
+- Login inchangé.
+
+### Pricing HT/TTC et wording fiscal
+- Harmonisation HT/TTC confirmée sur landing, auth et billing.
+- Mise à jour du setup Stripe test:
+  - `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md` (Starter/Pro avec référence TTC claire).
+
+### Stripe test safety hardening
+- Sécurisation clé Stripe:
+  - en `BILLING_MODE=test`, le backend n’accepte plus de fallback implicite sur les variables live.
+  - fichiers:
+    - `backend/src/services/stripeService.js`
+    - `backend/src/services/planService.js`
+- Fallback légal:
+  - `legal-acceptance` supporte désormais `accept_*` et `accepted_*`.
+  - fichier: `backend/src/services/legalAcceptanceService.js`
+
+### Import portefeuille V1
+- Migration non destructive:
+  - `backend/migrations/20260502_import_jobs.sql`
+- Nouveaux services:
+  - `backend/src/services/importMappingService.js`
+  - `backend/src/services/importValidationService.js`
+  - `backend/src/services/importService.js`
+- Nouvelle route API:
+  - `backend/src/routes/imports.js`
+  - montée via `backend/server.js` sur `/api/imports`
+- Nouvelle UI:
+  - `frontend/src/pages/ImportPortfolio.jsx`
+  - route privée `/import`
+  - bouton d’accès ajouté dans `Paramètres`.
+- Documentation:
+  - `docs/COURTIA_PORTFOLIO_IMPORT_STRATEGY.md`
+
+### Validation technique locale
+- Build frontend: ✅
+- Tests frontend: ✅ (33/33)
+- Syntax backend (billing/stripe/import): ✅
+- QA Python: ✅ 0 P0/P1 (37 P2)
+- Secret audit: ✅ P0=0
+
+## Pré-live légal / TVA / branding RHASRHASS™ (2 mai 2026)
+
+### Légal / conformité documentaire
+- Ajout de la revue officielle des sources:
+  - `docs/COURTIA_LEGAL_SOURCES_REVIEW.md`
+  - Service-Public (CGV, facturation, mentions EI), impots.gouv (TVA intracom), CNIL (responsable/sous-traitant et clauses DPA).
+- Création des versions pré-live:
+  - `docs/legal-drafts/COURTIA_MENTIONS_LEGALES_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_PRIVACY_POLICY_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_DPA_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_COOKIES_POLICY_PRELIVE.md`
+
+### Fiscalité / pricing
+- Passage explicite en mode TVA applicable dans les documents pré-live.
+- Harmonisation des wording visibles:
+  - Starter: `89 € HT / mois` + `106,80 € TTC` (TVA 20 %),
+  - Pro: `159 € HT / mois` + `190,80 € TTC` (TVA 20 %),
+  - mention globale: `Prix indiqués hors taxes. TVA applicable au taux en vigueur.`
+- Suppression des anciennes hypothèses actives `TVA non applicable, art. 293 B`.
+
+### Branding RHASRHASS™
+- Nouveau composant:
+  - `frontend/src/components/brand/RhasrhassSignature.jsx`
+- Intégration discrète sur surfaces clés:
+  - landing, auth funnel, billing/onboarding, paramètres.
+- Mise à jour design system:
+  - `docs/COURTIA_AURORA_DESIGN_SYSTEM.md` (règle d’usage footer discrète).
+
+### Infra
+- `docs/COURTIA_RENDER_DEPLOY_FIX.md` précisé: Render reste non-prod/secondaire et non requis pour l’exécution officielle.
+
 ## Stripe Test Mode + Légal + Secrets (2 mai 2026)
 
 ### Sécurité / secrets

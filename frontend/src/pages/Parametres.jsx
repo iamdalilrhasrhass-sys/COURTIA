@@ -117,6 +117,15 @@ export default function Parametres() {
           badge="Espace cabinet"
           dark
         />
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => navigate('/import')}
+            className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10"
+          >
+            Importer un portefeuille
+          </button>
+        </div>
 
         <div className="flex flex-col md:flex-row gap-12">
           <aside className="md:w-1/4">
@@ -212,7 +221,6 @@ export default function Parametres() {
             </section>
           </div>
         </div>
-        <footer className="text-center py-8"><p className="text-xs text-gray-300">Rhasrhass®</p></footer>
       </main>
     </div>
   )

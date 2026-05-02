@@ -6,9 +6,9 @@ Date : 2 mai 2026
 Finaliser la landing en expérience Aurora premium continue, orientée conversion courtier, sans casser la performance ni le parcours auth.
 
 ## Ajustements livrés
-- Wording pricing harmonisé en `/ mois` (sans figer `HT`) pour rester compatible micro-entreprise / TVA configurable.
+- Wording pricing harmonisé en `HT / mois` avec mention `TTC` visible (TVA applicable).
 - Mentions essai renforcées : `0 € aujourd’hui`, `7 jours`, `annulation en ligne`.
-- Mention explicite de fiscalité configurable ajoutée dans la section tarifs.
+- Mention globale ajoutée : `Prix indiqués hors taxes. TVA applicable au taux en vigueur.`
 - Conserver le flux 3 actes + profondeur (parallax, perspective, cartes hover, Aurora rails subtils).
 
 ## Contrôles
@@ -21,4 +21,3 @@ Finaliser la landing en expérience Aurora premium continue, orientée conversio
 - Pas de changement Stripe.
 - Pas de changement backend.
 - Pas de dépendance lourde ajoutée.
-

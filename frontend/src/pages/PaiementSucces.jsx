@@ -6,7 +6,7 @@ import api from '../api'
 
 export default function PaiementSucces() {
   const navigate = useNavigate()
-  const [message, setMessage] = useState("Votre abonnement est en cours d'activation.")
+  const [message, setMessage] = useState("Votre essai est en cours d’activation.")
   
   useEffect(() => {
     api.get('/billing/status')
@@ -28,6 +28,9 @@ export default function PaiementSucces() {
         </h1>
         <p style={{fontSize:16,color:'rgba(0,0,0,0.6)',marginBottom:24,fontFamily:'Arial,sans-serif',lineHeight:1.6}}>
           {message}
+        </p>
+        <p style={{fontSize:13,color:'rgba(0,0,0,0.56)',marginBottom:20,fontFamily:'Arial,sans-serif',lineHeight:1.5}}>
+          0 € aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement. Annulation en ligne via le portail sécurisé.
         </p>
         <button onClick={() => navigate('/dashboard')} style={{
           padding:'12px 32px',background:'#2563eb',color:'white',border:'none',borderRadius:10,

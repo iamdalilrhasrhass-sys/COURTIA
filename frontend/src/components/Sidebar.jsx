@@ -325,9 +325,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <p style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.15)', margin: '6px 0 10px', letterSpacing: '0.08em' }}>
-        Rhasrhass®
-      </p>
     </aside>
   )
 
