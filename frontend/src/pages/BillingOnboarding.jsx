@@ -9,11 +9,11 @@ const BILLING_TEST_UI_ENABLED = import.meta.env.VITE_BILLING_TEST_MODE !== 'fals
 const PLAN_COPY = {
   starter: {
     title: 'Starter',
-    banner: '0 € aujourd’hui, puis 89 € / mois après le 7e jour.',
+    banner: '0 € aujourd’hui, puis 89 € HT / mois après le 7e jour (106,80 € TTC avec TVA 20 %).',
   },
   pro: {
     title: 'Pro',
-    banner: '0 € aujourd’hui, puis 159 € / mois après le 7e jour.',
+    banner: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour (190,80 € TTC avec TVA 20 %).',
   },
   premium: {
     title: 'Premium',
@@ -206,7 +206,7 @@ export default function BillingOnboarding() {
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: 12, marginTop: 2 }}>
-          Informations fiscales à confirmer avec comptable avant passage en production commerciale live.
+          Prix indiqués hors taxes. TVA applicable au taux en vigueur.
         </p>
       </div>
     </div>

@@ -15,6 +15,9 @@ export default function PaiementAnnule() {
         <p style={{fontSize:16,color:'rgba(0,0,0,0.6)',marginBottom:24,fontFamily:'Arial,sans-serif',lineHeight:1.6}}>
           Votre paiement n'a pas été finalisé. Aucun montant n'a été débité.
         </p>
+        <p style={{fontSize:13,color:'rgba(0,0,0,0.56)',marginBottom:18,fontFamily:'Arial,sans-serif',lineHeight:1.5}}>
+          Vous pouvez reprendre l’activation de votre essai quand vous le souhaitez depuis le billing.
+        </p>
         <button onClick={() => navigate('/billing')} style={{
           padding:'12px 32px',background:'#2563eb',color:'white',border:'none',borderRadius:10,
           fontSize:15,fontWeight:600,cursor:'pointer',fontFamily:'Arial,sans-serif'

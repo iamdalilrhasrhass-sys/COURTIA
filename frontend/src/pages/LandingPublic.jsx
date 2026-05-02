@@ -33,6 +33,7 @@ import {
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import AuroraButton from '../components/brand/AuroraButton'
+import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 const styles = `
 html { scroll-behavior: smooth; }
@@ -369,11 +370,11 @@ const features = [
 const pricing = [
   {
     name: 'Starter',
-    price: '89 €',
+    price: '89 € HT',
     period: '/ mois',
     label: 'Entrée structurée',
     headline: 'Pour arrêter le bricolage sans lancer un gros chantier.',
-    note: '0 € aujourd’hui, puis 89 € / mois après le 7e jour.',
+    note: '0 € aujourd’hui, puis 89 € HT / mois après le 7e jour. Soit 106,80 € TTC / mois avec TVA 20 %.',
     href: '/register?plan=starter',
     cta: 'Activer mon essai Starter',
     featured: false,
@@ -381,11 +382,11 @@ const pricing = [
   },
   {
     name: 'Pro',
-    price: '159 €',
+    price: '159 € HT',
     period: '/ mois',
     label: 'Recommandé',
     headline: 'L’offre logique pour piloter un portefeuille sérieusement.',
-    note: '0 € aujourd’hui, puis 159 € / mois après le 7e jour. Annulation possible en ligne avant la fin de l’essai.',
+    note: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour. Soit 190,80 € TTC / mois avec TVA 20 %. Annulation possible en ligne avant la fin de l’essai.',
     href: '/register?plan=pro',
     cta: 'Activer mon essai Pro',
     featured: true,
@@ -422,7 +423,7 @@ const faq = [
   ['Puis-je commencer seul ?', 'Oui. Starter structure un usage solo. Pro est recommandé pour exploiter ARK et piloter plus finement.'],
   ['COURTIA convient-il à une équipe ?', 'Oui. Premium est prévu pour les cabinets structurés et les besoins avancés.'],
   ['Puis-je importer mes clients ?', 'L’import fait partie du périmètre produit. Les modalités dépendent du format et de l’organisation actuelle.'],
-  ['La carte bancaire est-elle débitée au départ ?', 'La stratégie cible est claire : 0 € aujourd’hui, essai 7 jours, puis facturation si l’essai n’est pas annulé. Stripe reste une phase dédiée.'],
+  ['La carte bancaire est-elle débitée au départ ?', '0 € est facturé aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement. Annulation en ligne via le portail sécurisé.'],
 ]
 
 function SectionIntro({ label, title, children, align = 'center' }) {
@@ -823,10 +824,10 @@ export default function LandingPublic() {
                 <p className="scene-kicker">Acte 3 · décision</p>
                 <h2 className="scene-title mt-5 text-white">Le prix devient logique quand le courtier voit ce qu’il arrête de perdre.</h2>
                 <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/60">
-                  Starter structure. Pro pilote. Premium accompagne les cabinets. La carte bancaire sera gérée uniquement via Stripe Checkout dans la phase Billing dédiée.
+                  Starter structure. Pro pilote. Premium accompagne les cabinets. La carte bancaire est gérée uniquement via Stripe Checkout sécurisé.
                 </p>
                 <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/42">
-                  Affichage fiscal selon votre configuration de facturation (micro-entreprise, TVA, mentions légales).
+                  Prix indiqués hors taxes. TVA applicable au taux en vigueur.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -916,12 +917,18 @@ export default function LandingPublic() {
 
       <footer className="border-t border-white/[0.06] bg-[#02040c] px-5 py-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 text-sm text-white/45 md:flex-row md:items-center md:justify-between">
-          <CourtiaMiniLogo size={34} />
+          <div className="flex flex-col gap-3">
+            <CourtiaMiniLogo size={34} />
+            <p className="text-xs text-white/45">
+              Prix indiqués hors taxes. TVA applicable au taux en vigueur.
+            </p>
+          </div>
           <div className="flex flex-wrap gap-4">
             <button type="button" onClick={() => scrollTo('pricing')} className="hover:text-white">Tarifs</button>
             <Link to="/login" className="hover:text-white">Connexion</Link>
             <a href="mailto:contact@courtia.fr" className="hover:text-white">Contact</a>
           </div>
+          <RhasrhassSignature compact />
         </div>
       </footer>
     </div>

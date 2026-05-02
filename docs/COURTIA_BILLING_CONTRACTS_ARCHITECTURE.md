@@ -21,14 +21,14 @@ Scope : architecture produit + technique + conformité (sans activation Stripe L
 15. Supervision Admin Center billing/legal.
 
 ## B) Différence par offre
-### Starter — 89 €
+### Starter — 89 € HT
 - Essai 7 jours.
 - Carte obligatoire via Stripe Checkout.
 - CGV/consentements obligatoires.
 - Acceptation contractuelle horodatée.
 - Accès fonctionnel limité.
 
-### Pro — 159 €
+### Pro — 159 € HT
 - Essai 7 jours.
 - Carte obligatoire via Stripe Checkout.
 - CGV/consentements obligatoires.
@@ -74,12 +74,12 @@ Texte générique :
 > J’accepte l’essai gratuit de 7 jours. Je comprends que 0 € est facturé aujourd’hui et que, sans annulation avant la fin de l’essai, mon abonnement sera automatiquement facturé selon l’offre choisie.
 
 Starter :
-> 0 € aujourd’hui, puis 89 € / mois après le 7e jour.
+> 0 € aujourd’hui, puis 89 € HT / mois après le 7e jour (106,80 € TTC avec TVA 20 %).
 
 Pro :
-> 0 € aujourd’hui, puis 159 € / mois après le 7e jour.
+> 0 € aujourd’hui, puis 159 € HT / mois après le 7e jour (190,80 € TTC avec TVA 20 %).
 
-Note fiscale : le suffixe HT/TVA doit être piloté par configuration.
+Note fiscale : stratégie pré-live COURTIA = affichage HT + mention TTC visible.
 
 ## E) Documents contractuels nécessaires
 1. CGV SaaS B2B
@@ -203,7 +203,7 @@ Webhooks minimum :
 - Historique événements billing
 
 ## K) Risques légaux / conformité
-- Fiscalité micro-entreprise à confirmer (TVA/franchise en base).
+- Fiscalité pré-live retenue: TVA applicable (à valider une dernière fois côté comptable avant live).
 - Textes contractuels finaux à valider par juriste/avocat.
 - Cadrage RGPD strict (données clients de courtiers).
 - Conservation des preuves de consentement.
@@ -226,10 +226,14 @@ Configurer côté app et templates :
 - `vat_label`
 - `legal_seller_status`
 
-Exemples d’affichage selon configuration :
-- `89 € / mois`
-- `89 € HT / mois`
-- `TVA non applicable, art. 293 B du CGI`
+Configuration pré-live COURTIA retenue (2 mai 2026) :
+- `vat_applicable=true`
+- prix affichés en `HT` avec mention `TTC` lisible
+- mention globale recommandée : `Prix indiqués hors taxes. TVA applicable au taux en vigueur.`
+
+Exemples d’affichage retenus :
+- `89 € HT / mois — soit 106,80 € TTC avec TVA 20 %`
+- `159 € HT / mois — soit 190,80 € TTC avec TVA 20 %`
 
 ## État de scaffolding déjà présent (audit Phase 4)
 - Routes existantes :
