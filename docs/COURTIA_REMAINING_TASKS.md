@@ -46,7 +46,7 @@
 
 - [x] P0 Vercel frontend — build failed corrigé dans l'historique ; déploiement production actuel `Ready` sur `1a749f1`.
 
-- [ ] Déployer le backend VPS / PM2 avec le hotfix Portfolio schema hardening.
+- [x] Déployer le backend VPS / PM2 avec le hotfix Portfolio schema hardening.
 
 ## P1 — Important
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
@@ -69,6 +69,7 @@
   - ne pas faire de faux paiement 0 EUR ni collecter la carte directement dans COURTIA
 - [ ] Token super_admin → tests Admin Center E2E
 - [ ] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
+- [ ] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production (job/snapshot portefeuille à initialiser)
 - [ ] AuroraPageHeader → Rapports, Paramètres
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres

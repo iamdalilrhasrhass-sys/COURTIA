@@ -1,5 +1,32 @@
 # COURTIA — Changelog Mission 2M
 
+## P0 Backend VPS / PM2 — Redeploy portfolio hotfix (2 mai 2026)
+
+**Commit docs** : à créer  
+**Message attendu** : docs: document backend VPS redeploy and portfolio API validation
+
+### Changements
+- SSH VPS validé avec clé dédiée.
+- Clone VPS de référence réaligné sur `origin/main` (`bc09e93`, incluant `1a749f1` hotfix portfolio schema hardening).
+- Backend runtime PM2 synchronisé vers `/srv/courtia/backend` (sans écraser `.env`).
+- Dépendances backend vérifiées et process `courtia-api` redémarré via PM2.
+
+### Vérifications
+- `node -c` OK sur :
+  - `server.js`
+  - `src/routes/portfolio.js`
+  - `src/routes/adminSuperAdmin.js`
+  - `src/services/portfolioAnalyzer.js`
+  - `src/utils/portfolioSchema.js`
+- API locale VPS :
+  - `/api/health` -> 200
+  - `/api/portfolio/morning-brief` -> 200
+  - `/api/portfolio/health-score` -> 503 fallback propre (plus de 500)
+- API publique :
+  - `/api/health` -> 200
+  - `/api/portfolio/morning-brief` -> 200
+  - `/api/portfolio/health-score` -> 503 fallback propre
+
 ## P0 Vercel — Deployment Failed diagnostiqué et résolu (2 mai 2026)
 
 **Commit docs** : à créer
