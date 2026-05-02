@@ -11,6 +11,13 @@
 | Front prod health | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
 | QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 36 P2 |
 | Secret audit | ⚠️ Action requise | `python3 scripts/courtia_secret_audit.py` | P0 levé, P1 legacy docs encore présents |
+| Billing plans API public | ✅ OK | `GET /api/billing/plans` | HTTP 200 après redeploy VPS |
+| Billing onboarding/consent | ✅ OK | `POST /api/billing/onboarding`, `POST /api/billing/legal-acceptance` | HTTP 200 en auth demo |
+| Billing checkout Pro | ✅ OK | `POST /api/billing/create-checkout-session` | HTTP 200 + URL checkout |
+| Billing checkout Premium | ✅ OK | `POST /api/billing/create-checkout-session` | HTTP 409 `premium_contact_required` |
+| Billing portal | ✅ OK | `POST /api/billing/create-portal-session` | HTTP 200 + URL portal |
+| Stripe webhook sans signature | ✅ OK | `POST /api/stripe/webhook` | HTTP 400 `missing_signature` |
+| Admin billing non autorisé | ✅ OK | `/api/admin/super/billing` | 401 sans auth, 403 broker |
 | Stripe E2E test mode | ⚠️ Partiel | Revue code + endpoints implémentés | Nécessite variables Stripe test + webhook dashboard pour validation complète |
 
 ### Détails Stripe test mode

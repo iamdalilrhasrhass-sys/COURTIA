@@ -29,6 +29,8 @@
 - Compatibilité route conservée via `backend/src/routes/stripe.js` (proxy vers billing router).
 - Montage explicite `app.use('/api/billing', ...)` dans `backend/server.js`.
 - Ajout endpoints admin billing (`/api/admin/super/billing` et détail par organisation).
+- Redeploy backend VPS/PM2 réalisé (`courtia-api` restart) et endpoints billing publics activés.
+- Smoke tests runtime validés sur API officielle (`/api/billing/plans`, onboarding, consentements, checkout, portal).
 
 ### Frontend billing / onboarding test mode
 - Ajout page onboarding billing: `frontend/src/pages/BillingOnboarding.jsx`.
