@@ -66,6 +66,7 @@
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
+- [ ] (Immédiat non-prod) Couper Auto-Deploy sur Render `srv-d7561hsr85hc73a9c6i0` pour arrêter les mails "deploy failed".
 - [ ] Stripe test mode — validation opérationnelle finale :
   - configurer les variables `_TEST` côté VPS (`STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE=test`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`),
   - redéployer backend VPS/PM2 avec les guards test-only activés,
