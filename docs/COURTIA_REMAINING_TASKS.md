@@ -67,12 +67,11 @@
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
 - [ ] (Immédiat non-prod) Couper Auto-Deploy sur Render `srv-d7561hsr85hc73a9c6i0` pour arrêter les mails "deploy failed".
-- [ ] Stripe test mode — validation opérationnelle finale :
-  - configurer les variables `_TEST` côté VPS (`STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE=test`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`),
-  - redéployer backend VPS/PM2 avec les guards test-only activés,
-  - rejouer les webhooks signés via Stripe Dashboard (ou CLI) et vérifier `payment_events`,
-  - valider le scénario `invoice.payment_failed` en test contrôlé,
-  - valider le rappel fin d’essai J5/J7 (orchestration email/job).
+- [x] Stripe test mode — variables `_TEST` configurées côté VPS + redémarrage PM2.
+- [x] Stripe test mode — checkout Starter/Pro + Premium 409 + Portal validés en runtime.
+- [x] Stripe test mode — webhook signé + idempotence + `invoice.payment_failed` validés.
+- [ ] Stripe billing — durcir le post-traitement `checkout.session.completed` pour garantir une réponse 200 même si l’envoi email J0 échoue.
+- [ ] Stripe billing emails — finaliser provider transactionnel + scheduler J5/J7 avant live.
 - [ ] Rotation opérationnelle des secrets :
   - révoquer/régénérer JWT secret prod,
   - régénérer credentials DB si exposition historique confirmée,

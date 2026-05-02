@@ -1,5 +1,43 @@
 # COURTIA — Changelog Mission 2M
 
+## Reprise finale après passation Hermes (2 mai 2026)
+
+### Correctif code
+- `fix: recover stale Stripe customer ids for checkout and portal` (`4f16806`)
+  - `backend/src/services/stripeService.js`
+  - `backend/src/routes/billing.js`
+- Objectif: auto-récupérer un `stripe_customer_id` périmé/supprimé côté Stripe (cause réelle des 500 checkout/portal).
+
+### Déploiement VPS
+- Sync `main` vers `/srv/courtia/backend`.
+- `npm ci --omit=dev`.
+- `pm2 restart courtia-api --update-env` + `pm2 save`.
+- Health local/public confirmé en 200.
+
+### Validation Stripe test runtime
+- Variables `_TEST` présentes et valides côté VPS.
+- Checkout Starter: OK.
+- Checkout Pro: OK.
+- Premium: OK (`409 premium_contact_required`).
+- Customer Portal: OK.
+- Webhook sans signature: OK (`400 missing_signature`).
+- Webhook signé: OK (`invoice.payment_failed`, `customer.subscription.updated`).
+- Idempotence: OK (rejeu même `event_id`, pas de doublon DB).
+
+### Validation import non-régression
+- `/api/imports/preview` OK
+- `/api/imports/commit` OK
+- `/api/imports/history` OK
+- Doublon détecté au rejeu CSV.
+
+### Docs mises à jour
+- `docs/COURTIA_STRIPE_TEST_OPERATIONAL_QA.md`
+- `docs/COURTIA_STRIPE_WEBHOOK_SIGNED_QA.md`
+- `docs/COURTIA_DEPLOYMENT_FINAL_TEST_MODE_REPORT.md`
+- `docs/COURTIA_TRANSACTIONAL_EMAILS_QA.md`
+- `docs/COURTIA_QA_REPORT.md`
+- `docs/COURTIA_REMAINING_TASKS.md`
+
 ## Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
 
 ### Ce qui a été tenté automatiquement

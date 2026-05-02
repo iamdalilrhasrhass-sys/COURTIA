@@ -1,5 +1,26 @@
 # COURTIA — Rapport QA
 
+## QA reprise finale après passation Hermes (2 mai 2026)
+
+| Test | Résultat | Commentaire |
+|---|---|---|
+| Variables Stripe test VPS | ✅ OK | présentes + formats valides (`sk_test_`, `whsec_`, `price_`) |
+| PM2 + health VPS/public | ✅ OK | `courtia-api` online, `/api/health` 200 local/public |
+| Checkout Starter/Pro | ✅ OK | sessions Stripe test créées |
+| Premium | ✅ OK | `409 premium_contact_required` |
+| Customer Portal | ✅ OK | URL portal générée |
+| Webhook sans signature | ✅ OK | `400 missing_signature` |
+| Webhook signé | ✅ OK | events signés traités (`invoice.payment_failed`, `customer.subscription.updated`) |
+| Idempotence webhook | ✅ OK | rejeu même `event_id` -> pas de doublon DB |
+| Import CSV V1 | ✅ OK | `preview` + `commit` + `history` + détection doublon au rejeu |
+| QA Python | ✅ OK | `0 P0/P1`, `37 P2` |
+| Secret audit | ✅ OK (P0) | `P0=0`, `P1=52`, `P2=3` |
+
+### Décision
+- Stripe test opérationnel backend: **OUI**
+- Stripe live: **NON** (validation juriste/comptable obligatoire)
+- Encaissement live immédiat: **NON**
+
 ## QA Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
 
 | Test | Résultat | Preuve | Commentaire |
