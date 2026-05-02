@@ -4,7 +4,6 @@ import { CreditCard, ShieldCheck, RefreshCw, XCircle } from 'lucide-react'
 import api from '../api'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
-import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 export default function Billing() {
   const navigate = useNavigate()
@@ -131,9 +130,6 @@ export default function Billing() {
             <RefreshCw size={14} /> Rafraîchir
           </button>
         </section>
-      </div>
-      <div style={{ marginTop: 14 }}>
-        <RhasrhassSignature compact />
       </div>
     </div>
   )

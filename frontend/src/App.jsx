@@ -33,6 +33,7 @@ const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
 const Onboarding = lazy(() => import('./pages/BillingOnboarding'))
 const DataOnboarding = lazy(() => import('./pages/Onboarding'))
+const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
@@ -56,6 +57,7 @@ import CommandPalette from './components/ui/CommandPalette'
 import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
+import RhasrhassSignature from './components/brand/RhasrhassSignature'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -118,9 +120,14 @@ function AppLayout() {
         <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
       </div>
       <Sidebar />
-      <main className="courtia-cockpit-main flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh' }}>
+      <main className="courtia-cockpit-main flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <ImpersonationBanner />
-        <Outlet />
+        <div style={{ flex: 1 }}>
+          <Outlet />
+        </div>
+        <footer style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 16px' }}>
+          <RhasrhassSignature compact />
+        </footer>
       </main>
       <PaywallModal
         open={!!paywallError}
@@ -182,6 +189,7 @@ export default function App() {
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/onboarding"    element={<Onboarding />} />
           <Route path="/onboarding/import" element={<DataOnboarding />} />
+          <Route path="/import"        element={<ImportPortfolio />} />
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />

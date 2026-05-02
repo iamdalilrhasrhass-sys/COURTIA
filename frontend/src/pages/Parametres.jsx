@@ -5,7 +5,6 @@ import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTo
 import api from '../api'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
-import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -118,6 +117,15 @@ export default function Parametres() {
           badge="Espace cabinet"
           dark
         />
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => navigate('/import')}
+            className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10"
+          >
+            Importer un portefeuille
+          </button>
+        </div>
 
         <div className="flex flex-col md:flex-row gap-12">
           <aside className="md:w-1/4">
@@ -213,9 +221,6 @@ export default function Parametres() {
             </section>
           </div>
         </div>
-        <footer className="flex justify-center py-8">
-          <RhasrhassSignature compact />
-        </footer>
       </main>
     </div>
   )

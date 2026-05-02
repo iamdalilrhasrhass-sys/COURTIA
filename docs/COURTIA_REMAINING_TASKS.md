@@ -46,6 +46,9 @@
 - [x] Documents légaux pré-live COURTIA créés (`*_PRELIVE.md`)
 - [x] Wording pricing HT/TTC harmonisé sur landing/auth/billing
 - [x] Signature premium discrète `COURTIA — une création RHASRHASS™` intégrée sur surfaces clés
+- [x] Signature RHASRHASS™ harmonisée globalement via layouts privés/admin + surfaces publiques clés
+- [x] Register Starter/Pro: champ confirmation mot de passe + validation frontend
+- [x] Import portefeuille V1: fondation API `/api/imports` + UI `/import` + stratégie documentée
 
 ## P0 — Bloquant plateforme complète
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
@@ -64,6 +67,8 @@
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
 - [ ] Stripe test mode — validation opérationnelle finale :
+  - configurer les variables `_TEST` côté VPS (`STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE=test`, portal return URL),
+  - redéployer backend VPS/PM2 avec les guards test-only activés,
   - rejouer les webhooks signés via Stripe CLI/dashboard (idempotence réelle),
   - valider le scénario `invoice.payment_failed` en test contrôlé,
   - valider le rappel fin d’essai J5/J7 (orchestration email/job).

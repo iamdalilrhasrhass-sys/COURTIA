@@ -41,6 +41,7 @@
   - jamais au milieu de l’écran
   - jamais en watermark envahissant
   - une seule occurrence visible par surface principale
+  - implémentation recommandée: footer de layout (public/auth/privé/admin) plutôt que duplications page par page
 
 ## Mise à jour finale (2 mai 2026)
 - Landing : wording tarifaire aligné avec fiscalité configurable (`/ mois`, mention de configuration).

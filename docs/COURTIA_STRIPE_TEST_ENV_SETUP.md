@@ -28,11 +28,13 @@ Règle de cohérence UX:
 
 ## Produits Stripe test à créer
 1. Starter
-- Prix mensuel: 89 EUR HT (stratégie recommandée)
+- Prix mensuel : 89 € HT / mois
+- Référence commerciale UI : 106,80 € TTC / mois avec TVA 20 %
 - Recurring monthly
 
 2. Pro
-- Prix mensuel: 159 EUR HT (stratégie recommandée)
+- Prix mensuel : 159 € HT / mois
+- Référence commerciale UI : 190,80 € TTC / mois avec TVA 20 %
 - Recurring monthly
 
 3. Premium
