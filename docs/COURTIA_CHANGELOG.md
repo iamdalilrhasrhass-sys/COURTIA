@@ -1,5 +1,24 @@
 # COURTIA — Changelog Mission 2M
 
+## Mission Finale 500% — Stabilisation produit + sécurité + performance (2 mai 2026)
+
+### Frontend
+- Landing : wording pricing aligné avec fiscalité configurable (`/ mois` + mention explicite).
+- Auth funnel : wording Starter/Pro aligné, micro-réassurance conservée.
+- Rapports + Paramètres : `AuroraPageHeader` intégré, loaders remplacés par `CourtiaLogoLoader`.
+- Performance : code-splitting des routes secondaires via `React.lazy` + `Suspense`.
+
+### Backend
+- Sécurité JWT durcie via `backend/src/utils/jwtSecret.js` (fin des fallbacks faibles sur routes critiques modifiées).
+- Messages d’erreur API critiques francisés et assainis (moins d’exposition `err.message` brute).
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 33/33
+- QA Python : 0 P0 / 0 P1, 37 P2
+- API prod `https://api.courtiark.fr/api/health` : 200
+- Front prod `https://courtia.vercel.app` : 200
+
 ## Clôture Render (2 mai 2026)
 
 ### Décision infra

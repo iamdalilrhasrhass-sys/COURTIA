@@ -4,7 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { AuthenticationError } = require('../utils/errors');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -13,21 +13,21 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({
       success: false,
       error: 'AuthenticationError',
-      message: 'No token provided'
+      message: 'Token manquant'
     });
   }
 
   const token = authHeader.substring(7);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     req.user = decoded;
     next();
   } catch (error) {
     return res.status(403).json({
       success: false,
       error: 'AuthenticationError',
-      message: 'Invalid or expired token'
+      message: 'Token invalide ou expiré'
     });
   }
 };
@@ -35,7 +35,7 @@ const verifyToken = (req, res, next) => {
 const generateToken = (userId, email) => {
   return jwt.sign(
     { userId, email },
-    process.env.JWT_SECRET || 'dev-secret-key',
+    getJwtSecret(),
     { expiresIn: process.env.JWT_EXPIRY || '7d' }
   );
 };
@@ -43,7 +43,7 @@ const generateToken = (userId, email) => {
 const generateRefreshToken = (userId) => {
   return jwt.sign(
     { userId },
-    process.env.JWT_SECRET || 'dev-secret-key',
+    getJwtSecret(),
     { expiresIn: '30d' }
   );
 };

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { BarChart3 } from 'lucide-react'
-import Topbar from '../components/Topbar'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
+import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
@@ -89,10 +90,17 @@ export default function Rapports() {
   const tdStyle = { padding: '11px 16px', fontSize: 13, borderBottom: '0.5px solid #f7f6f2' }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: 'transparent' }}>
-      <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #e8e6e0', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ minHeight: '100vh', background: 'transparent', fontFamily: 'Arial, sans-serif' }}>
+      <div className="rp-container" style={{ padding: '24px 32px', maxWidth: 1100, margin: '0 auto' }}>
+        <AuroraPageHeader
+          title="Rapports"
+          subtitle="Lecture exécutive du portefeuille, des échéances et des signaux ARK."
+          badge="Rapports"
+          dark
+        />
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 280 }}>
+          <CourtiaLogoLoader fullScreen={false} message="COURTIA prépare vos rapports…" />
+        </div>
       </div>
     </div>
   )
@@ -111,9 +119,13 @@ export default function Rapports() {
           .rp-card { padding: 16px !important; }
         }
       `}</style>
-      <Topbar title="Rapports" subtitle="Analyse de votre portefeuille" />
-
-      <div className="rp-container" style={{ padding: '24px 32px', maxWidth: 1100 }}>
+      <div className="rp-container" style={{ padding: '24px 32px', maxWidth: 1100, margin: '0 auto' }}>
+        <AuroraPageHeader
+          title="Rapports"
+          subtitle="Analyse exécutable du portefeuille, des échéances et de l'activité ARK."
+          badge="Pilotage"
+          dark
+        />
 
         {error && (
           <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#dc2626', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

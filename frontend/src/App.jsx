@@ -1,49 +1,49 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 
 // Pages
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
-import MorningBrief from './pages/MorningBrief'
 import Clients from './pages/Clients'
-import ClientDetail from './pages/ClientDetail'
 import Contrats from './pages/Contrats'
-import ClientNew from './pages/ClientNew'
-import ContratNew from './pages/ContratNew'
 import Taches from './pages/Taches'
 import Rapports from './pages/Rapports'
-import ReachDashboard from './pages/ReachDashboard'
-import ReachSearch from './pages/ReachSearch'
-import ReachProspects from './pages/ReachProspects'
-import ReachCampaigns from './pages/ReachCampaigns'
-import ReachInbox from './pages/ReachInbox'
-import ReachProspectDetail from './pages/ReachProspectDetail'
-import ReachMap from './pages/ReachMap'
-import ReachSettings from './pages/ReachSettings'
 import Parametres from './pages/Parametres'
-import Capitia from './pages/Capitia'
-import AnalyticsExecutive from './pages/AnalyticsExecutive'
-import Abonnement from './pages/Abonnement'
-import Billing from './pages/Billing'
-import PaiementSucces from './pages/PaiementSucces'
-import PaiementAnnule from './pages/PaiementAnnule'
-import Onboarding from './pages/Onboarding'
 import LandingPublic from './pages/LandingPublic'
-import Academy from './pages/Academy'
-import Documents from './pages/Documents'
-import BrowserPilot from './pages/BrowserPilot'
-import Tarifs from './pages/Tarifs'
-import PublicDocumentUpload from './pages/PublicDocumentUpload'
+import MorningBrief from './pages/MorningBrief'
 
 // Admin pages
-import AdminOverview from './pages/AdminOverview'
-import AdminUsers from './pages/AdminUsers'
-import AdminUserDetail from './pages/AdminUserDetail'
-import AdminSubscriptions from './pages/AdminSubscriptions'
-import AdminSystem from './pages/AdminSystem'
-import AdminLogs from './pages/AdminLogs'
-import AdminSupport from './pages/AdminSupport'
+const ClientDetail = lazy(() => import('./pages/ClientDetail'))
+const ClientNew = lazy(() => import('./pages/ClientNew'))
+const ContratNew = lazy(() => import('./pages/ContratNew'))
+const ReachDashboard = lazy(() => import('./pages/ReachDashboard'))
+const ReachSearch = lazy(() => import('./pages/ReachSearch'))
+const ReachProspects = lazy(() => import('./pages/ReachProspects'))
+const ReachCampaigns = lazy(() => import('./pages/ReachCampaigns'))
+const ReachInbox = lazy(() => import('./pages/ReachInbox'))
+const ReachProspectDetail = lazy(() => import('./pages/ReachProspectDetail'))
+const ReachMap = lazy(() => import('./pages/ReachMap'))
+const ReachSettings = lazy(() => import('./pages/ReachSettings'))
+const Capitia = lazy(() => import('./pages/Capitia'))
+const AnalyticsExecutive = lazy(() => import('./pages/AnalyticsExecutive'))
+const Abonnement = lazy(() => import('./pages/Abonnement'))
+const Billing = lazy(() => import('./pages/Billing'))
+const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
+const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
+const Academy = lazy(() => import('./pages/Academy'))
+const Documents = lazy(() => import('./pages/Documents'))
+const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
+const Tarifs = lazy(() => import('./pages/Tarifs'))
+const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
+const AdminOverview = lazy(() => import('./pages/AdminOverview'))
+const AdminUsers = lazy(() => import('./pages/AdminUsers'))
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
+const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'))
+const AdminSystem = lazy(() => import('./pages/AdminSystem'))
+const AdminLogs = lazy(() => import('./pages/AdminLogs'))
+const AdminSupport = lazy(() => import('./pages/AdminSupport'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -54,6 +54,7 @@ import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
 import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
+import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -153,11 +154,20 @@ function AppLayout() {
   )
 }
 
+function RouteLoader() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <CourtiaLogoLoader fullScreen={false} message="COURTIA charge l’espace..." />
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+      <Suspense fallback={<RouteLoader />}>
       <Routes>
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
@@ -218,9 +228,9 @@ export default function App() {
         {/* 404 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }
 // Trigger Vercel rebuild
 /* Build trigger 2 */
-

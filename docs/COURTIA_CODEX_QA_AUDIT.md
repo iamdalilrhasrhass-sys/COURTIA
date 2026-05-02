@@ -1,13 +1,13 @@
 # COURTIA — Audit QA Python
 
-- Date : 2026-05-02 08:39:27
+- Date : 2026-05-02 10:10:46
 - Statut : OK
 - Fichiers scannés : 164
 
 ## Synthèse
 
 - P0/P1 : 0
-- P2 : 38
+- P2 : 37
 
 ## Documentation
 
@@ -87,7 +87,6 @@
 | P2 | Loader générique | `frontend/src/pages/ClientNew.jsx` | 138 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Loader générique | `frontend/src/pages/MyUsage.jsx` | 42 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/Onboarding.jsx` | 227 | Motif loader générique : `\banimate-spin\b` |
-| P2 | Loader générique | `frontend/src/pages/Parametres.jsx` | 91 | Motif loader générique : `\banimate-spin\b` |
 | P2 | Message technique | `frontend/src/pages/PublicDocumentUpload.jsx` | 71 | Motif technique détecté : `err\.message` |
 | P2 | Loader générique | `frontend/src/pages/ReachDashboard.jsx` | 47 | Motif loader générique : `>\s*Chargement\.\.\.\s*<` |
 | P2 | Loader générique | `frontend/src/pages/ReachProspectDetail.jsx` | 108 | Motif loader générique : `\banimate-spin\b` |

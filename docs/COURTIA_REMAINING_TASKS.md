@@ -74,18 +74,19 @@
 - [ ] Token super_admin → tests Admin Center E2E
 - [x] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
 - [x] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production
-- [ ] Uniformiser les messages d'erreur API auth en français (le backend login expose encore `Invalid email or password` en brut API)
-- [ ] AuroraPageHeader → Rapports, Paramètres
+- [x] Uniformiser les messages d'erreur API auth en français sur routes critiques (auth/dashboard/contrats/tâches)
+- [x] AuroraPageHeader → Rapports, Paramètres
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
-- [ ] Harmonisation profonde Rapports / Paramètres
+- [ ] Harmonisation profonde Rapports / Paramètres (batch final micro-interactions)
+- [ ] Rotation opérationnelle des secrets (JWT/DB/Render/Stripe) après validation sécurité
 - [ ] Stripe test mode + documents légaux (CGV, confidentialité, DPA, consentements essai) avant encaissement.
 
 ## P2 — Finition
-- [ ] Résorber les 38 signaux P2 du rapport `COURTIA_CODEX_QA_AUDIT.md`
+- [ ] Résorber les 37 signaux P2 du rapport `COURTIA_CODEX_QA_AUDIT.md`
 - [ ] AuroraDivider sur toutes les transitions
 - [ ] AuroraButton → harmoniser toutes les pages
 - [ ] Test mobile responsive complet (toutes les pages app)
 - [ ] Valider visuellement la landing Vercel dans un vrai viewport mobile après déploiement
 - [x] Compression og:image → PNG pour LinkedIn
 - [ ] Vérifier apple-touch-icon rendu mobile
-- [ ] Optimiser le chunk frontend principal supérieur à 500 kB
+- [x] Optimiser le chunk frontend principal supérieur à 500 kB (code-splitting routes secondaires)
