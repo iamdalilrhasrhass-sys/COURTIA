@@ -1,5 +1,38 @@
 # COURTIA — Rapport QA
 
+## QA Functional Readiness — Démo commerciale (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Git local | ✅ OK | `git status --short` | Worktree propre avant patch |
+| Build frontend | ✅ OK | `npm run build` | Build Vite en succès |
+| Tests frontend | ✅ OK | `npm run test` | 33/33 passés |
+| Syntax backend local | ✅ OK | `node -c` ciblé | server + routes/services clés OK |
+| PM2 VPS | ✅ OK | `pm2 status` | `courtia-api` online |
+| Health local VPS | ✅ OK | `GET /api/health` | HTTP 200 |
+| Health public | ✅ OK | `GET https://api.courtiark.fr/api/health` | HTTP 200 |
+| Morning brief local | ✅ OK | endpoint tokenisé | HTTP 200 |
+| Health score local | ✅ OK | endpoint tokenisé | HTTP 200 |
+| Morning brief public | ✅ OK | endpoint tokenisé | HTTP 200 |
+| Health score public | ✅ OK | endpoint tokenisé | HTTP 200 |
+| Login demo API | ✅ OK | `POST /api/auth/login` | HTTP 200 |
+| Mauvais mot de passe | ✅ OK | `POST /api/auth/login` | HTTP 401 propre |
+| Register email existant | ✅ OK | `POST /api/auth/register` | HTTP 409 message propre |
+| Register nouvel email | ✅ OK | `POST /api/auth/register` | HTTP 201 |
+| Auth me | ✅ OK | `GET /api/auth/me` | HTTP 200 |
+| Dashboard stats | ✅ OK | `GET /api/dashboard/stats` | HTTP 200 |
+| Clients | ✅ OK | `GET /api/clients` | HTTP 200 |
+| Contrats | ✅ OK | `GET /api/contrats` | HTTP 200 |
+| Tâches | ✅ OK | `GET /api/taches` | HTTP 200 |
+| Admin non connecté | ✅ OK | `GET /api/admin/super/analytics` | HTTP 401 propre |
+| Admin broker | ✅ OK | endpoint tokenisé | HTTP 403 propre |
+| QA audit Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 38 P2 |
+
+### Décision
+- P0 fonctionnel : fermé.
+- P1 portfolio health-score : fermé (endpoint maintenant `200` au lieu de `503` fallback).
+- Plateforme prête pour démo commerciale (avec limites P1/P2 documentées).
+
 ## QA P0 — Backend VPS / PM2 redeploy portfolio (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

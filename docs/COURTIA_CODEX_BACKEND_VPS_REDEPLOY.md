@@ -28,16 +28,22 @@ Date : 2 mai 2026
   - `src/utils/portfolioSchema.js`
   - Résultat : OK
 
-## 5. Résultats API
+## 5. Résultats API (redeploy final readiness)
 - Local VPS :
   - `GET /api/health` -> `200`
   - `GET /api/portfolio/morning-brief` -> `200`
-  - `GET /api/portfolio/health-score` -> `503` (fallback métier propre, plus de `500`)
+  - `GET /api/portfolio/health-score` -> `200`
 - Public :
   - `GET https://api.courtiark.fr/api/health` -> `200`
   - `GET /api/portfolio/morning-brief` -> `200`
-  - `GET /api/portfolio/health-score` -> `503` (fallback propre)
+  - `GET /api/portfolio/health-score` -> `200`
+
+Réponse `health-score` observée sur le compte demo :
+- `status: "portfolio_empty"`
+- `source: "computed_live"`
+- message explicite d'amorçage portefeuille
+- aucun `500`, aucune fuite SQL
 
 ## 6. Conclusion
-- P0 demandé est levé : plus d'erreur `500` sur les endpoints portfolio ciblés.
-- Le `503` actuel de `health-score` est un état de fallback propre quand l'analyse portefeuille n'est pas encore disponible (pas de fuite SQL, pas de crash).
+- P0 backend maintenu levé : plus d'erreur `500` portfolio.
+- P1 `health-score 503` levé : endpoint désormais en `200` avec état exploitable, y compris portefeuille vide.
