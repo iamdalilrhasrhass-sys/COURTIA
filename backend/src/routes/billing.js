@@ -83,7 +83,7 @@ async function getOrCreateStripeCustomerForUser({ userId, organizationId }) {
         process.env.BILLING_SELLER_STATUS || 'micro-entreprise_to_confirm',
       ]
     );
-  } else if (!existingCustomerId) {
+  } else if (!existingCustomerId || existingCustomerId !== customerId) {
     await pool.query(
       'UPDATE customer_billing_profiles SET stripe_customer_id=$1, updated_at=NOW() WHERE id=$2',
       [customerId, customerRes.rows[0].id]
@@ -581,18 +581,7 @@ async function createPortalSessionHandler(req, res) {
     }
 
     const org = await billingService.getOrCreateOrganization(userId);
-    const profile = await pool.query(
-      'SELECT stripe_customer_id FROM customer_billing_profiles WHERE organization_id=$1 LIMIT 1',
-      [org.id]
-    );
-    const customerId = profile.rows[0]?.stripe_customer_id;
-    if (!customerId) {
-      return res.status(400).json({
-        success: false,
-        error: 'no_stripe_customer',
-        message: 'Aucun client Stripe associé pour le moment.',
-      });
-    }
+    const { customerId } = await getOrCreateStripeCustomerForUser({ userId, organizationId: org.id });
 
     const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://courtia.vercel.app'}/billing`;
     const portal = await stripeService.createPortalSession({ customerId, returnUrl });
