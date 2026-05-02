@@ -1,8 +1,8 @@
 # COURTIA — Transactional Emails QA (Billing Test Mode)
 
-Date: 2 mai 2026
+Date: 2 mai 2026 (run final après passation Hermes)
 
-## Templates ciblés
+## Templates présents
 - `trial_activated_j0`
 - `trial_reminder_j5`
 - `subscription_started_j7`
@@ -12,28 +12,19 @@ Date: 2 mai 2026
 - `premium_contact_received`
 - `legal_acceptance_recorded`
 
-## Vérifications attendues
-1. Templates présents et rendus sans erreur.
-2. Service email non bloquant:
-   - si provider absent, mode `disabled/skipped` propre.
-   - webhook Stripe ne doit pas échouer à cause d’un envoi email.
-3. Messages cohérents:
-   - essai 7 jours
-   - 0 € aujourd’hui
-   - annulation via portail Stripe
+## État opérationnel constaté
+- Provider SMTP billing: **incomplet/legacy** (logs récurrents `Missing credentials for "PLAIN"` sur autres jobs).
+- Flux Stripe test principal:
+  - `invoice.payment_failed` signé: ✅ traité sans crash backend.
+  - `customer.subscription.updated` signé: ✅ traité sans crash backend.
+- Réserve:
+  - sur test synthétique `checkout.session.completed`, réponse 400 observée malgré event persisté (traitement post-webhook à durcir, probablement sur l’étape email J0).
 
-## Orchestration
-- J0: prêt (trigger événement activation)
-- J5/J7: nécessite scheduler/cron opérationnel + règles d’envoi
+## Orchestration J0/J5/J7
+- J0: fondation en place mais robustesse à finaliser côté provider.
+- J5/J7: scheduler dédié billing à confirmer avant live.
 
-## État actuel (à compléter)
-- Provider configuré: ⚠️ non validé pour billing test mode (logs runtime montrent encore des erreurs SMTP legacy `Missing credentials for "PLAIN"` sur scheduler relance)
-- Envoi réel test: ❌ non validé (aucun envoi de facturation Stripe testé en réel)
-- Mode fallback sans provider: ✅ service prévu pour ne pas bloquer le flux billing
-- Blocage webhook en cas d’échec email: ⚠️ non prouvé E2E webhook signé (Stripe test non configuré côté VPS)
-
-## Conclusion QA email (mission actuelle)
-- Templates: ✅ présents
-- J0: prêt côté template/service
-- J5/J7: ⚠️ orchestration scheduler dédiée à finaliser avant live
-- Décision: **email billing prêt côté fondation, non validé bout-en-bout en test mode signé**
+## Décision
+- **Templates et service de base: prêts**
+- **Chaîne email billing complète avant live: partielle**
+- **Pré-live recommandation**: finaliser provider SMTP/transactionnel + job J5/J7 avant passage Stripe live.
