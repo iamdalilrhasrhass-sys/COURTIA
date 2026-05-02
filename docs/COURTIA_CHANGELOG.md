@@ -1,5 +1,29 @@
 # COURTIA — Changelog Mission 2M
 
+## Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
+
+### Ce qui a été tenté automatiquement
+- Vérification Stripe CLI local/VPS pour récupérer les variables test: indisponible sur les deux environnements.
+- Tentative de récupération autonome des variables Stripe `_TEST` sans exposition de secrets: impossible faute accès Stripe (CLI/dashboard) dans cet environnement.
+- Mise à jour sécurisée VPS conservée:
+  - `BILLING_MODE=test`
+  - `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`
+- Redémarrage PM2 avec `--update-env` + `pm2 save`.
+
+### Résultat technique
+- `/api/health`: 200
+- `/api/billing/plans`: 200
+- `/api/billing/legal-acceptance`: 200
+- Checkout starter/pro: 503 `billing_test_mode_not_configured` (attendu tant que `_TEST` sensibles absentes)
+- Portal: 503 `billing_test_mode_not_configured`
+- Premium: 409 `premium_contact_required`
+- Webhook signé/idempotence/invoice.payment_failed: non testables sans secret webhook test.
+- Import CSV: preview + commit + history toujours OK.
+
+### Décision
+- Stripe test opérationnel complet: NON (blocage configuration Stripe test sensible).
+- Render reste non-prod: Auto-Deploy à couper côté dashboard pour stopper les alertes.
+
 ## Déploiement final test mode / Stripe E2E / Import runtime (2 mai 2026)
 
 ### Merge + déploiement

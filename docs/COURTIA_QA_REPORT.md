@@ -1,5 +1,25 @@
 # COURTIA — Rapport QA
 
+## QA Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Stripe CLI local | ❌ indisponible | `stripe --version` | commande absente |
+| Stripe CLI VPS | ❌ indisponible | `ssh ... stripe --version` | commande absente |
+| Récupération auto des secrets Stripe test | ❌ impossible | audit env local+VPS | aucune valeur `_TEST` sensible disponible |
+| Variables test non sensibles | ✅ partiel | vérif `.env` VPS | `BILLING_MODE=test`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL` OK |
+| Checkout Starter/Pro | ⚠️ KO propre | API billing | `503 billing_test_mode_not_configured` |
+| Portal | ⚠️ KO propre | API billing | `503 billing_test_mode_not_configured` |
+| Premium | ✅ OK | API billing | `409 premium_contact_required` |
+| Webhook signé | ❌ non testé | n/a | `STRIPE_WEBHOOK_SECRET_TEST` absent |
+| Idempotence | ❌ non prouvée | `payment_events` | aucune ligne |
+| `invoice.payment_failed` signé | ❌ non testé | n/a | dépend webhook signé |
+| Import CSV non-régression | ✅ OK | preview+commit+history | succès conservé |
+
+### Décision run complémentaire
+- Stripe test opérationnel complet: **NON**
+- Cause unique: absence des 4 variables Stripe test sensibles + pas d’accès Stripe CLI/dashboard depuis cet environnement.
+
 ## QA Déploiement final test mode (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

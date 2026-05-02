@@ -2,6 +2,14 @@
 
 Date: 2 mai 2026
 
+## 0. Run complémentaire (2 mai 2026 — mission finale Stripe TEST)
+- Tentative de récupération autonome des variables Stripe test: effectuée.
+- Stripe CLI local: indisponible (`command not found`).
+- Stripe CLI VPS: indisponible.
+- Accès Dashboard Stripe via cet environnement: non disponible.
+- Conséquence: impossible de récupérer automatiquement `sk_test`, `whsec` et les 2 `price_` test sans intervention utilisateur côté Stripe.
+- Render: non-prod confirmé; coupure Auto-Deploy à faire manuellement dans le dashboard Render (non pilotable depuis cet environnement).
+
 ## 1. Contexte
 - Commit source attendu: `a2558a9`
 - Merge production réalisé: `fcf70c3` (inclut `a2558a9`)
@@ -79,3 +87,4 @@ Variables legacy présentes:
 4. Configurer webhook Stripe test signé.
 5. Rejouer au moins: `checkout.session.completed`, `customer.subscription.updated`, `invoice.payment_failed`.
 6. Rejouer un même `event_id` pour prouver l’idempotence.
+7. Couper Auto-Deploy du service Render `srv-d7561hsr85hc73a9c6i0` (dashboard Render), pour stopper les alertes non-prod.
