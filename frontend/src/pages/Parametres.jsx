@@ -5,6 +5,7 @@ import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTo
 import api from '../api'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
+import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -212,7 +213,9 @@ export default function Parametres() {
             </section>
           </div>
         </div>
-        <footer className="text-center py-8"><p className="text-xs text-gray-300">Rhasrhass®</p></footer>
+        <footer className="flex justify-center py-8">
+          <RhasrhassSignature compact />
+        </footer>
       </main>
     </div>
   )

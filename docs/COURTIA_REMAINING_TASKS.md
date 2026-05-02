@@ -42,6 +42,10 @@
 - [x] Brouillons légaux minimum créés (`docs/legal-drafts/*`)
 - [x] Migration SQL non destructive billing/legal créée (non appliquée prod auto)
 - [x] Script d’audit secrets + runbook rotation ajoutés
+- [x] Revue officielle pré-live (Service-Public / impots.gouv / CNIL) documentée
+- [x] Documents légaux pré-live COURTIA créés (`*_PRELIVE.md`)
+- [x] Wording pricing HT/TTC harmonisé sur landing/auth/billing
+- [x] Signature premium discrète `COURTIA — une création RHASRHASS™` intégrée sur surfaces clés
 
 ## P0 — Bloquant plateforme complète
 - [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
@@ -68,10 +72,10 @@
   - régénérer credentials DB si exposition historique confirmée,
   - révoquer anciennes clés Render/Stripe éventuellement exposées,
   - nettoyer les anciennes docs legacy contenant des exemples sensibles.
-- [ ] Légal/compliance avant encaissement live :
-  - validation juriste des CGV/Privacy/DPA/Cookies/Mentions légales,
-  - validation comptable du libellé fiscal (micro-entreprise / TVA),
-  - publication versionnée des docs légales finales.
+- [ ] Validation pré-live avant encaissement live :
+  - validation juriste des versions `*_PRELIVE.md` (CGV/Privacy/DPA/Cookies/Mentions légales),
+  - validation comptable finale du paramétrage TVA/HT/TTC Stripe,
+  - publication des versions légales finales signées.
 - [ ] Token super_admin → tests Admin Center E2E
 - [x] Déployer / vérifier sur VPS le rate limit auth ajusté si le backend ne suit pas automatiquement `main`
 - [x] Passer `portfolio/health-score` de fallback `503` à `200` avec score réel en production

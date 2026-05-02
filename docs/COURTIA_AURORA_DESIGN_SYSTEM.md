@@ -27,6 +27,7 @@
 | AuroraHalo | components/brand/AuroraHalo.jsx | Effet de halo lumineux |
 | AuroraBackground | components/brand/AuroraBackground.jsx | Fond d'écran Aurora |
 | AuroraTransition | components/brand/AuroraTransition.jsx | Transition animée |
+| RhasrhassSignature | components/brand/RhasrhassSignature.jsx | Signature premium discrète |
 
 ## Règles visuelles
 - Pas d'ancien logo violet (banni définitivement)
@@ -35,6 +36,11 @@
 - Pas d'animations lourdes
 - Palette : fonds sombres, accents iridescents
 - Admin Center : style cockpit propriétaire (pas marketing)
+- Signature RHASRHASS™ autorisée uniquement en footer discret:
+  - wording cible: `COURTIA — une création RHASRHASS™`
+  - jamais au milieu de l’écran
+  - jamais en watermark envahissant
+  - une seule occurrence visible par surface principale
 
 ## Mise à jour finale (2 mai 2026)
 - Landing : wording tarifaire aligné avec fiscalité configurable (`/ mois`, mention de configuration).
@@ -53,7 +59,7 @@
 - Le cockpit produit peut utiliser des données illustratives uniquement si elles sont indiquées comme aperçu ou démonstration.
 - Le pricing Pro doit être clair : 159 EUR HT/mois, essai gratuit 7 jours, 0 EUR aujourd’hui, annulation en ligne.
 - Aucun wording de piège commercial : pas de recommandé obligatoire, pas de fausse friction à la résiliation.
-- La carte bancaire sera collectée uniquement via un checkout sécurisé dans une phase Billing dédiée, jamais directement par COURTIA.
+- La carte bancaire est collectée uniquement via Stripe Checkout sécurisé, jamais directement par COURTIA.
 
 ## Phase 3 — Conversion premium
 - Le pricing Pro doit vendre la valeur avant le prix : coût journalier, contrôle du portefeuille, essai clair.
@@ -66,7 +72,7 @@
 - Le premier écran du funnel Pro doit afficher rapidement la valeur : logo Aurora, titre cockpit, essai Pro, `0 €`, `7 jours`, annulation en ligne et CTA visible.
 - Le CTA principal Pro reste `Activer mon essai Pro`.
 - Le register classique conserve un niveau premium aligné via le funnel Starter.
-- Le wording de collecte carte reste commercial et clair, mais l’intégration Stripe reste réservée à une phase Billing dédiée.
+- Le wording de collecte carte reste commercial et clair, avec renvoi explicite vers Stripe Checkout/Portal.
 
 ## Phase B — Landing 3D scroll premium
 - La landing doit se lire comme une seule expérience continue, pas comme une pile de pages séparées.

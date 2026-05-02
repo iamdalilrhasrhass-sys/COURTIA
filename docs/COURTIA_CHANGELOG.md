@@ -1,5 +1,37 @@
 # COURTIA — Changelog Mission 2M
 
+## Pré-live légal / TVA / branding RHASRHASS™ (2 mai 2026)
+
+### Légal / conformité documentaire
+- Ajout de la revue officielle des sources:
+  - `docs/COURTIA_LEGAL_SOURCES_REVIEW.md`
+  - Service-Public (CGV, facturation, mentions EI), impots.gouv (TVA intracom), CNIL (responsable/sous-traitant et clauses DPA).
+- Création des versions pré-live:
+  - `docs/legal-drafts/COURTIA_MENTIONS_LEGALES_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_PRIVACY_POLICY_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_DPA_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_COOKIES_POLICY_PRELIVE.md`
+
+### Fiscalité / pricing
+- Passage explicite en mode TVA applicable dans les documents pré-live.
+- Harmonisation des wording visibles:
+  - Starter: `89 € HT / mois` + `106,80 € TTC` (TVA 20 %),
+  - Pro: `159 € HT / mois` + `190,80 € TTC` (TVA 20 %),
+  - mention globale: `Prix indiqués hors taxes. TVA applicable au taux en vigueur.`
+- Suppression des anciennes hypothèses actives `TVA non applicable, art. 293 B`.
+
+### Branding RHASRHASS™
+- Nouveau composant:
+  - `frontend/src/components/brand/RhasrhassSignature.jsx`
+- Intégration discrète sur surfaces clés:
+  - landing, auth funnel, billing/onboarding, paramètres.
+- Mise à jour design system:
+  - `docs/COURTIA_AURORA_DESIGN_SYSTEM.md` (règle d’usage footer discrète).
+
+### Infra
+- `docs/COURTIA_RENDER_DEPLOY_FIX.md` précisé: Render reste non-prod/secondaire et non requis pour l’exécution officielle.
+
 ## Stripe Test Mode + Légal + Secrets (2 mai 2026)
 
 ### Sécurité / secrets

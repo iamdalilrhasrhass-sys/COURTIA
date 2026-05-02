@@ -4,6 +4,7 @@ import { CreditCard, ShieldCheck, RefreshCw, XCircle } from 'lucide-react'
 import api from '../api'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 export default function Billing() {
   const navigate = useNavigate()
@@ -67,7 +68,7 @@ export default function Billing() {
     <div style={{ padding: '28px 22px 42px' }}>
       <AuroraPageHeader
         title="Billing test mode"
-        subtitle="0 € aujourd’hui — essai 7 jours — annulation en ligne via portail sécurisé."
+        subtitle="0 € aujourd’hui — essai 7 jours — annulation en ligne via portail sécurisé Stripe."
       />
 
       {error && (
@@ -107,7 +108,9 @@ export default function Billing() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
                   {p.code === 'premium'
                     ? 'Sur devis — pas de checkout direct'
-                    : `0 € aujourd’hui, puis ${p.price} € / mois après le ${p.trial_days}e jour.`}
+                    : p.code === 'starter'
+                      ? `0 € aujourd’hui, puis 89 € HT / mois après le ${p.trial_days}e jour (106,80 € TTC avec TVA 20 %).`
+                      : `0 € aujourd’hui, puis 159 € HT / mois après le ${p.trial_days}e jour (190,80 € TTC avec TVA 20 %).`}
                 </div>
               </div>
               {p.code !== 'premium' ? (
@@ -122,12 +125,15 @@ export default function Billing() {
             </div>
           ))}
           <p style={{ marginTop: 10, color: 'rgba(255,255,255,0.58)', fontSize: 12 }}>
-            Affichage fiscal selon configuration. Validation comptable/juridique requise avant live.
+            Prix indiqués hors taxes. TVA applicable au taux en vigueur. Validation comptable/juridique requise avant live.
           </p>
           <button type="button" onClick={load} style={{ ...btnGhost, marginTop: 8 }}>
             <RefreshCw size={14} /> Rafraîchir
           </button>
         </section>
+      </div>
+      <div style={{ marginTop: 14 }}>
+        <RhasrhassSignature compact />
       </div>
     </div>
   )

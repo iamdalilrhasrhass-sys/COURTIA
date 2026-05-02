@@ -31,8 +31,9 @@ Traitements décrits dans la Politique de confidentialité et le DPA.
 
 ## 7. Informations fiscales (IMPORTANT)
 Les libellés fiscaux/tva doivent être confirmés avec comptable avant mise en production commerciale.
-Exemple possible selon situation:
-- "TVA non applicable, art. 293 B du CGI" (uniquement si confirmé)
+Orientation actuelle pré-live COURTIA:
+- TVA applicable
+- Prix affichés HT avec mention TVA/TTC lisible
 
 ## 8. Clause obligatoire
 Ce brouillon doit être validé juridiquement et comptablement avant publication live.

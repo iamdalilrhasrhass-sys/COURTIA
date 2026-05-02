@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
+import RhasrhassSignature from './brand/RhasrhassSignature'
 
 const theme = {
   accent: '#5B4DF5',
@@ -325,9 +326,9 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <p style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.15)', margin: '6px 0 10px', letterSpacing: '0.08em' }}>
-        Rhasrhass®
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0 10px' }}>
+        <RhasrhassSignature compact />
+      </div>
     </aside>
   )
 
