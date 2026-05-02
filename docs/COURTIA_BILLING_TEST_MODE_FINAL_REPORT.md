@@ -14,6 +14,8 @@ Mettre en place un tunnel d’encaissement propre en Stripe test mode (sans live
 - Customer Portal session (`/api/billing/create-portal-session`).
 - Admin billing views (`/api/admin/super/billing`).
 - Templates d’emails transactionnels préparés.
+- Déploiement backend VPS/PM2 effectué (service `courtia-api` redémarré).
+- Endpoint public `GET https://api.courtiark.fr/api/billing/plans` actif.
 
 ## 3. Documents légaux (drafts)
 - `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_DRAFT.md`
@@ -36,6 +38,7 @@ Mettre en place un tunnel d’encaissement propre en Stripe test mode (sans live
 - Stripe test E2E complet dépend des clés test réelles + config webhook Stripe Dashboard.
 - Validation juridique/comptable des textes non terminée.
 - Scheduling J5/J7 emails non branché automatiquement.
+- Événements webhook signés Stripe (idempotence en situation réelle) à rejouer via Stripe CLI/dashboard.
 
 ## 7. Go / No-Go
 - Démo produit: **GO**

@@ -60,10 +60,9 @@
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
 - [ ] Stripe test mode — validation opérationnelle finale :
-  - créer les produits/prices test Stripe (Starter/Pro),
-  - configurer `STRIPE_*_TEST` et `BILLING_MODE=test` dans l’environnement backend,
-  - configurer endpoint webhook Stripe test + `whsec`,
-  - exécuter campagne de tests Stripe CLI/dashboard (checkout/session/webhooks/portal).
+  - rejouer les webhooks signés via Stripe CLI/dashboard (idempotence réelle),
+  - valider le scénario `invoice.payment_failed` en test contrôlé,
+  - valider le rappel fin d’essai J5/J7 (orchestration email/job).
 - [ ] Rotation opérationnelle des secrets :
   - révoquer/régénérer JWT secret prod,
   - régénérer credentials DB si exposition historique confirmée,
