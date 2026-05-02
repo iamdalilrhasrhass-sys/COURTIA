@@ -29,14 +29,15 @@ Validation des webhooks Stripe test:
 - `customer.subscription.trial_will_end`
 
 ## État actuel (à compléter)
-- Sans signature: ✅ 400 `missing_signature`
-- Signé: ⚠️ non validé sur ce run (secret webhook test non confirmé sur VPS)
-- Idempotence: ⚠️ non validée sur ce run
+- Sans signature: ⚠️ actuellement `200 {"received":true,"note":"stripe_not_configured"}` (normal tant que config Stripe test absente)
+- Signé: ❌ non validé sur ce run (secret webhook test non configuré sur VPS)
+- Idempotence: ❌ non validée sur ce run
 
 ## Blocages possibles
-- `STRIPE_WEBHOOK_SECRET_TEST` absent
+- `STRIPE_WEBHOOK_SECRET_TEST` absent sur VPS
+- `STRIPE_SECRET_KEY_TEST` absent sur VPS
 - endpoint webhook non configuré côté dashboard Stripe test
-- absence Stripe CLI en local
+- Stripe CLI indisponible sur l'environnement d'exécution
 
 ## Règle de vérité
 Ne pas déclarer “Stripe test complet” tant qu’un webhook signé + rejeu idempotent n’a pas été prouvé.

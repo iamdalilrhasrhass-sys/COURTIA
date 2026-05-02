@@ -67,9 +67,9 @@
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
 - [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
 - [ ] Stripe test mode — validation opérationnelle finale :
-  - configurer les variables `_TEST` côté VPS (`STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE=test`, portal return URL),
+  - configurer les variables `_TEST` côté VPS (`STRIPE_SECRET_KEY_TEST`, `STRIPE_WEBHOOK_SECRET_TEST`, `STRIPE_STARTER_PRICE_ID_TEST`, `STRIPE_PRO_PRICE_ID_TEST`, `BILLING_MODE=test`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`),
   - redéployer backend VPS/PM2 avec les guards test-only activés,
-  - rejouer les webhooks signés via Stripe CLI/dashboard (idempotence réelle),
+  - rejouer les webhooks signés via Stripe Dashboard (ou CLI) et vérifier `payment_events`,
   - valider le scénario `invoice.payment_failed` en test contrôlé,
   - valider le rappel fin d’essai J5/J7 (orchestration email/job).
 - [ ] Rotation opérationnelle des secrets :
@@ -89,6 +89,8 @@
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres (batch final micro-interactions)
 - [x] Stripe test mode + documents légaux (draft) implémentés côté code/docs
+- [ ] Vérifier cohérence API legal acceptance:
+  - standardiser la lecture `acceptance_id` / `legal_acceptance_id` dans les scripts QA/outils internes.
 
 ## P2 — Finition
 - [ ] Résorber les 37 signaux P2 du rapport `COURTIA_CODEX_QA_AUDIT.md`
@@ -99,3 +101,4 @@
 - [x] Compression og:image → PNG pour LinkedIn
 - [ ] Vérifier apple-touch-icon rendu mobile
 - [x] Optimiser le chunk frontend principal supérieur à 500 kB (code-splitting routes secondaires)
+- [ ] Import V1: renforcer la déduplication contrats/tâches au rejeu CSV (actuellement les doublons clients sont bien détectés, mais des insertions contrats/tâches restent possibles selon mapping)
