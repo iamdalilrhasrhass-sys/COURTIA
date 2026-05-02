@@ -144,6 +144,7 @@ const documentsRouter      = require('./src/routes/documents')
 const ddaQuizRouter        = require('./src/routes/ddaQuiz')
 const analyticsRouter      = require('./src/routes/analytics')
 const stripeRouter         = require('./src/routes/stripe')
+const billingRouter        = require('./src/routes/billing')
 const plansRouter          = require('./src/routes/plans')
 const messagingRoutes      = require('./src/routes/messaging')
 const importRouter         = require('./src/routes/import')
@@ -157,6 +158,7 @@ const extensionRouter      = require('./src/routes/extension')
 app.use('/api/auth',   authLimiter, authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
+app.use('/api/billing', billingRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)

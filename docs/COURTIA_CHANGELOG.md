@@ -1,5 +1,51 @@
 # COURTIA — Changelog Mission 2M
 
+## Stripe Test Mode + Légal + Secrets (2 mai 2026)
+
+### Sécurité / secrets
+- Ajout du script `scripts/courtia_secret_audit.py` (scan non destructif + masquage des valeurs).
+- Ajout du runbook `docs/COURTIA_SECRET_ROTATION_RUNBOOK.md` et extension de la checklist de rotation.
+- Durcissement `.gitignore` (env variants, clés privées, dumps).
+- Suppression du faux motif `sk_live` dans `backend/src/services/apiGatewayService.js` (préfixe configurable via env).
+
+### Légal (drafts à faire valider)
+- Création des brouillons:
+  - `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_PRIVACY_POLICY_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_DPA_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_COOKIES_POLICY_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_MENTIONS_LEGALES_DRAFT.md`
+
+### Billing / Stripe test mode (foundation)
+- Ajout migration non destructive:
+  - `backend/migrations/20260502_billing_legal_foundation.sql`
+- Ajout fondations backend:
+  - `backend/src/routes/billing.js`
+  - `backend/src/services/billingService.js`
+  - `backend/src/services/legalAcceptanceService.js`
+  - `backend/src/services/stripeService.js`
+  - `backend/src/services/emailService.js`
+  - `backend/src/emails/templates/billingTemplates.js`
+- Compatibilité route conservée via `backend/src/routes/stripe.js` (proxy vers billing router).
+- Montage explicite `app.use('/api/billing', ...)` dans `backend/server.js`.
+- Ajout endpoints admin billing (`/api/admin/super/billing` et détail par organisation).
+
+### Frontend billing / onboarding test mode
+- Ajout page onboarding billing: `frontend/src/pages/BillingOnboarding.jsx`.
+- Mise à jour parcours:
+  - routes `/onboarding`, `/billing`, `/billing/success`, `/billing/cancel`,
+  - redirection register -> onboarding par plan.
+- Mise à jour `frontend/src/pages/Billing.jsx`, `PaiementSucces.jsx`, `PaiementAnnule.jsx`.
+- Ajustements responsive sur les layouts onboarding/billing.
+
+### Documentation Stripe test mode
+- Ajout:
+  - `docs/COURTIA_BILLING_LEGAL_DB_SCHEMA.md`
+  - `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md`
+  - `docs/COURTIA_TRANSACTIONAL_EMAILS.md`
+  - `docs/COURTIA_STRIPE_TEST_QA_REPORT.md`
+  - `docs/COURTIA_BILLING_TEST_MODE_FINAL_REPORT.md`
+
 ## Mission Finale 500% — Stabilisation produit + sécurité + performance (2 mai 2026)
 
 ### Frontend

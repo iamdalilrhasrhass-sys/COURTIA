@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBackground from '../components/BubbleBackground'
@@ -6,9 +6,17 @@ import api from '../api'
 
 export default function PaiementSucces() {
   const navigate = useNavigate()
+  const [message, setMessage] = useState("Votre abonnement est en cours d'activation.")
   
   useEffect(() => {
-    api.get('/stripe/subscription-status').catch(() => {})
+    api.get('/billing/status')
+      .then((res) => {
+        const s = res.data?.status
+        if (s?.status) {
+          setMessage(`Statut actuel: ${s.status}. Vous pouvez gérer votre abonnement depuis votre espace billing.`)
+        }
+      })
+      .catch(() => {})
   }, [])
   
   return (
@@ -19,13 +27,19 @@ export default function PaiementSucces() {
           Bienvenue dans COURTIA ! 🎉
         </h1>
         <p style={{fontSize:16,color:'rgba(0,0,0,0.6)',marginBottom:24,fontFamily:'Arial,sans-serif',lineHeight:1.6}}>
-          Votre abonnement est en cours d'activation. Vous recevrez un email de confirmation dans quelques instants.
+          {message}
         </p>
         <button onClick={() => navigate('/dashboard')} style={{
           padding:'12px 32px',background:'#2563eb',color:'white',border:'none',borderRadius:10,
           fontSize:15,fontWeight:600,cursor:'pointer',fontFamily:'Arial,sans-serif'
         }}>
           Accéder à mon espace
+        </button>
+        <button onClick={() => navigate('/billing')} style={{
+          padding:'12px 20px',background:'transparent',color:'#2563eb',border:'1px solid rgba(37,99,235,0.35)',borderRadius:10,
+          fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'Arial,sans-serif',marginLeft:10
+        }}>
+          Ouvrir Billing
         </button>
       </BubbleCard>
     </div>

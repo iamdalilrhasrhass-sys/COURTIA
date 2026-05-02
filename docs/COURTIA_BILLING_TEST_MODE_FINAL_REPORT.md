@@ -1,0 +1,53 @@
+# COURTIA — Billing Test Mode Final Report
+
+Date: 2 mai 2026
+
+## 1. Objectif
+Mettre en place un tunnel d’encaissement propre en Stripe test mode (sans live), avec consentements, traçabilité légale et visibilité admin.
+
+## 2. Implémenté
+- Onboarding cabinet (`/onboarding`) + champs organisation.
+- Consentements obligatoires (CGV/privacy/DPA/essai/renouvellement) enregistrés.
+- Création checkout session Stripe test mode.
+- Webhook Stripe avec vérification de signature + idempotence.
+- Statut abonnement (`/api/billing/status`).
+- Customer Portal session (`/api/billing/create-portal-session`).
+- Admin billing views (`/api/admin/super/billing`).
+- Templates d’emails transactionnels préparés.
+
+## 3. Documents légaux (drafts)
+- `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_DRAFT.md`
+- `docs/legal-drafts/COURTIA_PRIVACY_POLICY_DRAFT.md`
+- `docs/legal-drafts/COURTIA_DPA_DRAFT.md`
+- `docs/legal-drafts/COURTIA_COOKIES_POLICY_DRAFT.md`
+- `docs/legal-drafts/COURTIA_MENTIONS_LEGALES_DRAFT.md`
+
+## 4. Base de données
+- Migration non destructive créée:
+  - `backend/migrations/20260502_billing_legal_foundation.sql`
+- Exécution production non forcée dans ce batch.
+
+## 5. Variables d’environnement
+- Setup documenté dans:
+  - `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md`
+- Valeurs réelles non commitées.
+
+## 6. Limites actuelles
+- Stripe test E2E complet dépend des clés test réelles + config webhook Stripe Dashboard.
+- Validation juridique/comptable des textes non terminée.
+- Scheduling J5/J7 emails non branché automatiquement.
+
+## 7. Go / No-Go
+- Démo produit: **GO**
+- Stripe test mode (code): **GO**
+- Stripe test mode (opérationnel complet): **GO conditionnel** après config env Stripe
+- Stripe live: **NO GO**
+- Commercialisation payante live: **NO GO** tant que validation juridique/comptable n’est pas signée.
+
+## 8. Passage live — checklist minimale
+1. Rotation secrets terminée (JWT/DB/Stripe).
+2. Validation juriste des documents contractuels.
+3. Validation comptable du régime fiscal affiché.
+4. Test E2E Stripe test complet (checkout/webhooks/portal/fails).
+5. Validation sécurité finale + monitoring.
+6. Activation contrôlée Stripe live.

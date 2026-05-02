@@ -235,27 +235,35 @@ Exemples d’affichage selon configuration :
 - Routes existantes :
   - `backend/src/routes/billing.js`
   - `backend/src/routes/stripe.js`
-  - `backend/src/routes/stripe-webhook.js`
 - Services existants :
   - `backend/src/services/stripeService.js`
   - `backend/src/services/planService.js`
 - Frontend existant :
   - page billing déjà présente (`/billing`), parcours auth/register actifs.
+  - onboarding billing ajouté (`/onboarding?plan=starter|pro|premium`)
 
 ### Variables d’environnement actuellement attendues
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_PRICE_STARTER`
-- `STRIPE_PRICE_PRO`
-- `STRIPE_PRICE_PREMIUM`
+- `BILLING_MODE=test`
+- `STRIPE_SECRET_KEY_TEST`
+- `STRIPE_WEBHOOK_SECRET_TEST`
+- `STRIPE_STARTER_PRICE_ID_TEST`
+- `STRIPE_PRO_PRICE_ID_TEST`
+- `STRIPE_CUSTOMER_PORTAL_RETURN_URL`
 - `FRONTEND_URL`
 - `BACKEND_URL`
 
 ### Actions sûres recommandées avant implémentation supplémentaire
-1. Ne pas ajouter de nouvelle couche Stripe tant que les variables test mode ne sont pas validées.
-2. Unifier les noms d’env Stripe (éviter mélange `STRIPE_PRICE_START` vs `STRIPE_PRICE_STARTER`) dans une phase dédiée.
-3. Ajouter ensuite les tables juridiques (`legal_documents`, `legal_acceptances`, `signature_requests`) via migrations non destructives.
+1. Configurer les variables test mode côté backend (sans commiter de secrets).
+2. Vérifier en environnement de test les webhooks Stripe (idempotence + statuts abonnement).
+3. Finaliser la rotation des secrets legacy documentés par l’audit.
 4. Intégrer la signature électronique Premium via provider externe, jamais via “signature maison”.
+
+## Implémentation réalisée (2 mai 2026)
+- Endpoints backend ajoutés pour onboarding, consentements légaux, checkout session, webhook, status et portail client.
+- Traçabilité légale ajoutée (`legal_acceptances`) avec timestamp, IP, user-agent et contexte de consentement.
+- Fondations DB billing/legal ajoutées en migration non destructive (`20260502_billing_legal_foundation.sql`).
+- Vues Admin billing ajoutées (`/api/admin/super/billing` + détail organisation).
+- UI onboarding/billing ajoutée côté frontend sans bloquer la démo hors paiement.
 
 ---
 

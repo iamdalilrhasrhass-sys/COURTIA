@@ -1,5 +1,35 @@
 # COURTIA — Rapport QA
 
+## QA Stripe Test Mode + Légal (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Build frontend | ✅ OK | `npm run build` | 1877 modules, build vert |
+| Tests frontend | ✅ OK | `npm run test` | 33/33 |
+| Syntax backend billing | ✅ OK | `node -c` (billing/stripe/services/email/admin) | Aucun défaut syntaxe |
+| API prod health | ✅ OK | `curl -i https://api.courtiark.fr/api/health` | HTTP 200 |
+| Front prod health | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
+| QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1, 36 P2 |
+| Secret audit | ⚠️ Action requise | `python3 scripts/courtia_secret_audit.py` | P0 levé, P1 legacy docs encore présents |
+| Stripe E2E test mode | ⚠️ Partiel | Revue code + endpoints implémentés | Nécessite variables Stripe test + webhook dashboard pour validation complète |
+
+### Détails Stripe test mode
+- Endpoints implémentés:
+  - `GET /api/billing/plans`
+  - `POST /api/billing/onboarding`
+  - `POST /api/billing/legal-acceptance`
+  - `POST /api/billing/create-checkout-session`
+  - `GET /api/billing/status`
+  - `POST /api/billing/create-portal-session`
+  - `POST /api/billing/cancel-trial`
+  - `POST /api/billing/webhook`
+- Idempotence webhook basée sur `payment_events.event_id` (unique).
+- En cas d’env manquante Stripe: erreurs propres `billing_test_mode_not_configured`.
+
+### Décision
+- Socle Stripe test mode prêt côté code.
+- Validation juridique/comptable encore obligatoire avant live.
+
 ## QA Mission Finale 500% (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

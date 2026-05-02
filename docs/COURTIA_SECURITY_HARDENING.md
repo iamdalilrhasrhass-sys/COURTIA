@@ -15,6 +15,11 @@ Posture sécurité renforcée sur les points critiques sans casser la prod.
 - Frontend :
   - aucune clé sensible ajoutée,
   - code-splitting routes secondaires pour limiter surface runtime.
+- Secrets hygiene :
+  - `.gitignore` étendu (env variants, clés, dumps),
+  - script d’audit dédié `scripts/courtia_secret_audit.py`,
+  - runbook de rotation `docs/COURTIA_SECRET_ROTATION_RUNBOOK.md`,
+  - suppression du motif `sk_live` codé en dur dans `apiGatewayService`.
 
 ## Scan secrets (statique)
 Commande utilisée :
@@ -22,7 +27,12 @@ Commande utilisée :
 
 Résultat :
 - nombreuses occurrences historiques/documentaires et exemples,
-- pas de nouvelle clé réelle injectée dans ce batch.
+- pas de nouvelle clé réelle injectée dans ce batch,
+- aucun secret Stripe live codé en dur dans les services backend actifs.
+
+## État actuel (mission Stripe test mode)
+- P0 secret scan: levé.
+- P1 restants: principalement docs legacy/samples historiques (rotation/documentation planifiée).
 
 ## Anti-vol réaliste
 - Le frontend public reste inspectable par nature.
@@ -39,4 +49,3 @@ Résultat :
 3. Rotation des secrets potentiellement exposés historiquement (priorité JWT/DB/Render/Stripe).
 4. Valider CORS prod strict (`courtia.vercel.app`).
 5. Ajouter alerting sécurité (auth failures, rate-limit spikes, admin attempts).
-

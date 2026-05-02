@@ -30,6 +30,7 @@ const {
   getPortfolioTimestampSelect,
   selectPortfolioColumn,
 } = require('../utils/portfolioSchema');
+const billingService = require('../services/billingService');
 const pool = require('../db');
 
 // Prix mensuels par plan (HT, €) — à synchroniser avec les prix Stripe
@@ -42,6 +43,137 @@ function adminCompletedFilter(columns, alias = '') {
 
 // Appliquer verifyToken + superAdminGuard sur tout le routeur
 router.use(verifyToken, superAdminGuard);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/admin/super/billing
+// Vue abonnements/essais/consentements (super_admin only)
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/billing', async (_req, res) => {
+  try {
+    await billingService.ensureBillingFoundation();
+
+    const result = await pool.query(
+      `SELECT
+         op.id AS organization_id,
+         op.cabinet_name,
+         op.siret,
+         op.orias,
+         u.id AS user_id,
+         u.email,
+         u.first_name,
+         u.last_name,
+         COALESCE(bp.code, 'starter') AS plan_code,
+         COALESCE(sub.status, 'not_started') AS subscription_status,
+         sub.trial_end_at,
+         sub.current_period_end,
+         sub.cancel_at_period_end,
+         cbp.stripe_customer_id,
+         la.accepted_at AS last_legal_acceptance_at
+       FROM organization_profiles op
+       JOIN users u ON u.id = op.owner_user_id
+       LEFT JOIN LATERAL (
+         SELECT s.* FROM subscriptions s
+         WHERE s.organization_id = op.id
+         ORDER BY s.updated_at DESC, s.id DESC
+         LIMIT 1
+       ) sub ON TRUE
+       LEFT JOIN billing_plans bp ON bp.id = sub.plan_id
+       LEFT JOIN customer_billing_profiles cbp ON cbp.organization_id = op.id
+       LEFT JOIN LATERAL (
+         SELECT accepted_at FROM legal_acceptances l
+         WHERE l.organization_id = op.id
+         ORDER BY accepted_at DESC, id DESC
+         LIMIT 1
+       ) la ON TRUE
+       ORDER BY op.created_at DESC`
+    );
+
+    const rows = result.rows.map((r) => ({
+      ...r,
+      stripe_customer_id_masked: r.stripe_customer_id
+        ? `${r.stripe_customer_id.slice(0, 6)}***${r.stripe_customer_id.slice(-4)}`
+        : null,
+    }));
+
+    res.json({ total: rows.length, organizations: rows });
+  } catch (err) {
+    console.error('GET /admin/super/billing error:', err.message);
+    res.status(500).json({ error: 'Impossible de récupérer la vue billing admin.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/admin/super/billing/:organizationId
+// Détail billing d'une organisation (super_admin only)
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/billing/:organizationId', async (req, res) => {
+  try {
+    await billingService.ensureBillingFoundation();
+    const organizationId = parseInt(req.params.organizationId, 10);
+    if (Number.isNaN(organizationId)) {
+      return res.status(400).json({ error: 'organizationId invalide' });
+    }
+
+    const [orgRes, subRes, legalRes, eventsRes, invoicesRes] = await Promise.all([
+      pool.query(
+        `SELECT op.*, u.email, u.first_name, u.last_name
+         FROM organization_profiles op
+         JOIN users u ON u.id = op.owner_user_id
+         WHERE op.id = $1
+         LIMIT 1`,
+        [organizationId]
+      ),
+      pool.query(
+        `SELECT s.*, bp.code AS plan_code, bp.display_name AS plan_name
+         FROM subscriptions s
+         LEFT JOIN billing_plans bp ON bp.id = s.plan_id
+         WHERE s.organization_id = $1
+         ORDER BY s.updated_at DESC, s.id DESC
+         LIMIT 1`,
+        [organizationId]
+      ),
+      pool.query(
+        `SELECT doc_type, doc_version, accepted_at, user_id
+         FROM legal_acceptances
+         WHERE organization_id = $1
+         ORDER BY accepted_at DESC, id DESC
+         LIMIT 20`,
+        [organizationId]
+      ),
+      pool.query(
+        `SELECT event_id, event_type, processed_at, created_at
+         FROM payment_events
+         WHERE organization_id = $1
+         ORDER BY created_at DESC, id DESC
+         LIMIT 20`,
+        [organizationId]
+      ),
+      pool.query(
+        `SELECT provider_invoice_id, status, amount_cents, currency, paid_at, due_at, created_at
+         FROM invoices
+         WHERE organization_id = $1
+         ORDER BY created_at DESC, id DESC
+         LIMIT 20`,
+        [organizationId]
+      ),
+    ]);
+
+    if (!orgRes.rows[0]) {
+      return res.status(404).json({ error: 'Organisation introuvable' });
+    }
+
+    res.json({
+      organization: orgRes.rows[0],
+      subscription: subRes.rows[0] || null,
+      legal_acceptances: legalRes.rows,
+      payment_events: eventsRes.rows,
+      invoices: invoicesRes.rows,
+    });
+  } catch (err) {
+    console.error('GET /admin/super/billing/:organizationId error:', err.message);
+    res.status(500).json({ error: 'Impossible de récupérer le détail billing.' });
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/admin/users
