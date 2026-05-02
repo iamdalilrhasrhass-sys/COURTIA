@@ -49,12 +49,12 @@
 - [x] P0 Vercel frontend — build failed corrigé dans l'historique ; déploiement production actuel `Ready` sur `1a749f1`.
 
 - [x] Déployer le backend VPS / PM2 avec le hotfix Portfolio schema hardening.
-- [ ] Valider le statut exact du deploy Render `srv-d7561hsr85hc73a9c6i0` avec logs dashboard (non accessibles depuis Codex), puis confirmer que l'instance active est alignée avec `main`.
+- [x] Clôturer Render comme non-prod : DB `courtia-db` suspendue (billing), production backend officialisée sur VPS/PM2.
 
 ## P1 — Important
 - [ ] DNS courtiark.fr → propager nameservers Hostinger
 - [ ] Stripe LIVE → obtenir clés sk_live_ + whsec_ + Price IDs
-- [ ] Corriger la configuration DB de l'instance Render actuellement observable (`courtia.onrender.com`) qui retourne `getaddrinfo ENOTFOUND` sur register.
+- [ ] (Optionnel non-prod) Nettoyer/archiver le service Render `srv-d7561hsr85hc73a9c6i0` ou réactiver une DB Render uniquement si une stratégie Render est relancée.
 - [ ] Billing / Onboarding Stripe :
   - onboarding cabinet avec SIRET / ORIAS
   - nom du cabinet, adresse de facturation, téléphone optionnel
@@ -78,6 +78,7 @@
 - [ ] AuroraPageHeader → Rapports, Paramètres
 - [x] Message 429 auth rate limit à rendre plus clair côté interface
 - [ ] Harmonisation profonde Rapports / Paramètres
+- [ ] Stripe test mode + documents légaux (CGV, confidentialité, DPA, consentements essai) avant encaissement.
 
 ## P2 — Finition
 - [ ] Résorber les 38 signaux P2 du rapport `COURTIA_CODEX_QA_AUDIT.md`
