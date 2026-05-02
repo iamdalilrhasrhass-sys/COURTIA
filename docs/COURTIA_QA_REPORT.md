@@ -1,5 +1,21 @@
 # COURTIA — Rapport QA
 
+## QA Clôture Render (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Backend prod officiel | ✅ OK | `curl -i https://api.courtiark.fr/api/health` | HTTP 200 |
+| Frontend prod officiel | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
+| Render DB | ⚠️ Suspendue | Dashboard Render (`courtia-db`) | Plan free expiré, suspension billing (`expiresAt 2026-04-29`) |
+| Render auth DB dépendant | ⚠️ KO attendu | `POST https://courtia.onrender.com/api/auth/register` | `getaddrinfo ENOTFOUND` (DB Render non disponible) |
+| Dépendance frontend prod à Render | ✅ Non | `rg "onrender.com" frontend` | Aucune référence dans le frontend |
+
+### Décision infra
+- Render est classé non-prod / secondaire.
+- Le backend officiel de production est `https://api.courtiark.fr` (VPS/PM2).
+- Le frontend officiel de production est `https://courtia.vercel.app`.
+- Le P0 Render est clôturé par décision d'architecture infra, sans réactivation de la DB Render.
+
 ## QA Mission unique — Render + Landing 3D + Architecture billing (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |

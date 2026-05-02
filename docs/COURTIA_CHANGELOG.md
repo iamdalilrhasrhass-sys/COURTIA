@@ -1,5 +1,22 @@
 # COURTIA — Changelog Mission 2M
 
+## Clôture Render (2 mai 2026)
+
+### Décision infra
+- Confirmation Render Dashboard : DB `courtia-db` suspendue (plan free expiré, suspension billing, `expiresAt 2026-04-29`).
+- Render classé non-prod / secondaire.
+- Pas de paiement Render, pas de recréation DB Render, pas de migration production vers Render.
+
+### Production officielle
+- Backend officiel : `https://api.courtiark.fr`
+- Frontend officiel : `https://courtia.vercel.app`
+
+### Vérifications
+- `curl -i https://api.courtiark.fr/api/health` -> `HTTP 200`
+- `curl -I https://courtia.vercel.app` -> `HTTP/2 200`
+- `POST https://courtia.onrender.com/api/auth/register` reste en `ENOTFOUND` (cohérent avec DB Render suspendue)
+- aucune dépendance `courtia.onrender.com` détectée dans le frontend.
+
 ## Render P0 + Landing 3D Repair + Billing Architecture (2 mai 2026)
 
 **Commits**
