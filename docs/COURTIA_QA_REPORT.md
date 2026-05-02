@@ -1,5 +1,26 @@
 # COURTIA — Rapport QA
 
+## QA P0 — Backend VPS / PM2 redeploy portfolio (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| SSH VPS + PM2 actif | ✅ OK | `ssh -i ~/.ssh/courtia_vps`, `pm2 status` | Process `courtia-api` trouvé sur `/srv/courtia/backend` |
+| Alignement code VPS | ✅ OK | `git reset --hard origin/main` sur clone de référence | Commit source `bc09e93` (inclut `1a749f1`) |
+| Sync backend runtime | ✅ OK | `rsync` vers `/srv/courtia/backend` | `.env` préservé |
+| Dépendances backend | ✅ OK | `npm install --omit=dev` | Installation propre |
+| Syntax checks backend | ✅ OK | `node -c` ciblé | server + routes/services portfolio/admin OK |
+| PM2 restart | ✅ OK | `pm2 restart courtia-api` | Process online après restart |
+| API health local VPS | ✅ OK | `GET /api/health` | HTTP 200 |
+| Portfolio morning-brief local | ✅ OK | `GET /api/portfolio/morning-brief` | HTTP 200, réponse fallback propre |
+| Portfolio health-score local | ✅ Sans 500 | `GET /api/portfolio/health-score` | HTTP 503 fallback métier propre, pas de fuite SQL |
+| API health publique | ✅ OK | `GET https://api.courtiark.fr/api/health` | HTTP 200 |
+| Portfolio morning-brief public | ✅ OK | endpoint public + token demo | HTTP 200 |
+| Portfolio health-score public | ✅ Sans 500 | endpoint public + token demo | HTTP 503 fallback propre |
+
+### Décision
+- P0 demandé résolu : plus d'erreur 500 sur les endpoints portfolio ciblés.
+- Reste fonctionnel à suivre (non bloquant P0) : disponibilité du `health-score` en 200 quand une analyse portefeuille est générée.
+
 ## QA P0 — Vercel Deployment Failed (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
