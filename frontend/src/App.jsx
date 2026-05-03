@@ -46,6 +46,7 @@ const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'))
 const AdminSystem = lazy(() => import('./pages/AdminSystem'))
 const AdminLogs = lazy(() => import('./pages/AdminLogs'))
 const AdminSupport = lazy(() => import('./pages/AdminSupport'))
+const Partners = lazy(() => import('./pages/Partners'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -224,6 +225,7 @@ export default function App() {
           <Route path="/reach/inbox"       element={<ReachInbox />} />
           <Route path="/reach/map"         element={<ReachMap />} />
           <Route path="/reach/settings"    element={<ReachSettings />} />
+          <Route path="/partners"       element={<Partners />} />
         </Route>
 
         {/* Routes Admin — protégées par AdminRoute (super_admin uniquement) */}

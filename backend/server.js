@@ -154,6 +154,7 @@ const academyRouter        = require('./src/routes/academy')
 const documentInboxRouter  = require('./src/routes/documentInbox')
 const browserPilotRouter   = require('./src/routes/browserPilot')
 const extensionRouter      = require('./src/routes/extension')
+const partnersRouter       = require('./src/routes/partners')
 
 // Public
 app.use('/api/auth',   authLimiter, authRouter)
@@ -191,8 +192,8 @@ app.use('/api/academy',        verifyToken, academyRouter)
 app.use('/api/document-inbox', verifyToken, documentInboxRouter)
 app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 app.use('/api/extension',      verifyToken, extensionRouter)
+app.use('/api/partners',       verifyToken, partnersRouter)
 
-// Messaging (auth gérée route par route — webhook inbound est public)
 app.use('/api/messaging',    messagingRoutes)
 
 // ==================== PORTFOLIO CRON (03h00 Europe/Paris) ====================
