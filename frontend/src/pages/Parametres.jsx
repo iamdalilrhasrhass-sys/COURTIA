@@ -85,10 +85,16 @@ export default function Parametres() {
     pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 159, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
     starter: { label: "L'Essentiel", classes: 'bg-emerald-100 text-emerald-700', price: 89, features: ["Jusqu'à 200 clients", 'Scores & Segments', 'Module Tâches'] },
     elite: { label: 'Le Réseau', classes: 'bg-violet-100 text-violet-700', price: 350, features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
-    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: 0, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'] }
+    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: null, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'], noSubscriptionText: 'Offre en cours de configuration' }
   }
   const tier = (profile?.pricing_tier || '').toLowerCase()
-  const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', price: 0, features: [] }
+  const currentPlan = planConfig[tier] || {
+    label: profile?.pricing_tier || 'Aucun abonnement actif',
+    classes: 'bg-gray-100 text-gray-700',
+    price: null,
+    features: [],
+    noSubscriptionText: 'Aucun abonnement actif'
+  }
 
   if (loading) {
     return (
@@ -199,7 +205,9 @@ export default function Parametres() {
                             <p className="font-semibold text-gray-800">Votre plan actuel</p>
                             <span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span>
                         </div>
-                        <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                        {typeof currentPlan.price === 'number'
+                          ? <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                          : <p className="mt-2 text-lg font-semibold text-gray-600">{currentPlan.noSubscriptionText || 'Aucun abonnement actif'}</p>}
                         <ul className="mt-4 space-y-2 text-sm text-gray-600">
                             {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
                         </ul>

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import api from '../api'
+import { buildApiUrl } from '../api/sessionPolicy'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import RhasrhassSignature from '../components/brand/RhasrhassSignature'
@@ -535,7 +536,7 @@ export default function Login() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
         }).then(r => r.json())
 
-        const res = await axios.post(`${API_URL}/api/auth/google`, {
+        const res = await axios.post(buildApiUrl('/auth/google', API_URL), {
           googleId: userInfo.sub,
           email: userInfo.email,
           firstName: userInfo.given_name,

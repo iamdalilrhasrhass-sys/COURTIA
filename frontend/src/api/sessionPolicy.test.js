@@ -27,5 +27,7 @@ describe('sessionPolicy', () => {
   it('avoids duplicate api prefixes when building URLs', () => {
     expect(buildApiUrl('/api/document-inbox/stats', '/api')).toBe('/api/document-inbox/stats')
     expect(buildApiUrl('/document-inbox/stats', '/api')).toBe('/api/document-inbox/stats')
+    expect(buildApiUrl('/api/dashboard/stats', 'https://api.courtiark.fr/api')).toBe('https://api.courtiark.fr/api/dashboard/stats')
+    expect(buildApiUrl('/dashboard/stats', 'https://api.courtiark.fr')).toBe('https://api.courtiark.fr/api/dashboard/stats')
   })
 })

@@ -14,7 +14,8 @@ const { verifyToken } = require('../middleware/auth');
 
 // Middleware admin
 const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
+  const role = String(req.user?.role || '').toLowerCase();
+  if (!req.user || (role !== 'admin' && role !== 'super_admin')) {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();
@@ -25,6 +26,15 @@ const requireAdmin = (req, res, next) => {
 router.get('/costs', verifyToken, requireAdmin, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const tableCheck = await pool.query(`SELECT to_regclass('public.api_request_logs') AS table_name`);
+    if (!tableCheck.rows[0]?.table_name) {
+      return res.json({
+        trackingAvailable: false,
+        message: 'Aucune donnée de coût IA disponible pour le moment. Activez le tracking ARK pour commencer le suivi.',
+        period: new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' }),
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     const globalStats = await pool.query(`
       SELECT
@@ -33,7 +43,9 @@ router.get('/costs', verifyToken, requireAdmin, async (req, res) => {
         SUM(CASE WHEN model_used = 'claude-opus-4-6' THEN 1 ELSE 0 END) as opus_requests,
         SUM(CASE WHEN model_used = 'claude-haiku-4-5-20251001' THEN 1 ELSE 0 END) as haiku_requests,
         COALESCE(SUM(cost_usd), 0) as total_cost_usd,
-        COALESCE(AVG(cost_usd), 0) as avg_cost_per_request
+        COALESCE(AVG(cost_usd), 0) as avg_cost_per_request,
+        COALESCE(AVG(CASE WHEN model_used ILIKE '%haiku%' THEN cost_usd END), 0) as avg_haiku_cost,
+        COALESCE(AVG(CASE WHEN model_used ILIKE '%opus%' THEN cost_usd END), 0) as avg_opus_cost
       FROM api_request_logs
       WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
     `);
@@ -42,11 +54,13 @@ router.get('/costs', verifyToken, requireAdmin, async (req, res) => {
       SELECT
         u.id, u.first_name, u.last_name, u.email, u.pricing_tier,
         COUNT(arl.id) as request_count,
+        SUM(CASE WHEN arl.model_used ILIKE '%haiku%' THEN 1 ELSE 0 END) as haiku_count,
+        SUM(CASE WHEN arl.model_used ILIKE '%opus%' THEN 1 ELSE 0 END) as opus_count,
         COALESCE(ROUND(SUM(arl.cost_usd)::numeric, 4), 0) as total_cost_usd
       FROM users u
       LEFT JOIN api_request_logs arl ON u.id = arl.user_id
         AND DATE_TRUNC('month', arl.created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
-      WHERE u.role != 'admin'
+      WHERE u.role NOT IN ('admin', 'super_admin')
       GROUP BY u.id, u.first_name, u.last_name, u.email, u.pricing_tier
       ORDER BY total_cost_usd DESC NULLS LAST
       LIMIT 10
@@ -56,6 +70,8 @@ router.get('/costs', verifyToken, requireAdmin, async (req, res) => {
       SELECT
         DATE(created_at) as date,
         COUNT(*) as request_count,
+        SUM(CASE WHEN model_used ILIKE '%haiku%' THEN 1 ELSE 0 END) as haiku_count,
+        SUM(CASE WHEN model_used ILIKE '%opus%' THEN 1 ELSE 0 END) as opus_count,
         COALESCE(ROUND(SUM(cost_usd)::numeric, 4), 0) as daily_cost
       FROM api_request_logs
       WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
@@ -67,19 +83,47 @@ router.get('/costs', verifyToken, requireAdmin, async (req, res) => {
       SELECT
         COALESCE(request_type, 'unknown') as request_type,
         COUNT(*) as count,
-        COALESCE(ROUND(SUM(cost_usd)::numeric, 4), 0) as total_cost
+        COALESCE(ROUND(SUM(cost_usd)::numeric, 4), 0) as total_cost,
+        COALESCE(ROUND(AVG(cost_usd)::numeric, 4), 0) as avg_cost
       FROM api_request_logs
       WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
       GROUP BY request_type
       ORDER BY count DESC
     `);
 
+    const usageByDay = await pool.query(`
+      SELECT COALESCE(ROUND(SUM(cost_usd)::numeric, 4), 0) AS daily_average_cost
+      FROM api_request_logs
+      WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
+      GROUP BY DATE(created_at)
+    `);
+
+    const quotaDefaults = await pool.query(`
+      SELECT
+        COALESCE(SUM(COALESCE(haiku_quota_monthly, 0)), 0) AS haiku_quota_total,
+        COALESCE(SUM(COALESCE(opus_quota_monthly, 0)), 0) AS opus_quota_total
+      FROM pricing_config
+    `);
+
+    const gs = globalStats.rows[0] || {};
+    const totalUsers = Number(gs.total_users || 0);
+    const totalCost = Number(gs.total_cost_usd || 0);
+    const daysCount = Math.max(usageByDay.rows.length, 1);
+    const costPerDay = totalCost / daysCount;
+    const costPerUser = totalUsers > 0 ? totalCost / totalUsers : 0;
+
     res.json({
+      trackingAvailable: true,
       period: new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' }),
-      globalStats: globalStats.rows[0],
+      globalStats: {
+        ...gs,
+        cost_per_day: Number(costPerDay.toFixed(4)),
+        cost_per_user: Number(costPerUser.toFixed(4)),
+      },
       topUsers: topUsers.rows,
       requestsTrend: requestsTrend.rows,
       requestsByType: requestsByType.rows,
+      quotas: quotaDefaults.rows[0] || { haiku_quota_total: 0, opus_quota_total: 0 },
       timestamp: new Date().toISOString()
     });
   } catch (err) {
@@ -94,8 +138,10 @@ router.get('/costs/by-user', verifyToken, requireAdmin, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const { userId, month } = req.query;
+    const tableCheck = await pool.query(`SELECT to_regclass('public.api_request_logs') AS table_name`);
+    const hasLogsTable = !!tableCheck.rows[0]?.table_name;
 
-    let query = `
+    let query = hasLogsTable ? `
       SELECT
         u.id,
         u.first_name || ' ' || u.last_name as full_name,
@@ -108,7 +154,20 @@ router.get('/costs/by-user', verifyToken, requireAdmin, async (req, res) => {
       FROM users u
       LEFT JOIN api_request_logs arl ON u.id = arl.user_id
       LEFT JOIN pricing_config pc ON u.pricing_tier = pc.tier_name
-      WHERE u.role != 'admin'
+      WHERE u.role NOT IN ('admin', 'super_admin')
+    ` : `
+      SELECT
+        u.id,
+        u.first_name || ' ' || u.last_name as full_name,
+        u.email, u.pricing_tier,
+        pc.monthly_price_eur,
+        COALESCE(pc.haiku_quota_monthly, 100) as haiku_quota_monthly,
+        COALESCE(pc.opus_quota_monthly, 10) as opus_quota_monthly,
+        0::bigint as total_requests,
+        0::numeric as total_cost_usd
+      FROM users u
+      LEFT JOIN pricing_config pc ON u.pricing_tier = pc.tier_name
+      WHERE u.role NOT IN ('admin', 'super_admin')
     `;
     const params = [];
 
@@ -116,9 +175,9 @@ router.get('/costs/by-user', verifyToken, requireAdmin, async (req, res) => {
       query += ` AND u.id = $${params.length + 1}`;
       params.push(userId);
     }
-    if (!month) {
+    if (hasLogsTable && !month) {
       query += ` AND (arl.created_at IS NULL OR DATE_TRUNC('month', arl.created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP))`;
-    } else {
+    } else if (hasLogsTable) {
       query += ` AND TO_CHAR(arl.created_at, 'YYYY-MM') = $${params.length + 1}`;
       params.push(month);
     }
@@ -142,6 +201,16 @@ router.get('/costs/export', verifyToken, requireAdmin, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const { format = 'csv' } = req.query;
+    const tableCheck = await pool.query(`SELECT to_regclass('public.api_request_logs') AS table_name`);
+    if (!tableCheck.rows[0]?.table_name) {
+      if (format === 'csv') {
+        const csv = 'message\n"Aucune donnée de coût IA disponible pour le moment. Activez le tracking ARK pour commencer le suivi."\n';
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=api-costs-empty-' + new Date().toISOString().slice(0, 10) + '.csv');
+        return res.send(csv);
+      }
+      return res.json([]);
+    }
 
     const data = await pool.query(`
       SELECT
@@ -179,8 +248,10 @@ router.get('/costs/export', verifyToken, requireAdmin, async (req, res) => {
 router.get('/quota-status/:userId', verifyToken, requireAdmin, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const tableCheck = await pool.query(`SELECT to_regclass('public.api_request_logs') AS table_name`);
+    const hasLogsTable = !!tableCheck.rows[0]?.table_name;
 
-    const result = await pool.query(`
+    const result = await pool.query(hasLogsTable ? `
       SELECT
         u.id, u.first_name || ' ' || u.last_name as name, u.pricing_tier,
         COALESCE(pc.haiku_quota_monthly, 100) as haiku_quota_monthly,
@@ -193,6 +264,16 @@ router.get('/quota-status/:userId', verifyToken, requireAdmin, async (req, res) 
         AND DATE_TRUNC('month', arl.created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
       WHERE u.id = $1
       GROUP BY u.id, u.first_name, u.last_name, u.pricing_tier, pc.haiku_quota_monthly, pc.opus_quota_monthly
+    ` : `
+      SELECT
+        u.id, u.first_name || ' ' || u.last_name as name, u.pricing_tier,
+        COALESCE(pc.haiku_quota_monthly, 100) as haiku_quota_monthly,
+        COALESCE(pc.opus_quota_monthly, 10) as opus_quota_monthly,
+        0::bigint as haiku_used,
+        0::bigint as opus_used
+      FROM users u
+      LEFT JOIN pricing_config pc ON u.pricing_tier = pc.tier_name
+      WHERE u.id = $1
     `, [req.params.userId]);
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });

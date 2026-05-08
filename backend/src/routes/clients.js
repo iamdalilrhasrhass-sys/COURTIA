@@ -23,9 +23,26 @@ router.get('/', async (req, res) => {
         id, first_name as prenom, last_name as nom, 
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
+        status, risk_score,
         bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
-        notes, created_at, company_name, type as segment
+        notes, created_at, company_name, type as segment,
+        city, postal_code, silent_alert, last_contact, loyalty_score, lifetime_value,
+        (
+          SELECT COUNT(*)::int
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status = 'actif'
+        ) AS contracts_count,
+        (
+          SELECT COALESCE(SUM(NULLIF(q.quote_data->>'prime_annuelle', '')::numeric), 0)
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status = 'actif'
+        ) AS prime_totale,
+        (
+          SELECT MIN(NULLIF(q.quote_data->>'date_echeance', '')::date)
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status = 'actif'
+        ) AS next_echeance
       FROM clients 
       WHERE courtier_id = $3
       ORDER BY created_at DESC
@@ -61,10 +78,12 @@ router.get('/:id', async (req, res) => {
         id, first_name as prenom, last_name as nom,
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
+        status, risk_score,
         bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
         notes, created_at, company_name, type as segment,
-        loyalty_score, lifetime_value, civility, postal_code, city, country
+        loyalty_score, lifetime_value, civility, postal_code, city, country,
+        silent_alert, last_contact
       FROM clients WHERE id = $1 AND courtier_id = $2`,
       [req.params.id, req.user.id]
     );
@@ -87,11 +106,14 @@ router.get('/:id/contrats', async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const result = await pool.query(
-      `SELECT id,
+      `SELECT q.id,
+              q.client_id,
+              q.status,
+              q.status as statut,
               quote_data->>'type_contrat' as type_contrat,
               quote_data->>'compagnie' as compagnie,
+              quote_data->>'numero' as numero,
               (quote_data->>'prime_annuelle')::numeric as prime_annuelle,
-              status as statut,
               (quote_data->>'date_effet')::date as date_effet,
               (quote_data->>'date_echeance')::date as date_echeance
        FROM quotes q

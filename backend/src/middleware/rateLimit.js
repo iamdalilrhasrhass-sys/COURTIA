@@ -1,12 +1,20 @@
 // backend/middleware/rateLimit.js
 const rateLimit = require('express-rate-limit');
 
-const globalLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 120,
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'too_many_requests', details: '120 requêtes max par minute' }
+  message: { error: 'too_many_requests', details: '300 requêtes max toutes les 15 minutes' }
+});
+
+const healthLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 240,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'too_many_requests', details: 'Limiter /health atteint temporairement' }
 });
 
 const arkLimiter = rateLimit({
@@ -17,9 +25,9 @@ const arkLimiter = rateLimit({
   message: { error: 'ark_rate_limit', details: '20 appels ARK max par minute' }
 });
 
-const authLimiter = rateLimit({
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
@@ -29,4 +37,15 @@ const authLimiter = rateLimit({
   }
 });
 
-module.exports = { globalLimiter, arkLimiter, authLimiter };
+const meLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'session_rate_limit',
+    details: 'Vérification de session temporairement limitée. Réessayez dans quelques secondes.'
+  }
+});
+
+module.exports = { apiLimiter, healthLimiter, arkLimiter, loginLimiter, meLimiter };

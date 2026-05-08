@@ -26,11 +26,17 @@ const verifyToken = (req, res, next) => {
 router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const courtierId = req.user.id || req.user.userId;
+    const clientId = req.query.clientId || req.query.client_id || null;
+    const params = [courtierId];
+    const clientClause = clientId ? ` AND a.client_id = $2` : '';
+    if (clientId) params.push(clientId);
+
     const result = await pool.query(`
       SELECT 
         a.id, a.title as titre, a.description, 
         a.status as statut, a.start_time as echeance,
-        a.client_id, c.first_name as client_nom, c.last_name as client_prenom,
+        a.client_id, c.first_name as client_prenom, c.last_name as client_nom,
         a.created_at,
         CASE 
           WHEN a.start_time < NOW() + INTERVAL '3 days' THEN 'haute'
@@ -39,8 +45,9 @@ router.get('/', verifyToken, async (req, res) => {
         END as priorite
       FROM appointments a
       JOIN clients c ON a.client_id = c.id AND c.courtier_id = $1
+      ${clientClause}
       ORDER BY a.start_time ASC
-    `, [req.user.id]);
+    `, params);
 
     res.json(result.rows);
   } catch (err) {
@@ -63,7 +70,7 @@ router.post('/', verifyToken, async (req, res) => {
     if (client_id) {
       const own = await pool.query(
         'SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2',
-        [client_id, req.user.userId]
+        [client_id, req.user.id || req.user.userId]
       );
       if (!own.rows.length) return res.status(403).json({ error: 'client_not_owned' });
     }
@@ -72,7 +79,7 @@ router.post('/', verifyToken, async (req, res) => {
       `INSERT INTO appointments 
        (title, description, client_id, start_time, status, user_id, created_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *`,
-      [titre, description, client_id, echeance, statut || 'a_faire', req.user.userId]
+      [titre, description, client_id, echeance, statut || 'a_faire', req.user.id || req.user.userId]
     );
 
     res.status(201).json(result.rows[0]);

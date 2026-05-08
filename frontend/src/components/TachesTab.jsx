@@ -103,7 +103,7 @@ export default function TachesTab({ taches: initialTaches = [], clientId, naviga
     try {
       const payload = { ...formData, client_id: clientId, description: formData.description || '' }
       if (payload.id) {
-        const { data } = await api.put(`/api/taches/${payload.id}`, payload)
+        const { data } = await api.put(`/taches/${payload.id}`, payload)
         setTaches(taches.map(t => t.id === payload.id ? data : t))
         toast.success('Tâche modifiée ✓')
       } else {
@@ -118,7 +118,7 @@ export default function TachesTab({ taches: initialTaches = [], clientId, naviga
   async function handleDelete(id) {
     if (!window.confirm('Voulez-vous vraiment supprimer cette tâche ?')) return
     try {
-      await api.delete(`/api/taches/${id}`)
+      await api.delete(`/taches/${id}`)
       setTaches(t => t.filter(x => x.id !== id))
       toast.success('Tâche supprimée.')
     } catch { toast.error('Erreur de suppression.') }
