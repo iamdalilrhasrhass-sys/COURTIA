@@ -397,6 +397,7 @@ async function main() {
       }
       await classifyAdminAccess(page, '/admin', 'dalil')
       await classifyAdminAccess(page, '/admin/costs', 'dalil')
+      await logout(page)
     } else {
       routeChecks.push({ route: '/admin (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
       routeChecks.push({ route: '/admin/costs (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
