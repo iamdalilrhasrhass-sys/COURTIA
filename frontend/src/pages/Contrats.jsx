@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Calendar, FileText } from 'lucide-react'
+import { Plus, Calendar, FileText, Search } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
@@ -53,6 +53,11 @@ function KanbanCard({ contrat, borderColor, onNavigate }) {
   const echeance = contrat.date_echeance ? new Date(contrat.date_echeance) : null
   const now = new Date(); now.setHours(0,0,0,0)
   const daysLeft = echeance ? Math.ceil((echeance - now) / (1000*60*60*24)) : null
+  const actionReco = daysLeft !== null && daysLeft <= 30
+    ? 'Relance renouvellement'
+    : daysLeft !== null && daysLeft <= 90
+      ? 'Préparer ajustement tarifaire'
+      : 'Suivi standard'
 
   return (
     <BubbleCard hover padding={16} onClick={() => onNavigate(contrat.client_id)}>
@@ -95,6 +100,7 @@ function KanbanCard({ contrat, borderColor, onNavigate }) {
           </div>
         </div>
       </div>
+      <div className="mt-2 text-[11px] font-semibold text-blue-700">{actionReco}</div>
     </BubbleCard>
   )
 }
@@ -104,6 +110,9 @@ export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
   const [useMock, setUseMock] = useState(false)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('tous')
+  const [sortBy, setSortBy] = useState('echeance')
   const navigate = useNavigate()
 
   useEffect(() => { fetchContrats() }, [])
@@ -122,6 +131,35 @@ export default function Contrats() {
     } finally { setLoading(false) }
   }
 
+  const displayedContrats = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    let rows = [...(contrats || [])]
+
+    if (q) {
+      rows = rows.filter((c) => {
+        const client = `${c.client_prenom || ''} ${c.client_nom || ''}`.toLowerCase()
+        const type = String(c.type_contrat || '').toLowerCase()
+        const compagnie = String(c.compagnie || '').toLowerCase()
+        const numero = String(c.numero || '').toLowerCase()
+        return client.includes(q) || type.includes(q) || compagnie.includes(q) || numero.includes(q)
+      })
+    }
+
+    if (statusFilter !== 'tous') {
+      rows = rows.filter((c) => String(c.statut || c.status || '').toLowerCase() === statusFilter)
+    }
+
+    rows.sort((a, b) => {
+      if (sortBy === 'prime') return Number(b.prime_annuelle || 0) - Number(a.prime_annuelle || 0)
+      if (sortBy === 'compagnie') return String(a.compagnie || '').localeCompare(String(b.compagnie || ''))
+      const da = a.date_echeance ? new Date(a.date_echeance).getTime() : Number.MAX_SAFE_INTEGER
+      const db = b.date_echeance ? new Date(b.date_echeance).getTime() : Number.MAX_SAFE_INTEGER
+      return da - db
+    })
+
+    return rows
+  }, [contrats, search, statusFilter, sortBy])
+
   const kanbanData = useMemo(() => {
     const grouped = {
       actif: [],
@@ -129,7 +167,7 @@ export default function Contrats() {
       resilie: [],
       brouillon: [],
     }
-    ;(contrats || []).forEach(c => {
+    displayedContrats.forEach(c => {
       const s = (c.statut || c.status || '').toLowerCase()
       if (s === 'actif') grouped.actif.push(c)
       else if (['renouvellement', 'en attente', 'suspendu'].includes(s)) grouped.renouvellement.push(c)
@@ -138,7 +176,7 @@ export default function Contrats() {
       else grouped.brouillon.push(c) // fallback
     })
     return grouped
-  }, [contrats])
+  }, [displayedContrats])
 
   const SkeletonCard = () => (
     <div className="animate-pulse rounded-2xl p-4 mb-3" style={{ background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}>
@@ -172,6 +210,30 @@ export default function Contrats() {
             Aperçu démonstration : les contrats affichés sont fictifs car aucune donnée réelle n’a été chargée.
           </div>
         )}
+
+        <div className="mb-5 grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher client, compagnie, type, numéro..."
+              className="w-full rounded-xl border border-white/20 bg-white/80 pl-9 pr-3 py-2 text-sm outline-none"
+            />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
+            <option value="tous">Tous statuts</option>
+            <option value="actif">Actif</option>
+            <option value="renouvellement">Renouvellement</option>
+            <option value="brouillon">Brouillon</option>
+            <option value="resilie">Résilié</option>
+          </select>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
+            <option value="echeance">Tri: échéance proche</option>
+            <option value="prime">Tri: prime annuelle</option>
+            <option value="compagnie">Tri: compagnie</option>
+          </select>
+        </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
