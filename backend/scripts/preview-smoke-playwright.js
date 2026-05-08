@@ -134,6 +134,32 @@ async function login(page, accountKey) {
   recordInfo(scope, `Logged in at ${page.url()}`)
 }
 
+async function checkCurrentRole(page, accountKey) {
+  const scope = `role:${accountKey}`
+  const role = await page.evaluate(async () => {
+    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
+    if (!token) return null
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return null
+      const payload = await res.json()
+      return String(payload?.role || '').toLowerCase()
+    } catch {
+      return null
+    }
+  })
+
+  if (!role) {
+    recordFailure(scope, 'Unable to resolve current role via /api/auth/me')
+    return null
+  }
+
+  recordInfo(scope, `Resolved role: ${role}`)
+  return role
+}
+
 async function checkRoute(page, route, expectedMarkers = [], options = {}) {
   const url = `${normalizeBase(PREVIEW_BASE_URL)}${route}`
   const check = { route, ok: true, details: '' }
@@ -365,6 +391,10 @@ async function main() {
     }
 
     if (dalilLogged) {
+      const dalilRole = await checkCurrentRole(page, 'dalil')
+      if (dalilRole !== 'admin' && dalilRole !== 'super_admin') {
+        recordFailure('role:dalil', `Expected admin/super_admin, got "${dalilRole || 'unknown'}"`)
+      }
       await classifyAdminAccess(page, '/admin', 'dalil')
       await classifyAdminAccess(page, '/admin/costs', 'dalil')
     } else {
