@@ -1,15 +1,24 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle } from 'lucide-react'
+import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle, AlertTriangle } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
+import ClientBubblePremium from '../components/ClientBubblePremium'
+import WelcomeScreen from '../components/WelcomeScreen'
+import EmptyState from '../components/EmptyState'
+import ErrorState from '../components/ErrorState'
 import BubbleBackground from '../components/BubbleBackground'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
+import CreateTaskModal from '../components/clients/CreateTaskModal'
+import { computeClientIntelligence } from '../utils/clientIntelligence'
 import '../styles/design-system.css'
 
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
+
+// Mock clients — uniquement utilisés si VITE_USE_MOCKS=true
 const MOCK_CLIENTS = [
   {id:1,name:'SARL Dupont',email:'contact@dupont.fr',status:'actif',riskScore:28,premium:45000,city:'Paris'},
   {id:2,name:'Martin Assurances',email:'m.assurances@outlook.fr',status:'actif',riskScore:65,premium:32000,city:'Lyon'},
@@ -142,12 +151,16 @@ function ClientCard({ client, onNavigate }) {
 export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
   const [sortField, setSortField] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
-  const [viewMode, setViewMode] = useState('bulles') // 'list' | 'cards' | 'bulles'
+  const [viewMode, setViewMode] = useState('bulles')
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
+  const [taskClient, setTaskClient] = useState(null)
+  const [taskIntelligence, setTaskIntelligence] = useState(null)
   const navigate = useNavigate()
   const PER_PAGE = 15
 
@@ -156,22 +169,49 @@ export default function Clients() {
   async function fetchClients() {
     try {
       setLoading(true)
+      setError(null)
       const res = await api.get('/clients')
-      setClients(res.data?.data || [])
+      const data = res.data?.data || res.data || []
+      if (!Array.isArray(data)) {
+        setClients([])
+        if (!USE_MOCKS) setError('Format de réponse API inattendu')
+        else if (USE_MOCKS) setClients(MOCK_CLIENTS)
+      } else {
+        setClients(data)
+      }
     } catch (err) {
-      console.error(`Impossible de charger les clients: ${err.message}`)
-      setClients(MOCK_CLIENTS)
+      console.error('Erreur chargement clients:', err.message)
+      if (USE_MOCKS) {
+        setClients(MOCK_CLIENTS)
+      } else {
+        setError(err?.response?.status === 401 
+          ? 'Session expirée. Veuillez vous reconnecter.' 
+          : 'Impossible de charger les clients. Vérifiez votre connexion.')
+        setClients([])
+      }
     }
     finally { setLoading(false) }
   }
-  
+
+  // Pre-compute intelligence profiles for bubble view (without quotes/appointments)
+  const clientIntelligenceMap = useMemo(() => {
+    const map = {}
+    if (!loading) {
+      (clients || []).forEach(c => {
+        if (!c || !c.id) return
+        map[c.id] = computeClientIntelligence(c, [], [])
+      })
+    }
+    return map
+  }, [clients, loading])
+
   const filteredClients = useMemo(() => {
     return (clients || []).filter(c => {
         if (!c) return false
         const s = search.toLowerCase()
-        const name = c.name || `${c.prenom || ''} ${c.nom || ''}`.toLowerCase()
-        const email = c.email || ''
-        const matchSearch = !s || name.includes(s) || email.toLowerCase().includes(s)
+        const name = (c.name || `${c.prenom || ''} ${c.nom || ''}`).toLowerCase()
+        const email = (c.email || '').toLowerCase()
+        const matchSearch = !s || name.includes(s) || email.includes(s)
         const st = (c.status || c.statut || '').toLowerCase()
         if (statusFilter === 'tous') return matchSearch
         if (statusFilter === 'inactif') return matchSearch && ['inactif'].includes(st)
@@ -204,7 +244,7 @@ export default function Clients() {
     else { setSortField(field); setSortDir('asc') }
     setPage(1)
   }
-  
+
   function timeAgo(dateString) {
       if (!dateString) return 'Jamais'
       const seconds = Math.floor((new Date() - new Date(dateString)) / 1000)
@@ -217,6 +257,20 @@ export default function Clients() {
       return `aujourd'hui`
   }
 
+  const handleCreateTask = (client, intelligence) => {
+    setTaskClient(client)
+    setTaskIntelligence(intelligence)
+    setTaskModalOpen(true)
+  }
+
+  const handleTaskCreated = () => {
+    // Optionnel : rafraîchir les données ou afficher un toast
+  }
+
+  const handleAskArk = (client, intelligence) => {
+    navigate(`/clients/${client.id}`)
+  }
+
   const thClass = "p-4 text-left text-[11px] font-semibold uppercase tracking-widest select-none cursor-pointer"
   const headerMapping = { Client: 'nom', Statut: 'statut', 'Score Risque': 'score_risque', 'Dernière activité': 'created_at' }
   const VIEW_OPTIONS = [
@@ -224,6 +278,19 @@ export default function Clients() {
     { key: 'cards', label: 'Cartes', icon: LayoutGrid },
     { key: 'bulles', label: 'Bulles', icon: Circle },
   ]
+
+  // Sort by priority for bubble view
+  const prioritySortedClients = useMemo(() => {
+    if (viewMode !== 'bulles') return paginatedClients
+    return [...paginatedClients].sort((a, b) => {
+      const intelA = clientIntelligenceMap[a.id]
+      const intelB = clientIntelligenceMap[b.id]
+      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
+      const pA = priorityOrder[intelA?.priorityLevel] ?? 3
+      const pB = priorityOrder[intelB?.priorityLevel] ?? 3
+      return pA - pB
+    })
+  }, [paginatedClients, clientIntelligenceMap, viewMode])
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
@@ -233,10 +300,15 @@ export default function Clients() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl md:text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Clients</h1>
             <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{clients.length}</span>
+            {USE_MOCKS && (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full" style={{ background: 'rgba(245,158,11,0.12)', color: '#b45309' }}>
+                Mode démo
+              </span>
+            )}
           </div>
           <button onClick={() => navigate('/clients/new')} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:scale-[1.02]" style={{ border: '0.5px solid rgba(255,255,255,0.1)' }}><Plus size={16} />Nouveau client</button>
         </header>
-        
+
         <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: 'var(--text-tertiary)' }} />
@@ -294,8 +366,33 @@ export default function Clients() {
           </div>
         </div>
 
+        {/* Error state */}
+        {error && !loading && (
+          <ErrorState onRetry={fetchClients} />
+        )}
+
+        {/* Welcome screen — onboarding 0-client */}
+        {!error && !loading && clients.length === 0 && search === '' && statusFilter === 'tous' && (
+          <WelcomeScreen onLoadDemo={async () => {
+            try { await api.post('/dev/seed-demo'); fetchClients() }
+            catch(e) { console.error('Seed demo failed', e) }
+          }} />
+        )}
+
+        {/* Empty search/filter results */}
+        {!error && !loading && clients.length > 0 && paginatedClients.length === 0 && (
+          <EmptyState
+            icon={Search}
+            title="Aucun client ne correspond"
+            message={search ? `Aucun résultat pour "${search}". Essayez un autre terme ou réinitialisez vos filtres.` : "Aucun client ne correspond aux filtres actuels."}
+            ctaLabel="Réinitialiser"
+            onCta={() => { setSearch(''); setStatusFilter('tous'); setPage(1) }}
+            variant="search"
+          />
+        )}
+
         {/* View: Liste (table) */}
-        {viewMode === 'list' && (
+        {!error && viewMode === 'list' && (
           <BubbleCard hover={false} padding={0}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[700px]">
@@ -347,7 +444,7 @@ export default function Clients() {
         )}
 
         {/* View: Cartes */}
-        {viewMode === 'cards' && (
+        {!error && viewMode === 'cards' && (
           loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -376,170 +473,81 @@ export default function Clients() {
           )
         )}
 
-        {/* View: Bulles */}
-        {viewMode === 'bulles' && (
+        {/* View: Bulles — Cockpit intelligent */}
+        {!error && viewMode === 'bulles' && (
           <>
-            <style>{`
-              @keyframes bubbleFloat {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-3px); }
-              }
-            `}</style>
             {loading ? (
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="animate-pulse rounded-full mx-auto" style={{ width: 130, height: 130, background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}></div>
-                ))}
+              <div className="flex items-center justify-center py-16">
+                <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3 justify-items-center">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="animate-pulse flex flex-col items-center gap-2.5">
+                      <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.08), rgba(255,255,255,0.03))', border: '0.5px solid rgba(255,255,255,0.08)' }} />
+                      <div className="w-14 h-2 bg-gray-200/30 rounded" />
+                      <div className="w-10 h-3 bg-gray-200/15 rounded-full" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : paginatedClients.length > 0 ? (
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
-                {paginatedClients.map((client, idx) => {
-                  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-                  const riskScore = client.riskScore ?? client.score_risque ?? 0
-                  const st = (client.status || client.statut || '').toLowerCase()
-
-                  // Iridescent color config per status
-                  const statusColors = {
-                    prospect:    { base: '#3b82f6', light: 'rgba(147,197,253,0.85)', mid: 'rgba(59,130,246,0.65)', dark: 'rgba(37,99,235,0.88)' },
-                    actif:       { base: '#10b981', light: 'rgba(167,243,208,0.85)', mid: 'rgba(16,185,129,0.65)', dark: 'rgba(5,150,105,0.88)' },
-                    inactif:     { base: '#9ca3af', light: 'rgba(229,231,235,0.85)', mid: 'rgba(156,163,175,0.65)', dark: 'rgba(107,114,128,0.88)' },
-                    résilié:     { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
-                    resilié:     { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
-                    perdu:       { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
-                    opportunite: { base: '#8b5cf6', light: 'rgba(196,181,253,0.85)', mid: 'rgba(139,92,246,0.65)', dark: 'rgba(124,58,237,0.88)' },
-                    a_risque:    { base: '#ec4899', light: 'rgba(252,165,165,0.85)', mid: 'rgba(236,72,153,0.65)', dark: 'rgba(219,39,119,0.88)' },
-                  }
-                  const c = statusColors[st] || statusColors.inactif
-
-                  // Risk score color
-                  let riskColor = '#10b981'
-                  if (riskScore >= 70) riskColor = '#ef4444'
-                  else if (riskScore >= 40) riskColor = '#f59e0b'
-
-                  const initials = getInitials(name)
-                  const gradId = `bubble-${client.id}`
-                  const floatDelay = (idx % 5) * 0.25
-
-                  return (
-                    <div
-                      key={client.id}
-                      onClick={() => navigate(`/clients/${client.id}`)}
-                      className="mx-auto cursor-pointer relative"
-                      style={{
-                        width: 130,
-                        height: 130,
-                        animation: `bubbleFloat 3s ease-in-out ${floatDelay}s infinite`,
-                        transition: 'transform 0.3s ease, filter 0.3s ease',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.12))' }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)' }}
-                    >
-                      <svg width="130" height="130" viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <radialGradient id={`${gradId}-main`} cx="28%" cy="25%" r="75%">
-                            <stop offset="0%" stopColor="rgba(255,255,255,1)" />
-                            <stop offset="10%" stopColor="rgba(255,255,255,0.94)" />
-                            <stop offset="28%" stopColor={c.light} />
-                            <stop offset="60%" stopColor={c.mid} />
-                            <stop offset="100%" stopColor={c.dark} />
-                          </radialGradient>
-                          <radialGradient id={`${gradId}-iris`} cx="55%" cy="45%" r="55%">
-                            <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
-                            <stop offset="40%" stopColor="rgba(255,255,255,0.04)" />
-                            <stop offset="70%" stopColor="rgba(255,255,255,0.18)" />
-                            <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
-                          </radialGradient>
-                          <filter id={`${gradId}-blur`}>
-                            <feGaussianBlur stdDeviation="1.2" />
-                          </filter>
-                        </defs>
-                        {/* Outer glow ring */}
-                        <circle cx="65" cy="65" r="57" fill="none" stroke={c.base} strokeWidth="0.8" opacity="0.25" filter={`url(#${gradId}-blur)`} />
-                        {/* Main bubble body */}
-                        <circle cx="65" cy="65" r="55" fill={`url(#${gradId}-main)`} stroke={c.base} strokeWidth="0.7" opacity="0.92" />
-                        {/* Iris overlay */}
-                        <circle cx="65" cy="65" r="55" fill={`url(#${gradId}-iris)`} opacity="0.28" style={{ mixBlendMode: 'screen' }} />
-                        {/* Specular highlight — top-left */}
-                        <ellipse cx="43" cy="34" rx="15" ry="9" fill="rgba(255,255,255,0.78)" transform="rotate(-14 43 34)" filter={`url(#${gradId}-blur)`} />
-                        {/* Bright core spot */}
-                        <ellipse cx="38" cy="31" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.95)" transform="rotate(-14 38 31)" />
-                        {/* Secondary reflection — bottom-right */}
-                        <ellipse cx="91" cy="93" rx="6.5" ry="3.5" fill="rgba(255,255,255,0.32)" transform="rotate(-22 91 93)" filter={`url(#${gradId}-blur)`} />
-                        {/* Tiny reflection top-right */}
-                        <ellipse cx="78" cy="28" rx="3.5" ry="2" fill="rgba(255,255,255,0.28)" transform="rotate(8 78 28)" />
-                      </svg>
-                      {/* Overlay content */}
-                      <div style={{
-                        position: 'absolute',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        pointerEvents: 'none',
-                      }}>
-                        {/* Risk score pill — top-right */}
-                        <div style={{
-                          position: 'absolute',
-                          top: 16,
-                          right: 12,
-                          background: riskColor,
-                          color: 'white',
-                          fontSize: 9,
-                          fontWeight: 800,
-                          padding: '1px 5px',
-                          borderRadius: 999,
-                          lineHeight: 1.3,
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                        }}>{riskScore}</div>
-                        {/* Initials */}
-                        <span style={{
-                          fontSize: 22,
-                          fontWeight: 700,
-                          color: 'white',
-                          textShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                          lineHeight: 1.1,
-                          marginBottom: 1,
-                        }}>{initials}</span>
-                        {/* Name */}
-                        <span style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: 'rgba(255,255,255,0.92)',
-                          textShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                          maxWidth: 96,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          textAlign: 'center',
-                        }}>{name}</span>
-                        {/* Status badge — bottom */}
-                        <div style={{
-                          position: 'absolute',
-                          bottom: 12,
-                          fontSize: 9,
-                          fontWeight: 700,
-                          color: 'white',
-                          background: c.base,
-                          padding: '1px 7px',
-                          borderRadius: 999,
-                          textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                        }}>
-                          {(client.status || client.statut || 'Inconnu').charAt(0).toUpperCase() + (client.status || client.statut || '').slice(1)}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <BubbleCard hover={false} padding={40}>
-                <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
-                  <p className="font-semibold">Aucun client trouvé</p>
-                  <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
+              <>
+                {/* Priority legend */}
+                <div className="flex items-center gap-3 mb-3 px-1 text-[9px] text-gray-400 font-semibold uppercase tracking-wider">
+                  <span>Priorité ARK</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-400/70" /> Urgent</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400/50" /> Relance</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400/40" /> Stable</span>
                 </div>
-              </BubbleCard>
+                <div className="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-5 px-1 py-3">
+                  {prioritySortedClients.map((client, idx) => (
+                    <ClientBubblePremium
+                      key={client.id}
+                      client={client}
+                      floatDelay={(idx % 6) * 0.15}
+                      onClick={(id) => navigate(`/clients/${id}`)}
+                      onViewDetail={(id) => navigate(`/clients/${id}`)}
+                      onAskArk={handleAskArk}
+                      onCreateTask={handleCreateTask}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              /* Empty state premium */
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                {/* Bubble fantôme */}
+                <div style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
+                  border: '0.5px solid rgba(255,255,255,0.08)',
+                  marginBottom: 24,
+                  position: 'relative',
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: -8,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle at 50% 50%, rgba(180,160,255,0.06), transparent 70%)',
+                    filter: 'blur(12px)',
+                  }} />
+                </div>
+                <p className="text-base font-semibold" style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>
+                  Aucun client dans ce segment
+                </p>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>
+                  {search ? 'Essayez de modifier votre recherche.' : 'Ajoutez votre premier client pour activer le cockpit.'}
+                </p>
+                <button onClick={() => navigate('/clients/new')} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200"
+                  style={{
+                    background: 'rgba(0,0,0,0.04)',
+                    border: 'var(--border-fine)',
+                    color: 'var(--text-primary)',
+                  }}>
+                  <Plus size={14} />
+                  Ajouter un client
+                </button>
+              </div>
             )}
           </>
         )}
@@ -592,6 +600,15 @@ export default function Clients() {
           </div>
         )}
       </main>
+
+      {/* CreateTaskModal */}
+      <CreateTaskModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        client={taskClient}
+        intelligence={taskIntelligence}
+        onCreated={handleTaskCreated}
+      />
     </div>
   )
 }
