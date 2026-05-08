@@ -8,12 +8,6 @@ import BubbleBackground from '../components/BubbleBackground'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
-import ClientBubblePremium from '../components/ClientBubblePremium'
-import { computeClientIntelligence } from '../utils/clientIntelligence'
-import ClientBubbleActionSheet from '../components/clients/ClientBubbleActionSheet'
-import { openWhatsappForClient } from '../utils/whatsapp'
-import ErrorState from '../components/ErrorState'
-import WelcomeScreen from '../components/WelcomeScreen'
 import '../styles/design-system.css'
 
 const MOCK_CLIENTS = [
@@ -234,37 +228,6 @@ export default function Clients() {
     { key: 'bulles', label: 'Bulles', icon: Circle },
   ]
 
-  // Pre-compute intelligence profiles for bubble view
-  const clientIntelligenceMap = useMemo(() => {
-    const map = {}
-    if (!loading) {
-      (clients || []).forEach(c => {
-        if (!c || !c.id) return
-        map[c.id] = computeClientIntelligence(c, [], [])
-      })
-    }
-    return map
-  }, [clients, loading])
-
-  // Sort by priority for bubble view
-  const prioritySortedClients = useMemo(() => {
-    if (viewMode !== 'bulles') return paginatedClients
-    return [...paginatedClients].sort((a, b) => {
-      const intelA = clientIntelligenceMap[a.id]
-      const intelB = clientIntelligenceMap[b.id]
-      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
-      const pA = priorityOrder[intelA?.priorityLevel] ?? 3
-      const pB = priorityOrder[intelB?.priorityLevel] ?? 3
-      return pA - pB
-    })
-  }, [paginatedClients, clientIntelligenceMap, viewMode])
-
-  // ARK + Task handlers
-  const [taskModalOpen, setTaskModalOpen] = useState(false)
-  const [taskClient, setTaskClient] = useState(null)
-  const handleAskArk = (client) => navigate(`/clients/${client.id}?tab=ark`)
-  const handleCreateTask = (client, intel) => { setTaskClient(client); setTaskModalOpen(true) }
-
   return (
     <div className="min-h-screen" style={{ background: 'transparent', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
@@ -426,64 +389,174 @@ export default function Clients() {
           )
         )}
 
-        {/* View: Bulles — Aurora V2 Premium */}
+        {/* View: Bulles */}
         {viewMode === 'bulles' && (
           <>
+            <style>{`
+              @keyframes bubbleFloat {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-3px); }
+              }
+            `}</style>
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3 justify-items-center">
-                  {Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} className="animate-pulse flex flex-col items-center gap-2.5">
-                      <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.08), rgba(255,255,255,0.03))', border: '0.5px solid rgba(255,255,255,0.08)' }} />
-                      <div className="w-14 h-2 bg-gray-200/30 rounded" />
-                      <div className="w-10 h-3 bg-gray-200/15 rounded-full" />
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="animate-pulse rounded-full mx-auto" style={{ width: 130, height: 130, background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}></div>
+                ))}
               </div>
             ) : paginatedClients.length > 0 ? (
-              <>
-                <div className="flex items-center gap-3 mb-3 px-1 text-[9px] text-gray-400 font-semibold uppercase tracking-wider">
-                  <span>Priorité ARK</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-400/70" /> Urgent</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400/50" /> Relance</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400/40" /> Stable</span>
-                </div>
-                <div className="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-5 px-1 py-3">
-                  {prioritySortedClients.map((client, idx) => (
-                    <ClientBubblePremium
+              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-5 justify-center">
+                {paginatedClients.map((client, idx) => {
+                  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
+                  const riskScore = client.riskScore ?? client.score_risque ?? 0
+                  const st = (client.status || client.statut || '').toLowerCase()
+
+                  // Iridescent color config per status
+                  const statusColors = {
+                    prospect:    { base: '#3b82f6', light: 'rgba(147,197,253,0.85)', mid: 'rgba(59,130,246,0.65)', dark: 'rgba(37,99,235,0.88)' },
+                    actif:       { base: '#10b981', light: 'rgba(167,243,208,0.85)', mid: 'rgba(16,185,129,0.65)', dark: 'rgba(5,150,105,0.88)' },
+                    inactif:     { base: '#9ca3af', light: 'rgba(229,231,235,0.85)', mid: 'rgba(156,163,175,0.65)', dark: 'rgba(107,114,128,0.88)' },
+                    résilié:     { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
+                    resilié:     { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
+                    perdu:       { base: '#ef4444', light: 'rgba(252,165,165,0.85)', mid: 'rgba(239,68,68,0.65)', dark: 'rgba(220,38,38,0.88)' },
+                    opportunite: { base: '#8b5cf6', light: 'rgba(196,181,253,0.85)', mid: 'rgba(139,92,246,0.65)', dark: 'rgba(124,58,237,0.88)' },
+                    a_risque:    { base: '#ec4899', light: 'rgba(252,165,165,0.85)', mid: 'rgba(236,72,153,0.65)', dark: 'rgba(219,39,119,0.88)' },
+                  }
+                  const c = statusColors[st] || statusColors.inactif
+
+                  // Risk score color
+                  let riskColor = '#10b981'
+                  if (riskScore >= 70) riskColor = '#ef4444'
+                  else if (riskScore >= 40) riskColor = '#f59e0b'
+
+                  const initials = getInitials(name)
+                  const gradId = `bubble-${client.id}`
+                  const floatDelay = (idx % 5) * 0.25
+
+                  return (
+                    <div
                       key={client.id}
-                      client={client}
-                      floatDelay={(idx % 6) * 0.15}
-                      onClick={(id) => navigate(`/clients/${id}`)}
-                      onViewDetail={(id) => navigate(`/clients/${id}`)}
-                      onAskArk={handleAskArk}
-                      onCreateTask={handleCreateTask}
-                    />
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 px-4">
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', border: '0.5px solid rgba(255,255,255,0.10)', marginBottom: 20, position: 'relative' }}>
-                  <div style={{ position: 'absolute', inset: '-8px', borderRadius: '50%', background: 'radial-gradient(circle at 50% 50%, rgba(160,140,220,0.07), transparent 70%)', filter: 'blur(10px)' }} />
-                </div>
-                <p className="text-base font-semibold" style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Aucun client dans ce segment</p>
-                <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>{search ? 'Essayez de modifier votre recherche.' : 'Ajoutez votre premier client pour activer le cockpit.'}</p>
+                      onClick={() => navigate(`/clients/${client.id}`)}
+                      className="mx-auto cursor-pointer relative"
+                      style={{
+                        width: 130,
+                        height: 130,
+                        animation: `bubbleFloat 3s ease-in-out ${floatDelay}s infinite`,
+                        transition: 'transform 0.3s ease, filter 0.3s ease',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.12))' }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)' }}
+                    >
+                      <svg width="130" height="130" viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <radialGradient id={`${gradId}-main`} cx="28%" cy="25%" r="75%">
+                            <stop offset="0%" stopColor="rgba(255,255,255,1)" />
+                            <stop offset="10%" stopColor="rgba(255,255,255,0.94)" />
+                            <stop offset="28%" stopColor={c.light} />
+                            <stop offset="60%" stopColor={c.mid} />
+                            <stop offset="100%" stopColor={c.dark} />
+                          </radialGradient>
+                          <radialGradient id={`${gradId}-iris`} cx="55%" cy="45%" r="55%">
+                            <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+                            <stop offset="40%" stopColor="rgba(255,255,255,0.04)" />
+                            <stop offset="70%" stopColor="rgba(255,255,255,0.18)" />
+                            <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
+                          </radialGradient>
+                          <filter id={`${gradId}-blur`}>
+                            <feGaussianBlur stdDeviation="1.2" />
+                          </filter>
+                        </defs>
+                        {/* Outer glow ring */}
+                        <circle cx="65" cy="65" r="57" fill="none" stroke={c.base} strokeWidth="0.8" opacity="0.25" filter={`url(#${gradId}-blur)`} />
+                        {/* Main bubble body */}
+                        <circle cx="65" cy="65" r="55" fill={`url(#${gradId}-main)`} stroke={c.base} strokeWidth="0.7" opacity="0.92" />
+                        {/* Iris overlay */}
+                        <circle cx="65" cy="65" r="55" fill={`url(#${gradId}-iris)`} opacity="0.28" style={{ mixBlendMode: 'screen' }} />
+                        {/* Specular highlight — top-left */}
+                        <ellipse cx="43" cy="34" rx="15" ry="9" fill="rgba(255,255,255,0.78)" transform="rotate(-14 43 34)" filter={`url(#${gradId}-blur)`} />
+                        {/* Bright core spot */}
+                        <ellipse cx="38" cy="31" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.95)" transform="rotate(-14 38 31)" />
+                        {/* Secondary reflection — bottom-right */}
+                        <ellipse cx="91" cy="93" rx="6.5" ry="3.5" fill="rgba(255,255,255,0.32)" transform="rotate(-22 91 93)" filter={`url(#${gradId}-blur)`} />
+                        {/* Tiny reflection top-right */}
+                        <ellipse cx="78" cy="28" rx="3.5" ry="2" fill="rgba(255,255,255,0.28)" transform="rotate(8 78 28)" />
+                      </svg>
+                      {/* Overlay content */}
+                      <div style={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        pointerEvents: 'none',
+                      }}>
+                        {/* Risk score pill — top-right */}
+                        <div style={{
+                          position: 'absolute',
+                          top: 16,
+                          right: 12,
+                          background: riskColor,
+                          color: 'white',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          padding: '1px 5px',
+                          borderRadius: 999,
+                          lineHeight: 1.3,
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                        }}>{riskScore}</div>
+                        {/* Initials */}
+                        <span style={{
+                          fontSize: 22,
+                          fontWeight: 700,
+                          color: 'white',
+                          textShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                          lineHeight: 1.1,
+                          marginBottom: 1,
+                        }}>{initials}</span>
+                        {/* Name */}
+                        <span style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: 'rgba(255,255,255,0.92)',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                          maxWidth: 96,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          textAlign: 'center',
+                        }}>{name}</span>
+                        {/* Status badge — bottom */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 12,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          color: 'white',
+                          background: c.base,
+                          padding: '1px 7px',
+                          borderRadius: 999,
+                          textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                        }}>
+                          {(client.status || client.statut || 'Inconnu').charAt(0).toUpperCase() + (client.status || client.statut || '').slice(1)}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
+            ) : (
+              <BubbleCard hover={false} padding={40}>
+                <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="font-semibold">Aucun client trouvé</p>
+                  <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
+                </div>
+              </BubbleCard>
             )}
           </>
         )}
-        {/* Error and welcome states */}
-        {error && !loading && (
-          <ErrorState onRetry={fetchClients} />
-        )}
 
-        {!error && !loading && clients.length === 0 && (
-          <WelcomeScreen onLoadDemo={() => { setClients(MOCK_CLIENTS); setUseMock(true) }} />
-        )}
-
-        {/* Pagination */}
         {!loading && totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-4 md:mt-8">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
