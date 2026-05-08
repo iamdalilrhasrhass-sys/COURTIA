@@ -483,6 +483,15 @@ router.get('/impersonation/logs', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/analytics', async (req, res) => {
   try {
+    const safeQuery = async (label, sql, fallbackRows = [{}]) => {
+      try {
+        return await pool.query(sql);
+      } catch (error) {
+        console.warn(`[admin/analytics] fallback on ${label}: ${error.message}`);
+        return { rows: fallbackRows };
+      }
+    };
+
     const insightColumns = await getPortfolioInsightColumns(pool);
     const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
     const portfolioWhere = [];
@@ -497,31 +506,38 @@ router.get('/analytics', async (req, res) => {
 
     const [planDist, signups30, churn30, arkUsage, portfolioStats] = await Promise.all([
       // Distribution des plans actifs
-      pool.query(
+      safeQuery(
+        'plan distribution',
         `SELECT subscription_plan, COUNT(*) AS count
          FROM users
          WHERE subscription_status IN ('active','trialing')
            AND role != 'super_admin'
          GROUP BY subscription_plan
-         ORDER BY subscription_plan`
+         ORDER BY subscription_plan`,
+        []
       ),
       // Nouveaux inscrits sur 30j
-      pool.query(
+      safeQuery(
+        'signups_30d',
         `SELECT COUNT(*) AS count
          FROM users
          WHERE created_at > NOW() - INTERVAL '30 days'
-           AND role != 'super_admin'`
+           AND role != 'super_admin'`,
+        [{ count: 0 }]
       ),
       // Churns sur 30j (suspended ou cancelled récents)
-      pool.query(
+      safeQuery(
+        'churn_30d',
         `SELECT COUNT(*) AS count
          FROM users
          WHERE subscription_status IN ('suspended','cancelled')
            AND suspended_at > NOW() - INTERVAL '30 days'
-           AND role != 'super_admin'`
+           AND role != 'super_admin'`,
+        [{ count: 0 }]
       ),
       // Usage ARK moyen par user (30j)
-      pool.query(
+      safeQuery(
+        'ark_usage_30d',
         `SELECT
            COUNT(DISTINCT ac.client_id) AS total_ark_conversations_30d,
            COUNT(DISTINCT c.courtier_id) AS active_users_ark_30d,
@@ -535,15 +551,18 @@ router.get('/analytics', async (req, res) => {
          ) per_user
          JOIN clients c ON c.courtier_id = per_user.courtier_id
          JOIN ark_conversations ac ON ac.client_id = c.id
-           AND ac.created_at > NOW() - INTERVAL '30 days'`
+           AND ac.created_at > NOW() - INTERVAL '30 days'`,
+        [{ total_ark_conversations_30d: 0, active_users_ark_30d: 0, avg_ark_per_user_30d: 0 }]
       ),
       // Stats portefeuilles
-      pool.query(
+      safeQuery(
+        'portfolio_stats_30d',
         `SELECT
            COUNT(*) AS total_analyses,
            ${portfolioScoreStats}
          FROM portfolio_insights
-         ${portfolioWhereSql}`
+         ${portfolioWhereSql}`,
+        [{ total_analyses: 0, avg_health_score: 0, portfolios_healthy: 0 }]
       ),
     ]);
 
