@@ -320,6 +320,7 @@ async function main() {
     await checkRoute(page, '/clients', ['Clients'])
     await checkClientBubbleFlow(page)
     await checkRoute(page, '/rapports', ['Rapports'], { absentText: 'Impossible de charger les statistiques' })
+    await checkRoute(page, '/morning-brief', ['Morning Brief'])
     await checkRoute(page, '/parametres', ['Paramètres'])
     await checkRoute(page, '/taches', ['Tâches'])
     await checkRoute(page, '/contrats', ['Contrats'])
