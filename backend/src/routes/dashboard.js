@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const { getJwtSecret } = require('../utils/jwtSecret');
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No authorization header' });
+  if (!token) return res.status(401).json({ error: 'Token manquant' });
   const jwt = require('jsonwebtoken');
-  try { const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key'); req.user = decoded; next(); }
-  catch (err) { res.status(401).json({ error: 'Invalid token', details: err.message }); }
+  try { const decoded = jwt.verify(token, getJwtSecret()); req.user = decoded; next(); }
+  catch (err) { res.status(401).json({ error: 'Token invalide' }); }
 };
 router.get('/stats', verifyToken, async (req, res) => {
   try {
@@ -26,6 +27,9 @@ router.get('/stats', verifyToken, async (req, res) => {
     const r10 = await pool.query("SELECT type as segment,COUNT(*) as count FROM clients WHERE type IS NOT NULL AND courtier_id=$1 GROUP BY type", [userId]);
     const clientsParSegment = r10.rows.reduce((a,r)=>{ if(r.segment) a[r.segment]=parseInt(r.count); return a; },{});
     res.json({ totalClients:total, contratsActifs:parseInt(r4.rows[0].actifs), commissionsMois:parseFloat(r4.rows[0].commissions), primeTotale:parseFloat(r4.rows[0].prime_totale||0), contratsUrgents:parseInt(r5.rows[0].count), tauxConversion:total>0?Math.round((actifs/total)*1000)/10:0, scoreRisqueMoyen:parseInt(r2.rows[0].score), clientsParStatut, clientsParSegment, revenus6Mois:r6.rows, alertes:r7.rows, clientsRecents:r8.rows, typesContrats:r9.rows });
-  } catch(err) { console.error('dashboard error:',err.message); res.status(500).json({error:err.message}); }
+  } catch(err) {
+    console.error('dashboard error:', err.message);
+    res.status(500).json({ error: 'dashboard_unavailable', message: 'Les statistiques sont temporairement indisponibles.' });
+  }
 });
 module.exports = router;

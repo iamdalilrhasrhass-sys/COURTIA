@@ -1,6 +1,8 @@
 const apiGatewayService = {
   validateApiKey(apiKey) {
-    return apiKey && apiKey.startsWith('sk_live_PLACEHOLDER')
+    if (!apiKey || typeof apiKey !== 'string') return false
+    const configuredPrefix = process.env.API_GATEWAY_KEY_PREFIX || 'courtia_'
+    return apiKey.startsWith(configuredPrefix)
   },
 
   logWebhookEvent(event, data) {

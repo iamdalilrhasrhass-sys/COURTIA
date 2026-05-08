@@ -8,6 +8,9 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+.env.local
+.env.production
+.env.development
 
 # Build outputs
 dist/
@@ -35,6 +38,8 @@ out/
 *.sqlite
 *.db
 *.sql.bak
+.dump
+*.dump
 .aider*
 .env*.local
 
@@ -42,3 +47,13 @@ out/
 .vercel/
 landing/.vercel/
 frontend/.vercel/
+
+# Secrets / keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ecdsa
+id_ed25519
+secrets/

@@ -227,7 +227,6 @@ export default function ClientNew() {
         </form>
         <ArkScorePreview clientData={form} />
       </div>
-      <footer className="text-center py-8 md:py-12"><p className="text-xs text-gray-300">Rhasrhass®</p></footer>
     </div>
   )
 }

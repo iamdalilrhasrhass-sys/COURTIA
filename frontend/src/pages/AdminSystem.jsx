@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Activity, Server, Database, Globe, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { adminFetch, publicApiFetch } from '../lib/adminApi'
 const VPS_BACKEND = 'https://api.courtiark.fr'
 
 export default function AdminSystem() {
@@ -11,18 +10,17 @@ export default function AdminSystem() {
 
   const runChecks = async () => {
     setLoading(true)
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
     const results = {}
 
     // API health
     try {
-      const r = await fetch(`${API_URL}/api/health`, { headers: { Authorization: `Bearer ${token}` } })
+      const r = await publicApiFetch('/api/health')
       results.api = r.ok ? { ok: true, data: await r.json() } : { ok: false, status: r.status }
     } catch { results.api = { ok: false, error: 'Inaccessible' } }
 
     // DB check via admin analytics (requires DB)
     try {
-      const r = await fetch(`${API_URL}/api/admin/analytics`, { headers: { Authorization: `Bearer ${token}` } })
+      const r = await adminFetch('/analytics')
       results.db = r.ok ? { ok: true } : { ok: false, status: r.status }
     } catch { results.db = { ok: false, error: 'Inaccessible' } }
 

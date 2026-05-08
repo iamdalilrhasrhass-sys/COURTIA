@@ -424,10 +424,6 @@ export default function Abonnement() {
           </BubbleCard>
         </div>
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 40, paddingBottom: 24 }}>
-          <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.2)' }}>Rhasrhass®</p>
-        </div>
       </div>
     </div>
   )

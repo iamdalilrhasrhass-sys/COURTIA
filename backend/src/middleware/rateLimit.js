@@ -19,8 +19,14 @@ const arkLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'too_many_attempts', details: '10 tentatives max par 15 minutes' }
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    error: 'too_many_attempts',
+    details: 'Trop de tentatives de connexion. Patientez quelques minutes avant de réessayer.'
+  }
 });
 
 module.exports = { globalLimiter, arkLimiter, authLimiter };

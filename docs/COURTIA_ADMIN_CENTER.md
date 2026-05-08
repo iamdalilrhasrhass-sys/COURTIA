@@ -1,18 +1,21 @@
 # COURTIA — Admin Center
 
 ## Routes API backend existantes
-Toutes protégées par `verifyToken` + `superAdminGuard`.
+Le backend monte `adminSuperAdmin.js` sous `/api/admin/super`.
+Les routes super admin réelles sont donc protégées par `verifyToken` + `superAdminGuard` sous ce préfixe.
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | /api/admin/users | Liste paginée des courtiers |
-| GET | /api/admin/users/:id | Détail courtier + métriques |
-| GET | /api/admin/analytics | MRR, signups, churn, ARK |
-| GET | /api/admin/impersonation/logs | Historique impersonation |
-| POST | /api/admin/impersonate/:userId | Démarrer impersonation |
-| POST | /api/admin/impersonate/stop | Arrêter impersonation |
-| GET | /api/admin/iobsp/pending | Demandes IOBSP en attente |
-| PATCH | /api/admin/iobsp/:userId | Approuver/rejeter IOBSP |
+| GET | /api/admin/super/users | Liste paginée des courtiers |
+| GET | /api/admin/super/users/:id | Détail courtier + métriques |
+| GET | /api/admin/super/analytics | MRR, signups, churn, ARK |
+| GET | /api/admin/super/impersonation/logs | Historique impersonation |
+| POST | /api/admin/super/impersonate/:userId | Route backend existante, non exposée UI |
+| POST | /api/admin/super/impersonate/stop | Route backend existante, non exposée UI |
+| GET | /api/admin/super/iobsp/pending | Demandes IOBSP en attente |
+| PATCH | /api/admin/super/iobsp/:userId | Approuver/rejeter IOBSP |
+
+Les routes coûts restent séparées sous `/api/admin/costs`, car le backend `adminCosts.js` est monté volontairement sous `/api/admin`.
 
 ## Pages frontend admin
 
@@ -27,13 +30,14 @@ Toutes protégées par `verifyToken` + `superAdminGuard`.
 | /admin/support | AdminSupport | ✅ Créé |
 
 ## Composants créés
-- `AdminRoute.jsx` — Protection par rôle (vérifie /api/admin/analytics)
+- `AdminRoute.jsx` — Protection par rôle (vérifie `/api/admin/super/analytics`)
 - `AdminLayout.jsx` — Layout avec sidebar admin
 - `AdminSidebar.jsx` — Navigation admin sombre premium
+- `src/lib/adminApi.js` — Préfixe admin centralisé vers `/api/admin/super/*`
 
 ## Protections
 - Non connecté → redirection /login
-- Broker (non super_admin) → redirection /app/dashboard
+- Broker (non super_admin) → écran "Admin Center protégé" avec retour `/dashboard`
 - Super admin → accès complet
 - Vérification backend réelle (pas de confiance frontend seule)
 
@@ -49,5 +53,5 @@ Toutes protégées par `verifyToken` + `superAdminGuard`.
 
 ## Limites restantes
 - Pas de token super_admin pour tests E2E
-- Abonnements : données limitées à /api/admin/analytics
+- Abonnements : données limitées à `/api/admin/super/analytics`
 - Support : pas de système de tickets connecté

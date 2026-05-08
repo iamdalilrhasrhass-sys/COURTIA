@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Calendar } from 'lucide-react'
+import { Plus, Calendar, FileText } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleBackground from '../components/BubbleBackground'
+import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import AuroraEmptyState from '../components/brand/AuroraEmptyState'
+import AuroraButton from '../components/brand/AuroraButton'
 import '../styles/design-system.css'
 
 // Mock data with varied statuses
@@ -100,6 +103,7 @@ function KanbanCard({ contrat, borderColor, onNavigate }) {
 export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
+  const [useMock, setUseMock] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => { fetchContrats() }, [])
@@ -110,9 +114,11 @@ export default function Contrats() {
       const res = await api.get('/contrats')
       const data = Array.isArray(res.data) ? res.data : []
       setContrats(data.length > 0 ? data : MOCK_CONTRATS)
+      setUseMock(data.length === 0)
     } catch (err) {
-      console.error(`Impossible de charger les contrats : ${err.message}`)
+      console.error('Impossible de charger les contrats.')
       setContrats(MOCK_CONTRATS)
+      setUseMock(true)
     } finally { setLoading(false) }
   }
 
@@ -146,34 +152,26 @@ export default function Contrats() {
   )
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
+    <div className="min-h-screen" style={{ background: 'transparent', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
       <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-8">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl md:text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Contrats</h1>
-            <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{contrats.length}</span>
+        <AuroraPageHeader
+          title="Contrats"
+          subtitle={`${contrats.length} contrats suivis par statut, échéance et prime annuelle.`}
+          badge="Portefeuille contrats"
+          dark
+          actions={
+            <AuroraButton variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => navigate('/contrats/new')}>
+              Nouveau contrat
+            </AuroraButton>
+          }
+        />
+
+        {useMock && (
+          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
+            Aperçu démonstration : les contrats affichés sont fictifs car aucune donnée réelle n’a été chargée.
           </div>
-          <button onClick={() => navigate('/contrats/new')}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 20px',
-              background: '#0a0a0a',
-              borderRadius: 'var(--r-md)',
-              border: '0.5px solid rgba(255,255,255,0.1)',
-              boxShadow: 'var(--shadow-bubble)',
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#ffffff',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          ><Plus size={16} />Nouveau contrat</button>
-        </header>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -212,7 +210,12 @@ export default function Contrats() {
                         />
                       </div>
                     )) : (
-                      <AuroraEmptyState icon={FileText} title="Aucun contrat" subtitle="Créez votre premier contrat pour commencer à suivre votre portefeuille." />
+                      <AuroraEmptyState
+                        compact
+                        icon={<FileText size={30} />}
+                        title="Aucun contrat"
+                        description="Créez votre premier contrat pour commencer à suivre votre portefeuille."
+                      />
                     )}
                   </div>
                 </div>

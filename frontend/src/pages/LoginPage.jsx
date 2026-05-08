@@ -5,6 +5,7 @@ import axios from 'axios'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
+import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -14,11 +15,15 @@ const STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 2rem;
     position: relative;
     overflow: hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #050510;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(124,58,237,0.24), transparent 24%),
+      radial-gradient(circle at 88% 18%, rgba(34,211,238,0.14), transparent 24%),
+      radial-gradient(circle at 60% 92%, rgba(16,185,129,0.10), transparent 26%),
+      #02040c;
   }
 
   .auth-aurora {
@@ -52,27 +57,73 @@ const STYLES = `
     z-index: 1;
     display: flex;
     width: 100%;
-    max-width: 880px;
-    min-height: 520px;
-    border-radius: 20px;
+    max-width: 1120px;
+    min-height: 660px;
+    border-radius: 28px;
     overflow: hidden;
-    background: rgba(10,10,18,0.85);
-    border: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) inset;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(4,7,18,0.86);
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow: 0 34px 100px rgba(0,0,0,0.58), 0 0 0 1px rgba(255,255,255,0.035) inset;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.10), transparent 22%, transparent 76%, rgba(34,211,238,0.07)),
+      radial-gradient(circle at 78% 18%, rgba(124,58,237,0.12), transparent 32%);
+    opacity: 0.72;
+  }
+  .auth-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(167,139,250,0.18), rgba(34,211,238,0.14), rgba(255,255,255,0.05));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .auth-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(167,139,250,0.22);
+    background: rgba(139,92,246,0.10);
+    color: #ddd6fe;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
   }
 
   .auth-left {
-    flex: 1;
+    flex: 1.12;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 48px 40px;
-    background: rgba(255,255,255,0.015);
-    border-right: 1px solid rgba(255,255,255,0.04);
+    padding: 56px 52px;
+    background:
+      linear-gradient(145deg, rgba(124,58,237,0.18), rgba(2,4,12,0.25) 42%, rgba(34,211,238,0.10)),
+      rgba(255,255,255,0.015);
+    border-right: 1px solid rgba(255,255,255,0.07);
     position: relative;
     overflow: hidden;
+  }
+  .auth-left,
+  .auth-right {
+    position: relative;
+    z-index: 1;
   }
 
   .auth-left-halo {
@@ -81,8 +132,20 @@ const STYLES = `
     height: 300px;
     top: -80px;
     left: -80px;
-    background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(139,92,246,0.22) 0%, transparent 70%);
     border-radius: 50%;
+  }
+
+  .auth-left::after {
+    content: '';
+    position: absolute;
+    inset: auto 10% 8% auto;
+    width: 260px;
+    height: 260px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(34,211,238,0.12), transparent 68%);
+    filter: blur(8px);
+    pointer-events: none;
   }
 
   .auth-left-content {
@@ -94,7 +157,7 @@ const STYLES = `
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .auth-benefit-dot {
     width: 6px;
@@ -107,28 +170,81 @@ const STYLES = `
   }
 
   .auth-preview {
-    margin-top: 28px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
-    padding: 16px 18px;
+    margin-top: 30px;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 18px;
+    padding: 18px;
     position: relative;
+    box-shadow: 0 20px 70px rgba(0,0,0,0.28);
+  }
+  .auth-preview::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 42%, rgba(34,211,238,0.06));
+  }
+  .auth-preview > * {
+    position: relative;
+    z-index: 1;
   }
 
   .auth-right {
-    flex: 1;
+    flex: 0.88;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 48px 40px;
+    padding: 46px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+  }
+
+  .auth-right-inner {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  .auth-form-shell {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.035);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .auth-activation-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .auth-activation-item {
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.035);
+    border-radius: 12px;
+    padding: 9px 8px;
+  }
+  .auth-activation-item strong {
+    display: block;
+    color: rgba(255,255,255,0.86);
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .auth-activation-item span {
+    display: block;
+    margin-top: 3px;
+    color: rgba(255,255,255,0.36);
+    font-size: 9.5px;
+    line-height: 1.2;
   }
 
   .auth-input {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.18);
     color: #e5e5e5;
     font-size: 13.5px;
     font-family: inherit;
@@ -147,21 +263,23 @@ const STYLES = `
 
   .auth-btn {
     width: 100%;
-    padding: 11px 20px;
+    padding: 13px 20px;
     border: none;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    border-radius: 12px;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(255,255,255,0.28), transparent 28%),
+      linear-gradient(135deg, #7c3aed, #8b5cf6 48%, #22d3ee);
     color: #fff;
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 800;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s ease;
     letter-spacing: -0.01em;
   }
   .auth-btn:hover {
-    background: linear-gradient(135deg, #9b6dff, #7c3aed);
-    box-shadow: 0 4px 16px rgba(139,92,246,0.25);
+    background: linear-gradient(135deg, #8b5cf6, #9b6dff 48%, #38bdf8);
+    box-shadow: 0 14px 34px rgba(139,92,246,0.32), 0 0 26px rgba(34,211,238,0.16);
   }
   .auth-btn:disabled {
     opacity: 0.5;
@@ -172,7 +290,7 @@ const STYLES = `
     width: 100%;
     padding: 10px 20px;
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
+    border-radius: 12px;
     background: rgba(255,255,255,0.03);
     color: rgba(255,255,255,0.7);
     font-size: 13px;
@@ -236,27 +354,92 @@ const STYLES = `
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
+    padding: 7px 14px;
     border-radius: 20px;
-    background: rgba(139,92,246,0.1);
-    border: 1px solid rgba(139,92,246,0.2);
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.26);
     color: #c4b5fd;
     font-size: 12px;
     font-weight: 500;
     margin-bottom: 20px;
   }
 
+  .auth-trial-panel {
+    border: 1px solid rgba(110,231,183,0.18);
+    background: linear-gradient(135deg, rgba(16,185,129,0.09), rgba(139,92,246,0.08));
+    border-radius: 18px;
+    padding: 14px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-trial-panel::after {
+    content: '';
+    position: absolute;
+    inset: auto -20% -35% 22%;
+    height: 120px;
+    background: radial-gradient(circle, rgba(34,211,238,0.12), transparent 68%);
+    pointer-events: none;
+  }
+  .auth-trial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .auth-trial-cell {
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0.16);
+    border-radius: 10px;
+    padding: 9px 8px;
+  }
+  .auth-trial-value {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .auth-trial-label {
+    color: rgba(255,255,255,0.40);
+    font-size: 9.5px;
+    margin-top: 3px;
+    line-height: 1.25;
+  }
+
   @media (max-width: 768px) {
     .auth-card { flex-direction: column; min-height: 100vh; max-width: 100vw; border-radius: 0; }
-    .auth-left { display: none; }
-    .auth-right { width: 100%; padding: 2rem 1.5rem; justify-content: center; min-height: 100vh; }
+    .auth-left {
+      display: block;
+      flex: none;
+      padding: 0.85rem 1.35rem 0.7rem;
+      border-right: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .auth-left-content > div:first-child { margin-bottom: 8px !important; }
+    .auth-left-content > p:first-of-type { font-size: 9px !important; margin-bottom: 5px !important; }
+    .auth-left-content > p:nth-of-type(2) { display: none; }
+    .auth-left h2 { font-size: 16px !important; line-height: 1.18 !important; margin-bottom: 0 !important; }
+    .auth-benefit { display: none; }
+    .auth-preview { display: none; }
+    .auth-right { width: 100%; padding: 0.9rem 1.35rem 1.35rem; justify-content: flex-start; min-height: auto; }
+    .auth-right-inner { max-width: none; }
+    .auth-right-inner > h1 { font-size: 20px !important; margin-bottom: 2px !important; }
+    .auth-right-inner > p { margin-bottom: 12px !important; }
+    .auth-plan-badge { margin-bottom: 12px; }
+    .auth-trial-panel { padding: 10px; margin-bottom: 12px; }
+    .auth-activation-strip { display: none; }
+    .auth-form-shell { padding: 10px; }
     .auth-root { padding: 0; }
+    .auth-trial-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .auth-trial-cell { padding: 8px 6px; }
+    .auth-trial-value { font-size: 12px; }
+    .auth-trial-label { font-size: 9px; }
   }
 `
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
@@ -268,6 +451,16 @@ export default function Login() {
   const isRegister = location.pathname === '/register'
   const params = new URLSearchParams(location.search)
   const selectedPlan = params.get('plan')
+  const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
+  const planName = planKey === 'pro' ? 'Pro' : 'Starter'
+  const planPrice = planKey === 'pro'
+    ? '159 € HT / mois (190,80 € TTC avec TVA 20 %)'
+    : '89 € HT / mois (106,80 € TTC avec TVA 20 %)'
+  const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
+  const planSubtitle = planKey === 'pro'
+    ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
+    : '7 jours pour structurer vos clients, contrats et relances dans un cockpit clair.'
+  const planCta = planKey === 'pro' ? 'Activer mon essai Pro' : 'Activer mon essai Starter'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -279,16 +472,31 @@ export default function Login() {
       setError('Veuillez renseigner votre prénom et votre nom.')
       return
     }
+    if (isRegister && !confirmPassword) {
+      setError('Veuillez confirmer votre mot de passe.')
+      return
+    }
+    if (isRegister && password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.')
+      return
+    }
     setLoading(true)
     setError('')
+    setErrorLink(null)
     try {
       const endpoint = isRegister ? '/auth/register' : '/auth/login'
       const body = isRegister ? { email, password, firstName, lastName } : { email, password }
       const res = await api.post(endpoint, body)
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
+      localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
-      navigate('/dashboard')
+      if (user) localStorage.setItem('user', JSON.stringify(user))
+      if (isRegister) {
+        navigate(`/onboarding?plan=${planKey || 'starter'}`)
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       const data = err.response?.data || {}
       const status = err.response?.status
@@ -303,6 +511,8 @@ export default function Login() {
         setError('Email ou mot de passe incorrect.')
       } else if (status === 403) {
         setError('Votre compte est suspendu. Contactez le support COURTIA.')
+      } else if (status === 429) {
+        setError('Trop de tentatives de connexion. Réessayez dans quelques minutes.')
       } else if (status >= 500) {
         setError('Connexion impossible pour le moment. Réessayez dans quelques instants.')
       } else if (!err.response) {
@@ -334,7 +544,9 @@ export default function Login() {
         })
 
         localStorage.setItem('courtia_token', res.data.token)
+        localStorage.setItem('token', res.data.token)
         if (res.data.user) localStorage.setItem('courtia_user', JSON.stringify(res.data.user))
+        if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user))
         navigate('/dashboard')
       } catch (err) {
         setError('Erreur lors de la connexion Google.')
@@ -412,21 +624,69 @@ export default function Login() {
 
           {/* RIGHT — Form */}
           <div className="auth-right">
+            <div className="auth-right-inner">
             {/* Plan badge for register */}
-            {isRegister && selectedPlan && (
+            {isRegister && (
               <div className="auth-plan-badge">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-                Offre {selectedPlan === 'pro' ? 'Pro' : selectedPlan} sélectionnée — Essai gratuit 7 jours
+                Offre {planName} sélectionnée — Essai gratuit 7 jours
               </div>
             )}
 
             <h1 style={{ fontSize: 22, fontWeight: 600, color: '#fff', margin: 0, marginBottom: 4, letterSpacing: '-0.02em' }}>
-              {isRegister ? 'Créer votre espace courtier' : 'Connexion'}
+              {isRegister
+                ? planTitle
+                : 'Accédez à votre cockpit COURTIA'}
             </h1>
             <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)', marginBottom: 24 }}>
-              {isRegister ? 'Lancez votre cockpit IA en quelques minutes.' : 'Accédez à votre cockpit COURTIA.'}
+              {isRegister
+                ? planSubtitle
+                : 'Retrouvez vos priorités, vos clients et votre brief ARK.'}
             </p>
 
+            {isRegister && (
+              <div className="auth-trial-panel">
+                <div className="auth-trial-grid">
+                  <div className="auth-trial-cell">
+                    <div className="auth-trial-value">0 €</div>
+                    <div className="auth-trial-label">aujourd’hui</div>
+                  </div>
+                  <div className="auth-trial-cell">
+                    <div className="auth-trial-value">7 jours</div>
+                    <div className="auth-trial-label">pour tester {planName}</div>
+                  </div>
+                  <div className="auth-trial-cell">
+                    <div className="auth-trial-value">En ligne</div>
+                    <div className="auth-trial-label">annulation simple</div>
+                  </div>
+                </div>
+                <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
+                  Carte demandée à l’étape sécurisée Stripe. 0 € aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement à {planPrice}. Annulation en ligne via le portail sécurisé.
+                </p>
+              </div>
+            )}
+
+            <div className="auth-activation-strip" aria-hidden="true">
+              {(isRegister
+                ? [
+                    ['0 €', 'aujourd’hui'],
+                    ['7 jours', 'pour juger la valeur'],
+                    ['En ligne', 'annulation simple'],
+                  ]
+                : [
+                    ['ARK', 'brief métier'],
+                    ['Clients', 'portefeuille centralisé'],
+                    ['Sécurisé', 'accès protégé'],
+                  ]
+              ).map(([value, label]) => (
+                <div key={`${value}-${label}`} className="auth-activation-item">
+                  <strong>{value}</strong>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="auth-form-shell">
             <form onSubmit={handleSubmit} noValidate>
               {/* Error */}
               {error && (
@@ -501,6 +761,21 @@ export default function Login() {
                 </button>
               </div>
 
+              {isRegister && (
+                <div style={{ marginBottom: 14, position: 'relative' }}>
+                  <input
+                    className="auth-input"
+                    type={showPw ? 'text' : 'password'}
+                    placeholder="Confirmer le mot de passe"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    style={{ paddingRight: 40 }}
+                  />
+                </div>
+              )}
+
               {/* Remember me (login only) */}
               {!isRegister && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
@@ -519,7 +794,9 @@ export default function Login() {
                     {isRegister ? 'Création...' : 'Connexion...'}
                   </span>
                 ) : (
-                  isRegister ? 'Créer mon compte' : 'Se connecter'
+                  isRegister
+                    ? planCta
+                    : 'Ouvrir mon cockpit'
                 )}
               </button>
             </form>
@@ -551,6 +828,11 @@ export default function Login() {
                   Pas encore de compte ? <strong>Inscrivez-vous gratuitement</strong>
                 </Link>
               )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
+              <RhasrhassSignature compact />
+            </div>
+            </div>
             </div>
           </div>
         </div>

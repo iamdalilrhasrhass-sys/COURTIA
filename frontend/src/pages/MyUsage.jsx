@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, Zap, Upgrade } from 'lucide-react';
 import PricingModal from '@/components/PricingModal';
+import { getAuthToken } from '@/api/sessionPolicy';
 
 const MyUsage = () => {
   const [usage, setUsage] = useState(null);
@@ -27,7 +28,7 @@ const MyUsage = () => {
   const fetchUsage = async () => {
     try {
       const response = await fetch('/api/ark/my-usage', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
       const result = await response.json();
       setUsage(result);

@@ -1,21 +1,22 @@
 const express = require('express');
 const pool = require('../db');
 const router = express.Router();
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 // Middleware pour vérifier le token
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ error: 'No authorization header' });
+    return res.status(401).json({ error: 'Token manquant' });
   }
   
   const jwt = require('jsonwebtoken');
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Invalid token', details: err.message });
+    res.status(401).json({ error: 'Token invalide' });
   }
 };
 
@@ -44,7 +45,7 @@ router.get('/', verifyToken, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('GET /api/taches error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'tasks_unavailable', message: 'Impossible de charger les tâches pour le moment.' });
   }
 });
 
@@ -77,7 +78,7 @@ router.post('/', verifyToken, async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('POST /api/taches error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'task_create_failed', message: 'Création de tâche impossible pour le moment.' });
   }
 });
 
@@ -105,7 +106,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('PUT /api/taches/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'task_update_failed', message: 'Mise à jour de tâche impossible pour le moment.' });
   }
 });
 
@@ -121,7 +122,7 @@ router.post('/auto-generate', verifyToken, async (req, res) => {
     res.json(result)
   } catch (err) {
     console.error('POST /api/taches/auto-generate error:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: 'task_autogen_failed', message: 'Génération automatique indisponible pour le moment.' })
   }
 });
 
@@ -139,7 +140,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/taches/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'task_delete_failed', message: 'Suppression de tâche impossible pour le moment.' });
   }
 });
 
