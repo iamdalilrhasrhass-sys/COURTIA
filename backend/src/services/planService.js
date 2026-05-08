@@ -4,6 +4,19 @@
  */
 
 const pool = require('../db');
+const BILLING_MODE = process.env.BILLING_MODE || 'test';
+
+function stripePriceFor(planCode) {
+  if (BILLING_MODE === 'test') {
+    if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || null;
+    if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || null;
+    if (planCode === 'premium') return null;
+  }
+  if (planCode === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
+  if (planCode === 'pro') return process.env.STRIPE_PRICE_PRO || null;
+  if (planCode === 'premium') return process.env.STRIPE_PRICE_PREMIUM || null;
+  return null;
+}
 
 const PLANS = {
   starter: {
@@ -32,7 +45,7 @@ const PLANS = {
       max_pdf_generations: 20,
       max_users: 1,
     },
-    stripe_price_id: process.env.STRIPE_PRICE_STARTER || null,
+    stripe_price_id: stripePriceFor('starter'),
   },
   pro: {
     name: 'Pro',
@@ -60,7 +73,7 @@ const PLANS = {
       max_pdf_generations: 200,
       max_users: 1,
     },
-    stripe_price_id: process.env.STRIPE_PRICE_PRO || null,
+    stripe_price_id: stripePriceFor('pro'),
   },
   premium: {
     name: 'Premium',
@@ -88,7 +101,7 @@ const PLANS = {
       max_pdf_generations: Infinity,
       max_users: Infinity,
     },
-    stripe_price_id: process.env.STRIPE_PRICE_PREMIUM || null,
+    stripe_price_id: stripePriceFor('premium'),
   },
 };
 

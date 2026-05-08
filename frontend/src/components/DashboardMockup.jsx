@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Brain, TrendingUp, Clock, Sparkles, Zap, Shield, Bell } from 'lucide-react'
+import CourtiaBubbleLogo from './brand/CourtiaBubbleLogo'
 
 /**
  * DashboardMockup — Mockup 3D glassmorphism du cockpit COURTIA
@@ -37,8 +38,8 @@ export default function DashboardMockup({ className = '' }) {
         {/* Top bar */}
         <div className="relative px-5 py-3 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <span className="text-white font-bold text-[11px]">C</span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <CourtiaBubbleLogo size={27} animated={false} showHalo={false} showFoam={false} />
             </div>
             <span className="text-white font-semibold text-sm tracking-tight">COURTIA</span>
             <span className="hidden sm:inline text-[9px] bg-white/10 text-white/60 px-2 py-0.5 rounded-full font-medium">

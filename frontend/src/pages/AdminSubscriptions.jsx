@@ -2,20 +2,23 @@ import { useState, useEffect } from 'react'
 import { CreditCard, TrendingUp, AlertTriangle } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
-
-const PLAN_PRICES = { start: 49, pro: 99, elite: 199 }
+import { adminFetch } from '../lib/adminApi'
 
 export default function AdminSubscriptions() {
   const [data, setData] = useState(null)
+  const [billingRows, setBillingRows] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-    fetch(`${API_URL}/api/admin/analytics`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false) })
+    Promise.all([
+      adminFetch('/analytics').then(r => r.json()),
+      adminFetch('/billing').then(r => r.json())
+    ])
+      .then(([analytics, billing]) => {
+        setData(analytics)
+        setBillingRows(billing.organizations || [])
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
   }, [])
 
@@ -78,6 +81,64 @@ export default function AdminSubscriptions() {
           </span>
         </div>
       )}
+
+      <div style={{ marginTop: 28 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Suivi Billing (test mode)</h2>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '0 0 14px' }}>
+          Plan, statut abonnement, fin d’essai et preuve de consentement.
+        </p>
+
+        {billingRows.length === 0 ? (
+          <AuroraEmptyState
+            icon={CreditCard}
+            title="Aucune organisation billing"
+            subtitle="Les données apparaîtront dès qu’un onboarding billing est créé."
+          />
+        ) : (
+          <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12 }}>
+            <table style={{ width: '100%', minWidth: 860, borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <tr>
+                  <th style={th}>Cabinet</th>
+                  <th style={th}>Compte</th>
+                  <th style={th}>Plan</th>
+                  <th style={th}>Statut</th>
+                  <th style={th}>Fin essai</th>
+                  <th style={th}>Consentement</th>
+                  <th style={th}>Customer Stripe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billingRows.map((row) => (
+                  <tr key={row.organization_id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <td style={td}>{row.cabinet_name || 'Non renseigné'}</td>
+                    <td style={td}>{row.email}</td>
+                    <td style={td}>{row.plan_code || 'starter'}</td>
+                    <td style={td}>{row.subscription_status || 'not_started'}</td>
+                    <td style={td}>{row.trial_end_at ? new Date(row.trial_end_at).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td style={td}>{row.last_legal_acceptance_at ? new Date(row.last_legal_acceptance_at).toLocaleString('fr-FR') : '—'}</td>
+                    <td style={td}>{row.stripe_customer_id_masked || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
+}
+
+const th = {
+  textAlign: 'left',
+  padding: '10px 12px',
+  color: 'rgba(255,255,255,0.65)',
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+}
+
+const td = {
+  padding: '10px 12px',
+  color: 'rgba(255,255,255,0.86)',
+  whiteSpace: 'nowrap',
 }

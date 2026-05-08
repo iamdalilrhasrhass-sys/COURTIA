@@ -1,6 +1,8 @@
+import { buildApiUrl } from '../api/sessionPolicy'
+
 export async function callArkAI(clientData, userMessage, token) {
   try {
-    const response = await fetch(import.meta.env.VITE_API_URL || '/api') + '/ark/chat', {
+    const response = await fetch(buildApiUrl('/ark/chat'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

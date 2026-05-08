@@ -1,24 +1,21 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle, AlertTriangle } from 'lucide-react'
+import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
-import ClientBubblePremium from '../components/ClientBubblePremium'
-import WelcomeScreen from '../components/WelcomeScreen'
-import EmptyState from '../components/EmptyState'
-import ErrorState from '../components/ErrorState'
 import BubbleBackground from '../components/BubbleBackground'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
-import CreateTaskModal from '../components/clients/CreateTaskModal'
+import ClientBubblePremium from '../components/ClientBubblePremium'
 import { computeClientIntelligence } from '../utils/clientIntelligence'
+import ClientBubbleActionSheet from '../components/clients/ClientBubbleActionSheet'
+import { openWhatsappForClient } from '../utils/whatsapp'
+import ErrorState from '../components/ErrorState'
+import WelcomeScreen from '../components/WelcomeScreen'
 import '../styles/design-system.css'
 
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
-
-// Mock clients — uniquement utilisés si VITE_USE_MOCKS=true
 const MOCK_CLIENTS = [
   {id:1,name:'SARL Dupont',email:'contact@dupont.fr',status:'actif',riskScore:28,premium:45000,city:'Paris'},
   {id:2,name:'Martin Assurances',email:'m.assurances@outlook.fr',status:'actif',riskScore:65,premium:32000,city:'Lyon'},
@@ -151,16 +148,13 @@ function ClientCard({ client, onNavigate }) {
 export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [useMock, setUseMock] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
   const [sortField, setSortField] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
-  const [viewMode, setViewMode] = useState('bulles')
-  const [taskModalOpen, setTaskModalOpen] = useState(false)
-  const [taskClient, setTaskClient] = useState(null)
-  const [taskIntelligence, setTaskIntelligence] = useState(null)
+  const [viewMode, setViewMode] = useState('bulles') // 'list' | 'cards' | 'bulles'
   const navigate = useNavigate()
   const PER_PAGE = 15
 
@@ -169,49 +163,24 @@ export default function Clients() {
   async function fetchClients() {
     try {
       setLoading(true)
-      setError(null)
       const res = await api.get('/clients')
-      const data = res.data?.data || res.data || []
-      if (!Array.isArray(data)) {
-        setClients([])
-        if (!USE_MOCKS) setError('Format de réponse API inattendu')
-        else if (USE_MOCKS) setClients(MOCK_CLIENTS)
-      } else {
-        setClients(data)
-      }
+      setClients(res.data?.data || [])
+      setUseMock(false)
     } catch (err) {
-      console.error('Erreur chargement clients:', err.message)
-      if (USE_MOCKS) {
-        setClients(MOCK_CLIENTS)
-      } else {
-        setError(err?.response?.status === 401 
-          ? 'Session expirée. Veuillez vous reconnecter.' 
-          : 'Impossible de charger les clients. Vérifiez votre connexion.')
-        setClients([])
-      }
+      console.error('Impossible de charger les clients.')
+      setClients(MOCK_CLIENTS)
+      setUseMock(true)
     }
     finally { setLoading(false) }
   }
-
-  // Pre-compute intelligence profiles for bubble view (without quotes/appointments)
-  const clientIntelligenceMap = useMemo(() => {
-    const map = {}
-    if (!loading) {
-      (clients || []).forEach(c => {
-        if (!c || !c.id) return
-        map[c.id] = computeClientIntelligence(c, [], [])
-      })
-    }
-    return map
-  }, [clients, loading])
-
+  
   const filteredClients = useMemo(() => {
     return (clients || []).filter(c => {
         if (!c) return false
         const s = search.toLowerCase()
-        const name = (c.name || `${c.prenom || ''} ${c.nom || ''}`).toLowerCase()
-        const email = (c.email || '').toLowerCase()
-        const matchSearch = !s || name.includes(s) || email.includes(s)
+        const name = c.name || `${c.prenom || ''} ${c.nom || ''}`.toLowerCase()
+        const email = c.email || ''
+        const matchSearch = !s || name.includes(s) || email.toLowerCase().includes(s)
         const st = (c.status || c.statut || '').toLowerCase()
         if (statusFilter === 'tous') return matchSearch
         if (statusFilter === 'inactif') return matchSearch && ['inactif'].includes(st)
@@ -244,7 +213,7 @@ export default function Clients() {
     else { setSortField(field); setSortDir('asc') }
     setPage(1)
   }
-
+  
   function timeAgo(dateString) {
       if (!dateString) return 'Jamais'
       const seconds = Math.floor((new Date() - new Date(dateString)) / 1000)
@@ -257,20 +226,6 @@ export default function Clients() {
       return `aujourd'hui`
   }
 
-  const handleCreateTask = (client, intelligence) => {
-    setTaskClient(client)
-    setTaskIntelligence(intelligence)
-    setTaskModalOpen(true)
-  }
-
-  const handleTaskCreated = () => {
-    // Optionnel : rafraîchir les données ou afficher un toast
-  }
-
-  const handleAskArk = (client, intelligence) => {
-    navigate(`/clients/${client.id}`)
-  }
-
   const thClass = "p-4 text-left text-[11px] font-semibold uppercase tracking-widest select-none cursor-pointer"
   const headerMapping = { Client: 'nom', Statut: 'statut', 'Score Risque': 'score_risque', 'Dernière activité': 'created_at' }
   const VIEW_OPTIONS = [
@@ -278,6 +233,18 @@ export default function Clients() {
     { key: 'cards', label: 'Cartes', icon: LayoutGrid },
     { key: 'bulles', label: 'Bulles', icon: Circle },
   ]
+
+  // Pre-compute intelligence profiles for bubble view
+  const clientIntelligenceMap = useMemo(() => {
+    const map = {}
+    if (!loading) {
+      (clients || []).forEach(c => {
+        if (!c || !c.id) return
+        map[c.id] = computeClientIntelligence(c, [], [])
+      })
+    }
+    return map
+  }, [clients, loading])
 
   // Sort by priority for bubble view
   const prioritySortedClients = useMemo(() => {
@@ -292,23 +259,34 @@ export default function Clients() {
     })
   }, [paginatedClients, clientIntelligenceMap, viewMode])
 
+  // ARK + Task handlers
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
+  const [taskClient, setTaskClient] = useState(null)
+  const handleAskArk = (client) => navigate(`/clients/${client.id}?tab=ark`)
+  const handleCreateTask = (client, intel) => { setTaskClient(client); setTaskModalOpen(true) }
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
+    <div className="min-h-screen" style={{ background: 'transparent', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="subtle" />
       <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl md:text-2xl font-black text-gray-900" style={{ fontFamily: 'Arial' }}>Clients</h1>
-            <span className="px-2.5 py-1 text-sm font-semibold rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{clients.length}</span>
-            {USE_MOCKS && (
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full" style={{ background: 'rgba(245,158,11,0.12)', color: '#b45309' }}>
-                Mode démo
-              </span>
-            )}
-          </div>
-          <button onClick={() => navigate('/clients/new')} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a0a0a] text-white rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ease-out shadow-lg hover:scale-[1.02]" style={{ border: '0.5px solid rgba(255,255,255,0.1)' }}><Plus size={16} />Nouveau client</button>
-        </header>
+        <AuroraPageHeader
+          title="Clients"
+          subtitle={`${clients.length} contacts dans le cockpit. Recherche, statut, risque et prochaine action en un seul endroit.`}
+          badge="Portefeuille clients"
+          dark
+          actions={
+            <AuroraButton variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => navigate('/clients/new')}>
+              Nouveau client
+            </AuroraButton>
+          }
+        />
 
+        {useMock && (
+          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
+            Aperçu démonstration : l’API clients n’a pas répondu, les lignes affichées sont des données fictives réalistes.
+          </div>
+        )}
+        
         <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: 'var(--text-tertiary)' }} />
@@ -366,33 +344,8 @@ export default function Clients() {
           </div>
         </div>
 
-        {/* Error state */}
-        {error && !loading && (
-          <ErrorState onRetry={fetchClients} />
-        )}
-
-        {/* Welcome screen — onboarding 0-client */}
-        {!error && !loading && clients.length === 0 && search === '' && statusFilter === 'tous' && (
-          <WelcomeScreen onLoadDemo={async () => {
-            try { await api.post('/dev/seed-demo'); fetchClients() }
-            catch(e) { console.error('Seed demo failed', e) }
-          }} />
-        )}
-
-        {/* Empty search/filter results */}
-        {!error && !loading && clients.length > 0 && paginatedClients.length === 0 && (
-          <EmptyState
-            icon={Search}
-            title="Aucun client ne correspond"
-            message={search ? `Aucun résultat pour "${search}". Essayez un autre terme ou réinitialisez vos filtres.` : "Aucun client ne correspond aux filtres actuels."}
-            ctaLabel="Réinitialiser"
-            onCta={() => { setSearch(''); setStatusFilter('tous'); setPage(1) }}
-            variant="search"
-          />
-        )}
-
         {/* View: Liste (table) */}
-        {!error && viewMode === 'list' && (
+        {viewMode === 'list' && (
           <BubbleCard hover={false} padding={0}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[700px]">
@@ -444,7 +397,7 @@ export default function Clients() {
         )}
 
         {/* View: Cartes */}
-        {!error && viewMode === 'cards' && (
+        {viewMode === 'cards' && (
           loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -473,8 +426,8 @@ export default function Clients() {
           )
         )}
 
-        {/* View: Bulles — Cockpit intelligent */}
-        {!error && viewMode === 'bulles' && (
+        {/* View: Bulles — Aurora V2 Premium */}
+        {viewMode === 'bulles' && (
           <>
             {loading ? (
               <div className="flex items-center justify-center py-16">
@@ -490,7 +443,6 @@ export default function Clients() {
               </div>
             ) : paginatedClients.length > 0 ? (
               <>
-                {/* Priority legend */}
                 <div className="flex items-center gap-3 mb-3 px-1 text-[9px] text-gray-400 font-semibold uppercase tracking-wider">
                   <span>Priorité ARK</span>
                   <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-400/70" /> Urgent</span>
@@ -512,46 +464,26 @@ export default function Clients() {
                 </div>
               </>
             ) : (
-              /* Empty state premium */
               <div className="flex flex-col items-center justify-center py-20 px-4">
-                {/* Bubble fantôme */}
-                <div style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
-                  border: '0.5px solid rgba(255,255,255,0.08)',
-                  marginBottom: 24,
-                  position: 'relative',
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: -8,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle at 50% 50%, rgba(180,160,255,0.06), transparent 70%)',
-                    filter: 'blur(12px)',
-                  }} />
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', border: '0.5px solid rgba(255,255,255,0.10)', marginBottom: 20, position: 'relative' }}>
+                  <div style={{ position: 'absolute', inset: '-8px', borderRadius: '50%', background: 'radial-gradient(circle at 50% 50%, rgba(160,140,220,0.07), transparent 70%)', filter: 'blur(10px)' }} />
                 </div>
-                <p className="text-base font-semibold" style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>
-                  Aucun client dans ce segment
-                </p>
-                <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>
-                  {search ? 'Essayez de modifier votre recherche.' : 'Ajoutez votre premier client pour activer le cockpit.'}
-                </p>
-                <button onClick={() => navigate('/clients/new')} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200"
-                  style={{
-                    background: 'rgba(0,0,0,0.04)',
-                    border: 'var(--border-fine)',
-                    color: 'var(--text-primary)',
-                  }}>
-                  <Plus size={14} />
-                  Ajouter un client
-                </button>
+                <p className="text-base font-semibold" style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Aucun client dans ce segment</p>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>{search ? 'Essayez de modifier votre recherche.' : 'Ajoutez votre premier client pour activer le cockpit.'}</p>
               </div>
             )}
           </>
         )}
+        {/* Error and welcome states */}
+        {error && !loading && (
+          <ErrorState onRetry={fetchClients} />
+        )}
 
+        {!error && !loading && clients.length === 0 && (
+          <WelcomeScreen onLoadDemo={() => { setClients(MOCK_CLIENTS); setUseMock(true) }} />
+        )}
+
+        {/* Pagination */}
         {!loading && totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-4 md:mt-8">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
@@ -600,15 +532,6 @@ export default function Clients() {
           </div>
         )}
       </main>
-
-      {/* CreateTaskModal */}
-      <CreateTaskModal
-        isOpen={taskModalOpen}
-        onClose={() => setTaskModalOpen(false)}
-        client={taskClient}
-        intelligence={taskIntelligence}
-        onCreated={handleTaskCreated}
-      />
     </div>
   )
 }

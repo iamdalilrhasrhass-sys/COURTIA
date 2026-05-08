@@ -7,6 +7,7 @@ const verifyToken = require('../middleware/authMiddleware');
 const { verifyToken: verifyTokenMiddleware } = require('../middleware/auth');
 const User = require('../models/User');
 const pool = require('../db');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 const router = express.Router();
 
@@ -64,7 +65,7 @@ router.get('/me', verifyTokenMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error('GET /api/auth/me error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Profil indisponible pour le moment' });
   }
 });
 
@@ -101,7 +102,7 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
     res.json({ success: true, message: 'Profil mis à jour' });
   } catch (err) {
     console.error('PUT /api/auth/me error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Mise à jour du profil impossible pour le moment' });
   }
 });
 
@@ -128,7 +129,7 @@ router.post('/google', async (req, res) => {
     const jwt = require('jsonwebtoken');
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'crm-assurance-secret-key-2026',
+      getJwtSecret(),
       { expiresIn: process.env.JWT_EXPIRY || '7d' }
     );
 

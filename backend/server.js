@@ -144,19 +144,23 @@ const documentsRouter      = require('./src/routes/documents')
 const ddaQuizRouter        = require('./src/routes/ddaQuiz')
 const analyticsRouter      = require('./src/routes/analytics')
 const stripeRouter         = require('./src/routes/stripe')
+const billingRouter        = require('./src/routes/billing')
 const plansRouter          = require('./src/routes/plans')
 const messagingRoutes      = require('./src/routes/messaging')
 const importRouter         = require('./src/routes/import')
+const importsRouter        = require('./src/routes/imports')
 const reachRouter          = require('./src/routes/reach')
 const academyRouter        = require('./src/routes/academy')
 const documentInboxRouter  = require('./src/routes/documentInbox')
 const browserPilotRouter   = require('./src/routes/browserPilot')
 const extensionRouter      = require('./src/routes/extension')
+const partnersRouter       = require('./src/routes/partners')
 
 // Public
 app.use('/api/auth',   authLimiter, authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
+app.use('/api/billing', billingRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
@@ -182,13 +186,14 @@ app.use('/api/dda',             verifyToken, ddaQuizRouter)
 app.use('/api/analytics',       verifyToken, analyticsRouter)
 app.use('/api/plans',           verifyToken, plansRouter)
 app.use('/api/import',          verifyToken, importRouter)
+app.use('/api/imports',         verifyToken, importsRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
 app.use('/api/academy',        verifyToken, academyRouter)
 app.use('/api/document-inbox', verifyToken, documentInboxRouter)
 app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 app.use('/api/extension',      verifyToken, extensionRouter)
+app.use('/api/partners',       verifyToken, partnersRouter)
 
-// Messaging (auth gérée route par route — webhook inbound est public)
 app.use('/api/messaging',    messagingRoutes)
 
 // ==================== PORTFOLIO CRON (03h00 Europe/Paris) ====================

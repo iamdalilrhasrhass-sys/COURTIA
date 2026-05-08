@@ -4,6 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 function verifyToken(req, res, next) {
   try {
@@ -11,46 +12,38 @@ function verifyToken(req, res, next) {
 
     if (!authHeader) {
       return res.status(401).json({
-        error: 'No authorization header',
-        details: 'Bearer token required'
+        error: 'En-tête d’authentification manquant'
       });
     }
 
     const parts = authHeader.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
       return res.status(401).json({
-        error: 'Invalid authorization header format',
-        details: 'Expected: Bearer <token>'
+        error: 'Format d’authentification invalide'
       });
     }
 
     const token = parts[1];
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'crm-assurance-secret-key-2026'
-    );
+    const decoded = jwt.verify(token, getJwtSecret());
 
     req.user = decoded;
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({
-        error: 'Token expired',
-        expiredAt: err.expiredAt
+        error: 'Token expiré'
       });
     }
 
     if (err.name === 'JsonWebTokenError') {
       return res.status(401).json({
-        error: 'Invalid token',
-        details: err.message
+        error: 'Token invalide'
       });
     }
 
     res.status(500).json({
-      error: 'Token verification failed',
-      details: err.message
+      error: 'Vérification du token impossible'
     });
   }
 }

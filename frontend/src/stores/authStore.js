@@ -1,18 +1,19 @@
 import create from 'zustand';
+import { buildApiUrl, clearStoredSession, getAuthToken } from '../api/sessionPolicy';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const authStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: getAuthToken() || null,
+  isAuthenticated: !!getAuthToken(),
   loading: false,
   error: null,
   
   login: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(buildApiUrl('/auth/login', API_URL), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -21,8 +22,10 @@ const authStore = create((set) => ({
       if (!response.ok) throw new Error('Login failed');
       
       const data = await response.json();
+      localStorage.setItem('courtia_token', data.token);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.user) localStorage.setItem('courtia_user', JSON.stringify(data.user));
       set({ user: data.user, token: data.token, isAuthenticated: true, loading: false });
       return data;
     } catch (error) {
@@ -35,7 +38,7 @@ const authStore = create((set) => ({
   register: async (email, password, firstName, lastName) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      const response = await fetch(buildApiUrl('/auth/register', API_URL), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, firstName, lastName }),
@@ -44,8 +47,10 @@ const authStore = create((set) => ({
       if (!response.ok) throw new Error('Registration failed');
       
       const data = await response.json();
+      localStorage.setItem('courtia_token', data.token);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.user) localStorage.setItem('courtia_user', JSON.stringify(data.user));
       set({ user: data.user, token: data.token, isAuthenticated: true, loading: false });
       return data;
     } catch (error) {
@@ -56,8 +61,7 @@ const authStore = create((set) => ({
   },
   
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearStoredSession();
     set({ user: null, token: null, isAuthenticated: false, loading: false, error: null });
   },
   

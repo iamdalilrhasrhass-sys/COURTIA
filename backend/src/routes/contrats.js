@@ -2,21 +2,22 @@ const express = require('express');
 const pool = require('../db');
 const router = express.Router();
 const { requireUnderLimit } = require('../middleware/planGuard');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 // Middleware pour vérifier le token
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ error: 'No authorization header' });
+    return res.status(401).json({ error: 'Token manquant' });
   }
   
   const jwt = require('jsonwebtoken');
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, getJwtSecret());
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Invalid token', details: err.message });
+    res.status(401).json({ error: 'Token invalide' });
   }
 };
 
@@ -67,7 +68,7 @@ router.get('/', verifyToken, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('GET /api/contrats error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'contracts_unavailable', message: 'Impossible de charger les contrats pour le moment.' });
   }
 });
 
@@ -104,7 +105,7 @@ router.post('/', verifyToken, requireUnderLimit('contracts'), async (req, res) =
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('POST /api/contrats error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'contract_create_failed', message: 'Création du contrat impossible pour le moment.' });
   }
 });
 
@@ -143,7 +144,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('PUT /api/contrats/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'contract_update_failed', message: 'Mise à jour du contrat impossible pour le moment.' });
   }
 });
 
@@ -161,7 +162,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/contrats/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'contract_delete_failed', message: 'Suppression du contrat impossible pour le moment.' });
   }
 });
 

@@ -1,1 +1,13 @@
-{"private":true}
+{
+  "private": true,
+  "name": "courtia-root",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "postinstall": "npm --prefix backend install --omit=dev",
+    "build": "npm --prefix backend install --omit=dev",
+    "start": "node backend/server.js"
+  }
+}

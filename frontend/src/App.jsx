@@ -1,49 +1,52 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 
 // Pages
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
-import MorningBrief from './pages/MorningBrief'
 import Clients from './pages/Clients'
-import ClientDetail from './pages/ClientDetail'
 import Contrats from './pages/Contrats'
-import ClientNew from './pages/ClientNew'
-import ContratNew from './pages/ContratNew'
 import Taches from './pages/Taches'
 import Rapports from './pages/Rapports'
-import ReachDashboard from './pages/ReachDashboard'
-import ReachSearch from './pages/ReachSearch'
-import ReachProspects from './pages/ReachProspects'
-import ReachCampaigns from './pages/ReachCampaigns'
-import ReachInbox from './pages/ReachInbox'
-import ReachProspectDetail from './pages/ReachProspectDetail'
-import ReachMap from './pages/ReachMap'
-import ReachSettings from './pages/ReachSettings'
 import Parametres from './pages/Parametres'
-import Capitia from './pages/Capitia'
-import AnalyticsExecutive from './pages/AnalyticsExecutive'
-import Abonnement from './pages/Abonnement'
-import Billing from './pages/Billing'
-import PaiementSucces from './pages/PaiementSucces'
-import PaiementAnnule from './pages/PaiementAnnule'
-import Onboarding from './pages/Onboarding'
 import LandingPublic from './pages/LandingPublic'
-import Academy from './pages/Academy'
-import Documents from './pages/Documents'
-import BrowserPilot from './pages/BrowserPilot'
-import Tarifs from './pages/Tarifs'
-import PublicDocumentUpload from './pages/PublicDocumentUpload'
+import MorningBrief from './pages/MorningBrief'
 
 // Admin pages
-import AdminOverview from './pages/AdminOverview'
-import AdminUsers from './pages/AdminUsers'
-import AdminUserDetail from './pages/AdminUserDetail'
-import AdminSubscriptions from './pages/AdminSubscriptions'
-import AdminSystem from './pages/AdminSystem'
-import AdminLogs from './pages/AdminLogs'
-import AdminSupport from './pages/AdminSupport'
+const ClientDetail = lazy(() => import('./pages/ClientDetail'))
+const ClientNew = lazy(() => import('./pages/ClientNew'))
+const ContratNew = lazy(() => import('./pages/ContratNew'))
+const ReachDashboard = lazy(() => import('./pages/ReachDashboard'))
+const ReachSearch = lazy(() => import('./pages/ReachSearch'))
+const ReachProspects = lazy(() => import('./pages/ReachProspects'))
+const ReachCampaigns = lazy(() => import('./pages/ReachCampaigns'))
+const ReachInbox = lazy(() => import('./pages/ReachInbox'))
+const ReachProspectDetail = lazy(() => import('./pages/ReachProspectDetail'))
+const ReachMap = lazy(() => import('./pages/ReachMap'))
+const ReachSettings = lazy(() => import('./pages/ReachSettings'))
+const Capitia = lazy(() => import('./pages/Capitia'))
+const AnalyticsExecutive = lazy(() => import('./pages/AnalyticsExecutive'))
+const Abonnement = lazy(() => import('./pages/Abonnement'))
+const Billing = lazy(() => import('./pages/Billing'))
+const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
+const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
+const Onboarding = lazy(() => import('./pages/BillingOnboarding'))
+const DataOnboarding = lazy(() => import('./pages/Onboarding'))
+const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
+const Academy = lazy(() => import('./pages/Academy'))
+const Documents = lazy(() => import('./pages/Documents'))
+const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
+const Tarifs = lazy(() => import('./pages/Tarifs'))
+const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
+const AdminOverview = lazy(() => import('./pages/AdminOverview'))
+const AdminUsers = lazy(() => import('./pages/AdminUsers'))
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
+const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'))
+const AdminSystem = lazy(() => import('./pages/AdminSystem'))
+const AdminLogs = lazy(() => import('./pages/AdminLogs'))
+const AdminSupport = lazy(() => import('./pages/AdminSupport'))
+const Partners = lazy(() => import('./pages/Partners'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -53,6 +56,9 @@ import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
 import ProtectedRoute from './components/ProtectedRoute'
+import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
+import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
+import RhasrhassSignature from './components/brand/RhasrhassSignature'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -109,11 +115,20 @@ function AppLayout() {
   }, [handleKeyDown])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div className="courtia-cockpit-shell" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <div className="courtia-cockpit-aurora" aria-hidden="true" />
+      <div className="courtia-cockpit-watermark" aria-hidden="true">
+        <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
+      </div>
       <Sidebar />
-      <main className="flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ background: '#f7f6f2', minHeight: '100vh' }}>
+      <main className="courtia-cockpit-main flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <ImpersonationBanner />
-        <Outlet />
+        <div style={{ flex: 1 }}>
+          <Outlet />
+        </div>
+        <footer style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 16px' }}>
+          <RhasrhassSignature compact />
+        </footer>
       </main>
       <PaywallModal
         open={!!paywallError}
@@ -148,11 +163,20 @@ function AppLayout() {
   )
 }
 
+function RouteLoader() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <CourtiaLogoLoader fullScreen={false} message="COURTIA charge l’espace..." />
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+      <Suspense fallback={<RouteLoader />}>
       <Routes>
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
@@ -161,10 +185,12 @@ export default function App() {
         <Route path="/tarifs" element={<Tarifs />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
-        <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route path="/onboarding"    element={<Onboarding />} />
+          <Route path="/onboarding/import" element={<DataOnboarding />} />
+          <Route path="/import"        element={<ImportPortfolio />} />
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
@@ -186,6 +212,8 @@ export default function App() {
           <Route path="/analyses"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
           <Route path="/billing"       element={<Billing />} />
+          <Route path="/billing/success" element={<PaiementSucces />} />
+          <Route path="/billing/cancel" element={<PaiementAnnule />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
           <Route path="/reach"             element={<ReachDashboard />} />
@@ -197,6 +225,7 @@ export default function App() {
           <Route path="/reach/inbox"       element={<ReachInbox />} />
           <Route path="/reach/map"         element={<ReachMap />} />
           <Route path="/reach/settings"    element={<ReachSettings />} />
+          <Route path="/partners"       element={<Partners />} />
         </Route>
 
         {/* Routes Admin — protégées par AdminRoute (super_admin uniquement) */}
@@ -213,10 +242,9 @@ export default function App() {
         {/* 404 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }
 // Trigger Vercel rebuild
 /* Build trigger 2 */
-
-

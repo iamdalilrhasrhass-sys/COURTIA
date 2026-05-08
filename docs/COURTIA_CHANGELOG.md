@@ -1,5 +1,671 @@
 # COURTIA — Changelog Mission 2M
 
+## Reprise finale après passation Hermes (2 mai 2026)
+
+### Correctif code
+- `fix: recover stale Stripe customer ids for checkout and portal` (`4f16806`)
+  - `backend/src/services/stripeService.js`
+  - `backend/src/routes/billing.js`
+- Objectif: auto-récupérer un `stripe_customer_id` périmé/supprimé côté Stripe (cause réelle des 500 checkout/portal).
+
+### Déploiement VPS
+- Sync `main` vers `/srv/courtia/backend`.
+- `npm ci --omit=dev`.
+- `pm2 restart courtia-api --update-env` + `pm2 save`.
+- Health local/public confirmé en 200.
+
+### Validation Stripe test runtime
+- Variables `_TEST` présentes et valides côté VPS.
+- Checkout Starter: OK.
+- Checkout Pro: OK.
+- Premium: OK (`409 premium_contact_required`).
+- Customer Portal: OK.
+- Webhook sans signature: OK (`400 missing_signature`).
+- Webhook signé: OK (`invoice.payment_failed`, `customer.subscription.updated`).
+- Idempotence: OK (rejeu même `event_id`, pas de doublon DB).
+
+### Validation import non-régression
+- `/api/imports/preview` OK
+- `/api/imports/commit` OK
+- `/api/imports/history` OK
+- Doublon détecté au rejeu CSV.
+
+### Docs mises à jour
+- `docs/COURTIA_STRIPE_TEST_OPERATIONAL_QA.md`
+- `docs/COURTIA_STRIPE_WEBHOOK_SIGNED_QA.md`
+- `docs/COURTIA_DEPLOYMENT_FINAL_TEST_MODE_REPORT.md`
+- `docs/COURTIA_TRANSACTIONAL_EMAILS_QA.md`
+- `docs/COURTIA_QA_REPORT.md`
+- `docs/COURTIA_REMAINING_TASKS.md`
+
+## Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
+
+### Ce qui a été tenté automatiquement
+- Vérification Stripe CLI local/VPS pour récupérer les variables test: indisponible sur les deux environnements.
+- Tentative de récupération autonome des variables Stripe `_TEST` sans exposition de secrets: impossible faute accès Stripe (CLI/dashboard) dans cet environnement.
+- Mise à jour sécurisée VPS conservée:
+  - `BILLING_MODE=test`
+  - `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`
+- Redémarrage PM2 avec `--update-env` + `pm2 save`.
+
+### Résultat technique
+- `/api/health`: 200
+- `/api/billing/plans`: 200
+- `/api/billing/legal-acceptance`: 200
+- Checkout starter/pro: 503 `billing_test_mode_not_configured` (attendu tant que `_TEST` sensibles absentes)
+- Portal: 503 `billing_test_mode_not_configured`
+- Premium: 409 `premium_contact_required`
+- Webhook signé/idempotence/invoice.payment_failed: non testables sans secret webhook test.
+- Import CSV: preview + commit + history toujours OK.
+
+### Décision
+- Stripe test opérationnel complet: NON (blocage configuration Stripe test sensible).
+- Render reste non-prod: Auto-Deploy à couper côté dashboard pour stopper les alertes.
+
+## Déploiement final test mode / Stripe E2E / Import runtime (2 mai 2026)
+
+### Merge + déploiement
+- Merge production effectué sur `main` via commit `fcf70c3` (inclut `a2558a9`).
+- Push GitHub: `c75b80e..fcf70c3`.
+- Déploiement backend VPS synchronisé depuis `/root/courtia_new` vers `/srv/courtia/backend` avec backup préalable.
+- `pm2 restart courtia-api --update-env` et `pm2 save` exécutés.
+
+### Vérifications production
+- Frontend Vercel: `200` sur `/`, `/login`, `/register?plan=pro`, `/onboarding`, `/billing`, `/import`.
+- Backend VPS: `200` sur `/api/health` en local et en public.
+- Migrations non destructives appliquées:
+  - `backend/migrations/20260502_billing_legal_foundation.sql`
+  - `backend/migrations/20260502_import_jobs.sql`
+
+### Stripe test mode (état réel)
+- API billing validées:
+  - plans/status/onboarding/legal-acceptance OK.
+  - premium correctement bloqué en `409 premium_contact_required`.
+- Checkout starter/pro + portal: bloqués proprement par absence de config test (`billing_test_mode_not_configured`).
+- Cause identifiée: variables `_TEST` absentes sur VPS.
+- Variables legacy détectées, dont `STRIPE_SECRET_KEY` au format live (non utilisée dans cette mission).
+- Webhooks signés/idempotence non prouvés (non testables sans secret webhook test configuré).
+
+### Import portefeuille V1 runtime
+- Preview CSV: OK (`import_job_id` renvoyé).
+- Commit CSV: OK (`status: completed` + `summary`).
+- History import: OK.
+- Rejeu CSV: détection de doublons clients observée; consolidation contrats/tâches à affiner en P2.
+
+### Documentation
+- Ajout de `docs/COURTIA_DEPLOYMENT_FINAL_TEST_MODE_REPORT.md`.
+- Mise à jour:
+  - `docs/COURTIA_STRIPE_TEST_OPERATIONAL_QA.md`
+  - `docs/COURTIA_STRIPE_WEBHOOK_SIGNED_QA.md`
+  - `docs/COURTIA_TRANSACTIONAL_EMAILS_QA.md`
+  - `docs/COURTIA_BILLING_TEST_MODE_FINAL_REPORT.md`
+  - `docs/COURTIA_QA_REPORT.md`
+  - `docs/COURTIA_REMAINING_TASKS.md`
+
+## Finalisation Stripe / Branding / Import V1 (2 mai 2026)
+
+### Branding RHASRHASS™ global
+- Signature unifiée via layout privé + layout admin:
+  - `frontend/src/App.jsx`
+  - `frontend/src/components/AdminLayout.jsx`
+- Signature explicite conservée sur surfaces publiques:
+  - `frontend/src/pages/LandingPublic.jsx`
+  - `frontend/src/pages/LoginPage.jsx` (`/login`, `/register`, `/register?plan=pro`)
+- Suppression des anciens footers texte `Rhasrhass®` sur pages legacy.
+
+### Register Starter/Pro — confirmation mot de passe
+- Ajout du champ `Confirmer le mot de passe` sur les funnels register (Starter et Pro).
+- Validation frontend:
+  - blocage si confirmation vide,
+  - blocage si mismatch (`Les mots de passe ne correspondent pas.`).
+- `confirmPassword` non envoyé au backend.
+- Login inchangé.
+
+### Pricing HT/TTC et wording fiscal
+- Harmonisation HT/TTC confirmée sur landing, auth et billing.
+- Mise à jour du setup Stripe test:
+  - `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md` (Starter/Pro avec référence TTC claire).
+
+### Stripe test safety hardening
+- Sécurisation clé Stripe:
+  - en `BILLING_MODE=test`, le backend n’accepte plus de fallback implicite sur les variables live.
+  - fichiers:
+    - `backend/src/services/stripeService.js`
+    - `backend/src/services/planService.js`
+- Fallback légal:
+  - `legal-acceptance` supporte désormais `accept_*` et `accepted_*`.
+  - fichier: `backend/src/services/legalAcceptanceService.js`
+
+### Import portefeuille V1
+- Migration non destructive:
+  - `backend/migrations/20260502_import_jobs.sql`
+- Nouveaux services:
+  - `backend/src/services/importMappingService.js`
+  - `backend/src/services/importValidationService.js`
+  - `backend/src/services/importService.js`
+- Nouvelle route API:
+  - `backend/src/routes/imports.js`
+  - montée via `backend/server.js` sur `/api/imports`
+- Nouvelle UI:
+  - `frontend/src/pages/ImportPortfolio.jsx`
+  - route privée `/import`
+  - bouton d’accès ajouté dans `Paramètres`.
+- Documentation:
+  - `docs/COURTIA_PORTFOLIO_IMPORT_STRATEGY.md`
+
+### Validation technique locale
+- Build frontend: ✅
+- Tests frontend: ✅ (33/33)
+- Syntax backend (billing/stripe/import): ✅
+- QA Python: ✅ 0 P0/P1 (37 P2)
+- Secret audit: ✅ P0=0
+
+## Pré-live légal / TVA / branding RHASRHASS™ (2 mai 2026)
+
+### Légal / conformité documentaire
+- Ajout de la revue officielle des sources:
+  - `docs/COURTIA_LEGAL_SOURCES_REVIEW.md`
+  - Service-Public (CGV, facturation, mentions EI), impots.gouv (TVA intracom), CNIL (responsable/sous-traitant et clauses DPA).
+- Création des versions pré-live:
+  - `docs/legal-drafts/COURTIA_MENTIONS_LEGALES_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_PRIVACY_POLICY_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_DPA_PRELIVE.md`
+  - `docs/legal-drafts/COURTIA_COOKIES_POLICY_PRELIVE.md`
+
+### Fiscalité / pricing
+- Passage explicite en mode TVA applicable dans les documents pré-live.
+- Harmonisation des wording visibles:
+  - Starter: `89 € HT / mois` + `106,80 € TTC` (TVA 20 %),
+  - Pro: `159 € HT / mois` + `190,80 € TTC` (TVA 20 %),
+  - mention globale: `Prix indiqués hors taxes. TVA applicable au taux en vigueur.`
+- Suppression des anciennes hypothèses actives `TVA non applicable, art. 293 B`.
+
+### Branding RHASRHASS™
+- Nouveau composant:
+  - `frontend/src/components/brand/RhasrhassSignature.jsx`
+- Intégration discrète sur surfaces clés:
+  - landing, auth funnel, billing/onboarding, paramètres.
+- Mise à jour design system:
+  - `docs/COURTIA_AURORA_DESIGN_SYSTEM.md` (règle d’usage footer discrète).
+
+### Infra
+- `docs/COURTIA_RENDER_DEPLOY_FIX.md` précisé: Render reste non-prod/secondaire et non requis pour l’exécution officielle.
+
+## Stripe Test Mode + Légal + Secrets (2 mai 2026)
+
+### Sécurité / secrets
+- Ajout du script `scripts/courtia_secret_audit.py` (scan non destructif + masquage des valeurs).
+- Ajout du runbook `docs/COURTIA_SECRET_ROTATION_RUNBOOK.md` et extension de la checklist de rotation.
+- Durcissement `.gitignore` (env variants, clés privées, dumps).
+- Suppression du faux motif `sk_live` dans `backend/src/services/apiGatewayService.js` (préfixe configurable via env).
+
+### Légal (drafts à faire valider)
+- Création des brouillons:
+  - `docs/legal-drafts/COURTIA_CGV_SAAS_B2B_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_PRIVACY_POLICY_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_DPA_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_COOKIES_POLICY_DRAFT.md`
+  - `docs/legal-drafts/COURTIA_MENTIONS_LEGALES_DRAFT.md`
+
+### Billing / Stripe test mode (foundation)
+- Ajout migration non destructive:
+  - `backend/migrations/20260502_billing_legal_foundation.sql`
+- Ajout fondations backend:
+  - `backend/src/routes/billing.js`
+  - `backend/src/services/billingService.js`
+  - `backend/src/services/legalAcceptanceService.js`
+  - `backend/src/services/stripeService.js`
+  - `backend/src/services/emailService.js`
+  - `backend/src/emails/templates/billingTemplates.js`
+- Compatibilité route conservée via `backend/src/routes/stripe.js` (proxy vers billing router).
+- Montage explicite `app.use('/api/billing', ...)` dans `backend/server.js`.
+- Ajout endpoints admin billing (`/api/admin/super/billing` et détail par organisation).
+- Redeploy backend VPS/PM2 réalisé (`courtia-api` restart) et endpoints billing publics activés.
+- Smoke tests runtime validés sur API officielle (`/api/billing/plans`, onboarding, consentements, checkout, portal).
+
+### Frontend billing / onboarding test mode
+- Ajout page onboarding billing: `frontend/src/pages/BillingOnboarding.jsx`.
+- Mise à jour parcours:
+  - routes `/onboarding`, `/billing`, `/billing/success`, `/billing/cancel`,
+  - redirection register -> onboarding par plan.
+- Mise à jour `frontend/src/pages/Billing.jsx`, `PaiementSucces.jsx`, `PaiementAnnule.jsx`.
+- Ajustements responsive sur les layouts onboarding/billing.
+
+### Documentation Stripe test mode
+- Ajout:
+  - `docs/COURTIA_BILLING_LEGAL_DB_SCHEMA.md`
+  - `docs/COURTIA_STRIPE_TEST_ENV_SETUP.md`
+  - `docs/COURTIA_TRANSACTIONAL_EMAILS.md`
+  - `docs/COURTIA_STRIPE_TEST_QA_REPORT.md`
+  - `docs/COURTIA_BILLING_TEST_MODE_FINAL_REPORT.md`
+
+## Mission Finale 500% — Stabilisation produit + sécurité + performance (2 mai 2026)
+
+### Frontend
+- Landing : wording pricing aligné avec fiscalité configurable (`/ mois` + mention explicite).
+- Auth funnel : wording Starter/Pro aligné, micro-réassurance conservée.
+- Rapports + Paramètres : `AuroraPageHeader` intégré, loaders remplacés par `CourtiaLogoLoader`.
+- Performance : code-splitting des routes secondaires via `React.lazy` + `Suspense`.
+
+### Backend
+- Sécurité JWT durcie via `backend/src/utils/jwtSecret.js` (fin des fallbacks faibles sur routes critiques modifiées).
+- Messages d’erreur API critiques francisés et assainis (moins d’exposition `err.message` brute).
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 33/33
+- QA Python : 0 P0 / 0 P1, 37 P2
+- API prod `https://api.courtiark.fr/api/health` : 200
+- Front prod `https://courtia.vercel.app` : 200
+
+## Clôture Render (2 mai 2026)
+
+### Décision infra
+- Confirmation Render Dashboard : DB `courtia-db` suspendue (plan free expiré, suspension billing, `expiresAt 2026-04-29`).
+- Render classé non-prod / secondaire.
+- Pas de paiement Render, pas de recréation DB Render, pas de migration production vers Render.
+
+### Production officielle
+- Backend officiel : `https://api.courtiark.fr`
+- Frontend officiel : `https://courtia.vercel.app`
+
+### Vérifications
+- `curl -i https://api.courtiark.fr/api/health` -> `HTTP 200`
+- `curl -I https://courtia.vercel.app` -> `HTTP/2 200`
+- `POST https://courtia.onrender.com/api/auth/register` reste en `ENOTFOUND` (cohérent avec DB Render suspendue)
+- aucune dépendance `courtia.onrender.com` détectée dans le frontend.
+
+## Render P0 + Landing 3D Repair + Billing Architecture (2 mai 2026)
+
+**Commits**
+- `1b92a3f` — fix: restore Render backend deploy after auth duplicate email handling
+- à créer — fix: restore premium 3D scroll landing experience
+- à créer — docs: define Courtia billing contracts and signature architecture
+
+### Render (stabilisation deploy)
+- Cause probable et reproductible couverte : service Render root échoue si `npm start` est exécuté à la racine sans script.
+- `package.json` racine renforcé avec scripts Render-safe :
+  - `postinstall` -> installation backend prod deps,
+  - `build` -> installation backend prod deps,
+  - `start` -> `node backend/server.js`.
+
+### Landing 3D repair
+- Rail vertical central agressif atténué et déplacé hors centre.
+- Barre de progression scroll adoucie.
+- Profondeur 3D subtile restaurée sur panneaux clés (perspective/tilt/hover).
+- Build/tests frontend conservés en succès.
+
+### Billing / contrats / signature (architecture)
+- Document d’architecture complet ajouté :
+  - parcours onboarding/billing,
+  - consentements et preuves légales,
+  - distinction Starter/Pro/Premium,
+  - contraintes micro-entreprise / TVA configurable,
+  - tables cibles billing/legal/signature,
+  - plan d’implémentation en phases.
+
+## Functional Readiness — Portfolio score 200 + parcours complet (2 mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : fix: complete Courtia functional readiness after VPS redeploy
+
+### Changements backend
+- Correction d'un bug runtime dans `portfolioAnalyzer` (`last_30 is not defined`) qui provoquait le fallback `503` sur `/api/portfolio/health-score`.
+- Route `GET /api/portfolio/health-score` enrichie :
+  - ajout de `success`, `status`, `source`, `message`,
+  - retour explicite `portfolio_empty` si aucun client/contrat,
+  - conservation de la compatibilité frontend existante.
+
+### Déploiement backend VPS
+- Sync backend vers `/srv/courtia/backend`.
+- `npm install --omit=dev` exécuté.
+- `pm2 restart courtia-api` exécuté, process online.
+
+### Résultats production
+- `GET /api/portfolio/morning-brief` : `200`.
+- `GET /api/portfolio/health-score` : `200` (plus de `503` pour le compte demo).
+- `GET /api/health` : `200` local VPS et public.
+
+### Vérification fonctionnelle globale
+- Frontend : build OK, tests OK (33/33).
+- Routes publiques/front privées SPA : HTTP 200 (`/`, `/login`, `/register`, `/register?plan=pro`, `/dashboard`, `/clients`, `/contrats`, `/taches`, `/rapports`, `/parametres`, `/admin`).
+- Auth API :
+  - login demo OK (`200`),
+  - mauvais mot de passe OK (`401`),
+  - register email existant `409` propre,
+  - register nouvel utilisateur `201`.
+- Admin API :
+  - non connecté `401`,
+  - broker connecté `403` propre.
+
+## P0 Backend VPS / PM2 — Redeploy portfolio hotfix (2 mai 2026)
+
+**Commit docs** : à créer  
+**Message attendu** : docs: document backend VPS redeploy and portfolio API validation
+
+### Changements
+- SSH VPS validé avec clé dédiée.
+- Clone VPS de référence réaligné sur `origin/main` (`bc09e93`, incluant `1a749f1` hotfix portfolio schema hardening).
+- Backend runtime PM2 synchronisé vers `/srv/courtia/backend` (sans écraser `.env`).
+- Dépendances backend vérifiées et process `courtia-api` redémarré via PM2.
+
+### Vérifications
+- `node -c` OK sur :
+  - `server.js`
+  - `src/routes/portfolio.js`
+  - `src/routes/adminSuperAdmin.js`
+  - `src/services/portfolioAnalyzer.js`
+  - `src/utils/portfolioSchema.js`
+- API locale VPS :
+  - `/api/health` -> 200
+  - `/api/portfolio/morning-brief` -> 200
+  - `/api/portfolio/health-score` -> 503 fallback propre (plus de 500)
+- API publique :
+  - `/api/health` -> 200
+  - `/api/portfolio/morning-brief` -> 200
+  - `/api/portfolio/health-score` -> 503 fallback propre
+
+## P0 Vercel — Deployment Failed diagnostiqué et résolu (2 mai 2026)
+
+**Commit docs** : à créer
+**Message attendu** : docs: document Vercel deployment failed root cause and recovery
+
+### Cause exacte (prouvée logs Vercel)
+- Déploiement failed : `dpl_akzhe2qmDNMKdFQiddC4Cqe6K6QQ` (commit `7294a4326078e39e67a18f677627cc9bb7c21449`).
+- Build error :
+  - `Could not resolve "../components/brand/AuroraTransition" from "src/pages/LandingPublic.jsx"`.
+  - `Command "npm run build" exited with 1`.
+
+### Résolution confirmée
+- Le composant manquant est bien présent : `frontend/src/components/brand/AuroraTransition.jsx`.
+- Déploiement production actuel `Ready` :
+  - `dpl_46a3j754h6h6HWzXUJLKFigea93T`
+  - commit `1a749f12b6e81c8680246795042857cfd369bfba`
+  - alias `https://courtia.vercel.app`.
+
+### Vérifications
+- `npm ci` : OK
+- `npm run build` : OK
+- `npm run test` : 33 tests OK
+- Routes frontend critiques : `/`, `/login`, `/register?plan=pro`, `/dashboard` -> HTTP 200.
+
+## Hotfix portfolio — Schéma ancien VPS + fallback Morning Brief (2 mai 2026)
+
+**Commit** : à créer
+**Message attendu** : fix: harden Courtia portfolio schema compatibility
+
+### Changements
+- Confirmation production d'un second P0 : `/api/portfolio/health-score` retourne `500` car `health_score` est absent du schéma VPS.
+- `portfolio_insights` est maintenant introspecté avant les requêtes sensibles.
+- Routes portfolio durcies : `morning-brief`, `health-score`, `regenerate`, `insights/history`.
+- `portfolioAnalyzer` écrit seulement dans les colonnes disponibles.
+- Admin super admin ne suppose plus obligatoirement `generated_at` / `health_score`.
+- Les erreurs portfolio renvoient un message propre, sans exposer de SQL.
+- `MorningBrief.jsx` affiche un score local estimé si l'API portfolio score est temporairement indisponible.
+- Aucun Stripe, aucune DB migration, aucune impersonation.
+
+### Tests
+- `node -c backend/server.js` : OK.
+- `node -c backend/src/routes/portfolio.js` : OK.
+- `node -c backend/src/routes/adminSuperAdmin.js` : OK.
+- `node -c backend/src/services/portfolioAnalyzer.js` : OK.
+- `node -c backend/src/utils/portfolioSchema.js` : OK.
+- `npm run build` : OK.
+- `npm run test` : 33 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+
+## Hotfix portfolio — Morning Brief compatible schéma production (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : fix: make portfolio morning brief resilient to timestamp schema
+
+### Changements
+- Détection dynamique de la colonne temporelle disponible sur `portfolio_insights`.
+- `/api/portfolio/morning-brief`, `/health-score`, `/regenerate` et `/insights/history` ne supposent plus obligatoirement `generated_at`.
+- `portfolioAnalyzer` ne force plus l'insertion dans `generated_at` si la colonne est absente.
+- Aucune migration DB, aucun Stripe, aucune impersonation.
+
+### Tests
+- `node -c backend/server.js` : OK.
+- `node -c backend/src/routes/portfolio.js` : OK.
+- `node -c backend/src/services/portfolioAnalyzer.js` : OK.
+- `node -c backend/src/utils/portfolioSchema.js` : OK.
+- `npm run build` : OK.
+- `npm run test` : 33 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+
+## Landing Aurora — Rebuild en 3 actes continus (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: rebuild Courtia landing as continuous Aurora sales story
+
+### Changements
+- Landing publique restructurée en 3 actes : promesse, portefeuille/ARK/cockpit, conversion.
+- Ajout d'un sol perspectif Aurora et d'un rideau lumineux pour relier toute la page.
+- Hero renforcé autour de la Bubble C officielle avec scène liquide, halo, orbites et signaux métier.
+- Pricing, réassurance et FAQ regroupés dans un flux de conversion plus premium.
+- Correction préventive des largeurs mobile du hero et des CTA.
+- Aucun changement backend, auth, Stripe, DB ou impersonation.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 33 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+- Captures Chrome headless desktop/mobile locales : desktop OK, mobile headless partiel car media queries non fiables dans ce mode.
+
+## Stabilisation auth/session — Pré-commercialisation 500 adhérents (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : fix: harden Courtia auth session handling for commercial QA
+
+### Changements
+- Ajout d'une politique frontend centralisée pour distinguer session réellement expirée et erreur API secondaire.
+- Les tokens `courtia_token` et `token` sont désormais lus de manière cohérente sur les helpers critiques.
+- Les anciens appels fetch legacy évitent le double préfixe `/api/api`.
+- `ProtectedRoute` n'efface plus la session sur une erreur réseau/serveur non-401 ; il affiche un écran de récupération.
+- Correction de l'appel ARK legacy `fetch`.
+- Rate limit auth backend ajusté pour ignorer les connexions réussies et éviter de bloquer trop vite les parcours légitimes.
+- Aucun changement Stripe, checkout, DB, impersonation ou JWT d'impersonation.
+
+### Tests
+- `npm run test -- src/api/sessionPolicy.test.js` : 4 tests OK.
+- `npm run test` : 33 tests OK.
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `node -c backend/server.js` : OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+
+## Reprise architecture visuelle — Cockpit Aurora global (1er mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : feat: install global Aurora cockpit shell
+
+### Changements
+- Application connectée enveloppée dans un shell Aurora global : aurore fixe, grille subtile, Bubble C canonique en filigrane.
+- Fond beige global retiré du layout privé pour éviter la cassure entre landing, auth et cockpit.
+- Dashboard adapté au shell sombre : chargement transparent et header en mode dark.
+- `CourtiaBubbleLogo` optimisé : les animations internes SVG sont désactivées sur les usages statiques.
+- Aucun changement backend, auth, Stripe, DB ou impersonation.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- In-app browser local `/` : landing détectée.
+- In-app browser local `/dashboard` non connecté : redirection `/login?next=%2Fdashboard` propre.
+
+## Reprise pages métier — Harmonisation Aurora cockpit (1er mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : feat: harmonize business pages with Aurora cockpit shell
+
+### Changements
+- Pages `Clients`, `Contrats`, `Tâches` : fond générique remplacé par transparence sur le shell Aurora et headers en mode dark.
+- Pages `Rapports`, `Paramètres` : suppression des fonds globaux beige/blanc pour conserver l’univers cockpit.
+- Paramètres : correction des champs et panneaux pour préserver la lisibilité sur surfaces claires.
+- Aucun changement API, auth, Stripe, DB ou impersonation.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+
+## Reprise critique Codex — Landing cinematic Aurora (1er mai 2026)
+
+**Commit** : à créer  
+**Message attendu** : feat: rebuild Courtia landing around canonical Aurora logo
+
+### Changements
+- Landing publique reconstruite autour du logo canonique Aurora Bubble C fourni par Dalil.
+- Hero simplifié et renforcé : promesse métier, CTA Pro visible, réassurance `0 € aujourd’hui / 7 jours / annulation en ligne`.
+- Suppression de l’effet “pile de sections SaaS” au profit d’un flux plus continu : halos, rails, panneaux glass, narration courtier.
+- Pricing Starter/Pro/Premium reconstruit pour vendre la valeur avant le prix, avec Pro comme choix évident.
+- Cockpit preview remplacé par une version compacte, explicitement marketing, sans données client réelles.
+- Aucun changement backend, Stripe, auth, DB ou impersonation.
+- Reprise finale après feedback : landing transformée en une seule scène continue avec ciel d’aurore boréale fixe et Bubble C canonique en filigrane permanent.
+- Optimisation `CourtiaBubbleLogo` : animations internes désactivées sur les logos statiques pour préserver la fluidité.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- `python3 scripts/courtia_qa_audit.py` : 0 P0/P1.
+- In-app browser local `/` : DOM OK, hero/CTA/pricing détectés.
+- Capture screenshot in-app browser : timeout CDP, non bloquant fonctionnellement.
+- Reprise finale : `npm run build` OK.
+- Reprise finale : `npm run test` 29 OK.
+- Reprise finale : audit Python 0 P0/P1.
+
+## Phase D Codex — Cockpit interne (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: enhance Courtia cockpit and internal platform experience
+
+### Changements
+- Dashboard : Command Center Aurora ajouté.
+- Dashboard : KPI tâches retiré du hardcoding, fallback à 0 si aucune donnée statistique.
+- Dashboard : graphiques / échéances de démo explicitement signalés.
+- Clients / Contrats / Tâches : headers harmonisés, CTA Aurora, messages de fallback mock propres.
+- Tâches : loader Courtia et empty state premium.
+
+### Tests
+- `npm run build` : OK.
+- `npm run test` : 29 tests OK.
+- Local cockpit browser : login bloqué par proxy Vite dev, validation production requise après push.
+
+---
+
+## Phase C Codex — Auth / Funnel final premium (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: polish Courtia auth and Pro funnel experience
+
+### Changements
+- Login : titre renforcé en `Accédez à votre cockpit COURTIA`.
+- Register Starter : titre renforcé en `Activez votre cockpit Starter`.
+- Register Pro : funnel conservé avec `Activez votre cockpit Pro`.
+- Carte auth enrichie : reflets Aurora, bordure liquide, halo et bouton principal plus premium.
+- Strip de valeur desktop ajouté sans casser le mobile.
+- Aucun changement backend, Stripe, DB ou JWT.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- Browser local `/register?plan=pro`, `/register`, `/login` : visibles, console 0 erreur.
+
+---
+
+## Phase B Codex — Landing 3D scroll premium (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: deliver premium 3D scroll Courtia landing experience
+
+### Changements
+- Landing enrichie avec fond continu `courtia-flow`, rail Aurora au scroll et progress line discrète.
+- Sections rendues plus fluides, sans grosse cassure visuelle entre les blocs.
+- Cartes Glass/Aurora améliorées avec bordure liquide et hover 3D sobre.
+- Hero rendu plus cinématique avec signaux flottants métier autour du cockpit.
+- Pricing Starter retravaillé avec le même niveau premium que Pro : essai 7 jours, 0 EUR aujourd’hui, puis 89 EUR HT/mois après le 7e jour.
+- Pricing Pro renforcé : valeur journalière, 0 EUR aujourd’hui, puis 159 EUR HT/mois après le 7e jour, annulation en ligne.
+
+### Tests
+- `npm run build` : OK, warning chunk > 500 kB connu.
+- `npm run test` : 29 tests OK.
+- `python3 scripts/courtia_landing_audit.py` : OK.
+- Browser local `/` : hero visible, CTA visible, console 0 erreur.
+- Browser local `/#pricing` via navigation mobile : tarifs visibles, console 0 erreur.
+
+---
+
+## Phase A Codex — Validation production funnel Pro (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : docs: document Pro funnel production QA
+
+### Changements
+- Documentation de la validation production du funnel Pro Vercel.
+- Vérification de `/register?plan=pro`, `/register`, `/login` et `/dashboard`.
+- Confirmation que le CTA `Activer mon essai Pro` et le bloc `0 € / 7 jours / annulation en ligne` sont visibles en production.
+- Confirmation que le login démo redirige vers `/dashboard` et survit à un refresh.
+
+### Tests
+- Browser in-app production : `/register?plan=pro` OK, console 0 erreur.
+- Browser in-app production : `/register` Starter OK, console 0 erreur.
+- Browser in-app production : `/login` OK, console 0 erreur.
+- Login démo production : OK vers `/dashboard`.
+- Refresh dashboard production : OK.
+
+---
+
+## Phase 3 Codex — Auth et pricing conversion premium (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: polish Courtia pricing and auth conversion experience
+
+### Changements
+- Auth structure : écran register Pro transformé en funnel premium avec panneau marque, surface d’activation et CTA visible plus tôt sur mobile.
+- Register Pro : titre “Activez votre cockpit Pro”.
+- Register Starter : `/register` transformé en funnel premium avec essai 7 jours, 0 EUR aujourd’hui et 89 EUR HT/mois après essai.
+- Register Pro : panneau essai 0 EUR aujourd’hui / 7 jours / annulation en ligne.
+- CTA register Pro : “Activer mon essai Pro”.
+- Login : “Ouvrez votre cockpit”.
+- Pricing Pro : prix rendu plus premium, badge “Offre la plus logique”, phrase de valeur “moins de 6 EUR HT par jour”.
+- Landing : suppression de transitions trop brutes entre sections.
+
+### Tests
+- Audit landing Python : OK
+- Build frontend : OK
+- Tests Vitest : 29 OK
+- Browser local `/register?plan=pro` et `/#pricing` : console 0 erreur
+
+---
+
+## Phase 2 Codex — Landing premium 60x (1er mai 2026)
+
+**Commit** : à créer
+**Message attendu** : feat: extend Courtia landing into premium 2M SaaS experience
+
+### Fichiers modifiés / créés
+- `frontend/src/pages/LandingPublic.jsx` — Refonte landing étendue en 15 sections.
+- `frontend/src/components/FloatingProductMockup.jsx` — Ancien `C` texte remplacé par Aurora Bubble C.
+- `frontend/src/components/DashboardMockup.jsx` — Ancien `C` texte remplacé par Aurora Bubble C.
+- `scripts/courtia_landing_audit.py` — Audit statique landing.
+- `docs/COURTIA_CODEX_LANDING_AUDIT.md` — Rapport généré.
+- `docs/COURTIA_CODEX_PHASE2_LANDING.md` — Rapport Phase 2.
+
+### Changements produit
+- Hero repositionné sur la promesse : cockpit IA des courtiers qui veulent reprendre le contrôle de leur portefeuille.
+- Ajout d’une narration complète : problème, coût invisible, solution, ARK, workflow quotidien, cockpit, fonctionnalités, avant/après, CRM métier, tarifs, réassurance, FAQ, CTA final.
+- Offre Pro à 159 EUR HT/mois mise en avant comme offre principale.
+- Discours essai Pro intégré : 0 EUR aujourd’hui, carte pour activer l’essai, annulation en ligne avant la fin des 7 jours.
+- Lien `/contact` supprimé car la route n’existe pas.
+- Première passe visuelle rejetée puis reprise : hero mobile plus noir, CTA visibles, badge non tronqué, mini-cockpit visible.
+
+### Tests
+- Audit Python landing : OK
+- Build frontend : OK
+- Tests Vitest : 29 OK
+- Navigateur local : `/`, `/login`, `/register`, `/register?plan=pro` visibles, console 0 erreur bloquante
+
+---
+
 ## Auth Pages Premium Redesign (1er mai 2026)
 
 **Commit** : 99d1f76
@@ -44,6 +710,128 @@
 - Rapport final complet livré
 - Documentation exhaustive dans /docs/
 - 6 commits, 0 erreur console, build OK
+
+---
+
+## Hotfix final — Rapports + logo canonique (1er mai 2026)
+
+**Commit prévu** : fix: restore rapports page and document canonical logo
+
+### Résumé
+- Correction du crash production `/rapports` : imports `AuroraEmptyState` et `BarChart3` rétablis.
+- Documentation du logo canonique : le fichier Desktop `courtia_bubble_C.html` est identique à `frontend/public/courtia-bubble-C-reference.html`.
+- Clarification : tout l'écosystème visuel doit partir de `CourtiaBubbleLogo.jsx` ou de ses variantes.
+
+### Vérifications
+- `cmp` fichier Desktop / référence repo : identique
+- Build frontend : OK
+- Tests frontend : 29 passés
+- Audit Python : 0 P0/P1
+- Production `/rapports` : page visible après login demo, plus de page blanche
+
+---
+
+## Phase H — Tests finaux et documentation (1er mai 2026)
+
+**Commit prévu** : docs: add final Courtia 2M delivery and QA report
+
+### Fichiers créés
+- `docs/COURTIA_CODEX_FINAL_REPORT.md`
+- `docs/COURTIA_CODEX_FINAL_QA_REPORT.md`
+
+### Résumé
+Rapport final honnête : prêt pour démo produit, partiel pour commercialisation payante, P1 Billing/DNS/super_admin encore ouverts.
+
+---
+
+## Hotfix final — Message auth rate limit (1er mai 2026)
+
+**Commit prévu** : fix: improve Courtia auth rate limit messaging
+
+### Résumé
+Après les tests finaux répétés, le backend a correctement renvoyé un 429 de protection.
+L'interface affiche désormais un message français propre : `Trop de tentatives de connexion. Réessayez dans quelques minutes.`
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 29 passés
+
+---
+
+## Phase G — SEO / social / image de marque (1er mai 2026)
+
+**Commit prévu** : feat: polish Courtia SEO and social assets
+
+### Fichiers modifiés
+- `frontend/index.html` — canonical, manifest, theme-color, OG/Twitter PNG
+- `frontend/public/manifest.json` — icônes PNG existantes
+- `frontend/public/og-courtia.png` — image sociale 1200x630
+- `frontend/public/icon-192.png`
+- `frontend/public/icon-512.png`
+- `frontend/public/apple-touch-icon.png`
+- `frontend/public/og-courtia.svg`
+- `docs/COURTIA_CODEX_PHASE7_SEO.md`
+
+### Résumé
+Les previews sociales utilisent maintenant un PNG 1200x630 et pointent vers l'URL de production fonctionnelle `courtia.vercel.app`.
+Le manifest ne référence plus d'icônes manquantes.
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 29 passés
+- Dimensions OG : 1200x630
+- Icônes manifest : 192x192, 512x512
+- Apple icon : 180x180
+- Production Vercel : metas et assets PNG servis en HTTP 200
+
+---
+
+## Phase F — QA Python et contrôle qualité (1er mai 2026)
+
+**Commit prévu** : test: add Courtia Python QA audit
+
+### Fichiers modifiés
+- `scripts/courtia_qa_audit.py` — audit statique QA produit
+- `docs/COURTIA_CODEX_QA_AUDIT.md` — rapport généré
+- `frontend/src/components/brand/AuroraBadge.jsx` — export brand aligné avec la documentation Aurora
+
+### Résumé
+Ajout d'un audit Python simple pour détecter anciens logos, routes `/app/*`, endpoints Admin suspects, messages techniques, loaders génériques, docs manquantes et composants Aurora manquants.
+L'audit ressort à 0 P0/P1 et 38 P2 de finition à traiter progressivement.
+
+### Vérifications
+- `python3 scripts/courtia_qa_audit.py` : OK, rapport généré
+- Build frontend : OK
+- Tests frontend : 29 passés
+
+---
+
+## Phase E — Admin Center aligné et protégé (1er mai 2026)
+
+**Commit prévu** : fix: align and stabilize Courtia Admin Center
+
+### Fichiers modifiés
+- `frontend/src/lib/adminApi.js` — client admin centralisé vers `/api/admin/super/*`
+- `frontend/src/components/AdminRoute.jsx` — garde super_admin et refus broker propre
+- `frontend/src/pages/AdminOverview.jsx`
+- `frontend/src/pages/AdminUsers.jsx`
+- `frontend/src/pages/AdminUserDetail.jsx`
+- `frontend/src/pages/AdminSubscriptions.jsx`
+- `frontend/src/pages/AdminSystem.jsx`
+- `frontend/src/pages/AdminLogs.jsx`
+- `docs/COURTIA_CODEX_PHASE5_ADMIN.md`
+
+### Résumé
+L'Admin Center n'appelle plus les anciennes routes `/api/admin/analytics` ou `/api/admin/users`.
+Les pages actives utilisent les routes backend réelles `/api/admin/super/*`.
+La redirection cassée `/app/dashboard` est supprimée et remplacée par un écran d'accès refusé premium.
+
+### Vérifications
+- Build frontend : OK
+- Tests frontend : 29 passés
+- Backend health : HTTP 200
+- `/admin` local non connecté : redirection `/login`, console 0 erreur
+- `/admin` production broker : écran "Admin Center protégé", console 0 erreur
 
 ---
 

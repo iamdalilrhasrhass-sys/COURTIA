@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
   Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe
+  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, HeartHandshake
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -39,6 +39,7 @@ const NAV_ITEMS = [
   { path: '/academy', label: 'Academy', icon: GraduationCap, badge: 'Nouveau' },
   { path: '/documents', label: 'Documents', icon: FolderOpen },
   { path: '/browser-pilot', label: 'Browser Pilot', icon: Globe, badge: 'Bêta' },
+  { path: '/partners', label: 'Partenaires', icon: HeartHandshake, badge: 'Prospection' },
   { path: '/analytics', label: 'Analyses', icon: BarChart2 },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
@@ -325,9 +326,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <p style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.15)', margin: '6px 0 10px', letterSpacing: '0.08em' }}>
-        Rhasrhass®
-      </p>
     </aside>
   )
 

@@ -459,7 +459,9 @@ export default function Login() {
       const res = await api.post('/auth/login', { email, password })
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
+      localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
+      if (user) localStorage.setItem('user', JSON.stringify(user))
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
