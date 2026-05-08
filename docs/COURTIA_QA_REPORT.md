@@ -1,5 +1,80 @@
 # COURTIA — Rapport QA
 
+## QA reprise finale après passation Hermes (2 mai 2026)
+
+| Test | Résultat | Commentaire |
+|---|---|---|
+| Variables Stripe test VPS | ✅ OK | présentes + formats valides (`sk_test_`, `whsec_`, `price_`) |
+| PM2 + health VPS/public | ✅ OK | `courtia-api` online, `/api/health` 200 local/public |
+| Checkout Starter/Pro | ✅ OK | sessions Stripe test créées |
+| Premium | ✅ OK | `409 premium_contact_required` |
+| Customer Portal | ✅ OK | URL portal générée |
+| Webhook sans signature | ✅ OK | `400 missing_signature` |
+| Webhook signé | ✅ OK | events signés traités (`invoice.payment_failed`, `customer.subscription.updated`) |
+| Idempotence webhook | ✅ OK | rejeu même `event_id` -> pas de doublon DB |
+| Import CSV V1 | ✅ OK | `preview` + `commit` + `history` + détection doublon au rejeu |
+| QA Python | ✅ OK | `0 P0/P1`, `37 P2` |
+| Secret audit | ✅ OK (P0) | `P0=0`, `P1=52`, `P2=3` |
+
+### Décision
+- Stripe test opérationnel backend: **OUI**
+- Stripe live: **NON** (validation juriste/comptable obligatoire)
+- Encaissement live immédiat: **NON**
+
+## QA Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Stripe CLI local | ❌ indisponible | `stripe --version` | commande absente |
+| Stripe CLI VPS | ❌ indisponible | `ssh ... stripe --version` | commande absente |
+| Récupération auto des secrets Stripe test | ❌ impossible | audit env local+VPS | aucune valeur `_TEST` sensible disponible |
+| Variables test non sensibles | ✅ partiel | vérif `.env` VPS | `BILLING_MODE=test`, `STRIPE_CUSTOMER_PORTAL_RETURN_URL` OK |
+| Checkout Starter/Pro | ⚠️ KO propre | API billing | `503 billing_test_mode_not_configured` |
+| Portal | ⚠️ KO propre | API billing | `503 billing_test_mode_not_configured` |
+| Premium | ✅ OK | API billing | `409 premium_contact_required` |
+| Webhook signé | ❌ non testé | n/a | `STRIPE_WEBHOOK_SECRET_TEST` absent |
+| Idempotence | ❌ non prouvée | `payment_events` | aucune ligne |
+| `invoice.payment_failed` signé | ❌ non testé | n/a | dépend webhook signé |
+| Import CSV non-régression | ✅ OK | preview+commit+history | succès conservé |
+
+### Décision run complémentaire
+- Stripe test opérationnel complet: **NON**
+- Cause unique: absence des 4 variables Stripe test sensibles + pas d’accès Stripe CLI/dashboard depuis cet environnement.
+
+## QA Déploiement final test mode (2 mai 2026)
+
+| Test | Résultat | Preuve | Commentaire |
+|---|---|---|---|
+| Push main | ✅ OK | `git push origin HEAD:main` | `fcf70c3` en production git |
+| Frontend Vercel | ✅ OK | `curl -I https://courtia.vercel.app` | HTTP/2 200 |
+| Routes Vercel critiques | ✅ OK | `curl -I / /login /register?plan=pro /onboarding /billing /import` | HTTP 200 |
+| Backend VPS PM2 | ✅ OK | `pm2 restart courtia-api --update-env` | process `online` |
+| API health local VPS | ✅ OK | `curl -i http://127.0.0.1:9998/api/health` | HTTP 200 |
+| API health public | ✅ OK | `curl -i https://api.courtiark.fr/api/health` | HTTP 200 |
+| Migrations billing/import | ✅ OK | `psql -f 20260502_billing_legal_foundation.sql` + `20260502_import_jobs.sql` | tables présentes |
+| Billing plans | ✅ OK | `GET /api/billing/plans` | 200 |
+| Billing onboarding | ✅ OK | `POST /api/billing/onboarding` | 200 |
+| Legal acceptance | ✅ OK | `POST /api/billing/legal-acceptance` | 200 (`acceptance_id`) |
+| Checkout starter/pro | ⚠️ Bloqué proprement | `POST /api/billing/create-checkout-session` | `billing_test_mode_not_configured` |
+| Premium | ✅ OK | `POST /api/billing/create-checkout-session` | 409 `premium_contact_required` |
+| Customer portal | ⚠️ Bloqué proprement | `POST /api/billing/create-portal-session` | `billing_test_mode_not_configured` |
+| Webhook sans signature | ⚠️ Stripe non configuré | `POST /api/stripe/webhook` | 200 `stripe_not_configured` |
+| Webhook signé | ❌ Non testé | n/a | secret test non configuré |
+| Idempotence webhook | ❌ Non prouvée | n/a | pas d’event signé traité |
+| Import preview + commit | ✅ OK | `/api/imports/preview` + `/api/imports/commit` | succès runtime confirmé |
+| Import history | ✅ OK | `/api/imports/history` | historique présent |
+| Admin billing anon/broker | ✅ OK | `/api/admin/super/billing` | 401 / 403 propres |
+| Build frontend | ✅ OK | `npm run build` | succès |
+| Tests frontend | ✅ OK | `npm run test` | 33/33 |
+| Syntax backend | ✅ OK | `node -c` routes/services billing+import | succès |
+| QA Python | ✅ OK | `python3 scripts/courtia_qa_audit.py` | 0 P0/P1 |
+| Secret audit | ✅ P0=0 | `python3 scripts/courtia_secret_audit.py` | P1 legacy restants |
+
+### Décision (run final test mode)
+- Déploiement app/api: **OK**
+- Stripe test mode complet signé: **NON** (variables `_TEST` absentes + webhooks signés non prouvés)
+- Import portefeuille V1 CSV: **OUI** (preview + commit validés)
+
 ## QA Finalisation Stripe / Branding / Import V1 (2 mai 2026)
 
 | Test | Résultat | Preuve | Commentaire |
