@@ -1,5 +1,107 @@
 # COURTIA — Changelog Mission 2M
 
+## Reprise finale après passation Hermes (2 mai 2026)
+
+### Correctif code
+- `fix: recover stale Stripe customer ids for checkout and portal` (`4f16806`)
+  - `backend/src/services/stripeService.js`
+  - `backend/src/routes/billing.js`
+- Objectif: auto-récupérer un `stripe_customer_id` périmé/supprimé côté Stripe (cause réelle des 500 checkout/portal).
+
+### Déploiement VPS
+- Sync `main` vers `/srv/courtia/backend`.
+- `npm ci --omit=dev`.
+- `pm2 restart courtia-api --update-env` + `pm2 save`.
+- Health local/public confirmé en 200.
+
+### Validation Stripe test runtime
+- Variables `_TEST` présentes et valides côté VPS.
+- Checkout Starter: OK.
+- Checkout Pro: OK.
+- Premium: OK (`409 premium_contact_required`).
+- Customer Portal: OK.
+- Webhook sans signature: OK (`400 missing_signature`).
+- Webhook signé: OK (`invoice.payment_failed`, `customer.subscription.updated`).
+- Idempotence: OK (rejeu même `event_id`, pas de doublon DB).
+
+### Validation import non-régression
+- `/api/imports/preview` OK
+- `/api/imports/commit` OK
+- `/api/imports/history` OK
+- Doublon détecté au rejeu CSV.
+
+### Docs mises à jour
+- `docs/COURTIA_STRIPE_TEST_OPERATIONAL_QA.md`
+- `docs/COURTIA_STRIPE_WEBHOOK_SIGNED_QA.md`
+- `docs/COURTIA_DEPLOYMENT_FINAL_TEST_MODE_REPORT.md`
+- `docs/COURTIA_TRANSACTIONAL_EMAILS_QA.md`
+- `docs/COURTIA_QA_REPORT.md`
+- `docs/COURTIA_REMAINING_TASKS.md`
+
+## Mission finale Stripe TEST (2 mai 2026 — run complémentaire)
+
+### Ce qui a été tenté automatiquement
+- Vérification Stripe CLI local/VPS pour récupérer les variables test: indisponible sur les deux environnements.
+- Tentative de récupération autonome des variables Stripe `_TEST` sans exposition de secrets: impossible faute accès Stripe (CLI/dashboard) dans cet environnement.
+- Mise à jour sécurisée VPS conservée:
+  - `BILLING_MODE=test`
+  - `STRIPE_CUSTOMER_PORTAL_RETURN_URL=https://courtia.vercel.app/billing`
+- Redémarrage PM2 avec `--update-env` + `pm2 save`.
+
+### Résultat technique
+- `/api/health`: 200
+- `/api/billing/plans`: 200
+- `/api/billing/legal-acceptance`: 200
+- Checkout starter/pro: 503 `billing_test_mode_not_configured` (attendu tant que `_TEST` sensibles absentes)
+- Portal: 503 `billing_test_mode_not_configured`
+- Premium: 409 `premium_contact_required`
+- Webhook signé/idempotence/invoice.payment_failed: non testables sans secret webhook test.
+- Import CSV: preview + commit + history toujours OK.
+
+### Décision
+- Stripe test opérationnel complet: NON (blocage configuration Stripe test sensible).
+- Render reste non-prod: Auto-Deploy à couper côté dashboard pour stopper les alertes.
+
+## Déploiement final test mode / Stripe E2E / Import runtime (2 mai 2026)
+
+### Merge + déploiement
+- Merge production effectué sur `main` via commit `fcf70c3` (inclut `a2558a9`).
+- Push GitHub: `c75b80e..fcf70c3`.
+- Déploiement backend VPS synchronisé depuis `/root/courtia_new` vers `/srv/courtia/backend` avec backup préalable.
+- `pm2 restart courtia-api --update-env` et `pm2 save` exécutés.
+
+### Vérifications production
+- Frontend Vercel: `200` sur `/`, `/login`, `/register?plan=pro`, `/onboarding`, `/billing`, `/import`.
+- Backend VPS: `200` sur `/api/health` en local et en public.
+- Migrations non destructives appliquées:
+  - `backend/migrations/20260502_billing_legal_foundation.sql`
+  - `backend/migrations/20260502_import_jobs.sql`
+
+### Stripe test mode (état réel)
+- API billing validées:
+  - plans/status/onboarding/legal-acceptance OK.
+  - premium correctement bloqué en `409 premium_contact_required`.
+- Checkout starter/pro + portal: bloqués proprement par absence de config test (`billing_test_mode_not_configured`).
+- Cause identifiée: variables `_TEST` absentes sur VPS.
+- Variables legacy détectées, dont `STRIPE_SECRET_KEY` au format live (non utilisée dans cette mission).
+- Webhooks signés/idempotence non prouvés (non testables sans secret webhook test configuré).
+
+### Import portefeuille V1 runtime
+- Preview CSV: OK (`import_job_id` renvoyé).
+- Commit CSV: OK (`status: completed` + `summary`).
+- History import: OK.
+- Rejeu CSV: détection de doublons clients observée; consolidation contrats/tâches à affiner en P2.
+
+### Documentation
+- Ajout de `docs/COURTIA_DEPLOYMENT_FINAL_TEST_MODE_REPORT.md`.
+- Mise à jour:
+  - `docs/COURTIA_STRIPE_TEST_OPERATIONAL_QA.md`
+  - `docs/COURTIA_STRIPE_WEBHOOK_SIGNED_QA.md`
+  - `docs/COURTIA_TRANSACTIONAL_EMAILS_QA.md`
+  - `docs/COURTIA_BILLING_TEST_MODE_FINAL_REPORT.md`
+  - `docs/COURTIA_QA_REPORT.md`
+  - `docs/COURTIA_REMAINING_TASKS.md`
+
 ## Finalisation Stripe / Branding / Import V1 (2 mai 2026)
 
 ### Branding RHASRHASS™ global

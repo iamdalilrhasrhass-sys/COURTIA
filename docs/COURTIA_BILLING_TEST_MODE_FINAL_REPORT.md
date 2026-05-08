@@ -14,9 +14,9 @@ Mettre en place un tunnel d’encaissement propre en Stripe test mode (sans live
 - Customer Portal session (`/api/billing/create-portal-session`).
 - Admin billing views (`/api/admin/super/billing`).
 - Templates d’emails transactionnels préparés.
-- Déploiement backend VPS/PM2 effectué (service `courtia-api` redémarré).
-- Endpoint public `GET https://api.courtiark.fr/api/billing/plans` actif.
-- Guard sécurité ajouté dans le code: en `BILLING_MODE=test`, plus de fallback implicite vers clé live.
+- Déploiement backend VPS/PM2 effectué (service `courtia-api` redémarré, commit backend sync depuis `fcf70c3`).
+- Endpoint public `GET https://api.courtiark.fr/api/billing/plans` actif (200).
+- Guard sécurité confirmé: en `BILLING_MODE=test`, plus de fallback implicite vers clé live.
 
 ## 3. Documents légaux
 Base draft:
@@ -44,17 +44,18 @@ Version pré-live à relire/valider:
 - Valeurs réelles non commitées.
 
 ## 6. Limites actuelles
-- Variables Stripe test `_TEST` absentes sur le backend VPS actuel (à configurer avant validation complète).
-- Stripe test E2E complet dépend des clés test réelles + config webhook Stripe Dashboard.
+- Variables Stripe test `_TEST` absentes sur le backend VPS actuel (bloquant checkout/portal test).
+- Une clé legacy `STRIPE_SECRET_KEY` en format live est présente sur VPS; elle n'est pas utilisée dans cette mission.
+- Stripe test E2E complet dépend des clés test réelles + config webhook Stripe Dashboard/CLI.
 - Validation juridique/comptable des textes non terminée.
 - Validation fiscale finale (paramétrage HT/TTC/TVA Stripe) à confirmer avec comptable.
 - Scheduling J5/J7 emails non branché automatiquement.
-- Événements webhook signés Stripe (idempotence en situation réelle) à rejouer via Stripe CLI/dashboard.
+- Événements webhook signés Stripe (idempotence en situation réelle) non rejoués dans ce run.
 
 ## 7. Go / No-Go
 - Démo produit: **GO**
 - Stripe test mode (code): **GO**
-- Stripe test mode (opérationnel complet): **GO conditionnel** après config env `_TEST` + redeploy backend
+- Stripe test mode (opérationnel complet): **NO GO** tant que les variables `_TEST` ne sont pas configurées et les webhooks signés non prouvés
 - Stripe live: **NO GO**
 - Commercialisation payante live: **NO GO** tant que validation juridique/comptable n’est pas signée.
 
