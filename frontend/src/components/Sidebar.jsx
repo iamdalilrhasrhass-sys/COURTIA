@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
+import { clearStoredSession } from '../api/sessionPolicy'
+import { resetSessionUserCache } from '../api/sessionUser'
 
 const theme = {
   accent: '#5B4DF5',
@@ -82,11 +84,16 @@ export default function Sidebar() {
   }, [])
 
   function logout() {
-    localStorage.removeItem('courtia_token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('courtia_user');
-    navigate('/login');
-    toast.success('Déconnexion réussie');
+    clearStoredSession()
+    resetSessionUserCache()
+    sessionStorage.removeItem('courtia_token')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('courtia_user')
+    sessionStorage.removeItem('user')
+    setUser(null)
+    window.dispatchEvent(new Event('profileUpdated'))
+    navigate('/login')
+    toast.success('Déconnexion réussie')
   }
 
   // Normalise l'utilisateur (support camelCase du login + snake_case de /me)

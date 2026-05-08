@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, FileText, Euro, Calendar, Zap, TrendingUp, ArrowRight, Sparkles, Bell } from 'lucide-react'
 import api from '../api'
+import { getSessionUser } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraCard from '../components/brand/AuroraCard'
 import AuroraButton from '../components/brand/AuroraButton'
@@ -107,7 +108,7 @@ export default function Dashboard() {
       setLoading(true)
       const [statsRes, userRes] = await Promise.all([
         api.get('/dashboard/stats'),
-        api.get('/auth/me').catch(() => ({ data: {} }))
+        getSessionUser().then((user) => ({ data: user || {} })).catch(() => ({ data: {} }))
       ])
       setStats(statsRes.data)
       setUser(userRes.data || {})

@@ -6,6 +6,18 @@ const app = express()
 
 app.use(helmet({ contentSecurityPolicy: false }))
 
+const trustProxyEnv = process.env.TRUST_PROXY
+if (trustProxyEnv === undefined || trustProxyEnv === '') {
+  app.set('trust proxy', 1)
+} else if (trustProxyEnv === 'true') {
+  app.set('trust proxy', true)
+} else if (trustProxyEnv === 'false') {
+  app.set('trust proxy', false)
+} else {
+  const trustProxyInt = Number.parseInt(trustProxyEnv, 10)
+  app.set('trust proxy', Number.isFinite(trustProxyInt) ? trustProxyInt : 1)
+}
+
 const pool = require('./src/db')
 app.locals.pool = pool
 
