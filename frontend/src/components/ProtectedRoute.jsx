@@ -1,13 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import api from '../api'
 import Paywall from './Paywall'
 import { clearStoredSession } from '../api/sessionPolicy'
-
-const ME_CACHE_TTL_MS = 60 * 1000
-let cachedMe = null
-let cachedMeAt = 0
-let pendingMePromise = null
+import { getSessionUser, isSessionUserCoolingDown, resetSessionUserCache } from '../api/sessionUser'
 
 function readRoleFromToken(token = '') {
   try {
@@ -26,37 +21,38 @@ export default function ProtectedRoute({ children, requireFeature }) {
   const [softWarning, setSoftWarning] = useState('')
 
   useEffect(() => {
-    if (!token) return
-
-    const now = Date.now()
-    if (cachedMe && (now - cachedMeAt) < ME_CACHE_TTL_MS) {
-      setMe(cachedMe)
+    if (!token) {
+      setMe(null)
+      setErr(null)
+      setSoftWarning('')
       return
     }
 
-    const run = pendingMePromise || api.get('/auth/me')
-    pendingMePromise = run
+    let cancelled = false
+    setErr(null)
 
-    run
-      .then((r) => {
-        cachedMe = r.data
-        cachedMeAt = Date.now()
-        setMe(r.data)
+    getSessionUser()
+      .then((user) => {
+        if (cancelled) return
+        const fallbackUser = user || { role: readRoleFromToken(token) }
+        setMe(fallbackUser)
+        if (isSessionUserCoolingDown()) {
+          setSoftWarning('Vérification de session temporairement ralentie. Votre accès est conservé.')
+        } else {
+          setSoftWarning('')
+        }
       })
       .catch((e) => {
+        if (cancelled) return
         if (e?.response?.status === 429) {
-          const fallbackUser = cachedMe || {
-            role: readRoleFromToken(token),
-          }
-          setMe(fallbackUser)
+          setMe((prev) => prev || { role: readRoleFromToken(token) })
           setSoftWarning('Vérification de session temporairement ralentie. Votre accès est conservé.')
           return
         }
         setErr(e)
       })
-      .finally(() => {
-        if (pendingMePromise === run) pendingMePromise = null
-      })
+
+    return () => { cancelled = true }
   }, [token])
 
   if (!token) {
@@ -69,6 +65,7 @@ export default function ProtectedRoute({ children, requireFeature }) {
 
   if (err) {
     if (err.response?.status === 401) {
+      resetSessionUserCache()
       clearStoredSession()
       return <Navigate to="/login?reason=expired" replace />
     }

@@ -37,10 +37,17 @@ export function getAuthToken(read = (key) => localStorage.getItem(key)) {
 }
 
 export function clearStoredSession(storage = localStorage) {
-  storage.removeItem('courtia_token')
-  storage.removeItem('token')
-  storage.removeItem('courtia_user')
-  storage.removeItem('user')
+  const storages = [storage]
+  if (typeof window !== 'undefined' && storage === localStorage && window.sessionStorage) {
+    storages.push(window.sessionStorage)
+  }
+
+  storages.forEach((target) => {
+    target.removeItem('courtia_token')
+    target.removeItem('token')
+    target.removeItem('courtia_user')
+    target.removeItem('user')
+  })
 }
 
 export function buildApiUrl(path, baseUrl = import.meta.env.VITE_API_URL || '/api') {

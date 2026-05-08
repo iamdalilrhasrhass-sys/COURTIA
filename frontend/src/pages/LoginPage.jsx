@@ -4,6 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import api from '../api'
 import { buildApiUrl } from '../api/sessionPolicy'
+import { primeSessionUserCache } from '../api/sessionUser'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import RhasrhassSignature from '../components/brand/RhasrhassSignature'
@@ -493,6 +494,7 @@ export default function Login() {
       localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
       if (user) localStorage.setItem('user', JSON.stringify(user))
+      if (user) primeSessionUserCache(user)
       if (isRegister) {
         navigate(`/onboarding?plan=${planKey || 'starter'}`)
       } else {
@@ -548,6 +550,7 @@ export default function Login() {
         localStorage.setItem('token', res.data.token)
         if (res.data.user) localStorage.setItem('courtia_user', JSON.stringify(res.data.user))
         if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user))
+        if (res.data.user) primeSessionUserCache(res.data.user)
         navigate('/dashboard')
       } catch (err) {
         setError('Erreur lors de la connexion Google.')

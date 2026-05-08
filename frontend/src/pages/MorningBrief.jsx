@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import { getSessionUser } from '../api/sessionUser'
 import PageTransition from '../components/ui/PageTransition'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
@@ -399,14 +400,32 @@ export default function MorningBrief() {
   const [currentPlan, setCurrentPlan] = useState(null)
 
   useEffect(() => {
-    api.get('/auth/me')
-      .then(res => {
-        if (res.data?.first_name) setFirstName(res.data.first_name)
-        if (res.data?.plan) setCurrentPlan(res.data.plan)
-      })
-      .catch(() => {
-        api.get('/plans/info').then(r => { if (r.data?.plan) setCurrentPlan(r.data.plan) }).catch(() => {})
-      })
+    let cancelled = false
+    const loadSession = async () => {
+      try {
+        const user = await getSessionUser()
+        if (cancelled) return
+        if (user?.first_name) setFirstName(user.first_name)
+        if (user?.plan) {
+          setCurrentPlan(user.plan)
+          return
+        }
+      } catch {
+        // fallback below
+      }
+
+      try {
+        const planResponse = await api.get('/plans/info')
+        if (!cancelled && planResponse.data?.plan) {
+          setCurrentPlan(planResponse.data.plan)
+        }
+      } catch {
+        // optional plan info
+      }
+    }
+
+    loadSession()
+    return () => { cancelled = true }
   }, [])
 
   const fetchPriorities = useCallback(async () => {

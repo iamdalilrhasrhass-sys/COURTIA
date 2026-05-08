@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles } from 'lucide-react'
 import api from '../api'
+import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
@@ -46,24 +47,32 @@ export default function Parametres() {
 
   useEffect(() => { fetchProfile() }, [])
 
-  async function fetchProfile() {
+  async function fetchProfile(options = {}) {
+    const { force = false, silent = false } = options
     try {
-      setLoading(true)
-      const { data } = await api.get('/auth/me')
+      if (!silent) setLoading(true)
+      const data = await getSessionUser({ force, allowStaleOn429: true })
+      if (!data) throw new Error('session_unavailable')
+
+      primeSessionUserCache(data)
       setProfile(data)
       setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
-      localStorage.setItem('courtia_user', JSON.stringify(data))
-      window.dispatchEvent(new Event('profileUpdated'))
-    } catch { toast.error('Impossible de charger le profil') } 
-    finally { setLoading(false) }
+    } catch {
+      toast.error('Impossible de charger le profil')
+    } finally {
+      if (!silent) setLoading(false)
+    }
   }
 
   async function handleProfileSubmit(e) {
     e.preventDefault(); setSaving(true)
     try {
       await api.put('/auth/me', form)
+      const optimisticProfile = { ...(profile || {}), ...form }
+      setProfile(optimisticProfile)
+      primeSessionUserCache(optimisticProfile)
       toast.success('Profil mis à jour ✓')
-      fetchProfile()
+      fetchProfile({ force: true, silent: true })
     } catch { toast.error('Erreur lors de la sauvegarde') } 
     finally { setSaving(false) }
   }
