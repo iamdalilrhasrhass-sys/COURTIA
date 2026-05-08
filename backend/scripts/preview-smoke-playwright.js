@@ -251,10 +251,24 @@ async function classifyAdminAccess(page, route, accountKey) {
 }
 
 async function logout(page) {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(`${normalizeBase(PREVIEW_BASE_URL)}/dashboard`, { waitUntil: 'domcontentloaded' })
   await waitForAppIdle(page)
-  const logoutBtn = page.locator('button[title="Déconnexion"]').first()
-  const visible = await logoutBtn.isVisible().catch(() => false)
+
+  let logoutBtn = page.locator('button[title="Déconnexion"]').first()
+  let visible = await logoutBtn.isVisible().catch(() => false)
+
+  if (!visible) {
+    const burger = page.locator('button[aria-label="Ouvrir le menu"]').first()
+    const burgerVisible = await burger.isVisible().catch(() => false)
+    if (burgerVisible) {
+      await burger.click().catch(() => null)
+      await waitForAppIdle(page)
+      logoutBtn = page.locator('button[title="Déconnexion"]').first()
+      visible = await logoutBtn.isVisible().catch(() => false)
+    }
+  }
+
   if (!visible) {
     recordFailure('logout', 'Logout button not visible in sidebar')
     return
