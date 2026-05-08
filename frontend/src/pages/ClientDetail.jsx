@@ -258,7 +258,7 @@ function DocumentsTab({ client, setClient, clientId }) {
   const confirmDocument = async () => {
     if (!analysisResult) return
     try {
-      const res = await api.post(`/api/clients/${clientId}/documents`, {
+      const res = await api.post(`/documents/client/${clientId}`, {
         ...analysisResult,
         fileName: analysisResult.fileName || 'document'
       })
@@ -672,14 +672,23 @@ export default function ClientDetail() {
       try {
         setLoading(true); setError(null)
         const [clientRes, contratsRes, tachesRes] = await Promise.all([
-          api.get(`/api/clients/${id}`), 
-          api.get(`/api/clients/${id}/contrats`),
-          api.get(`/api/taches?clientId=${id}`).catch(() => ({ data: [] }))
+          api.get(`/clients/${id}`),
+          api.get(`/clients/${id}/contrats`),
+          api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] }))
         ])
         setClient(clientRes.data)
         setContrats(Array.isArray(contratsRes.data) ? contratsRes.data : [])
         setTaches(Array.isArray(tachesRes.data) ? tachesRes.data : [])
-      } catch (err) { setError('Client introuvable.'); toast.error('Client introuvable.') }
+      } catch (err) {
+        const status = err?.response?.status
+        if (status === 404) {
+          setError('Client introuvable.')
+          toast.error('Client introuvable.')
+        } else {
+          setError('Impossible de charger cette fiche client pour le moment.')
+          toast.error('Impossible de charger la fiche client.')
+        }
+      }
       finally { setLoading(false) }
     }
     loadAll()

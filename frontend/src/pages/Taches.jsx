@@ -11,6 +11,8 @@ import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
+
 const PRIORITY_SECTIONS = [
   { id: 'urgente',   label: 'Urgentes',   color: '#dc2626', bgLight: 'rgba(220,38,38,0.04)', border: '0.5px solid rgba(220,38,38,0.15)' },
   { id: 'haute',     label: 'Hautes',     color: '#d97706', bgLight: 'rgba(217,119,6,0.04)',  border: '0.5px solid rgba(217,119,6,0.15)' },
@@ -162,6 +164,7 @@ export default function Taches() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [useMock, setUseMock] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchAll()
@@ -169,14 +172,21 @@ export default function Taches() {
 
   async function fetchAll() {
     setLoading(true)
+    setError('')
     try {
       const { data } = await api.get('/taches')
       setTasks(Array.isArray(data) ? data : [])
       setUseMock(false)
     } catch {
-      // Fallback to mock data if API fails
-      setTasks(MOCK_TASKS)
-      setUseMock(true)
+      if (USE_MOCKS) {
+        setTasks(MOCK_TASKS)
+        setUseMock(true)
+        setError('Mode démonstration actif: affichage des tâches de test.')
+      } else {
+        setTasks([])
+        setUseMock(false)
+        setError('Impossible de charger les tâches pour le moment.')
+      }
     } finally {
       setLoading(false)
     }
@@ -205,7 +215,7 @@ export default function Taches() {
       return
     }
     try {
-      await api.put(`/api/taches/${id}`, { statut: 'terminee' })
+      await api.put(`/taches/${id}`, { statut: 'terminee' })
       setTasks((prev) =>
         prev.map((t) =>
           t.id === id ? { ...t, statut: 'terminee' } : t
@@ -249,6 +259,12 @@ export default function Taches() {
         {useMock && (
           <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
             Aperçu démonstration : les tâches affichées sont fictives car l’API tâches n’a pas répondu.
+          </div>
+        )}
+
+        {!useMock && error && (
+          <div className="mb-5 rounded-2xl border border-red-200/40 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
+            {error}
           </div>
         )}
 

@@ -46,7 +46,8 @@ const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'))
 const AdminSystem = lazy(() => import('./pages/AdminSystem'))
 const AdminLogs = lazy(() => import('./pages/AdminLogs'))
 const AdminSupport = lazy(() => import('./pages/AdminSupport'))
-const Partners = lazy(() => import('./pages/Partners'))
+const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -225,7 +226,6 @@ export default function App() {
           <Route path="/reach/inbox"       element={<ReachInbox />} />
           <Route path="/reach/map"         element={<ReachMap />} />
           <Route path="/reach/settings"    element={<ReachSettings />} />
-          <Route path="/partners"       element={<Partners />} />
         </Route>
 
         {/* Routes Admin — protégées par AdminRoute (super_admin uniquement) */}
@@ -234,13 +234,14 @@ export default function App() {
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/users/:id" element={<AdminUserDetail />} />
           <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/costs" element={<AdminCostsDashboard />} />
           <Route path="/admin/system" element={<AdminSystem />} />
           <Route path="/admin/logs" element={<AdminLogs />} />
           <Route path="/admin/support" element={<AdminSupport />} />
         </Route>
 
         {/* 404 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
     </BrowserRouter>

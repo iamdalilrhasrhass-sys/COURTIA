@@ -90,7 +90,7 @@ export default function ClientNew() {
   useEffect(() => {
     if (id) {
       setPageLoading(true)
-      api.get(`/api/clients/${id}`)
+      api.get(`/clients/${id}`)
         .then(res => setForm(f => ({ ...f, ...res.data, prenom: res.data.prenom || '', nom: res.data.nom || '', bonus_malus: res.data.bonus_malus || 1.0, nb_sinistres_3ans: res.data.nb_sinistres_3ans || 0 })))
         .catch(() => toast.error('Impossible de charger les données du client.'))
         .finally(() => setPageLoading(false))
@@ -122,7 +122,7 @@ export default function ClientNew() {
     setLoading(true); setSubmitState('submitting')
     try {
       const { data } = isEditMode
-        ? await api.put(`/api/clients/${id}`, form)
+        ? await api.put(`/clients/${id}`, form)
         : await api.post('/clients', form)
       setSubmitState('success')
       toast.success(`Client ${isEditMode ? 'mis à jour' : 'créé'} !`)

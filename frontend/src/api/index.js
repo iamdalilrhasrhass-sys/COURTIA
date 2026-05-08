@@ -1,14 +1,15 @@
 import axios from 'axios'
 import {
+  buildApiUrl,
   clearStoredSession,
+  getAuthToken,
   isAuthScreen,
-  shouldClearSessionOnUnauthorized
+  shouldClearSessionOnUnauthorized,
 } from './sessionPolicy'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 const api = axios.create({
-  baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 20000
 })
@@ -28,8 +29,10 @@ const emitPaywall = (payload) => paywallListeners.forEach(fn => fn(payload))
 
 // Intercepteur request : attache le JWT
 api.interceptors.request.use((config) => {
+  config.url = buildApiUrl(config.url || '', API_BASE)
+
   // Support les deux clés localStorage (migration progressive)
-  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
+  const token = getAuthToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }

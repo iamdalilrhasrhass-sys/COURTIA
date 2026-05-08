@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles } from 'lucide-react'
 import api from '../api'
+import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
@@ -46,24 +47,32 @@ export default function Parametres() {
 
   useEffect(() => { fetchProfile() }, [])
 
-  async function fetchProfile() {
+  async function fetchProfile(options = {}) {
+    const { force = false, silent = false } = options
     try {
-      setLoading(true)
-      const { data } = await api.get('/auth/me')
+      if (!silent) setLoading(true)
+      const data = await getSessionUser({ force, allowStaleOn429: true })
+      if (!data) throw new Error('session_unavailable')
+
+      primeSessionUserCache(data)
       setProfile(data)
       setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
-      localStorage.setItem('courtia_user', JSON.stringify(data))
-      window.dispatchEvent(new Event('profileUpdated'))
-    } catch { toast.error('Impossible de charger le profil') } 
-    finally { setLoading(false) }
+    } catch {
+      toast.error('Impossible de charger le profil')
+    } finally {
+      if (!silent) setLoading(false)
+    }
   }
 
   async function handleProfileSubmit(e) {
     e.preventDefault(); setSaving(true)
     try {
       await api.put('/auth/me', form)
+      const optimisticProfile = { ...(profile || {}), ...form }
+      setProfile(optimisticProfile)
+      primeSessionUserCache(optimisticProfile)
       toast.success('Profil mis à jour ✓')
-      fetchProfile()
+      fetchProfile({ force: true, silent: true })
     } catch { toast.error('Erreur lors de la sauvegarde') } 
     finally { setSaving(false) }
   }
@@ -85,10 +94,16 @@ export default function Parametres() {
     pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 159, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
     starter: { label: "L'Essentiel", classes: 'bg-emerald-100 text-emerald-700', price: 89, features: ["Jusqu'à 200 clients", 'Scores & Segments', 'Module Tâches'] },
     elite: { label: 'Le Réseau', classes: 'bg-violet-100 text-violet-700', price: 350, features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
-    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: 0, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'] }
+    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: null, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'], noSubscriptionText: 'Offre en cours de configuration' }
   }
   const tier = (profile?.pricing_tier || '').toLowerCase()
-  const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', price: 0, features: [] }
+  const currentPlan = planConfig[tier] || {
+    label: profile?.pricing_tier || 'Aucun abonnement actif',
+    classes: 'bg-gray-100 text-gray-700',
+    price: null,
+    features: [],
+    noSubscriptionText: 'Aucun abonnement actif'
+  }
 
   if (loading) {
     return (
@@ -199,7 +214,9 @@ export default function Parametres() {
                             <p className="font-semibold text-gray-800">Votre plan actuel</p>
                             <span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span>
                         </div>
-                        <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                        {typeof currentPlan.price === 'number'
+                          ? <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                          : <p className="mt-2 text-lg font-semibold text-gray-600">{currentPlan.noSubscriptionText || 'Aucun abonnement actif'}</p>}
                         <ul className="mt-4 space-y-2 text-sm text-gray-600">
                             {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
                         </ul>

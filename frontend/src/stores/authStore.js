@@ -1,5 +1,6 @@
 import create from 'zustand';
 import { buildApiUrl, clearStoredSession, getAuthToken } from '../api/sessionPolicy';
+import { primeSessionUserCache, resetSessionUserCache } from '../api/sessionUser';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -26,6 +27,7 @@ const authStore = create((set) => ({
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       if (data.user) localStorage.setItem('courtia_user', JSON.stringify(data.user));
+      if (data.user) primeSessionUserCache(data.user);
       set({ user: data.user, token: data.token, isAuthenticated: true, loading: false });
       return data;
     } catch (error) {
@@ -51,6 +53,7 @@ const authStore = create((set) => ({
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       if (data.user) localStorage.setItem('courtia_user', JSON.stringify(data.user));
+      if (data.user) primeSessionUserCache(data.user);
       set({ user: data.user, token: data.token, isAuthenticated: true, loading: false });
       return data;
     } catch (error) {
@@ -62,6 +65,7 @@ const authStore = create((set) => ({
   
   logout: () => {
     clearStoredSession();
+    resetSessionUserCache();
     set({ user: null, token: null, isAuthenticated: false, loading: false, error: null });
   },
   

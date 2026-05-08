@@ -5,6 +5,7 @@ const express = require('express');
 const authController = require('../controllers/authController');
 const verifyToken = require('../middleware/authMiddleware');
 const { verifyToken: verifyTokenMiddleware } = require('../middleware/auth');
+const { loginLimiter, meLimiter } = require('../middleware/rateLimit');
 const User = require('../models/User');
 const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
@@ -13,7 +14,7 @@ const router = express.Router();
 
 // Public
 router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/login', loginLimiter, authController.login);
 
 // Protected
 router.post('/verify', verifyToken, authController.verify);
@@ -22,7 +23,7 @@ router.post('/refresh', authController.refresh);
 /**
  * GET /api/auth/me — Profil de l'utilisateur connecté
  */
-router.get('/me', verifyTokenMiddleware, async (req, res) => {
+router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
 
