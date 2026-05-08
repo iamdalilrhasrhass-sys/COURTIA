@@ -33,6 +33,9 @@ const NAV_ITEMS = [
   { path: '/clients', label: 'Clients', icon: Users },
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
+  { path: '/rapports', label: 'Rapports', icon: BarChart2 },
+  { path: '/morning-brief', label: 'Morning Brief', icon: Zap },
+  { path: '/parametres', label: 'Paramètres', icon: Settings },
   { separator: true, label: 'ACQUISITION' },
   { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
   { separator: true, label: 'MODULES' },
@@ -40,7 +43,6 @@ const NAV_ITEMS = [
   { path: '/documents', label: 'Documents', icon: FolderOpen },
   { path: '/browser-pilot', label: 'Browser Pilot', icon: Globe, badge: 'Bêta' },
   { path: '/analytics', label: 'Analyses', icon: BarChart2 },
-  { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
 ]
 
@@ -94,6 +96,11 @@ export default function Sidebar() {
   const userFirstName = user ? (user.first_name || user.firstName || '') : ''
   const userLastName = user ? (user.last_name || user.lastName || '') : ''
   const userEmail = user?.email || ''
+  const userRole = (user?.role || '').toLowerCase()
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin'
+  const navItems = isAdmin
+    ? [...NAV_ITEMS, { separator: true, label: 'ADMIN' }, { path: '/admin/costs', label: 'Admin', icon: Shield }]
+    : NAV_ITEMS
 
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === path
@@ -135,7 +142,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '24px 10px', overflowY: 'auto' }}>
-        {NAV_ITEMS.map((item, idx) => {
+        {navItems.map((item, idx) => {
           if (item.separator) {
             return (
               <div key={`sep-${idx}`} style={{ padding: '16px 12px 6px' }}>
@@ -373,7 +380,7 @@ export default function Sidebar() {
       </AnimatePresence>
 
       {/* SIDEBAR DESKTOP */}
-      <div style={{ display: 'none' }} className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
+      <div className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
         {sidebarContent}
       </div>
 

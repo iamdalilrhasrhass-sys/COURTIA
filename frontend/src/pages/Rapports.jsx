@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { BarChart3 } from 'lucide-react'
+import api from '../api'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
-
-const API_URL = import.meta.env.VITE_API_URL || '/api'
-function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 
 function fmtEur(v) {
   if (v === null || v === undefined || v === '' || isNaN(Number(v))) return '—'
@@ -62,21 +60,26 @@ export default function Rapports() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const headers = { Authorization: `Bearer ${getToken()}` }
-
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     setLoading(true); setError('')
     try {
       const [statsRes, portfolioRes] = await Promise.allSettled([
-        fetch(`${API_URL}/api/dashboard/stats`, { headers }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }),
-        fetch(`${API_URL}/api/stats/portfolio`, { headers }).then(r => r.ok ? r.json() : null)
+        api.get('/dashboard/stats'),
+        api.get('/stats/portfolio')
       ])
-      if (statsRes.status === 'fulfilled') setStats(statsRes.value)
-      else setError('Impossible de charger les statistiques')
-      if (portfolioRes.status === 'fulfilled') setPortfolio(portfolioRes.value)
-    } catch { setError('Erreur de chargement') }
+      if (statsRes.status === 'fulfilled') setStats(statsRes.value?.data || null)
+      if (portfolioRes.status === 'fulfilled') setPortfolio(portfolioRes.value?.data || null)
+
+      if (statsRes.status !== 'fulfilled' && portfolioRes.status !== 'fulfilled') {
+        setError('Impossible de charger les statistiques')
+      } else if (statsRes.status !== 'fulfilled' || portfolioRes.status !== 'fulfilled') {
+        setError('Certaines données de rapport sont temporairement indisponibles.')
+      }
+    } catch {
+      setError('Erreur de chargement')
+    }
     finally { setLoading(false) }
   }
 
@@ -221,7 +224,7 @@ export default function Rapports() {
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
                       >
                         <td style={{ ...tdStyle, color: '#9ca3af', fontWeight: 700, textAlign: 'center' }}>{i + 1}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{client.nom} {client.prenom}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{client.prenom} {client.nom}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', color: '#2563eb', fontWeight: 600 }}>{client.loyalty_score ?? '—'}/100</td>
                         <td style={{ ...tdStyle, textAlign: 'right', color: '#9ca3af' }}>{fmtEur(client.lifetime_value)}</td>
                       </motion.tr>
@@ -259,8 +262,8 @@ export default function Rapports() {
                       const tooltipContent = (
                         <span>
                           Échéance dans <strong>{days}j</strong><br />
-                          {a.type_contrat ? `Contrat : ${a.type_contrat}` : ''}{a.type_contrat && (a.nom || a.prenom) ? ' · ' : ''}
-                          {a.nom || a.prenom ? `${a.nom} ${a.prenom}` : ''}<br />
+                            {a.type_contrat ? `Contrat : ${a.type_contrat}` : ''}{a.type_contrat && (a.nom || a.prenom) ? ' · ' : ''}
+                            {a.nom || a.prenom ? `${a.prenom} ${a.nom}` : ''}<br />
                           <span style={{ color: '#9ca3af', fontSize: 10 }}>Cliquer pour ouvrir le dossier</span>
                         </span>
                       )
@@ -277,7 +280,7 @@ export default function Rapports() {
                             onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
                             onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
                           >
-                            <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{a.nom} {a.prenom}</td>
+                            <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{a.prenom} {a.nom}</td>
                             <td style={{ ...tdStyle, color: '#9ca3af' }}>{a.type_contrat || '—'}</td>
                             <td style={{ ...tdStyle, textAlign: 'right' }}>
                               <DaysBadge days={days} />

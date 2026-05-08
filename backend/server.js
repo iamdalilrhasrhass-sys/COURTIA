@@ -9,9 +9,11 @@ app.use(helmet({ contentSecurityPolicy: false }))
 const pool = require('./src/db')
 app.locals.pool = pool
 
-// Rate limit global
-const { globalLimiter, arkLimiter, authLimiter } = require('./src/middleware/rateLimit')
-app.use(globalLimiter)
+// Rate limiting
+const { apiLimiter, healthLimiter, arkLimiter } = require('./src/middleware/rateLimit')
+app.use('/api', apiLimiter)
+app.use('/health', healthLimiter)
+app.use('/api/health', healthLimiter)
 
 app.use(cors({ origin: ['https://courtia.vercel.app', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173'], credentials: true }))
 app.use(express.json({
@@ -63,8 +65,26 @@ function arkRateLimit(req, res, next) {
 
 // ==================== HEALTH (public) ====================
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'crm-assurance-backend', timestamp: new Date().toISOString(), uptime: process.uptime() })
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1')
+    res.json({
+      status: 'ok',
+      api: 'ok',
+      db: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    })
+  } catch (err) {
+    res.status(503).json({
+      status: 'degraded',
+      api: 'ok',
+      db: 'error',
+      error: err.message,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    })
+  }
 })
 
 app.get('/api/health', (req, res) => {
@@ -156,7 +176,7 @@ const browserPilotRouter   = require('./src/routes/browserPilot')
 const extensionRouter      = require('./src/routes/extension')
 
 // Public
-app.use('/api/auth',   authLimiter, authRouter)
+app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
 app.use('/api/billing', billingRouter)

@@ -4,17 +4,59 @@ import api from '../api'
 import Paywall from './Paywall'
 import { clearStoredSession } from '../api/sessionPolicy'
 
+const ME_CACHE_TTL_MS = 60 * 1000
+let cachedMe = null
+let cachedMeAt = 0
+let pendingMePromise = null
+
+function readRoleFromToken(token = '') {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return String(payload?.role || '')
+  } catch {
+    return ''
+  }
+}
+
 export default function ProtectedRoute({ children, requireFeature }) {
   const loc = useLocation()
   const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
   const [me, setMe] = useState(null)
   const [err, setErr] = useState(null)
+  const [softWarning, setSoftWarning] = useState('')
 
   useEffect(() => {
     if (!token) return
-    api.get('/auth/me')
-      .then(r => setMe(r.data))
-      .catch(e => setErr(e))
+
+    const now = Date.now()
+    if (cachedMe && (now - cachedMeAt) < ME_CACHE_TTL_MS) {
+      setMe(cachedMe)
+      return
+    }
+
+    const run = pendingMePromise || api.get('/auth/me')
+    pendingMePromise = run
+
+    run
+      .then((r) => {
+        cachedMe = r.data
+        cachedMeAt = Date.now()
+        setMe(r.data)
+      })
+      .catch((e) => {
+        if (e?.response?.status === 429) {
+          const fallbackUser = cachedMe || {
+            role: readRoleFromToken(token),
+          }
+          setMe(fallbackUser)
+          setSoftWarning('Vérification de session temporairement ralentie. Votre accès est conservé.')
+          return
+        }
+        setErr(e)
+      })
+      .finally(() => {
+        if (pendingMePromise === run) pendingMePromise = null
+      })
   }, [token])
 
   if (!token) {
@@ -55,5 +97,14 @@ export default function ProtectedRoute({ children, requireFeature }) {
     return <Paywall feature={requireFeature} plan={me.plan || 'trial'} />
   }
 
-  return children
+  return (
+    <>
+      {softWarning && (
+        <div className="mx-auto mt-2 w-[min(95%,980px)] rounded-xl border border-amber-300/40 bg-amber-50/90 px-4 py-2 text-xs font-medium text-amber-900">
+          {softWarning}
+        </div>
+      )}
+      {children}
+    </>
+  )
 }
