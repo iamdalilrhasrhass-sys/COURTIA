@@ -237,7 +237,56 @@ router.get('/users', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/users error:', err.message);
-    res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs.' });
+    try {
+      const { search, page = 1, limit = 20 } = req.query;
+      const params = [];
+      const conditions = ["u.role != 'super_admin'"];
+      if (search) {
+        params.push(`%${search}%`);
+        const p = params.length;
+        conditions.push(`(u.email ILIKE $${p} OR u.first_name ILIKE $${p} OR u.last_name ILIKE $${p})`);
+      }
+
+      const offset = (Math.max(1, parseInt(page, 10)) - 1) * Math.min(100, parseInt(limit, 10));
+      const pageSize = Math.min(100, parseInt(limit, 10));
+      const where = 'WHERE ' + conditions.join(' AND ');
+
+      const [usersRes, countRes] = await Promise.all([
+        pool.query(
+          `SELECT u.id, u.email, u.first_name, u.last_name, u.role,
+                  'start'::text AS subscription_plan,
+                  'active'::text AS subscription_status,
+                  u.created_at,
+                  NULL::text AS iobsp_status,
+                  NULL::timestamptz AS suspended_at,
+                  bp.cabinet, bp.orias,
+                  (SELECT COUNT(*) FROM clients c WHERE c.courtier_id = u.id) AS clients_count,
+                  (SELECT COUNT(*) FROM quotes q JOIN clients c ON q.client_id = c.id WHERE c.courtier_id = u.id) AS contracts_count,
+                  (SELECT MAX(ac.created_at) FROM ark_conversations ac
+                     JOIN clients c ON ac.client_id = c.id WHERE c.courtier_id = u.id) AS last_ark_activity
+           FROM users u
+           LEFT JOIN broker_profiles bp ON bp.user_id = u.id
+           ${where}
+           ORDER BY u.created_at DESC
+           LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          [...params, pageSize, offset]
+        ),
+        pool.query(
+          `SELECT COUNT(*) FROM users u ${where}`,
+          params
+        ),
+      ]);
+
+      return res.json({
+        users: usersRes.rows,
+        total: parseInt(countRes.rows[0].count, 10),
+        page: parseInt(page, 10),
+        page_size: pageSize,
+      });
+    } catch (fallbackErr) {
+      console.error('GET /admin/users fallback error:', fallbackErr.message);
+      res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs.' });
+    }
   }
 });
 
@@ -428,6 +477,16 @@ router.post('/impersonate/:userId', async (req, res) => {
 router.get('/impersonation/logs', async (req, res) => {
   try {
     const { target_id, page = 1, limit = 20 } = req.query;
+    const pageSize = Math.min(100, parseInt(limit, 10));
+    const tableCheck = await pool.query(`SELECT to_regclass('public.admin_impersonation_log') AS table_name`);
+    if (!tableCheck.rows[0]?.table_name) {
+      return res.json({
+        logs: [],
+        total: 0,
+        page: parseInt(page, 10),
+        page_size: pageSize,
+      });
+    }
 
     const conditions = [];
     const params     = [];
@@ -438,8 +497,7 @@ router.get('/impersonation/logs', async (req, res) => {
     }
 
     const where    = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
-    const offset   = (Math.max(1, parseInt(page)) - 1) * Math.min(100, parseInt(limit));
-    const pageSize = Math.min(100, parseInt(limit));
+    const offset   = (Math.max(1, parseInt(page)) - 1) * pageSize;
 
     const [logsRes, countRes] = await Promise.all([
       pool.query(
