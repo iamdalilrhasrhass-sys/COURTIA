@@ -1,249 +1,386 @@
-import React from 'react'
+import React, { useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 /**
- * ClientBubbleGridPremium — Vue bulles Aurora premium.
- * Pure presentational. No API calls, no auth, no business logic.
- * Props:
- *   clients: Array of client objects
- *   loading: boolean
- *   onClientClick: (clientId: number) => void
- *   onAskArk: (clientId: number) => void
- *   onCreateTask: (clientId: number) => void
+ * ClientBubbleGridPremium — Bulles clients "cockpit intelligent" COURTIA.
+ * 
+ * Direction visuelle : verre sombre irisé, halos Aurora Bubble C,
+ * reflets cristal, profondeur premium. Pure presentational.
+ * No API calls, no auth, no business logic.
  */
 
-/* ---- Helpers ---- */
-function getInitials(name) {
-  if (!name) return '?'
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+/* ═══════════ SAFE HELPERS (no .split crash) ═══════════ */
+function safeName(client) {
+  const raw = client?.name || `${client?.nom || ''} ${client?.prenom || ''}`.trim()
+  return raw || 'Client'
 }
 
-function getStatusLabel(client) {
-  const st = (client.status || client.statut || '').toLowerCase()
+function safeInitials(name) {
+  if (!name || typeof name !== 'string') return '?'
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+function safeStatus(client) {
+  const raw = ((client?.status || client?.statut || 'prospect') + '').toLowerCase()
   const map = {
-    prospect: 'Prospect',
-    actif: 'Actif',
-    inactif: 'Inactif',
-    résilié: 'Résilié',
-    resilié: 'Résilié',
-    perdu: 'Perdu',
-    a_risque: 'À risque',
-    opportunite: 'Opportunité',
+    prospect:'Prospect', actif:'Actif', inactif:'Inactif',
+    résilié:'Résilié', resilié:'Résilié', perdu:'Perdu',
+    a_risque:'À risque', opportunite:'Opportunité',
   }
-  return map[st] || 'Inconnu'
+  return map[raw] || 'Prospect'
 }
 
-function getStatusRingColor(client) {
-  const st = (client.status || client.statut || '').toLowerCase()
-  const ring = {
-    a_risque: 'rgba(244,114,182,0.60)',
-    prospect: 'rgba(147,197,253,0.40)',
-    actif: 'rgba(94,196,167,0.35)',
-    inactif: 'rgba(168,180,192,0.25)',
-    résilié: 'rgba(168,180,192,0.20)',
-    resilié: 'rgba(168,180,192,0.20)',
-    perdu: 'rgba(239,68,68,0.25)',
-    opportunite: 'rgba(180,160,230,0.45)',
+function statusRingColor(client) {
+  const st = ((client?.status || client?.statut || '') + '').toLowerCase()
+  const map = {
+    a_risque:    ['rgba(244,114,182,0.7)', 'rgba(236,72,153,0.3)'],
+    prospect:    ['rgba(147,197,253,0.6)', 'rgba(59,130,246,0.3)'],
+    actif:       ['rgba(94,196,167,0.5)',  'rgba(16,185,129,0.25)'],
+    inactif:     ['rgba(156,163,175,0.3)', 'rgba(156,163,175,0.12)'],
+    résilié:     ['rgba(156,163,175,0.2)', 'rgba(156,163,175,0.08)'],
+    resilié:     ['rgba(156,163,175,0.2)', 'rgba(156,163,175,0.08)'],
+    perdu:       ['rgba(239,68,68,0.35)',  'rgba(239,68,68,0.15)'],
+    opportunite: ['rgba(167,139,250,0.65)','rgba(124,58,237,0.3)'],
   }
-  return ring[st] || 'rgba(168,180,192,0.20)'
+  return map[st] || ['rgba(156,163,175,0.3)', 'rgba(156,163,175,0.12)']
 }
 
-function getHaloColor(client) {
-  const st = (client.status || client.statut || '').toLowerCase()
-  const halo = {
-    a_risque: 'rgba(244,114,182,0.12)',
-    prospect: 'rgba(147,197,253,0.08)',
-    actif: 'rgba(94,196,167,0.08)',
-    inactif: 'rgba(168,180,192,0.04)',
-    résilié: 'rgba(168,180,192,0.03)',
-    resilié: 'rgba(168,180,192,0.03)',
-    perdu: 'rgba(239,68,68,0.05)',
-    opportunite: 'rgba(180,160,230,0.10)',
-  }
-  return halo[st] || 'rgba(168,180,192,0.03)'
+function riskBadge(client) {
+  const risk = Number(client?.riskScore ?? client?.score_risque ?? 0) || 0
+  if (risk >= 70) return { show: true, label: 'URG', color: '#f43f5e' }
+  if (risk >= 40) return { show: true, label: 'À FAIRE', color: '#f59e0b' }
+  return { show: false }
 }
 
-function getMicroBadge(client) {
-  const riskScore = client.riskScore ?? client.score_risque ?? 0
-  const st = (client.status || client.statut || '').toLowerCase()
-
-  if (st === 'a_risque' || riskScore >= 70) return { show: true, symbol: '!', bg: 'rgba(244,114,182,0.90)' }
-  if (riskScore >= 40) return { show: true, symbol: '●', bg: 'rgba(251,191,36,0.85)' }
-  return { show: false, symbol: '', bg: '' }
+function clientOpacity(client) {
+  const st = ((client?.status || client?.statut || '') + '').toLowerCase()
+  return ['inactif','résilié','resilié','perdu'].includes(st) ? 0.45 : 1
 }
 
-function getClientName(client) {
-  const full = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim()
-  if (full && full.length > 16) return full.slice(0, 14) + '…'
-  return full || '—'
-}
-
-/* ---- Aurora Glass SVG (uniform for all clients) ---- */
-function AuroraBubbleSVG({ size, ringColor }) {
-  const c = size / 2
-  const r = size * 0.40
-  const strokeW = Math.max(1, size * 0.012)
+/* ═══════════ AURORA HALO (ring around bubble) ═══════════ */
+function AuroraRing({ colors, size, selected }) {
+  const [outer] = colors
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Status ring glow */}
-      <circle cx={c} cy={c} r={r + 4} fill="none" stroke={ringColor} strokeWidth={strokeW * 1.5} opacity="0.5" filter="url(#auroraBlur)" />
-      {/* Status ring */}
-      <circle cx={c} cy={c} r={r + 2} fill="none" stroke={ringColor} strokeWidth={strokeW} opacity="0.85" />
-      {/* Glass body */}
-      <circle cx={c} cy={c} r={r} fill="url(#auroraGlass)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" opacity="0.95" />
-      {/* Specular highlight */}
-      <ellipse cx={c - r * 0.35} cy={c - r * 0.38} rx={r * 0.32} ry={r * 0.18} fill="rgba(255,255,255,0.55)" transform={`rotate(-14 ${c - r * 0.35} ${c - r * 0.38})`} />
-      <ellipse cx={c - r * 0.43} cy={c - r * 0.42} rx={r * 0.08} ry={r * 0.04} fill="rgba(255,255,255,0.80)" transform={`rotate(-14 ${c - r * 0.43} ${c - r * 0.42})`} />
-      {/* Defs */}
-      <defs>
-        <radialGradient id="auroraGlass" cx="28%" cy="25%" r="75%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-          <stop offset="15%" stopColor="rgba(255,255,255,0.85)" />
-          <stop offset="40%" stopColor="rgba(220,210,240,0.45)" />
-          <stop offset="70%" stopColor="rgba(200,210,230,0.25)" />
-          <stop offset="100%" stopColor="rgba(180,190,215,0.15)" />
-        </radialGradient>
-        <filter id="auroraBlur">
-          <feGaussianBlur stdDeviation="2" />
-        </filter>
-      </defs>
-    </svg>
+    <div style={{
+      position: 'absolute',
+      inset: selected ? -5 : -3,
+      borderRadius: '50%',
+      border: `${selected ? 2 : 1.5}px solid transparent`,
+      background: `conic-gradient(from 0deg, ${outer}, rgba(124,58,237,0.15), rgba(6,182,212,0.2), ${outer}) border-box`,
+      WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+      WebkitMaskComposite: 'xor',
+      maskComposite: 'exclude',
+      filter: selected ? 'blur(0.5px)' : 'blur(0.3px)',
+      transition: 'inset 0.3s ease, border-width 0.3s ease',
+    }} />
   )
 }
 
-/* ---- Skeleton Loader ---- */
+/* ═══════════ BUBBLE AVATAR ═══════════ */
+const avatarAnim = {
+  initial: { opacity: 0, scale: 0.85 },
+  animate: { opacity: 1, scale: 1 },
+  exit:    { opacity: 0, scale: 0.85 },
+  transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+}
+
+function BubbleAvatar({ client, selected, onClick }) {
+  const name   = useMemo(() => safeName(client), [client])
+  const init   = useMemo(() => safeInitials(name), [name])
+  const status = useMemo(() => safeStatus(client), [client])
+  const ring   = useMemo(() => statusRingColor(client), [client])
+  const badge  = useMemo(() => riskBadge(client), [client])
+  const opacity = useMemo(() => clientOpacity(client), [client])
+  const shortName = name.length > 18 ? name.slice(0, 16) + '…' : name
+  const size = 'clamp(72px, 11vw, 96px)'
+
+  return (
+    <motion.button
+      {...avatarAnim}
+      onClick={() => onClick(client?.id)}
+      aria-label={`${name}, ${status}`}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
+        cursor: 'pointer', background: 'none', border: 'none',
+        padding: '6px 2px', opacity,
+        width: '100%',
+        outline: 'none',
+      }}
+      whileHover={{ y: -3, transition: { duration: 0.25 } }}
+      whileTap={{ scale: 0.97 }}
+    >
+      {/* --- Avatar circle --- */}
+      <div style={{ position: 'relative', width: size, height: size }}>
+        {/* Aurora ring */}
+        <AuroraRing colors={ring} size={size} selected={selected} />
+
+        {/* Glow halo behind bubble */}
+        <div style={{
+          position: 'absolute', inset: -10,
+          borderRadius: '50%',
+          background: `radial-gradient(circle at 50% 45%, ${ring[1]}, transparent 68%)`,
+          filter: 'blur(8px)',
+        }} />
+
+        {/* Main glass sphere */}
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: `
+            radial-gradient(ellipse 65% 45% at 40% 28%, rgba(255,255,255,0.10) 0%, transparent 55%),
+            radial-gradient(ellipse at 50% 50%, rgba(15,23,42,0.35), rgba(8,9,13,0.65) 70%, rgba(2,4,8,0.80) 100%)
+          `,
+          boxShadow: selected
+            ? `0 0 20px ${ring[1]}, 0 0 40px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)`
+            : '0 4px 20px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.06)',
+          border: '0.5px solid rgba(255,255,255,0.06)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
+          transition: 'box-shadow 0.35s ease',
+        }}>
+          {/* Specular highlight (top-left arc) */}
+          <div style={{
+            position: 'absolute',
+            top: '8%', left: '14%',
+            width: '34%', height: '22%',
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse at 35% 30%, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 70%, transparent)',
+            filter: 'blur(2px)',
+            transform: 'rotate(-15deg)',
+          }} />
+          {/* Secondary highlight (bottom-right) */}
+          <div style={{
+            position: 'absolute',
+            bottom: '10%', right: '12%',
+            width: '22%', height: '12%',
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse at 60% 70%, rgba(200,180,255,0.05), transparent)',
+            filter: 'blur(3px)',
+          }} />
+          {/* Initials */}
+          <span style={{
+            fontSize: 'clamp(20px, 3.5vw, 27px)',
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.88)',
+            letterSpacing: '-0.01em',
+            textShadow: '0 1px 3px rgba(0,0,0,0.40)',
+            zIndex: 1,
+          }}>
+            {init}
+          </span>
+        </div>
+
+        {/* Risk badge */}
+        {badge.show && (
+          <div style={{
+            position: 'absolute', top: -6, right: -4,
+            background: badge.color,
+            color: '#fff',
+            fontSize: 9, fontWeight: 800,
+            padding: '2px 7px', borderRadius: 999,
+            letterSpacing: '0.05em',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.30)',
+            lineHeight: 1.3,
+            zIndex: 2,
+          }}>
+            {badge.label}
+          </div>
+        )}
+      </div>
+
+      {/* --- Name --- */}
+      <span style={{
+        fontSize: 'clamp(10px, 1.3vw, 12px)',
+        fontWeight: 600,
+        color: 'rgba(255,255,255,0.82)',
+        maxWidth: 100, textAlign: 'center',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        lineHeight: 1.2,
+      }}>
+        {shortName}
+      </span>
+
+      {/* --- Status dot + label --- */}
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        fontSize: 10, fontWeight: 500,
+        color: 'rgba(255,255,255,0.45)',
+        lineHeight: 1,
+      }}>
+        <span style={{
+          width: 4, height: 4, borderRadius: '50%',
+          background: ring[0],
+          flexShrink: 0,
+        }} />
+        {status}
+      </span>
+    </motion.button>
+  )
+}
+
+/* ═══════════ SKELETON ═══════════ */
 function SkeletonBubble() {
   return (
-    <div className="flex flex-col items-center gap-2 animate-pulse">
-      <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.06)' }} />
-      <div className="w-14 h-2.5 bg-gray-200/20 rounded" />
-      <div className="w-10 h-2 bg-gray-200/10 rounded-full" />
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
+      padding: '6px 2px', opacity: 0.3,
+    }}>
+      <div style={{
+        width: 'clamp(72px, 11vw, 96px)', height: 'clamp(72px, 11vw, 96px)',
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,0.03)',
+        border: '0.5px solid rgba(255,255,255,0.04)',
+      }} />
+      <div style={{ width: 60, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 4 }} />
+      <div style={{ width: 36, height: 6, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
     </div>
   )
 }
 
-/* ---- Single Bubble ---- */
-function BubbleItem({ client, onClick }) {
-  const ringColor = getStatusRingColor(client)
-  const haloColor = getHaloColor(client)
-  const badge = getMicroBadge(client)
-
+/* ═══════════ EMPTY ═══════════ */
+function EmptyCockpit() {
   return (
-    <button
-      onClick={() => onClick(client.id)}
-      aria-label={`${getClientName(client)}, ${getStatusLabel(client)}`}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 6,
-        cursor: 'pointer',
-        background: 'none',
-        border: 'none',
-        padding: '4px 2px',
-        transition: 'transform 180ms ease, filter 180ms ease',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)'; e.currentTarget.style.filter = 'brightness(1.05)' }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)' }}
-      onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)' }}
-      onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
-    >
-      {/* Bubble wrapper */}
-      <div style={{ position: 'relative', width: 84, height: 84 }}>
-        {/* Halo */}
-        <div style={{
-          position: 'absolute', inset: '-8px', borderRadius: '50%',
-          background: `radial-gradient(circle at 50% 50%, ${haloColor}, transparent 70%)`,
-          filter: 'blur(6px)',
-        }} />
-        {/* SVG */}
-        <AuroraBubbleSVG size={84} ringColor={ringColor} />
-        {/* Initials */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20, fontWeight: 700,
-          color: 'rgba(15,23,42,0.85)',
-          textShadow: '0 1px 2px rgba(255,255,255,0.3)',
-        }}>
-          {getInitials(getClientName(client))}
-        </div>
-        {/* Micro badge */}
-        {badge.show && (
-          <div style={{
-            position: 'absolute', top: 4, right: 4,
-            background: badge.bg, color: 'white',
-            fontSize: 9, fontWeight: 800,
-            minWidth: 16, height: 16, borderRadius: 999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-            lineHeight: 1,
-          }}>
-            {badge.symbol}
-          </div>
-        )}
-      </div>
-      {/* Labels */}
-      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', maxWidth: 84, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', lineHeight: 1.2 }}>
-        {getClientName(client)}
-      </span>
-      <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text-tertiary)', lineHeight: 1 }}>
-        {getStatusLabel(client)}
-      </span>
-    </button>
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '48px 20px', opacity: 0.6,
+    }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: '50%',
+        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'radial-gradient(circle at 35% 30%, rgba(124,58,237,0.06), transparent 60%)',
+        marginBottom: 16,
+      }} />
+      <p style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 600, fontSize: 14 }}>Aucun client trouvé</p>
+      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 4 }}>Ajustez vos filtres ou ajoutez un nouveau client.</p>
+    </div>
   )
 }
 
-/* ---- Main Grid ---- */
-export default function ClientBubbleGridPremium({ clients, loading, onClientClick }) {
-  if (loading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3 justify-items-center">
-          {Array.from({ length: 7 }).map((_, i) => <SkeletonBubble key={i} />)}
-        </div>
+/* ═══════════ COCKPIT HEADER ═══════════ */
+function CockpitHeader({ total, mode }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      marginBottom: 10,
+      padding: '6px 8px',
+      borderRadius: 10,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        fontSize: 11, fontWeight: 600,
+        color: 'rgba(255,255,255,0.35)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+      }}>
+        <span>{total} contacts</span>
+        <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.08)' }} />
+        <span style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          color: 'rgba(244,114,182,0.65)',
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(244,114,182,0.7)', boxShadow: '0 0 4px rgba(244,114,182,0.4)' }} />
+          Urgent
+        </span>
+        <span style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          color: 'rgba(245,158,11,0.55)',
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(245,158,11,0.5)' }} />
+          À faire
+        </span>
+        <span style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          color: 'rgba(94,196,167,0.40)',
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(94,196,167,0.35)' }} />
+          Stable
+        </span>
       </div>
-    )
+    </div>
+  )
+}
+
+/* ═══════════ MAIN GRID ═══════════ */
+export default function ClientBubbleGridPremium({ clients = [], loading = false, onClientClick }) {
+  const [selectedId, setSelectedId] = React.useState(null)
+
+  const safeClients = useMemo(() =>
+    (Array.isArray(clients) ? clients : []).filter(Boolean),
+  [clients])
+
+  const handleClick = (id) => {
+    setSelectedId(id)
+    onClientClick?.(id)
   }
 
-  if (!clients || clients.length === 0) {
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', border: '0.5px solid rgba(255,255,255,0.10)', marginBottom: 20 }}>
-          <div style={{ position: 'absolute', inset: '-8px', borderRadius: '50%', background: 'radial-gradient(circle at 50% 50%, rgba(160,140,220,0.07), transparent 70%)', filter: 'blur(10px)' }} />
+      <div style={{ padding: '8px 0' }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '10px 6px', justifyContent: 'center',
+        }} className="sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => <SkeletonBubble key={i} />)}
         </div>
-        <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>Aucun client dans ce segment</p>
-        <p style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Ajoutez votre premier client pour activer le cockpit.</p>
       </div>
     )
   }
 
   return (
-    <>
-      {/* Legend */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, paddingLeft: 4, fontSize: 9, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        <span>Priorité ARK</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(244,114,182,0.8)' }} /> Urgent
-        </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(251,191,36,0.7)' }} /> Relance
-        </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(94,196,167,0.5)' }} /> Stable
-        </span>
-      </div>
-      {/* Grid */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px 8px', paddingLeft: 4, paddingRight: 4, paddingTop: 8, paddingBottom: 8 }}>
-        {clients.map(client => (
-          <BubbleItem key={client.id} client={client} onClick={onClientClick} />
-        ))}
-      </div>
-    </>
+    <div
+      style={{
+        background: 'rgba(8,9,13,0.82)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderRadius: 20,
+        border: '0.5px solid rgba(255,255,255,0.06)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.25), 0 0 60px rgba(124,58,237,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
+        padding: '18px 16px 14px',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* Subtle aurora background inside cockpit */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `
+          radial-gradient(ellipse 50% 40% at 20% 20%, rgba(124,58,237,0.06), transparent 60%),
+          radial-gradient(ellipse 40% 35% at 70% 30%, rgba(6,182,212,0.04), transparent 55%),
+          radial-gradient(ellipse 60% 50% at 50% 80%, rgba(236,72,153,0.03), transparent 60%)
+        `,
+      }} />
+
+      <CockpitHeader total={safeClients.length} />
+
+      {safeClients.length === 0 ? (
+        <EmptyCockpit />
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px 6px',
+            }}
+            className="sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+          >
+            {safeClients.map((client) => (
+              <BubbleAvatar
+                key={client?.id ?? Math.random()}
+                client={client}
+                selected={selectedId === client?.id}
+                onClick={handleClick}
+              />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </div>
   )
 }
