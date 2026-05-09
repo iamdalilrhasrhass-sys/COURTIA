@@ -616,48 +616,9 @@ const MESSAGE_STATUS = {
   echoue: { label: 'Échoué', color: '#ef4444' },
 }
 
-const mockMessages = [
-  {
-    id: 1,
-    canal: 'email',
-    direction: 'envoye',
-    date: new Date('2026-04-24T10:30:00'),
-    contenu: 'Bonjour, votre contrat Auto arrive à échéance le 15 mai. Souhaitez-vous un rendez-vous pour en discuter ?',
-    statut: 'lu',
-    dossier_statut: 'en_cours',
-  },
-  {
-    id: 2,
-    canal: 'sms',
-    direction: 'recu',
-    date: new Date('2026-04-24T11:45:00'),
-    contenu: 'Oui je suis disponible jeudi prochain à 14h pour faire le point sur mon contrat.',
-    statut: 'lu',
-    dossier_statut: 'en_cours',
-  },
-  {
-    id: 3,
-    canal: 'whatsapp',
-    direction: 'envoye',
-    date: new Date('2026-04-23T09:15:00'),
-    contenu: '📋 Votre devis MRH est prêt ! Prime à 18,50€/mois. Je vous l\'envoie ?',
-    statut: 'livre',
-    dossier_statut: 'relance',
-  },
-  {
-    id: 4,
-    canal: 'email',
-    direction: 'recu',
-    date: new Date('2026-04-22T16:20:00'),
-    contenu: 'Merci pour le devis. Pouvez-vous m\'envoyer les garanties détaillées avant que je signe ?',
-    statut: 'lu',
-    dossier_statut: 'reponse_recue',
-  },
-]
-
 // ─── MESSAGES TAB ──────────────────────────────────────────────────────────
-function MessagesTab() {
-  const [messages] = useState(mockMessages)
+function MessagesTab({ clientId }) {
+  const [messages] = useState([])
   const [sendingARK, setSendingARK] = useState(false)
   const [triggeringRelance, setTriggeringRelance] = useState(false)
   const [dossierStatut, setDossierStatut] = useState('en_cours')
@@ -676,11 +637,11 @@ function MessagesTab() {
   const handleEnvoyerARK = async () => {
     setSendingARK(true)
     try {
-      // await api.post('/messaging/send', { clientId })
-      await new Promise(r => setTimeout(r, 800))
+      await api.post('/messaging/send', { clientId })
       toast.success('Message envoyé via ARK')
-    } catch {
-      toast.error('Échec de l\'envoi')
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || 'Configuration email/SMS requise.'
+      toast.error(message)
     } finally {
       setSendingARK(false)
     }
@@ -689,12 +650,12 @@ function MessagesTab() {
   const handleRelancer = async () => {
     setTriggeringRelance(true)
     try {
-      // await api.post('/messaging/relance/trigger', { clientId })
-      await new Promise(r => setTimeout(r, 800))
+      await api.post('/messaging/relance/trigger', { clientId })
       setDossierStatut('relance')
       toast.success('Relance déclenchée')
-    } catch {
-      toast.error('Échec de la relance')
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || 'Configuration relance requise.'
+      toast.error(message)
     } finally {
       setTriggeringRelance(false)
     }

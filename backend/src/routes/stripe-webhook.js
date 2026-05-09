@@ -3,6 +3,7 @@ const Stripe = require('stripe');
 const pool = require('../db');
 const express = require('express');
 const router = express.Router();
+const logger = require('../lib/logger');
 
 const SK = process.env.STRIPE_SECRET_KEY;
 const WS = process.env.STRIPE_WEBHOOK_SECRET;
@@ -17,7 +18,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, WS);
   } catch (e) {
-    console.error('[stripe webhook] sig fail', e.message);
+    logger.warn({ error: e.message }, 'stripe webhook signature failed');
     return res.status(400).send(`Webhook Error: ${e.message}`);
   }
   try {
@@ -31,7 +32,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
             `UPDATE users SET plan=$1, subscription_status='active', stripe_subscription_id=$2 WHERE id=$3`,
             [plan, s.subscription, userId]
           );
-          console.log(`[stripe] user ${userId} subscribed to ${plan}`);
+          logger.info({ user_id: userId, plan }, 'stripe subscription activated');
         }
         break;
       }

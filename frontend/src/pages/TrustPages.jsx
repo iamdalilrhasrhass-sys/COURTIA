@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Activity,
@@ -221,6 +221,26 @@ export function HelpPublic() {
 }
 
 export function StatusPublic() {
+  const [status, setStatus] = useState(null)
+
+  useEffect(() => {
+    const base = import.meta.env.VITE_API_URL || 'https://api.courtiark.fr/api'
+    fetch(`${base.replace(/\/$/, '')}/status`, { headers: { Accept: 'application/json' } })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => setStatus(data))
+      .catch(() => setStatus(null))
+  }, [])
+
+  const integrations = status?.integrations || {}
+  const serviceCards = [
+    { title: 'Frontend', value: status ? 'ready' : 'monitoring', icon: CheckCircle2 },
+    { title: 'API', value: status?.api || status?.status || 'monitoring', icon: Server },
+    { title: 'DB', value: status?.database || 'monitoring', icon: Database },
+    { title: 'Email', value: integrations.email_transactional || 'configuration_required', icon: FileText },
+    { title: 'SMS', value: integrations.sms || 'configuration_required', icon: Activity },
+    { title: 'Intégrations', value: Object.values(integrations).some((v) => v === 'configuration_required') ? 'configuration_required' : 'configured', icon: Lock },
+  ]
+
   return (
     <MarketingShell activePath="/status">
       <TrustHero
@@ -231,13 +251,24 @@ export function StatusPublic() {
         icon={Activity}
       />
       <InfoGrid items={[
-        { icon: CheckCircle2, title: 'Application', text: 'Production Vercel surveillée par smoke tests et vérifications de parcours métier.' },
-        { icon: Server, title: 'API', text: 'Endpoints health/status disponibles, avec contrôle DB et garde-fou double préfixe API.' },
-        { icon: ShieldCheck, title: 'Admin', text: 'Routes admin protégées, rôle super_admin validé par API et smoke Dalil.' },
-        { icon: Sparkles, title: 'ARK', text: 'Mode local disponible si l’IA externe n’est pas configurée ou si le budget est atteint.' },
-        { icon: Lock, title: 'Intégrations', text: 'Google, Gmail, WhatsApp, Stripe et Yousign dégradent proprement en configuration requise.' },
-        { icon: Archive, title: 'Documents', text: 'Documents DDA et signatures gardent leurs statuts et leur traçabilité.' },
+        ...serviceCards.map((card) => ({
+          icon: card.icon,
+          title: card.title,
+          text: card.value === 'configured' || card.value === 'ready' || card.value === 'connected'
+            ? 'Opérationnel.'
+            : card.value === 'configuration_required'
+              ? 'Configuration requise pour activer ce module.'
+              : 'Surveillance en cours.',
+        })),
       ]} />
+      {status?.maintenance?.active && (
+        <section className="mk-section">
+          <div className="mk-card">
+            <h3>Maintenance</h3>
+            <p>{status.maintenance.message || 'Une maintenance est en cours.'}</p>
+          </div>
+        </section>
+      )}
       <section className="mk-section">
         <div className="mk-card">
           <h3>Contrôles recommandés</h3>

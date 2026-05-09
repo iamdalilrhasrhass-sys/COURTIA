@@ -8,6 +8,9 @@
  */
 
 const crypto = require('crypto');
+const logger = require('../lib/logger');
+const { sendEmail } = require('../services/emailService');
+const { sendSMS } = require('../services/smsService');
 
 class ReachWorker {
   constructor(pool) {
@@ -16,18 +19,18 @@ class ReachWorker {
   }
 
   start(intervalMs = 5 * 60 * 1000) {
-    console.log('[reachWorker] Démarrage worker (intervalle: ' + (intervalMs / 1000) + 's)');
+    logger.info({ interval_seconds: intervalMs / 1000 }, 'reach worker starting');
     // Run immediately then every interval
     this.processCampaigns();
     this.interval = setInterval(() => this.processCampaigns(), intervalMs);
-    console.log('[reachWorker] Worker actif');
+    logger.info({}, 'reach worker active');
   }
 
   stop() {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
-      console.log('[reachWorker] Worker arrêté');
+      logger.info({}, 'reach worker stopped');
     }
   }
 
@@ -44,11 +47,11 @@ class ReachWorker {
         try {
           await this.processCampaign(campaign);
         } catch (e) {
-          console.error(`[reachWorker] Erreur campagne #${campaign.id}:`, e.message);
+          logger.warn({ error: e.message, campaign_id: campaign.id }, 'reach worker campaign failed');
         }
       }
     } catch (e) {
-      console.error('[reachWorker] Erreur processCampaigns:', e.message);
+      logger.warn({ error: e.message }, 'reach worker process campaigns failed');
     }
   }
 
@@ -59,7 +62,7 @@ class ReachWorker {
     );
 
     if (steps.rows.length === 0) {
-      console.log(`[reachWorker] Campagne #${campaign.id} sans steps — complétion`);
+      logger.info({ campaign_id: campaign.id }, 'reach campaign completed without steps');
       await this.pool.query(
         "UPDATE reach_campaigns SET status = 'completed', updated_at = NOW() WHERE id = $1",
         [campaign.id]
@@ -87,7 +90,7 @@ class ReachWorker {
           "UPDATE reach_campaigns SET status = 'completed', updated_at = NOW() WHERE id = $1",
           [campaign.id]
         );
-        console.log(`[reachWorker] Campagne #${campaign.id} complétée`);
+        logger.info({ campaign_id: campaign.id }, 'reach campaign completed');
       }
       return;
     }
@@ -98,7 +101,7 @@ class ReachWorker {
       try {
         await this.sendNextStep(campaign, prospect, steps.rows, now);
       } catch (e) {
-        console.error(`[reachWorker] Erreur prospect #${prospect.prospect_id}:`, e.message);
+        logger.warn({ error: e.message, prospect_id: prospect.prospect_id }, 'reach worker prospect failed');
       }
     }
   }
@@ -252,10 +255,7 @@ class ReachWorker {
     const subject = this.personalize(step.subject_template || '', prospect);
     const body = this.personalize(step.body_template || '', prospect);
 
-    console.log(`[reachWorker][WOULD_SEND] Campagne #${campaign.id}, step ${step.step_order}, prospect ${prospect.email}`);
-    console.log(`[reachWorker][WOULD_SEND] Raison: ${reason}`);
-    console.log(`[reachWorker][WOULD_SEND] Sujet: ${subject}`);
-    console.log(`[reachWorker][WOULD_SEND] Corps: ${body.substring(0, 200)}...`);
+    logger.info({ campaign_id: campaign.id, step: step.step_order, prospect_id: prospectId, reason }, 'reach dry-run send blocked');
 
     // Insérer comme message dry_run pour traçabilité
     const result = await this.pool.query(
@@ -293,7 +293,7 @@ class ReachWorker {
       })]
     );
 
-    console.log(`[reachWorker][WOULD_SEND] ✅ Événement #${dbId} tracé pour ${prospect.email}`);
+    logger.info({ event_id: dbId, campaign_id: campaign.id, prospect_id: prospectId }, 'reach dry-run event recorded');
   }
 
   async sendNextStep(campaign, prospect, steps, now) {
@@ -318,7 +318,7 @@ class ReachWorker {
         await this.logWouldSend(campaign, prospect, step, barrier.reason, now);
       } else {
         // Autre blocage : on log et on passe au suivant
-        console.log(`[reachWorker] ⛔ Prospect #${prospectId} — ${barrier.reason}`);
+        logger.info({ prospect_id: prospectId, reason: barrier.reason }, 'reach send blocked');
 
         try {
           await this.pool.query(
@@ -339,6 +339,28 @@ class ReachWorker {
     // TOUTES LES VÉRIFICATIONS PASSÉES — prêt à envoyer
     const subject = this.personalize(step.subject_template || '', prospect);
     const body = this.personalize(step.body_template || '', prospect);
+
+    let delivery;
+    if (campaign.channel === 'email') {
+      delivery = await sendEmail({
+        to: prospect.email,
+        subject,
+        text: body,
+        html: body.replace(/\n/g, '<br>'),
+      });
+    } else if (campaign.channel === 'sms') {
+      delivery = await sendSMS({
+        to: prospect.phone,
+        message: body,
+      });
+    } else {
+      delivery = { success: false, error: 'channel_not_configured' };
+    }
+
+    if (!delivery?.success) {
+      await this.logWouldSend(campaign, prospect, step, delivery?.error || 'configuration_required', now);
+      return;
+    }
 
     // ENVOI RÉEL — seulement si toutes les barrières sont levées
     const realResult = await this.pool.query(
@@ -378,7 +400,7 @@ class ReachWorker {
       })]
     );
 
-    console.log(`[reachWorker] ✅ Message #${realDbId} envoyé → ${prospect.email} (campagne #${campaign.id}, step ${step.step_order})`);
+    logger.info({ message_id: realDbId, campaign_id: campaign.id, step: step.step_order, prospect_id: prospectId }, 'reach message sent');
   }
 
   personalize(text, prospect) {
@@ -402,7 +424,7 @@ let instance = null;
  */
 function startReachWorker(pool, intervalMs) {
   if (instance) {
-    console.log('[reachWorker] Worker déjà actif');
+    logger.info({}, 'reach worker already active');
     return instance;
   }
   instance = new ReachWorker(pool);

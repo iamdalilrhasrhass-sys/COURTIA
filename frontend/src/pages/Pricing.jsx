@@ -18,14 +18,13 @@ export default function Pricing() {
     setLoading(planId)
     try {
       const { data } = await api.post('/billing/create-checkout-session', { plan: planId })
-      if (data.mock) {
-        navigate(`/billing?status=success&plan=${planId}&mock=true`)
-      } else if (data.url) {
+      if (data.url) {
         window.location.href = data.url
+      } else {
+        navigate(`/billing?status=configuration-required&plan=${planId}`)
       }
-    } catch (err) {
-      console.error('Pricing checkout error:', err)
-      navigate(`/billing?status=cancel`)
+    } catch {
+      navigate(`/billing?status=configuration-required&plan=${planId}`)
     } finally {
       setLoading(null)
     }

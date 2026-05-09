@@ -29,7 +29,7 @@ const NICHES = [
 
 export default function ReachSearch() {
   const navigate = useNavigate();
-  const { searchProspects, prospects, loading } = useReachStore();
+  const { searchProspects, prospects, searchMeta, loading } = useReachStore();
   const [category, setCategory] = useState('garage');
   const [city, setCity] = useState('Sens');
   const [niche, setNiche] = useState('');
@@ -101,7 +101,9 @@ export default function ReachSearch() {
             <h2 className="text-lg font-semibold text-gray-800">
               {prospects.length} prospects trouvés
             </h2>
-            <span className="text-xs text-gray-400">Mode démo — données fictives</span>
+            <span className={`text-xs ${searchMeta?.configuration_required ? 'text-amber-600' : 'text-gray-400'}`}>
+              {searchMeta?.configuration_required ? 'Configuration Google Places requise' : 'Résultats COURTIA'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -146,6 +148,13 @@ export default function ReachSearch() {
               </motion.div>
             ))}
           </div>
+          {prospects.length === 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-14 text-center text-gray-400">
+              <Search size={38} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium text-gray-600">Aucun prospect trouvé</p>
+              <p className="text-xs mt-1">{searchMeta?.message || 'Essayez une autre cible ou une autre ville.'}</p>
+            </div>
+          )}
         </div>
       )}
     </div>

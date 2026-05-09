@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, CreditCard, Activity, FileText, LifeBuoy, Shield, BrainCircuit } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Activity, FileText, LifeBuoy, Shield, BrainCircuit, MessageCircle } from 'lucide-react'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { to: '/admin/costs', icon: BrainCircuit, label: 'Coûts ARK' },
   { to: '/admin/system', icon: Activity, label: 'Système' },
   { to: '/admin/logs', icon: FileText, label: 'Journaux' },
+  { to: '/admin/feedback', icon: MessageCircle, label: 'Feedback' },
   { to: '/admin/support', icon: LifeBuoy, label: 'Support' },
 ]
 

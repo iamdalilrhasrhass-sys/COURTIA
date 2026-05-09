@@ -7,6 +7,7 @@ const useReachStore = create((set, get) => ({
   prospects: [],
   campaigns: [],
   replies: [],
+  searchMeta: null,
   prospectDetail: null,
   analysis: null,
   loading: false,
@@ -30,7 +31,13 @@ const useReachStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { data } = await api.post('/reach/search', { category, city, radius, niche, limit: limit || 15 });
-      if (data.success) set({ prospects: data.data });
+      if (data.success) {
+        const payload = data.data || {};
+        const rows = Array.isArray(payload)
+          ? payload
+          : [...(payload.items || []), ...(payload.suggestions || [])];
+        set({ prospects: rows, searchMeta: Array.isArray(payload) ? null : payload });
+      }
       return data;
     } catch (_err) {
       set({ error: 'Erreur recherche' });

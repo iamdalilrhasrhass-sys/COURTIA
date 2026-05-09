@@ -10,26 +10,6 @@ import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import '../styles/design-system.css'
 
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
-
-// Mock data with varied statuses
-const MOCK_CONTRATS = [
-  { id: 1, compagnie: 'AXA', type_contrat: 'Auto Tiers', client_nom: 'Dupont', client_prenom: 'Jean', client_id: 1, statut: 'actif', prime_annuelle: 4800, date_echeance: '2026-08-15' },
-  { id: 2, compagnie: 'Allianz', type_contrat: 'MRH', client_nom: 'Martin', client_prenom: 'Sophie', client_id: 2, statut: 'actif', prime_annuelle: 3200, date_echeance: '2026-06-01' },
-  { id: 3, compagnie: 'Generali', type_contrat: 'Prévoyance', client_nom: 'Petit', client_prenom: 'Paul', client_id: 3, statut: 'actif', prime_annuelle: 12000, date_echeance: '2027-01-20' },
-  { id: 4, compagnie: 'MMA', type_contrat: 'Auto Tous Risques', client_nom: 'Lefebvre', client_prenom: 'Marie', client_id: 4, statut: 'renouvellement', prime_annuelle: 2100, date_echeance: '2026-05-10' },
-  { id: 5, compagnie: 'Groupama', type_contrat: 'Santé', client_nom: 'Bernard', client_prenom: 'Luc', client_id: 5, statut: 'renouvellement', prime_annuelle: 5600, date_echeance: '2026-05-25' },
-  { id: 6, compagnie: 'Matmut', type_contrat: 'Auto Tiers', client_nom: 'Dubois', client_prenom: 'Emma', client_id: 6, statut: 'resilie', prime_annuelle: 1500, date_echeance: '2025-12-01' },
-  { id: 7, compagnie: 'GMF', type_contrat: 'MRH', client_nom: 'Roux', client_prenom: 'Pierre', client_id: 7, statut: 'resilie', prime_annuelle: 2800, date_echeance: '2026-02-28' },
-  { id: 8, compagnie: 'Swiss Life', type_contrat: 'Prévoyance', client_nom: 'Fournier', client_prenom: 'Anne', client_id: 8, statut: 'brouillon', prime_annuelle: 7500, date_echeance: '2026-09-01' },
-  { id: 9, compagnie: 'Aésio', type_contrat: 'Santé', client_nom: 'Moreau', client_prenom: 'David', client_id: 9, statut: 'brouillon', prime_annuelle: 4200, date_echeance: '2026-10-15' },
-  { id: 10, compagnie: 'MAIF', type_contrat: 'Auto Tiers', client_nom: 'Garcia', client_prenom: 'Elena', client_id: 10, statut: 'actif', prime_annuelle: 3900, date_echeance: '2026-07-30' },
-  { id: 11, compagnie: 'Covéa', type_contrat: 'Multirisque Pro', client_nom: 'SARL Dupont', client_prenom: '', client_id: 11, statut: 'actif', prime_annuelle: 45000, date_echeance: '2026-12-31' },
-  { id: 12, compagnie: 'Generali', type_contrat: 'RC Pro', client_nom: 'BCE Courtage', client_prenom: '', client_id: 12, statut: 'renouvellement', prime_annuelle: 78000, date_echeance: '2026-05-05' },
-  { id: 13, compagnie: 'AXA', type_contrat: 'Flotte Auto', client_nom: 'Groupe Axial', client_prenom: '', client_id: 13, statut: 'brouillon', prime_annuelle: 56000, date_echeance: '2026-11-01' },
-  { id: 14, compagnie: 'Allianz', type_contrat: 'MRH', client_nom: 'Cabinet Lefebvre', client_prenom: '', client_id: 14, statut: 'actif', prime_annuelle: 21000, date_echeance: '2027-03-15' },
-]
-
 // Helpers
 const fmtEur = (v) => (!v && v !== 0) ? '—' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v))
 
@@ -123,7 +103,6 @@ function KanbanCard({ contrat, borderColor, onNavigate }) {
 export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
-  const [useMock, setUseMock] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
@@ -140,29 +119,13 @@ export default function Contrats() {
       const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : [])
       if (data.length > 0) {
         setContrats(data)
-        setUseMock(false)
         return
       }
-
-      if (USE_MOCKS) {
-        setContrats(MOCK_CONTRATS)
-        setUseMock(true)
-        setError('Mode simulation activé (VITE_USE_MOCKS=true).')
-      } else {
-        setContrats([])
-        setUseMock(false)
-      }
+      setContrats([])
     } catch {
       console.error('Impossible de charger les contrats.')
-      if (USE_MOCKS) {
-        setContrats(MOCK_CONTRATS)
-        setUseMock(true)
-        setError('Mode simulation activé (API indisponible).')
-      } else {
-        setContrats([])
-        setUseMock(false)
-        setError('Impossible de charger les contrats pour le moment.')
-      }
+      setContrats([])
+      setError('Impossible de charger les contrats pour le moment.')
     } finally { setLoading(false) }
   }, [])
 
@@ -270,13 +233,7 @@ export default function Contrats() {
           }
         />
 
-        {useMock && (
-          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
-            {error || 'Mode simulation activé (données fictives).'}
-          </div>
-        )}
-
-        {!useMock && error && (
+        {error && (
           <div className="mb-5 rounded-2xl border border-red-200/40 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
             {error}
           </div>

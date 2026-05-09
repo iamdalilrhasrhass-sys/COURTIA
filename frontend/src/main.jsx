@@ -12,7 +12,7 @@ const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 initSentry()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || 'placeholder'} onScriptLoadError={() => console.warn('Google OAuth: No client ID configured — login with Google disabled')}>
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || 'configuration-required'}>
     <React.StrictMode>
       <App />
     </React.StrictMode>

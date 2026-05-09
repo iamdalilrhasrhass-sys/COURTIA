@@ -327,6 +327,23 @@ export default function Dashboard() {
   }, [stats])
 
   const userName = user?.first_name || user?.firstName || ''
+  const roiMetrics = useMemo(() => {
+    const documentsGenerated = Number(stats?.documentsGenerated || stats?.documents_generes || 0)
+    const relancesPrepared = Math.max(metrics.urgentTasks, Array.isArray(stats?.alertes) ? stats.alertes.length : 0)
+    const opportunities = insights.filter((item) => String(item.text || '').toLowerCase().includes('mono-contrat')).length
+    const commissionsTracked = Number(stats?.commissionsMois || 0)
+    const measurable = documentsGenerated + relancesPrepared + opportunities + commissionsTracked > 0
+    const estimatedMinutes = documentsGenerated * 18 + relancesPrepared * 8 + opportunities * 12
+    return {
+      measurable,
+      timeSaved: estimatedMinutes > 0 ? `${Math.round(estimatedMinutes / 60 * 10) / 10} h` : 'À mesurer après usage',
+      documentsGenerated: documentsGenerated || 'À mesurer après usage',
+      relancesPrepared: relancesPrepared || 'À mesurer après usage',
+      opportunities: opportunities || 'À mesurer après usage',
+      commissionsTracked: commissionsTracked > 0 ? fmtEur(commissionsTracked) : 'À mesurer après usage',
+      arkActions: insights.length || 'À mesurer après usage',
+    }
+  }, [stats, metrics.urgentTasks, insights])
 
   if (loading) {
     return (
@@ -378,6 +395,32 @@ export default function Dashboard() {
               <KpiCard title="Tâches urgentes" value={metrics.urgentTasks} format="number" icon={Calendar} accent="#f59e0b" />
               <KpiCard title="Clients à risque" value={metrics.atRiskClients} format="number" icon={AlertTriangle} accent="#ef4444" />
             </div>
+
+            <AuroraCard padding={20} className="mb-6">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>Valeur générée ce mois-ci</h3>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    Estimation déterministe basée sur vos documents, relances, échéances et signaux ARK.
+                  </p>
+                </div>
+                <AuroraBadge>{roiMetrics.measurable ? 'Mesuré' : 'À mesurer après usage'}</AuroraBadge>
+              </div>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                {[
+                  ['Temps économisé estimé', roiMetrics.timeSaved],
+                  ['Documents générés', roiMetrics.documentsGenerated],
+                  ['Relances préparées', roiMetrics.relancesPrepared],
+                  ['Opportunités détectées', roiMetrics.opportunities],
+                  ['Commissions suivies', roiMetrics.commissionsTracked],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                    <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
+                    <p className="mt-2 text-sm font-black text-gray-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </AuroraCard>
 
             <AuroraCard padding={20} className="mb-6">
               <div className="flex items-center gap-2 mb-3">

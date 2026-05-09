@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const logger = require('../lib/logger');
 
 // POST /analyze — analyser une page web
 router.post('/analyze', async (req, res) => {
@@ -14,8 +15,7 @@ router.post('/analyze', async (req, res) => {
     const { url, title, forms, text } = req.body;
     const userId = req.user?.userId || req.user?.id;
 
-    // Log l'analyse
-    console.log(`[Extension] Analyse page: ${title || url}`);
+    logger.info({ user_id: userId, has_url: Boolean(url), has_title: Boolean(title) }, 'extension page analyze requested');
 
     // Analyse simple des champs
     const fields = forms?.fields || [];

@@ -105,7 +105,7 @@ export default function Sidebar() {
   const userRole = (user?.role || '').toLowerCase()
   const isAdmin = isAdminRole(userRole)
   const navItems = isAdmin
-    ? [...NAV_ITEMS, { separator: true, label: 'ADMIN' }, { path: '/admin/costs', label: 'Admin', icon: Shield }]
+    ? [...NAV_ITEMS, { separator: true, label: 'ADMIN' }, { path: '/admin', label: 'Admin', icon: Shield }]
     : NAV_ITEMS
 
   const isActive = (path) => {

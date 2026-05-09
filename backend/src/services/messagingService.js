@@ -4,7 +4,7 @@
  *
  * Route les messages selon le canal préféré du client :
  *   - email   → emailService
- *   - sms     → smsService (TextBelt gratuit)
+ *   - sms     → smsService
  *
  * Stocke l'historique dans la table `messages`.
  *
@@ -13,9 +13,10 @@
  */
 
 const pool = require('../db');
-const { sendEmail } = require('./emailService');
-const { sendSMS, sendBulkSMS } = require('./smsService');
+const { sendEmail, getEmailStatus } = require('./emailService');
+const { sendSMS, sendBulkSMS, getSmsStatus } = require('./smsService');
 const telegramService = require('./telegramService');
+const logger = require('../lib/logger');
 
 // ==================== CONFIGURATION ====================
 
@@ -40,10 +41,16 @@ const SENDERS = {
   telegram: async ({ chatId, message }) => {
     return telegramService.sendMessage(chatId, message);
   },
-  // WhatsApp : lien wa.me seulement (pas d'API gratuite)
   whatsapp: async ({ to, message }) => {
     const waLink = `https://wa.me/${to.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-    return { success: true, channel: 'whatsapp', link: waLink, note: 'Lien WhatsApp généré (ouverture manuelle requise)' };
+    return {
+      success: false,
+      skipped: true,
+      error: 'configuration_required',
+      channel: 'whatsapp',
+      link: waLink,
+      note: 'Lien WhatsApp disponible pour ouverture manuelle, aucun envoi API effectue.',
+    };
   },
 };
 
@@ -70,7 +77,7 @@ async function resolveChannel(clientId, canalExplicite) {
         if (pref && SENDERS[pref]) return pref;
       }
     } catch (err) {
-      console.warn(`[Messaging] Erreur résolution canal client ${clientId}:`, err.message);
+      logger.warn({ error: err.message, client_id: clientId }, 'messaging channel resolution failed');
     }
   }
 
@@ -95,7 +102,7 @@ async function resolveDestination(clientId, canal) {
     if (canal === 'telegram') return client.phone; // fallback, Telegram utilise chatId
     return client.email; // email par défaut
   } catch (err) {
-    console.warn(`[Messaging] Erreur résolution destination client ${clientId}:`, err.message);
+    logger.warn({ error: err.message, client_id: clientId }, 'messaging destination resolution failed');
     return null;
   }
 }
@@ -113,7 +120,7 @@ async function logMessage({ clientId, canal, direction, content, status, externa
     );
     return result.rows[0];
   } catch (err) {
-    console.error('[Messaging] Erreur log message:', err.message);
+    logger.warn({ error: err.message }, 'messaging log message failed');
     return null;
   }
 }
@@ -288,9 +295,21 @@ async function getHistory(clientId, options = {}) {
  * Récupère les canaux disponibles et leurs statuts
  */
 function getAvailableChannels() {
+  const emailStatus = getEmailStatus();
+  const smsStatus = getSmsStatus();
   return {
-    email: { available: true, description: 'Email via Gmail SMTP' },
-    sms: { available: true, description: 'SMS via TextBelt (1 gratuit/jour)' },
+    email: {
+      available: emailStatus.configured,
+      status: emailStatus.status,
+      provider: emailStatus.provider,
+      description: emailStatus.configured ? 'Email transactionnel configuré' : 'Configuration email transactionnel requise',
+    },
+    sms: {
+      available: smsStatus.configured,
+      status: smsStatus.status,
+      provider: smsStatus.provider,
+      description: smsStatus.configured ? 'SMS transactionnel configuré' : 'Configuration SMS requise',
+    },
     telegram: { available: true, description: 'Notifications Telegram' },
     whatsapp: { available: true, description: 'Lien WhatsApp (ouverture manuelle)' },
   };

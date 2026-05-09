@@ -54,6 +54,9 @@ const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
 const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
 const LegalCookies = lazy(() => import('./pages/LegalCookies'))
 const LegalConditionsUtilisation = lazy(() => import('./pages/LegalConditionsUtilisation'))
+const LegalCgv = lazy(() => import('./pages/LegalCgv'))
+const LegalDpa = lazy(() => import('./pages/LegalDpa'))
+const LegalSubprocessors = lazy(() => import('./pages/LegalSubprocessors'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const DevUi = lazy(() => import('./pages/DevUi'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
@@ -65,6 +68,7 @@ const AdminLogs = lazy(() => import('./pages/AdminLogs'))
 const AdminSupport = lazy(() => import('./pages/AdminSupport'))
 const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
 const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
+const AdminFeedback = lazy(() => import('./pages/AdminFeedback'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
@@ -76,6 +80,7 @@ import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
 import NotificationBell from './components/NotificationBell'
+import FeedbackButton from './components/FeedbackButton'
 import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
@@ -145,6 +150,7 @@ function AppLayout() {
       <div style={{ position: 'fixed', right: 20, bottom: 68, zIndex: 200 }}>
         <NotificationBell />
       </div>
+      <FeedbackButton />
 
       {/* Bouton de secours Cmd+K */}
       <button
@@ -205,6 +211,9 @@ export default function App() {
         <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
         <Route path="/legal/cookies" element={<LegalCookies />} />
         <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
+        <Route path="/legal/cgv" element={<LegalCgv />} />
+        <Route path="/legal/dpa" element={<LegalDpa />} />
+        <Route path="/legal/sous-traitants" element={<LegalSubprocessors />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/dev/ui" element={<DevUi />} />
@@ -268,6 +277,7 @@ export default function App() {
           <Route path="/admin/costs" element={<AdminCostsDashboard />} />
           <Route path="/admin/system" element={<AdminSystem />} />
           <Route path="/admin/logs" element={<AdminLogs />} />
+          <Route path="/admin/feedback" element={<AdminFeedback />} />
           <Route path="/admin/support" element={<AdminSupport />} />
         </Route>
 

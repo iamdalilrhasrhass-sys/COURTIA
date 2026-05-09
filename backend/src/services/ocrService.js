@@ -1,21 +1,52 @@
-const vision = require('@google-cloud/vision');
+function getOcrStatus() {
+  const configured = Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_CLOUD_PROJECT);
+  return {
+    configured,
+    provider: configured ? 'google_vision' : 'none',
+    status: configured ? 'ready' : 'configuration_required',
+    missing: configured ? [] : ['GOOGLE_APPLICATION_CREDENTIALS'],
+  };
+}
 
 const ocrService = {
+  getOcrStatus,
+
   async extractFromImage(imagePath) {
-    // Mock OCR - en prod utiliser Google Vision API
-    const mockData = {
-      client_name: 'Jean Dupont',
-      contract_type: 'Assurance Auto',
-      premium: 450,
-      start_date: '2026-03-01',
-      end_date: '2027-03-01',
-      coverage: 'Tiers+',
-      insurer: 'AXA'
+    const status = getOcrStatus();
+    if (!status.configured) {
+      return {
+        success: false,
+        error: 'configuration_required',
+        provider: status.provider,
+        missing: status.missing,
+        data: null,
+      };
+    }
+
+    let vision;
+    try {
+      vision = require('@google-cloud/vision');
+    } catch (_err) {
+      return {
+        success: false,
+        error: 'provider_unavailable',
+        provider: 'google_vision',
+        message: 'Google Vision SDK non installe.',
+        data: null,
+      };
+    }
+
+    const client = new vision.ImageAnnotatorClient();
+    const [result] = await client.textDetection(imagePath);
+    const text = result.fullTextAnnotation?.text || '';
+
+    return {
+      success: true,
+      provider: 'google_vision',
+      text,
+      data: { text },
     };
-    
-    console.log(`✅ OCR extracted from ${imagePath}:`, mockData);
-    return mockData;
-  }
+  },
 };
 
 module.exports = ocrService;

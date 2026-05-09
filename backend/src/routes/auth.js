@@ -122,7 +122,7 @@ router.post('/google', async (req, res) => {
 
     if (!user) {
       // Nouvel utilisateur — créer le compte automatiquement
-      // No password for Google users — use a placeholder
+      // Google users receive a random unusable local password hash.
       const crypto = require('crypto');
       const tempPassword = crypto.randomBytes(32).toString('hex');
 

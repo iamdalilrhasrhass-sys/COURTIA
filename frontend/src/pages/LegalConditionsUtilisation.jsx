@@ -30,6 +30,10 @@ export default function LegalConditionsUtilisation() {
             la conformité réglementaire complète (DDA, devoir de conseil, obligations contractuelles).
           </p>
           <p>
+            Cette page constitue une base opérationnelle destinée aux premiers clients et doit être validée juridiquement
+            avant contractualisation définitive.
+          </p>
+          <p>
             Les intégrations (Google Agenda, WhatsApp Business, Gmail/Outlook) nécessitent une configuration explicite
             par l&apos;utilisateur et peuvent être déconnectées à tout moment depuis l&apos;espace paramètres.
           </p>
