@@ -24,6 +24,10 @@ describe('demoRequestService', () => {
       last_name: ' Rhasrhass ',
       company_name: '  Courtia Cabinet ',
       email: 'DALIL@CABINET.FR',
+      current_tools: 'Excel + Agenda papier',
+      wants_google_calendar: 'true',
+      wants_whatsapp: 1,
+      wants_email_sync: false,
       consent: 'true',
     })
 
@@ -31,6 +35,10 @@ describe('demoRequestService', () => {
     expect(payload.last_name).toBe('Rhasrhass')
     expect(payload.company_name).toBe('Courtia Cabinet')
     expect(payload.email).toBe('dalil@cabinet.fr')
+    expect(payload.current_tools).toBe('Excel + Agenda papier')
+    expect(payload.wants_google_calendar).toBe(true)
+    expect(payload.wants_whatsapp).toBe(true)
+    expect(payload.wants_email_sync).toBe(false)
     expect(payload.source).toBe('landing')
     expect(payload.consent).toBe(true)
   })

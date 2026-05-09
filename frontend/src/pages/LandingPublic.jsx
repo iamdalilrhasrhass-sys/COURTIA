@@ -14,6 +14,8 @@ import {
   Radar,
   Cpu,
   BadgeEuro,
+  MessageSquare,
+  Mail,
 } from 'lucide-react'
 import MarketingShell from '../components/marketing/MarketingShell'
 import DemoRequestForm from '../components/marketing/DemoRequestForm'
@@ -27,6 +29,9 @@ const CORE_FEATURES = [
   { icon: CalendarClock, title: 'Contrats & échéances', desc: 'Pilotage des renouvellements 30/60/90 jours pour ne rater aucune relance.' },
   { icon: RefreshCcw, title: 'Tâches intelligentes', desc: 'Priorisation métier et tri par urgence, statut, client et source ARK.' },
   { icon: BookOpenCheck, title: 'Morning Brief', desc: 'Plan de journée actionnable pour savoir quoi faire en premier dès 8h.' },
+  { icon: CalendarClock, title: 'Google Agenda', desc: 'Synchronisation des rendez-vous pour préparer chaque échange client avec ARK.' },
+  { icon: MessageSquare, title: 'WhatsApp Business', desc: 'Threads clients centralisés dans COURTIA avec suivi des messages non traités.' },
+  { icon: Mail, title: 'Gmail / Outlook', desc: 'Architecture prête pour unifier les emails métier sans fuite de données sensibles.' },
   { icon: BarChart3, title: 'Rapports cabinet', desc: 'KPIs portefeuille, clients actifs, prospects, primes et retard opérationnel.' },
   { icon: Cpu, title: 'Admin Costs IA', desc: 'Suivi des coûts ARK, tendances d\'usage et export CSV côté super_admin.' },
   { icon: BrainCircuit, title: 'ARK métier natif', desc: 'Assistant courtage intégré aux pages, pas un chatbot déconnecté du contexte.' },
@@ -99,7 +104,7 @@ export default function LandingPublic() {
               </Link>
             </div>
             <div className="mk-chip-row">
-              {['Pensé pour les courtiers français', 'IA native ARK', 'Portefeuille vivant', 'Bêta privée'].map((chip) => (
+              {['Pensé pour les courtiers français', 'IA native ARK', 'Google Agenda', 'WhatsApp Business', 'Portefeuille vivant', 'Bêta privée'].map((chip) => (
                 <span key={chip} className="mk-chip">{chip}</span>
               ))}
             </div>
@@ -177,6 +182,29 @@ export default function LandingPublic() {
               <p>{feature.desc}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="mk-section" id="integrations">
+        <span className="mk-eyebrow"><CalendarClock size={12} /> Intégrations connectées</span>
+        <h2 className="mk-section-title">Agenda, WhatsApp et email dans un seul cockpit</h2>
+        <p className="mk-section-sub">
+          COURTIA prépare et centralise les intégrations clés du courtier: Google Agenda, WhatsApp Business, Gmail et Outlook.
+          Les connexions actives dépendent de votre configuration cabinet, sans faux statut \"connecté\".
+        </p>
+        <div className="mk-grid">
+          <article className="mk-card">
+            <h3>Google Agenda</h3>
+            <p>Rendez-vous du jour, préparation ARK et liens clients dans la fiche 360.</p>
+          </article>
+          <article className="mk-card">
+            <h3>WhatsApp Business</h3>
+            <p>Messages entrants/sortants, templates de relance et suivi des réponses.</p>
+          </article>
+          <article className="mk-card">
+            <h3>Gmail / Outlook</h3>
+            <p>Architecture OAuth prête pour centraliser les échanges email métier.</p>
+          </article>
         </div>
       </section>
 

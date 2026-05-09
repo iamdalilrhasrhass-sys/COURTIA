@@ -15,6 +15,10 @@ const links = [
 
 export default function AdminSidebar() {
   const location = useLocation()
+  const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
+  const visibleLinks = growthLeadsEnabled
+    ? links
+    : links.filter((link) => link.to !== '/admin/growth-leads')
 
   return (
     <aside style={{
@@ -38,7 +42,7 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '12px 10px' }}>
-        {links.map(link => {
+        {visibleLinks.map(link => {
           const active = location.pathname === link.to || (link.to !== '/admin' && location.pathname.startsWith(link.to))
           return (
             <NavLink

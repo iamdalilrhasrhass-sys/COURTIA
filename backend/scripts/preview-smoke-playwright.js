@@ -16,10 +16,32 @@ const ENABLE_GROWTH_LEADS_SMOKE = String(process.env.SMOKE_GROWTH_LEADS || '').t
 
 function parsePreviewInput(inputUrl) {
   const parsed = new URL(inputUrl)
-  const hasShareToken = parsed.searchParams.has('_vercel_share')
+  const hasBootstrapQuery =
+    parsed.searchParams.has('_vercel_share') ||
+    parsed.searchParams.has('x-vercel-protection-bypass') ||
+    parsed.searchParams.has('x-vercel-set-bypass-cookie')
+  const bypassSecret = (parsed.searchParams.get('x-vercel-protection-bypass') || process.env.VERCEL_PROTECTION_BYPASS || '').trim()
+  const bypassCookieMode = (
+    parsed.searchParams.get('x-vercel-set-bypass-cookie') ||
+    process.env.VERCEL_SET_BYPASS_COOKIE ||
+    (bypassSecret ? 'true' : '')
+  ).trim()
+  let bootstrapShareUrl = null
+  if (hasBootstrapQuery || bypassSecret) {
+    const bootstrap = new URL(inputUrl)
+    if (bypassSecret && !bootstrap.searchParams.has('x-vercel-protection-bypass')) {
+      bootstrap.searchParams.set('x-vercel-protection-bypass', bypassSecret)
+    }
+    if (bypassSecret && !bootstrap.searchParams.has('x-vercel-set-bypass-cookie')) {
+      bootstrap.searchParams.set('x-vercel-set-bypass-cookie', bypassCookieMode || 'true')
+    }
+    bootstrapShareUrl = bootstrap.toString()
+  }
   return {
     baseUrl: `${parsed.origin}${parsed.pathname.replace(/\/$/, '')}`,
-    bootstrapShareUrl: hasShareToken ? inputUrl : null,
+    bootstrapShareUrl,
+    bypassSecret,
+    bypassCookieMode,
   }
 }
 
@@ -423,15 +445,37 @@ async function main() {
   const startedAt = new Date().toISOString()
 
   try {
-    const desktop = await browser.newContext({ viewport: { width: 1440, height: 900 } })
+    const desktop = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    })
     const page = await desktop.newPage()
     attachObservers(page, 'desktop')
+    if (PREVIEW_CONFIG.bypassSecret) {
+      const origin = new URL(PREVIEW_BASE_URL).origin
+      await page.route('**/*', async (route) => {
+        const reqUrl = route.request().url()
+        if (!reqUrl.startsWith(origin)) {
+          await route.continue()
+          return
+        }
+        await route.continue({
+          headers: {
+            ...route.request().headers(),
+            'x-vercel-protection-bypass': PREVIEW_CONFIG.bypassSecret,
+            'x-vercel-set-bypass-cookie': PREVIEW_CONFIG.bypassCookieMode || 'true',
+          },
+        })
+      })
+    }
 
     if (PREVIEW_CONFIG.bootstrapShareUrl) {
       await page.goto(PREVIEW_CONFIG.bootstrapShareUrl, { waitUntil: 'domcontentloaded' })
       await waitForAppIdle(page)
-      recordInfo('vercel-share', 'Bootstrap share URL visited to set auth cookie')
+      recordInfo('vercel-share', 'Bootstrap URL visited with deployment protection bypass')
     }
+
+    await checkRoute(page, '/demo', ['Réserver ma démo'])
+    await checkRoute(page, '/tarifs', ['Tarifs COURTIA'])
 
     await login(page, 'e2e')
 
@@ -440,7 +484,7 @@ async function main() {
     await checkClientBubbleFlow(page)
     await checkRoute(page, '/rapports', ['Rapports'], { absentText: 'Impossible de charger les statistiques' })
     await checkRoute(page, '/morning-brief', ['Morning Brief'])
-    await checkRoute(page, '/parametres', ['Paramètres'])
+    await checkRoute(page, '/parametres', ['Paramètres', 'Intégrations'])
     await checkRoute(page, '/taches', ['Tâches'])
     await checkRoute(page, '/contrats', ['Contrats'])
     await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])

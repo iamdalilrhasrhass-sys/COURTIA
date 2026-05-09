@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles } from 'lucide-react'
+import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase } from 'lucide-react'
 import api from '../api'
 import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
@@ -12,9 +12,63 @@ const NAV_ITEMS = [
   { id: 'securite', label: 'Sécurité', icon: Lock },
   { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'integrations', label: 'Intégrations', icon: Link },
 ]
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
+
+const INTEGRATION_META = {
+  google_calendar: {
+    title: 'Google Agenda',
+    icon: CalendarDays,
+    connectPath: '/integrations/google-calendar/connect',
+    syncPath: '/integrations/google-calendar/sync',
+    disconnectPath: '/integrations/google-calendar/disconnect',
+    description: 'Synchronisez vos rendez-vous courtier et enrichissez Morning Brief.',
+  },
+  whatsapp_business: {
+    title: 'WhatsApp Business',
+    icon: MessageSquare,
+    connectPath: '/integrations/whatsapp/configure',
+    syncPath: null,
+    disconnectPath: '/integrations/whatsapp/configure',
+    description: 'Centralisez les échanges clients WhatsApp dans la fiche 360.',
+  },
+  gmail: {
+    title: 'Gmail',
+    icon: Mail,
+    connectPath: '/integrations/gmail/connect',
+    syncPath: '/integrations/gmail/sync',
+    disconnectPath: '/integrations/gmail/disconnect',
+    description: 'Préparez la centralisation des échanges email professionnels.',
+  },
+  outlook: {
+    title: 'Outlook',
+    icon: Briefcase,
+    connectPath: '/integrations/outlook/connect',
+    syncPath: '/integrations/outlook/sync',
+    disconnectPath: '/integrations/outlook/disconnect',
+    description: 'Connectez Microsoft 365 pour un suivi client multi-canal.',
+  },
+}
+const DEFAULT_INTEGRATIONS = Object.keys(INTEGRATION_META).map((provider) => ({
+  provider,
+  status: 'configuration_required',
+  metadata: {},
+  last_sync_at: null,
+}))
+
+function getIntegrationLabel(status = '') {
+  const normalized = String(status || '').toLowerCase()
+  if (normalized === 'connected') return { text: 'Connecté', classes: 'bg-emerald-100 text-emerald-700' }
+  if (normalized === 'configured') return { text: 'Configuré', classes: 'bg-blue-100 text-blue-700' }
+  if (normalized === 'authorization_received') return { text: 'Autorisation reçue', classes: 'bg-amber-100 text-amber-700' }
+  if (normalized === 'pending_oauth') return { text: 'Connexion en attente', classes: 'bg-amber-100 text-amber-700' }
+  if (normalized === 'configuration_required') return { text: 'Configuration requise', classes: 'bg-rose-100 text-rose-700' }
+  if (normalized === 'oauth_denied') return { text: 'Connexion refusée', classes: 'bg-rose-100 text-rose-700' }
+  return { text: 'Non connecté', classes: 'bg-gray-100 text-gray-700' }
+}
 
 const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
   <div className="flex items-center justify-between py-3">
@@ -44,8 +98,15 @@ export default function Parametres() {
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
   const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
+  const [integrations, setIntegrations] = useState(() => (INTEGRATIONS_API_ENABLED ? [] : DEFAULT_INTEGRATIONS))
+  const [integrationsLoading, setIntegrationsLoading] = useState(false)
+  const [integrationAction, setIntegrationAction] = useState('')
+  const [whatsappConfig, setWhatsappConfig] = useState({ phone_number_id: '', business_account_id: '' })
 
-  useEffect(() => { fetchProfile() }, [])
+  useEffect(() => {
+    fetchProfile()
+    if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
+  }, [])
 
   async function fetchProfile(options = {}) {
     const { force = false, silent = false } = options
@@ -80,6 +141,78 @@ export default function Parametres() {
   function handlePasswordSubmit(e) {
     e.preventDefault()
     toast('Fonctionnalité bientôt disponible.', { icon: '🚧' })
+  }
+
+  async function fetchIntegrations({ silent = false } = {}) {
+    if (!INTEGRATIONS_API_ENABLED) {
+      setIntegrations(DEFAULT_INTEGRATIONS)
+      return
+    }
+    try {
+      if (!silent) setIntegrationsLoading(true)
+      const res = await api.get('/integrations/status')
+      const list = Array.isArray(res?.data?.integrations) ? res.data.integrations : []
+      setIntegrations(list)
+      const wa = list.find((i) => i.provider === 'whatsapp_business')
+      setWhatsappConfig({
+        phone_number_id: wa?.metadata?.phone_number_id || '',
+        business_account_id: wa?.metadata?.business_account_id || '',
+      })
+    } catch {
+      if (!silent) toast.error('Impossible de charger les intégrations')
+    } finally {
+      if (!silent) setIntegrationsLoading(false)
+    }
+  }
+
+  async function handleIntegrationAction(provider, action) {
+    if (!INTEGRATIONS_API_ENABLED) {
+      toast('API intégrations en cours de déploiement. Configurez VITE_INTEGRATIONS_API_ENABLED=true quand le backend est prêt.', { icon: 'ℹ️' })
+      return
+    }
+    const meta = INTEGRATION_META[provider]
+    if (!meta) return
+
+    const actionKey = `${provider}:${action}`
+    setIntegrationAction(actionKey)
+    try {
+      if (provider === 'whatsapp_business' && action === 'connect') {
+        await api.post(meta.connectPath, {
+          phone_number_id: whatsappConfig.phone_number_id || undefined,
+          business_account_id: whatsappConfig.business_account_id || undefined,
+        })
+        toast.success('Configuration WhatsApp enregistrée')
+        await fetchIntegrations({ silent: true })
+        return
+      }
+
+      if (action === 'connect') {
+        const res = await api.post(meta.connectPath)
+        const authUrl = res?.data?.authUrl
+        if (authUrl) {
+          window.location.href = authUrl
+          return
+        }
+        toast.success('Connexion initialisée')
+      } else if (action === 'sync' && meta.syncPath) {
+        const res = await api.post(meta.syncPath)
+        if (typeof res?.data?.synced === 'number') {
+          toast.success(`Synchronisation terminée (${res.data.synced})`)
+        } else {
+          toast.success('Synchronisation terminée')
+        }
+      } else if (action === 'disconnect' && meta.disconnectPath) {
+        await api.post(meta.disconnectPath)
+        toast.success('Intégration déconnectée')
+      }
+
+      await fetchIntegrations({ silent: true })
+    } catch (err) {
+      const msg = err?.response?.data?.details || err?.response?.data?.error || err?.message || 'Action impossible'
+      toast.error(String(msg))
+    } finally {
+      setIntegrationAction('')
+    }
   }
 
   const handleNavClick = (sectionId) => {
@@ -234,6 +367,112 @@ export default function Parametres() {
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
+              </div>
+            </section>
+
+            <section id="integrations" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Intégrations</h2>
+              <p className="text-sm text-white/50 mb-5">Connectez agenda, WhatsApp et email pour alimenter ARK sans bricolage.</p>
+
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs text-white/60">Tokens stockés côté backend uniquement. Consentement requis pour chaque connexion.</p>
+                <button
+                  type="button"
+                  onClick={() => fetchIntegrations()}
+                  disabled={integrationsLoading || !INTEGRATIONS_API_ENABLED}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-60"
+                >
+                  <RefreshCw size={12} className={integrationsLoading ? 'animate-spin' : ''} />
+                  Actualiser
+                </button>
+              </div>
+              {!INTEGRATIONS_API_ENABLED && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Intégrations prêtes côté interface. Activez `VITE_INTEGRATIONS_API_ENABLED=true` quand l’API backend d’intégrations est déployée.
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4">
+                {Object.entries(INTEGRATION_META).map(([provider, meta]) => {
+                  const row = integrations.find((item) => item.provider === provider) || { status: 'disconnected', metadata: {} }
+                  const statusBadge = getIntegrationLabel(row.status)
+                  const busy = integrationAction.startsWith(`${provider}:`)
+                  const Icon = meta.icon
+                  const canSync = Boolean(meta.syncPath) && (row.status === 'connected' || row.status === 'authorization_received' || row.status === 'configured')
+
+                  return (
+                    <div key={provider} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 rounded-xl bg-blue-50 p-2 text-blue-700">
+                            <Icon size={16} />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-gray-900">{meta.title}</h3>
+                            <p className="text-xs text-gray-500">{meta.description}</p>
+                          </div>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${statusBadge.classes}`}>
+                          {statusBadge.text}
+                        </span>
+                      </div>
+
+                      {provider === 'whatsapp_business' && (
+                        <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <label className="text-xs font-medium text-gray-600">
+                            Phone Number ID
+                            <input
+                              value={whatsappConfig.phone_number_id}
+                              onChange={(e) => setWhatsappConfig((prev) => ({ ...prev, phone_number_id: e.target.value }))}
+                              placeholder="Meta phone number id"
+                              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-800"
+                            />
+                          </label>
+                          <label className="text-xs font-medium text-gray-600">
+                            Business Account ID
+                            <input
+                              value={whatsappConfig.business_account_id}
+                              onChange={(e) => setWhatsappConfig((prev) => ({ ...prev, business_account_id: e.target.value }))}
+                              placeholder="Meta business account id"
+                              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-800"
+                            />
+                          </label>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleIntegrationAction(provider, 'connect')}
+                          disabled={busy || !INTEGRATIONS_API_ENABLED}
+                          className="rounded-lg bg-[#2563eb] px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {provider === 'whatsapp_business' ? 'Configurer' : 'Connecter'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleIntegrationAction(provider, 'sync')}
+                          disabled={busy || !canSync || !INTEGRATIONS_API_ENABLED}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                        >
+                          Synchroniser
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleIntegrationAction(provider, 'disconnect')}
+                          disabled={busy || !INTEGRATIONS_API_ENABLED}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                        >
+                          Déconnecter
+                        </button>
+                      </div>
+
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        Dernière synchro: {row.last_sync_at ? new Date(row.last_sync_at).toLocaleString('fr-FR') : 'jamais'}
+                      </p>
+                    </div>
+                  )
+                })}
               </div>
             </section>
           </div>

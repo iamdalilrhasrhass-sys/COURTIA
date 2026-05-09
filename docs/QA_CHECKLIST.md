@@ -16,9 +16,11 @@
 7. rapports
 8. paramètres
 9. morning brief
-10. tentative `/admin` => refus propre
-11. tentative `/admin/costs` => refus propre
-12. logout
+10. vérifier bloc intégrations dans paramètres
+11. vérifier timeline interactions dans fiche client (onglet Activité)
+12. tentative `/admin` => refus propre
+13. tentative `/admin/costs` => refus propre
+14. logout
 
 ## Parcours smoke admin
 
@@ -35,6 +37,12 @@
 - `authMe429Responses = 0`
 - `authLogin429Responses = 0`
 - `networkErrors = 0`
+
+## Contrôles intégrations
+
+- `/parametres` affiche Google Agenda / WhatsApp / Gmail / Outlook
+- statuts: connecté / non connecté / configuration requise cohérents
+- aucun secret visible côté UI (tokens masqués côté API)
 
 ## Responsive rapide
 
