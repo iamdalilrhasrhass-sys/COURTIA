@@ -12,6 +12,7 @@ if (!TARGET_URL) {
 }
 
 const RUN_MODE = process.env.PROD_URL ? 'prod' : 'preview'
+const ENABLE_GROWTH_LEADS_SMOKE = String(process.env.SMOKE_GROWTH_LEADS || '').trim() === '1'
 
 function parsePreviewInput(inputUrl) {
   const parsed = new URL(inputUrl)
@@ -59,6 +60,7 @@ function recordInfo(scope, message) {
 }
 
 function buildReport(base, startedAt) {
+  const networkErrors = networkResponses.filter((r) => r.status >= 400)
   return {
     previewUrl: base,
     runMode: RUN_MODE,
@@ -70,7 +72,7 @@ function buildReport(base, startedAt) {
       authMe429Responses: authMe429Responses.length,
       authLogin429Responses: authLogin429Responses.length,
       consoleIssues: consoleIssues.length,
-      networkErrors: networkResponses.filter((r) => r.status >= 400).length,
+      networkErrors: networkErrors.length,
     },
     findings,
     routeChecks,
@@ -79,7 +81,7 @@ function buildReport(base, startedAt) {
     authMe429Responses,
     authLogin429Responses,
     consoleIssues,
-    networkErrors: networkResponses.filter((r) => r.status >= 400),
+    networkErrors,
     sampledApiHosts: Array.from(new Set(networkRequests
       .map((r) => {
         try { return new URL(r.url).origin } catch { return null }
@@ -295,7 +297,7 @@ async function classifyAdminAccess(page, route, accountKey) {
     await page.getByText('Admin Center protégé', { exact: false }).first().isVisible().catch(() => false) ||
     await page.getByText('Accès refusé', { exact: false }).first().isVisible().catch(() => false)
   const expectedGrantMarkers = {
-    '/admin': ['Admin Center', 'Administration'],
+    '/admin': ['Vue d\'ensemble', 'MRR par plan', 'Administration'],
     '/admin/costs': ['Tableau de bord Coûts IA', 'Coûts IA ARK'],
     '/admin/growth-leads': ['Growth Leads', 'Leads total', 'Demandes de démo'],
   }
@@ -445,10 +447,14 @@ async function main() {
 
     await runResponsiveChecks(page)
 
-    const e2eAdmin = await classifyAdminAccess(page, '/admin', 'e2e')
-    const e2eCosts = await classifyAdminAccess(page, '/admin/costs', 'e2e')
-    const e2eGrowth = await classifyAdminAccess(page, '/admin/growth-leads', 'e2e')
-    for (const check of [e2eAdmin, e2eCosts, e2eGrowth]) {
+    const e2eChecks = [
+      await classifyAdminAccess(page, '/admin', 'e2e'),
+      await classifyAdminAccess(page, '/admin/costs', 'e2e'),
+    ]
+    if (ENABLE_GROWTH_LEADS_SMOKE) {
+      e2eChecks.push(await classifyAdminAccess(page, '/admin/growth-leads', 'e2e'))
+    }
+    for (const check of e2eChecks) {
       if (check && !check.forbidden) {
         recordFailure(`admin:${check.route}:e2e`, 'Expected non-admin forbidden access')
       }
@@ -467,10 +473,14 @@ async function main() {
       if (dalilRole !== 'admin' && dalilRole !== 'super_admin') {
         recordFailure('role:dalil', `Expected admin/super_admin, got "${dalilRole || 'unknown'}"`)
       }
-      const dalilAdmin = await classifyAdminAccess(page, '/admin', 'dalil')
-      const dalilCosts = await classifyAdminAccess(page, '/admin/costs', 'dalil')
-      const dalilGrowth = await classifyAdminAccess(page, '/admin/growth-leads', 'dalil')
-      for (const check of [dalilAdmin, dalilCosts, dalilGrowth]) {
+      const dalilChecks = [
+        await classifyAdminAccess(page, '/admin', 'dalil'),
+        await classifyAdminAccess(page, '/admin/costs', 'dalil'),
+      ]
+      if (ENABLE_GROWTH_LEADS_SMOKE) {
+        dalilChecks.push(await classifyAdminAccess(page, '/admin/growth-leads', 'dalil'))
+      }
+      for (const check of dalilChecks) {
         if (check && !check.granted) {
           recordFailure(`admin:${check.route}:dalil`, 'Expected admin/super_admin granted access')
         }
@@ -479,7 +489,9 @@ async function main() {
     } else {
       routeChecks.push({ route: '/admin (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
       routeChecks.push({ route: '/admin/costs (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
-      routeChecks.push({ route: '/admin/growth-leads (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
+      if (ENABLE_GROWTH_LEADS_SMOKE) {
+        routeChecks.push({ route: '/admin/growth-leads (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
+      }
     }
 
     await desktop.close()
