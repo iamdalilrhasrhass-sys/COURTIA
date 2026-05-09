@@ -345,16 +345,24 @@ async function listClientInteractions(pool, userId, clientId, { limit = 50 } = {
   return result.rows
 }
 
-async function listWhatsappThreads(pool, userId, { limit = 50 } = {}) {
+async function listWhatsappThreads(pool, userId, { limit = 50, clientId = null } = {}) {
   await ensureIntegrationsSchema(pool)
+  const params = [userId]
+  let where = 'WHERE user_id = $1'
+  if (clientId) {
+    params.push(clientId)
+    where += ` AND client_id = $${params.length}`
+  }
+  params.push(Math.min(Math.max(Number(limit) || 50, 1), 500))
+
   const result = await pool.query(
     `SELECT id, user_id, client_id, phone, external_thread_id, last_message_preview,
             last_message_at, status, metadata, created_at, updated_at
      FROM whatsapp_threads
-     WHERE user_id = $1
+     ${where}
      ORDER BY last_message_at DESC NULLS LAST, updated_at DESC
-     LIMIT $2`,
-    [userId, Math.min(Math.max(Number(limit) || 50, 1), 500)]
+     LIMIT $${params.length}`,
+    params
   )
   return result.rows
 }
@@ -390,6 +398,90 @@ async function upsertWhatsappThread(pool, row) {
   )
 
   return result.rows[0]
+}
+
+async function findWhatsappConversationByPhone(pool, userId, phone) {
+  if (!phone) return null
+  const result = await pool.query(
+    `SELECT id, user_id, client_id, phone_e164, external_conversation_id,
+            last_message_preview, last_message_at, status, metadata, created_at, updated_at
+     FROM whatsapp_conversations
+     WHERE user_id = $1 AND phone_e164 = $2
+     LIMIT 1`,
+    [userId, phone]
+  ).catch((err) => {
+    if (err?.code === '42P01') return { rows: [] }
+    throw err
+  })
+  return result.rows[0] || null
+}
+
+async function upsertWhatsappConversation(pool, row) {
+  const result = await pool.query(
+    `INSERT INTO whatsapp_conversations (
+        user_id, client_id, phone_e164, external_conversation_id,
+        last_message_preview, last_message_at, status, metadata, created_at, updated_at
+     )
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,NOW(),NOW())
+     ON CONFLICT (user_id, phone_e164)
+     DO UPDATE SET
+       client_id = COALESCE(EXCLUDED.client_id, whatsapp_conversations.client_id),
+       external_conversation_id = COALESCE(EXCLUDED.external_conversation_id, whatsapp_conversations.external_conversation_id),
+       last_message_preview = EXCLUDED.last_message_preview,
+       last_message_at = EXCLUDED.last_message_at,
+       status = COALESCE(EXCLUDED.status, whatsapp_conversations.status),
+       metadata = COALESCE(whatsapp_conversations.metadata, '{}'::jsonb) || COALESCE(EXCLUDED.metadata, '{}'::jsonb),
+       updated_at = NOW()
+     RETURNING *`,
+    [
+      row.user_id,
+      row.client_id || null,
+      row.phone_e164,
+      row.external_conversation_id || row.phone_e164,
+      row.last_message_preview || null,
+      row.last_message_at || new Date(),
+      row.status || 'open',
+      JSON.stringify(row.metadata || {}),
+    ]
+  ).catch((err) => {
+    if (err?.code === '42P01') return { rows: [] }
+    throw err
+  })
+
+  return result.rows[0] || null
+}
+
+async function insertWhatsappMessage(pool, row) {
+  const result = await pool.query(
+    `INSERT INTO whatsapp_messages (
+        conversation_id, external_id, direction, body_preview, media_url,
+        media_type, status, template_id, sent_at, metadata, created_at
+     )
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,NOW())
+     ON CONFLICT (conversation_id, external_id)
+     DO UPDATE SET
+       status = COALESCE(EXCLUDED.status, whatsapp_messages.status),
+       body_preview = COALESCE(EXCLUDED.body_preview, whatsapp_messages.body_preview),
+       metadata = COALESCE(whatsapp_messages.metadata, '{}'::jsonb) || COALESCE(EXCLUDED.metadata, '{}'::jsonb)
+     RETURNING *`,
+    [
+      row.conversation_id,
+      row.external_id || `local-${Date.now()}`,
+      row.direction,
+      row.body_preview || null,
+      row.media_url || null,
+      row.media_type || null,
+      row.status || null,
+      row.template_id || null,
+      row.sent_at || new Date(),
+      JSON.stringify(row.metadata || {}),
+    ]
+  ).catch((err) => {
+    if (err?.code === '42P01') return { rows: [] }
+    throw err
+  })
+
+  return result.rows[0] || null
 }
 
 async function findClientByPhone(pool, userId, phone) {
@@ -441,6 +533,9 @@ module.exports = {
   listClientInteractions,
   listWhatsappThreads,
   upsertWhatsappThread,
+  findWhatsappConversationByPhone,
+  upsertWhatsappConversation,
+  insertWhatsappMessage,
   findClientByPhone,
   findClientByEmail,
 }

@@ -2,15 +2,17 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Upload, File, Download, RefreshCw, Clock, MessageSquare, Send } from 'lucide-react'
+import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Upload, File, Download, RefreshCw, Clock, MessageSquare, Send, Euro } from 'lucide-react'
 import api from '../api'
 import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
+import { formatCommissionCurrency, getCommissionStatusMeta, summarizeCommissions } from '../lib/commissions'
 import ContratsTab from '../components/ContratsTab'
 import TachesTab from '../components/TachesTab'
 import ARKChatTab from '../components/ARKChatTab'
 import ClientInteractionsTimeline from '../components/ClientInteractionsTimeline'
 
 const INTERACTIONS_TIMELINE_API_ENABLED = String(import.meta.env.VITE_CLIENT_INTERACTIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
@@ -216,6 +218,57 @@ function DocumentsTab({ client, setClient, clientId }) {
   const fileInputRef = useRef(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState(null)
+  const [generatedDocs, setGeneratedDocs] = useState([])
+  const [generatedLoading, setGeneratedLoading] = useState(false)
+  const [generatingType, setGeneratingType] = useState('')
+  const [signingDocId, setSigningDocId] = useState(null)
+
+  const loadGeneratedDocs = async () => {
+    try {
+      setGeneratedLoading(true)
+      const res = await api.get(`/documents?client_id=${clientId}`)
+      setGeneratedDocs(Array.isArray(res?.data?.data) ? res.data.data : [])
+    } catch {
+      setGeneratedDocs([])
+    } finally {
+      setGeneratedLoading(false)
+    }
+  }
+
+  // Chargement initial des documents DDA de la fiche; rafraîchissements explicites après génération.
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+  useEffect(() => {
+    loadGeneratedDocs()
+  }, [clientId])
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+
+  const generateDda = async (type) => {
+    setGeneratingType(type)
+    try {
+      await api.post('/documents/generate', { client_id: clientId, type })
+      toast.success('Document DDA généré')
+      await loadGeneratedDocs()
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Génération impossible'
+      toast.error(String(msg))
+    } finally {
+      setGeneratingType('')
+    }
+  }
+
+  const sendToSign = async (doc) => {
+    setSigningDocId(doc.id)
+    try {
+      await api.post(`/documents/${doc.id}/send-to-sign`, {})
+      toast.success('Document envoyé à signer via Yousign')
+      await loadGeneratedDocs()
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Yousign configuration requise'
+      toast.error(String(msg))
+    } finally {
+      setSigningDocId(null)
+    }
+  }
 
   const readFileAsBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -286,6 +339,65 @@ function DocumentsTab({ client, setClient, clientId }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="rounded-2xl border border-white/60 bg-white/75 p-4 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: '#5B4DF5' }}>Documents métier DDA</p>
+            <h4 className="mt-1 text-sm font-black text-gray-900">FIC, mandat, devoir de conseil et attestation</h4>
+            <p className="mt-1 text-xs text-gray-500">Générez une trace de conseil structurée. COURTIA aide à documenter, le courtier valide le contenu final.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ['fic', 'FIC'],
+              ['mandat_courtage', 'Mandat'],
+              ['devoir_conseil', 'Devoir conseil'],
+              ['attestation', 'Attestation'],
+            ].map(([type, label]) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => generateDda(type)}
+                disabled={!!generatingType}
+                className="rounded-xl px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ background: generatingType === type ? '#9CA3AF' : 'linear-gradient(135deg, #5B4DF5, #8b5cf6)' }}
+              >
+                {generatingType === type ? '...' : label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          {generatedLoading ? (
+            <p className="text-xs text-gray-400">Chargement des documents générés...</p>
+          ) : generatedDocs.length === 0 ? (
+            <p className="text-xs text-gray-400">Aucun document DDA généré pour ce client.</p>
+          ) : (
+            generatedDocs.map(doc => (
+              <div key={doc.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/80 p-3">
+                <FileText size={15} className="text-indigo-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-gray-800">{doc.title || doc.type}</p>
+                  <p className="text-[11px] text-gray-400">{doc.status || 'generated'} · {doc.template_version}</p>
+                </div>
+                <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" className="rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] font-bold text-white">
+                  PDF
+                </a>
+                {doc.status === 'generated' && (
+                  <button
+                    type="button"
+                    onClick={() => sendToSign(doc)}
+                    disabled={signingDocId === doc.id}
+                    className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-700 disabled:opacity-60"
+                  >
+                    {signingDocId === doc.id ? 'Envoi...' : 'Signer'}
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Upload zone */}
       <div
         className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer"
@@ -377,6 +489,106 @@ function DocumentsTab({ client, setClient, clientId }) {
         )}
       </div>
     </motion.div>
+  )
+}
+
+function CommissionsTab({ clientId, navigate }) {
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadCommissions() {
+      try {
+        setLoading(true)
+        setError('')
+        const res = await api.get(`/commissions?client_id=${clientId}`)
+        if (!cancelled) setRows(Array.isArray(res.data?.data) ? res.data.data : [])
+      } catch (err) {
+        if (!cancelled) {
+          const status = err?.response?.status
+          setError(status === 403 ? 'Suivi commissions désactivé pour ce cabinet.' : 'Commissions indisponibles.')
+          setRows([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadCommissions()
+    return () => { cancelled = true }
+  }, [clientId])
+
+  const summary = summarizeCommissions(rows)
+
+  if (loading) {
+    return (
+      <div className="space-y-2 py-2">
+        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-100/70" />)}
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="rounded-2xl border border-amber-200/40 bg-amber-50/80 p-4 text-sm font-semibold text-amber-800">{error}</div>
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <Euro size={34} className="mx-auto mb-3 text-gray-300" />
+        <p className="font-bold text-gray-900">Aucune commission liée</p>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-gray-500">Importez un relevé compagnie ou ajoutez une commission depuis la page Commissions.</p>
+        <button
+          onClick={() => navigate('/commissions')}
+          className="mt-4 rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white"
+        >
+          Ouvrir Commissions
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-2xl bg-white/70 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Attendu</p>
+          <p className="mt-1 text-sm font-black text-gray-900">{formatCommissionCurrency(summary.expected)}</p>
+        </div>
+        <div className="rounded-2xl bg-white/70 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Reçu</p>
+          <p className="mt-1 text-sm font-black text-emerald-700">{formatCommissionCurrency(summary.received)}</p>
+        </div>
+        <div className="rounded-2xl bg-white/70 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Reste</p>
+          <p className="mt-1 text-sm font-black text-amber-700">{formatCommissionCurrency(summary.pending)}</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {rows.map((row) => {
+          const status = getCommissionStatusMeta(row.status)
+          return (
+            <div key={row.id} className="rounded-2xl border border-gray-100 bg-white/80 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-gray-900">{row.insurer}</p>
+                  <p className="text-xs text-gray-500">{row.type_contrat || 'Contrat'} · {row.period_month}/{row.period_year}</p>
+                </div>
+                <span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: status.tone === 'success' ? 'rgba(16,185,129,0.14)' : 'rgba(59,130,246,0.12)', color: status.tone === 'success' ? '#047857' : '#1d4ed8' }}>
+                  {status.label}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-xs">
+                <span className="text-gray-500">Attendu {formatCommissionCurrency(row.expected_amount_eur)}</span>
+                <span className="font-bold text-gray-900">Reçu {formatCommissionCurrency(row.received_amount_eur)}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -637,11 +849,207 @@ function MessagesTab() {
   )
 }
 
+function WhatsAppBusinessTab({ client }) {
+  const [status, setStatus] = useState(null)
+  const [threads, setThreads] = useState([])
+  const [templates, setTemplates] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [templateId, setTemplateId] = useState('')
+  const [templateVariables, setTemplateVariables] = useState('')
+
+  const clientId = client?.id
+
+  // Chargement initial WhatsApp isolé: ne modifie pas les autres onglets métier.
+  useEffect(() => {
+    let cancelled = false
+    async function loadWhatsapp() {
+      if (!INTEGRATIONS_API_ENABLED || !clientId) {
+        setStatus({ status: 'configuration_required', configured: false, webhookReady: false })
+        setThreads([])
+        setTemplates([])
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        const [statusRes, threadsRes, templatesRes] = await Promise.all([
+          api.get('/integrations/whatsapp/status').catch((err) => ({ error: err })),
+          api.get(`/integrations/whatsapp/threads?client_id=${clientId}&limit=8`).catch(() => ({ data: { rows: [] } })),
+          api.get('/integrations/whatsapp/templates').catch(() => ({ data: { templates: [] } })),
+        ])
+
+        if (cancelled) return
+        if (statusRes.error) {
+          setStatus({ status: 'configuration_required', configured: false, webhookReady: false })
+          setError(statusRes.error?.response?.data?.message || statusRes.error?.response?.data?.error || 'WhatsApp indisponible.')
+        } else {
+          setStatus(statusRes.data || null)
+          setError('')
+        }
+        setThreads(Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [])
+        setTemplates(Array.isArray(templatesRes?.data?.templates) ? templatesRes.data.templates : [])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadWhatsapp()
+    return () => { cancelled = true }
+  }, [clientId])
+
+  const configured = Boolean(status?.configured && ['configured', 'connected'].includes(String(status?.status || '')))
+  const selectedTemplate = templates.find((tpl) => tpl.key === templateId)
+  const phone = client?.phone || client?.telephone || ''
+
+  const sendWhatsapp = async () => {
+    if (!configured) {
+      toast.error('WhatsApp Business doit être configuré avant envoi.')
+      return
+    }
+    if (!templateId && !message.trim()) {
+      toast.error('Ajoutez un message ou choisissez un template Meta.')
+      return
+    }
+
+    setSending(true)
+    try {
+      const variables = templateVariables
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+      await api.post('/integrations/whatsapp/send', {
+        clientId,
+        message: message.trim(),
+        templateId: templateId || undefined,
+        templateVariables: variables,
+      })
+      toast.success('Message WhatsApp envoyé')
+      setMessage('')
+      setTemplateVariables('')
+    } catch (err) {
+      const details = err?.response?.data?.details || err?.response?.data?.error || 'Envoi WhatsApp impossible'
+      toast.error(String(details))
+    } finally {
+      setSending(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-2 py-2">
+        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-white/60" />)}
+      </div>
+    )
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+      <div className="rounded-2xl border border-emerald-200/40 bg-gradient-to-br from-emerald-50/90 to-white/80 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-700">WhatsApp Business</p>
+            <h3 className="mt-1 text-lg font-black text-gray-950">Conversations client centralisées</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              {configured
+                ? 'Canal prêt. Les messages entrants alimentent la timeline et ARK peut préparer les relances.'
+                : 'Configuration Meta requise avant d’envoyer ou recevoir des messages depuis COURTIA.'}
+            </p>
+          </div>
+          <BubbleBadge color={configured ? '#10b981' : '#f59e0b'} size="sm">
+            {configured ? 'Configuré' : 'Configuration requise'}
+          </BubbleBadge>
+        </div>
+        {error && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            <AlertTriangle size={14} />
+            {error}
+          </div>
+        )}
+        <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-2">
+          <span>Téléphone client : <strong className="text-gray-900">{phone || 'non renseigné'}</strong></span>
+          <span>Webhook Meta : <strong className="text-gray-900">{status?.webhookReady ? 'prêt' : 'à configurer'}</strong></span>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-100 bg-white/80 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="text-sm font-black text-gray-900">Préparer une réponse</h4>
+          <span className="text-[11px] font-semibold text-gray-500">Templates requis hors fenêtre 24h</span>
+        </div>
+        <select
+          value={templateId}
+          onChange={(e) => setTemplateId(e.target.value)}
+          className="mb-3 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+        >
+          <option value="">Message libre si fenêtre 24h ouverte</option>
+          {templates.map((tpl) => (
+            <option key={tpl.key} value={tpl.key}>{tpl.label}</option>
+          ))}
+        </select>
+        {selectedTemplate && (
+          <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
+            <p className="font-bold">{selectedTemplate.description}</p>
+            <p className="mt-1">{selectedTemplate.body}</p>
+            <textarea
+              value={templateVariables}
+              onChange={(e) => setTemplateVariables(e.target.value)}
+              placeholder={(selectedTemplate.variableLabels || []).join('\n') || 'Variables, une par ligne'}
+              className="mt-2 min-h-[78px] w-full rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs text-gray-800"
+            />
+          </div>
+        )}
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={`Message ARK à envoyer à ${client?.prenom || client?.first_name || 'ce client'}...`}
+          className="min-h-[96px] w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+        />
+        <button
+          type="button"
+          onClick={sendWhatsapp}
+          disabled={sending || !configured || !phone}
+          className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Send size={13} />
+          {sending ? 'Envoi...' : 'Envoyer via WhatsApp'}
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-400">Derniers échanges</p>
+        {threads.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white/70 p-5 text-center text-sm text-gray-500">
+            Aucun thread WhatsApp lié pour ce client. Les messages entrants seront reliés automatiquement par téléphone.
+          </div>
+        ) : threads.map((thread) => (
+          <div key={thread.id} className="rounded-2xl border border-gray-100 bg-white/80 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-gray-900">{thread.phone}</p>
+                <p className="mt-1 text-xs text-gray-600">{thread.last_message_preview || 'Conversation WhatsApp'}</p>
+              </div>
+              <span className="text-[11px] font-semibold text-gray-400">
+                {thread.last_message_at ? new Date(thread.last_message_at).toLocaleString('fr-FR') : 'jamais'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── TABS CONFIG ──────────────────────────────────────────────────────────
 const TABS_CONFIG = [
   { id: 'activite', label: 'Activité', icon: Activity },
   { id: 'contrats', label: 'Contrats', icon: Shield },
   { id: 'taches', label: 'Tâches', icon: CheckSquare },
+  { id: 'commissions', label: 'Commissions', icon: Euro },
+  { id: 'whatsapp', label: 'WhatsApp', icon: Phone },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'historique', label: 'Historique', icon: Clock },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
@@ -763,6 +1171,10 @@ export default function ClientDetail() {
         return <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} />
       case 'taches':
         return <TachesTab taches={taches} clientId={client.id} navigate={navigate} />
+      case 'commissions':
+        return <CommissionsTab clientId={client.id} navigate={navigate} />
+      case 'whatsapp':
+        return <WhatsAppBusinessTab client={client} />
       case 'activite':
         return (
           <ClientInteractionsTimeline

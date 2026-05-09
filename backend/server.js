@@ -3,6 +3,10 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const app = express()
+const logger = require('./src/lib/logger')
+const { initSentry, captureException } = require('./src/sentry')
+
+initSentry()
 
 app.use(helmet({ contentSecurityPolicy: false }))
 
@@ -37,7 +41,13 @@ app.use(cors({ origin: corsOrigins, credentials: true }))
 app.use(express.json({
   // We need the raw body for Stripe webhook verification
   verify: (req, res, buf) => {
-    if (req.originalUrl.startsWith('/api/stripe/webhook') || req.originalUrl.startsWith('/api/billing/webhook')) {
+    if (
+      req.originalUrl.startsWith('/api/stripe/webhook') ||
+      req.originalUrl.startsWith('/api/billing/webhook') ||
+      req.originalUrl.startsWith('/api/billing/stripe-webhook') ||
+      req.originalUrl.startsWith('/api/documents/yousign/webhook') ||
+      req.originalUrl.startsWith('/api/integrations/whatsapp/webhook')
+    ) {
       req.rawBody = buf
     }
   }
@@ -56,8 +66,7 @@ if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
     res.on('finish', () => {
       const durationMs = Date.now() - startedAt
       const status = res.statusCode
-      // Log structuré sans secrets/tokens
-      console.log(JSON.stringify({
+      logger.info({
         type: 'http_request',
         method: req.method,
         path: req.originalUrl,
@@ -66,7 +75,7 @@ if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
         ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null,
         user_agent: String(req.headers['user-agent'] || '').slice(0, 200),
         at: new Date().toISOString(),
-      }))
+      })
     })
     next()
   })
@@ -219,6 +228,13 @@ const extensionRouter      = require('./src/routes/extension')
 const partnersRouter       = require('./src/routes/partners')
 const notificationsRouter  = require('./src/routes/notifications')
 const webhooksRouter       = require('./src/routes/webhooks')
+const featureFlagsRouter   = require('./src/routes/featureFlags')
+const cabinetMembersRouter = require('./src/routes/cabinetMembers')
+const inviteRouter         = require('./src/routes/invite')
+const { router: commissionsRouter } = require('./src/routes/commissions')
+const contractsAliasRouter = require('./src/routes/contractsAlias')
+const searchRouter         = require('./src/routes/search')
+const templatesRouter      = require('./src/routes/templates')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -228,18 +244,21 @@ app.use('/api/billing', billingRouter)
 app.use('/api/leads', leadsRouter)
 app.use('/api/integrations', integrationsRouter)
 app.use('/api/webhooks', webhooksRouter)
+app.use('/api/invite', inviteRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
 app.use('/api/clients',         verifyToken, clientsRouter)
 app.use('/api/clients',         verifyToken, clientTagsRouter)
 app.use('/api/contrats',        verifyToken, contratsRouter)
+app.use('/api/contracts',       verifyToken, contractsAliasRouter)
 app.use('/api/taches',          verifyToken, tachesRouter)
 app.use('/api/ark',             verifyToken, arkRateLimit, arkRouter)
 app.use('/api/admin',           verifyToken, adminCostsRouter)
 // Routes Super Admin (back-office propriétaire COURTIA) — verifyToken + superAdminGuard inclus dans le routeur
 app.use('/api/admin/super',    adminSuperAdminRouter)
 app.use('/api/onboarding',      verifyToken, onboardingRouter)
+app.use('/api/cabinet/members', verifyToken, cabinetMembersRouter)
 app.use('/api/stats',           verifyToken, statsRouter)
 app.use('/api/portfolio',       verifyToken, portfolioRouter)
 app.use('/api/financing',       verifyToken, financingRouter)
@@ -249,9 +268,13 @@ app.use('/api/kanban',          verifyToken, kanbanRouter)
 app.use('/api/email-templates', verifyToken, emailTemplatesRouter)
 app.use('/api/automations',     verifyToken, automationsRouter)
 app.use('/api/documents',       verifyToken, documentsRouter)
+app.use('/api/commissions',     verifyToken, commissionsRouter)
 app.use('/api/dda',             verifyToken, ddaQuizRouter)
 app.use('/api/analytics',       verifyToken, analyticsRouter)
 app.use('/api/plans',           verifyToken, plansRouter)
+app.use('/api/feature-flags',   verifyToken, featureFlagsRouter)
+app.use('/api/search',          verifyToken, searchRouter)
+app.use('/api/templates',       verifyToken, templatesRouter)
 app.use('/api/import',          verifyToken, importRouter)
 app.use('/api/imports',         verifyToken, importsRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
@@ -344,8 +367,8 @@ app.use((req, res) => {
 })
 
 app.use((err, req, res, next) => {
-  console.error('Erreur non gérée:', err.message)
-  console.error(err.stack)
+  logger.error({ err, path: req.originalUrl, method: req.method }, 'Erreur non gérée')
+  captureException(err, { path: req.originalUrl, method: req.method, userId: req.user?.id || req.user?.userId })
   res.status(err.status || 500).json({ error: 'Erreur serveur', details: err.message })
 })
 

@@ -3,6 +3,7 @@ import { apiGet, apiPost, apiDelete } from '../utils/api'
 
 const useDocumentInboxStore = create((set, get) => ({
   documents: [],
+  generatedDocuments: [],
   requests: [],
   submissions: [],
   checklists: {},
@@ -21,6 +22,61 @@ const useDocumentInboxStore = create((set, get) => ({
       set({ documents: res.data || [], loading: false })
     } catch (_err) {
       set({ error: "Impossible de charger les documents reçus.", loading: false })
+    }
+  },
+
+  fetchGeneratedDocuments: async (clientId, status, type) => {
+    try {
+      const params = new URLSearchParams()
+      if (clientId) params.set('client_id', clientId)
+      if (status) params.set('status', status)
+      if (type) params.set('type', type)
+      const suffix = params.toString() ? `?${params.toString()}` : ''
+      const res = await apiGet(`/api/documents${suffix}`)
+      set({ generatedDocuments: res.data || [] })
+      return res.data || []
+    } catch (_err) {
+      set({ error: 'Impossible de charger les documents métier DDA.' })
+      return []
+    }
+  },
+
+  generateDdaDocument: async ({ clientId, contractId, type }) => {
+    set({ loading: true, error: null })
+    try {
+      const res = await apiPost('/api/documents/generate', {
+        client_id: clientId,
+        contract_id: contractId || null,
+        type,
+      })
+      set({ loading: false })
+      await get().fetchGeneratedDocuments(clientId)
+      return res.data
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Impossible de générer ce document.'
+      set({ error: message, loading: false })
+      throw err
+    }
+  },
+
+  archiveGeneratedDocument: async (id, clientId) => {
+    try {
+      await apiPost(`/api/documents/${id}/archive`, {})
+      await get().fetchGeneratedDocuments(clientId)
+    } catch (_err) {
+      set({ error: 'Impossible d’archiver ce document.' })
+    }
+  },
+
+  sendGeneratedDocumentToSign: async (id, signer = {}, clientId) => {
+    try {
+      const res = await apiPost(`/api/documents/${id}/send-to-sign`, signer)
+      await get().fetchGeneratedDocuments(clientId)
+      return res.data
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Impossible d’envoyer ce document à signer.'
+      set({ error: message })
+      throw err
     }
   },
 

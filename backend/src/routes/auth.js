@@ -9,6 +9,7 @@ const { loginLimiter, meLimiter } = require('../middleware/rateLimit');
 const User = require('../models/User');
 const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
+const { getFeatureFlagsForUser } = require('../lib/featureFlags');
 
 const router = express.Router();
 
@@ -47,6 +48,7 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
     );
 
     const brokerProfile = profileResult.rows[0] || {};
+    const featureFlags = await getFeatureFlagsForUser({ userId }).catch(() => ({}));
 
     res.json({
       id: user.id,
@@ -62,7 +64,8 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       telephone: brokerProfile.telephone || '',
       adresse: brokerProfile.adresse || '',
       ville: brokerProfile.ville || '',
-      code_postal: brokerProfile.code_postal || ''
+      code_postal: brokerProfile.code_postal || '',
+      feature_flags: featureFlags
     });
   } catch (err) {
     console.error('GET /api/auth/me error:', err.message);
