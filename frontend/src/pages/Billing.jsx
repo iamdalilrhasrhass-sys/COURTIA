@@ -87,10 +87,10 @@ export default function Billing() {
           <Info label="Customer Stripe" value={status?.stripe_customer_id_masked || '—'} />
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-            <button type="button" onClick={() => navigate('/onboarding?plan=pro')} style={btnPrimary}>
+            <button type="button" onClick={() => navigate('/onboarding/billing?plan=pro')} style={btnPrimary}>
               <CreditCard size={14} /> Passer à Pro
             </button>
-            <button type="button" onClick={() => navigate('/onboarding')} style={btnPrimary}>
+            <button type="button" onClick={() => navigate('/onboarding/billing')} style={btnPrimary}>
               <CreditCard size={14} /> Activer / modifier mon essai
             </button>
             <button type="button" onClick={manageSubscription} style={btnGhost}>
@@ -117,11 +117,11 @@ export default function Billing() {
                 </div>
               </div>
               {p.code !== 'premium' ? (
-                <button type="button" onClick={() => navigate(`/onboarding?plan=${p.code}`)} style={btnMini}>
+                <button type="button" onClick={() => navigate(`/onboarding/billing?plan=${p.code}`)} style={btnMini}>
                   Choisir
                 </button>
               ) : (
-                <button type="button" onClick={() => navigate('/onboarding?plan=premium')} style={btnMini}>
+                <button type="button" onClick={() => navigate('/onboarding/billing?plan=premium')} style={btnMini}>
                   Demander
                 </button>
               )}
