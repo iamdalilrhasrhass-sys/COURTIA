@@ -657,7 +657,7 @@ export default function LandingPublic() {
               </button>
             ))}
             <Link to="/login" className="text-sm font-bold text-white/60 transition hover:text-white">Se connecter</Link>
-            <AuroraButton href="/demo" size="sm">Demander une démo</AuroraButton>
+            <AuroraButton href="/register" size="sm">Essai Pro 7 jours</AuroraButton>
           </div>
           <button type="button" onClick={() => setMenuOpen((value) => !value)} className="rounded-xl border border-white/[0.08] bg-white/[0.045] p-2 text-white/74 backdrop-blur-xl md:hidden" aria-label="Ouvrir le menu">
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -677,7 +677,7 @@ export default function LandingPublic() {
               <Link to="/login" onClick={() => setMenuOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-semibold text-white/70 hover:bg-white/[0.06]">
                 Se connecter
               </Link>
-              <AuroraButton href="/demo" className="mt-3 w-full">Demander une démo</AuroraButton>
+              <AuroraButton href="/register" className="mt-3 w-full">Essai Pro 7 jours</AuroraButton>
             </div>
           </motion.div>
         )}
