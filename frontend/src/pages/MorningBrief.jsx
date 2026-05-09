@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sun, Zap, TrendingUp, RefreshCw, ChevronRight,
-  AlertCircle, CheckCircle2, Clock, BarChart2, UserPlus
+  AlertCircle, CheckCircle2, Clock, BarChart2, UserPlus, CalendarDays, MessageSquare
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
@@ -26,6 +26,18 @@ function getGreeting() {
 function formatDate() {
   return new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  })
+}
+
+function formatShortDateTime(value) {
+  if (!value) return 'Date inconnue'
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return 'Date inconnue'
+  return d.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -398,6 +410,8 @@ export default function MorningBrief() {
   const [scoreError, setScoreError] = useState(null)
   const [regenerating, setRegenerating] = useState(false)
   const [currentPlan, setCurrentPlan] = useState(null)
+  const [integrationEvents, setIntegrationEvents] = useState([])
+  const [whatsappThreads, setWhatsappThreads] = useState([])
 
   useEffect(() => {
     let cancelled = false
@@ -431,15 +445,19 @@ export default function MorningBrief() {
   const fetchPriorities = useCallback(async () => {
     setBriefLoading(true)
     try {
-      const [clientsRes, contratsRes, tachesRes] = await Promise.all([
+      const [clientsRes, contratsRes, tachesRes, eventsRes, threadsRes] = await Promise.all([
         api.get('/clients?limit=1000').catch(() => ({ data: [] })),
         api.get('/contrats').catch(() => ({ data: [] })),
         api.get('/taches').catch(() => ({ data: [] })),
+        api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } })),
+        api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } })),
       ])
       const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
       const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
       const taches   = Array.isArray(tachesRes.data) ? tachesRes.data : (tachesRes.data?.data || [])
       setPriorities(computeDailyPriorities(clients, contrats, taches))
+      setIntegrationEvents(Array.isArray(eventsRes?.data?.rows) ? eventsRes.data.rows : [])
+      setWhatsappThreads(Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [])
     } catch {
       setPriorities({ critiques: [], importantes: [], suggerees: [] })
     } finally {
@@ -698,6 +716,49 @@ export default function MorningBrief() {
                   )}
                 </div>
               )}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+              style={{
+                background: 'white',
+                border: '0.5px solid #e8e6e0',
+                borderRadius: 16,
+                padding: 18
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <CalendarDays size={15} color="#0a0a0a" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a' }}>Signaux intégrations</span>
+              </div>
+              <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 10px' }}>
+                Agenda et WhatsApp enrichissent les priorités ARK dès qu’ils sont connectés.
+              </p>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+                    Rendez-vous synchronisés: {integrationEvents.length}
+                  </p>
+                  {integrationEvents.slice(0, 1).map((event) => (
+                    <p key={event.id || event.external_event_id} style={{ margin: '4px 0 0', fontSize: 11, color: '#334155' }}>
+                      {event.title || 'Événement'} · {formatShortDateTime(event.start_time)}
+                    </p>
+                  ))}
+                </div>
+                <div style={{ background: '#f0fdf4', border: '0.5px solid #bbf7d0', borderRadius: 10, padding: '10px 12px' }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#14532d' }}>
+                    Threads WhatsApp: {whatsappThreads.length}
+                  </p>
+                  {whatsappThreads.slice(0, 1).map((thread) => (
+                    <p key={thread.id || thread.phone} style={{ margin: '4px 0 0', fontSize: 11, color: '#166534' }}>
+                      <MessageSquare size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: '-1px' }} />
+                      {thread.last_message_preview || 'Dernier message client'}
+                    </p>
+                  ))}
+                </div>
+              </div>
             </motion.div>
 
             {/* Raccourcis */}

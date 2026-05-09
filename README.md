@@ -47,9 +47,21 @@ npm run dev
 
 - `DATABASE_URL`
 - `JWT_SECRET`
+- `ENCRYPTION_KEY`
 - `AUTH_LOGIN_RATE_LIMIT_MAX`
 - `AUTH_ME_RATE_LIMIT_MAX`
 - `TRUST_PROXY`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+- `OUTLOOK_CLIENT_ID`
+- `OUTLOOK_CLIENT_SECRET`
+- `OUTLOOK_REDIRECT_URI`
+- `OUTLOOK_TENANT_ID`
+- `WHATSAPP_VERIFY_TOKEN`
+- `WHATSAPP_ACCESS_TOKEN`
+- `WHATSAPP_PHONE_NUMBER_ID`
+- `WHATSAPP_BUSINESS_ACCOUNT_ID`
 
 ### Frontend
 
@@ -119,6 +131,19 @@ Routes marketing:
 
 Formulaire démo connecté à `POST /api/leads/demo-request`.
 
+## Intégrations cockpit
+
+Le module `/parametres` inclut un centre d’intégrations:
+
+- Google Agenda (OAuth + sync événements)
+- WhatsApp Business Cloud API (status/webhook/templates/send)
+- Gmail (architecture OAuth V1)
+- Outlook (architecture OAuth V1)
+
+Les interactions multi-canaux sont exposées dans la fiche client via:
+
+- `GET /api/clients/:id/interactions`
+
 ## Growth leads
 
 Pipeline dans `growth/leads`:
@@ -149,6 +174,10 @@ Workflow recommandé:
 - `docs/QA_CHECKLIST.md`
 - `docs/PRODUCTION_RUNBOOK.md`
 - `docs/ARK_PRODUCT_ROADMAP.md`
+- `docs/INTEGRATIONS_GOOGLE_CALENDAR.md`
+- `docs/INTEGRATIONS_WHATSAPP.md`
+- `docs/INTEGRATIONS_EMAIL.md`
+- `docs/RGPD_INTEGRATIONS.md`
 - `docs/GROWTH_PLAYBOOK.md`
 - `docs/LANDING_PAGE_STRATEGY.md`
 - `growth/leads/RGPD_PROSPECTION.md`

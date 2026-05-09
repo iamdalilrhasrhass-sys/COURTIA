@@ -433,6 +433,9 @@ async function main() {
       recordInfo('vercel-share', 'Bootstrap share URL visited to set auth cookie')
     }
 
+    await checkRoute(page, '/demo', ['Réserver ma démo'])
+    await checkRoute(page, '/tarifs', ['Tarifs COURTIA'])
+
     await login(page, 'e2e')
 
     await checkRoute(page, '/dashboard', ['Tableau de bord'])
@@ -440,7 +443,7 @@ async function main() {
     await checkClientBubbleFlow(page)
     await checkRoute(page, '/rapports', ['Rapports'], { absentText: 'Impossible de charger les statistiques' })
     await checkRoute(page, '/morning-brief', ['Morning Brief'])
-    await checkRoute(page, '/parametres', ['Paramètres'])
+    await checkRoute(page, '/parametres', ['Paramètres', 'Intégrations'])
     await checkRoute(page, '/taches', ['Tâches'])
     await checkRoute(page, '/contrats', ['Contrats'])
     await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])
