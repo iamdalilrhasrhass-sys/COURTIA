@@ -112,6 +112,7 @@ export default function Billing() {
           subtitle="Choisissez votre plan, ouvrez Checkout Stripe et gérez l’abonnement depuis le portail sécurisé. Aucun numéro de carte n’est saisi dans COURTIA."
         />
         <p className="sr-only">Statut abonnement</p>
+        <p className="sr-only">Plans disponibles</p>
 
         {error && (
           <GlassCard className="border-rose-300/30 bg-rose-500/10 p-4 text-sm text-rose-100">
