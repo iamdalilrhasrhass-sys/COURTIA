@@ -72,6 +72,16 @@
 - `/clients/:id` onglet `Commissions` affiche les commissions liées ou un état vide
 - le feature flag `v1_commissions` désactivé renvoie un état “fonctionnalité désactivée” propre
 
+## Contrôles WhatsApp Business
+
+- `Paramètres > Intégrations` affiche WhatsApp Business en `Configuration requise` si les secrets Meta sont absents
+- `GET /api/integrations/whatsapp/status` ne renvoie jamais de token en clair
+- webhook Meta GET vérifie le challenge avec `WHATSAPP_VERIFY_TOKEN`
+- webhook Meta POST refuse une signature `X-Hub-Signature-256` invalide
+- fiche client: onglet `WhatsApp` affiche l'état de configuration et les threads liés
+- envoi libre sans conversation récente est refusé avec `whatsapp_template_required`
+- envoi via template utilise un template Meta approuvé
+
 ## Responsive rapide
 
 - desktop

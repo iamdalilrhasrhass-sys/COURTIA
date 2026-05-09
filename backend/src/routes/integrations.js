@@ -4,6 +4,7 @@ const axios = require('axios')
 const { OAuth2Client } = require('google-auth-library')
 
 const { verifyToken } = require('../middleware/auth')
+const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const { getJwtSecret } = require('../utils/jwtSecret')
 const logger = require('../lib/logger')
 const {
@@ -21,6 +22,9 @@ const {
   listClientInteractions,
   listWhatsappThreads,
   upsertWhatsappThread,
+  findWhatsappConversationByPhone,
+  upsertWhatsappConversation,
+  insertWhatsappMessage,
   findClientByPhone,
   findClientByEmail,
 } = require('../services/integrationsStore')
@@ -34,38 +38,18 @@ const {
   encodeGmailRawMessage,
   extractGmailMessageSummary,
 } = require('../services/googleIntegrationService')
+const {
+  buildWhatsappPayload,
+  getWhatsappTemplates,
+  isWhatsappWindowOpen,
+  parseWhatsappWebhookMessages,
+  sanitizeWhatsappPhone,
+  verifyMetaSignature,
+} = require('../services/whatsappBusinessService')
 
 const router = express.Router()
 
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000
-const WHATSAPP_TEMPLATES = [
-  {
-    key: 'relance_echeance',
-    label: 'Relance échéance',
-    body: 'Bonjour {{prenom}}, votre échéance de contrat approche. Souhaitez-vous que nous préparions le renouvellement ensemble ?'
-  },
-  {
-    key: 'demande_pieces',
-    label: 'Demande de pièces',
-    body: 'Bonjour {{prenom}}, pour finaliser votre dossier, pouvez-vous nous envoyer les pièces manquantes aujourd\'hui ?'
-  },
-  {
-    key: 'confirmation_rdv',
-    label: 'Confirmation rendez-vous',
-    body: 'Bonjour {{prenom}}, je vous confirme notre rendez-vous du {{date}} à {{heure}}. À très vite.'
-  },
-  {
-    key: 'relance_prospect',
-    label: 'Relance prospect',
-    body: 'Bonjour {{prenom}}, je reviens vers vous concernant votre projet d\'assurance. Un créneau de 10 minutes cette semaine ?'
-  },
-  {
-    key: 'suivi_apres_appel',
-    label: 'Suivi après appel',
-    body: 'Merci pour notre échange {{prenom}}. Je vous envoie la proposition et reste disponible pour vos questions.'
-  },
-]
-
 function getStateSecret() {
   return process.env.ENCRYPTION_KEY || getJwtSecret()
 }
@@ -108,7 +92,7 @@ function maskSecretValue(value) {
 }
 
 function sanitizePhone(phone) {
-  return String(phone || '').replace(/[^0-9+]/g, '')
+  return sanitizeWhatsappPhone(phone)
 }
 
 function withUserId(req, res) {
@@ -367,76 +351,102 @@ router.post('/whatsapp/webhook', async (req, res) => {
   const pool = req.app.locals.pool
   await ensureIntegrationsSchema(pool)
 
-  const payload = req.body || {}
-  const entries = Array.isArray(payload.entry) ? payload.entry : []
+  const signature = verifyMetaSignature({
+    rawBody: req.rawBody,
+    signatureHeader: req.get('x-hub-signature-256'),
+    appSecret: process.env.WHATSAPP_APP_SECRET,
+  })
+
+  if (!signature.configured) {
+    return res.status(503).json({ error: 'whatsapp_app_secret_missing' })
+  }
+  if (!signature.valid) {
+    return res.status(403).json({ error: 'whatsapp_signature_invalid' })
+  }
 
   try {
-    for (const entry of entries) {
-      const changes = Array.isArray(entry.changes) ? entry.changes : []
-      for (const change of changes) {
-        const value = change.value || {}
-        const metadata = value.metadata || {}
-        const phoneNumberId = metadata.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID || null
+    const messages = parseWhatsappWebhookMessages(req.body || {})
 
-        const messages = Array.isArray(value.messages) ? value.messages : []
-        for (const message of messages) {
-          const fromPhone = sanitizePhone(message.from)
-          if (!fromPhone) continue
-
-          const messageText = message?.text?.body || message?.button?.text || message?.interactive?.button_reply?.title || '[message whatsapp]'
-          const occurredAt = message?.timestamp ? new Date(Number(message.timestamp) * 1000) : new Date()
-
-          let userId = null
-          if (phoneNumberId) {
-            const owner = await pool.query(
-              `SELECT user_id
-               FROM integrations
-               WHERE provider = 'whatsapp_business'
-                 AND metadata->>'phone_number_id' = $1
-               ORDER BY updated_at DESC
-               LIMIT 1`,
-              [String(phoneNumberId)]
-            )
-            userId = owner.rows[0]?.user_id ? Number(owner.rows[0].user_id) : null
-          }
-
-          if (!userId) {
-            continue
-          }
-
-          const client = await findClientByPhone(pool, userId, fromPhone)
-
-          await upsertWhatsappThread(pool, {
-            user_id: userId,
-            client_id: client?.id || null,
-            phone: fromPhone,
-            external_thread_id: fromPhone,
-            last_message_preview: String(messageText).slice(0, 220),
-            last_message_at: occurredAt,
-            status: 'open',
-            metadata: {
-              webhook: true,
-              message_id: message.id || null,
-              contact_name: value.contacts?.[0]?.profile?.name || null,
-            },
-          })
-
-          await recordClientInteraction(pool, {
-            user_id: userId,
-            client_id: client?.id || null,
-            provider: 'whatsapp_business',
-            direction: 'in',
-            external_id: message.id || null,
-            subject: 'Message WhatsApp entrant',
-            body_preview: String(messageText).slice(0, 320),
-            occurred_at: occurredAt,
-            metadata: {
-              phone_number_id: phoneNumberId,
-              from: fromPhone,
-            },
-          })
-        }
+    for (const message of messages) {
+      let userId = null
+      if (message.phoneNumberId) {
+        const owner = await pool.query(
+          `SELECT user_id
+           FROM integrations
+           WHERE provider = 'whatsapp_business'
+             AND metadata->>'phone_number_id' = $1
+           ORDER BY updated_at DESC
+           LIMIT 1`,
+          [String(message.phoneNumberId)]
+        )
+        userId = owner.rows[0]?.user_id ? Number(owner.rows[0].user_id) : null
       }
+
+      if (!userId) continue
+
+      const client = await findClientByPhone(pool, userId, message.phone)
+      const preview = String(message.text || '').slice(0, 320)
+
+      await upsertWhatsappThread(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        phone: message.phone,
+        external_thread_id: message.phone,
+        last_message_preview: preview.slice(0, 220),
+        last_message_at: message.occurredAt,
+        status: 'open',
+        metadata: {
+          webhook: true,
+          message_id: message.messageId,
+          contact_name: message.contactName,
+          message_type: message.type,
+        },
+      })
+
+      const conversation = await upsertWhatsappConversation(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        phone_e164: message.phone,
+        external_conversation_id: message.phone,
+        last_message_preview: preview.slice(0, 220),
+        last_message_at: message.occurredAt,
+        status: 'open',
+        metadata: {
+          phone_number_id: message.phoneNumberId,
+          contact_name: message.contactName,
+        },
+      })
+
+      if (conversation?.id) {
+        await insertWhatsappMessage(pool, {
+          conversation_id: conversation.id,
+          external_id: message.messageId || `in-${message.phone}-${Date.now()}`,
+          direction: 'inbound',
+          body_preview: preview,
+          media_type: message.type === 'text' ? null : message.type,
+          status: 'received',
+          sent_at: message.occurredAt,
+          metadata: {
+            phone_number_id: message.phoneNumberId,
+            raw_type: message.type,
+          },
+        })
+      }
+
+      await recordClientInteraction(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        provider: 'whatsapp_business',
+        direction: 'in',
+        external_id: message.messageId,
+        subject: 'Message WhatsApp entrant',
+        body_preview: preview,
+        occurred_at: message.occurredAt,
+        metadata: {
+          phone_number_id: message.phoneNumberId,
+          from: message.phone,
+        }
+      })
     }
 
     return res.status(200).json({ received: true })
@@ -973,7 +983,7 @@ async function listGoogleCalendarEventsHandler(req, res) {
 router.get('/google-calendar/events', listGoogleCalendarEventsHandler)
 router.get('/calendar/events', listGoogleCalendarEventsHandler)
 
-router.get('/whatsapp/status', async (req, res) => {
+router.get('/whatsapp/status', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
@@ -1002,7 +1012,7 @@ router.get('/whatsapp/status', async (req, res) => {
   }
 })
 
-router.post('/whatsapp/configure', async (req, res) => {
+router.post('/whatsapp/configure', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
@@ -1038,14 +1048,18 @@ router.post('/whatsapp/configure', async (req, res) => {
   }
 })
 
-router.post('/whatsapp/send', async (req, res) => {
+router.post('/whatsapp/send', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
 
     const body = req.body || {}
-    const message = String(body.message || '').trim()
+    const message = String(body.message || body.body || '').trim()
+    const templateId = String(body.templateId || body.template_id || '').trim()
+    const templateVariables = Array.isArray(body.templateVariables || body.template_variables)
+      ? (body.templateVariables || body.template_variables)
+      : []
     let to = sanitizePhone(body.to)
     const clientId = Number(body.clientId || body.client_id || 0)
 
@@ -1066,11 +1080,13 @@ router.post('/whatsapp/send', async (req, res) => {
       return res.status(400).json({ error: 'whatsapp_to_missing' })
     }
 
-    if (!message) {
+    if (!message && !templateId) {
       return res.status(400).json({ error: 'whatsapp_message_missing' })
     }
 
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
+    const integration = await getIntegration(pool, userId, 'whatsapp_business')
+    const metadata = integration?.metadata || {}
+    const phoneNumberId = metadata.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID
     const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
 
     if (!phoneNumberId || !accessToken) {
@@ -1080,16 +1096,32 @@ router.post('/whatsapp/send', async (req, res) => {
       })
     }
 
+    const conversation = await findWhatsappConversationByPhone(pool, userId, to)
+    const textAllowed = templateId || isWhatsappWindowOpen(conversation?.last_message_at)
+    if (!textAllowed) {
+      return res.status(400).json({
+        error: 'whatsapp_template_required',
+        details: 'La fenêtre client 24h est fermée. Utilisez un template Meta approuvé.',
+        templates: getWhatsappTemplates(),
+      })
+    }
+
     const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`
+    let whatsappPayload
+    try {
+      whatsappPayload = buildWhatsappPayload({
+        to,
+        message,
+        templateId,
+        templateVariables,
+        language: body.language || 'fr',
+      })
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'whatsapp_payload_invalid' })
+    }
     const response = await axios.post(
       url,
-      {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to,
-        type: 'text',
-        text: { body: message },
-      },
+      whatsappPayload,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -1103,18 +1135,50 @@ router.post('/whatsapp/send', async (req, res) => {
       client = await findClientByPhone(pool, userId, to)
     }
 
+    const preview = message || `Template ${templateId}`
     await upsertWhatsappThread(pool, {
       user_id: userId,
       client_id: client?.id || null,
       phone: to,
       external_thread_id: to,
-      last_message_preview: message.slice(0, 220),
+      last_message_preview: preview.slice(0, 220),
       last_message_at: new Date(),
       status: 'open',
       metadata: {
         last_message_direction: 'out',
+        template_id: templateId || null,
       },
     })
+
+    const savedConversation = await upsertWhatsappConversation(pool, {
+      user_id: userId,
+      client_id: client?.id || null,
+      phone_e164: to,
+      external_conversation_id: to,
+      last_message_preview: preview.slice(0, 220),
+      last_message_at: new Date(),
+      status: 'open',
+      metadata: {
+        last_message_direction: 'outbound',
+        phone_number_id: phoneNumberId,
+      },
+    })
+
+    if (savedConversation?.id) {
+      await insertWhatsappMessage(pool, {
+        conversation_id: savedConversation.id,
+        external_id: response.data?.messages?.[0]?.id || `out-${Date.now()}`,
+        direction: 'outbound',
+        body_preview: preview.slice(0, 320),
+        status: response.data?.messages?.[0]?.message_status || 'sent',
+        template_id: templateId || null,
+        sent_at: new Date(),
+        metadata: {
+          payload_type: whatsappPayload.type,
+          phone_number_id: phoneNumberId,
+        },
+      })
+    }
 
     await recordClientInteraction(pool, {
       user_id: userId,
@@ -1123,11 +1187,12 @@ router.post('/whatsapp/send', async (req, res) => {
       direction: 'out',
       external_id: response.data?.messages?.[0]?.id || null,
       subject: 'Message WhatsApp envoyé',
-      body_preview: message.slice(0, 320),
+      body_preview: preview.slice(0, 320),
       occurred_at: new Date(),
       metadata: {
         to,
         phone_number_id: phoneNumberId,
+        template_id: templateId || null,
       },
     })
 
@@ -1154,14 +1219,15 @@ router.post('/whatsapp/send', async (req, res) => {
   }
 })
 
-router.get('/whatsapp/threads', async (req, res) => {
+router.get('/whatsapp/threads', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
 
     const limit = Number(req.query.limit || 50)
-    const rows = await listWhatsappThreads(pool, userId, { limit })
+    const clientId = req.query.client_id || req.query.clientId || null
+    const rows = await listWhatsappThreads(pool, userId, { limit, clientId })
     return res.json({ success: true, provider: 'whatsapp_business', count: rows.length, rows })
   } catch (err) {
     logger.error({ error: err.message }, 'integrations whatsapp threads failed')
@@ -1169,8 +1235,8 @@ router.get('/whatsapp/threads', async (req, res) => {
   }
 })
 
-router.get('/whatsapp/templates', async (_req, res) => {
-  return res.json({ success: true, provider: 'whatsapp_business', templates: WHATSAPP_TEMPLATES })
+router.get('/whatsapp/templates', requireCabinetFeature('v1_whatsapp_business'), async (_req, res) => {
+  return res.json({ success: true, provider: 'whatsapp_business', templates: getWhatsappTemplates() })
 })
 
 router.get('/gmail/status', async (req, res) => {

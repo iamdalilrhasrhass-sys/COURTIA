@@ -12,6 +12,7 @@ import ARKChatTab from '../components/ARKChatTab'
 import ClientInteractionsTimeline from '../components/ClientInteractionsTimeline'
 
 const INTERACTIONS_TIMELINE_API_ENABLED = String(import.meta.env.VITE_CLIENT_INTERACTIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
@@ -848,12 +849,207 @@ function MessagesTab() {
   )
 }
 
+function WhatsAppBusinessTab({ client }) {
+  const [status, setStatus] = useState(null)
+  const [threads, setThreads] = useState([])
+  const [templates, setTemplates] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [templateId, setTemplateId] = useState('')
+  const [templateVariables, setTemplateVariables] = useState('')
+
+  const clientId = client?.id
+
+  // Chargement initial WhatsApp isolé: ne modifie pas les autres onglets métier.
+  useEffect(() => {
+    let cancelled = false
+    async function loadWhatsapp() {
+      if (!INTEGRATIONS_API_ENABLED || !clientId) {
+        setStatus({ status: 'configuration_required', configured: false, webhookReady: false })
+        setThreads([])
+        setTemplates([])
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        const [statusRes, threadsRes, templatesRes] = await Promise.all([
+          api.get('/integrations/whatsapp/status').catch((err) => ({ error: err })),
+          api.get(`/integrations/whatsapp/threads?client_id=${clientId}&limit=8`).catch(() => ({ data: { rows: [] } })),
+          api.get('/integrations/whatsapp/templates').catch(() => ({ data: { templates: [] } })),
+        ])
+
+        if (cancelled) return
+        if (statusRes.error) {
+          setStatus({ status: 'configuration_required', configured: false, webhookReady: false })
+          setError(statusRes.error?.response?.data?.message || statusRes.error?.response?.data?.error || 'WhatsApp indisponible.')
+        } else {
+          setStatus(statusRes.data || null)
+          setError('')
+        }
+        setThreads(Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [])
+        setTemplates(Array.isArray(templatesRes?.data?.templates) ? templatesRes.data.templates : [])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadWhatsapp()
+    return () => { cancelled = true }
+  }, [clientId])
+
+  const configured = Boolean(status?.configured && ['configured', 'connected'].includes(String(status?.status || '')))
+  const selectedTemplate = templates.find((tpl) => tpl.key === templateId)
+  const phone = client?.phone || client?.telephone || ''
+
+  const sendWhatsapp = async () => {
+    if (!configured) {
+      toast.error('WhatsApp Business doit être configuré avant envoi.')
+      return
+    }
+    if (!templateId && !message.trim()) {
+      toast.error('Ajoutez un message ou choisissez un template Meta.')
+      return
+    }
+
+    setSending(true)
+    try {
+      const variables = templateVariables
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+      await api.post('/integrations/whatsapp/send', {
+        clientId,
+        message: message.trim(),
+        templateId: templateId || undefined,
+        templateVariables: variables,
+      })
+      toast.success('Message WhatsApp envoyé')
+      setMessage('')
+      setTemplateVariables('')
+    } catch (err) {
+      const details = err?.response?.data?.details || err?.response?.data?.error || 'Envoi WhatsApp impossible'
+      toast.error(String(details))
+    } finally {
+      setSending(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-2 py-2">
+        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-white/60" />)}
+      </div>
+    )
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+      <div className="rounded-2xl border border-emerald-200/40 bg-gradient-to-br from-emerald-50/90 to-white/80 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-700">WhatsApp Business</p>
+            <h3 className="mt-1 text-lg font-black text-gray-950">Conversations client centralisées</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              {configured
+                ? 'Canal prêt. Les messages entrants alimentent la timeline et ARK peut préparer les relances.'
+                : 'Configuration Meta requise avant d’envoyer ou recevoir des messages depuis COURTIA.'}
+            </p>
+          </div>
+          <BubbleBadge color={configured ? '#10b981' : '#f59e0b'} size="sm">
+            {configured ? 'Configuré' : 'Configuration requise'}
+          </BubbleBadge>
+        </div>
+        {error && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            <AlertTriangle size={14} />
+            {error}
+          </div>
+        )}
+        <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-2">
+          <span>Téléphone client : <strong className="text-gray-900">{phone || 'non renseigné'}</strong></span>
+          <span>Webhook Meta : <strong className="text-gray-900">{status?.webhookReady ? 'prêt' : 'à configurer'}</strong></span>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-100 bg-white/80 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="text-sm font-black text-gray-900">Préparer une réponse</h4>
+          <span className="text-[11px] font-semibold text-gray-500">Templates requis hors fenêtre 24h</span>
+        </div>
+        <select
+          value={templateId}
+          onChange={(e) => setTemplateId(e.target.value)}
+          className="mb-3 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+        >
+          <option value="">Message libre si fenêtre 24h ouverte</option>
+          {templates.map((tpl) => (
+            <option key={tpl.key} value={tpl.key}>{tpl.label}</option>
+          ))}
+        </select>
+        {selectedTemplate && (
+          <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
+            <p className="font-bold">{selectedTemplate.description}</p>
+            <p className="mt-1">{selectedTemplate.body}</p>
+            <textarea
+              value={templateVariables}
+              onChange={(e) => setTemplateVariables(e.target.value)}
+              placeholder={(selectedTemplate.variableLabels || []).join('\n') || 'Variables, une par ligne'}
+              className="mt-2 min-h-[78px] w-full rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs text-gray-800"
+            />
+          </div>
+        )}
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={`Message ARK à envoyer à ${client?.prenom || client?.first_name || 'ce client'}...`}
+          className="min-h-[96px] w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+        />
+        <button
+          type="button"
+          onClick={sendWhatsapp}
+          disabled={sending || !configured || !phone}
+          className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Send size={13} />
+          {sending ? 'Envoi...' : 'Envoyer via WhatsApp'}
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-400">Derniers échanges</p>
+        {threads.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white/70 p-5 text-center text-sm text-gray-500">
+            Aucun thread WhatsApp lié pour ce client. Les messages entrants seront reliés automatiquement par téléphone.
+          </div>
+        ) : threads.map((thread) => (
+          <div key={thread.id} className="rounded-2xl border border-gray-100 bg-white/80 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-gray-900">{thread.phone}</p>
+                <p className="mt-1 text-xs text-gray-600">{thread.last_message_preview || 'Conversation WhatsApp'}</p>
+              </div>
+              <span className="text-[11px] font-semibold text-gray-400">
+                {thread.last_message_at ? new Date(thread.last_message_at).toLocaleString('fr-FR') : 'jamais'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── TABS CONFIG ──────────────────────────────────────────────────────────
 const TABS_CONFIG = [
   { id: 'activite', label: 'Activité', icon: Activity },
   { id: 'contrats', label: 'Contrats', icon: Shield },
   { id: 'taches', label: 'Tâches', icon: CheckSquare },
   { id: 'commissions', label: 'Commissions', icon: Euro },
+  { id: 'whatsapp', label: 'WhatsApp', icon: Phone },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'historique', label: 'Historique', icon: Clock },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
@@ -977,6 +1173,8 @@ export default function ClientDetail() {
         return <TachesTab taches={taches} clientId={client.id} navigate={navigate} />
       case 'commissions':
         return <CommissionsTab clientId={client.id} navigate={navigate} />
+      case 'whatsapp':
+        return <WhatsAppBusinessTab client={client} />
       case 'activite':
         return (
           <ClientInteractionsTimeline
