@@ -31,7 +31,8 @@ const ScoreBadge = ({ score }) => {
 };
 
 export default function ReachProspects() {
-  const { prospects, fetchProspects, loading } = useReachStore();
+  const navigate = useNavigate()
+  const { prospects, fetchProspects, _loading } = useReachStore();
   const [filters, setFilters] = useState({ category: '', city: '', status: '' });
 
   useEffect(() => {

@@ -144,7 +144,7 @@ const FRAGMENT_SHADER = `
   }
 `
 
-export default function SuperBubbleScene({ intensity = 'max' }) {
+export default function SuperBubbleScene({ _intensity = 'max' }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {

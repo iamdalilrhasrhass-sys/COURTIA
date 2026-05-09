@@ -25,7 +25,6 @@ export default function PipelineEnhanced() {
   const isStagnant = (prospect) => getStagnantDays(prospect.enteredDate) > 15
 
   const handleConvertToClient = (prospect) => {
-    console.log(`Convertir ${prospect.name} en client`)
     alert(`${prospect.name} converti en client!`)
   }
 

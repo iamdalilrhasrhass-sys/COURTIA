@@ -21,7 +21,7 @@ export default function Academy() {
   const [referral, setReferral] = useState(null)
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState('')
-  const [shareCard, setShareCard] = useState(null)
+  const [_shareCard, _setShareCard] = useState(null)
   const [rarityFilter, setRarityFilter] = useState('all')
   const [unlockFilter, setUnlockFilter] = useState('all')
 
@@ -51,7 +51,7 @@ export default function Academy() {
     setLoading(false)
   }
 
-  async function handleUnlock(card) {
+  async function _handleUnlock(card) {
     toast.success(`Carte débloquée : ${card.title} !`)
     loadData(token)
   }
@@ -62,7 +62,9 @@ export default function Academy() {
       await fetch(`${API_URL}/api/academy/cards/${card.id}/share`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       })
-    } catch {}
+    } catch (_err) {
+      // Non bloquant: le partage LinkedIn peut continuer même si le tracking API échoue.
+    }
     const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://courtiark.fr')}&text=${encodeURIComponent(text)}`
     window.open(linkedinUrl, '_blank')
     toast.success('Texte copié – publication LinkedIn ouverte.')
@@ -363,7 +365,7 @@ export default function Academy() {
 // Course detail modal
 function openCourseDetail(course) {
   const API_URL = import.meta.env.VITE_API_URL || '/api'
-  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
+  const _token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
   const courseSlug = course.slug || course.id
 
   // Navigate to course view (inline modal)
@@ -397,7 +399,7 @@ function openCourseDetail(course) {
   document.body.appendChild(modal)
 }
 
-window.completeCourse = async (btn, courseId, slug) => {
+window.completeCourse = async (btn, courseId, _slug) => {
   const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
   const API_URL = import.meta.env.VITE_API_URL || '/api'
   try {
@@ -421,7 +423,7 @@ window.completeCourse = async (btn, courseId, slug) => {
         window.location.reload()
       }, 1500)
     }
-  } catch (err) {
+  } catch (_err) {
     document.getElementById('course-feedback').style.display = 'block'
     document.getElementById('course-feedback').textContent = 'Erreur lors de la validation.'
   }

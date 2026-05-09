@@ -186,7 +186,7 @@ export default function SearchBar({ clients = [], prospects = [], onNavigate }) 
       {/* Results */}
       {isOpen && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 glass rounded-lg z-40 overflow-hidden max-h-96 overflow-y-auto">
-          {results.map((result, idx) => (
+          {results.map((result, _idx) => (
             <button
               key={`${result.type}-${result.id}`}
               onClick={() => handleSelectResult(result)}

@@ -105,7 +105,6 @@ export default function Settings() {
       
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-      console.log('✅ Profil sauvegardé')
     } catch (err) {
       setError("Impossible d'enregistrer vos modifications pour le moment.")
       console.error('Error saving profile:', err)

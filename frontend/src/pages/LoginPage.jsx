@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, _useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
@@ -552,7 +552,7 @@ export default function Login() {
         if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user))
         if (res.data.user) primeSessionUserCache(res.data.user)
         navigate('/dashboard')
-      } catch (err) {
+      } catch (_err) {
         setError('Erreur lors de la connexion Google.')
       }
     },

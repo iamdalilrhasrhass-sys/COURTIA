@@ -4,7 +4,10 @@ const path = require('path')
 const { spawnSync } = require('child_process')
 
 const assetsDir = path.resolve(__dirname, '../assets/screenshots')
-const audioPath = path.resolve(__dirname, '../assets/audio/orchestral-bed.mp3')
+const audioCandidates = [
+  path.resolve(__dirname, '../assets/audio/orchestral-bed.wav'),
+  path.resolve(__dirname, '../assets/audio/orchestral-bed.mp3'),
+]
 const exportDir = path.resolve(__dirname, '../exports')
 const outputFile = path.join(exportDir, 'courtia-orchestral-bubbles.mp4')
 
@@ -12,10 +15,11 @@ const sequence = [
   { file: 'dashboard.png', duration: 3.6, caption: 'BOUM Dashboard · POP Priorités du jour' },
   { file: 'clients.png', duration: 3.6, caption: 'BOUM Clients · POP Clients à risque' },
   { file: 'client-detail.png', duration: 3.8, caption: 'BOUM Fiche client · POP Vue 360' },
-  { file: 'dashboard.png', duration: 3.6, caption: 'BOUM Contrats · POP Échéances sous contrôle' },
-  { file: 'dashboard.png', duration: 3.6, caption: 'BOUM Tâches · POP Actions à traiter' },
+  { file: 'contrats.png', duration: 3.6, caption: 'BOUM Contrats · POP Échéances sous contrôle' },
+  { file: 'taches.png', duration: 3.6, caption: 'BOUM Tâches · POP Actions à traiter' },
+  { file: 'integrations.png', duration: 3.6, caption: 'BOUM Google Agenda · POP Rendez-vous préparés' },
+  { file: 'integrations.png', duration: 3.6, caption: 'BOUM WhatsApp Business · POP Conversations centralisées' },
   { file: 'morning-brief.png', duration: 3.8, caption: 'BOUM Morning Brief · POP Plan intelligent' },
-  { file: 'dashboard.png', duration: 3.6, caption: 'BOUM Rapports · POP Pilotage cabinet' },
   { file: 'admin-costs.png', duration: 3.8, caption: 'BOUM Admin Costs · POP Coûts IA maîtrisés' },
   { file: 'dashboard.png', duration: 4.2, caption: 'COURTIA · Votre portefeuille devient vivant.' },
 ]
@@ -26,6 +30,10 @@ function resolveSequenceFile(file) {
   if (file === 'client-detail.png') {
     const fallback = path.join(assetsDir, 'clients.png')
     if (fs.existsSync(fallback)) return 'clients.png'
+  }
+  if (file === 'integrations.png') {
+    const fallback = path.join(assetsDir, 'parametres.png')
+    if (fs.existsSync(fallback)) return 'parametres.png'
   }
   return null
 }
@@ -50,6 +58,10 @@ function ffmpegInstalled() {
 function ffmpegSupportsSubtitles() {
   const check = run('ffmpeg', ['-filters'])
   return check.status === 0 && /\bsubtitles\b/i.test(`${check.stdout}\n${check.stderr}`)
+}
+
+function resolveAudioPath() {
+  return audioCandidates.find((candidate) => fs.existsSync(candidate)) || null
 }
 
 function buildTempFiles() {
@@ -122,7 +134,8 @@ function main() {
     '-i', concatPath,
   ]
 
-  const hasAudio = fs.existsSync(audioPath)
+  const audioPath = resolveAudioPath()
+  const hasAudio = Boolean(audioPath)
   if (hasAudio) {
     args.push('-stream_loop', '-1', '-i', audioPath)
   }

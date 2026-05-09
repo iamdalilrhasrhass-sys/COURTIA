@@ -36,7 +36,6 @@ export default function Dashboard() {
       fetch(`${API_URL}/api/dashboard/stats`)
         .then(res => res.json())
         .then(data => {
-          console.log('Dashboard stats:', data)
           setDashboardStats(data)
         })
         .catch(err => console.error('Stats error:', err))

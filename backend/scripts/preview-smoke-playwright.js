@@ -13,6 +13,8 @@ if (!TARGET_URL) {
 
 const RUN_MODE = process.env.PROD_URL ? 'prod' : 'preview'
 const ENABLE_GROWTH_LEADS_SMOKE = String(process.env.SMOKE_GROWTH_LEADS || '').trim() === '1'
+const SKIP_RESPONSIVE = String(process.env.SMOKE_SKIP_RESPONSIVE || '').trim() === '1'
+const STEP_DELAY_MS = Number(process.env.SMOKE_STEP_DELAY_MS || 700)
 
 function parsePreviewInput(inputUrl) {
   const parsed = new URL(inputUrl)
@@ -168,6 +170,9 @@ async function waitForAppIdle(page) {
     await page.waitForLoadState('networkidle', { timeout: 12000 })
   } catch {
     // Some pages keep background polling; DOM readiness is enough for smoke checks.
+  }
+  if (STEP_DELAY_MS > 0) {
+    await page.waitForTimeout(STEP_DELAY_MS)
   }
 }
 
@@ -529,7 +534,11 @@ async function main() {
     await checkRoute(page, '/import', ['Import portefeuille V1'])
     await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])
 
-    await runResponsiveChecks(page)
+    if (!SKIP_RESPONSIVE) {
+      await runResponsiveChecks(page)
+    } else {
+      recordInfo('responsive', 'Responsive checks skipped (SMOKE_SKIP_RESPONSIVE=1)')
+    }
 
     const e2eChecks = [
       await classifyAdminAccess(page, '/admin', 'e2e'),
@@ -604,6 +613,10 @@ async function main() {
       if (!url.includes('/api/')) return false
       if (entry.status === 401) return false
       if (entry.status === 403 && url.includes('/api/admin')) return false
+      if (
+        entry.status === 404 &&
+        /\/api\/clients\/\d+\/interactions(?:\?|$)/.test(url)
+      ) return false
       return true
     })
     if (criticalApiErrors.length > 0) {

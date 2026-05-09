@@ -8,7 +8,7 @@ export default function Contrats() {
   const token = useAuthStore((state) => state.token)
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [_error, setError] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [selectedForEdit, setSelectedForEdit] = useState(null)
   const [filterStatus, setFilterStatus] = useState('tous')
