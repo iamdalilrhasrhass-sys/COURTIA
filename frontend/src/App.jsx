@@ -123,6 +123,8 @@ function AppLayout() {
       <div className="courtia-cockpit-watermark" aria-hidden="true">
         <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
       </div>
+      <div className="courtia-bubble-orb courtia-bubble-orb--violet courtia-bubble-orb--app-left" aria-hidden="true" />
+      <div className="courtia-bubble-orb courtia-bubble-orb--cyan courtia-bubble-orb--app-right" aria-hidden="true" />
       <Sidebar />
       <main className="courtia-cockpit-main courtia-depth-stage flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <ImpersonationBanner />
