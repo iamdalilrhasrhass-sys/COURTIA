@@ -6,6 +6,7 @@ const links = [
     { to: '/admin', icon: LayoutDashboard, label: "Vue d'ensemble" },
   { to: '/admin/users', icon: Users, label: 'Courtiers' },
   { to: '/admin/subscriptions', icon: CreditCard, label: 'Abonnements' },
+  { to: '/admin/growth-leads', icon: Users, label: 'Growth Leads' },
   { to: '/admin/costs', icon: BrainCircuit, label: 'Coûts ARK' },
   { to: '/admin/system', icon: Activity, label: 'Système' },
   { to: '/admin/logs', icon: FileText, label: 'Journaux' },

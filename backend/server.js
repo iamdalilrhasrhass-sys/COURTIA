@@ -179,6 +179,7 @@ const stripeRouter         = require('./src/routes/stripe')
 const billingRouter        = require('./src/routes/billing')
 const plansRouter          = require('./src/routes/plans')
 const messagingRoutes      = require('./src/routes/messaging')
+const leadsRouter          = require('./src/routes/leads')
 const importRouter         = require('./src/routes/import')
 const importsRouter        = require('./src/routes/imports')
 const reachRouter          = require('./src/routes/reach')
@@ -193,6 +194,7 @@ app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
 app.use('/api/billing', billingRouter)
+app.use('/api/leads', leadsRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
