@@ -101,6 +101,7 @@ export default function CabinetOnboarding() {
       <section style={heroStyle}>
         <div>
           <Badge tone="success">V1 cabinet</Badge>
+          <p style={{ ...eyebrowStyle, marginTop: 14 }}>Onboarding cabinet</p>
           <h1 style={titleStyle}>Votre cabinet prend vie dans COURTIA.</h1>
           <p style={leadStyle}>
             En moins de trois minutes, posez le profil cabinet, préparez l’import clients, connectez vos outils et lancez votre premier Morning Brief ARK.
