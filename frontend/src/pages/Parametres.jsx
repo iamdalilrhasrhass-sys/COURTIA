@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'integrations', label: 'Intégrations', icon: Link },
 ]
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
 
@@ -51,6 +52,12 @@ const INTEGRATION_META = {
     description: 'Connectez Microsoft 365 pour un suivi client multi-canal.',
   },
 }
+const DEFAULT_INTEGRATIONS = Object.keys(INTEGRATION_META).map((provider) => ({
+  provider,
+  status: 'configuration_required',
+  metadata: {},
+  last_sync_at: null,
+}))
 
 function getIntegrationLabel(status = '') {
   const normalized = String(status || '').toLowerCase()
@@ -91,14 +98,14 @@ export default function Parametres() {
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
   const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
-  const [integrations, setIntegrations] = useState([])
+  const [integrations, setIntegrations] = useState(() => (INTEGRATIONS_API_ENABLED ? [] : DEFAULT_INTEGRATIONS))
   const [integrationsLoading, setIntegrationsLoading] = useState(false)
   const [integrationAction, setIntegrationAction] = useState('')
   const [whatsappConfig, setWhatsappConfig] = useState({ phone_number_id: '', business_account_id: '' })
 
   useEffect(() => {
     fetchProfile()
-    fetchIntegrations()
+    if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
   }, [])
 
   async function fetchProfile(options = {}) {
@@ -137,6 +144,10 @@ export default function Parametres() {
   }
 
   async function fetchIntegrations({ silent = false } = {}) {
+    if (!INTEGRATIONS_API_ENABLED) {
+      setIntegrations(DEFAULT_INTEGRATIONS)
+      return
+    }
     try {
       if (!silent) setIntegrationsLoading(true)
       const res = await api.get('/integrations/status')
@@ -155,6 +166,10 @@ export default function Parametres() {
   }
 
   async function handleIntegrationAction(provider, action) {
+    if (!INTEGRATIONS_API_ENABLED) {
+      toast('API intégrations en cours de déploiement. Configurez VITE_INTEGRATIONS_API_ENABLED=true quand le backend est prêt.', { icon: 'ℹ️' })
+      return
+    }
     const meta = INTEGRATION_META[provider]
     if (!meta) return
 
@@ -364,13 +379,18 @@ export default function Parametres() {
                 <button
                   type="button"
                   onClick={() => fetchIntegrations()}
-                  disabled={integrationsLoading}
+                  disabled={integrationsLoading || !INTEGRATIONS_API_ENABLED}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-60"
                 >
                   <RefreshCw size={12} className={integrationsLoading ? 'animate-spin' : ''} />
                   Actualiser
                 </button>
               </div>
+              {!INTEGRATIONS_API_ENABLED && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Intégrations prêtes côté interface. Activez `VITE_INTEGRATIONS_API_ENABLED=true` quand l’API backend d’intégrations est déployée.
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-4">
                 {Object.entries(INTEGRATION_META).map(([provider, meta]) => {
@@ -424,7 +444,7 @@ export default function Parametres() {
                         <button
                           type="button"
                           onClick={() => handleIntegrationAction(provider, 'connect')}
-                          disabled={busy}
+                          disabled={busy || !INTEGRATIONS_API_ENABLED}
                           className="rounded-lg bg-[#2563eb] px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                         >
                           {provider === 'whatsapp_business' ? 'Configurer' : 'Connecter'}
@@ -432,7 +452,7 @@ export default function Parametres() {
                         <button
                           type="button"
                           onClick={() => handleIntegrationAction(provider, 'sync')}
-                          disabled={busy || !canSync}
+                          disabled={busy || !canSync || !INTEGRATIONS_API_ENABLED}
                           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                         >
                           Synchroniser
@@ -440,7 +460,7 @@ export default function Parametres() {
                         <button
                           type="button"
                           onClick={() => handleIntegrationAction(provider, 'disconnect')}
-                          disabled={busy}
+                          disabled={busy || !INTEGRATIONS_API_ENABLED}
                           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                         >
                           Déconnecter

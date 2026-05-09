@@ -13,6 +13,7 @@ import AnimatedNumber from '../components/ui/AnimatedNumber'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 import PremiumEmptyState from '../components/ui/PremiumEmptyState'
 import { computeDailyPriorities } from '../lib/priorities'
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
@@ -445,12 +446,18 @@ export default function MorningBrief() {
   const fetchPriorities = useCallback(async () => {
     setBriefLoading(true)
     try {
+      const eventsRequest = INTEGRATIONS_API_ENABLED
+        ? api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } }))
+        : Promise.resolve({ data: { rows: [] } })
+      const threadsRequest = INTEGRATIONS_API_ENABLED
+        ? api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } }))
+        : Promise.resolve({ data: { rows: [] } })
       const [clientsRes, contratsRes, tachesRes, eventsRes, threadsRes] = await Promise.all([
         api.get('/clients?limit=1000').catch(() => ({ data: [] })),
         api.get('/contrats').catch(() => ({ data: [] })),
         api.get('/taches').catch(() => ({ data: [] })),
-        api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } })),
-        api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } })),
+        eventsRequest,
+        threadsRequest,
       ])
       const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
       const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
