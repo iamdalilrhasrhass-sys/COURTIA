@@ -26,7 +26,10 @@ npm --prefix backend run qa:prod-smoke
 - login Dalil + role super_admin
 - `/admin` + `/admin/costs` + `/admin/growth-leads`
 - `/parametres` section Intégrations visible
+- `/parametres` section Conformité DDA visible
+- `/documents` onglet Documents DDA visible
 - `/clients/:id` onglet Activité (timeline interactions) OK
+- `/clients/:id` onglet Documents : génération FIC OK si ORIAS renseigné
 - `/billing` + `/onboarding` + `/import` OK
 - logout OK
 - `/api/api = 0`
@@ -63,3 +66,19 @@ npm --prefix backend run qa:prod-smoke
 
 - vérifier `buildApiUrl` frontend (`frontend/src/api/sessionPolicy.js`)
 - relancer tests unitaires frontend + smoke
+
+## Documents DDA
+
+- feature flag : `v1_dda_documents`
+- migration : `016_v1_dda_documents.sql`
+- rollback : `down/016_v1_dda_documents.down.sql`
+- prérequis utilisateur : ORIAS dans Paramètres > Conformité
+- stockage V1 : table `documents_blob`
+- signature électronique : prévue via Yousign dans la PR suivante
+
+Si la génération échoue :
+
+1. vérifier ORIAS cabinet/courtier
+2. vérifier tables `documents`, `documents_blob`, `document_activity_log`
+3. vérifier `audit_log`
+4. relancer `npm --prefix backend test -- documentDdaService.test.js --runInBand`
