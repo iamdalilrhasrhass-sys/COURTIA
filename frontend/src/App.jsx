@@ -38,7 +38,6 @@ const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
-const FonctionnalitesPublic = lazy(() => import('./pages/FonctionnalitesPublic'))
 const DemoPublic = lazy(() => import('./pages/DemoPublic'))
 const ContactPublic = lazy(() => import('./pages/ContactPublic'))
 const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
@@ -175,7 +174,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
-        <Route path="/fonctionnalites" element={<FonctionnalitesPublic />} />
+        <Route path="/fonctionnalites" element={<Navigate to="/#cockpit" replace />} />
         <Route path="/tarifs" element={<TarifsPublic />} />
         <Route path="/demo" element={<DemoPublic />} />
         <Route path="/contact" element={<ContactPublic />} />
