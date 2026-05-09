@@ -69,6 +69,7 @@ import AdminLayout from './components/AdminLayout'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
+import NotificationBell from './components/NotificationBell'
 import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
@@ -133,6 +134,9 @@ function AppLayout() {
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+      <div style={{ position: 'fixed', right: 20, bottom: 68, zIndex: 200 }}>
+        <NotificationBell />
+      </div>
 
       {/* Bouton de secours Cmd+K */}
       <button

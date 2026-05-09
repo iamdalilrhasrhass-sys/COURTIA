@@ -22,6 +22,9 @@ async function ensureNotificationsTable(pool) {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `)
+  await pool.query("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS channel TEXT NOT NULL DEFAULT 'in_app';")
+  await pool.query('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS kind TEXT;')
+  await pool.query('UPDATE notifications SET kind = COALESCE(kind, type) WHERE kind IS NULL;')
   await pool.query('CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);')
   await pool.query('CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, read_at);')
 }
@@ -35,7 +38,7 @@ router.get('/', verifyToken, async (req, res) => {
 
     const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 200)
     const rows = await pool.query(
-      `SELECT id, type, title, body, severity, link, metadata, read_at, created_at
+      `SELECT id, type, COALESCE(kind, type) AS kind, channel, title, body, severity, link, metadata, read_at, created_at
        FROM notifications
        WHERE user_id=$1
        ORDER BY created_at DESC
