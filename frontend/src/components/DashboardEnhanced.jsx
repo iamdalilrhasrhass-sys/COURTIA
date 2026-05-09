@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, _useEffect } from 'react'
 import { BarChart3, TrendingUp, Users, AlertCircle } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
 

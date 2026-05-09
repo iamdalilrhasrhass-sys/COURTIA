@@ -10,7 +10,7 @@ const accent = '#5B4DF5';
 
 export default function ReachCampaigns() {
   const navigate = useNavigate();
-  const { campaigns, fetchCampaigns, loading, createCampaign } = useReachStore();
+  const { campaigns, fetchCampaigns, _loading, createCampaign } = useReachStore();
   const [showTemplates, setShowTemplates] = useState(false);
 
   const templates = [
@@ -113,7 +113,7 @@ export default function ReachCampaigns() {
               {c.status === 'active' ? (
                 <button
                   onClick={async () => {
-                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' }); } catch {}
+                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' }); } catch (_err) { /* noop */ }
                     toast.success('Campagne mise en pause');
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition flex items-center gap-1"
@@ -123,7 +123,7 @@ export default function ReachCampaigns() {
               ) : (
                 <button
                   onClick={async () => {
-                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'active' }); } catch {}
+                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'active' }); } catch (_err) { /* noop */ }
                     toast.success('Campagne lancée !');
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}

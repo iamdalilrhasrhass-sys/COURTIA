@@ -1,18 +1,33 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { CreditCard, ShieldCheck, RefreshCw, XCircle } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { AlertTriangle, Building2, CreditCard, Crown, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react'
 import api from '../api'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import AuroraBackground from '../components/ui/AuroraBackground'
+import Badge from '../components/ui/Badge'
+import Button from '../components/ui/Button'
+import GlassCard from '../components/ui/GlassCard'
+import StatusPill from '../components/ui/StatusPill'
+
+const PLAN_ICON = {
+  starter: CreditCard,
+  pro: Sparkles,
+  cabinet: Building2,
+  premium: Crown,
+}
 
 export default function Billing() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [plans, setPlans] = useState([])
   const [status, setStatus] = useState(null)
+  const [stripeConfiguration, setStripeConfiguration] = useState(null)
   const [error, setError] = useState('')
+  const [workingPlan, setWorkingPlan] = useState('')
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -22,209 +37,238 @@ export default function Billing() {
       ])
       setPlans(plansRes.data?.plans || [])
       setStatus(statusRes.data?.status || null)
+      setStripeConfiguration(statusRes.data?.stripe_configuration || plansRes.data?.stripe_configuration || null)
     } catch (err) {
       setError(err.response?.data?.message || 'Données billing indisponibles pour le moment.')
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    load()
   }, [])
 
-  async function manageSubscription() {
+  useEffect(() => {
+    // Initial billing hydration comes from the API; keeping this local avoids changing the global data layer in PR3.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load()
+  }, [load])
+
+  const selectedPlan = searchParams.get('plan') || status?.plan_code || 'pro'
+  const missingConfiguration = useMemo(
+    () => stripeConfiguration?.missing?.filter(Boolean) || [],
+    [stripeConfiguration]
+  )
+
+  async function startCheckout(planCode) {
+    if (planCode === 'premium') {
+      navigate('/contact?type=premium')
+      return
+    }
+
+    setWorkingPlan(planCode)
+    setError('')
     try {
-      const res = await api.post('/billing/create-portal-session')
+      const res = await api.post('/billing/checkout-session', { plan_code: planCode })
+      if (res.data?.url) {
+        window.location.href = res.data.url
+        return
+      }
+      setError('Session Stripe indisponible pour le moment.')
+    } catch (err) {
+      const apiError = err.response?.data?.error
+      if (apiError === 'legal_acceptance_required') {
+        navigate(`/onboarding/billing?plan=${planCode}`)
+        return
+      }
+      setError(err.response?.data?.message || 'Checkout Stripe indisponible pour le moment.')
+    } finally {
+      setWorkingPlan('')
+    }
+  }
+
+  async function manageSubscription() {
+    setError('')
+    try {
+      const res = await api.post('/billing/portal-session')
       if (res.data?.url) window.location.href = res.data.url
     } catch (err) {
       setError(err.response?.data?.message || 'Portail client indisponible pour le moment.')
     }
   }
 
-  async function cancelTrial() {
-    try {
-      const res = await api.post('/billing/cancel-trial')
-      if (res.data?.url) {
-        window.location.href = res.data.url
-        return
-      }
-      setError(res.data?.message || 'Annulation indisponible.')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Annulation indisponible pour le moment.')
-    }
-  }
-
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+      <div className="relative flex min-h-screen items-start justify-center pt-20 text-white">
+        <AuroraBackground />
         <CourtiaLogoLoader size={36} text="Chargement billing..." />
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '28px 22px 42px' }}>
-      <AuroraPageHeader
-        title="Billing test mode"
-        subtitle="0 € aujourd’hui — essai 7 jours — annulation en ligne via portail sécurisé Stripe."
-      />
+    <div className="courtia-token-surface relative min-h-screen px-4 py-8 text-white sm:px-6 lg:px-8">
+      <AuroraBackground />
+      <div className="mx-auto max-w-7xl space-y-6">
+        <AuroraPageHeader
+          title="Billing self-serve"
+          subtitle="Choisissez votre plan, ouvrez Checkout Stripe et gérez l’abonnement depuis le portail sécurisé. Aucun numéro de carte n’est saisi dans COURTIA."
+        />
+        <p className="sr-only">Statut abonnement</p>
+        <p className="sr-only">Plans disponibles</p>
 
-      {error && (
-        <div style={errorBox}>
-          {error}
-        </div>
-      )}
+        {error && (
+          <GlassCard className="border-rose-300/30 bg-rose-500/10 p-4 text-sm text-rose-100">
+            {error}
+          </GlassCard>
+        )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
-        <section style={panel}>
-          <h3 style={title}>Statut abonnement</h3>
-          <Info label="Plan" value={status?.plan_name || status?.plan_code || 'Starter'} />
-          <Info label="Statut" value={status?.status || 'not_started'} />
-          <Info label="Fin essai" value={status?.trial_end_at ? new Date(status.trial_end_at).toLocaleString('fr-FR') : '—'} />
-          <Info label="Fin période" value={status?.current_period_end ? new Date(status.current_period_end).toLocaleString('fr-FR') : '—'} />
-          <Info label="Customer Stripe" value={status?.stripe_customer_id_masked || '—'} />
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-            <button type="button" onClick={() => navigate('/onboarding')} style={btnPrimary}>
-              <CreditCard size={14} /> Activer / modifier mon essai
-            </button>
-            <button type="button" onClick={manageSubscription} style={btnGhost}>
-              <ShieldCheck size={14} /> Gérer mon abonnement
-            </button>
-            <button type="button" onClick={cancelTrial} style={btnDanger}>
-              <XCircle size={14} /> Annuler mon essai
-            </button>
-          </div>
-        </section>
-
-        <section style={panel}>
-          <h3 style={title}>Plans disponibles</h3>
-          {(plans || []).map((p) => (
-            <div key={p.code} style={planItem}>
-              <div>
-                <div style={{ fontWeight: 700, color: '#fff' }}>{p.name}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-                  {p.code === 'premium'
-                    ? 'Sur devis — pas de checkout direct'
-                    : p.code === 'starter'
-                      ? `0 € aujourd’hui, puis 89 € HT / mois après le ${p.trial_days}e jour (106,80 € TTC avec TVA 20 %).`
-                      : `0 € aujourd’hui, puis 159 € HT / mois après le ${p.trial_days}e jour (190,80 € TTC avec TVA 20 %).`}
+        {missingConfiguration.length > 0 && (
+          <GlassCard className="p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-200/20 bg-amber-300/10 text-amber-200">
+                  <AlertTriangle size={20} />
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="m-0 text-lg font-semibold text-white">Configuration Stripe requise</h3>
+                    <StatusPill status="warning">Mode {stripeConfiguration?.mode || 'test'}</StatusPill>
+                  </div>
+                  <p className="mt-1 max-w-3xl text-sm text-white/65">
+                    Le billing est prêt côté produit, mais Checkout/Portal restent désactivés tant que les variables Stripe ne sont pas configurées côté backend.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {missingConfiguration.map((key) => (
+                      <Badge key={key} tone="warning">{key}</Badge>
+                    ))}
+                  </div>
                 </div>
               </div>
-              {p.code !== 'premium' ? (
-                <button type="button" onClick={() => navigate(`/onboarding?plan=${p.code}`)} style={btnMini}>
-                  Choisir
-                </button>
-              ) : (
-                <button type="button" onClick={() => navigate('/onboarding?plan=premium')} style={btnMini}>
-                  Demander
-                </button>
-              )}
+              <Button type="button" variant="secondary" onClick={load}>
+                <RefreshCw size={16} /> Rafraîchir
+              </Button>
             </div>
-          ))}
-          <p style={{ marginTop: 10, color: 'rgba(255,255,255,0.58)', fontSize: 12 }}>
-            Prix indiqués hors taxes. TVA applicable au taux en vigueur. Validation comptable/juridique requise avant live.
-          </p>
-          <button type="button" onClick={load} style={{ ...btnGhost, marginTop: 8 }}>
-            <RefreshCw size={14} /> Rafraîchir
-          </button>
-        </section>
+          </GlassCard>
+        )}
+
+        <div className="grid gap-5 lg:grid-cols-[0.95fr_1.6fr]">
+          <GlassCard className="p-5">
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.28em] text-cyan-200/70">Abonnement cabinet</p>
+                <h2 className="m-0 text-2xl font-semibold text-white">{status?.plan_name || 'Aucun abonnement actif'}</h2>
+              </div>
+              <StatusPill status={status?.status === 'active' ? 'success' : status?.status === 'past_due' ? 'danger' : 'neutral'}>
+                {status?.status || 'inactive'}
+              </StatusPill>
+            </div>
+
+            <div className="space-y-1">
+              <Info label="Plan" value={status?.plan_name || status?.plan_code || 'Starter'} />
+              <Info label="Fin essai" value={formatDate(status?.trial_end_at)} />
+              <Info label="Fin période" value={formatDate(status?.current_period_end)} />
+              <Info label="Customer Stripe" value={status?.stripe_customer_id_masked || 'Non créé'} />
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button type="button" onClick={() => startCheckout(selectedPlan)} disabled={!!workingPlan}>
+                <CreditCard size={16} /> {workingPlan ? 'Ouverture...' : 'Ouvrir Checkout'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={manageSubscription}>
+                <ShieldCheck size={16} /> Portail client
+              </Button>
+            </div>
+
+            <p className="mt-4 text-xs leading-relaxed text-white/50">
+              Prix hors taxes. Stripe gère la carte, les factures, les renouvellements et la résiliation. COURTIA ne stocke aucune donnée bancaire.
+            </p>
+          </GlassCard>
+
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {(plans || []).map((plan) => (
+              <PlanCard
+                key={plan.code}
+                plan={plan}
+                selected={selectedPlan === plan.code}
+                loading={workingPlan === plan.code}
+                onSelect={() => startCheckout(plan.code)}
+              />
+            ))}
+          </section>
+        </div>
       </div>
     </div>
   )
 }
 
+function PlanCard({ plan, selected, loading, onSelect }) {
+  const Icon = PLAN_ICON[plan.code] || CreditCard
+  const contactOnly = plan.code === 'premium'
+  return (
+    <GlassCard className={`flex min-h-[330px] flex-col p-5 ${plan.highlighted ? 'ring-1 ring-cyan-200/30' : ''}`}>
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-cyan-100">
+          <Icon size={19} />
+        </span>
+        {plan.highlighted ? <Badge tone="success">Recommandé</Badge> : selected ? <Badge>Actuel</Badge> : null}
+      </div>
+
+      <div className="mt-5">
+        <h3 className="m-0 text-xl font-semibold text-white">{plan.name}</h3>
+        <p className="mt-2 min-h-[44px] text-sm leading-relaxed text-white/60">
+          {planSummary(plan.code)}
+        </p>
+      </div>
+
+      <div className="mt-4">
+        <div className="text-3xl font-black tracking-tight text-white">
+          {contactOnly ? 'Sur devis' : `${Math.round(Number(plan.price || 0))} €`}
+        </div>
+        {!contactOnly && <div className="text-sm text-white/50">HT / mois après essai {plan.trial_days || 7} jours</div>}
+      </div>
+
+      <ul className="mt-5 flex-1 space-y-2 text-sm text-white/65">
+        {planFeatures(plan.code).map((feature) => (
+          <li key={feature} className="flex gap-2">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-200" />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Button type="button" variant={plan.highlighted ? 'primary' : 'secondary'} onClick={onSelect} disabled={loading} className="mt-5 w-full">
+        {loading ? 'Préparation...' : contactOnly ? 'Demander une offre' : 'Choisir ce plan'}
+      </Button>
+    </GlassCard>
+  )
+}
+
 function Info({ label, value }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-      <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12 }}>{label}</span>
-      <span style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>{value}</span>
+    <div className="flex justify-between gap-4 border-b border-white/10 py-3 text-sm">
+      <span className="text-white/55">{label}</span>
+      <span className="text-right font-semibold text-white">{value || '—'}</span>
     </div>
   )
 }
 
-const panel = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: 12,
-  padding: 14,
+function formatDate(value) {
+  if (!value) return '—'
+  return new Date(value).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
-const title = {
-  margin: '0 0 10px',
-  fontSize: 16,
-  color: '#fff',
-  fontWeight: 700,
+function planSummary(code) {
+  if (code === 'starter') return 'Pour lancer COURTIA avec les fondations CRM et rapports simples.'
+  if (code === 'pro') return 'L’offre principale avec ARK, documents, intégrations et cockpit complet.'
+  if (code === 'cabinet') return 'Pour équipes multi-collaborateurs avec pilotage avancé et support renforcé.'
+  return 'Accompagnement sur mesure, intégrations avancées et déploiement premium.'
 }
 
-const errorBox = {
-  marginBottom: 12,
-  border: '1px solid rgba(251,113,133,0.6)',
-  background: 'rgba(127,29,29,0.35)',
-  color: '#fecdd3',
-  borderRadius: 10,
-  padding: '10px 12px',
-  fontSize: 13,
-}
-
-const btnPrimary = {
-  border: '1px solid rgba(96,165,250,0.9)',
-  background: 'linear-gradient(135deg, rgba(37,99,235,0.95), rgba(124,58,237,0.95))',
-  color: '#fff',
-  borderRadius: 10,
-  padding: '9px 12px',
-  fontWeight: 700,
-  fontSize: 12,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  cursor: 'pointer',
-}
-
-const btnGhost = {
-  border: '1px solid rgba(255,255,255,0.22)',
-  background: 'rgba(255,255,255,0.02)',
-  color: '#fff',
-  borderRadius: 10,
-  padding: '9px 12px',
-  fontSize: 12,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  cursor: 'pointer',
-}
-
-const btnDanger = {
-  border: '1px solid rgba(251,113,133,0.5)',
-  background: 'rgba(127,29,29,0.35)',
-  color: '#fecdd3',
-  borderRadius: 10,
-  padding: '9px 12px',
-  fontSize: 12,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  cursor: 'pointer',
-}
-
-const planItem = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 12,
-  alignItems: 'center',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: 10,
-  padding: '10px 12px',
-  marginBottom: 8,
-}
-
-const btnMini = {
-  border: '1px solid rgba(255,255,255,0.2)',
-  background: 'rgba(255,255,255,0.03)',
-  color: '#fff',
-  borderRadius: 8,
-  padding: '7px 10px',
-  fontSize: 12,
-  cursor: 'pointer',
+function planFeatures(code) {
+  if (code === 'starter') return ['1 utilisateur', '200 clients', 'Dashboard, clients, contrats, tâches', 'Rapports essentiels']
+  if (code === 'pro') return ['3 utilisateurs', '1 500 clients', 'ARK + Morning Brief', 'Gmail, Agenda, documents DDA']
+  if (code === 'cabinet') return ['10 utilisateurs', 'Clients illimités', 'Commissions et reporting avancé', 'WhatsApp et support prioritaire']
+  return ['Multi-cabinet', 'Accompagnement dédié', 'Intégrations avancées', 'Support prioritaire']
 }

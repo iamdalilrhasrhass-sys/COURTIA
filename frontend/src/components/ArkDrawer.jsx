@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { buildApiUrl } from '../api/sessionPolicy'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -18,7 +19,7 @@ export default function ArkDrawer({ isOpen, onClose, token }) {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/api/ark/chat`, {
+      const res = await fetch(buildApiUrl('/ark/chat', API_URL), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -28,7 +29,7 @@ export default function ArkDrawer({ isOpen, onClose, token }) {
       })
       const data = await res.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply || 'Erreur' }])
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erreur ARK')
     } finally {
       setLoading(false)

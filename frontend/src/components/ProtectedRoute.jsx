@@ -1,20 +1,54 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import api from '../api'
 import Paywall from './Paywall'
 import { clearStoredSession } from '../api/sessionPolicy'
+import { getSessionUser, isSessionUserCoolingDown, resetSessionUserCache } from '../api/sessionUser'
+
+function readRoleFromToken(token = '') {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return String(payload?.role || '')
+  } catch {
+    return ''
+  }
+}
 
 export default function ProtectedRoute({ children, requireFeature }) {
   const loc = useLocation()
   const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
   const [me, setMe] = useState(null)
   const [err, setErr] = useState(null)
+  const [softWarning, setSoftWarning] = useState('')
 
   useEffect(() => {
-    if (!token) return
-    api.get('/auth/me')
-      .then(r => setMe(r.data))
-      .catch(e => setErr(e))
+    if (!token) {
+      return
+    }
+
+    let cancelled = false
+
+    getSessionUser()
+      .then((user) => {
+        if (cancelled) return
+        const fallbackUser = user || { role: readRoleFromToken(token) }
+        setMe(fallbackUser)
+        if (isSessionUserCoolingDown()) {
+          setSoftWarning('Vérification de session temporairement ralentie. Votre accès est conservé.')
+        } else {
+          setSoftWarning('')
+        }
+      })
+      .catch((e) => {
+        if (cancelled) return
+        if (e?.response?.status === 429) {
+          setMe((prev) => prev || { role: readRoleFromToken(token) })
+          setSoftWarning('Vérification de session temporairement ralentie. Votre accès est conservé.')
+          return
+        }
+        setErr(e)
+      })
+
+    return () => { cancelled = true }
   }, [token])
 
   if (!token) {
@@ -27,6 +61,7 @@ export default function ProtectedRoute({ children, requireFeature }) {
 
   if (err) {
     if (err.response?.status === 401) {
+      resetSessionUserCache()
       clearStoredSession()
       return <Navigate to="/login?reason=expired" replace />
     }
@@ -55,5 +90,14 @@ export default function ProtectedRoute({ children, requireFeature }) {
     return <Paywall feature={requireFeature} plan={me.plan || 'trial'} />
   }
 
-  return children
+  return (
+    <>
+      {softWarning && (
+        <div className="mx-auto mt-2 w-[min(95%,980px)] rounded-xl border border-amber-300/40 bg-amber-50/90 px-4 py-2 text-xs font-medium text-amber-900">
+          {softWarning}
+        </div>
+      )}
+      {children}
+    </>
+  )
 }

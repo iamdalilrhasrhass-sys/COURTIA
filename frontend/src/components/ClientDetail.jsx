@@ -135,7 +135,7 @@ export default function ClientDetail() {
       const response = await callArkAI(clientData, arkMessage, token)
       setArkResponse(response)
       setArkMessage('')
-    } catch (error) {
+    } catch (_error) {
       setArkResponse('Erreur: Impossible de contacter ARK.')
     } finally {
       setArkLoading(false)

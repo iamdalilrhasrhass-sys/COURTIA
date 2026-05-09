@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles } from 'lucide-react'
+import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase, Shield } from 'lucide-react'
 import api from '../api'
+import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
@@ -11,9 +12,70 @@ const NAV_ITEMS = [
   { id: 'securite', label: 'Sécurité', icon: Lock },
   { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'templates', label: 'Templates', icon: Mail },
+  { id: 'conformite', label: 'Conformité', icon: Shield },
+  { id: 'integrations', label: 'Intégrations', icon: Link },
+]
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
+const COMPLIANCE_FIELDS = [
+  ['orias', 'Numéro ORIAS'],
+  ['cabinet', 'Nom du cabinet'],
+  ['telephone', 'Téléphone cabinet'],
 ]
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
+
+const INTEGRATION_META = {
+  google_calendar: {
+    title: 'Google Agenda',
+    icon: CalendarDays,
+    connectPath: '/integrations/google-calendar/connect',
+    syncPath: '/integrations/google-calendar/sync',
+    disconnectPath: '/integrations/google-calendar/disconnect',
+    description: 'Synchronisez vos rendez-vous courtier et enrichissez Morning Brief.',
+  },
+  whatsapp_business: {
+    title: 'WhatsApp Business',
+    icon: MessageSquare,
+    connectPath: '/integrations/whatsapp/configure',
+    syncPath: null,
+    disconnectPath: '/integrations/whatsapp/configure',
+    description: 'Centralisez les échanges clients WhatsApp dans la fiche 360.',
+  },
+  gmail: {
+    title: 'Gmail',
+    icon: Mail,
+    connectPath: '/integrations/gmail/connect',
+    syncPath: '/integrations/gmail/sync',
+    disconnectPath: '/integrations/gmail/disconnect',
+    description: 'Préparez la centralisation des échanges email professionnels.',
+  },
+  outlook: {
+    title: 'Outlook',
+    icon: Briefcase,
+    connectPath: '/integrations/outlook/connect',
+    syncPath: '/integrations/outlook/sync',
+    disconnectPath: '/integrations/outlook/disconnect',
+    description: 'Connectez Microsoft 365 pour un suivi client multi-canal.',
+  },
+}
+const DEFAULT_INTEGRATIONS = Object.keys(INTEGRATION_META).map((provider) => ({
+  provider,
+  status: 'configuration_required',
+  metadata: {},
+  last_sync_at: null,
+}))
+
+function getIntegrationLabel(status = '') {
+  const normalized = String(status || '').toLowerCase()
+  if (normalized === 'connected') return { text: 'Connecté', classes: 'bg-emerald-100 text-emerald-700' }
+  if (normalized === 'configured') return { text: 'Configuré', classes: 'bg-blue-100 text-blue-700' }
+  if (normalized === 'authorization_received') return { text: 'Autorisation reçue', classes: 'bg-amber-100 text-amber-700' }
+  if (normalized === 'pending_oauth') return { text: 'Connexion en attente', classes: 'bg-amber-100 text-amber-700' }
+  if (normalized === 'configuration_required') return { text: 'Configuration requise', classes: 'bg-rose-100 text-rose-700' }
+  if (normalized === 'oauth_denied') return { text: 'Connexion refusée', classes: 'bg-rose-100 text-rose-700' }
+  return { text: 'Non connecté', classes: 'bg-gray-100 text-gray-700' }
+}
 
 const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
   <div className="flex items-center justify-between py-3">
@@ -35,7 +97,8 @@ const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
 
 export default function Parametres() {
   const navigate = useNavigate()
-  const [activeSection, setActiveSection] = useState('profil')
+  const location = useLocation()
+  const [activeSection, setActiveSection] = useState(() => (location.pathname.endsWith('/integrations') ? 'integrations' : 'profil'))
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -43,27 +106,46 @@ export default function Parametres() {
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
   const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
+  const [integrations, setIntegrations] = useState(() => (INTEGRATIONS_API_ENABLED ? [] : DEFAULT_INTEGRATIONS))
+  const [integrationsLoading, setIntegrationsLoading] = useState(false)
+  const [integrationAction, setIntegrationAction] = useState('')
+  const [whatsappConfig, setWhatsappConfig] = useState({ phone_number_id: '', business_account_id: '' })
+  const [templates, setTemplates] = useState([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
 
-  useEffect(() => { fetchProfile() }, [])
+  useEffect(() => {
+    fetchProfile()
+    if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
+    fetchTemplates()
+  }, [])
 
-  async function fetchProfile() {
+
+  async function fetchProfile(options = {}) {
+    const { force = false, silent = false } = options
     try {
-      setLoading(true)
-      const { data } = await api.get('/auth/me')
+      if (!silent) setLoading(true)
+      const data = await getSessionUser({ force, allowStaleOn429: true })
+      if (!data) throw new Error('session_unavailable')
+
+      primeSessionUserCache(data)
       setProfile(data)
       setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
-      localStorage.setItem('courtia_user', JSON.stringify(data))
-      window.dispatchEvent(new Event('profileUpdated'))
-    } catch { toast.error('Impossible de charger le profil') } 
-    finally { setLoading(false) }
+    } catch {
+      toast.error('Impossible de charger le profil')
+    } finally {
+      if (!silent) setLoading(false)
+    }
   }
 
   async function handleProfileSubmit(e) {
     e.preventDefault(); setSaving(true)
     try {
       await api.put('/auth/me', form)
+      const optimisticProfile = { ...(profile || {}), ...form }
+      setProfile(optimisticProfile)
+      primeSessionUserCache(optimisticProfile)
       toast.success('Profil mis à jour ✓')
-      fetchProfile()
+      fetchProfile({ force: true, silent: true })
     } catch { toast.error('Erreur lors de la sauvegarde') } 
     finally { setSaving(false) }
   }
@@ -71,6 +153,90 @@ export default function Parametres() {
   function handlePasswordSubmit(e) {
     e.preventDefault()
     toast('Fonctionnalité bientôt disponible.', { icon: '🚧' })
+  }
+
+  async function fetchIntegrations({ silent = false } = {}) {
+    if (!INTEGRATIONS_API_ENABLED) {
+      setIntegrations(DEFAULT_INTEGRATIONS)
+      return
+    }
+    try {
+      if (!silent) setIntegrationsLoading(true)
+      const res = await api.get('/integrations/status')
+      const list = Array.isArray(res?.data?.integrations) ? res.data.integrations : []
+      setIntegrations(list)
+      const wa = list.find((i) => i.provider === 'whatsapp_business')
+      setWhatsappConfig({
+        phone_number_id: wa?.metadata?.phone_number_id || '',
+        business_account_id: wa?.metadata?.business_account_id || '',
+      })
+    } catch {
+      if (!silent) toast.error('Impossible de charger les intégrations')
+    } finally {
+      if (!silent) setIntegrationsLoading(false)
+    }
+  }
+
+  async function fetchTemplates() {
+    setTemplatesLoading(true)
+    try {
+      const res = await api.get('/templates')
+      setTemplates(Array.isArray(res?.data?.rows) ? res.data.rows : [])
+    } catch {
+      setTemplates([])
+    } finally {
+      setTemplatesLoading(false)
+    }
+  }
+
+  async function handleIntegrationAction(provider, action) {
+    if (!INTEGRATIONS_API_ENABLED) {
+      toast('API intégrations en cours de déploiement. Configurez VITE_INTEGRATIONS_API_ENABLED=true quand le backend est prêt.', { icon: 'ℹ️' })
+      return
+    }
+    const meta = INTEGRATION_META[provider]
+    if (!meta) return
+
+    const actionKey = `${provider}:${action}`
+    setIntegrationAction(actionKey)
+    try {
+      if (provider === 'whatsapp_business' && action === 'connect') {
+        await api.post(meta.connectPath, {
+          phone_number_id: whatsappConfig.phone_number_id || undefined,
+          business_account_id: whatsappConfig.business_account_id || undefined,
+        })
+        toast.success('Configuration WhatsApp enregistrée')
+        await fetchIntegrations({ silent: true })
+        return
+      }
+
+      if (action === 'connect') {
+        const res = await api.post(meta.connectPath)
+        const authUrl = res?.data?.authUrl
+        if (authUrl) {
+          window.location.href = authUrl
+          return
+        }
+        toast.success('Connexion initialisée')
+      } else if (action === 'sync' && meta.syncPath) {
+        const res = await api.post(meta.syncPath)
+        if (typeof res?.data?.synced === 'number') {
+          toast.success(`Synchronisation terminée (${res.data.synced})`)
+        } else {
+          toast.success('Synchronisation terminée')
+        }
+      } else if (action === 'disconnect' && meta.disconnectPath) {
+        await api.post(meta.disconnectPath)
+        toast.success('Intégration déconnectée')
+      }
+
+      await fetchIntegrations({ silent: true })
+    } catch (err) {
+      const msg = err?.response?.data?.details || err?.response?.data?.error || err?.message || 'Action impossible'
+      toast.error(String(msg))
+    } finally {
+      setIntegrationAction('')
+    }
   }
 
   const handleNavClick = (sectionId) => {
@@ -85,10 +251,16 @@ export default function Parametres() {
     pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 159, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
     starter: { label: "L'Essentiel", classes: 'bg-emerald-100 text-emerald-700', price: 89, features: ["Jusqu'à 200 clients", 'Scores & Segments', 'Module Tâches'] },
     elite: { label: 'Le Réseau', classes: 'bg-violet-100 text-violet-700', price: 350, features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
-    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: 0, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'] }
+    founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: null, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'], noSubscriptionText: 'Offre en cours de configuration' }
   }
   const tier = (profile?.pricing_tier || '').toLowerCase()
-  const currentPlan = planConfig[tier] || { label: profile?.pricing_tier || 'N/A', classes: 'bg-gray-100 text-gray-700', price: 0, features: [] }
+  const currentPlan = planConfig[tier] || {
+    label: profile?.pricing_tier || 'Aucun abonnement actif',
+    classes: 'bg-gray-100 text-gray-700',
+    price: null,
+    features: [],
+    noSubscriptionText: 'Aucun abonnement actif'
+  }
 
   if (loading) {
     return (
@@ -145,7 +317,7 @@ export default function Parametres() {
             <section id="profil" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Profil</h2>
               <p className="text-sm text-white/50 mb-5">Informations publiques et coordonnées.</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handleProfileSubmit}>
                   <div className="p-6 space-y-5">
                     <div className="flex items-center gap-6">
@@ -172,7 +344,7 @@ export default function Parametres() {
             <section id="securite" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Sécurité</h2>
               <p className="text-sm text-white/50 mb-5">Changez votre mot de passe.</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handlePasswordSubmit}>
                     <div className="p-6 space-y-5">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -192,19 +364,21 @@ export default function Parametres() {
             <section id="abonnement" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Abonnement</h2>
               <p className="text-sm text-white/50 mb-5">Gérez votre abonnement et consultez vos factures.</p>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-3">
                             <p className="font-semibold text-gray-800">Votre plan actuel</p>
                             <span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span>
                         </div>
-                        <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                        {typeof currentPlan.price === 'number'
+                          ? <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                          : <p className="mt-2 text-lg font-semibold text-gray-600">{currentPlan.noSubscriptionText || 'Aucun abonnement actif'}</p>}
                         <ul className="mt-4 space-y-2 text-sm text-gray-600">
                             {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
                         </ul>
                     </div>
-                    <button onClick={() => navigate('/abonnement')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Upgrader mon plan</button>
+                    <button onClick={() => navigate('/billing')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Gérer mon abonnement</button>
                 </div>
               </div>
             </section>
@@ -212,11 +386,200 @@ export default function Parametres() {
             <section id="notifications" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Notifications</h2>
               <p className="text-sm text-white/50 mb-5">Choisissez comment nous pouvons vous contacter.</p>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
                 <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} setEnabled={() => { setNotifications({...notifications, echeances: !notifications.echeances}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
+              </div>
+            </section>
+
+            <section id="templates" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Templates messages</h2>
+              <p className="text-sm text-white/50 mb-5">Modèles email et WhatsApp utilisés par ARK pour préparer les relances.</p>
+              <div className="courtia-depth-card rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <p className="text-xs text-gray-500">Templates système et modèles cabinet. Les variables utilisent le format <code>{'{{client}}'}</code>.</p>
+                  <button
+                    type="button"
+                    onClick={fetchTemplates}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Actualiser
+                  </button>
+                </div>
+                {templatesLoading ? (
+                  <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">Chargement des templates…</p>
+                ) : templates.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                    Les templates seront disponibles dès que la migration PR10 sera appliquée.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {templates.slice(0, 8).map((tpl) => (
+                      <div key={tpl.id || `${tpl.channel}-${tpl.kind}-${tpl.name}`} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <h3 className="text-sm font-bold text-gray-900">{tpl.name}</h3>
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">{tpl.channel}</span>
+                        </div>
+                        {tpl.subject && <p className="mb-1 text-xs font-semibold text-gray-700">{tpl.subject}</p>}
+                        <p className="line-clamp-3 text-xs leading-relaxed text-gray-500">{tpl.body_text}</p>
+                        <p className="mt-3 text-[10px] uppercase tracking-[0.12em] text-gray-400">{tpl.scope} · {tpl.kind}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section id="conformite" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Conformité DDA</h2>
+              <p className="text-sm text-white/50 mb-5">Informations utilisées pour générer les FIC, mandats et devoirs de conseil.</p>
+              <div className="courtia-depth-card rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                  COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation et de la remise des documents au client.
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {COMPLIANCE_FIELDS.map(([key, label]) => (
+                    <label key={key} className="text-xs font-semibold text-gray-600">
+                      {label}
+                      <input
+                        value={form[key] || ''}
+                        onChange={e => setForm({ ...form, [key]: e.target.value })}
+                        className={`${inputClass} mt-1`}
+                        placeholder={label}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleProfileSubmit}
+                    disabled={saving}
+                    className="rounded-lg bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 disabled:opacity-60"
+                  >
+                    {saving ? 'Sauvegarde...' : 'Sauvegarder la conformité'}
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section id="integrations" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Intégrations</h2>
+              <p className="text-sm text-white/50 mb-5">Connectez agenda, WhatsApp et email pour alimenter ARK sans bricolage.</p>
+
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs text-white/60">Tokens stockés côté backend uniquement. Consentement requis pour chaque connexion.</p>
+                <button
+                  type="button"
+                  onClick={() => fetchIntegrations()}
+                  disabled={integrationsLoading || !INTEGRATIONS_API_ENABLED}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-60"
+                >
+                  <RefreshCw size={12} className={integrationsLoading ? 'animate-spin' : ''} />
+                  Actualiser
+                </button>
+              </div>
+              {!INTEGRATIONS_API_ENABLED && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Intégrations prêtes côté interface. Activez `VITE_INTEGRATIONS_API_ENABLED=true` quand l’API backend d’intégrations est déployée.
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4">
+                {Object.entries(INTEGRATION_META).map(([provider, meta]) => {
+                  const row = integrations.find((item) => item.provider === provider) || { status: 'disconnected', metadata: {} }
+                  const statusBadge = getIntegrationLabel(row.status)
+                  const busy = integrationAction.startsWith(`${provider}:`)
+                  const Icon = meta.icon
+                  const canSync = Boolean(meta.syncPath) && (row.status === 'connected' || row.status === 'authorization_received' || row.status === 'configured')
+
+                  return (
+                    <div key={provider} className="courtia-depth-card rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 rounded-xl bg-blue-50 p-2 text-blue-700">
+                            <Icon size={16} />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-gray-900">{meta.title}</h3>
+                            <p className="text-xs text-gray-500">{meta.description}</p>
+                          </div>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${statusBadge.classes}`}>
+                          {statusBadge.text}
+                        </span>
+                      </div>
+
+                      {provider === 'whatsapp_business' && (
+                        <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <label className="text-xs font-medium text-gray-600">
+                            Phone Number ID
+                            <input
+                              value={whatsappConfig.phone_number_id}
+                              onChange={(e) => setWhatsappConfig((prev) => ({ ...prev, phone_number_id: e.target.value }))}
+                              placeholder="Meta phone number id"
+                              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-800"
+                            />
+                          </label>
+                          <label className="text-xs font-medium text-gray-600">
+                            Business Account ID
+                            <input
+                              value={whatsappConfig.business_account_id}
+                              onChange={(e) => setWhatsappConfig((prev) => ({ ...prev, business_account_id: e.target.value }))}
+                              placeholder="Meta business account id"
+                              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-800"
+                            />
+                          </label>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleIntegrationAction(provider, 'connect')}
+                          disabled={busy || !INTEGRATIONS_API_ENABLED}
+                          className="rounded-lg bg-[#2563eb] px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {provider === 'whatsapp_business' ? 'Configurer' : 'Connecter'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleIntegrationAction(provider, 'sync')}
+                          disabled={busy || !canSync || !INTEGRATIONS_API_ENABLED}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                        >
+                          Synchroniser
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleIntegrationAction(provider, 'disconnect')}
+                          disabled={busy || !INTEGRATIONS_API_ENABLED}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                        >
+                          Déconnecter
+                        </button>
+                      </div>
+
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        Dernière synchro: {row.last_sync_at ? new Date(row.last_sync_at).toLocaleString('fr-FR') : 'jamais'}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="courtia-depth-card mt-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-gray-900">Make / Zapier / Webhooks</h3>
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700">
+                    Bientôt disponible
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Les endpoints backend sont prêts (`/api/webhooks/incoming` et `/api/webhooks/outgoing/test`) pour brancher vos automatisations cabinet.
+                </p>
               </div>
             </section>
           </div>

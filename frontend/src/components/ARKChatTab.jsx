@@ -22,7 +22,7 @@ const formatContent = (text) => {
   });
 };
 
-const Message = ({ message, clientName }) => {
+const Message = ({ message, _clientName }) => {
   const isUser = message.role === 'user';
   return (
     <motion.div
@@ -94,7 +94,7 @@ export default function ARKChatTab({ clientId, client }) {
   const fetchHistory = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data } = await api.get(`/api/ark/history/${clientId}`);
+      const { data } = await api.get(`/ark/history/${clientId}`);
       setMessages(data.messages || []);
     } catch (err) {
       console.error("ARK history error:", err.message);
@@ -145,7 +145,7 @@ export default function ARKChatTab({ clientId, client }) {
   const handleClearHistory = async () => {
     if (messages.length === 0 || !window.confirm('Voulez-vous vraiment effacer cet historique ? Cette action est irréversible.')) return;
     try {
-      await api.delete(`/api/ark/history/${clientId}`);
+      await api.delete(`/ark/history/${clientId}`);
       setMessages([]);
       toast.success('Historique effacé.');
     } catch {

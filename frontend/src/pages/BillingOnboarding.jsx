@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CheckCircle2, ShieldCheck, CreditCard, Sparkles } from 'lucide-react'
+import { CheckCircle2, ShieldCheck, CreditCard, Sparkles, CalendarDays, MessageSquare, Mail, ArrowRight } from 'lucide-react'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 
@@ -94,7 +94,7 @@ export default function BillingOnboarding() {
         return
       }
 
-      const checkoutRes = await api.post('/billing/create-checkout-session', {
+      const checkoutRes = await api.post('/billing/checkout', {
         plan_code: planCode,
         legal_acceptance_id: acceptanceRes.data?.acceptance_id,
       })
@@ -190,6 +190,48 @@ export default function BillingOnboarding() {
           </section>
         </div>
 
+        <section style={cardStyle}>
+          <h2 style={h2Style}>Onboarding courtier en 4 étapes</h2>
+          <p style={{ marginTop: 0, color: 'rgba(255,255,255,0.68)', fontSize: 13 }}>
+            Objectif: être opérationnel en moins de 3 minutes, sans perdre le contexte métier.
+          </p>
+          <div style={{ display: 'grid', gap: 10 }}>
+            <StepCard
+              index={1}
+              title="Informations cabinet"
+              description="Profil cabinet, ORIAS, contact et facturation."
+              actionLabel="Rester sur cette étape"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            />
+            <StepCard
+              index={2}
+              title="Importer vos clients"
+              description="CSV / Excel avec preview, mapping et détection de doublons."
+              actionLabel="Ouvrir l’import"
+              onClick={() => navigate('/import')}
+            />
+            <StepCard
+              index={3}
+              title="Connecter vos outils"
+              description="Google Agenda, WhatsApp Business, Gmail et Outlook (activation selon configuration)."
+              actionLabel="Configurer les intégrations"
+              onClick={() => navigate('/parametres')}
+              badges={[
+                { icon: CalendarDays, label: 'Google Agenda' },
+                { icon: MessageSquare, label: 'WhatsApp Business' },
+                { icon: Mail, label: 'Gmail / Outlook' },
+              ]}
+            />
+            <StepCard
+              index={4}
+              title="Lancer ARK"
+              description="Générer vos premières priorités du jour depuis Morning Brief."
+              actionLabel="Ouvrir Morning Brief"
+              onClick={() => navigate('/morning-brief')}
+            />
+          </div>
+        </section>
+
         {error && <div style={errorStyle}>{error}</div>}
         {success && <div style={successStyle}>{success}</div>}
 
@@ -252,6 +294,55 @@ function Mini({ icon: Icon, text }) {
   )
 }
 
+function StepCard({ index, title, description, actionLabel, onClick, badges = [] }) {
+  return (
+    <div
+      style={{
+        border: '1px solid rgba(255,255,255,0.12)',
+        borderRadius: 12,
+        background: 'rgba(255,255,255,0.02)',
+        padding: 12,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.56)' }}>Étape {index}</p>
+          <h3 style={{ margin: '3px 0 4px', fontSize: 15 }}>{title}</h3>
+          <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: 13 }}>{description}</p>
+        </div>
+        <button type="button" onClick={onClick} style={miniActionStyle}>
+          {actionLabel} <ArrowRight size={13} />
+        </button>
+      </div>
+      {badges.length > 0 && (
+        <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {badges.map((badge) => {
+            const BadgeIcon = badge.icon
+            return (
+              <span
+                key={badge.label}
+                style={{
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  borderRadius: 999,
+                  padding: '4px 8px',
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.82)',
+                  display: 'inline-flex',
+                  gap: 5,
+                  alignItems: 'center',
+                }}
+              >
+                <BadgeIcon size={11} />
+                {badge.label}
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const cardStyle = {
   background: 'rgba(255,255,255,0.04)',
   border: '1px solid rgba(255,255,255,0.09)',
@@ -277,6 +368,18 @@ const ghostBtnStyle = {
   borderRadius: 10,
   padding: '10px 14px',
   cursor: 'pointer',
+}
+const miniActionStyle = {
+  border: '1px solid rgba(255,255,255,0.2)',
+  background: 'rgba(255,255,255,0.04)',
+  color: '#fff',
+  borderRadius: 9,
+  padding: '8px 10px',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  whiteSpace: 'nowrap',
 }
 const errorStyle = {
   border: '1px solid rgba(251,113,133,0.6)',

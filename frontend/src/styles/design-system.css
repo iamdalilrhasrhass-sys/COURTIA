@@ -298,3 +298,50 @@ body {
   0% { transform: translate3d(-2%, -1%, 0) scale(1); }
   100% { transform: translate3d(2%, 1%, 0) scale(1.04); }
 }
+
+/* ════════════════════════════════════════
+   SUBTLE 3D SYSTEM (global, non-intrusive)
+   ════════════════════════════════════════ */
+.courtia-depth-stage {
+  perspective: 1600px;
+  perspective-origin: 50% 10%;
+}
+
+.courtia-depth-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 240ms var(--ease-out), box-shadow 240ms var(--ease-out), border-color 240ms var(--ease-out);
+}
+
+.courtia-depth-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(130deg, rgba(255,255,255,0.18), transparent 24%, transparent 76%, rgba(34,211,238,0.10)),
+    radial-gradient(circle at 12% 8%, rgba(124,58,237,0.10), transparent 34%);
+  opacity: 0.68;
+  transition: opacity 240ms var(--ease-out);
+}
+
+.courtia-depth-card:hover::after {
+  opacity: 0.92;
+}
+
+.courtia-depth-float {
+  animation: courtiaDepthFloat 7.5s ease-in-out infinite;
+}
+
+@keyframes courtiaDepthFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .courtia-depth-float {
+    animation: none !important;
+  }
+}

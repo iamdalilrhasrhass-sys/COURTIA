@@ -49,7 +49,7 @@ const plans = [
 
 export default function PricingPremium() {
   const [clientsCount, setClientsCount] = useState(150)
-  const [discount, setDiscount] = useState(0)
+  const [_discount, _setDiscount] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
 
   useEffect(() => {

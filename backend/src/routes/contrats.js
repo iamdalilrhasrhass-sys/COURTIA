@@ -40,7 +40,8 @@ router.get('/', verifyToken, async (req, res) => {
         (q.quote_data->>'prime_annuelle')::decimal as prime_annuelle,
         q.quote_data->>'date_effet' as date_effet,
         q.quote_data->>'date_echeance' as date_echeance,
-        c.first_name as client_nom, c.last_name as client_prenom,
+        c.first_name as client_prenom, c.last_name as client_nom,
+        c.risk_score as risk_score,
         q.created_at
       FROM quotes q
       JOIN clients c ON q.client_id = c.id AND c.courtier_id = $2
@@ -56,7 +57,8 @@ router.get('/', verifyToken, async (req, res) => {
         (q.quote_data->>'prime_annuelle')::decimal as prime_annuelle,
         q.quote_data->>'date_effet' as date_effet,
         q.quote_data->>'date_echeance' as date_echeance,
-        c.first_name as client_nom, c.last_name as client_prenom,
+        c.first_name as client_prenom, c.last_name as client_nom,
+        c.risk_score as risk_score,
         q.created_at
       FROM quotes q
       JOIN clients c ON q.client_id = c.id AND c.courtier_id = $1

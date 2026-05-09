@@ -18,7 +18,7 @@ export const useClientStore = create((set, get) => ({
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       set({ clients: data.clients || [], loading: false })
-    } catch (err) {
+    } catch (_err) {
       set({ error: 'Impossible de charger la liste des clients.', loading: false })
     }
   },
@@ -98,7 +98,7 @@ export const useClientStore = create((set, get) => ({
       if (!res.ok) return false
       set((state) => ({ clients: state.clients.filter((c) => c.id !== id) }))
       return true
-    } catch (err) {
+    } catch (_err) {
       set({ error: 'Impossible de supprimer le client.' })
       return false
     }

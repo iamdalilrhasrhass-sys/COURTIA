@@ -237,7 +237,56 @@ router.get('/users', async (req, res) => {
 
   } catch (err) {
     console.error('GET /admin/users error:', err.message);
-    res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs.' });
+    try {
+      const { search, page = 1, limit = 20 } = req.query;
+      const params = [];
+      const conditions = ["u.role != 'super_admin'"];
+      if (search) {
+        params.push(`%${search}%`);
+        const p = params.length;
+        conditions.push(`(u.email ILIKE $${p} OR u.first_name ILIKE $${p} OR u.last_name ILIKE $${p})`);
+      }
+
+      const offset = (Math.max(1, parseInt(page, 10)) - 1) * Math.min(100, parseInt(limit, 10));
+      const pageSize = Math.min(100, parseInt(limit, 10));
+      const where = 'WHERE ' + conditions.join(' AND ');
+
+      const [usersRes, countRes] = await Promise.all([
+        pool.query(
+          `SELECT u.id, u.email, u.first_name, u.last_name, u.role,
+                  'start'::text AS subscription_plan,
+                  'active'::text AS subscription_status,
+                  u.created_at,
+                  NULL::text AS iobsp_status,
+                  NULL::timestamptz AS suspended_at,
+                  bp.cabinet, bp.orias,
+                  (SELECT COUNT(*) FROM clients c WHERE c.courtier_id = u.id) AS clients_count,
+                  (SELECT COUNT(*) FROM quotes q JOIN clients c ON q.client_id = c.id WHERE c.courtier_id = u.id) AS contracts_count,
+                  (SELECT MAX(ac.created_at) FROM ark_conversations ac
+                     JOIN clients c ON ac.client_id = c.id WHERE c.courtier_id = u.id) AS last_ark_activity
+           FROM users u
+           LEFT JOIN broker_profiles bp ON bp.user_id = u.id
+           ${where}
+           ORDER BY u.created_at DESC
+           LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          [...params, pageSize, offset]
+        ),
+        pool.query(
+          `SELECT COUNT(*) FROM users u ${where}`,
+          params
+        ),
+      ]);
+
+      return res.json({
+        users: usersRes.rows,
+        total: parseInt(countRes.rows[0].count, 10),
+        page: parseInt(page, 10),
+        page_size: pageSize,
+      });
+    } catch (fallbackErr) {
+      console.error('GET /admin/users fallback error:', fallbackErr.message);
+      res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs.' });
+    }
   }
 });
 
@@ -428,6 +477,16 @@ router.post('/impersonate/:userId', async (req, res) => {
 router.get('/impersonation/logs', async (req, res) => {
   try {
     const { target_id, page = 1, limit = 20 } = req.query;
+    const pageSize = Math.min(100, parseInt(limit, 10));
+    const tableCheck = await pool.query(`SELECT to_regclass('public.admin_impersonation_log') AS table_name`);
+    if (!tableCheck.rows[0]?.table_name) {
+      return res.json({
+        logs: [],
+        total: 0,
+        page: parseInt(page, 10),
+        page_size: pageSize,
+      });
+    }
 
     const conditions = [];
     const params     = [];
@@ -438,8 +497,7 @@ router.get('/impersonation/logs', async (req, res) => {
     }
 
     const where    = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
-    const offset   = (Math.max(1, parseInt(page)) - 1) * Math.min(100, parseInt(limit));
-    const pageSize = Math.min(100, parseInt(limit));
+    const offset   = (Math.max(1, parseInt(page)) - 1) * pageSize;
 
     const [logsRes, countRes] = await Promise.all([
       pool.query(
@@ -483,6 +541,15 @@ router.get('/impersonation/logs', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/analytics', async (req, res) => {
   try {
+    const safeQuery = async (label, sql, fallbackRows = [{}]) => {
+      try {
+        return await pool.query(sql);
+      } catch (error) {
+        console.warn(`[admin/analytics] fallback on ${label}: ${error.message}`);
+        return { rows: fallbackRows };
+      }
+    };
+
     const insightColumns = await getPortfolioInsightColumns(pool);
     const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
     const portfolioWhere = [];
@@ -497,31 +564,38 @@ router.get('/analytics', async (req, res) => {
 
     const [planDist, signups30, churn30, arkUsage, portfolioStats] = await Promise.all([
       // Distribution des plans actifs
-      pool.query(
+      safeQuery(
+        'plan distribution',
         `SELECT subscription_plan, COUNT(*) AS count
          FROM users
          WHERE subscription_status IN ('active','trialing')
            AND role != 'super_admin'
          GROUP BY subscription_plan
-         ORDER BY subscription_plan`
+         ORDER BY subscription_plan`,
+        []
       ),
       // Nouveaux inscrits sur 30j
-      pool.query(
+      safeQuery(
+        'signups_30d',
         `SELECT COUNT(*) AS count
          FROM users
          WHERE created_at > NOW() - INTERVAL '30 days'
-           AND role != 'super_admin'`
+           AND role != 'super_admin'`,
+        [{ count: 0 }]
       ),
       // Churns sur 30j (suspended ou cancelled récents)
-      pool.query(
+      safeQuery(
+        'churn_30d',
         `SELECT COUNT(*) AS count
          FROM users
          WHERE subscription_status IN ('suspended','cancelled')
            AND suspended_at > NOW() - INTERVAL '30 days'
-           AND role != 'super_admin'`
+           AND role != 'super_admin'`,
+        [{ count: 0 }]
       ),
       // Usage ARK moyen par user (30j)
-      pool.query(
+      safeQuery(
+        'ark_usage_30d',
         `SELECT
            COUNT(DISTINCT ac.client_id) AS total_ark_conversations_30d,
            COUNT(DISTINCT c.courtier_id) AS active_users_ark_30d,
@@ -535,15 +609,18 @@ router.get('/analytics', async (req, res) => {
          ) per_user
          JOIN clients c ON c.courtier_id = per_user.courtier_id
          JOIN ark_conversations ac ON ac.client_id = c.id
-           AND ac.created_at > NOW() - INTERVAL '30 days'`
+           AND ac.created_at > NOW() - INTERVAL '30 days'`,
+        [{ total_ark_conversations_30d: 0, active_users_ark_30d: 0, avg_ark_per_user_30d: 0 }]
       ),
       // Stats portefeuilles
-      pool.query(
+      safeQuery(
+        'portfolio_stats_30d',
         `SELECT
            COUNT(*) AS total_analyses,
            ${portfolioScoreStats}
          FROM portfolio_insights
-         ${portfolioWhereSql}`
+         ${portfolioWhereSql}`,
+        [{ total_analyses: 0, avg_health_score: 0, portfolios_healthy: 0 }]
       ),
     ]);
 

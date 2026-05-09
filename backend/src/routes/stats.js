@@ -29,8 +29,8 @@ router.get('/portfolio', verifyToken, async (req, res) => {
     const top10Result = await pool.query(`
       SELECT
         c.id,
-        c.first_name AS nom,
-        c.last_name AS prenom,
+        c.first_name AS prenom,
+        c.last_name AS nom,
         c.email,
         c.loyalty_score,
         c.lifetime_value,
@@ -50,8 +50,8 @@ router.get('/portfolio', verifyToken, async (req, res) => {
         q.quote_data->>'type_contrat' AS type_contrat,
         q.quote_data->>'date_echeance' AS date_echeance,
         NULLIF(q.quote_data->>'prime_annuelle', '')::decimal AS prime_annuelle,
-        c.first_name AS nom,
-        c.last_name AS prenom,
+        c.first_name AS prenom,
+        c.last_name AS nom,
         c.id AS client_id,
         CEIL(EXTRACT(EPOCH FROM (NULLIF(q.quote_data->>'date_echeance', '')::date - NOW())) / 86400)::int AS jours_restants
       FROM quotes q

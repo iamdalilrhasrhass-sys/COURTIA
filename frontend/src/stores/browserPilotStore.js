@@ -30,7 +30,7 @@ const useBrowserPilotStore = create((set, get) => ({
     try {
       const res = await apiGet(`/api/browser-pilot/task?limit=${limit}`)
       set({ tasks: res.data || [] })
-    } catch (err) {
+    } catch (_err) {
       set({ error: "Impossible de charger l'historique des tâches." })
     }
   },
@@ -65,7 +65,7 @@ const useBrowserPilotStore = create((set, get) => ({
       await apiDelete(`/api/browser-pilot/task/${id}`)
       if (get().currentTask?.taskId === id) set({ currentTask: null, status: 'idle' })
       get().fetchTasks()
-    } catch (err) {
+    } catch (_err) {
       set({ error: "Impossible de supprimer la tâche de navigation." })
     }
   },
@@ -74,7 +74,7 @@ const useBrowserPilotStore = create((set, get) => ({
     try {
       const res = await apiGet('/api/browser-pilot/status')
       set({ serviceStatus: res.data })
-    } catch (err) {
+    } catch (_err) {
       set({ error: "Impossible de vérifier l'état du service de navigation." })
     }
   },

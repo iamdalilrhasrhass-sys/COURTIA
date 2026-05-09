@@ -1,15 +1,16 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleBackground from '../components/BubbleBackground'
-import ClientBubbleGridPremium from '../components/ClientBubbleGridPremium'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import '../styles/design-system.css'
+
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
 
 const MOCK_CLIENTS = [
   {id:1,name:'SARL Dupont',email:'contact@dupont.fr',status:'actif',riskScore:28,premium:45000,city:'Paris'},
@@ -58,10 +59,7 @@ const StatusBadge = ({ status }) => {
 
 const ScoreGauge = ({ score }) => {
   const s = Math.min(100, Math.max(0, Number(score) || 0))
-  let color = '#10b981'
-  if (s >= 70) color = '#10b981'
-  else if (s >= 40) color = '#f59e0b'
-  else color = '#ef4444'
+  const color = s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#ef4444'
   const size = 48, strokeWidth = 4, radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (s / 100) * circumference
@@ -144,6 +142,7 @@ export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [useMock, setUseMock] = useState(false)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
   const [sortField, setSortField] = useState('created_at')
@@ -153,21 +152,36 @@ export default function Clients() {
   const navigate = useNavigate()
   const PER_PAGE = 15
 
-  useEffect(() => { fetchClients() }, [])
-
-  async function fetchClients() {
+  const fetchClients = useCallback(async () => {
     try {
       setLoading(true)
+      setError('')
       const res = await api.get('/clients')
-      setClients(res.data?.data || [])
+      const remote = res.data?.data || []
+      if (Array.isArray(remote)) {
+        setClients(remote)
+      } else {
+        setClients([])
+      }
       setUseMock(false)
     } catch (err) {
-      console.error('Impossible de charger les clients.')
-      setClients(MOCK_CLIENTS)
-      setUseMock(true)
+      console.error('Impossible de charger les clients.', err)
+      if (USE_MOCKS) {
+        setClients(MOCK_CLIENTS)
+        setUseMock(true)
+        setError('Mode démonstration actif : l’API clients est indisponible, affichage de données fictives.')
+      } else {
+        setClients([])
+        setUseMock(false)
+        setError('Impossible de charger les clients pour le moment.')
+      }
     }
     finally { setLoading(false) }
-  }
+  }, [])
+
+  // Chargement initial de la liste clients.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchClients() }, [fetchClients])
   
   const filteredClients = useMemo(() => {
     return (clients || []).filter(c => {
@@ -248,6 +262,12 @@ export default function Clients() {
         {useMock && (
           <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
             Aperçu démonstration : l’API clients n’a pas répondu, les lignes affichées sont des données fictives réalistes.
+          </div>
+        )}
+
+        {!useMock && error && (
+          <div className="mb-5 rounded-2xl border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
+            {error}
           </div>
         )}
         
@@ -390,13 +410,111 @@ export default function Clients() {
           )
         )}
 
-        {/* View: Bulles — Aurora Premium */}
+        {/* View: Bulles */}
         {viewMode === 'bulles' && (
-          <ClientBubbleGridPremium
-            clients={paginatedClients}
-            loading={loading}
-            onClientClick={(id) => navigate(`/clients/${id}`)}
-          />
+          <>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="animate-pulse rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.6)', border: 'var(--border-fine)' }}>
+                    <div className="w-1/2 h-4 bg-gray-200 rounded mb-3" />
+                    <div className="w-full h-3 bg-gray-200 rounded mb-2" />
+                    <div className="w-3/4 h-3 bg-gray-200 rounded mb-4" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="h-3 bg-gray-200 rounded" />
+                      <div className="h-3 bg-gray-200 rounded" />
+                      <div className="h-3 bg-gray-200 rounded" />
+                      <div className="h-3 bg-gray-200 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : paginatedClients.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {paginatedClients.map((client) => {
+                  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
+                  const riskScore = client.riskScore ?? client.score_risque ?? 0
+                  const status = (client.status || client.statut || 'inconnu').toLowerCase()
+                  const type = client.segment || client.type || 'particulier'
+                  const contractsCount = client.contracts_count ?? client.nb_contrats ?? '—'
+                  const totalPrime = client.prime_totale ?? client.premium ?? client.lifetime_value
+                  const nextEcheance = client.next_echeance
+                    ? new Date(client.next_echeance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Non renseignée'
+                  const lastInteraction = client.last_contact || client.last_interaction || client.updated_at || null
+                  const lastInteractionLabel = lastInteraction
+                    ? new Date(lastInteraction).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Aucune interaction'
+                  const numericContracts = Number(contractsCount)
+                  const opportunityLabel = Number.isFinite(numericContracts) && numericContracts <= 1
+                    ? 'Multi-équipement à proposer'
+                    : 'Fidélisation / upsell'
+                  const actionLabel = riskScore >= 70
+                    ? 'Relance prioritaire'
+                    : riskScore >= 40
+                      ? 'Suivi à planifier'
+                      : 'Consolidation portefeuille'
+                  const alertLabel = (client.silent_alert || '').toString().trim() || (riskScore >= 70 ? 'Alerte risque' : '')
+
+                  return (
+                    <BubbleCard key={client.id} hover padding={18} onClick={() => navigate(`/clients/${client.id}`)}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-gray-900 tracking-tight">{name}</p>
+                          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                            {type} · {(status || 'inconnu').replace('_', ' ')}
+                          </p>
+                        </div>
+                        <BubbleBadge color={riskScore >= 70 ? '#ef4444' : riskScore >= 40 ? '#f59e0b' : '#10b981'} size="sm">
+                          Risque {riskScore}/100
+                        </BubbleBadge>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Prime annuelle</p>
+                          <p className="font-semibold text-gray-900">{totalPrime ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(totalPrime)) : '—'}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Prochaine échéance</p>
+                          <p className="font-semibold text-gray-900">{nextEcheance}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Contrats</p>
+                          <p className="font-semibold text-gray-900">{contractsCount}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Action ARK</p>
+                          <p className="font-semibold text-gray-900">{actionLabel}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Dernière interaction</p>
+                          <p className="font-semibold text-gray-900">{lastInteractionLabel}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Opportunité</p>
+                          <p className="font-semibold text-gray-900">{opportunityLabel}</p>
+                        </div>
+                      </div>
+
+                      {alertLabel && (
+                        <div className="mt-3 rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: 'rgba(245,158,11,0.12)', color: '#b45309', border: '1px solid rgba(245,158,11,0.25)' }}>
+                          Alerte: {alertLabel}
+                        </div>
+                      )}
+                    </BubbleCard>
+                  )
+                })}
+              </div>
+            ) : (
+              <BubbleCard hover={false} padding={40}>
+                <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="font-semibold">Aucun client trouvé</p>
+                  <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
+                </div>
+              </BubbleCard>
+            )}
+          </>
         )}
 
         {!loading && totalPages > 1 && (

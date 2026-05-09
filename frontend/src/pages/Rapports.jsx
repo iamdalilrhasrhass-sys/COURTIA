@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { BarChart3 } from 'lucide-react'
+import api from '../api'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
-
-const API_URL = import.meta.env.VITE_API_URL || '/api'
-function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
 
 function fmtEur(v) {
   if (v === null || v === undefined || v === '' || isNaN(Number(v))) return '—'
@@ -29,7 +27,6 @@ function KPICard({ label, value, sub }) {
 function DaysBadge({ days }) {
   const veryUrgent = days <= 7
   const urgent = days <= 30
-  const soon = days <= 90
 
   let bg, color
   if (veryUrgent) { bg = '#fee2e2'; color = '#dc2626' }
@@ -59,24 +56,54 @@ export default function Rapports() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [portfolio, setPortfolio] = useState(null)
+  const [clients, setClients] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [commissionStats, setCommissionStats] = useState(null)
+  const [arkRecommendations, setArkRecommendations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
-  const headers = { Authorization: `Bearer ${getToken()}` }
 
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     setLoading(true); setError('')
     try {
-      const [statsRes, portfolioRes] = await Promise.allSettled([
-        fetch(`${API_URL}/api/dashboard/stats`, { headers }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }),
-        fetch(`${API_URL}/api/stats/portfolio`, { headers }).then(r => r.ok ? r.json() : null)
+      const [statsRes, portfolioRes, clientsRes, tasksRes, commissionsRes, arkRes] = await Promise.allSettled([
+        api.get('/dashboard/stats'),
+        api.get('/stats/portfolio'),
+        api.get('/clients?limit=1000'),
+        api.get('/taches'),
+        api.get(`/commissions/stats?year=${new Date().getFullYear()}`),
+        api.get('/ark/recommendations'),
       ])
-      if (statsRes.status === 'fulfilled') setStats(statsRes.value)
-      else setError('Impossible de charger les statistiques')
-      if (portfolioRes.status === 'fulfilled') setPortfolio(portfolioRes.value)
-    } catch { setError('Erreur de chargement') }
+      if (statsRes.status === 'fulfilled') setStats(statsRes.value?.data || null)
+      if (portfolioRes.status === 'fulfilled') setPortfolio(portfolioRes.value?.data || null)
+      if (portfolioRes.status === 'fulfilled') {
+        const rawClients = portfolioRes.value?.data?.clients || []
+        if (Array.isArray(rawClients) && rawClients.length > 0) setClients(rawClients)
+      }
+      if (clientsRes.status === 'fulfilled') {
+        const rows = Array.isArray(clientsRes.value?.data) ? clientsRes.value.data : (clientsRes.value?.data?.data || [])
+        if (Array.isArray(rows)) setClients(rows)
+      }
+      if (tasksRes.status === 'fulfilled') {
+        const rows = Array.isArray(tasksRes.value?.data) ? tasksRes.value.data : (tasksRes.value?.data?.data || [])
+        if (Array.isArray(rows)) setTasks(rows)
+      }
+      if (commissionsRes.status === 'fulfilled') setCommissionStats(commissionsRes.value?.data || null)
+      if (arkRes.status === 'fulfilled') {
+        const rows = Array.isArray(arkRes.value?.data?.data) ? arkRes.value.data.data : (arkRes.value?.data?.rows || [])
+        setArkRecommendations(Array.isArray(rows) ? rows : [])
+      }
+
+      if (statsRes.status !== 'fulfilled' && portfolioRes.status !== 'fulfilled') {
+        setError('Impossible de charger les statistiques')
+      } else if (statsRes.status !== 'fulfilled' || portfolioRes.status !== 'fulfilled') {
+        setError('Certaines données de rapport sont temporairement indisponibles.')
+      }
+    } catch {
+      setError('Erreur de chargement')
+    }
     finally { setLoading(false) }
   }
 
@@ -84,6 +111,21 @@ export default function Rapports() {
   const top10 = portfolio?.top10Loyalty || []
   const renewals = portfolio?.renewalWindows || stats?.alertes || []
   const arkActivity = portfolio?.arkActivity || null
+  const statusMap = stats?.clientsParStatut || {}
+  const totalClients = Number(stats?.totalClients || clients.length || 0)
+  const activeClients = Number(statusMap.actif || clients.filter((c) => String(c.status || c.statut || '').toLowerCase() === 'actif').length)
+  const prospectsCount = Number(statusMap.prospect || clients.filter((c) => String(c.status || c.statut || '').toLowerCase() === 'prospect').length)
+  const lostCount = Number(statusMap.perdu || statusMap['résilié'] || clients.filter((c) => ['perdu', 'résilié', 'resilie'].includes(String(c.status || c.statut || '').toLowerCase())).length)
+  const atRiskCount = Number(statusMap.a_risque || clients.filter((c) => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70).length)
+  const overdueTasksCount = tasks.filter((t) => {
+    const status = String(t.statut || t.status || '').toLowerCase()
+    if (['terminee', 'done', 'completed'].includes(status)) return false
+    const ts = t.echeance ? new Date(t.echeance).getTime() : null
+    return ts && !Number.isNaN(ts) && ts < Date.now()
+  }).length
+  const renewals30 = renewals.filter((r) => Number(r.jours_restants || 999) <= 30).length
+  const renewals60 = renewals.filter((r) => Number(r.jours_restants || 999) <= 60).length
+  const commissionTotal = Number(commissionStats?.totals?.received_amount_cents || commissionStats?.total_received_cents || 0) / 100
 
   const card = { background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px', marginBottom: 16 }
   const thStyle = { padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'white', background: '#0a0a0a', textTransform: 'uppercase', letterSpacing: 0.8, whiteSpace: 'nowrap' }
@@ -136,10 +178,14 @@ export default function Rapports() {
 
         {/* KPIs */}
         <div className="rp-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-          <KPICard label="Clients actifs" value={stats?.totalClients ?? '—'} sub="dans le portefeuille" />
+          <KPICard label="Clients total" value={totalClients} sub="portefeuille" />
+          <KPICard label="Clients actifs" value={activeClients} sub="base active" />
+          <KPICard label="Prospects" value={prospectsCount} sub="à convertir" />
+          <KPICard label="Perdus / résiliés" value={lostCount} sub="à analyser" />
           <KPICard label="Contrats actifs" value={stats?.contratsActifs ?? '—'} sub="en cours" />
-          <KPICard label="Commission mois" value={fmtEur(stats?.commissionsMois)} sub="ce mois-ci" />
-          <KPICard label="Prime portefeuille" value={fmtEur(stats?.primeTotale)} sub="total annuel" />
+          <KPICard label="Prime annuelle" value={fmtEur(stats?.primeTotale)} sub="total cumulé" />
+          <KPICard label="Échéances 30/60j" value={`${renewals30}/${renewals60}`} sub="contrats à traiter" />
+          <KPICard label="Tâches en retard" value={overdueTasksCount} sub={`Clients à risque: ${atRiskCount}`} />
         </div>
 
         {/* Répartition portefeuille */}
@@ -221,7 +267,7 @@ export default function Rapports() {
                         onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
                       >
                         <td style={{ ...tdStyle, color: '#9ca3af', fontWeight: 700, textAlign: 'center' }}>{i + 1}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{client.nom} {client.prenom}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{client.prenom} {client.nom}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', color: '#2563eb', fontWeight: 600 }}>{client.loyalty_score ?? '—'}/100</td>
                         <td style={{ ...tdStyle, textAlign: 'right', color: '#9ca3af' }}>{fmtEur(client.lifetime_value)}</td>
                       </motion.tr>
@@ -259,8 +305,8 @@ export default function Rapports() {
                       const tooltipContent = (
                         <span>
                           Échéance dans <strong>{days}j</strong><br />
-                          {a.type_contrat ? `Contrat : ${a.type_contrat}` : ''}{a.type_contrat && (a.nom || a.prenom) ? ' · ' : ''}
-                          {a.nom || a.prenom ? `${a.nom} ${a.prenom}` : ''}<br />
+                            {a.type_contrat ? `Contrat : ${a.type_contrat}` : ''}{a.type_contrat && (a.nom || a.prenom) ? ' · ' : ''}
+                            {a.nom || a.prenom ? `${a.prenom} ${a.nom}` : ''}<br />
                           <span style={{ color: '#9ca3af', fontSize: 10 }}>Cliquer pour ouvrir le dossier</span>
                         </span>
                       )
@@ -277,7 +323,7 @@ export default function Rapports() {
                             onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
                             onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'white' : '#fafaf8'}
                           >
-                            <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{a.nom} {a.prenom}</td>
+                            <td style={{ ...tdStyle, fontWeight: 600, color: '#0a0a0a' }}>{a.prenom} {a.nom}</td>
                             <td style={{ ...tdStyle, color: '#9ca3af' }}>{a.type_contrat || '—'}</td>
                             <td style={{ ...tdStyle, textAlign: 'right' }}>
                               <DaysBadge days={days} />
@@ -296,11 +342,14 @@ export default function Rapports() {
         {/* Activité ARK */}
         <div className="rp-card" style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>ACTIVITÉ ARK</h2>
-          <div className="rp-ark-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="rp-ark-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             {[
               { label: 'Conversations ce mois', value: arkActivity?.conversationsMois ?? '—' },
               { label: 'Clients analysés', value: arkActivity?.clientsAnalyses ?? '—' },
-              { label: 'Recommandations', value: arkActivity?.recommandations ?? '—' }
+              { label: 'Recommandations', value: arkRecommendations.length || arkActivity?.recommandations || '—' },
+              { label: 'Commissions suivies', value: commissionTotal ? fmtEur(commissionTotal) : '—' },
+              { label: 'Top opportunités ARK', value: arkRecommendations.filter((item) => item.kind === 'multi_equipment').length || '—' },
+              { label: 'Échéances 30/60', value: `${renewals30}/${renewals60}` }
             ].map(item => (
               <div key={item.label} style={{ background: '#fafaf8', border: '0.5px solid #e8e6e0', borderRadius: 10, padding: '18px 20px', textAlign: 'center' }}>
                 <p style={{ fontSize: 28, fontWeight: 500, color: '#0a0a0a', margin: '0 0 6px', letterSpacing: -0.5 }}>{item.value}</p>
