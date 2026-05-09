@@ -130,3 +130,25 @@ Si WhatsApp affiche “configuration requise” :
 3. vérifier `WHATSAPP_APP_SECRET`
 4. vérifier le webhook Meta et son verify token
 5. relancer `npm --prefix backend test -- whatsappBusinessService.test.js --runInBand`
+
+## ARK V1 proactif
+
+- feature flag : `v1_ark_proactive`
+- migration : `020_v1_ark_proactive.sql`
+- rollback : `down/020_v1_ark_proactive.down.sql`
+- routes principales :
+  - `POST /api/ark/morning-brief`
+  - `GET /api/ark/recommendations`
+  - `POST /api/ark/recommendations/:id/act`
+  - `POST /api/ark/recommendations/:id/dismiss`
+  - `POST /api/ark/rewrite`
+  - `GET /api/ark/budget`
+- variables optionnelles : `ANTHROPIC_API_KEY`, `ARK_DEFAULT_MODEL`, `ARK_LIGHT_MODEL`
+- si `ANTHROPIC_API_KEY` manque : ARK passe en fallback déterministe, sans erreur façade
+
+Si ARK renvoie `ark_budget_exceeded` :
+
+1. vérifier `ark_budgets.current_spend_micro_eur`
+2. vérifier `ark_budgets.hard_cap_micro_eur`
+3. décider d’un override admin ou attendre le reset mensuel
+4. relancer `npm --prefix backend test -- arkProactiveService.test.js --runInBand`

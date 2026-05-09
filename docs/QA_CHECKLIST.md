@@ -82,6 +82,18 @@
 - envoi libre sans conversation récente est refusé avec `whatsapp_template_required`
 - envoi via template utilise un template Meta approuvé
 
+## Contrôles ARK V1 proactif
+
+- feature flag `v1_ark_proactive` présent
+- `POST /api/ark/morning-brief` retourne au maximum 5 recommandations actionnables
+- si `ANTHROPIC_API_KEY` absent: réponse propre `mode=local_fallback` / configuration requise côté UI
+- `GET /api/ark/recommendations` liste les cartes non expirées/non masquées
+- `POST /api/ark/recommendations/:id/act` marque une carte comme traitée
+- `POST /api/ark/recommendations/:id/dismiss` masque une carte
+- `GET /api/ark/budget` retourne le budget courant sans exposer de secret
+- Morning Brief affiche un badge `ARK mode local` ou `ARK IA prête`
+- dépassement budget: API 402 propre, pas d’écran blanc
+
 ## Responsive rapide
 
 - desktop
