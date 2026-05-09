@@ -324,7 +324,7 @@ router.post('/relance/trigger-all', verifyToken, async (req, res) => {
     );
 
     const role = userResult.rows[0]?.role;
-    if (role !== 'admin' && role !== 'superadmin') {
+    if (role !== 'admin' && role !== 'super_admin') {
       return res.status(403).json({
         success: false,
         error: 'Accès réservé aux administrateurs',
