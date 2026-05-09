@@ -113,3 +113,20 @@ Si la page commissions est vide :
 2. vérifier que le client du contrat appartient au courtier connecté
 3. vérifier le format CSV (`compagnie,contrat_ref,periode,montant_attendu,montant_recu,statut,notes`)
 4. relancer `npm --prefix backend test -- commissionService.test.js --runInBand`
+
+## WhatsApp Business
+
+- feature flag : `v1_whatsapp_business`
+- migration : `019_v1_whatsapp_business.sql`
+- rollback : `down/019_v1_whatsapp_business.down.sql`
+- variables : `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_APP_SECRET`
+- intégrations : `/api/integrations/whatsapp/*`
+- fiche client : onglet `WhatsApp`
+
+Si WhatsApp affiche “configuration requise” :
+
+1. vérifier `WHATSAPP_ACCESS_TOKEN`
+2. vérifier `WHATSAPP_PHONE_NUMBER_ID`
+3. vérifier `WHATSAPP_APP_SECRET`
+4. vérifier le webhook Meta et son verify token
+5. relancer `npm --prefix backend test -- whatsappBusinessService.test.js --runInBand`
