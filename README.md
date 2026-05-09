@@ -216,3 +216,22 @@ Kit démo commercial:
 - `sales/demo/FAQ_COMMERCIALE.md`
 - `sales/demo/OBJECTIONS_COURTIERS.md`
 - `sales/demo/EMAIL_AFTER_DEMO.md`
+
+## Sprint métier courtier DDA (P0)
+
+Briques ajoutées dans ce sprint:
+- documents métier DDA (`fic`, `mandat_courtage`, `devoir_conseil`, `synthese_client`)
+- statuts documentaires (`brouillon`, `genere`, `envoye`, `signe`, `archive`)
+- journal d’activité documents + timeline client enrichie
+- Gmail V1 réel (`connect/callback/sync/send`)
+- onboarding courtier reprenable (`/api/onboarding/state`, `complete-step`, `skip-step`, `finish`)
+- conformité cabinet renforcée (ORIAS, RC Pro, représentant légal, mentions DDA)
+- pricing Pro ajusté à 199€ HT/mois
+
+Documentation liée:
+- `docs/DDA_COMPLIANCE.md`
+- `docs/RGPD_DPA.md`
+- `docs/SECURITY_OVERVIEW.md`
+- `docs/INTEGRATIONS_GOOGLE_CALENDAR.md`
+- `docs/INTEGRATIONS_GMAIL.md`
+- `docs/BILLING_STRIPE.md`

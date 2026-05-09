@@ -216,6 +216,33 @@ function DocumentsTab({ client, setClient, clientId }) {
   const fileInputRef = useRef(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState(null)
+  const [docTemplate, setDocTemplate] = useState('fic')
+  const [generatingDoc, setGeneratingDoc] = useState(false)
+  const [ddaDocsLoading, setDdaDocsLoading] = useState(false)
+  const [ddaDocs, setDdaDocs] = useState([])
+
+  const DDA_OPTIONS = [
+    { value: 'fic', label: 'FIC' },
+    { value: 'mandat_courtage', label: 'Mandat de courtage' },
+    { value: 'devoir_conseil', label: 'Devoir de conseil' },
+    { value: 'synthese_client', label: 'Synthèse client' },
+  ]
+
+  const fetchDdaDocs = async () => {
+    try {
+      setDdaDocsLoading(true)
+      const res = await api.get(`/documents/client/${clientId}/dda`)
+      setDdaDocs(Array.isArray(res?.data?.data) ? res.data.data : [])
+    } catch {
+      setDdaDocs([])
+    } finally {
+      setDdaDocsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDdaDocs()
+  }, [clientId])
 
   const readFileAsBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -276,6 +303,41 @@ function DocumentsTab({ client, setClient, clientId }) {
     }
   }
 
+  const handleGenerateDdaDocument = async () => {
+    try {
+      setGeneratingDoc(true)
+      const payload = {
+        template: docTemplate,
+        client_id: Number(clientId),
+        status: 'genere',
+        data: {
+          generated_from: 'client_detail',
+          notes: `Document ${docTemplate} généré depuis la fiche client`,
+        },
+      }
+      const res = await api.post('/documents/generate', payload)
+      const next = res?.data?.data
+      if (next) {
+        toast.success('Document métier généré')
+        await fetchDdaDocs()
+      }
+    } catch {
+      toast.error('Génération du document impossible')
+    } finally {
+      setGeneratingDoc(false)
+    }
+  }
+
+  const handleUpdateDdaStatus = async (docId, status) => {
+    try {
+      await api.patch(`/documents/${docId}/status`, { status })
+      toast.success(`Statut document: ${status}`)
+      await fetchDdaDocs()
+    } catch {
+      toast.error('Mise à jour du statut impossible')
+    }
+  }
+
   const getConfidenceColor = (confiance) => {
     if (confiance > 0.8) return 'bg-green-100 text-green-800'
     if (confiance >= 0.5) return 'bg-orange-100 text-orange-800'
@@ -286,6 +348,78 @@ function DocumentsTab({ client, setClient, clientId }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h4 className="font-semibold text-indigo-900">Documents métier DDA</h4>
+          <span className="rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-indigo-700">
+            Aide à structurer et tracer le devoir de conseil
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={docTemplate}
+            onChange={(e) => setDocTemplate(e.target.value)}
+            className="rounded-lg border border-indigo-200 px-3 py-2 text-sm text-indigo-900"
+          >
+            {DDA_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleGenerateDdaDocument}
+            disabled={generatingDoc}
+            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {generatingDoc ? 'Génération...' : 'Générer le document'}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-indigo-700">
+          COURTIA ne garantit pas la conformité réglementaire automatique. Le courtier reste responsable de la validation finale.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <h4 className="mb-3 font-semibold text-gray-900">Suivi des documents DDA</h4>
+        {ddaDocsLoading ? (
+          <p className="text-xs text-gray-500">Chargement des documents DDA...</p>
+        ) : ddaDocs.length === 0 ? (
+          <p className="text-xs text-gray-500">Aucun document DDA pour ce client.</p>
+        ) : (
+          <div className="space-y-2">
+            {ddaDocs.map((doc) => (
+              <div key={doc.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-100 p-2">
+                <span className="text-xs font-semibold text-gray-800">{doc.document_type}</span>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                  v{doc.document_version || 1}
+                </span>
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                  {doc.document_status || 'genere'}
+                </span>
+                <div className="ml-auto flex flex-wrap gap-1">
+                  {['brouillon', 'envoye', 'signe', 'archive'].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => handleUpdateDdaStatus(doc.id, status)}
+                      className="rounded border border-gray-200 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                      {status}
+                    </button>
+                  ))}
+                  <a
+                    href={doc.pdf_url || '#'}
+                    className="rounded border border-indigo-200 px-2 py-1 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-50"
+                  >
+                    PDF
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Upload zone */}
       <div
         className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer"
@@ -444,11 +578,14 @@ const mockMessages = [
 ]
 
 // ─── MESSAGES TAB ──────────────────────────────────────────────────────────
-function MessagesTab() {
+function MessagesTab({ client }) {
   const [messages] = useState(mockMessages)
   const [sendingARK, setSendingARK] = useState(false)
   const [triggeringRelance, setTriggeringRelance] = useState(false)
   const [dossierStatut, setDossierStatut] = useState('en_cours')
+  const [sendingGmail, setSendingGmail] = useState(false)
+  const [emailSubject, setEmailSubject] = useState('Suivi dossier COURTIA')
+  const [emailBody, setEmailBody] = useState('Bonjour,\\n\\nJe reviens vers vous concernant votre dossier.\\n\\nBien cordialement,')
 
   const dossierCfg = DOSSIER_STATUS[dossierStatut] || DOSSIER_STATUS.brouillon
 
@@ -485,6 +622,32 @@ function MessagesTab() {
       toast.error('Échec de la relance')
     } finally {
       setTriggeringRelance(false)
+    }
+  }
+
+  const handleSendGmail = async () => {
+    if (!client?.id) {
+      toast.error('Client invalide')
+      return
+    }
+    if (!emailBody.trim()) {
+      toast.error('Le message email est vide')
+      return
+    }
+    setSendingGmail(true)
+    try {
+      await api.post('/integrations/gmail/send', {
+        clientId: client.id,
+        to: client.email,
+        subject: emailSubject,
+        message: emailBody,
+      })
+      toast.success('Email envoyé via Gmail')
+    } catch (err) {
+      const details = err?.response?.data?.details || err?.response?.data?.error
+      toast.error(details || 'Envoi Gmail impossible (connexion requise)')
+    } finally {
+      setSendingGmail(false)
     }
   }
 
@@ -529,6 +692,30 @@ function MessagesTab() {
       </div>
 
       {/* Liste des messages */}
+      <div style={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 10, background: 'rgba(255,255,255,0.8)' }}>
+        <p style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Composer un email Gmail</p>
+        <input
+          type="text"
+          value={emailSubject}
+          onChange={(e) => setEmailSubject(e.target.value)}
+          placeholder="Objet"
+          style={{ width: '100%', marginBottom: 6, border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: '8px 10px', fontSize: 12 }}
+        />
+        <textarea
+          value={emailBody}
+          onChange={(e) => setEmailBody(e.target.value)}
+          rows={4}
+          placeholder="Votre message"
+          style={{ width: '100%', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: '8px 10px', fontSize: 12, resize: 'vertical' }}
+        />
+        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+          <BubbleButton variant="primary" size="sm" onClick={handleSendGmail} disabled={sendingGmail || !client?.email}>
+            <Mail size={12} />
+            {sendingGmail ? 'Envoi Gmail...' : 'Envoyer via Gmail'}
+          </BubbleButton>
+        </div>
+      </div>
+
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -777,7 +964,7 @@ export default function ClientDetail() {
       case 'historique':
         return <PlaceholderTab title="Historique" icon={Clock} />
       case 'messages':
-        return <MessagesTab clientId={client.id} />
+        return <MessagesTab client={client} />
       default:
         return <PlaceholderTab title="Activité" icon={Activity} />
     }

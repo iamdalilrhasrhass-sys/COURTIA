@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, CreditCard, Sparkles, CalendarDays, MessageSquare, Mail, ArrowRight } from 'lucide-react'
 import api from '../api'
@@ -13,13 +13,15 @@ const PLAN_COPY = {
   },
   pro: {
     title: 'Pro',
-    banner: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour (190,80 € TTC avec TVA 20 %).',
+    banner: '0 € aujourd’hui, puis 199 € HT / mois après le 7e jour (238,80 € TTC avec TVA 20 %).',
   },
   premium: {
     title: 'Premium',
     banner: 'Sur devis — demande de contact.',
   },
 }
+
+const ONBOARDING_STEPS = ['cabinet', 'conformite', 'import', 'integrations', 'morning_brief']
 
 export default function BillingOnboarding() {
   const navigate = useNavigate()
@@ -29,6 +31,13 @@ export default function BillingOnboarding() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [journeyLoading, setJourneyLoading] = useState(true)
+  const [journey, setJourney] = useState({
+    current_step: 'cabinet',
+    completed_steps: [],
+    skipped_steps: [],
+    is_completed: false,
+  })
   const [form, setForm] = useState({
     cabinet_name: '',
     legal_form: '',
@@ -52,6 +61,44 @@ export default function BillingOnboarding() {
   })
 
   const plan = useMemo(() => PLAN_COPY[planCode] || PLAN_COPY.pro, [planCode])
+
+  useEffect(() => {
+    let mounted = true
+    const loadJourney = async () => {
+      try {
+        setJourneyLoading(true)
+        const res = await api.get('/onboarding/state')
+        if (!mounted) return
+        setJourney({
+          current_step: res?.data?.state?.current_step || 'cabinet',
+          completed_steps: Array.isArray(res?.data?.state?.completed_steps) ? res.data.state.completed_steps : [],
+          skipped_steps: Array.isArray(res?.data?.state?.skipped_steps) ? res.data.state.skipped_steps : [],
+          is_completed: !!res?.data?.state?.is_completed,
+        })
+      } catch {
+        if (!mounted) return
+        setJourney((prev) => ({ ...prev }))
+      } finally {
+        if (mounted) setJourneyLoading(false)
+      }
+    }
+    loadJourney()
+    return () => { mounted = false }
+  }, [])
+
+  const markOnboardingStep = async (step, payload = {}) => {
+    try {
+      const res = await api.post('/onboarding/complete-step', { step, payload })
+      setJourney({
+        current_step: res?.data?.state?.current_step || step,
+        completed_steps: Array.isArray(res?.data?.state?.completed_steps) ? res.data.state.completed_steps : [],
+        skipped_steps: Array.isArray(res?.data?.state?.skipped_steps) ? res.data.state.skipped_steps : [],
+        is_completed: !!res?.data?.state?.is_completed,
+      })
+    } catch {
+      // silent: l'onboarding reste utilisable même si la table n'est pas encore initialisée
+    }
+  }
 
   const toggleConsent = (key) => {
     setConsents((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -80,6 +127,10 @@ export default function BillingOnboarding() {
     setLoading(true)
     try {
       await api.post('/billing/onboarding', form)
+      await markOnboardingStep('cabinet', {
+        cabinet_name: form.cabinet_name,
+        orias: form.orias,
+      })
 
       const acceptanceRes = await api.post('/billing/legal-acceptance', {
         plan_code: planCode,
@@ -87,6 +138,11 @@ export default function BillingOnboarding() {
         cgv_version: 'draft-2026-05',
         privacy_version: 'draft-2026-05',
         dpa_version: 'draft-2026-05',
+      })
+      await markOnboardingStep('conformite', {
+        accepted_cgv: consents.accept_cgv,
+        accepted_privacy: consents.accept_privacy,
+        accepted_dpa: consents.accept_dpa,
       })
 
       if (planCode === 'premium') {
@@ -155,6 +211,40 @@ export default function BillingOnboarding() {
           </div>
         </div>
 
+        <section style={cardStyle}>
+          <h2 style={h2Style}>Progression onboarding</h2>
+          {journeyLoading ? (
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Chargement de la progression...</p>
+          ) : (
+            <>
+              <p style={{ margin: '0 0 10px', color: 'rgba(255,255,255,0.72)', fontSize: 13 }}>
+                Étape actuelle: <strong>{journey.current_step || 'cabinet'}</strong>
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {ONBOARDING_STEPS.map((step) => {
+                  const done = journey.completed_steps.includes(step)
+                  const skipped = journey.skipped_steps.includes(step)
+                  return (
+                    <span
+                      key={step}
+                      style={{
+                        borderRadius: 999,
+                        border: '1px solid rgba(255,255,255,0.18)',
+                        padding: '4px 9px',
+                        fontSize: 11,
+                        color: done ? '#86efac' : skipped ? '#fcd34d' : 'rgba(255,255,255,0.76)',
+                        background: done ? 'rgba(34,197,94,0.16)' : skipped ? 'rgba(245,158,11,0.16)' : 'rgba(255,255,255,0.02)',
+                      }}
+                    >
+                      {step}
+                    </span>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </section>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
           <section style={cardStyle}>
             <h2 style={h2Style}>Informations cabinet</h2>
@@ -208,14 +298,20 @@ export default function BillingOnboarding() {
               title="Importer vos clients"
               description="CSV / Excel avec preview, mapping et détection de doublons."
               actionLabel="Ouvrir l’import"
-              onClick={() => navigate('/import')}
+              onClick={async () => {
+                await markOnboardingStep('import')
+                navigate('/import')
+              }}
             />
             <StepCard
               index={3}
               title="Connecter vos outils"
               description="Google Agenda, WhatsApp Business, Gmail et Outlook (activation selon configuration)."
               actionLabel="Configurer les intégrations"
-              onClick={() => navigate('/parametres')}
+              onClick={async () => {
+                await markOnboardingStep('integrations')
+                navigate('/parametres')
+              }}
               badges={[
                 { icon: CalendarDays, label: 'Google Agenda' },
                 { icon: MessageSquare, label: 'WhatsApp Business' },
@@ -227,7 +323,10 @@ export default function BillingOnboarding() {
               title="Lancer ARK"
               description="Générer vos premières priorités du jour depuis Morning Brief."
               actionLabel="Ouvrir Morning Brief"
-              onClick={() => navigate('/morning-brief')}
+              onClick={async () => {
+                await markOnboardingStep('morning_brief')
+                navigate('/morning-brief')
+              }}
             />
           </div>
         </section>
@@ -242,7 +341,14 @@ export default function BillingOnboarding() {
           <button type="button" onClick={() => navigate('/billing')} style={ghostBtnStyle}>
             Voir mon statut billing
           </button>
-          <button type="button" onClick={() => navigate('/dashboard')} style={ghostBtnStyle}>
+          <button
+            type="button"
+            onClick={async () => {
+              await api.post('/onboarding/finish', { payload: { finished_from: 'billing_onboarding_demo' } }).catch(() => {})
+              navigate('/dashboard')
+            }}
+            style={ghostBtnStyle}
+          >
             Continuer sans paiement (mode démo)
           </button>
         </div>

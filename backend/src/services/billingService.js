@@ -56,9 +56,20 @@ async function ensureBillingFoundation() {
     INSERT INTO billing_plans (code, display_name, price_amount_cents, currency, interval, is_active)
     VALUES
       ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
-      ('pro', 'Pro', 15900, 'EUR', 'month', TRUE),
+      ('pro', 'Pro', 19900, 'EUR', 'month', TRUE),
       ('premium', 'Premium', NULL, 'EUR', 'month', TRUE)
     ON CONFLICT (code) DO NOTHING;
+  `);
+
+  await pool.query(`
+    UPDATE billing_plans
+    SET price_amount_cents = CASE
+      WHEN code = 'starter' THEN 8900
+      WHEN code = 'pro' THEN 19900
+      ELSE price_amount_cents
+    END,
+    updated_at = NOW()
+    WHERE code IN ('starter', 'pro');
   `);
 
   await pool.query(`

@@ -1,6 +1,6 @@
 /**
  * planService.js — Source unique de vérité pour les plans COURTIA
- * Plans unifiés : starter (89€), pro (159€), premium (sur devis)
+ * Plans unifiés : starter (89€), pro (199€), premium (sur devis)
  */
 
 const pool = require('../db');
@@ -54,7 +54,7 @@ const PLANS = {
   },
   pro: {
     name: 'Pro',
-    price: 159,
+    price: 199,
     currency: 'EUR',
     interval: 'month',
     description: 'La solution complète pour les professionnels — OFFRE RECOMMANDÉE',

@@ -1,39 +1,19 @@
 # New Cabinet Setup — COURTIA
 
 ## Objectif
-Dupliquer rapidement un lancement cabinet avec un parcours standardisé.
+Rendre un nouveau cabinet opérationnel en quelques minutes sans casser la conformité métier.
 
-## Étapes opérationnelles
-1. Créer le compte propriétaire cabinet (`owner` ou `broker` initial).
-2. Vérifier le profil cabinet dans `/onboarding`:
-- nom cabinet
-- ville
-- spécialités
-- nombre de collaborateurs
-3. Importer le portefeuille initial via `/import`:
-- preview
-- mapping
-- confirmation
-4. Configurer les intégrations dans `/parametres`:
-- Google Agenda
-- WhatsApp Business
-- Gmail / Outlook
-5. Lancer Morning Brief pour première priorisation.
-6. Vérifier accès rôles:
-- broker: pas d’accès admin
-- super_admin: accès admin complet
-7. Configurer abonnement (`/billing`) et portail client Stripe.
+## Étapes
+1. Créer le compte courtier et vérifier `/api/auth/me`.
+2. Compléter `/onboarding` étape cabinet (nom, ORIAS, contact, facturation).
+3. Compléter la conformité (RC Pro, représentant légal, mentions DDA) dans `/parametres`.
+4. Importer le portefeuille via `/import` (CSV/XLSX + mapping + preview).
+5. Connecter Google Agenda et Gmail depuis `/parametres` > Intégrations.
+6. Générer un premier Morning Brief et vérifier les priorités.
+7. Générer un document DDA test sur une fiche client et valider son cycle de statut.
+8. Activer ou vérifier l’abonnement dans `/billing`.
 
-## Smoke cabinet minimum
-```bash
-npm --prefix backend run qa:prod-smoke
-```
-Contrôles obligatoires:
-- `/api/api = 0`
-- `auth 429 = 0`
-- login/logout OK
-- dashboard/clients/fiche/contrats/tâches/rapports/morning-brief OK
-
-## Notes architecture multi-cabinet
-- modèle actuel orienté `owner_user_id` (organization_profiles).
-- cible V2: `tenant_id` explicite pour chaque ressource métier sensible.
+## Contrôles finaux
+- dashboard, clients, fiche client, contrats, tâches, rapports, morning brief
+- admin guard conforme au rôle
+- `/api/api = 0` et `auth 429 = 0` au smoke
