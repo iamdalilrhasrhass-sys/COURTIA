@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeScores, getScoreColor, getScoreReasons } from './scoring.js'
+import { computeScores, getScoreColor, _getScoreReasons } from './scoring.js'
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 

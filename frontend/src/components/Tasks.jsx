@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, Check } from 'lucide-react'
 
-export default function Tasks({ clientId }) {
+export default function Tasks({ _clientId }) {
   const [tasks, setTasks] = useState([
     { id: 1, title: 'Renouvellement Auto', priority: 'high', dueDate: '2026-04-15', completed: false },
     { id: 2, title: 'Cross-sell habitation', priority: 'medium', dueDate: '2026-04-20', completed: false }

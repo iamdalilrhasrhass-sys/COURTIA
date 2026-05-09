@@ -45,7 +45,7 @@ export default function ReachMap() {
   const MAP_HEIGHT = 400;
   const PADDING = 60;
 
-  const getPosition = (cityName, index, total) => {
+  const getPosition = (cityName, index, _total) => {
     const coords = CITY_COORDS[cityName];
     if (coords) {
       // Normalize French coordinates to canvas

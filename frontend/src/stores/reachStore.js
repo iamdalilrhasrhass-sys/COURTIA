@@ -18,7 +18,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.get('/reach/dashboard');
       if (data.success) set({ dashboard: data.data });
-    } catch (err) {
+    } catch (_err) {
       set({ error: 'Erreur dashboard' });
     } finally {
       set({ loading: false });
@@ -32,7 +32,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.post('/reach/search', { category, city, radius, niche, limit: limit || 15 });
       if (data.success) set({ prospects: data.data });
       return data;
-    } catch (err) {
+    } catch (_err) {
       set({ error: 'Erreur recherche' });
       return { success: false };
     } finally {
@@ -48,7 +48,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.get(`/reach/prospects?${params}`);
       if (data.success) set({ prospects: data.data });
       return data;
-    } catch (err) {
+    } catch (_err) {
       set({ error: 'Erreur chargement prospects' });
       return { success: false };
     } finally {
@@ -63,7 +63,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.get(`/reach/prospects/${id}`);
       if (data.success) set({ prospectDetail: data.data });
       return data;
-    } catch (err) {
+    } catch (_err) {
       set({ error: 'Erreur chargement prospect' });
       return { success: false };
     } finally {
@@ -78,7 +78,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.post(`/reach/prospects/${id}/analyze`, { prospect });
       if (data.success) set({ analysis: data.data });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     } finally {
       set({ loading: false });
@@ -92,7 +92,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.get('/reach/campaigns');
       if (data.success) set({ campaigns: data.data });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     } finally {
       set({ loading: false });
@@ -108,7 +108,7 @@ const useReachStore = create((set, get) => ({
         set(s => ({ campaigns: [...s.campaigns, data.data] }));
       }
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     } finally {
       set({ loading: false });
@@ -120,7 +120,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.post('/reach/messages/generate', { prospect, analysis, channel });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     }
   },
@@ -132,7 +132,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.get('/reach/replies');
       if (data.success) set({ replies: data.data });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     } finally {
       set({ loading: false });
@@ -144,7 +144,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.post('/reach/convert-to-client', { prospect });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false, error: "Impossible de convertir ce prospect en client." };
     }
   },
@@ -154,7 +154,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.post(`/reach/prospects/${id}/create-task`, payload);
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false, error: "Impossible de créer cette tâche." };
     }
   },
@@ -164,7 +164,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.patch(`/reach/prospects/${id}/status`, { status });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false, error: "Impossible de mettre à jour le statut du prospect." };
     }
   },
@@ -174,7 +174,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.post(`/reach/replies/${id}/handle`, { action });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false, error: "Impossible de traiter cette réponse." };
     }
   },
@@ -184,7 +184,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.patch(`/reach/campaigns/${id}/status`, { status });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false, error: "Impossible de mettre à jour la campagne." };
     }
   },
@@ -194,7 +194,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.post('/reach/campaigns/from-template', payload);
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false, error: "Impossible de créer la campagne depuis le template." };
     }
   },
@@ -206,7 +206,7 @@ const useReachStore = create((set, get) => ({
       const { data } = await api.get('/reach/reporting');
       if (data.success) set({ dashboard: { ...get().dashboard, ...data.data } });
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     } finally {
       set({ loading: false });
@@ -218,7 +218,7 @@ const useReachStore = create((set, get) => ({
     try {
       const { data } = await api.get(`/reach/map?category=${category || ''}`);
       return data;
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     }
   },

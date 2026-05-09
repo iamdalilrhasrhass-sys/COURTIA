@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Check, ArrowRight } from 'lucide-react'
 
 export default function Pricing() {
-  const [selectedPlan, setSelectedPlan] = useState(null)
+  const [_selectedPlan, setSelectedPlan] = useState(null)
   const [showDemoForm, setShowDemoForm] = useState(false)
   const [demoData, setDemoData] = useState({
     name: '',
@@ -90,7 +90,7 @@ export default function Pricing() {
         `Entreprise: ${demoData.company || 'N/A'}\n` +
         `Formule intéressée: ${demoData.plan || 'N/A'}`
       
-      console.log('Demo request:', message)
+      void message
       alert('Merci! Nous vous contacterons bientôt.')
       setShowDemoForm(false)
       setDemoData({ name: '', email: '', phone: '', company: '', plan: '' })

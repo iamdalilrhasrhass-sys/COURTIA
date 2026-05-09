@@ -22,7 +22,7 @@ const formatContent = (text) => {
   });
 };
 
-const Message = ({ message, clientName }) => {
+const Message = ({ message, _clientName }) => {
   const isUser = message.role === 'user';
   return (
     <motion.div

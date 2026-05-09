@@ -31,7 +31,7 @@ export default function Auth({ onAuthSuccess }) {
       } else {
         setError('Authentification échouée.')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Erreur. Veuillez réessayer.')
     } finally {
       setLoading(false)

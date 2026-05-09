@@ -3,9 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 export default function ARKDemo() {
  const [messages, setMessages] = useState([{ role: 'assistant', content: 'Bonjour. Je suis ARK, l\'assistant IA natif de COURTIA. Posez-moi une question sur la gestion de votre portefeuille d\'assurance.' }]);
  const [input, setInput] = useState('');
- const [loading, setLoading] = useState(false);
+ const [_loading, _setLoading] = useState(false);
  const [thinking, setThinking] = useState(false);
  const messagesEndRef = useRef(null);
+ const anthropicApiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || ''
 
  useEffect(() => {
  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,7 +24,7 @@ export default function ARKDemo() {
  method: 'POST',
  headers: {
  'Content-Type': 'application/json',
- 'x-api-key': process.env.REACT_APP_ANTHROPIC_API_KEY || '',
+ 'x-api-key': anthropicApiKey,
  'anthropic-version': '2023-06-01'
  },
  body: JSON.stringify({
@@ -72,7 +73,7 @@ Montre ta valeur métier pour un courtier d'assurance.`,
  return [...prev, { role: 'assistant', content: fullResponse }];
  });
  }
- } catch (e) {
+ } catch (_e) {
  // skip
  }
  }

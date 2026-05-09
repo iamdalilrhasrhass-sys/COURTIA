@@ -4,7 +4,11 @@ const path = require('path')
 const { spawnSync } = require('child_process')
 
 const assetsDir = path.resolve(__dirname, '../assets/screenshots')
-const audioPath = path.resolve(__dirname, '../assets/audio/tiktok-bed.mp3')
+const audioCandidates = [
+  path.resolve(__dirname, '../assets/audio/soft-whoosh.wav'),
+  path.resolve(__dirname, '../assets/audio/orchestral-bed.wav'),
+  path.resolve(__dirname, '../assets/audio/tiktok-bed.mp3'),
+]
 const exportDir = path.resolve(__dirname, '../exports')
 const outputFile = path.join(exportDir, 'courtia-tiktok-presentation.mp4')
 
@@ -13,9 +17,9 @@ const slides = [
   { file: 'dashboard.png', duration: 4.0, caption: 'ARK priorise vos journées.' },
   { file: 'clients.png', duration: 5.0, caption: 'Repérez vos clients à risque.' },
   { file: 'client-detail.png', duration: 5.0, caption: 'Chaque fiche client devient une vue 360.' },
+  { file: 'integrations.png', duration: 5.0, caption: 'Agenda, WhatsApp et emails : tout se centralise.' },
   { file: 'morning-brief.png', duration: 5.0, caption: 'Morning Brief : votre plan d\'action quotidien.' },
-  { file: 'admin-costs.png', duration: 5.0, caption: 'Admin, coûts IA, pilotage : tout est centralisé.' },
-  { file: 'dashboard.png', duration: 4.5, caption: 'COURTIA — Le cockpit IA des courtiers.' },
+  { file: 'dashboard.png', duration: 4.5, caption: 'COURTIA — Le cockpit IA des courtiers. Bêta privée : courtia.vercel.app' },
 ]
 
 function resolveSlideFile(file) {
@@ -24,6 +28,10 @@ function resolveSlideFile(file) {
   if (file === 'client-detail.png') {
     const fallback = path.join(assetsDir, 'clients.png')
     if (fs.existsSync(fallback)) return 'clients.png'
+  }
+  if (file === 'integrations.png') {
+    const fallback = path.join(assetsDir, 'parametres.png')
+    if (fs.existsSync(fallback)) return 'parametres.png'
   }
   return null
 }
@@ -98,6 +106,10 @@ function ffmpegSupportsSubtitles() {
   return check.status === 0 && /\bsubtitles\b/i.test(`${check.stdout}\n${check.stderr}`)
 }
 
+function resolveAudioPath() {
+  return audioCandidates.find((candidate) => fs.existsSync(candidate)) || null
+}
+
 function main() {
   if (!ffmpegInstalled()) {
     console.log(JSON.stringify({
@@ -123,7 +135,8 @@ function main() {
     '-i', concatFile,
   ]
 
-  const hasAudio = fs.existsSync(audioPath)
+  const audioPath = resolveAudioPath()
+  const hasAudio = Boolean(audioPath)
   if (hasAudio) {
     args.push('-stream_loop', '-1', '-i', audioPath)
   }

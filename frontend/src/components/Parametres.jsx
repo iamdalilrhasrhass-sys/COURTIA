@@ -51,7 +51,7 @@ export default function Parametres() {
       // Mock save - replace with real API endpoint
       setMessage('✓ Profil mis à jour')
       setTimeout(() => setMessage(''), 3000)
-    } catch (err) {
+    } catch (_err) {
       setMessage('Erreur lors de la sauvegarde')
     }
     setSaving(false)

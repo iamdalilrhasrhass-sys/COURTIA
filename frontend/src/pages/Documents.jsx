@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useDocumentInboxStore from '../stores/documentInboxStore'
+import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 
 const CATEGORIES = [
   { value: 'piece_identite', label: 'Pièce d\'identité' },
@@ -49,13 +50,13 @@ export default function Documents() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
-  const [selectedDoc, setSelectedDoc] = useState(null)
+  const [_selectedDoc, setSelectedDoc] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const {
-    documents, requests, submissions, stats,
+    documents, _requests, submissions, stats,
     fetchDocuments, fetchRequests, fetchSubmissions, fetchStats,
-    uploadDocument, deleteDocument, loading,
+    uploadDocument, deleteDocument, updateDocumentStatus, _loading,
   } = useDocumentInboxStore()
 
   useEffect(() => {
@@ -304,7 +305,7 @@ function UploadModal({ onClose, onUpload }) {
       await onUpload(clientId, file, category)
       toast.success('Document ajouté')
       onClose()
-    } catch (err) {
+    } catch (_err) {
       toast.error("Impossible d'ajouter ce document. Vérifiez le format et réessayez.")
     }
     setLoading(false)
@@ -376,7 +377,7 @@ function RequestModal({ onClose }) {
       const result = await createRequest(clientId, selectedDocs, message, recipientEmail)
       setGeneratedLink(result.upload_url)
       toast.success('Lien généré !')
-    } catch (err) {
+    } catch (_err) {
       toast.error("Impossible de générer le lien de dépôt. Vérifiez le client et les pièces demandées.")
     }
     setLoading(false)
