@@ -178,3 +178,31 @@ Si Cmd+K ne remonte pas de résultats :
 2. vérifier `GET /api/search?q=<terme>` connecté
 3. vérifier que les tables `clients`, `quotes`, `documents` existent
 4. relancer `npm --prefix backend test -- searchService.test.js templateService.test.js --runInBand`
+
+## Pages publiques confiance
+
+Routes publiques à vérifier après déploiement :
+
+- `/securite`
+- `/rgpd`
+- `/changelog`
+- `/roadmap`
+- `/aide`
+- `/status`
+- `/contact`
+- `/legal/confidentialite`
+- `/legal/conditions-utilisation`
+
+Points de contrôle :
+
+1. pages accessibles sans authentification
+2. rendu Aurora Bubble C cohérent avec la landing
+3. textes sans promesse de conformité automatique complète
+4. intégrations présentées comme activables/configurables si secrets absents
+5. footer marketing avec liens sécurité, RGPD, aide et status
+
+Docs associées :
+
+- `docs/SECURITY_OVERVIEW.md`
+- `docs/RGPD_DPA.md`
+- `docs/HELP_CENTER.md`
