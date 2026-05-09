@@ -216,6 +216,42 @@ function DocumentsTab({ client, setClient, clientId }) {
   const fileInputRef = useRef(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState(null)
+  const [generatedDocs, setGeneratedDocs] = useState([])
+  const [generatedLoading, setGeneratedLoading] = useState(false)
+  const [generatingType, setGeneratingType] = useState('')
+
+  const loadGeneratedDocs = async () => {
+    try {
+      setGeneratedLoading(true)
+      const res = await api.get(`/documents?client_id=${clientId}`)
+      setGeneratedDocs(Array.isArray(res?.data?.data) ? res.data.data : [])
+    } catch {
+      setGeneratedDocs([])
+    } finally {
+      setGeneratedLoading(false)
+    }
+  }
+
+  // Chargement initial des documents DDA de la fiche; rafraîchissements explicites après génération.
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+  useEffect(() => {
+    loadGeneratedDocs()
+  }, [clientId])
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+
+  const generateDda = async (type) => {
+    setGeneratingType(type)
+    try {
+      await api.post('/documents/generate', { client_id: clientId, type })
+      toast.success('Document DDA généré')
+      await loadGeneratedDocs()
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Génération impossible'
+      toast.error(String(msg))
+    } finally {
+      setGeneratingType('')
+    }
+  }
 
   const readFileAsBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -286,6 +322,55 @@ function DocumentsTab({ client, setClient, clientId }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="rounded-2xl border border-white/60 bg-white/75 p-4 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: '#5B4DF5' }}>Documents métier DDA</p>
+            <h4 className="mt-1 text-sm font-black text-gray-900">FIC, mandat, devoir de conseil et attestation</h4>
+            <p className="mt-1 text-xs text-gray-500">Générez une trace de conseil structurée. COURTIA aide à documenter, le courtier valide le contenu final.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ['fic', 'FIC'],
+              ['mandat_courtage', 'Mandat'],
+              ['devoir_conseil', 'Devoir conseil'],
+              ['attestation', 'Attestation'],
+            ].map(([type, label]) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => generateDda(type)}
+                disabled={!!generatingType}
+                className="rounded-xl px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ background: generatingType === type ? '#9CA3AF' : 'linear-gradient(135deg, #5B4DF5, #8b5cf6)' }}
+              >
+                {generatingType === type ? '...' : label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          {generatedLoading ? (
+            <p className="text-xs text-gray-400">Chargement des documents générés...</p>
+          ) : generatedDocs.length === 0 ? (
+            <p className="text-xs text-gray-400">Aucun document DDA généré pour ce client.</p>
+          ) : (
+            generatedDocs.map(doc => (
+              <div key={doc.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/80 p-3">
+                <FileText size={15} className="text-indigo-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-gray-800">{doc.title || doc.type}</p>
+                  <p className="text-[11px] text-gray-400">{doc.status || 'generated'} · {doc.template_version}</p>
+                </div>
+                <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" className="rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] font-bold text-white">
+                  PDF
+                </a>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Upload zone */}
       <div
         className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer"

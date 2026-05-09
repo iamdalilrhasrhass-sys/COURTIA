@@ -14,10 +14,193 @@ const PDFDocument = require('pdfkit')
 const { verifyToken } = require('../middleware/auth')
 const { requireUnderLimit } = require('../middleware/planGuard')
 const visionService = require('../services/visionService')
+const logger = require('../lib/logger')
+const { logAudit } = require('../lib/audit')
+const { isFeatureEnabled } = require('../lib/featureFlags')
+const {
+  normalizeDocumentType,
+  getDocumentDefinition,
+  validateDdaReadiness,
+  buildDdaVariables,
+  renderDdaPlainText,
+  getDdaFileName,
+} = require('../services/documentDdaService')
 
 router.use(verifyToken)
 
 const VALID_TEMPLATES = ['attestation_assurance', 'proposition_commerciale', 'courrier_resiliation']
+
+function getCurrentUserId(req) {
+  return Number(req.user?.userId || req.user?.id || 0)
+}
+
+function isMissingTable(err) {
+  return err?.code === '42P01'
+}
+
+async function getCourtierContext(userId) {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.email, u.first_name, u.last_name,
+              bp.cabinet, bp.orias, bp.telephone, bp.adresse, bp.ville, bp.code_postal,
+              c.id AS cabinet_id, c.name AS cabinet_name, c.orias_number,
+              c.ias_categories, c.rc_pro_company, c.rc_pro_number, c.rc_pro_amount_cents,
+              c.address_line1, c.postal_code, c.city, c.tutelle_authority, c.dpa_signed_at
+       FROM users u
+       LEFT JOIN broker_profiles bp ON bp.user_id = u.id
+       LEFT JOIN cabinet_members cm ON cm.user_id = u.id AND cm.removed_at IS NULL
+       LEFT JOIN cabinets c ON c.id = cm.cabinet_id
+       WHERE u.id = $1
+       ORDER BY cm.created_at ASC NULLS LAST
+       LIMIT 1`,
+      [userId]
+    )
+    const row = result.rows[0] || {}
+    return {
+      courtier: row,
+      cabinet: {
+        id: row.cabinet_id || null,
+        name: row.cabinet_name || row.cabinet || 'Cabinet COURTIA',
+        orias_number: row.orias_number || row.orias || '',
+        ias_categories: row.ias_categories || [],
+        rc_pro_company: row.rc_pro_company || '',
+        rc_pro_number: row.rc_pro_number || '',
+        rc_pro_amount_cents: row.rc_pro_amount_cents || null,
+        address_line1: row.address_line1 || row.adresse || '',
+        postal_code: row.postal_code || row.code_postal || '',
+        city: row.city || row.ville || '',
+        tutelle_authority: row.tutelle_authority || 'ACPR',
+        dpa_signed_at: row.dpa_signed_at || null,
+      },
+    }
+  } catch (err) {
+    logger.warn({ error: err.message, user_id: userId }, 'documents courtier context fallback')
+    const result = await pool.query('SELECT id, email, first_name, last_name FROM users WHERE id = $1 LIMIT 1', [userId])
+    return { courtier: result.rows[0] || {}, cabinet: { name: 'Cabinet COURTIA' } }
+  }
+}
+
+async function createPdfBufferFromText({ title, text }) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 48 })
+    const chunks = []
+    doc.on('data', (chunk) => chunks.push(chunk))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    doc.fontSize(22).font('Helvetica-Bold').fillColor('#111827').text('COURTIA', { align: 'left' })
+    doc.moveDown(0.3).fontSize(14).fillColor('#5b4df5').text(title, { align: 'left' })
+    doc.moveDown(1)
+    doc.fontSize(10).font('Helvetica').fillColor('#111827')
+    for (const line of String(text || '').split('\n')) {
+      if (!line.trim()) {
+        doc.moveDown(0.55)
+      } else if (line === line.toUpperCase() && line.length < 80) {
+        doc.moveDown(0.2).font('Helvetica-Bold').text(line).font('Helvetica')
+      } else {
+        doc.text(line, { lineGap: 3 })
+      }
+    }
+    doc.moveDown(1)
+    doc.fontSize(8).fillColor('#6b7280').text('Document généré par COURTIA. Validation humaine obligatoire avant remise ou signature.', { align: 'left' })
+    doc.end()
+  })
+}
+
+async function generateDdaDocument(req, res, documentType) {
+  const userId = getCurrentUserId(req)
+  const body = req.body || {}
+  const clientId = Number(body.client_id || body.clientId || 0)
+  const contractId = Number(body.contract_id || body.contractId || 0) || null
+  const definition = getDocumentDefinition(documentType)
+
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  if (!definition) return res.status(400).json({ error: 'unsupported_document_type' })
+  if (!clientId) return res.status(400).json({ error: 'client_required', message: 'client_id est requis' })
+
+  const clientResult = await pool.query('SELECT * FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1', [clientId, userId])
+  const client = clientResult.rows[0]
+  if (!client) return res.status(404).json({ error: 'not_found', message: 'Client introuvable' })
+
+  const contractResult = contractId
+    ? await pool.query('SELECT * FROM contracts WHERE id = $1 AND client_id = $2 LIMIT 1', [contractId, clientId])
+    : { rows: [] }
+  const contract = contractResult.rows[0] || {}
+  const { cabinet, courtier } = await getCourtierContext(userId)
+  if (req.user?.role !== 'super_admin') {
+    const enabled = await isFeatureEnabled({
+      userId,
+      cabinetId: cabinet.id ? String(cabinet.id) : null,
+      key: 'v1_dda_documents',
+    })
+    if (!enabled) {
+      return res.status(403).json({
+        error: 'feature_disabled',
+        message: 'Les documents métier DDA ne sont pas activés pour ce cabinet.',
+        feature_flag: 'v1_dda_documents',
+      })
+    }
+  }
+  const readiness = validateDdaReadiness({ cabinet, courtier })
+  if (!readiness.ok) {
+    return res.status(400).json(readiness)
+  }
+
+  const variables = buildDdaVariables({
+    type: definition.type,
+    client,
+    courtier,
+    cabinet,
+    contract,
+    overrides: body.variablesOverride || body.variables || {},
+  })
+  const text = renderDdaPlainText(definition.type, variables)
+
+  const inserted = await pool.query(
+    `INSERT INTO documents (
+       user_id, client_id, contract_id, type, status, template_version,
+       variables, storage_path, generated_by, generated_at, created_at, updated_at
+     ) VALUES ($1,$2,$3,$4,'generated',$5,$6,NULL,$1,NOW(),NOW(),NOW())
+     RETURNING *`,
+    [userId, clientId, contractId, definition.type, definition.templateVersion, JSON.stringify(variables)]
+  )
+  const documentRow = inserted.rows[0]
+  const fileName = getDdaFileName(definition.type, documentRow.id)
+  const buffer = await createPdfBufferFromText({ title: definition.title, text })
+
+  await pool.query(
+    `INSERT INTO documents_blob (document_id, content, mime_type, file_name, created_at)
+     VALUES ($1,$2,'application/pdf',$3,NOW())
+     ON CONFLICT (document_id) DO UPDATE SET content = EXCLUDED.content, file_name = EXCLUDED.file_name`,
+    [documentRow.id, buffer, fileName]
+  )
+  await pool.query('UPDATE documents SET storage_path = $1, updated_at = NOW() WHERE id = $2', [`db://documents_blob/${documentRow.id}`, documentRow.id])
+  await pool.query(
+    `INSERT INTO document_activity_log (document_id, user_id, action, metadata)
+     VALUES ($1,$2,'generated',$3::jsonb)`,
+    [documentRow.id, userId, JSON.stringify({ type: definition.type, client_id: clientId, contract_id: contractId })]
+  )
+  await logAudit({
+    cabinetId: cabinet.id ? String(cabinet.id) : null,
+    userId,
+    entityType: 'document',
+    entityId: documentRow.id,
+    action: 'document.generated',
+    metadata: { type: definition.type, client_id: clientId, contract_id: contractId },
+    req,
+  })
+
+  return res.status(201).json({
+    success: true,
+    data: {
+      ...documentRow,
+      storage_path: `db://documents_blob/${documentRow.id}`,
+      title: definition.title,
+      download_url: `/api/documents/${documentRow.id}/download`,
+      file_name: fileName,
+    },
+  })
+}
 
 // S'assurer que le répertoire temporaire existe
 function ensureTmpDir() {
@@ -192,14 +375,56 @@ function generatePDF(filePath, template, client, courtier, data) {
 // GET /api/documents — liste des documents générés
 router.get('/', async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const userId = getCurrentUserId(req)
+    const filters = []
+    const params = [userId]
+    if (req.query.client_id) {
+      params.push(Number(req.query.client_id))
+      filters.push(`d.client_id = $${params.length}`)
+    }
+    if (req.query.status) {
+      params.push(String(req.query.status))
+      filters.push(`d.status = $${params.length}`)
+    }
+    if (req.query.type) {
+      params.push(String(req.query.type))
+      filters.push(`d.type = $${params.length}`)
+    }
+    const where = filters.length ? ` AND ${filters.join(' AND ')}` : ''
     const result = await pool.query(
-      'SELECT * FROM generated_documents WHERE courtier_id = $1 ORDER BY created_at DESC',
-      [courtier_id]
+      `SELECT d.*, db.file_name,
+              CASE d.type
+                WHEN 'fic' THEN 'Fiche d’information et de conseil'
+                WHEN 'mandat_courtage' THEN 'Mandat de courtage'
+                WHEN 'devoir_conseil' THEN 'Devoir de conseil'
+                WHEN 'attestation' THEN 'Attestation / synthèse client'
+                ELSE d.type
+              END AS title,
+              COALESCE(c.company_name, NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), ''), c.email, CONCAT('Client #', c.id)) AS client_name
+       FROM documents d
+       LEFT JOIN documents_blob db ON db.document_id = d.id
+       LEFT JOIN clients c ON c.id = d.client_id
+       WHERE d.user_id = $1${where}
+       ORDER BY d.created_at DESC`,
+      params
     )
     return res.json({ success: true, data: result.rows })
   } catch (err) {
-    console.error('[GET /api/documents]', err.message)
+    if (isMissingTable(err)) {
+      try {
+        const userId = getCurrentUserId(req)
+        const result = await pool.query(
+          'SELECT * FROM generated_documents WHERE courtier_id = $1 ORDER BY created_at DESC',
+          [userId]
+        )
+        return res.json({ success: true, data: result.rows, legacy: true })
+      } catch (legacyErr) {
+        if (isMissingTable(legacyErr)) return res.json({ success: true, data: [], migration_required: true })
+        logger.error({ error: legacyErr.message }, 'documents legacy list failed')
+        return res.status(500).json({ error: 'server_error', message: legacyErr.message })
+      }
+    }
+    logger.error({ error: err.message }, 'documents list failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -207,6 +432,11 @@ router.get('/', async (req, res) => {
 // POST /api/documents/generate — générer un PDF
 router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) => {
   try {
+    const requestedType = normalizeDocumentType(req.body?.type || req.body?.document_type || req.body?.template)
+    if (requestedType) {
+      return await generateDdaDocument(req, res, requestedType)
+    }
+
     const courtier_id = req.user.userId
     const { template, client_id, data } = req.body
 
@@ -278,7 +508,39 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
       }
     })
   } catch (err) {
-    console.error('[POST /api/documents/generate]', err.message)
+    logger.error({ error: err.message }, 'documents generate failed')
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+router.post('/:id/archive', async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    const id = Number(req.params.id)
+    const result = await pool.query(
+      `UPDATE documents
+       SET status = 'archived', updated_at = NOW()
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [id, userId]
+    )
+    if (!result.rows[0]) return res.status(404).json({ error: 'not_found', message: 'Document introuvable' })
+    await pool.query(
+      `INSERT INTO document_activity_log (document_id, user_id, action, metadata)
+       VALUES ($1,$2,'archived',$3::jsonb)`,
+      [id, userId, JSON.stringify({ reason: req.body?.reason || 'user_request' })]
+    )
+    await logAudit({
+      userId,
+      entityType: 'document',
+      entityId: id,
+      action: 'document.archived',
+      metadata: { reason: req.body?.reason || 'user_request' },
+      req,
+    })
+    return res.json({ success: true, data: result.rows[0] })
+  } catch (err) {
+    logger.error({ error: err.message }, 'documents archive failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -286,8 +548,29 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
 // GET /api/documents/:id/download — télécharger un PDF
 router.get('/:id/download', async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const courtier_id = getCurrentUserId(req)
     const { id } = req.params
+
+    if (/^\d+$/.test(String(id))) {
+      try {
+        const v1 = await pool.query(
+          `SELECT d.*, db.content, db.mime_type, db.file_name
+           FROM documents d
+           JOIN documents_blob db ON db.document_id = d.id
+           WHERE d.id = $1 AND d.user_id = $2
+           LIMIT 1`,
+          [Number(id), courtier_id]
+        )
+        if (v1.rows[0]) {
+          const row = v1.rows[0]
+          res.setHeader('Content-Type', row.mime_type || 'application/pdf')
+          res.setHeader('Content-Disposition', `attachment; filename="${row.file_name || getDdaFileName(row.type, row.id)}"`)
+          return res.send(row.content)
+        }
+      } catch (err) {
+        if (!isMissingTable(err)) throw err
+      }
+    }
 
     // Récupérer le document — id peut être l'id DB ou le template_id
     const result = await pool.query(
@@ -312,7 +595,7 @@ router.get('/:id/download', async (req, res) => {
 
     return res.download(filePath, `courtia_${doc.document_type}_${docId}.pdf`)
   } catch (err) {
-    console.error('[GET /api/documents/:id/download]', err.message)
+    logger.error({ error: err.message }, 'documents download failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -341,7 +624,7 @@ router.post('/analyze', async (req, res) => {
       }
     })
   } catch (err) {
-    console.error('[POST /api/documents/analyze]', err.message)
+    logger.error({ error: err.message }, 'documents analyze failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -365,7 +648,7 @@ router.post('/classify', async (req, res) => {
       }
     })
   } catch (err) {
-    console.error('[POST /api/documents/classify]', err.message)
+    logger.error({ error: err.message }, 'documents classify failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -395,7 +678,7 @@ router.post('/bulk', async (req, res) => {
       total: results.length
     })
   } catch (err) {
-    console.error('[POST /api/documents/bulk]', err.message)
+    logger.error({ error: err.message }, 'documents bulk analyze failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -411,7 +694,7 @@ router.get('/client/:clientId', async (req, res) => {
     )
     return res.json({ success: true, data: result.rows })
   } catch (err) {
-    console.error('[GET /api/documents/client/:clientId]', err.message)
+    logger.error({ error: err.message, client_id: req.params?.clientId }, 'documents client index list failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
@@ -438,7 +721,7 @@ router.post('/client/:clientId', async (req, res) => {
 
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
-    console.error('[POST /api/documents/client/:clientId]', err.message)
+    logger.error({ error: err.message, client_id: req.params?.clientId }, 'documents client index insert failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
