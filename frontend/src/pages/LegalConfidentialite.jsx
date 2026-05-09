@@ -21,6 +21,9 @@ export default function LegalConfidentialite() {
             COURTIA collecte les données strictement nécessaires au fonctionnement de la plateforme et aux demandes de démo B2B.
           </p>
           <p>
+            Finalités principales: gestion de la relation client cabinet, suivi des tâches, pilotage portefeuille, assistance ARK et support utilisateur.
+          </p>
+          <p>
             Base légale principale pour les contacts commerciaux: intérêt légitime B2B, avec possibilité d\'opposition (opt-out) à tout moment.
           </p>
           <p>
@@ -28,6 +31,15 @@ export default function LegalConfidentialite() {
           </p>
           <p>
             Les données ne sont pas revendues à des tiers. Elles sont conservées pour le suivi commercial et la relation contractuelle, dans une durée proportionnée.
+          </p>
+          <p>
+            Intégrations (Google Agenda, WhatsApp Business, Gmail/Outlook): activées uniquement sur action explicite du cabinet. Les tokens restent côté backend.
+          </p>
+          <p>
+            Sous-traitants techniques: hébergement web/app et services d&apos;infrastructure nécessaires à l&apos;exploitation de COURTIA.
+          </p>
+          <p>
+            Vous pouvez demander export, rectification, limitation ou suppression de vos données selon les cas applicables.
           </p>
           <p>
             Toute demande d\'accès, correction ou suppression peut être adressée à contact@courtia.fr.

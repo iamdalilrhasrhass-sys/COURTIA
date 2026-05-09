@@ -58,6 +58,7 @@ const ACCOUNTS = {
     password: process.env.DALIL_PASSWORD || 'pass123',
   },
 }
+const ADMIN_ROLES = new Set(['admin', 'super_admin', 'owner', 'manager'])
 
 const networkRequests = []
 const networkResponses = []
@@ -306,6 +307,40 @@ async function checkClientBubbleFlow(page) {
   await waitForAppIdle(page)
   await page.getByRole('button', { name: 'Tâches' }).first().click().catch(() => null)
   await waitForAppIdle(page)
+
+  const timelineErrorVisible = await page.getByText('Impossible de charger la timeline interactions', { exact: false }).first().isVisible().catch(() => false)
+  if (timelineErrorVisible) {
+    recordFailure(scope, 'Client timeline interactions failed to load')
+  }
+}
+
+async function checkIntegrationsPanel(page) {
+  const scope = 'integrations:panel'
+  await page.goto(`${normalizeBase(PREVIEW_BASE_URL)}/parametres`, { waitUntil: 'domcontentloaded' })
+  await waitForAppIdle(page)
+
+  const markers = ['Google Agenda', 'WhatsApp Business', 'Gmail', 'Outlook']
+  for (const marker of markers) {
+    const visible = await page.getByText(marker, { exact: false }).first().isVisible().catch(() => false)
+    if (!visible) {
+      recordFailure(scope, `Integration marker missing: ${marker}`)
+      return
+    }
+  }
+
+  const stateMarkers = ['Configuration requise', 'Non connecté', 'Connecté']
+  let hasState = false
+  for (const marker of stateMarkers) {
+    const visible = await page.getByText(marker, { exact: false }).first().isVisible().catch(() => false)
+    if (visible) {
+      hasState = true
+      break
+    }
+  }
+
+  if (!hasState) {
+    recordFailure(scope, 'No integration state label detected')
+  }
 }
 
 async function classifyAdminAccess(page, route, accountKey) {
@@ -474,6 +509,7 @@ async function main() {
       recordInfo('vercel-share', 'Bootstrap URL visited with deployment protection bypass')
     }
 
+    await checkRoute(page, '/', ['Le cockpit IA des courtiers en assurance', 'Demander une démo'])
     await checkRoute(page, '/demo', ['Réserver ma démo'])
     await checkRoute(page, '/tarifs', ['Tarifs COURTIA'])
 
@@ -485,8 +521,12 @@ async function main() {
     await checkRoute(page, '/rapports', ['Rapports'], { absentText: 'Impossible de charger les statistiques' })
     await checkRoute(page, '/morning-brief', ['Morning Brief'])
     await checkRoute(page, '/parametres', ['Paramètres', 'Intégrations'])
+    await checkIntegrationsPanel(page)
     await checkRoute(page, '/taches', ['Tâches'])
     await checkRoute(page, '/contrats', ['Contrats'])
+    await checkRoute(page, '/billing', ['Statut abonnement', 'Plans disponibles'])
+    await checkRoute(page, '/onboarding', ['Onboarding cabinet'])
+    await checkRoute(page, '/import', ['Import portefeuille V1'])
     await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])
 
     await runResponsiveChecks(page)
@@ -514,8 +554,8 @@ async function main() {
 
     if (dalilLogged) {
       const dalilRole = await checkCurrentRole(page, 'dalil')
-      if (dalilRole !== 'admin' && dalilRole !== 'super_admin') {
-        recordFailure('role:dalil', `Expected admin/super_admin, got "${dalilRole || 'unknown'}"`)
+      if (!ADMIN_ROLES.has(String(dalilRole || '').toLowerCase())) {
+        recordFailure('role:dalil', `Expected admin-level role, got "${dalilRole || 'unknown'}"`)
       }
       const dalilChecks = [
         await classifyAdminAccess(page, '/admin', 'dalil'),
@@ -526,7 +566,7 @@ async function main() {
       }
       for (const check of dalilChecks) {
         if (check && !check.granted) {
-          recordFailure(`admin:${check.route}:dalil`, 'Expected admin/super_admin granted access')
+          recordFailure(`admin:${check.route}:dalil`, 'Expected admin-level granted access')
         }
       }
       await logout(page)
@@ -550,6 +590,30 @@ async function main() {
       recordFailure('network:auth-me-429', `Detected ${authMe429Responses.length} 429 response(s) on /api/auth/me`)
     } else {
       recordInfo('network:auth-me-429', 'No 429 response detected on /api/auth/me')
+    }
+
+    if (authLogin429Responses.length > 0) {
+      recordFailure('network:auth-login-429', `Detected ${authLogin429Responses.length} 429 response(s) on /api/auth/login`)
+    } else {
+      recordInfo('network:auth-login-429', 'No 429 response detected on /api/auth/login')
+    }
+
+    const criticalApiErrors = networkResponses.filter((entry) => {
+      if (!entry || Number(entry.status) < 400) return false
+      const url = String(entry.url || '')
+      if (!url.includes('/api/')) return false
+      if (entry.status === 401) return false
+      if (entry.status === 403 && url.includes('/api/admin')) return false
+      return true
+    })
+    if (criticalApiErrors.length > 0) {
+      const sample = criticalApiErrors
+        .slice(0, 3)
+        .map((entry) => `${entry.status} ${entry.method} ${entry.url}`)
+        .join(' | ')
+      recordFailure('network:critical-api', `Detected ${criticalApiErrors.length} critical API error(s). Sample: ${sample}`)
+    } else {
+      recordInfo('network:critical-api', 'No critical API error response detected')
     }
 
     const report = buildReport(base, startedAt)

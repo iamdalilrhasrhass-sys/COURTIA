@@ -44,6 +44,7 @@ const ContactPublic = lazy(() => import('./pages/ContactPublic'))
 const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
 const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
 const LegalCookies = lazy(() => import('./pages/LegalCookies'))
+const LegalConditionsUtilisation = lazy(() => import('./pages/LegalConditionsUtilisation'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
@@ -68,6 +69,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
 import RhasrhassSignature from './components/brand/RhasrhassSignature'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Stores / API
 import { usePlanStore } from './stores/planStore'
@@ -163,11 +165,12 @@ function RouteLoader() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
-      <Suspense fallback={<RouteLoader />}>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+        <Suspense fallback={<RouteLoader />}>
+        <Routes>
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
@@ -179,13 +182,17 @@ export default function App() {
         <Route path="/legal/mentions-legales" element={<LegalMentionsLegales />} />
         <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
         <Route path="/legal/cookies" element={<LegalCookies />} />
+        <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/onboarding"    element={<Onboarding />} />
+          <Route path="/onboarding/cabinet" element={<Onboarding />} />
           <Route path="/onboarding/import" element={<DataOnboarding />} />
+          <Route path="/onboarding/integrations" element={<Parametres />} />
+          <Route path="/onboarding/ark" element={<MorningBrief />} />
           <Route path="/import"        element={<ImportPortfolio />} />
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
@@ -238,9 +245,10 @@ export default function App() {
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
-      </Suspense>
-    </BrowserRouter>
+        </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 // Trigger Vercel rebuild

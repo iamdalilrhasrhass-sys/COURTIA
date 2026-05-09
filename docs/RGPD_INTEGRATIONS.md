@@ -21,6 +21,13 @@
 - routes protégées par JWT (hors callbacks/webhook)
 - masquage des secrets dans les réponses API
 
+## IA / ARK — cadre d'usage
+
+- ARK assiste le courtier, ne remplace pas son jugement professionnel.
+- recommandations indicatives, validation humaine obligatoire.
+- pas de décision automatique sensible sans validation explicite.
+- COURTIA aide à structurer/prioriser, ne garantit pas la conformité réglementaire complète à lui seul.
+
 ## Recommandations exploitation
 
 - documenter la finalité dans politique interne cabinet
