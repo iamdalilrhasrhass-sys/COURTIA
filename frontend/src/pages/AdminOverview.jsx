@@ -19,7 +19,7 @@ export default function AdminOverview() {
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><CourtiaLogoLoader size={40} text="Chargement..." /></div>
   if (error || !data) return <AuroraEmptyState icon={AlertTriangle} title="Impossible de charger les données" subtitle="Vérifiez vos droits d'accès administrateur." />
 
-  const { mrr, users, ark, portfolio } = data
+  const { mrr, users, ark, portfolio, product } = data
 
   const kpis = [
     { icon: Users, label: 'Courtiers actifs', value: users.total_active, sub: `${users.signups_30d} nouveaux / 30j`, color: '#3b82f6' },
@@ -85,6 +85,38 @@ export default function AdminOverview() {
             Analyses (30j) : <strong style={{ color: '#fff' }}>{portfolio?.total_analyses_30d || 0}</strong><br/>
             Score santé moyen : <strong style={{ color: '#fff' }}>{portfolio?.avg_health_score || '-'}</strong><br/>
             Portefeuilles sains : <strong style={{ color: '#10b981' }}>{portfolio?.healthy_portfolios || 0}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="courtia-depth-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20, marginTop: 16 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: '0 0 12px' }}>Observabilité produit</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+          <div style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>Cabinets actifs 30j</div>
+            <div style={{ marginTop: 4, fontSize: 22, color: '#fff', fontWeight: 800 }}>{product?.active_cabinets_30d || 0}</div>
+          </div>
+          <div style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>Événements produit</div>
+            <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
+              {(product?.events_30d || []).slice(0, 4).map((event) => (
+                <div key={event.event_name} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: 'rgba(255,255,255,0.72)', fontSize: 12 }}>
+                  <span>{event.event_name}</span><strong>{event.count}</strong>
+                </div>
+              ))}
+              {(product?.events_30d || []).length === 0 && <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>Aucun événement récent.</span>}
+            </div>
+          </div>
+          <div style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>Feedback</div>
+            <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
+              {(product?.feedback_by_status || []).map((row) => (
+                <div key={row.status} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: 'rgba(255,255,255,0.72)', fontSize: 12 }}>
+                  <span>{row.status}</span><strong>{row.count}</strong>
+                </div>
+              ))}
+              {(product?.feedback_by_status || []).length === 0 && <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>Aucun feedback.</span>}
+            </div>
           </div>
         </div>
       </div>

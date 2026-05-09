@@ -47,6 +47,8 @@ function validateClient(mapped = {}) {
       code_postal: cleanString(mapped.code_postal),
       ville: cleanString(mapped.ville),
       type_client: cleanString(mapped.type_client),
+      statut: cleanString(mapped.statut),
+      notes: cleanString(mapped.notes),
       societe: cleanString(mapped.societe),
       siret: cleanString(mapped.siret),
     },

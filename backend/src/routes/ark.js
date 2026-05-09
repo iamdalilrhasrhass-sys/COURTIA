@@ -4,6 +4,8 @@ const OpenAI = require('openai')
 const { verifyToken } = require('../middleware/auth')
 const { requireUnderLimit } = require('../middleware/planGuard')
 const { incrementUsage } = require('../services/planService')
+const { trackEvent } = require('../services/analyticsService')
+const logger = require('../lib/logger')
 const pool = require('../db')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const {
@@ -20,8 +22,13 @@ const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com/v1'
 })
 
-// Log au démarrage pour vérifier la clé
-console.log('ARK init - DEEPSEEK_API_KEY présente:', !!process.env.DEEPSEEK_API_KEY)
+function arkConfigurationRequired(res) {
+  return res.status(503).json({
+    error: 'configuration_required',
+    provider: 'deepseek',
+    message: 'Configuration ARK requise. Ajoutez DEEPSEEK_API_KEY pour activer le chat IA.',
+  })
+}
 
 function getCurrentUserId(req) {
   return Number(req.user?.userId || req.user?.id || 0)
@@ -69,6 +76,11 @@ router.post('/morning-brief', proactiveGuard, async (req, res) => {
     const userId = getCurrentUserId(req)
     if (!userId) return res.status(401).json({ error: 'auth_required' })
     const result = await buildAndStoreMorningBrief(req.app.locals.pool || pool, userId)
+    await trackEvent({
+      userId,
+      event: 'ark_morning_brief_opened',
+      properties: { source: result.source || 'unknown' },
+    }).catch(() => {})
     res.json({
       ...result,
       mode: result.source === 'deterministic_fallback' ? 'local_fallback' : 'llm_ready',
@@ -198,7 +210,7 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
           )
           clientData.contrats = contratsRes.rows || []
         } catch (e) {
-          console.error('ARK auto-fetch contrats failed:', e.message)
+          logger.warn({ error: e.message }, 'ark autofetch contracts failed')
           clientData.contrats = []
         }
       }
@@ -210,18 +222,14 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
           )
           clientData.taches = tachesRes.rows || []
         } catch (e) {
-          console.error('ARK auto-fetch taches failed:', e.message)
+          logger.warn({ error: e.message }, 'ark autofetch tasks failed')
           clientData.taches = []
         }
       }
     }
 
     if (!process.env.DEEPSEEK_API_KEY) {
-      console.error('ARK ERROR: DEEPSEEK_API_KEY non définie')
-      return res.status(500).json({
-        error: 'Configuration ARK incomplète',
-        details: 'La clé API DeepSeek est manquante. Vérifiez les variables d\'environnement.'
-      })
+      return arkConfigurationRequired(res)
     }
 
     // Construire le prompt système selon le contexte
@@ -251,7 +259,7 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
           )
           clientData.taches_actives = tachesResult.rows
         } catch (fetchErr) {
-          console.error('ARK: erreur fetch contrats/tâches:', fetchErr.message)
+          logger.warn({ error: fetchErr.message }, 'ark client context fetch failed')
         }
       }
 
@@ -317,8 +325,6 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
       }
     ]
 
-    console.log(`ARK: appel DeepSeek - message: "${message.substring(0, 60)}..." - client: ${clientData?.id || 'global'}`)
-
     // Appel API DeepSeek via OpenAI SDK
     const response = await openai.chat.completions.create({
       model: 'deepseek-chat',
@@ -329,8 +335,6 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
     const reply = response.choices && response.choices[0] 
       ? response.choices[0].message.content 
       : 'Aucune réponse générée'
-
-    console.log(`ARK: réponse reçue - ${reply.substring(0, 80)}...`)
 
     // Sauvegarder dans ark_conversations si client présent
     if (clientData && clientData.id) {
@@ -361,7 +365,7 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
           )
         }
       } catch (saveErr) {
-        console.error('ARK: erreur sauvegarde conversation:', saveErr.message)
+        logger.warn({ error: saveErr.message }, 'ark conversation save failed')
       }
     }
 
@@ -373,18 +377,18 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
       const userId = req.user.userId || req.user.id
       await incrementUsage(userId, 'ark_messages')
     } catch (err) {
-      console.error('[ARK] Erreur incrément usage (non bloquant):', err.message)
+      logger.warn({ error: err.message }, 'ark usage increment failed')
     }
 
   } catch (err) {
-    console.error('ARK ERREUR CRITIQUE:', err.message)
-    console.error('ARK ERREUR STACK:', err.stack)
+    logger.error({ err }, 'ark chat failed')
 
     // Gérer les erreurs DeepSeek spécifiques
     if (err.status === 401 || (err.message && err.message.includes('api_key'))) {
-      return res.status(500).json({
-        error: 'Clé API DeepSeek invalide ou expirée',
-        details: 'Vérifiez DEEPSEEK_API_KEY'
+      return res.status(503).json({
+        error: 'configuration_required',
+        provider: 'deepseek',
+        message: 'Clé API DeepSeek invalide ou expirée.'
       })
     }
 
@@ -396,15 +400,17 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
     }
 
     if (err.status === 404 || (err.message && err.message.includes('model'))) {
-      return res.status(500).json({
-        error: 'Modèle ARK non disponible',
-        details: 'Contactez le support COURTIA'
+      return res.status(503).json({
+        error: 'provider_unavailable',
+        provider: 'deepseek',
+        message: 'Modèle ARK indisponible. Contactez le support COURTIA.'
       })
     }
 
-    res.status(500).json({
-      error: 'ARK temporairement indisponible',
-      details: err.message || 'Erreur inconnue'
+    res.status(503).json({
+      error: 'provider_unavailable',
+      provider: 'deepseek',
+      message: 'ARK temporairement indisponible.'
     })
   }
 })
@@ -422,7 +428,7 @@ const getConversationHistory = async (req, res) => {
     )
     res.json(result.rows[0]?.messages || [])
   } catch (err) {
-    console.error('ARK conversations erreur:', err.message)
+    logger.warn({ error: err.message }, 'ark conversations unavailable')
     res.json([])
   }
 }
@@ -438,7 +444,7 @@ router.get('/history/:clientId', verifyToken, async (req, res) => {
     )
     res.json({ messages: result.rows[0]?.messages || [] })
   } catch (err) {
-    console.error('ARK history erreur:', err.message)
+    logger.warn({ error: err.message }, 'ark history unavailable')
     res.json({ messages: [] })
   }
 })
@@ -446,6 +452,7 @@ router.get('/history/:clientId', verifyToken, async (req, res) => {
 // ── Extension Chrome: analyser une page web ────────────────────────
 router.post('/extension/analyze', verifyToken, async (req, res) => {
   try {
+    if (!process.env.DEEPSEEK_API_KEY) return arkConfigurationRequired(res)
     const { url, title, text, forms } = req.body.pageData || req.body;
     if (!text && (!forms || forms.length === 0)) {
       return res.status(400).json({ error: 'Donnees de page requises' });
@@ -512,14 +519,15 @@ Regles de securite ABSOLUES :
 
     return res.json(result);
   } catch (err) {
-    console.error('[ARK EXTENSION ANALYZE]', err.message);
-    return res.status(500).json({ error: err.message, analysis: 'Erreur analyse', suggestions: [] });
+    logger.error({ err }, 'ark extension analyze failed');
+    return res.status(503).json({ error: 'provider_unavailable', analysis: 'Analyse ARK indisponible.', suggestions: [] });
   }
 });
 
 // ── Extension Chrome: suggestion de remplissage pour un champ ────────
 router.post('/extension/fill', verifyToken, async (req, res) => {
   try {
+    if (!process.env.DEEPSEEK_API_KEY) return arkConfigurationRequired(res)
     const { field_name, field_label, form_title, page_title } = req.body;
 
     const prompt = `Tu es ARK, assistant pour courtiers en assurances COURTIA.
@@ -560,8 +568,8 @@ Reponds UNIQUEMENT avec ce JSON:
 
     return res.json(result);
   } catch (err) {
-    console.error('[ARK EXTENSION FILL]', err.message);
-    return res.status(500).json({ error: err.message });
+    logger.error({ err }, 'ark extension fill failed');
+    return res.status(503).json({ error: 'provider_unavailable', message: 'Suggestion ARK indisponible.' });
   }
 });
 

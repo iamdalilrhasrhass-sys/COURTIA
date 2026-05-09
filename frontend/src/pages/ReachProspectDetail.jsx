@@ -43,38 +43,7 @@ export default function ReachProspectDetail() {
       if (res?.success) {
         setData(res.data);
       } else {
-        // Fallback mock prospect detail
-        const mock = {
-          id: id,
-          company_name: 'Garage des Alpes',
-          contact_first_name: 'Pierre',
-          contact_last_name: 'Martin',
-          role: 'Gérant',
-          category: 'garage',
-          city: 'Sens',
-          phone: '03 86 95 12 34',
-          email: 'contact@garagedesalpes.fr',
-          website: 'https://garagedesalpes.fr',
-          rating: 4.7,
-          review_count: 42,
-          opportunity_score: 85,
-          urgency_score: 72,
-          ease_score: 65,
-          estimated_annual_premium: 28000,
-          recommended_product: 'RC Pro Garage + Multirisque Pro',
-          approach_angle: 'Proposer un bilan gratuit de leur couverture actuelle, mettre en avant les 32k courtiers qui font confiance à COURTIA REACH pour leur prospection',
-          probable_objection: '"On est déjà assuré depuis 10 ans, on n\'a pas besoin de changer"',
-          status: 'nouveau',
-          analysis: {
-            call_script: 'Bonjour M. Martin, je vous appelle de COURTIA. Nous aidons les garages comme le vôtre à optimiser leur couverture assurance. En 2 minutes, je peux vous dire si vous payez trop cher. Avez-vous 3 minutes ?',
-            email_template: 'Objet: Optimisation assurance pour Garage des Alpes\n\nBonjour M. Martin,\n\nNotre analyse montre que votre garage pourrait économiser jusqu\'à 30% sur ses primes d\'assurance tout en renforçant sa couverture.\n\nJe vous propose un diagnostic gratuit de 15 minutes.\n\nSouhaitez-vous qu\'on en parle cette semaine ?',
-            sms_template: 'Bonjour, COURTIA ici. Votre garage pourrait économiser sur son assurance pro. Diagnostic gratuit en 15 min. Intéressé ?',
-            linkedin_message: 'Bonjour Pierre, je suis spécialisé en assurance pour l\'automobile. J\'ai remarqué votre garage à Sens — excellents avis ! Seriez-vous ouvert à échanger sur l\'optimisation de votre couverture pro ?',
-            next_best_action: 'Appeler demain entre 9h30 et 11h — créneau garages',
-            score_details: { opportunity: 85, urgency: 72, ease: 65 },
-          }
-        };
-        setData(mock);
+        setData(null);
       }
       setLoading(false);
     })();
@@ -82,8 +51,12 @@ export default function ReachProspectDetail() {
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
-    await analyzeProspect(id, data);
-    toast.success('Analyse ARK complétée');
+    const result = await analyzeProspect(id, data);
+    if (result?.success) {
+      toast.success('Analyse ARK complétée');
+    } else {
+      toast.error(result?.message || 'Configuration ARK requise.');
+    }
     setAnalyzing(false);
     // Refresh
     const res = await fetchProspectDetail(id);
@@ -98,7 +71,7 @@ export default function ReachProspectDetail() {
     } else if (res.already_client) {
       toast('Déjà client COURTIA', { icon: '✅' });
     } else {
-      toast.success('Conversion déclenchée (mode démo)');
+      toast.error('Conversion impossible pour le moment.');
     }
     setConverting(false);
   };
@@ -135,7 +108,6 @@ export default function ReachProspectDetail() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-bold text-gray-900">{data.company_name}</h1>
-              <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-700">Démo</span>
               {isConverted && (
                 <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 text-green-700 flex items-center gap-1">
                   <UserPlus size={10} /> Déjà client
@@ -301,9 +273,10 @@ export default function ReachProspectDetail() {
           {isConverted ? 'Déjà client COURTIA' : 'Convertir en client'}
         </button>
         <button
-          onClick={() => {
-            createTask(prospectDetail?.id || id, { title: 'Suivi ' + (data.company_name || 'prospect') });
-            toast.success('Tâche créée : Suivi ' + (data.company_name || 'prospect'));
+          onClick={async () => {
+            const result = await createTask(prospectDetail?.id || id, { title: 'Suivi ' + (data.company_name || 'prospect') });
+            if (result?.success) toast.success('Tâche créée : Suivi ' + (data.company_name || 'prospect'));
+            else toast.error('Création de tâche impossible.');
           }}
           className="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center gap-2"
         >

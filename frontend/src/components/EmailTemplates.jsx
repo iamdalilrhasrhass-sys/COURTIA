@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Mail, Send } from 'lucide-react'
+import api from '../api'
 
 const EMAIL_TEMPLATES = {
   renewal: {
@@ -41,6 +42,7 @@ export default function EmailTemplates({ client }) {
   const [selectedTemplate, setSelectedTemplate] = useState('renewal')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
+  const [sendStatus, setSendStatus] = useState('')
   const [showPreview, setShowPreview] = useState(false)
 
   const loadTemplate = (templateKey) => {
@@ -62,8 +64,22 @@ export default function EmailTemplates({ client }) {
   }
 
   const sendEmail = async () => {
-    // TODO: Implémenter l'envoi via backend
-    alert(`Email envoyé à ${client.email}!`)
+    setSendStatus('')
+    try {
+      const { data } = await api.post('/messaging/send', {
+        clientId: client.id,
+        canal: 'email',
+        subject,
+        message: body,
+      })
+      if (data?.success === false) {
+        setSendStatus(data.message || data.error || 'Configuration email requise.')
+      } else {
+        setSendStatus('Email envoyé.')
+      }
+    } catch (err) {
+      setSendStatus(err.response?.data?.message || err.response?.data?.error || 'Configuration email requise.')
+    }
   }
 
   return (
@@ -72,6 +88,7 @@ export default function EmailTemplates({ client }) {
         <Mail size={24} />
         Envoyer un email
       </h3>
+      {sendStatus && <p className="mb-3 text-sm text-slate-300">{sendStatus}</p>}
 
       {/* Templates */}
       <div className="grid grid-cols-3 gap-2 mb-4">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Upload, Database, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react'
+import { Upload, Database, CheckCircle2, AlertTriangle, RefreshCw, Download, TableProperties } from 'lucide-react'
 import api from '../api'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 
@@ -12,6 +12,8 @@ const FIELD_OPTIONS = [
   ['code_postal', 'Code postal'],
   ['ville', 'Ville'],
   ['type_client', 'Type client'],
+  ['statut', 'Statut client'],
+  ['notes', 'Notes'],
   ['societe', 'Société'],
   ['siret', 'SIRET'],
   ['type_contrat', 'Type contrat'],
@@ -23,6 +25,11 @@ const FIELD_OPTIONS = [
   ['statut_contrat', 'Statut contrat'],
   ['tache', 'Tâche'],
   ['date_rappel', 'Date rappel'],
+]
+
+const CSV_TEMPLATE = [
+  ['prenom', 'nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'type_client', 'statut', 'notes', 'compagnie', 'type_contrat', 'prime_annuelle', 'date_echeance'],
+  ['Sophie', 'Martin', 'sophie.martin@example.com', '06 12 34 56 78', '12 rue Exemple', 'Paris', '75008', 'particulier', 'prospect', 'Client à appeler', 'AXA', 'Auto', '720', '2026-12-31'],
 ]
 
 export default function ImportPortfolio() {
@@ -38,6 +45,17 @@ export default function ImportPortfolio() {
   const [committing, setCommitting] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+
+  function downloadTemplate() {
+    const csv = CSV_TEMPLATE.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'clients-template.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   async function loadHistory() {
     setLoadingHistory(true)
@@ -112,10 +130,22 @@ export default function ImportPortfolio() {
   return (
     <div style={{ padding: '28px 22px 42px' }}>
       <AuroraPageHeader
-        title="Import portefeuille V1"
-        subtitle="CSV/XLSX, mapping colonnes, prévisualisation et commit sécurisé."
+        title="Import clients"
+        subtitle="Importez votre fichier client, COURTIA vous aide à mapper les colonnes."
         badge="Données"
       />
+
+      <div style={stepsBar}>
+        {['Upload', 'Preview', 'Mapping', 'Simulation', 'Import final'].map((label, idx) => {
+          const active = idx === 0 || (idx === 1 && stats) || (idx === 2 && stats) || (idx === 3 && stats) || (idx === 4 && result)
+          return (
+            <div key={label} style={{ ...stepItem, opacity: active ? 1 : 0.45 }}>
+              <span style={stepDot}>{idx + 1}</span>
+              {label}
+            </div>
+          )
+        })}
+      </div>
 
       <div style={panel}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
@@ -127,6 +157,9 @@ export default function ImportPortfolio() {
             <Upload size={14} /> Choisir un fichier CSV/XLSX
             <input type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={onFileChange} />
           </label>
+          <button type="button" onClick={downloadTemplate} style={templateBtn}>
+            <Download size={14} /> Télécharger le template CSV
+          </button>
         </div>
         {file && (
           <p style={{ marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
@@ -174,6 +207,24 @@ export default function ImportPortfolio() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <h4 style={subTitle}>Simulation d’import</h4>
+                <div style={simulationBox}>
+                  <TableProperties size={16} color="#8eeaff" />
+                  <div>
+                    <p style={{ margin: 0, color: '#fff', fontSize: 13, fontWeight: 800 }}>
+                      {stats?.valid_rows_estimate ?? 0} lignes prêtes, {stats?.error_rows_estimate ?? 0} à corriger, {(stats?.unknown_columns || []).length} colonne(s) ignorée(s).
+                    </p>
+                    <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.62)', fontSize: 12 }}>
+                      Les doublons email/téléphone sont détectés au moment de l’import final et remontés dans le rapport.
+                    </p>
+                  </div>
+                </div>
+                {(stats?.unknown_columns || []).length > 0 && (
+                  <p style={caption}>Colonnes inconnues : {(stats.unknown_columns || []).join(', ')}</p>
+                )}
               </div>
 
               <div style={{ marginTop: 14 }}>
@@ -307,6 +358,52 @@ const uploadBtn = {
   fontWeight: 700,
 }
 
+const templateBtn = {
+  border: '1px solid rgba(142,234,255,0.34)',
+  background: 'rgba(34,211,238,0.08)',
+  color: '#e0faff',
+  borderRadius: 10,
+  padding: '9px 12px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  cursor: 'pointer',
+  fontSize: 12,
+  fontWeight: 700,
+}
+
+const stepsBar = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 14,
+}
+
+const stepItem = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 7,
+  border: '1px solid rgba(255,255,255,0.11)',
+  background: 'rgba(255,255,255,0.035)',
+  borderRadius: 999,
+  padding: '7px 10px',
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: 800,
+}
+
+const stepDot = {
+  width: 18,
+  height: 18,
+  borderRadius: 999,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'linear-gradient(135deg, rgba(91,77,245,0.9), rgba(34,211,238,0.9))',
+  color: '#fff',
+  fontSize: 10,
+}
+
 const errorBox = {
   marginTop: 14,
   border: '1px solid rgba(251,113,133,0.45)',
@@ -348,6 +445,16 @@ const previewRow = {
   borderRadius: 8,
   background: 'rgba(0,0,0,0.2)',
   padding: '8px 10px',
+}
+
+const simulationBox = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 10,
+  border: '1px solid rgba(142,234,255,0.18)',
+  borderRadius: 12,
+  background: 'rgba(34,211,238,0.06)',
+  padding: '11px 12px',
 }
 
 const ctaBtn = {

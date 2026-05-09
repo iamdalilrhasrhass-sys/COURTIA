@@ -273,8 +273,19 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
     try {
       const { emailNouveauClient } = require('../services/emailService')
       const fullName = [req.body.prenom, req.body.nom].filter(Boolean).join(' ') || 'Nouveau client'
-      await emailNouveauClient({ courtierEmail: req.user?.email || 'arkcourtia@gmail.com', clientNom: fullName })
+      if (req.user?.email) {
+        await emailNouveauClient({ courtierEmail: req.user.email, clientNom: fullName })
+      }
     } catch(e) { console.error('Email notification skipped:', e.message) }
+
+    try {
+      const { trackEvent } = require('../services/analyticsService')
+      await trackEvent({
+        userId: req.user.id || req.user.userId,
+        event: 'client_created',
+        properties: { client_id: result.rows[0].id, status: result.rows[0].status },
+      })
+    } catch (e) { console.error('Product event skipped:', e.message) }
 
     res.status(201).json(result.rows[0]);
   } catch (err) {

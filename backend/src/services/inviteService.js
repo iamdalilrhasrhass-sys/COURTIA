@@ -1,20 +1,19 @@
-const crypto = require('crypto');
-
 const inviteService = {
-  async generateInviteToken(courtierEmail, targetEmail) {
-    const token = crypto.randomBytes(32).toString('hex');
-    // TODO: Store token in DB with expiry (24h)
-    const inviteLink = `https://courtia.app/accept-invite?token=${token}`;
-    
-    console.log(`✅ Invite link for ${targetEmail}: ${inviteLink}`);
-    // TODO: Send email via nodemailer
-    return { token, inviteLink };
+  async generateInviteToken() {
+    return {
+      success: false,
+      error: 'legacy_invite_service_disabled',
+      message: 'Use the database-backed team invitation routes and emailService.',
+    };
   },
 
-  async validateInvite(token) {
-    // TODO: Check token in DB, verify not expired
-    return true;
-  }
+  async validateInvite() {
+    return {
+      valid: false,
+      error: 'legacy_invite_service_disabled',
+      message: 'Use the database-backed team invitation routes.',
+    };
+  },
 };
 
 module.exports = inviteService;

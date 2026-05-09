@@ -6,6 +6,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { getJwtSecret } = require('../utils/jwtSecret');
+const { trackEvent } = require('../services/analyticsService');
 
 // Générer un JWT token
 function generateToken(user) {
@@ -90,6 +91,12 @@ exports.login = async (req, res) => {
 
     // Générer token
     const token = generateToken(user);
+
+    await trackEvent({
+      userId: user.id,
+      event: 'login',
+      properties: { method: 'password' },
+    }).catch(() => {});
 
     res.json({
       message: 'Connexion réussie',

@@ -44,6 +44,10 @@ const PLANS = {
       integrations_google_calendar: false,
       integrations_whatsapp: false,
       integrations_email_sync: false,
+      integrations: false,
+      documents: true,
+      whatsapp: false,
+      commissions: false,
       admin_costs: false,
     },
     limits: {
@@ -77,6 +81,10 @@ const PLANS = {
       integrations_google_calendar: true,
       integrations_whatsapp: true,
       integrations_email_sync: true,
+      integrations: true,
+      documents: true,
+      whatsapp: true,
+      commissions: true,
       admin_costs: true,
     },
     limits: {
@@ -110,6 +118,10 @@ const PLANS = {
       integrations_google_calendar: true,
       integrations_whatsapp: true,
       integrations_email_sync: true,
+      integrations: true,
+      documents: true,
+      whatsapp: true,
+      commissions: true,
       admin_costs: true,
     },
     limits: {
@@ -143,6 +155,10 @@ const PLANS = {
       integrations_google_calendar: true,
       integrations_whatsapp: true,
       integrations_email_sync: true,
+      integrations: true,
+      documents: true,
+      whatsapp: true,
+      commissions: true,
       admin_costs: true,
     },
     limits: {
@@ -273,27 +289,59 @@ async function checkLimit(userId, limitType) {
   }
 
   const planInfo = await getUserPlanInfo(userId);
-  const max = planInfo.limits[limitType] !== undefined ? planInfo.limits[limitType] : Infinity;
+  const limitKey = normalizeLimitKey(limitType);
+  const max = planInfo.limits[limitKey] !== undefined ? planInfo.limits[limitKey] : Infinity;
 
-  // TODO: Implémenter le comptage réel selon le type de limite
   let current = 0;
-  if (limitType === 'max_clients') {
+  if (limitKey === 'max_clients') {
     const count = await pool.query('SELECT COUNT(*) FROM clients WHERE courtier_id = $1', [userId]);
     current = parseInt(count.rows[0].count, 10);
-  } else if (limitType === 'max_contrats') {
+  } else if (limitKey === 'max_contrats') {
     const count = await pool.query('SELECT COUNT(*) FROM contracts WHERE courtier_id = $1', [userId]);
     current = parseInt(count.rows[0].count, 10);
+  } else if (limitKey === 'max_users') {
+    const count = await pool.query(
+      `SELECT COUNT(*) FROM cabinet_members cm
+       JOIN cabinet_members mine ON mine.cabinet_id = cm.cabinet_id
+       WHERE mine.user_id = $1 AND cm.removed_at IS NULL AND mine.removed_at IS NULL`,
+      [userId]
+    );
+    current = parseInt(count.rows[0]?.count || 0, 10);
+  } else if (limitKey === 'max_ark_messages') {
+    const count = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM plan_usage_events
+       WHERE user_id = $1
+         AND usage_type = 'ark_messages'
+         AND period_start = date_trunc('month', NOW())::date`,
+      [userId]
+    ).catch(() => ({ rows: [{ total: 0 }] }));
+    current = parseInt(count.rows[0]?.total || 0, 10);
+  } else if (limitKey === 'max_pdf_generations') {
+    const count = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM plan_usage_events
+       WHERE user_id = $1
+         AND usage_type IN ('pdf_generations','documents_generated')
+         AND period_start = date_trunc('month', NOW())::date`,
+      [userId]
+    ).catch(() => ({ rows: [{ total: 0 }] }));
+    current = parseInt(count.rows[0]?.total || 0, 10);
   }
 
-  return { allowed: current < max, current, max };
+  return { allowed: current < max, current, max, limit_key: limitKey };
 }
 
 /**
  * Incrémente un compteur d'utilisation
  */
 async function incrementUsage(userId, usageType, amount = 1) {
-  // TODO: Implémenter le suivi d'utilisation dans une table dédiée
-  return null;
+  await pool.query(
+    `INSERT INTO plan_usage_events (user_id, usage_type, amount)
+     VALUES ($1,$2,$3)`,
+    [userId, usageType, amount]
+  );
+  return { userId, usageType, amount };
 }
 
 /**
@@ -309,12 +357,22 @@ async function getUsageWithLimits(userId) {
     const limitType = key;
     let current = 0;
     try {
-      if (limitType === 'max_clients') {
+      const normalizedLimit = normalizeLimitKey(limitType);
+      if (normalizedLimit === 'max_clients') {
         const count = await pool.query('SELECT COUNT(*) FROM clients WHERE courtier_id = $1', [userId]);
         current = parseInt(count.rows[0].count, 10);
-      } else if (limitType === 'max_contrats') {
+      } else if (normalizedLimit === 'max_contrats') {
         const count = await pool.query('SELECT COUNT(*) FROM contracts WHERE courtier_id = $1', [userId]);
         current = parseInt(count.rows[0].count, 10);
+      } else if (normalizedLimit === 'max_ark_messages' || normalizedLimit === 'max_pdf_generations') {
+        const usageType = normalizedLimit === 'max_ark_messages' ? 'ark_messages' : 'pdf_generations';
+        const count = await pool.query(
+          `SELECT COALESCE(SUM(amount), 0) AS total
+           FROM plan_usage_events
+           WHERE user_id = $1 AND usage_type = $2 AND period_start = date_trunc('month', NOW())::date`,
+          [userId, usageType]
+        );
+        current = parseInt(count.rows[0]?.total || 0, 10);
       }
     } catch (e) {
       // Ignorer les erreurs de comptage
@@ -345,8 +403,34 @@ const FEATURE_GATES = {
   integrations_google_calendar: 'pro',
   integrations_whatsapp: 'pro',
   integrations_email_sync: 'pro',
+  integrations: 'pro',
+  documents: 'starter',
+  whatsapp: 'pro',
+  commissions: 'pro',
   admin_costs: 'pro',
 };
+
+const LIMIT_ALIASES = {
+  clients: 'max_clients',
+  max_clients: 'max_clients',
+  contracts: 'max_contrats',
+  contrats: 'max_contrats',
+  max_contrats: 'max_contrats',
+  users: 'max_users',
+  invitations: 'max_users',
+  max_users: 'max_users',
+  ark_messages: 'max_ark_messages',
+  ark_runs: 'max_ark_messages',
+  max_ark_messages: 'max_ark_messages',
+  pdf_generations: 'max_pdf_generations',
+  documents: 'max_pdf_generations',
+  documents_generated: 'max_pdf_generations',
+  max_pdf_generations: 'max_pdf_generations',
+};
+
+function normalizeLimitKey(limitType) {
+  return LIMIT_ALIASES[limitType] || limitType;
+}
 
 /**
  * Retourne le plan minimum requis pour une feature
@@ -370,5 +454,6 @@ module.exports = {
   getUsageWithLimits,
   getPlanName,
   getMinPlanForFeature,
+  normalizeLimitKey,
   FEATURE_GATES,
 };

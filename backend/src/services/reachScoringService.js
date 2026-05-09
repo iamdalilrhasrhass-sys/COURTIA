@@ -3,7 +3,7 @@
  * Moteur de scoring assurance vertical.
  * Claude AI si ANTHROPIC_API_KEY présente, sinon rule-based intelligent.
  */
-const { generateAnalysis } = require('./reachMockService');
+const logger = require('../lib/logger');
 
 // ── Category → Assurance Product Mapping ─────────────────────────────
 const CATEGORY_PRODUCT_MAP = {
@@ -251,7 +251,7 @@ Sois réaliste. Catégories : garage, agent_assurance, courtier, artisan, taxi_v
       scoring_engine: 'claude-ai',
     };
   } catch (err) {
-    console.error('[reachScoring] Claude failed, fallback rule-based:', err.message);
+    logger.warn({ error: err.message }, 'reach scoring claude failed, using rule-based scoring');
     const fb = ruleBasedScore(prospect);
     fb.scoring_engine = 'rule-based (Claude fallback)';
     return fb;

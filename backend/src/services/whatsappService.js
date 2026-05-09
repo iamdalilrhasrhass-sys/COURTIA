@@ -1,7 +1,18 @@
 const visionService = require('./visionService')
 const pool = require('../db')
+const logger = require('../lib/logger')
 
 const whatsappService = {
+  getWhatsAppStatus() {
+    const configured = Boolean(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
+    return {
+      configured,
+      provider: configured ? 'meta_whatsapp_business' : 'none',
+      status: configured ? 'ready' : 'configuration_required',
+      missing: configured ? [] : ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
+    }
+  },
+
   templates: {
     renewal: `Bonjour {{firstName}}, votre assurance {{type}} expire le {{expiryDate}}. Je vous propose de faire un point ensemble pour voir comment optimiser votre couverture. Quand êtes-vous disponible cette semaine?`,
     crossSell: `Bonjour {{firstName}}, vous êtes assuré chez moi pour votre {{current}}. J'ai une excellente opportunité pour vous sur une {{suggested}} avec une réduction de {{discount}}%. Pouvons-nous en discuter?`,
@@ -51,7 +62,7 @@ const whatsappService = {
       )
 
       if (clientResult.rows.length === 0) {
-        console.log(`[WhatsApp] Message média de ${phone} — aucun client trouvé`)
+        logger.info({ user_id: userId }, 'whatsapp media received without matching client')
         return false
       }
 
@@ -62,7 +73,7 @@ const whatsappService = {
       try {
         mediaBuffer = await sock.downloadMediaMessage(msg)
       } catch (dlErr) {
-        console.error('[WhatsApp] Erreur téléchargement média:', dlErr.message)
+        logger.warn({ error: dlErr.message }, 'whatsapp media download failed')
         await sock.sendMessage(from, { text: whatsappService.templates.document_error })
         return true
       }
@@ -95,12 +106,11 @@ const whatsappService = {
         .replace('{{type}}', result.type || 'document')
       await sock.sendMessage(from, { text: reply })
 
-      // Notifier le courtier (log)
-      console.log(`[WhatsApp] Document analysé pour ${client.prenom} ${client.nom} — type: ${result.type}, confiance: ${(result.confiance * 100).toFixed(0)}%`)
+      logger.info({ client_id: client.id, type: result.type, confidence: Math.round((result.confiance || 0) * 100) }, 'whatsapp document analyzed')
 
       return { type: result.type, confiance: result.confiance, client: `${client.prenom} ${client.nom}` }
     } catch (err) {
-      console.error('[WhatsApp] Erreur handleIncomingMedia:', err.message)
+      logger.warn({ error: err.message }, 'whatsapp incoming media failed')
       return false
     }
   }

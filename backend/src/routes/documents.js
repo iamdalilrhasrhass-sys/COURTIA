@@ -16,6 +16,8 @@ const { requireUnderLimit } = require('../middleware/planGuard')
 const visionService = require('../services/visionService')
 const logger = require('../lib/logger')
 const { logAudit } = require('../lib/audit')
+const { incrementUsage } = require('../services/planService')
+const { trackEvent } = require('../services/analyticsService')
 const { isFeatureEnabled } = require('../lib/featureFlags')
 const {
   normalizeDocumentType,
@@ -289,6 +291,12 @@ async function generateDdaDocument(req, res, documentType) {
     metadata: { type: definition.type, client_id: clientId, contract_id: contractId },
     req,
   })
+  await incrementUsage(userId, 'documents_generated').catch(() => {})
+  await trackEvent({
+    userId,
+    event: 'document_generated',
+    properties: { type: definition.type, client_id: clientId },
+  }).catch(() => {})
 
   return res.status(201).json({
     success: true,

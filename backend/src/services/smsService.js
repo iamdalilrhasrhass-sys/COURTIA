@@ -1,163 +1,143 @@
-/**
- * smsService.js — SMS GRATUIT via TextBelt
- * COURTIA — 2026-04-25
- *
- * TextBelt : 1 SMS gratuit/jour en dev avec la clé 'textbelt'
- * Auto-hébergement possible pour SMS illimités (VPS à 3$/mois)
- * https://textbelt.com
- *
- * Pas de Twilio (payant) — Zéro service payant.
- *
- * Env vars :
- *   SMS_PROVIDER=textbelt          (par défaut)
- *   TEXTBELT_API_KEY=textbelt      (clé gratuite, 1 SMS/jour)
- *   TEXTBELT_SELF_HOST_URL=        (optionnel, pour auto-hébergement)
- */
-
 const axios = require('axios');
+const logger = require('../lib/logger');
 
-const SMS_PROVIDER = process.env.SMS_PROVIDER || 'textbelt';
-const TEXTBELT_API_KEY = process.env.TEXTBELT_API_KEY || 'textbelt';
-const TEXTBELT_SELF_HOST_URL = process.env.TEXTBELT_SELF_HOST_URL || null;
-
-const TEXTBELT_URL = TEXTBELT_SELF_HOST_URL
-  ? `${TEXTBELT_SELF_HOST_URL}/text`
-  : 'https://textbelt.com/text';
-
-/**
- * Nettoie un numéro de téléphone au format international E.164
- * Ex: "06 12 34 56 78" → "+33612345678"
- */
 function sanitizePhone(phone) {
   if (!phone) return null;
-  let cleaned = phone.replace(/[\s\.\-\(\)]/g, '');
-  if (cleaned.startsWith('00')) {
-    cleaned = '+' + cleaned.slice(2);
-  }
-  if (cleaned.startsWith('0') && !cleaned.startsWith('+')) {
-    cleaned = '+33' + cleaned.slice(1);
-  }
-  if (!cleaned.startsWith('+')) {
-    cleaned = '+' + cleaned;
-  }
-  return cleaned;
+  let cleaned = String(phone).replace(/[\s.\-()]/g, '');
+  cleaned = cleaned.replace(/^\+33\(0\)/, '+33');
+  if (cleaned.startsWith('00')) cleaned = `+${cleaned.slice(2)}`;
+  if (cleaned.startsWith('0') && !cleaned.startsWith('+')) cleaned = `+33${cleaned.slice(1)}`;
+  if (/^33[1-9]/.test(cleaned)) cleaned = `+${cleaned}`;
+  if (!cleaned.startsWith('+')) cleaned = `+${cleaned}`;
+  return /^\+[1-9]\d{7,14}$/.test(cleaned) ? cleaned : null;
 }
 
-/**
- * Envoie un SMS via TextBelt
- * @param {Object} params
- * @param {string} params.to      - Numéro du destinataire (format FR ou international)
- * @param {string} params.message - Contenu du SMS (max 160 caractères recommandé)
- * @returns {Promise<Object>} { success: boolean, quotaRemaining: number, id: string, provider: string }
- */
+function getSmsStatus() {
+  const provider = String(process.env.SMS_PROVIDER || '').trim().toLowerCase();
+
+  if (provider === 'twilio') {
+    const missing = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM'].filter((key) => !process.env[key]);
+    return {
+      configured: missing.length === 0,
+      status: missing.length === 0 ? 'configured' : 'configuration_required',
+      provider: 'twilio',
+      missing,
+    };
+  }
+
+  if (provider === 'generic') {
+    const missing = ['SMS_GATEWAY_URL', 'SMS_GATEWAY_TOKEN'].filter((key) => !process.env[key]);
+    return {
+      configured: missing.length === 0,
+      status: missing.length === 0 ? 'configured' : 'configuration_required',
+      provider: 'generic',
+      missing,
+    };
+  }
+
+  return {
+    configured: false,
+    status: 'configuration_required',
+    provider: 'none',
+    missing: ['SMS_PROVIDER', 'TWILIO_ACCOUNT_SID or SMS_GATEWAY_URL'],
+  };
+}
+
+async function sendViaGeneric({ phone, message }) {
+  const response = await axios.post(
+    process.env.SMS_GATEWAY_URL,
+    { to: phone, message },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.SMS_GATEWAY_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 15000,
+    }
+  );
+  return { success: true, provider: 'generic', id: response.data?.id || response.data?.messageId || null };
+}
+
+async function sendViaTwilio({ phone, message }) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+  const body = new URLSearchParams({
+    To: phone,
+    From: process.env.TWILIO_FROM,
+    Body: message,
+  });
+  const response = await axios.post(url, body, {
+    auth: {
+      username: sid,
+      password: process.env.TWILIO_AUTH_TOKEN,
+    },
+    timeout: 15000,
+  });
+  return { success: true, provider: 'twilio', id: response.data?.sid || null };
+}
+
 async function sendSMS({ to, message }) {
   const phone = sanitizePhone(to);
   if (!phone) {
-    console.error('[SMS] Numéro invalide:', to);
-    return { success: false, error: 'Numéro de téléphone invalide', provider: SMS_PROVIDER };
+    return { success: false, error: 'invalid_phone', provider: getSmsStatus().provider };
   }
 
-  if (!message || message.trim().length === 0) {
-    console.error('[SMS] Message vide');
-    return { success: false, error: 'Message vide', provider: SMS_PROVIDER };
+  const text = String(message || '').trim();
+  if (!text) {
+    return { success: false, error: 'empty_message', provider: getSmsStatus().provider };
   }
 
-  console.log(`[SMS] Envoi via ${SMS_PROVIDER} → ${phone} (${message.length} chars)`);
-
-  try {
-    const payload = {
-      phone,
-      message: message.trim(),
-      key: TEXTBELT_API_KEY,
-    };
-
-    const response = await axios.post(TEXTBELT_URL, payload, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15000,
-    });
-
-    const data = response.data;
-
-    if (data.success) {
-      console.log(`[SMS] ✅ Envoyé — ID: ${data.id || data.textId}, Quota restant: ${data.quotaRemaining || 'N/A'}`);
-      return {
-        success: true,
-        id: data.id || data.textId,
-        quotaRemaining: data.quotaRemaining,
-        provider: SMS_PROVIDER,
-      };
-    } else {
-      // TextBelt renvoie success:false avec une erreur explicite
-      const errorMsg = data.error || 'Erreur inconnue TextBelt';
-      console.error(`[SMS] ❌ Échec TextBelt: ${errorMsg}`);
-
-      // Suggestions utiles selon l'erreur
-      if (errorMsg.includes('free') || errorMsg.includes('upgrade')) {
-        console.warn('[SMS] 💡 Limite gratuite atteinte (1 SMS/jour). Auto-hébergez TextBelt pour SMS illimités : https://github.com/typpo/textbelt');
-      }
-
-      return {
-        success: false,
-        error: errorMsg,
-        provider: SMS_PROVIDER,
-      };
-    }
-  } catch (err) {
-    console.error(`[SMS] ❌ Erreur réseau/API: ${err.message}`);
+  const status = getSmsStatus();
+  if (!status.configured) {
+    logger.warn({ payload: { provider: status.provider, missing: status.missing } }, 'SMS configuration required - send skipped');
     return {
       success: false,
-      error: err.message,
-      provider: SMS_PROVIDER,
+      skipped: true,
+      error: 'configuration_required',
+      provider: status.provider,
+      missing: status.missing,
+      message: 'Configuration SMS requise.',
     };
+  }
+
+  try {
+    if (status.provider === 'generic') return await sendViaGeneric({ phone, message: text });
+    if (status.provider === 'twilio') return await sendViaTwilio({ phone, message: text });
+    return { success: false, skipped: true, error: 'configuration_required', provider: status.provider };
+  } catch (err) {
+    logger.error({ err, payload: { provider: status.provider } }, 'SMS send failed');
+    return { success: false, error: 'send_failed', provider: status.provider };
   }
 }
 
-/**
- * Envoi groupé de SMS (séquentiel pour respecter les limites)
- * @param {Array<{to: string, message: string}>} recipients
- * @returns {Promise<Object>} { sent: number, failed: number, results: Array }
- */
-async function sendBulkSMS(recipients) {
+async function sendBulkSMS(recipients = []) {
   const results = [];
   let sent = 0;
   let failed = 0;
 
-  for (const { to, message } of recipients) {
-    const result = await sendSMS({ to, message });
-    results.push({ to, ...result });
-    if (result.success) sent++;
-    else failed++;
-
-    // Petit délai entre chaque envoi (pas de rate limit stricte en gratuit, mais poli)
-    if (recipients.length > 1) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+  for (const item of recipients) {
+    const result = await sendSMS({ to: item.to, message: item.message });
+    results.push({ to: sanitizePhone(item.to), ...result });
+    if (result.success) sent += 1;
+    else failed += 1;
   }
 
-  console.log(`[SMS Bulk] ${sent} envoyés, ${failed} échoués sur ${recipients.length}`);
   return { sent, failed, total: recipients.length, results };
 }
 
-/**
- * Vérifie le statut du quota TextBelt
- * @returns {Promise<Object>}
- */
 async function checkQuota() {
-  try {
-    // TextBelt n'a pas d'endpoint /status officiel en gratuit,
-    // on fait une requête légère pour voir
-    const response = await axios.get(
-      `https://textbelt.com/status/${TEXTBELT_API_KEY}`,
-      { timeout: 10000 }
-    );
-    return { success: true, ...response.data };
-  } catch (err) {
-    // Pas critique, on retourne juste une erreur silencieuse
-    return { success: false, error: err.message };
-  }
+  const status = getSmsStatus();
+  return {
+    success: status.configured,
+    configured: status.configured,
+    provider: status.provider,
+    status: status.status,
+    missing: status.missing,
+  };
 }
 
 module.exports = {
+  getSmsStatus,
   sendSMS,
   sendBulkSMS,
   checkQuota,

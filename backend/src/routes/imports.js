@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 
 const importService = require('../services/importService');
+const { trackEvent } = require('../services/analyticsService');
 
 const router = express.Router();
 
@@ -91,6 +92,16 @@ router.post('/commit', async (req, res) => {
       userId,
       mapping,
     });
+
+    await trackEvent({
+      userId,
+      event: 'import_completed',
+      properties: {
+        imported_clients: result.imported_clients,
+        duplicate_rows: result.duplicate_rows,
+        error_rows: result.error_rows,
+      },
+    }).catch(() => {});
 
     return res.json({
       success: true,

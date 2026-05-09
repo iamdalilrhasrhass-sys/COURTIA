@@ -4,6 +4,7 @@ const { verifyToken } = require('../middleware/auth');
 const planService = require('../services/planService');
 const billingService = require('../services/billingService');
 const stripeService = require('../services/stripeService');
+const { trackEvent } = require('../services/analyticsService');
 const legalAcceptanceService = require('../services/legalAcceptanceService');
 const emailService = require('../services/emailService');
 const logger = require('../lib/logger');
@@ -643,6 +644,13 @@ async function createCheckoutSessionHandler(req, res) {
       ON CONFLICT (provider_session_id) DO UPDATE SET raw_payload_json=EXCLUDED.raw_payload_json`,
       [org.id, planId, session.id, JSON.stringify({ id: session.id, url: session.url })]
     );
+
+    await trackEvent({
+      userId,
+      organizationId: org.id,
+      event: 'billing_checkout_started',
+      properties: { plan_code: planCode, billing_mode: stripeService.getBillingMode() },
+    }).catch(() => {});
 
     return res.json({
       success: true,
