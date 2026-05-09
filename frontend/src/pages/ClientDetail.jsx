@@ -8,6 +8,7 @@ import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
 import ContratsTab from '../components/ContratsTab'
 import TachesTab from '../components/TachesTab'
 import ARKChatTab from '../components/ARKChatTab'
+import ClientInteractionsTimeline from '../components/ClientInteractionsTimeline'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
@@ -665,20 +666,28 @@ export default function ClientDetail() {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('activite')
   const [activeBubble, setActiveBubble] = useState(null)
+  const [interactions, setInteractions] = useState([])
+  const [interactionsLoading, setInteractionsLoading] = useState(false)
+  const [interactionsError, setInteractionsError] = useState('')
   const bubbleTimeoutRef = useRef(null)
 
   useEffect(() => {
     async function loadAll() {
       try {
         setLoading(true); setError(null)
-        const [clientRes, contratsRes, tachesRes] = await Promise.all([
+        setInteractionsLoading(true)
+        const [clientRes, contratsRes, tachesRes, interactionsRes] = await Promise.all([
           api.get(`/clients/${id}`),
           api.get(`/clients/${id}/contrats`),
-          api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] }))
+          api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] })),
+          api.get(`/clients/${id}/interactions?limit=40`).catch(() => ({ data: { rows: [] } })),
         ])
         setClient(clientRes.data)
         setContrats(Array.isArray(contratsRes.data) ? contratsRes.data : [])
         setTaches(Array.isArray(tachesRes.data) ? tachesRes.data : [])
+        const timelineRows = Array.isArray(interactionsRes?.data?.rows) ? interactionsRes.data.rows : []
+        setInteractions(timelineRows)
+        setInteractionsError('')
       } catch (err) {
         const status = err?.response?.status
         if (status === 404) {
@@ -689,10 +698,26 @@ export default function ClientDetail() {
           toast.error('Impossible de charger la fiche client.')
         }
       }
-      finally { setLoading(false) }
+      finally {
+        setInteractionsLoading(false)
+        setLoading(false)
+      }
     }
     loadAll()
   }, [id])
+
+  const reloadInteractions = async () => {
+    try {
+      setInteractionsLoading(true)
+      const res = await api.get(`/clients/${id}/interactions?limit=40`)
+      setInteractions(Array.isArray(res?.data?.rows) ? res.data.rows : [])
+      setInteractionsError('')
+    } catch {
+      setInteractionsError('Impossible de charger la timeline interactions.')
+    } finally {
+      setInteractionsLoading(false)
+    }
+  }
 
   const handleBubbleEnter = (type) => { clearTimeout(bubbleTimeoutRef.current); setActiveBubble(type) }
   const handleBubbleLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 300) }
@@ -721,8 +746,6 @@ export default function ClientDetail() {
 
   if (!client) return null
   
-  const TABS = [ { id: 'infos', label: 'Informations', icon: FileText, component: <InfosTab client={client}/> }, { id: 'contrats', label: 'Contrats', icon: Shield, component: <PlaceholderTab title="Contrats"/> }, { id: 'taches', label: 'Tâches', icon: CheckSquare, component: <PlaceholderTab title="Tâches"/> }, { id: 'ark', label: 'ARK Chat', icon: Bot, component: <PlaceholderTab title="ARK Chat"/> }, { id: 'documents', label: 'Documents', icon: File, component: <DocumentsTab client={client} setClient={setClient} clientId={id} /> }]
-
   // ─── TAB CONTENT RENDERER ───────────────────────────────────────────────
   const renderTabContent = () => {
     switch (activeTab) {
@@ -731,7 +754,14 @@ export default function ClientDetail() {
       case 'taches':
         return <TachesTab taches={taches} clientId={client.id} navigate={navigate} />
       case 'activite':
-        return <PlaceholderTab title="Activité" icon={Activity} />
+        return (
+          <ClientInteractionsTimeline
+            rows={interactions}
+            loading={interactionsLoading}
+            error={interactionsError}
+            onRetry={reloadInteractions}
+          />
+        )
       case 'documents':
         return <DocumentsTab client={client} setClient={setClient} clientId={id} />
       case 'historique':

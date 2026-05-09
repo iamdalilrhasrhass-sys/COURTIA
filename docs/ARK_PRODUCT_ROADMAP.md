@@ -4,7 +4,9 @@
 
 - Dashboard: priorités journalières actionnables
 - Morning Brief: plan de journée
+- Signaux intégrations: agenda/WhatsApp affichés quand disponibles
 - Fiche client: recommandations de relance et opportunités
+- Timeline interactions multi-canaux (agenda, WhatsApp, tâches, contrats)
 - Tâches: source ARK visible quand applicable
 - Rapports: activité ARK + signaux portefeuille
 

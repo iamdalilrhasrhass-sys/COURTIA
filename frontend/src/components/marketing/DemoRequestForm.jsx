@@ -19,6 +19,10 @@ const INITIAL_FORM = {
   phone: '',
   city: '',
   team_size: '',
+  current_tools: '',
+  wants_google_calendar: false,
+  wants_whatsapp: false,
+  wants_email_sync: false,
   message: '',
   consent: false,
 }
@@ -102,12 +106,53 @@ export default function DemoRequestForm({ compact = false }) {
           </select>
         </label>
         <label className="full">
+          Outils actuels
+          <input
+            value={form.current_tools}
+            onChange={(e) => updateField('current_tools', e.target.value)}
+            placeholder="Ex: Excel, CRM, Agenda Google, WhatsApp"
+          />
+        </label>
+        <label className="full">
           Message
           <textarea
             value={form.message}
             onChange={(e) => updateField('message', e.target.value)}
             placeholder="Quels enjeux souhaitez-vous résoudre avec COURTIA ?"
           />
+        </label>
+        <label className="full" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={form.wants_google_calendar}
+            onChange={(e) => updateField('wants_google_calendar', e.target.checked)}
+            style={{ width: 15, height: 15 }}
+          />
+          <span style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(236,242,255,0.74)' }}>
+            Je souhaite connecter Google Agenda
+          </span>
+        </label>
+        <label className="full" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={form.wants_whatsapp}
+            onChange={(e) => updateField('wants_whatsapp', e.target.checked)}
+            style={{ width: 15, height: 15 }}
+          />
+          <span style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(236,242,255,0.74)' }}>
+            Je souhaite connecter WhatsApp Business
+          </span>
+        </label>
+        <label className="full" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={form.wants_email_sync}
+            onChange={(e) => updateField('wants_email_sync', e.target.checked)}
+            style={{ width: 15, height: 15 }}
+          />
+          <span style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(236,242,255,0.74)' }}>
+            Je souhaite centraliser Gmail / Outlook
+          </span>
         </label>
         <label className="full" style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <input

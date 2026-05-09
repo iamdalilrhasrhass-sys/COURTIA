@@ -25,9 +25,19 @@ npm --prefix backend run qa:prod-smoke
 - login e2e OK
 - login Dalil + role super_admin
 - `/admin` + `/admin/costs` + `/admin/growth-leads`
+- `/parametres` section Intégrations visible
+- `/clients/:id` onglet Activité (timeline interactions) OK
 - logout OK
 - `/api/api = 0`
 - `auth 429 = 0`
+
+## Variables intégrations (prod)
+
+- `VITE_INTEGRATIONS_API_ENABLED=true` (front) pour activer les appels intégrations
+- `ENCRYPTION_KEY`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+- `OUTLOOK_CLIENT_ID`, `OUTLOOK_CLIENT_SECRET`, `OUTLOOK_REDIRECT_URI`, `OUTLOOK_TENANT_ID`
+- `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`
 
 ## Promotion admin (propre)
 

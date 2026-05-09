@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, BrainCircuit, CalendarClock, Radar, ShieldAlert, ListChecks, BookOpenCheck, BarChart3, Cog } from 'lucide-react'
+import { ArrowRight, BrainCircuit, CalendarClock, Radar, ShieldAlert, ListChecks, BookOpenCheck, BarChart3, Cog, MessageSquare, Mail } from 'lucide-react'
 import MarketingShell from '../components/marketing/MarketingShell'
 import { applySeo } from '../lib/seo'
 
@@ -10,6 +10,9 @@ const FEATURES = [
   { icon: CalendarClock, title: 'Échéances maîtrisées', detail: 'Contrats filtrables et échéanciers 30/60/90 jours.' },
   { icon: ListChecks, title: 'Tâches exploitables', detail: 'Filtrage urgence, retard, statut et lien direct vers client.' },
   { icon: BookOpenCheck, title: 'Morning Brief actionnable', detail: 'Plan de journée avec raisons, impact et action recommandée.' },
+  { icon: CalendarClock, title: 'Google Agenda connecté', detail: 'Synchronisez les rendez-vous et reliez-les aux fiches clients.' },
+  { icon: MessageSquare, title: 'WhatsApp Business', detail: 'Conversations client centralisées avec actions ARK de relance.' },
+  { icon: Mail, title: 'Gmail / Outlook prêts', detail: 'Connecteurs OAuth préparés pour la centralisation email.' },
   { icon: BrainCircuit, title: 'ARK métier natif', detail: 'Recommandations attachées aux pages métier, pas hors contexte.' },
   { icon: BarChart3, title: 'Rapports cabinet', detail: 'Vision pilotage clients, primes, risques, retard et activité.' },
   { icon: Cog, title: 'Admin sécurisé', detail: 'Rôles API, coûts IA, exports CSV et contrôle super_admin.' },
