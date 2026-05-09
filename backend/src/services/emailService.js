@@ -1,23 +1,63 @@
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 const { buildBillingTemplate } = require('../emails/templates/billingTemplates');
 const logger = require('../lib/logger');
 
-const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'disabled';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@courtia.fr';
+const RESEND_API_URL = 'https://api.resend.com/emails';
 
-function isEmailEnabled() {
-  if (EMAIL_PROVIDER === 'disabled') return false;
-  if (EMAIL_PROVIDER === 'smtp') {
-    return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD);
-  }
-  if (EMAIL_PROVIDER === 'gmail') {
-    return !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
-  }
-  return false;
+function getEmailFrom() {
+  return process.env.EMAIL_FROM || 'COURTIA <noreply@courtia.fr>';
 }
 
-function createTransporter() {
-  if (EMAIL_PROVIDER === 'smtp') {
+function getEmailStatus() {
+  if (process.env.RESEND_API_KEY) {
+    return {
+      configured: true,
+      status: 'configured',
+      provider: 'resend',
+      from: getEmailFrom(),
+      missing: [],
+    };
+  }
+
+  const provider = String(process.env.EMAIL_PROVIDER || '').toLowerCase();
+  if (provider === 'smtp') {
+    const missing = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'].filter((key) => !process.env[key]);
+    return {
+      configured: missing.length === 0,
+      status: missing.length === 0 ? 'configured' : 'configuration_required',
+      provider: 'smtp',
+      from: getEmailFrom(),
+      missing,
+    };
+  }
+
+  if (provider === 'gmail') {
+    const missing = ['EMAIL_USER', 'EMAIL_PASSWORD'].filter((key) => !process.env[key]);
+    return {
+      configured: missing.length === 0,
+      status: missing.length === 0 ? 'configured' : 'configuration_required',
+      provider: 'gmail',
+      from: getEmailFrom(),
+      missing,
+    };
+  }
+
+  return {
+    configured: false,
+    status: 'configuration_required',
+    provider: 'none',
+    from: getEmailFrom(),
+    missing: ['RESEND_API_KEY'],
+  };
+}
+
+function isEmailEnabled() {
+  return getEmailStatus().configured;
+}
+
+function createTransporter(provider) {
+  if (provider === 'smtp') {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),
@@ -39,24 +79,53 @@ function createTransporter() {
 }
 
 async function sendEmail({ to, subject, html, text }) {
-  if (!isEmailEnabled()) {
-    logger.info({ payload: { to, subject } }, 'Email disabled - skipped send');
-    return { skipped: true, reason: 'email_disabled' };
+  const status = getEmailStatus();
+  if (!status.configured) {
+    logger.warn({ payload: { to, subject, provider: status.provider, missing: status.missing } }, 'Email configuration required - send skipped');
+    return {
+      success: false,
+      skipped: true,
+      error: 'configuration_required',
+      provider: status.provider,
+      missing: status.missing,
+      message: 'Configuration email transactionnel requise.',
+    };
   }
 
   try {
-    const transporter = createTransporter();
+    if (status.provider === 'resend') {
+      const response = await axios.post(
+        RESEND_API_URL,
+        {
+          from: getEmailFrom(),
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+          text,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 15000,
+        }
+      );
+      return { success: true, provider: 'resend', id: response.data?.id || null };
+    }
+
+    const transporter = createTransporter(status.provider);
     await transporter.sendMail({
-      from: EMAIL_FROM,
+      from: getEmailFrom(),
       to,
       subject,
       html,
       text,
     });
-    return { success: true };
+    return { success: true, provider: status.provider };
   } catch (err) {
-    logger.error({ err, payload: { to, subject } }, 'Email send failed');
-    return { success: false, error: 'send_failed' };
+    logger.error({ err, payload: { to, subject, provider: status.provider } }, 'Email send failed');
+    return { success: false, error: 'send_failed', provider: status.provider };
   }
 }
 
@@ -98,6 +167,7 @@ async function emailEcheanceContrat({ courtierEmail, clientNom, dateEcheance }) 
 }
 
 module.exports = {
+  getEmailStatus,
   isEmailEnabled,
   sendEmail,
   sendBillingEmail,

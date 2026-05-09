@@ -10,16 +10,6 @@ import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import '../styles/design-system.css'
 
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
-
-const MOCK_CLIENTS = [
-  {id:1,name:'SARL Dupont',email:'contact@dupont.fr',status:'actif',riskScore:28,premium:45000,city:'Paris'},
-  {id:2,name:'Martin Assurances',email:'m.assurances@outlook.fr',status:'actif',riskScore:65,premium:32000,city:'Lyon'},
-  {id:3,name:'BCE Courtage',email:'bce@courtage.fr',status:'opportunite',riskScore:15,premium:78000,city:'Marseille'},
-  {id:4,name:'Cabinet Lefebvre',email:'contact@lefebvre.com',status:'a_risque',riskScore:82,premium:21000,city:'Bordeaux'},
-  {id:5,name:'Groupe Axial',email:'g.axial@orange.fr',status:'actif',riskScore:42,premium:56000,city:'Lille'}
-]
-
 // HSL gradient from string
 const getHash = (str) => {
   let hash = 0
@@ -141,7 +131,6 @@ function ClientCard({ client, onNavigate }) {
 export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
-  const [useMock, setUseMock] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
@@ -163,18 +152,10 @@ export default function Clients() {
       } else {
         setClients([])
       }
-      setUseMock(false)
     } catch (err) {
       console.error('Impossible de charger les clients.', err)
-      if (USE_MOCKS) {
-        setClients(MOCK_CLIENTS)
-        setUseMock(true)
-        setError('Mode démonstration actif : l’API clients est indisponible, affichage de données fictives.')
-      } else {
-        setClients([])
-        setUseMock(false)
-        setError('Impossible de charger les clients pour le moment.')
-      }
+      setClients([])
+      setError('Impossible de charger les clients pour le moment.')
     }
     finally { setLoading(false) }
   }, [])
@@ -259,13 +240,7 @@ export default function Clients() {
           }
         />
 
-        {useMock && (
-          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
-            Aperçu démonstration : l’API clients n’a pas répondu, les lignes affichées sont des données fictives réalistes.
-          </div>
-        )}
-
-        {!useMock && error && (
+        {error && (
           <div className="mb-5 rounded-2xl border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
             {error}
           </div>

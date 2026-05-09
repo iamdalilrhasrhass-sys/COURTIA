@@ -39,6 +39,10 @@ export default function LegalConfidentialite() {
             Sous-traitants techniques: hébergement web/app et services d&apos;infrastructure nécessaires à l&apos;exploitation de COURTIA.
           </p>
           <p>
+            Les durées de conservation dépendent de la relation contractuelle, des obligations légales du cabinet et des demandes
+            d&apos;effacement recevables. Les sauvegardes techniques sont restaurées selon le runbook incident.
+          </p>
+          <p>
             Vous pouvez demander export, rectification, limitation ou suppression de vos données selon les cas applicables.
           </p>
           <p>

@@ -19,11 +19,7 @@ export default function ReachCampaigns() {
     { name: 'Artisans BTP — Décennale + RC Pro', desc: 'Artisans du bâtiment', channel: 'email', steps: 3 },
   ];
 
-  const mockCampaigns = campaigns.length > 0 ? campaigns : [
-    { id: 1, name: 'Garages Sens — Prospection Q2', target_description: 'Garages à Sens et alentours', channel: 'email', status: 'active', prospect_count: 8 },
-    { id: 2, name: 'Taxis Montereau — Protection revenu', target_description: 'Taxis et VTC à Montereau', channel: 'email', status: 'draft', prospect_count: 5 },
-    { id: 3, name: 'Courtiers — Démo COURTIA REACH', target_description: 'Courtiers indépendants Île-de-France', channel: 'email', status: 'paused', prospect_count: 12 },
-  ];
+  const campaignRows = Array.isArray(campaigns) ? campaigns : [];
 
   useEffect(() => { fetchCampaigns(); }, []);
 
@@ -45,12 +41,6 @@ export default function ReachCampaigns() {
         </button>
       </div>
 
-      {/* Mock mode badge */}
-      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center gap-2">
-        <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-200 text-amber-800">Démo</span>
-        <span className="text-xs text-amber-700">Mode démo : données fictives. Configurez les API pour activer les données réelles.</span>
-      </div>
-
       {/* Templates popup */}
       {showTemplates && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
@@ -68,10 +58,14 @@ export default function ReachCampaigns() {
                   <span className="flex items-center gap-1"><Clock size={12} /> {t.steps} étapes</span>
                 </div>
                 <button
-                  onClick={() => {
-                    createCampaign({ name: t.name, description: t.desc, channel: t.channel, steps: t.steps });
-                    toast.success(`Campagne "${t.name}" créée !`);
-                    setShowTemplates(false);
+                  onClick={async () => {
+                    const result = await createCampaign({ name: t.name, target_description: t.desc, channel: t.channel, steps: t.steps });
+                    if (result?.success) {
+                      toast.success(`Campagne "${t.name}" créée !`);
+                      setShowTemplates(false);
+                    } else {
+                      toast.error('Création de campagne indisponible.');
+                    }
                   }}
                   className="mt-3 w-full py-2 text-xs font-medium text-white rounded-lg hover:opacity-90 transition" style={{ background: accent }}
                 >
@@ -85,7 +79,7 @@ export default function ReachCampaigns() {
 
       {/* Campaign list */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockCampaigns.map((c, i) => (
+        {campaignRows.map((c, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 10 }}
@@ -99,10 +93,10 @@ export default function ReachCampaigns() {
                 <p className="text-xs text-gray-500 mt-0.5">{c.target_description}</p>
               </div>
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                c.status === 'active' ? 'bg-green-50 text-green-700' :
+                c.status === 'running' || c.status === 'active' ? 'bg-green-50 text-green-700' :
                 c.status === 'paused' ? 'bg-amber-50 text-amber-700' : 'bg-gray-50 text-gray-500'
               }`}>
-                {c.status === 'active' ? 'Actif' : c.status === 'paused' ? 'Pause' : 'Brouillon'}
+                {c.status === 'running' || c.status === 'active' ? 'Actif' : c.status === 'paused' ? 'Pause' : 'Brouillon'}
               </span>
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
@@ -110,11 +104,15 @@ export default function ReachCampaigns() {
               <span className="flex items-center gap-1"><Mail size={12} /> {c.channel}</span>
             </div>
             <div className="flex gap-2">
-              {c.status === 'active' ? (
+              {c.status === 'running' || c.status === 'active' ? (
                 <button
                   onClick={async () => {
-                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' }); } catch (_err) { /* noop */ }
-                    toast.success('Campagne mise en pause');
+                    try {
+                      await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' });
+                      toast.success('Campagne mise en pause');
+                    } catch {
+                      toast.error('Mise en pause impossible.');
+                    }
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition flex items-center gap-1"
                 >
@@ -123,8 +121,12 @@ export default function ReachCampaigns() {
               ) : (
                 <button
                   onClick={async () => {
-                    try { await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'active' }); } catch (_err) { /* noop */ }
-                    toast.success('Campagne lancée !');
+                    try {
+                      await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'running' });
+                      toast.success('Campagne lancée !');
+                    } catch {
+                      toast.error('Lancement impossible.');
+                    }
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}
                 >
@@ -143,11 +145,11 @@ export default function ReachCampaigns() {
       </div>
 
       {/* Empty state */}
-      {mockCampaigns.length === 0 && (
+      {campaignRows.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <Mail size={40} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium">Aucune campagne pour le moment</p>
-          <p className="text-sm mt-1">Créez votre première campagne en un clic</p>
+          <p className="text-sm mt-1">Créez votre première campagne depuis un template, sans envoi automatique.</p>
         </div>
       )}
     </div>

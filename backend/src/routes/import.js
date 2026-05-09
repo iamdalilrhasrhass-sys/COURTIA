@@ -4,6 +4,7 @@ const multer = require('multer')
 const pool = require('../db')
 const verifyToken = require('../middleware/authMiddleware')
 const importService = require('../services/importService')
+const { trackEvent } = require('../services/analyticsService')
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
@@ -94,6 +95,16 @@ router.post('/clients/confirm', verifyToken, async (req, res) => {
       userId,
       mapping,
     })
+
+    await trackEvent({
+      userId,
+      event: 'import_completed',
+      properties: {
+        imported_clients: result.imported_clients,
+        duplicate_rows: result.duplicate_rows,
+        error_rows: result.error_rows,
+      },
+    }).catch(() => {})
 
     return res.json({
       success: true,

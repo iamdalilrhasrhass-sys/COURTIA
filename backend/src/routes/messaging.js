@@ -24,6 +24,7 @@ const { getWhatsAppStatus } = require('../services/whatsappService');
 const { getIMAPStatus } = require('../services/imapService');
 const { runDailyRelances } = require('../jobs/relanceScheduler');
 const { isAdminRole } = require('../constants/roles');
+const logger = require('../lib/logger');
 
 // ─── Helper : extraire userId du JWT ────────────────────────
 function getUserId(req) {
@@ -332,7 +333,7 @@ router.post('/relance/trigger-all', verifyToken, async (req, res) => {
       });
     }
 
-    console.log('[Messaging] Déclenchement manuel de toutes les relances...');
+    logger.info({ admin_user_id: userId }, 'manual relance run requested');
     const summary = await runDailyRelances(pool);
 
     res.status(200).json({

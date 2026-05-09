@@ -15,11 +15,12 @@
 const imaps = require('imap-simple');
 const { simpleParser } = require('mailparser');
 const { processInboundEmail } = require('./inboundProcessor');
+const logger = require('../lib/logger');
 
 // Configuration IMAP
 const IMAP_CONFIG = {
   imap: {
-    user: process.env.IMAP_USER || 'arkcourtia@gmail.com',
+    user: process.env.IMAP_USER || '',
     password: process.env.IMAP_PASSWORD || '',
     host: 'imap.gmail.com',
     port: 993,
@@ -39,6 +40,10 @@ let lastError = null;
  */
 async function fetchUnreadEmails() {
   try {
+    if (!IMAP_CONFIG.imap.user || !IMAP_CONFIG.imap.password) {
+      lastError = 'configuration_required';
+      return { error: 'configuration_required', provider: 'imap', messages: [] };
+    }
     const connection = await imaps.connect(IMAP_CONFIG);
     await connection.openBox('INBOX');
 
@@ -53,7 +58,7 @@ async function fetchUnreadEmails() {
     const messages = await connection.search(searchCriteria, fetchOptions);
 
     if (messages.length > 0) {
-      console.log(`[IMAP] ${messages.length} email(s) non lu(s) trouvé(s)`);
+      logger.info({ count: messages.length }, 'imap unread emails found');
     }
 
     const results = [];
@@ -85,21 +90,21 @@ async function fetchUnreadEmails() {
         // Transférer au processeur (le pool sera injecté par startIMAPWatcher)
         const pool = global.courtiaPool;
         if (!pool) {
-          console.error('[IMAP] Pool PostgreSQL non disponible — email ignoré');
-          results.push({ from: emailData.from, error: 'pool_missing' });
+          logger.warn({}, 'imap pool missing - email skipped');
+          results.push({ error: 'pool_missing' });
           continue;
         }
 
         const result = await processInboundEmail(pool, emailData);
-        results.push({ from: emailData.from, subject: emailData.subject, ...result });
+        results.push({ ...result });
 
         // Marquer comme lu (addFlags: ['\\Seen'])
         await connection.addFlags(item.attributes.uid, ['\\Seen']);
         totalProcessed++;
-        console.log(`[IMAP] ✓ Traité: ${emailData.subject} → ${result.analyse?.type || '?'}`);
+        logger.info({ type: result.analyse?.type || 'unknown' }, 'imap email processed');
 
       } catch (err) {
-        console.error('[IMAP] Erreur traitement email:', err.message);
+        logger.warn({ error: err.message }, 'imap email processing failed');
         results.push({ error: err.message });
       }
     }
@@ -110,7 +115,7 @@ async function fetchUnreadEmails() {
     return results;
 
   } catch (err) {
-    console.error('[IMAP] Erreur connexion/fetch:', err.message);
+    logger.warn({ error: err.message }, 'imap fetch failed');
     lastError = err.message;
     return { error: err.message };
   }
@@ -123,7 +128,7 @@ async function fetchUnreadEmails() {
  */
 function startIMAPWatcher(pool, intervalMinutes = 5) {
   if (isRunning) {
-    console.log('[IMAP] Watcher déjà en cours');
+    logger.info({}, 'imap watcher already running');
     return;
   }
 
@@ -132,15 +137,14 @@ function startIMAPWatcher(pool, intervalMinutes = 5) {
   isRunning = true;
   const intervalMs = intervalMinutes * 60 * 1000;
 
-  console.log(`[IMAP] Démarrage watcher — intervalle: ${intervalMinutes} min`);
-  console.log(`[IMAP] Compte: ${IMAP_CONFIG.imap.user}`);
+  logger.info({ interval_minutes: intervalMinutes, configured: Boolean(IMAP_CONFIG.imap.user) }, 'imap watcher starting');
 
   // Vérifier immédiatement
-  fetchUnreadEmails().catch(err => console.error('[IMAP] Erreur initiale:', err.message));
+  fetchUnreadEmails().catch(err => logger.warn({ error: err.message }, 'imap initial check failed'));
 
   // Puis toutes les N minutes
   watcherInterval = setInterval(() => {
-    fetchUnreadEmails().catch(err => console.error('[IMAP] Erreur cycle:', err.message));
+    fetchUnreadEmails().catch(err => logger.warn({ error: err.message }, 'imap cycle failed'));
   }, intervalMs);
 
   // Empêcher Node de s'arrêter (le watcher maintient le processus)
@@ -155,7 +159,7 @@ function stopIMAPWatcher() {
     clearInterval(watcherInterval);
     watcherInterval = null;
     isRunning = false;
-    console.log('[IMAP] Watcher arrêté');
+    logger.info({}, 'imap watcher stopped');
   }
 }
 
@@ -165,7 +169,7 @@ function stopIMAPWatcher() {
 function getIMAPStatus() {
   return {
     running: isRunning,
-    user: IMAP_CONFIG.imap.user,
+    configured: Boolean(IMAP_CONFIG.imap.user && IMAP_CONFIG.imap.password),
     total_processed: totalProcessed,
     last_check: lastCheck,
     last_error: lastError,

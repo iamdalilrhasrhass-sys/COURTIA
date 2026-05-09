@@ -5,7 +5,7 @@ import useReachStore from '../stores/reachStore';
 
 const accent = '#5B4DF5';
 
-// Mock city coordinates (France)
+// Approximate city coordinates used for the schematic map.
 const CITY_COORDS = {
   'Sens': { lat: 48.2007, lng: 3.2827 },
   'Montereau': { lat: 48.3839, lng: 2.9542 },
@@ -90,7 +90,7 @@ export default function ReachMap() {
         ))}
       </div>
 
-      {/* Pseudo Map */}
+      {/* Schematic map */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 overflow-hidden">
         <div className="relative" style={{ height: MAP_HEIGHT, maxWidth: '100%' }}>
@@ -133,7 +133,7 @@ export default function ReachMap() {
         </div>
         <div className="text-center mt-3">
           <span className="text-xs text-gray-400 bg-amber-50 px-3 py-1 rounded-full">
-            Mode démo — carte schématique · Activez Google Places API pour la carte réelle
+            Carte schématique · Activez Google Places API pour l’enrichissement externe
           </span>
         </div>
       </motion.div>

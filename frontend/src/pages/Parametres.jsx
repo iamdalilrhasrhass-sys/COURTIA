@@ -109,6 +109,7 @@ export default function Parametres() {
   const [integrations, setIntegrations] = useState(() => (INTEGRATIONS_API_ENABLED ? [] : DEFAULT_INTEGRATIONS))
   const [integrationsLoading, setIntegrationsLoading] = useState(false)
   const [integrationAction, setIntegrationAction] = useState('')
+  const [messagingChannels, setMessagingChannels] = useState({})
   const [whatsappConfig, setWhatsappConfig] = useState({ phone_number_id: '', business_account_id: '' })
   const [templates, setTemplates] = useState([])
   const [templatesLoading, setTemplatesLoading] = useState(false)
@@ -116,6 +117,7 @@ export default function Parametres() {
   useEffect(() => {
     fetchProfile()
     if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
+    fetchMessagingChannels()
     fetchTemplates()
   }, [])
 
@@ -186,6 +188,15 @@ export default function Parametres() {
       setTemplates([])
     } finally {
       setTemplatesLoading(false)
+    }
+  }
+
+  async function fetchMessagingChannels() {
+    try {
+      const res = await api.get('/messaging/channels')
+      setMessagingChannels(res?.data?.data || {})
+    } catch {
+      setMessagingChannels({})
     }
   }
 
@@ -473,8 +484,8 @@ export default function Parametres() {
                 <p className="text-xs text-white/60">Tokens stockés côté backend uniquement. Consentement requis pour chaque connexion.</p>
                 <button
                   type="button"
-                  onClick={() => fetchIntegrations()}
-                  disabled={integrationsLoading || !INTEGRATIONS_API_ENABLED}
+                  onClick={() => { fetchIntegrations(); fetchMessagingChannels() }}
+                  disabled={integrationsLoading}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-60"
                 >
                   <RefreshCw size={12} className={integrationsLoading ? 'animate-spin' : ''} />
@@ -486,6 +497,36 @@ export default function Parametres() {
                   Intégrations prêtes côté interface. Activez `VITE_INTEGRATIONS_API_ENABLED=true` quand l’API backend d’intégrations est déployée.
                 </div>
               )}
+
+              <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {[
+                  { key: 'email', title: 'Email transactionnel', icon: Mail, description: 'Invitations, alertes importantes, contact public et notifications critiques.' },
+                  { key: 'sms', title: 'SMS relances', icon: MessageSquare, description: 'Relances automatiques et messages courts, uniquement si un provider est configuré.' },
+                ].map((item) => {
+                  const channel = messagingChannels[item.key] || { status: 'configuration_required', provider: 'none' }
+                  const badge = getIntegrationLabel(channel.status)
+                  const Icon = item.icon
+                  return (
+                    <div key={item.key} className="courtia-depth-card rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 rounded-xl bg-blue-50 p-2 text-blue-700">
+                            <Icon size={16} />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-gray-900">{item.title}</h3>
+                            <p className="text-xs text-gray-500">{item.description}</p>
+                            <p className="mt-2 text-[11px] text-gray-400">Provider : {channel.provider || 'none'}</p>
+                          </div>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${badge.classes}`}>
+                          {badge.text}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
 
               <div className="grid grid-cols-1 gap-4">
                 {Object.entries(INTEGRATION_META).map(([provider, meta]) => {

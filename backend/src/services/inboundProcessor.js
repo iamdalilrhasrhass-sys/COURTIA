@@ -13,6 +13,7 @@
  */
 
 const Anthropic = require('@anthropic-ai/sdk');
+const logger = require('../lib/logger');
 
 // --- Messages Table (auto-create if not exists) ---
 const CREATE_MESSAGES_TABLE = `
@@ -149,10 +150,10 @@ async function updateClientStatus(pool, clientId, analysis) {
       `UPDATE clients SET status = $1, updated_at = NOW() WHERE id = $2`,
       [newStatus, clientId]
     );
-    console.log(`[inboundProcessor] Client ${clientId} status → ${newStatus} (${analysis.type})`);
+    logger.info({ client_id: clientId, status: newStatus, type: analysis.type }, 'inbound client status updated');
     return newStatus;
   } catch (err) {
-    console.error(`[inboundProcessor] Status update failed for client ${clientId}:`, err.message);
+    logger.warn({ error: err.message, client_id: clientId }, 'inbound client status update failed');
     return null;
   }
 }
@@ -174,7 +175,7 @@ async function saveMessage(pool, { clientId, from, subject, body, analysis, acti
       ]
     );
   } catch (err) {
-    console.error('[inboundProcessor] Save message error:', err.message);
+    logger.warn({ error: err.message }, 'inbound save message failed');
   }
 }
 
@@ -189,7 +190,7 @@ async function findClientByEmail(pool, email) {
     );
     return result.rows[0] || null;
   } catch (err) {
-    console.error('[inboundProcessor] Find client error:', err.message);
+    logger.warn({ error: err.message }, 'inbound find client failed');
     return null;
   }
 }
@@ -234,7 +235,7 @@ async function processInboundEmail(pool, { from, subject, body, attachments }) {
       result.client_nom = `${client.first_name || ''} ${client.last_name || ''}`.trim();
       result.statut_precedent = client.status;
     } else {
-      console.log(`[inboundProcessor] Aucun client trouvé pour ${senderEmail}`);
+      logger.info({}, 'inbound sender not matched to client');
     }
 
     // 3. Analyser le contenu avec Claude Haiku
@@ -264,12 +265,12 @@ async function processInboundEmail(pool, { from, subject, body, attachments }) {
                `email/${client.id}/${Date.now()}_${att.filename}`, category,
                JSON.stringify({ subject, from: senderEmail })]
             );
-            console.log('[inboundProcessor] Piece jointe sauvegardee:', att.filename);
+            logger.info({ client_id: client.id }, 'inbound attachment saved');
           }
         }
         await inboxService.updateChecklistAfterUpload(client.user_id || 1, client.id);
       } catch (e) {
-        console.error('[inboundProcessor] Erreur sauvegarde piece jointe:', e.message);
+        logger.warn({ error: e.message }, 'inbound attachment save failed');
       }
     }
 

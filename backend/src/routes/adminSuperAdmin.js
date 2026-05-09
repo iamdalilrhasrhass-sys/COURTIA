@@ -32,6 +32,7 @@ const {
 } = require('../utils/portfolioSchema');
 const billingService = require('../services/billingService');
 const pool = require('../db');
+const logger = require('../lib/logger');
 
 // Prix mensuels par plan (HT, €) — à synchroniser avec les prix Stripe
 const PLAN_PRICES_EUR = { start: 49, pro: 99, elite: 199 };
@@ -562,7 +563,7 @@ router.get('/analytics', async (req, res) => {
       : `0::numeric AS avg_health_score,
          0::integer AS portfolios_healthy`;
 
-    const [planDist, signups30, churn30, arkUsage, portfolioStats] = await Promise.all([
+    const [planDist, signups30, churn30, arkUsage, portfolioStats, productEvents, activeCabinets, feedbackStats] = await Promise.all([
       // Distribution des plans actifs
       safeQuery(
         'plan distribution',
@@ -622,6 +623,30 @@ router.get('/analytics', async (req, res) => {
          ${portfolioWhereSql}`,
         [{ total_analyses: 0, avg_health_score: 0, portfolios_healthy: 0 }]
       ),
+      safeQuery(
+        'product_events_recent',
+        `SELECT event_name, COUNT(*) AS count
+         FROM product_events
+         WHERE created_at > NOW() - INTERVAL '30 days'
+         GROUP BY event_name
+         ORDER BY count DESC
+         LIMIT 12`,
+        []
+      ),
+      safeQuery(
+        'active_cabinets_30d',
+        `SELECT COUNT(DISTINCT COALESCE(organization_id, user_id)) AS count
+         FROM product_events
+         WHERE created_at > NOW() - INTERVAL '30 days'`,
+        [{ count: 0 }]
+      ),
+      safeQuery(
+        'feedback_stats',
+        `SELECT status, COUNT(*) AS count
+         FROM feedback_items
+         GROUP BY status`,
+        []
+      ),
     ]);
 
     // Calculer MRR
@@ -665,6 +690,11 @@ router.get('/analytics', async (req, res) => {
         total_analyses_30d:  parseInt(portfolioStats.rows[0]?.total_analyses || 0),
         avg_health_score:    parseFloat(portfolioStats.rows[0]?.avg_health_score || 0),
         healthy_portfolios:  parseInt(portfolioStats.rows[0]?.portfolios_healthy || 0),
+      },
+      product: {
+        active_cabinets_30d: parseInt(activeCabinets.rows[0]?.count || 0),
+        events_30d: productEvents.rows,
+        feedback_by_status: feedbackStats.rows,
       },
       generated_at: new Date().toISOString(),
     });
@@ -759,7 +789,7 @@ router.patch('/iobsp/:userId', async (req, res) => {
       ]
     );
 
-    console.log(`[admin/iobsp] ${newStatus.toUpperCase()} user ${targetId} (${user.email}) par admin ${adminId}${comment ? ' — ' + comment : ''}`);
+    logger.info({ status: newStatus, target_user_id: targetId, admin_user_id: adminId, has_comment: Boolean(comment) }, 'admin iobsp status updated');
 
     res.json({
       message: `Attestation IOBSP ${newStatus === 'approved' ? 'approuvée' : 'rejetée'}.`,

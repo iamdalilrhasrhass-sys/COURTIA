@@ -15,7 +15,7 @@
  * (certaines routes inline) — on gère les deux.
  */
 
-const { checkFeatureAccess, checkLimit } = require('../services/planService');
+const { checkFeatureAccess, checkLimit, normalizeLimitKey } = require('../services/planService');
 
 // Mapping feature → plan minimum requis (pour le message d'erreur frontend)
 // SOURCE DE VÉRITÉ : aligné avec 003d_plan_features_complete_reset.sql
@@ -132,6 +132,7 @@ function requireUnderLimit(limitType) {
         return res.status(402).json({
           error: 'limit_reached',
           limit_type: limitType,
+          limit_key: check.limit_key || normalizeLimitKey(limitType),
           current: check.current,
           max: check.max,
           required_plan: 'pro',

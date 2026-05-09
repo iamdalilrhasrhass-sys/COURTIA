@@ -19,6 +19,8 @@
 
 const cron = require('node-cron');
 const { sendEmail } = require('../services/emailService');
+const { sendSMS, getSmsStatus } = require('../services/smsService');
+const logger = require('../lib/logger');
 
 // --- Schéma table relances ---
 const CREATE_RELANCES_TABLE = `
@@ -93,9 +95,9 @@ async function ensureRelancesTable(pool) {
   try {
     await pool.query(CREATE_RELANCES_TABLE);
     relancesTableEnsured = true;
-    console.log('[relanceScheduler] Table relances OK');
+    logger.info({}, 'relance table ready');
   } catch (err) {
-    console.error('[relanceScheduler] Cannot create relances table:', err.message);
+    logger.error({ error: err.message }, 'relance table ensure failed');
   }
 }
 
@@ -169,17 +171,30 @@ async function sendRelance(pool, client, etape) {
     });
 
     if (emailResult?.error) {
-      console.error(`[relanceScheduler] Email failed for client ${client.id}:`, emailResult.error);
+      logger.warn({ client_id: client.id, error: emailResult.error }, 'relance email not sent');
     } else {
-      console.log(`[relanceScheduler] ✓ Email envoyé à ${client.email} (étape ${etape})`);
+      logger.info({ client_id: client.id, etape }, 'relance email sent');
       result.success = true;
     }
 
     // SMS si étape 3 (urgence)
     if (etape >= 3 && client.phone) {
-      // TODO: Intégrer un service SMS gratuit (ex: Twilio trial, SMS Gateway API)
-      // Pour le MVP, on log juste
-      console.log(`[relanceScheduler] SMS suggéré pour ${client.phone} (canal SMS non activé en MVP gratuit)`);
+      const smsStatus = getSmsStatus();
+      if (!smsStatus.configured) {
+        result.sms = {
+          success: false,
+          skipped: true,
+          error: 'configuration_required',
+          provider: smsStatus.provider,
+        };
+        logger.warn({ client_id: client.id, provider: smsStatus.provider }, 'relance SMS skipped - configuration required');
+      } else {
+        result.sms = await sendSMS({
+          to: client.phone,
+          message: 'COURTIA: dernier rappel, votre dossier assurance attend des éléments. Répondez à votre conseiller pour finaliser.',
+        });
+        if (result.sms.success) result.success = true;
+      }
     }
 
     // Mettre à jour ou créer l'entrée relances
@@ -211,7 +226,7 @@ async function sendRelance(pool, client, etape) {
     }
 
   } catch (err) {
-    console.error(`[relanceScheduler] Erreur relance client ${client.id}:`, err.message);
+    logger.error({ error: err.message, client_id: client.id }, 'relance send failed');
     result.error = err.message;
   }
 
@@ -241,7 +256,7 @@ async function runDailyRelances(pool) {
   try {
     const clients = await getDossiersARelancer(pool);
     summary.dossiers_scannes = clients.length;
-    console.log(`[relanceScheduler] Scan de ${clients.length} dossiers ouverts`);
+    logger.info({ count: clients.length }, 'relance scan started');
 
     for (const client of clients) {
       const etapeDue = isRelanceDue(client);
@@ -251,7 +266,7 @@ async function runDailyRelances(pool) {
         continue;
       }
 
-      console.log(`[relanceScheduler] Relance due: ${client.first_name} ${client.last_name} (étape ${etapeDue})`);
+      logger.info({ client_id: client.id, etape: etapeDue }, 'relance due');
 
       const relanceResult = await sendRelance(pool, client, etapeDue);
 
@@ -263,8 +278,6 @@ async function runDailyRelances(pool) {
 
       summary.details.push({
         client_id: client.id,
-        nom: `${client.first_name || ''} ${client.last_name || ''}`.trim(),
-        email: client.email,
         etape: etapeDue,
         canal: relanceResult.canal,
         success: relanceResult.success,
@@ -272,12 +285,12 @@ async function runDailyRelances(pool) {
     }
 
   } catch (err) {
-    console.error('[relanceScheduler] Erreur critique:', err.message);
+    logger.error({ error: err.message }, 'relance daily run failed');
     summary.erreurs++;
     summary.error = err.message;
   }
 
-  console.log(`[relanceScheduler] Résumé: ${summary.relances_envoyees} envoyées, ${summary.relances_ignorees} ignorées, ${summary.erreurs} erreurs`);
+  logger.info({ sent: summary.relances_envoyees, ignored: summary.relances_ignorees, errors: summary.erreurs }, 'relance run finished');
   return summary;
 }
 
@@ -290,28 +303,28 @@ let cronJob = null;
  */
 function startRelanceScheduler(pool) {
   if (cronJob) {
-    console.log('[relanceScheduler] Déjà actif');
+    logger.info({}, 'relance scheduler already active');
     return;
   }
 
-  console.log('[relanceScheduler] Planification quotidienne 09:00 Europe/Paris');
+  logger.info({}, 'relance scheduler daily 09:00 Europe/Paris');
 
   cronJob = cron.schedule('0 9 * * *', async () => {
-    console.log('[relanceScheduler] ⏰ Exécution quotidienne 09:00');
+    logger.info({}, 'relance scheduler tick');
     try {
       const result = await runDailyRelances(pool);
-      console.log('[relanceScheduler] ✅ Terminé:', JSON.stringify({
+      logger.info({
         scannes: result.dossiers_scannes,
         envoyees: result.relances_envoyees,
         ignorees: result.relances_ignorees,
         erreurs: result.erreurs,
-      }));
+      }, 'relance scheduler tick finished');
     } catch (err) {
-      console.error('[relanceScheduler] ❌ Erreur:', err.message);
+      logger.error({ error: err.message }, 'relance scheduler tick failed');
     }
   }, { timezone: 'Europe/Paris' });
 
-  console.log('[relanceScheduler] ✅ Cron relances activé (09:00 Europe/Paris)');
+  logger.info({}, 'relance scheduler activated');
 }
 
 /**
@@ -321,7 +334,7 @@ function stopRelanceScheduler() {
   if (cronJob) {
     cronJob.stop();
     cronJob = null;
-    console.log('[relanceScheduler] Arrêté');
+    logger.info({}, 'relance scheduler stopped');
   }
 }
 

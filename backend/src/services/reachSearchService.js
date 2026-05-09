@@ -1,9 +1,10 @@
 /**
  * COURTIA REACH — Search Service
- * Google Places API si clé présente, sinon mock intelligent.
+ * Google Places API si clé présente. Sans provider, le service retourne vide.
  */
 
 const { generateProspects } = require('./reachMockService');
+const logger = require('../lib/logger');
 
 /**
  * Recherche des prospects selon critères.
@@ -21,11 +22,16 @@ async function searchProspects({ category, city, radius, niche, limit = 10 }) {
     try {
       return await googlePlacesSearch({ category, city, radius, apiKey, limit });
     } catch (err) {
-      console.error('[reachSearch] Google Places failed, fallback mock:', err.message);
+      logger.warn({ error: err.message }, 'reach google places search failed');
+      return [];
     }
   }
 
-  return mockSearch({ category, city, radius, niche, limit });
+  if (process.env.REACH_DEMO_MODE === 'true') {
+    return localDemoSearch({ category, city, radius, niche, limit });
+  }
+
+  return [];
 }
 
 // ── Google Places API ──────────────────────────────────────────────────
@@ -64,9 +70,12 @@ async function googlePlacesSearch({ category, city, radius, apiKey, limit }) {
   return results;
 }
 
-// ── Mock Search ────────────────────────────────────────────────────────
-function mockSearch({ category, city, radius, niche, limit }) {
-  return generateProspects({ category, city, count: limit });
+// ── Local demo search, opt-in only ─────────────────────────────────────
+function localDemoSearch({ category, city, radius, niche, limit }) {
+  return generateProspects({ category, city, count: limit }).map((prospect) => ({
+    ...prospect,
+    source: 'local_demo',
+  }));
 }
 
 module.exports = { searchProspects };

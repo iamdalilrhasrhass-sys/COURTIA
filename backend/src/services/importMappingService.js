@@ -7,6 +7,8 @@ const FIELD_SYNONYMS = {
   code_postal: ['code_postal', 'code postal', 'postal', 'zip', 'cp'],
   ville: ['ville', 'city', 'commune'],
   type_client: ['type_client', 'type client', 'segment', 'categorie_client'],
+  statut: ['statut', 'statut client', 'status client', 'client_status'],
+  notes: ['notes', 'note', 'commentaire', 'commentaires', 'observations'],
   societe: ['societe', 'société', 'entreprise', 'company', 'cabinet'],
   siret: ['siret', 'siren_siret', 'numero_siret'],
   type_contrat: ['type_contrat', 'type contrat', 'contrat', 'produit', 'garantie'],
@@ -38,8 +40,13 @@ function suggestMapping(headers = []) {
 
   const mapping = {};
   for (const [field, variants] of Object.entries(FIELD_SYNONYMS)) {
-    const hit = normalizedHeaders.find((h) =>
-      variants.some((v) => h.normalized.includes(normalizeHeader(v)))
+    const normalizedVariants = variants.map(normalizeHeader);
+    const exactHit = normalizedHeaders.find((h) => normalizedVariants.includes(h.normalized));
+    const hit = exactHit || normalizedHeaders.find((h) =>
+      normalizedVariants.some((variant) => {
+        if (!variant || variant.length < 3) return false;
+        return h.normalized.split('_').includes(variant) || h.normalized.startsWith(`${variant}_`) || h.normalized.endsWith(`_${variant}`);
+      })
     );
     if (hit) mapping[field] = hit.raw;
   }

@@ -147,9 +147,44 @@ app.get('/ping', (req, res) => {
 app.get('/api/status', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()')
-    res.json({ status: 'running', database: 'connected', timestamp: result.rows[0].now, uptime: process.uptime() })
+    const { getEmailStatus } = require('./src/services/emailService')
+    const { getSmsStatus } = require('./src/services/smsService')
+    const stripeService = require('./src/services/stripeService')
+    const whatsappConfigured = Boolean(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID)
+    const googleConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
+    const yousignConfigured = Boolean(process.env.YOUSIGN_API_KEY)
+    res.json({
+      status: 'running',
+      frontend: 'ready',
+      api: 'ready',
+      database: 'connected',
+      timestamp: result.rows[0].now,
+      uptime: process.uptime(),
+      integrations: {
+        email_transactional: getEmailStatus().status,
+        sms: getSmsStatus().status,
+        stripe: stripeService.isConfigured() ? 'configured' : 'configuration_required',
+        google: googleConfigured ? 'configured' : 'configuration_required',
+        whatsapp_business: whatsappConfigured ? 'configured' : 'configuration_required',
+        yousign: yousignConfigured ? 'configured' : 'configuration_required',
+      },
+      maintenance: {
+        active: String(process.env.MAINTENANCE_MODE || '').toLowerCase() === 'true',
+        message: process.env.MAINTENANCE_MESSAGE || null,
+      },
+    })
   } catch (err) {
-    res.status(503).json({ status: 'error', database: 'disconnected', error: err.message })
+    res.status(503).json({
+      status: 'degraded',
+      frontend: 'ready',
+      api: 'ready',
+      database: 'disconnected',
+      timestamp: new Date().toISOString(),
+      maintenance: {
+        active: String(process.env.MAINTENANCE_MODE || '').toLowerCase() === 'true',
+        message: process.env.MAINTENANCE_MESSAGE || null,
+      },
+    })
   }
 })
 
@@ -235,6 +270,8 @@ const { router: commissionsRouter } = require('./src/routes/commissions')
 const contractsAliasRouter = require('./src/routes/contractsAlias')
 const searchRouter         = require('./src/routes/search')
 const templatesRouter      = require('./src/routes/templates')
+const feedbackRouter       = require('./src/routes/feedback')
+const adminFeedbackRouter  = require('./src/routes/adminFeedback')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -277,6 +314,7 @@ app.use('/api/search',          verifyToken, searchRouter)
 app.use('/api/templates',       verifyToken, templatesRouter)
 app.use('/api/import',          verifyToken, importRouter)
 app.use('/api/imports',         verifyToken, importsRouter)
+app.use('/api/feedback',        verifyToken, feedbackRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
 app.use('/api/academy',        verifyToken, academyRouter)
 app.use('/api/document-inbox', verifyToken, documentInboxRouter)
@@ -284,6 +322,7 @@ app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 app.use('/api/extension',      verifyToken, extensionRouter)
 app.use('/api/partners',       verifyToken, partnersRouter)
 app.use('/api/notifications',  notificationsRouter)
+app.use('/api/admin/feedback', verifyToken, adminFeedbackRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 

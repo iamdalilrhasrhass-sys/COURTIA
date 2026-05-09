@@ -12,26 +12,11 @@ import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
-
 const PRIORITY_SECTIONS = [
   { id: 'urgente',   label: 'Urgentes',   color: '#dc2626', bgLight: 'rgba(220,38,38,0.04)', border: '0.5px solid rgba(220,38,38,0.15)' },
   { id: 'haute',     label: 'Hautes',     color: '#d97706', bgLight: 'rgba(217,119,6,0.04)',  border: '0.5px solid rgba(217,119,6,0.15)' },
   { id: 'normale',   label: 'Normales',   color: '#2563eb', bgLight: 'rgba(37,99,235,0.04)',  border: '0.5px solid rgba(37,99,235,0.15)' },
   { id: 'basse',     label: 'Basses',     color: '#6b7280', bgLight: 'rgba(107,114,128,0.04)', border: '0.5px solid rgba(107,114,128,0.15)' },
-]
-
-const MOCK_TASKS = [
-  { id: 1, titre: 'Relancer client Dubois pour signature', priorite: 'urgente', echeance: '2026-04-26', statut: 'a_faire', client_nom: 'Dubois', client_prenom: 'Marc' },
-  { id: 2, titre: 'Finaliser rapport mensuel Q1', priorite: 'urgente', echeance: '2026-04-27', statut: 'en_cours', client_nom: null, client_prenom: null },
-  { id: 3, titre: 'Appel prospection secteur Lyon', priorite: 'haute', echeance: '2026-04-28', statut: 'a_faire', client_nom: 'Petit', client_prenom: 'Chloe' },
-  { id: 4, titre: 'Mise à jour contrat Prevoyance', priorite: 'haute', echeance: '2026-04-25', statut: 'a_faire', client_nom: 'Martin', client_prenom: 'Julie' },
-  { id: 5, titre: 'Vérifier éligibilité nouveau prospect', priorite: 'normale', echeance: '2026-04-30', statut: 'terminee', client_nom: 'Leroy', client_prenom: 'Sophie' },
-  { id: 6, titre: 'Préparer dossier sinistre Bernard', priorite: 'normale', echeance: '2026-05-02', statut: 'a_faire', client_nom: 'Bernard', client_prenom: 'Pierre' },
-  { id: 7, titre: 'Envoyer devis auto client Moreau', priorite: 'basse', echeance: '2026-05-05', statut: 'en_cours', client_nom: 'Moreau', client_prenom: 'Luc' },
-  { id: 8, titre: 'Archiver contrats 2025', priorite: 'basse', echeance: '2026-05-10', statut: 'a_faire', client_nom: null, client_prenom: null },
-  { id: 9, titre: 'Reunion equipe commerciale', priorite: 'normale', echeance: '2026-04-29', statut: 'terminee', client_nom: null, client_prenom: null },
-  { id: 10, titre: 'Correction bug import CSV', priorite: 'haute', echeance: '2026-04-26', statut: 'terminee', client_nom: null, client_prenom: null },
 ]
 
 const fmtDate = (d) => {
@@ -190,7 +175,6 @@ export default function Taches() {
   const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [useMock, setUseMock] = useState(false)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
   const [urgencyFilter, setUrgencyFilter] = useState('toutes')
@@ -205,17 +189,9 @@ export default function Taches() {
     try {
       const { data } = await api.get('/taches')
       setTasks(Array.isArray(data) ? data : [])
-      setUseMock(false)
     } catch {
-      if (USE_MOCKS) {
-        setTasks(MOCK_TASKS)
-        setUseMock(true)
-        setError('Mode démonstration actif: affichage des tâches de test.')
-      } else {
-        setTasks([])
-        setUseMock(false)
-        setError('Impossible de charger les tâches pour le moment.')
-      }
+      setTasks([])
+      setError('Impossible de charger les tâches pour le moment.')
     } finally {
       setLoading(false)
     }
@@ -261,15 +237,6 @@ export default function Taches() {
   }, [filteredTasks])
 
   async function handleComplete(id) {
-    if (useMock) {
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, statut: 'terminee' } : t
-        )
-      )
-      toast.success('Tâche complétée ✓')
-      return
-    }
     try {
       await api.put(`/taches/${id}`, { statut: 'terminee' })
       setTasks((prev) =>
@@ -357,13 +324,7 @@ export default function Taches() {
           </button>
         </div>
 
-        {useMock && (
-          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
-            Aperçu démonstration : les tâches affichées sont fictives car l’API tâches n’a pas répondu.
-          </div>
-        )}
-
-        {!useMock && error && (
+        {error && (
           <div className="mb-5 rounded-2xl border border-red-200/40 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
             {error}
           </div>

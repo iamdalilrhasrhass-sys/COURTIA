@@ -50,12 +50,6 @@ export default function ReachProspects() {
         </div>
       </div>
 
-      {/* Mock mode badge */}
-      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center gap-2">
-        <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-200 text-amber-800">Démo</span>
-        <span className="text-xs text-amber-700">Mode démo : données fictives. Configurez les API pour activer les données réelles.</span>
-      </div>
-
       {/* Quick filters */}
       <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
         {CATEGORIES.map(c => (
@@ -116,6 +110,13 @@ export default function ReachProspects() {
             </tbody>
           </table>
         </div>
+        {prospects.filter(p => !filters.category || p.category === filters.category).length === 0 && (
+          <div className="py-14 text-center text-gray-400">
+            <Target size={38} className="mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium text-gray-600">Aucun prospect pour l’instant</p>
+            <p className="text-xs mt-1">Lancez une recherche REACH ou importez une audience qualifiée.</p>
+          </div>
+        )}
       </div>
     </div>
   );

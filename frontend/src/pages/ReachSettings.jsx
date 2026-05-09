@@ -19,8 +19,8 @@ export default function ReachSettings() {
         setSettings({
           google_places_configured: false,
           anthropic_configured: false,
-          mode: 'demo',
-          demo_note: 'Mode démo : données fictives réalistes. Ajoutez GOOGLE_PLACES_API_KEY pour activer la recherche réelle.',
+          mode: 'configuration_required',
+          status_note: 'Configuration requise : ajoutez GOOGLE_PLACES_API_KEY pour la recherche externe et DEEPSEEK_API_KEY pour les analyses ARK.',
           compliance: {
             linkedin: "Assisté uniquement — pas d'automatisation",
             google: 'API officielle uniquement',
@@ -52,19 +52,19 @@ export default function ReachSettings() {
 
       {/* Mode badge */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className={`rounded-2xl p-5 mb-6 border ${s.mode === 'demo' ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+        className={`rounded-2xl p-5 mb-6 border ${s.mode === 'live' ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
         <div className="flex items-center gap-3">
-          {s.mode === 'demo' ? (
-            <AlertTriangle size={20} className="text-amber-600" />
-          ) : (
+          {s.mode === 'live' ? (
             <CheckSquare size={20} className="text-green-600" />
+          ) : (
+            <AlertTriangle size={20} className="text-amber-600" />
           )}
           <div>
             <div className="font-semibold text-sm">
-              Mode {s.mode === 'live' ? 'Production' : 'Démo'}
+              {s.mode === 'live' ? 'Mode production' : 'Configuration requise'}
             </div>
-            <p className="text-xs mt-0.5" style={{ color: s.mode === 'demo' ? '#92400E' : '#166534' }}>
-              {s.demo_note || 'Mode actif'}
+            <p className="text-xs mt-0.5" style={{ color: s.mode === 'live' ? '#166534' : '#92400E' }}>
+              {s.status_note || 'Connectez les providers pour activer REACH en production.'}
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function ReachSettings() {
               </div>
             </div>
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${s.google_places_configured ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-              {s.google_places_configured ? '✓ Configurée' : 'Mode mock'}
+              {s.google_places_configured ? '✓ Configurée' : 'Configuration requise'}
             </span>
           </div>
 
@@ -100,7 +100,7 @@ export default function ReachSettings() {
               </div>
             </div>
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${s.anthropic_configured ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-              {s.anthropic_configured ? '✓ Configurée' : 'Mode rule-based'}
+              {s.anthropic_configured ? '✓ Configurée' : 'Mode local assisté'}
             </span>
           </div>
         </div>

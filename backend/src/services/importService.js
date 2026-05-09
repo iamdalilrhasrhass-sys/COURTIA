@@ -97,23 +97,19 @@ function getPreviewStats({ headers = [], rows = [], mapping = {} }) {
   const unknownColumns = headers.filter((h) => !Object.values(mapping).includes(h));
   const preview = [];
 
-  rows.slice(0, 8).forEach((row, idx) => {
+  rows.forEach((row, idx) => {
     const mapped = mapRowFromMapping({ headers, row, mapping });
     const clientValidation = validateClient(mapped);
     if (clientValidation.valid) validRows += 1;
     else errorRows += 1;
-    preview.push({
-      row_number: idx + 2,
-      mapped,
-      errors: clientValidation.errors,
-    });
+    if (preview.length < 8) {
+      preview.push({
+        row_number: idx + 2,
+        mapped,
+        errors: clientValidation.errors,
+      });
+    }
   });
-
-  if (rows.length > preview.length) {
-    // Estimation basique du volume exploitable sur le reste
-    validRows = Math.round((validRows / preview.length) * rows.length);
-    errorRows = rows.length - validRows;
-  }
 
   return {
     total_rows: rows.length,
@@ -197,20 +193,21 @@ async function createClientFromImport({ userId, normalized }, db) {
   const inserted = await client.query(
     `INSERT INTO clients (
       first_name, last_name, email, phone, address, status, type, company_name,
-      postal_code, city, courtier_id, created_at, updated_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW())
+      postal_code, city, notes, courtier_id, created_at, updated_at
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW())
     RETURNING id`,
     [
-      normalized.prenom || null,
-      normalized.nom || null,
+      normalized.prenom || '',
+      normalized.nom || 'Client importé',
       normalized.email || null,
       normalized.telephone || null,
       normalized.adresse || null,
-      'prospect',
+      normalized.statut || 'prospect',
       normalized.type_client || 'import',
       normalized.societe || null,
       normalized.code_postal || null,
       normalized.ville || null,
+      normalized.notes || null,
       userId,
     ]
   );

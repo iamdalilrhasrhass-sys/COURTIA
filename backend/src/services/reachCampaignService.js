@@ -3,8 +3,6 @@
  * Gestion des campagnes de prospection.
  */
 
-const { generateCampaigns } = require('./reachMockService');
-
 async function getCampaigns(userId, pool) {
   try {
     const result = await pool.query(
@@ -18,7 +16,7 @@ async function getCampaigns(userId, pool) {
     );
     return result.rows;
   } catch (err) {
-    return generateCampaigns(userId);
+    return [];
   }
 }
 
@@ -42,7 +40,7 @@ async function createCampaign(userId, { name, target_description, channel, steps
     }
     return campaign;
   } catch (err) {
-    return { id: Date.now(), name, target_description, channel, status: 'draft', steps };
+    return { success: false, error: 'campaign_create_failed' };
   }
 }
 

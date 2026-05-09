@@ -7,6 +7,7 @@ const express = require('express');
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
 const OpenAI = require('openai');
+const { searchProspects: searchExternalProspects } = require('../services/reachSearchService');
 const router = express.Router();
 
 // DeepSeek client for AI features
@@ -193,6 +194,14 @@ router.patch('/prospects/:id/status', verifyToken, async (req, res) => {
 // POST /api/reach/prospects/:id/analyze — Analyse IA
 router.post('/prospects/:id/analyze', verifyToken, async (req, res) => {
   try {
+    if (!process.env.DEEPSEEK_API_KEY) {
+      return res.status(503).json({
+        success: false,
+        error: 'configuration_required',
+        provider: 'deepseek',
+        message: 'Configuration ARK requise pour analyser un prospect REACH.',
+      });
+    }
     const prospect = await pool.query(
       'SELECT * FROM reach_prospects WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.id]
@@ -250,17 +259,12 @@ Note actuelle: ${p.opportunity_score || 'N/A'}/100`;
       });
       analysisResult = JSON.parse(response.choices[0].message.content);
     } catch (aiErr) {
-      console.error('[reach] AI analysis error:', aiErr.message);
-      analysisResult = {
-        problems_detected: [],
-        opportunities: [],
-        call_script: "Bonjour, je suis courtier en assurance...",
-        email_template: `Bonjour ${p.contact_first_name || ''},\n\nJe me permets de vous contacter...`,
-        sms_template: `Bonjour ${p.contact_first_name || ''}, je vous propose un audit...`,
-        linkedin_message: `Bonjour ${p.contact_first_name || ''}, je suis...`,
-        next_best_action: "Contacter le prospect par téléphone",
-        score_details: { opportunity: 50, urgency: 50, ease: 50 }
-      };
+      return res.status(503).json({
+        success: false,
+        error: 'provider_unavailable',
+        provider: 'deepseek',
+        message: 'Analyse ARK temporairement indisponible.',
+      });
     }
 
     // Save analysis
@@ -542,6 +546,14 @@ router.post('/campaigns/:id/prospects', verifyToken, async (req, res) => {
 // POST /api/reach/messages/generate — Générer un message personnalisé via AI
 router.post('/messages/generate', verifyToken, async (req, res) => {
   try {
+    if (!process.env.DEEPSEEK_API_KEY) {
+      return res.status(503).json({
+        success: false,
+        error: 'configuration_required',
+        provider: 'deepseek',
+        message: 'Configuration ARK requise pour generer un message.',
+      });
+    }
     const { prospect, analysis, channel } = req.body;
     if (!prospect) return res.status(400).json(err('prospect_required'));
 
@@ -575,10 +587,12 @@ Génère un message de prospession ${c} personnalisé pour ce courtier.`;
       });
       message = response.choices[0].message.content.trim();
     } catch (aiErr) {
-      console.error('[reach] AI generate error:', aiErr.message);
-      message = c === 'sms'
-        ? `Bonjour ${prospect.first_name || prospect.contact_first_name || ''}, je suis courtier en assurance. Puis-je vous proposer un audit gratuit ?`
-        : `Bonjour ${prospect.first_name || prospect.contact_first_name || ''},\n\nJe me permets de vous contacter car nous accompagnons les entreprises comme ${prospect.company_name || 'la vôtre'} dans l'optimisation de leurs contrats d'assurance.\n\nSouhaitez-vous échanger 10 minutes ?\n\nCordialement`;
+      return res.status(503).json({
+        success: false,
+        error: 'provider_unavailable',
+        provider: 'deepseek',
+        message: 'Generation ARK temporairement indisponible.',
+      });
     }
 
     res.json(wrap({ message, channel: c }));
@@ -711,28 +725,20 @@ router.post('/search', verifyToken, async (req, res) => {
 
     const r = await pool.query(query, params);
 
-    // Si pas de résultats, générer des suggestions AI
+    let suggestions = [];
     if (r.rows.length === 0 && city) {
-      try {
-        const aiResponse = await openai.chat.completions.create({
-          model: 'deepseek-chat',
-          max_tokens: 500,
-          messages: [{
-            role: 'system',
-            content: 'Tu es un assistant de prospection. Tu génères une liste de types d\'entreprises/professionnels à prospecter dans une ville donnée pour un courtier en assurance. Réponds UNIQUEMENT en JSON valide : [{"company_name": "...", "category": "...", "niche": "...", "city": "..."}]'
-          }, {
-            role: 'user',
-            content: `Je cherche des prospects ${category ? 'dans la catégorie ' + category : ''} à ${city}${niche ? ', niche: ' + niche : ''}. Propose 5 suggestions.`
-          }]
-        });
-        const suggestions = JSON.parse(aiResponse.choices[0].message.content);
-        res.json(wrap({ items: r.rows, suggestions }));
-      } catch (aiErr) {
-        res.json(wrap({ items: r.rows, suggestions: [] }));
-      }
-    } else {
-      res.json(wrap({ items: r.rows, suggestions: [] }));
+      suggestions = await searchExternalProspects({ category, city, radius, niche, limit });
     }
+
+    res.json(wrap({
+      items: r.rows,
+      suggestions,
+      configuration_required: !process.env.GOOGLE_PLACES_API_KEY && process.env.REACH_DEMO_MODE !== 'true',
+      provider: process.env.GOOGLE_PLACES_API_KEY ? 'google_places' : process.env.REACH_DEMO_MODE === 'true' ? 'local_demo' : 'none',
+      message: (!process.env.GOOGLE_PLACES_API_KEY && process.env.REACH_DEMO_MODE !== 'true')
+        ? 'Configuration Google Places requise pour enrichir la recherche externe.'
+        : undefined,
+    }));
   } catch (e) {
     console.error('[reach] search:', e.message);
     res.status(500).json(err('search_failed'));
@@ -856,6 +862,14 @@ router.post('/prospects/:id/notes', verifyToken, async (req, res) => {
 // GET /api/reach/settings
 router.get('/settings', verifyToken, async (req, res) => {
   try {
+    const integrationStatus = {
+      google_places_configured: Boolean(process.env.GOOGLE_PLACES_API_KEY),
+      anthropic_configured: Boolean(process.env.ANTHROPIC_API_KEY || process.env.DEEPSEEK_API_KEY),
+      mode: process.env.GOOGLE_PLACES_API_KEY ? 'live' : 'configuration_required',
+      status_note: process.env.GOOGLE_PLACES_API_KEY
+        ? 'REACH peut utiliser Google Places pour la recherche externe.'
+        : 'Configuration requise : ajoutez GOOGLE_PLACES_API_KEY pour activer la recherche externe.',
+    };
     const r = await pool.query(
       'SELECT * FROM reach_settings WHERE user_id = $1',
       [req.user.id]
@@ -866,9 +880,9 @@ router.get('/settings', verifyToken, async (req, res) => {
         'INSERT INTO reach_settings (user_id) VALUES ($1) RETURNING *',
         [req.user.id]
       );
-      return res.json(wrap(created.rows[0]));
+      return res.json(wrap({ ...created.rows[0], ...integrationStatus }));
     }
-    res.json(wrap(r.rows[0]));
+    res.json(wrap({ ...r.rows[0], ...integrationStatus }));
   } catch (e) {
     console.error('[reach] settings:', e.message);
     res.status(500).json(err('settings_failed'));

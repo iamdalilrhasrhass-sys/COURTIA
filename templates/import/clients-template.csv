@@ -1,0 +1,2 @@
+"prenom","nom","email","telephone","adresse","ville","code_postal","type_client","statut","notes","compagnie","type_contrat","prime_annuelle","date_echeance"
+"Sophie","Martin","sophie.martin@example.com","06 12 34 56 78","12 rue Exemple","Paris","75008","particulier","prospect","Client a appeler","AXA","Auto","720","2026-12-31"
