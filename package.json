@@ -9,6 +9,14 @@
     "postinstall": "npm --prefix backend install --omit=dev",
     "build": "cd frontend && npm install && npm run build",
     "build:backend": "npm --prefix backend install --omit=dev",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "test": "npm --prefix frontend test && npm --prefix backend test -- --passWithNoTests",
+    "qa:preview-smoke": "npm --prefix backend run qa:preview-smoke",
+    "qa:prod-smoke": "npm --prefix backend run qa:prod-smoke",
+    "leads:pipeline": "node growth/leads/scripts/import_manual_csv.js && node growth/leads/scripts/normalize_leads.js && node growth/leads/scripts/score_leads.js && node growth/leads/scripts/dedupe_leads.js && node growth/leads/scripts/export_leads_csv.js && node growth/leads/scripts/validate_rgpd_fields.js",
+    "videos:capture": "node marketing/videos/scripts/capture-app-screenshots.js",
+    "videos:capture:landing": "node marketing/videos/scripts/capture-landing-screenshots.js",
+    "videos:render:tiktok": "node marketing/videos/scripts/generate-courtia-tiktok.js",
+    "videos:render:orchestral": "node marketing/videos/scripts/generate-courtia-orchestral-bubbles.js"
   }
 }

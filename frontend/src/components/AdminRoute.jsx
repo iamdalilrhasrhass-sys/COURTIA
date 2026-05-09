@@ -5,6 +5,7 @@ import CourtiaLogoLoader from './brand/CourtiaLogoLoader'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 import AuroraButton from './brand/AuroraButton'
 import { getCourtiaAdminToken } from '../lib/adminApi'
+import { getSessionUser } from '../api/sessionUser'
 
 function decodeRoleFromToken(token = '') {
   try {
@@ -19,14 +20,22 @@ export default function AdminRoute({ children }) {
   const [status, setStatus] = useState('loading') // loading | granted | forbidden | unauthenticated
 
   useEffect(() => {
-    const check = () => {
+    const check = async () => {
       const token = getCourtiaAdminToken()
       if (!token) {
         setStatus('unauthenticated')
         return
       }
 
-      const role = decodeRoleFromToken(token)
+      let role = ''
+      try {
+        const sessionUser = await getSessionUser({ allowStaleOn429: true })
+        role = String(sessionUser?.role || '').toLowerCase()
+      } catch {
+        // fallback decode when auth/me is temporarily unavailable
+      }
+      if (!role) role = decodeRoleFromToken(token)
+
       if (role === 'admin' || role === 'super_admin') {
         setStatus('granted')
         return
@@ -39,7 +48,7 @@ export default function AdminRoute({ children }) {
 
       setStatus('forbidden')
     }
-    check()
+    check().catch(() => setStatus('forbidden'))
   }, [])
 
   if (status === 'loading') {
