@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 import { clearStoredSession } from '../api/sessionPolicy'
 import { resetSessionUserCache } from '../api/sessionUser'
+import { isAdminRole } from '../lib/roles'
 
 const theme = {
   accent: '#5B4DF5',
@@ -100,7 +101,7 @@ export default function Sidebar() {
   const userLastName = user ? (user.last_name || user.lastName || '') : ''
   const userEmail = user?.email || ''
   const userRole = (user?.role || '').toLowerCase()
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin'
+  const isAdmin = isAdminRole(userRole)
   const navItems = isAdmin
     ? [...NAV_ITEMS, { separator: true, label: 'ADMIN' }, { path: '/admin/costs', label: 'Admin', icon: Shield }]
     : NAV_ITEMS

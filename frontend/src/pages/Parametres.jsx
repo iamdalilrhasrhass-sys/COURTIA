@@ -474,6 +474,18 @@ export default function Parametres() {
                   )
                 })}
               </div>
+
+              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-gray-900">Make / Zapier / Webhooks</h3>
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700">
+                    Bientôt disponible
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Les endpoints backend sont prêts (`/api/webhooks/incoming` et `/api/webhooks/outgoing/test`) pour brancher vos automatisations cabinet.
+                </p>
+              </div>
             </section>
           </div>
         </div>

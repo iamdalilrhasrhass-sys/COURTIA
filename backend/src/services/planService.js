@@ -8,13 +8,13 @@ const BILLING_MODE = process.env.BILLING_MODE || 'test';
 
 function stripePriceFor(planCode) {
   if (BILLING_MODE === 'test') {
-    if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || null;
-    if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || null;
+    if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
+    if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
     if (planCode === 'premium') return null;
   }
   if (planCode === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
   if (planCode === 'pro') return process.env.STRIPE_PRICE_PRO || null;
-  if (planCode === 'premium') return process.env.STRIPE_PRICE_PREMIUM || null;
+  if (planCode === 'premium') return process.env.STRIPE_PRICE_CABINET || process.env.STRIPE_PRICE_PREMIUM || null;
   return null;
 }
 
@@ -37,6 +37,11 @@ const PLANS = {
       csv_import: true,
       crm_full: false,
       scoring: false,
+      morning_brief: false,
+      integrations_google_calendar: false,
+      integrations_whatsapp: false,
+      integrations_email_sync: false,
+      admin_costs: false,
     },
     limits: {
       max_clients: 3,
@@ -65,6 +70,11 @@ const PLANS = {
       csv_import: true,
       crm_full: true,
       scoring: true,
+      morning_brief: true,
+      integrations_google_calendar: true,
+      integrations_whatsapp: true,
+      integrations_email_sync: true,
+      admin_costs: true,
     },
     limits: {
       max_clients: Infinity,
@@ -93,6 +103,11 @@ const PLANS = {
       csv_import: true,
       crm_full: true,
       scoring: true,
+      morning_brief: true,
+      integrations_google_calendar: true,
+      integrations_whatsapp: true,
+      integrations_email_sync: true,
+      admin_costs: true,
     },
     limits: {
       max_clients: Infinity,
@@ -290,6 +305,11 @@ const FEATURE_GATES = {
   csv_import: 'starter',
   crm_full: 'pro',
   scoring: 'pro',
+  morning_brief: 'pro',
+  integrations_google_calendar: 'pro',
+  integrations_whatsapp: 'pro',
+  integrations_email_sync: 'pro',
+  admin_costs: 'pro',
 };
 
 /**
