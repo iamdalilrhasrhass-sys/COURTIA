@@ -22,14 +22,10 @@ export default function ProtectedRoute({ children, requireFeature }) {
 
   useEffect(() => {
     if (!token) {
-      setMe(null)
-      setErr(null)
-      setSoftWarning('')
       return
     }
 
     let cancelled = false
-    setErr(null)
 
     getSessionUser()
       .then((user) => {

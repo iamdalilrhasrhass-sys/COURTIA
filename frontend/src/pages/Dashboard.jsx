@@ -119,6 +119,8 @@ export default function Dashboard() {
     }
   }, [])
 
+  // Le chargement initial hydrate toutes les tuiles en une seule passe.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAllData() }, [loadAllData])
 
   const kpis = useMemo(() => {

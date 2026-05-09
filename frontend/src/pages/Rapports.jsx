@@ -27,7 +27,6 @@ function KPICard({ label, value, sub }) {
 function DaysBadge({ days }) {
   const veryUrgent = days <= 7
   const urgent = days <= 30
-  const soon = days <= 90
 
   let bg, color
   if (veryUrgent) { bg = '#fee2e2'; color = '#dc2626' }

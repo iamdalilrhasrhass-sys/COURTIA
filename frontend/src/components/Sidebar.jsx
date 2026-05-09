@@ -65,11 +65,6 @@ export default function Sidebar() {
   const [user, setUser] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Ferme le menu mobile quand on change de page
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname])
-
   useEffect(() => {
     const updateUserState = () => {
       try {
@@ -173,7 +168,10 @@ export default function Sidebar() {
           return (
             <React.Fragment key={item.path}>
               <button
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  setMobileOpen(false)
+                  navigate(item.path)
+                }}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -224,7 +222,10 @@ export default function Sidebar() {
                 return (
                   <button
                     key={sub.path}
-                    onClick={() => navigate(sub.path)}
+                    onClick={() => {
+                      setMobileOpen(false)
+                      navigate(sub.path)
+                    }}
                     style={{
                       width: '100%',
                       display: 'flex',
@@ -268,7 +269,10 @@ export default function Sidebar() {
       {/* ARK Button */}
       <div style={{ padding: '4px 14px 12px' }}>
         <button
-          onClick={() => navigate('/capitia')}
+          onClick={() => {
+            setMobileOpen(false)
+            navigate('/capitia')
+          }}
           style={{
             width: '100%',
             display: 'flex',

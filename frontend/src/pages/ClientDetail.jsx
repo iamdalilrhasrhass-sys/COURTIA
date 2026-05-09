@@ -237,7 +237,7 @@ function DocumentsTab({ client, setClient, clientId }) {
         mimeType: file.type
       })
       setAnalysisResult(res.data)
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de l\'analyse du document')
     } finally {
       setAnalyzing(false)
@@ -268,7 +268,7 @@ function DocumentsTab({ client, setClient, clientId }) {
       }))
       setAnalysisResult(null)
       toast.success('Document indexé avec succès')
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de l\'indexation')
     }
   }
@@ -441,8 +441,8 @@ const mockMessages = [
 ]
 
 // ─── MESSAGES TAB ──────────────────────────────────────────────────────────
-function MessagesTab({ clientId }) {
-  const [messages, setMessages] = useState(mockMessages)
+function MessagesTab() {
+  const [messages] = useState(mockMessages)
   const [sendingARK, setSendingARK] = useState(false)
   const [triggeringRelance, setTriggeringRelance] = useState(false)
   const [dossierStatut, setDossierStatut] = useState('en_cours')
@@ -696,9 +696,6 @@ export default function ClientDetail() {
 
   const handleBubbleEnter = (type) => { clearTimeout(bubbleTimeoutRef.current); setActiveBubble(type) }
   const handleBubbleLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 300) }
-  const handleBubbleMouseEnter = () => { clearTimeout(bubbleTimeoutRef.current) }
-  const handleBubbleMouseLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 300) }
-
   const scores = !loading && client ? {
     ...computeScores(client, contrats),
     get globalScore() { return Math.round((100 - this.risque) * 0.40 + this.fidelite * 0.25 + this.opportunite * 0.20 + this.retention * 0.15) }
