@@ -39,6 +39,7 @@ const Equipe = lazy(() => import('./pages/Equipe'))
 const InviteAccept = lazy(() => import('./pages/InviteAccept'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
+const Commissions = lazy(() => import('./pages/Commissions'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
 const DemoPublic = lazy(() => import('./pages/DemoPublic'))
@@ -216,6 +217,7 @@ export default function App() {
           <Route path="/academy"       element={<Academy />} />
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
+          <Route path="/commissions"   element={<Commissions />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />

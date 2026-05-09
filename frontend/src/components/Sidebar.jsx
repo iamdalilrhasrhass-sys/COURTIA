@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
   Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, HeartHandshake
+  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, HeartHandshake, Euro
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -45,6 +45,7 @@ const NAV_ITEMS = [
   { separator: true, label: 'MODULES' },
   { path: '/academy', label: 'Academy', icon: GraduationCap, badge: 'Nouveau' },
   { path: '/documents', label: 'Documents', icon: FolderOpen },
+  { path: '/commissions', label: 'Commissions', icon: Euro },
   { path: '/browser-pilot', label: 'Browser Pilot', icon: Globe, badge: 'Bêta' },
   { path: '/partners', label: 'Partenaires', icon: HeartHandshake, badge: 'Prospection' },
   { path: '/analytics', label: 'Analyses', icon: BarChart2 },
