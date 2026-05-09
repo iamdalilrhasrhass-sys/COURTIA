@@ -55,6 +55,7 @@ const AdminSupport = lazy(() => import('./pages/AdminSupport'))
 const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
 const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -228,7 +229,7 @@ export default function App() {
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/users/:id" element={<AdminUserDetail />} />
           <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-          <Route path="/admin/growth-leads" element={<AdminGrowthLeads />} />
+          {growthLeadsEnabled && <Route path="/admin/growth-leads" element={<AdminGrowthLeads />} />}
           <Route path="/admin/costs" element={<AdminCostsDashboard />} />
           <Route path="/admin/system" element={<AdminSystem />} />
           <Route path="/admin/logs" element={<AdminLogs />} />
