@@ -33,6 +33,7 @@ npm --prefix backend run qa:prod-smoke
 
 ## Variables intégrations (prod)
 
+- `VITE_INTEGRATIONS_API_ENABLED=true` (front) pour activer les appels intégrations
 - `ENCRYPTION_KEY`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
 - `OUTLOOK_CLIENT_ID`, `OUTLOOK_CLIENT_SECRET`, `OUTLOOK_REDIRECT_URI`, `OUTLOOK_TENANT_ID`

@@ -140,6 +140,11 @@ Le module `/parametres` inclut un centre d’intégrations:
 - Gmail (architecture OAuth V1)
 - Outlook (architecture OAuth V1)
 
+Activation front contrôlée:
+
+- `VITE_INTEGRATIONS_API_ENABLED=true` active les appels API d’intégration
+- valeur par défaut (absente/false): UI visible avec état "configuration requise", sans appels backend d’intégration
+
 Les interactions multi-canaux sont exposées dans la fiche client via:
 
 - `GET /api/clients/:id/interactions`

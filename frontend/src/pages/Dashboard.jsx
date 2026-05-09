@@ -24,6 +24,7 @@ import AuroraBadge from '../components/AuroraBadge'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraDivider from '../components/brand/AuroraDivider'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
@@ -150,13 +151,19 @@ export default function Dashboard() {
   const loadAllData = useCallback(async () => {
     try {
       setLoading(true)
+      const eventsRequest = INTEGRATIONS_API_ENABLED
+        ? api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } }))
+        : Promise.resolve({ data: { rows: [] } })
+      const threadsRequest = INTEGRATIONS_API_ENABLED
+        ? api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } }))
+        : Promise.resolve({ data: { rows: [] } })
       const [statsRes, userRes, clientsRes, tasksRes, eventsRes, threadsRes] = await Promise.all([
         api.get('/dashboard/stats'),
         getSessionUser().then((sessionUser) => ({ data: sessionUser || {} })).catch(() => ({ data: {} })),
         api.get('/clients?limit=300').catch(() => ({ data: [] })),
         api.get('/taches').catch(() => ({ data: [] })),
-        api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } })),
-        api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } })),
+        eventsRequest,
+        threadsRequest,
       ])
 
       setStats(statsRes.data || null)
