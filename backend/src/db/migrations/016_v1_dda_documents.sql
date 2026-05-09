@@ -2,7 +2,10 @@ CREATE TABLE IF NOT EXISTS documents (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-  contract_id INTEGER REFERENCES contracts(id) ON DELETE SET NULL,
+  -- Production historique stocke les contrats dans `quotes`; certains
+  -- environnements de dev disposent d'une table `contracts`. On conserve donc
+  -- un identifiant souple et la couche applicative résout contracts -> quotes.
+  contract_id INTEGER,
   type TEXT NOT NULL CHECK (type IN ('fic', 'mandat_courtage', 'devoir_conseil', 'attestation')),
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'generated', 'sent_to_sign', 'signed', 'refused', 'expired', 'archived')),
   template_version TEXT NOT NULL,
