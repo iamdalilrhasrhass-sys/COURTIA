@@ -105,6 +105,18 @@
 - `GET /api/templates` ne renvoie aucun secret et inclut `relance_echeance`
 - Rapports affiche l’activité ARK et les signaux commissions si disponibles
 
+## Contrôles pages publiques trust / RGPD / sécurité
+
+- `/securite` présente accès, secrets, sous-traitants, observabilité et responsabilité humaine.
+- `/rgpd` présente finalités, collecte minimale, droits utilisateurs, DPA et intégrations.
+- `/changelog` présente les livraisons V1 sans métriques inventées.
+- `/roadmap` présente Now / Next / Later sans promesse garantie.
+- `/aide` présente démarrage, ARK, documents, intégrations et incidents.
+- `/status` présente le statut indicatif sans dépendre d’un secret externe.
+- Footer marketing contient sécurité, RGPD, aide et status.
+- Toutes les pages restent Aurora premium, lisibles et responsives.
+- Les pages ne déclarent jamais Google / WhatsApp / Stripe / Yousign comme actifs sans configuration.
+
 ## Responsive rapide
 
 - desktop

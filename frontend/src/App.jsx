@@ -44,6 +44,12 @@ const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
 const DemoPublic = lazy(() => import('./pages/DemoPublic'))
 const ContactPublic = lazy(() => import('./pages/ContactPublic'))
+const SecurityPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.SecurityPublic })))
+const RgpdPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.RgpdPublic })))
+const ChangelogPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.ChangelogPublic })))
+const RoadmapPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.RoadmapPublic })))
+const HelpPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.HelpPublic })))
+const StatusPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.StatusPublic })))
 const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
 const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
 const LegalCookies = lazy(() => import('./pages/LegalCookies'))
@@ -187,6 +193,12 @@ export default function App() {
         <Route path="/tarifs" element={<TarifsPublic />} />
         <Route path="/demo" element={<DemoPublic />} />
         <Route path="/contact" element={<ContactPublic />} />
+        <Route path="/securite" element={<SecurityPublic />} />
+        <Route path="/rgpd" element={<RgpdPublic />} />
+        <Route path="/changelog" element={<ChangelogPublic />} />
+        <Route path="/roadmap" element={<RoadmapPublic />} />
+        <Route path="/aide" element={<HelpPublic />} />
+        <Route path="/status" element={<StatusPublic />} />
         <Route path="/legal/mentions-legales" element={<LegalMentionsLegales />} />
         <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
         <Route path="/legal/cookies" element={<LegalCookies />} />
