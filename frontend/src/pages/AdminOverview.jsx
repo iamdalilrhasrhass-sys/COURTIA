@@ -41,7 +41,7 @@ export default function AdminOverview() {
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
         {kpis.map((kpi, i) => (
-          <div key={i} style={{
+          <div key={i} className="courtia-depth-card" style={{
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
             borderRadius: 12, padding: '20px 22px',
           }}>
@@ -56,11 +56,11 @@ export default function AdminOverview() {
       </div>
 
       {/* MRR par plan */}
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div className="courtia-depth-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: '0 0 16px' }}>MRR par plan</h2>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {Object.entries(mrr.by_plan || {}).map(([plan, info]) => (
-            <div key={plan} style={{ flex: 1, minWidth: 140, background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 14 }}>
+            <div key={plan} className="courtia-depth-card" style={{ flex: 1, minWidth: 140, background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4, textTransform: 'capitalize' }}>{plan}</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{info.mrr_eur}€</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{info.count} courtier{info.count > 1 ? 's' : ''} × {info.price_eur}€</div>
@@ -71,7 +71,7 @@ export default function AdminOverview() {
 
       {/* ARK & Portfolio row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
+        <div className="courtia-depth-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
           <h3 style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: '0 0 12px' }}>Activité ARK</h3>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.8 }}>
             Conversations (30j) : <strong style={{ color: '#fff' }}>{ark.total_conversations_30d}</strong><br/>
@@ -79,7 +79,7 @@ export default function AdminOverview() {
             Moyenne par courtier : <strong style={{ color: '#fff' }}>{ark.avg_per_user_30d} conversations</strong>
           </div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
+        <div className="courtia-depth-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
           <h3 style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: '0 0 12px' }}>Santé portefeuilles</h3>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.8 }}>
             Analyses (30j) : <strong style={{ color: '#fff' }}>{portfolio?.total_analyses_30d || 0}</strong><br/>

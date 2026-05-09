@@ -13,7 +13,7 @@ import { getAuthToken, buildApiUrl } from '../api/sessionPolicy'
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 function cardClass(extra = '') {
-  return `rounded-xl border border-slate-200 bg-white p-4 ${extra}`.trim()
+  return `courtia-depth-card rounded-xl border border-white/20 bg-white/90 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.14)] backdrop-blur-xl ${extra}`.trim()
 }
 
 function money(value, digits = 2) {
