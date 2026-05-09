@@ -72,25 +72,6 @@ function ScrollToTop() {
   return null
 }
 
-// PrivateRoute — supporte courtia_token (nouveau) et token (legacy)
-function PrivateRoute({ children }) {
-  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-  if (!token) return <Navigate to="/login" replace />
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    if (payload.exp * 1000 < Date.now()) {
-      localStorage.removeItem('courtia_token')
-      localStorage.removeItem('token')
-      return <Navigate to="/login" replace />
-    }
-  } catch {
-    localStorage.removeItem('courtia_token')
-    localStorage.removeItem('token')
-    return <Navigate to="/login" replace />
-  }
-  return children
-}
-
 // Layout avec sidebar — monte UNE SEULE FOIS pour toute la session authentifiée
 // Les pages enfants sont injectées via <Outlet /> (React Router nested routes)
 function AppLayout() {

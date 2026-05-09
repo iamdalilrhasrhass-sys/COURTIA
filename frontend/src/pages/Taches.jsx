@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Check, Plus, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -48,7 +49,7 @@ const isOverdue = (d) => {
   return date < today
 }
 
-function TaskRow({ task, priorityColor, onComplete }) {
+function TaskRow({ task, priorityColor, onComplete, onOpenClient }) {
   const clientName = task.client_nom
     ? `${task.client_nom} ${task.client_prenom || ''}`.trim()
     : null
@@ -105,9 +106,34 @@ function TaskRow({ task, priorityColor, onComplete }) {
           {task.titre}
         </span>
         {clientName && (
-          <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', marginTop: 2, display: 'block' }}>
-            {clientName}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', display: 'block' }}>
+              {clientName}
+            </span>
+            {task.client_id && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenClient(task.client_id) }}
+                style={{
+                  border: 'none',
+                  background: 'rgba(37,99,235,0.08)',
+                  color: '#1d4ed8',
+                  borderRadius: 9999,
+                  padding: '1px 8px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Ouvrir client
+              </button>
+            )}
+            {String(task.source || task.origin || '').toLowerCase().includes('ark') && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#7c3aed', background: 'rgba(124,58,237,0.1)', borderRadius: 9999, padding: '1px 7px' }}>
+                Source ARK
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -161,10 +187,13 @@ function TaskRow({ task, priorityColor, onComplete }) {
 }
 
 export default function Taches() {
+  const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [useMock, setUseMock] = useState(false)
   const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('tous')
+  const [urgencyFilter, setUrgencyFilter] = useState('toutes')
 
   useEffect(() => {
     fetchAll()
@@ -192,17 +221,44 @@ export default function Taches() {
     }
   }
 
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const status = String(task.statut || task.status || '').toLowerCase()
+      const priority = String(task.priorite || '').toLowerCase()
+      const due = task.echeance ? new Date(task.echeance) : null
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      if (due) due.setHours(0, 0, 0, 0)
+
+      const statusOk = statusFilter === 'tous'
+        ? true
+        : statusFilter === 'terminee'
+          ? status === 'terminee'
+          : status !== 'terminee'
+
+      const urgencyOk = urgencyFilter === 'toutes'
+        ? true
+        : urgencyFilter === 'retard'
+          ? Boolean(due && due < now && status !== 'terminee')
+          : urgencyFilter === 'urgente'
+            ? priority === 'urgente' || priority === 'haute'
+            : true
+
+      return statusOk && urgencyOk
+    })
+  }, [tasks, statusFilter, urgencyFilter])
+
   // Group tasks by priority
   const tasksByPriority = useMemo(() => {
     const grouped = {}
     PRIORITY_SECTIONS.forEach((s) => { grouped[s.id] = [] })
-    tasks.forEach((t) => {
+    filteredTasks.forEach((t) => {
       const p = t.priorite || 'normale'
       if (grouped[p]) grouped[p].push(t)
       else grouped['normale'].push(t)
     })
     return grouped
-  }, [tasks])
+  }, [filteredTasks])
 
   async function handleComplete(id) {
     if (useMock) {
@@ -254,6 +310,51 @@ export default function Taches() {
           <BubbleBadge color="#2563eb" size="md">{pendingCount} en attente</BubbleBadge>
           <BubbleBadge color="#10b981" size="md">{completedCount} complétées</BubbleBadge>
           <BubbleBadge color="rgba(0,0,0,0.4)" size="md">{totalCount} total</BubbleBadge>
+        </div>
+
+        <div className="mb-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('tous')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusFilter === 'tous' ? 'bg-black text-white border-black' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Tous statuts
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('ouvert')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusFilter === 'ouvert' ? 'bg-black text-white border-black' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            À traiter
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('terminee')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusFilter === 'terminee' ? 'bg-black text-white border-black' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Terminées
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrgencyFilter('toutes')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${urgencyFilter === 'toutes' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Toutes urgences
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrgencyFilter('urgente')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${urgencyFilter === 'urgente' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Priorité haute/urgente
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrgencyFilter('retard')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${urgencyFilter === 'retard' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            En retard
+          </button>
         </div>
 
         {useMock && (
@@ -324,6 +425,7 @@ export default function Taches() {
                           task={task}
                           priorityColor={section.color}
                           onComplete={handleComplete}
+                          onOpenClient={(clientId) => navigate(`/clients/${clientId}`)}
                         />
                       ))}
                     </AnimatePresence>
@@ -354,6 +456,7 @@ export default function Taches() {
                               task={task}
                               priorityColor={section.color}
                               onComplete={() => {}}
+                              onOpenClient={(clientId) => navigate(`/clients/${clientId}`)}
                             />
                           ))}
                         </div>

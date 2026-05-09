@@ -1,6 +1,19 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, Euro, Calendar, Zap, TrendingUp, ArrowRight, Sparkles, Bell } from 'lucide-react'
+import {
+  Users,
+  FileText,
+  Euro,
+  Calendar,
+  Zap,
+  TrendingUp,
+  ArrowRight,
+  Sparkles,
+  Bell,
+  AlertTriangle,
+  Briefcase,
+  CheckSquare,
+} from 'lucide-react'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
@@ -11,15 +24,38 @@ import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraDivider from '../components/brand/AuroraDivider'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
-/* ─── helpers ──────────────────────────────────────────── */
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
 
-/* ─── KPI Card ─────────────────────────────────────────── */
+function normalizeRows(payload) {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.rows)) return payload.rows
+  return []
+}
+
+function normalizeStatus(status) {
+  const s = String(status || '').toLowerCase()
+  if (s === 'active') return 'actif'
+  if (s === 'lost') return 'perdu'
+  if (s === 'at_risk') return 'a_risque'
+  return s
+}
+
+function toTimestamp(value) {
+  if (!value) return null
+  const ts = new Date(value).getTime()
+  return Number.isNaN(ts) ? null : ts
+}
+
+function isTaskDone(task) {
+  return ['terminee', 'done', 'completed'].includes(String(task?.statut || task?.status || '').toLowerCase())
+}
+
 function KpiCard({ icon: Icon, title, value, format, accent, subtitle }) {
   const display = format === 'currency' ? fmtEur(value) : format === 'number' ? fmtNum(value) : value
   return (
-    <AuroraCard padding={20} className="flex-1 min-w-[160px]">
+    <AuroraCard padding={20} className="flex-1 min-w-[170px]">
       <div className="flex justify-between items-start mb-3">
         <span className="text-xs font-semibold tracking-wide" style={{ color: 'rgba(0,0,0,0.45)' }}>{title}</span>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${accent || '#7c3aed'}12` }}>
@@ -32,11 +68,25 @@ function KpiCard({ icon: Icon, title, value, format, accent, subtitle }) {
   )
 }
 
-function CockpitCommandCenter({ userName, stats, navigate }) {
-  const activeClients = stats?.totalClients || 0
-  const activeContracts = stats?.contratsActifs || 0
-  const urgentContracts = stats?.contratsUrgents || 0
+function InsightRow({ icon: Icon, text, accent = '#7c3aed', highlight = false, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${highlight ? 'border' : ''}`}
+      style={{
+        background: highlight ? `${accent}08` : 'transparent',
+        borderColor: highlight ? `${accent}20` : 'transparent',
+        color: 'rgba(0,0,0,0.75)',
+      }}
+    >
+      <Icon size={14} color={accent} className="shrink-0" />
+      <span>{text}</span>
+    </button>
+  )
+}
 
+function CockpitCommandCenter({ userName, activeClients, activeContracts, urgentTasks, navigate }) {
   return (
     <div className="mb-6 overflow-hidden rounded-[28px] border border-white/10 bg-[#050713] shadow-2xl shadow-slate-950/20">
       <div className="relative p-5 md:p-6">
@@ -48,29 +98,35 @@ function CockpitCommandCenter({ userName, stats, navigate }) {
               Cockpit portefeuille
             </div>
             <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">
-              {userName ? `Bonjour ${userName}, voici les priorités de votre portefeuille.` : 'Voici les priorités de votre portefeuille.'}
+              {userName ? `Bonjour ${userName}, voici vos signaux métier du jour.` : 'Voici vos signaux métier du jour.'}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/58">
-              COURTIA met en avant les clients, contrats, échéances et actions qui méritent une décision. ARK reste un assistant métier : il signale, vous décidez.
+              COURTIA priorise vos échéances, vos risques de résiliation, vos relances et vos opportunités multi-équipement.
             </p>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-5 flex flex-wrap gap-2">
               <AuroraButton variant="primary" size="sm" icon={<Zap size={14} />} onClick={() => navigate('/morning-brief')}>
-                Ouvrir le brief ARK
+                Morning Brief
               </AuroraButton>
-              <AuroraButton variant="secondary" size="sm" onClick={() => navigate('/clients/new')}>
-                Ajouter un client
+              <AuroraButton variant="secondary" size="sm" icon={<Users size={14} />} onClick={() => navigate('/clients/new')}>
+                Nouveau client
+              </AuroraButton>
+              <AuroraButton variant="secondary" size="sm" icon={<CheckSquare size={14} />} onClick={() => navigate('/taches')}>
+                Voir les tâches
+              </AuroraButton>
+              <AuroraButton variant="secondary" size="sm" icon={<Sparkles size={14} />} onClick={() => navigate('/capitia')}>
+                Ouvrir ARK
               </AuroraButton>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
-              ['Clients', activeClients],
-              ['Contrats', activeContracts],
-              ['Urgents', urgentContracts],
+              ['Clients actifs', activeClients],
+              ['Contrats actifs', activeContracts],
+              ['Tâches urgentes', urgentTasks],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.05] p-4 text-center backdrop-blur-xl">
                 <p className="text-2xl font-black text-white">{fmtNum(value)}</p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/38">{label}</p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-white/38">{label}</p>
               </div>
             ))}
           </div>
@@ -80,61 +136,151 @@ function CockpitCommandCenter({ userName, stats, navigate }) {
   )
 }
 
-/* ─── Insight Row ───────────────────────────────────────── */
-function InsightRow({ icon: Icon, children, accent = '#7c3aed', highlight = false }) {
-  return (
-    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${highlight ? 'border' : ''}`}
-      style={{
-        background: highlight ? `${accent}08` : 'transparent',
-        borderColor: highlight ? `${accent}20` : 'transparent',
-        color: 'rgba(0,0,0,0.7)',
-      }}
-    >
-      <Icon size={14} color={accent} className="shrink-0" />
-      <span>{children}</span>
-    </div>
-  )
-}
-
-/* ─── MAIN ──────────────────────────────────────────────── */
 export default function Dashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
+  const [clients, setClients] = useState([])
+  const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState({ first_name: '', last_name: '' })
+  const [snapshotTs, setSnapshotTs] = useState(0)
 
   const loadAllData = useCallback(async () => {
     try {
       setLoading(true)
-      const [statsRes, userRes] = await Promise.all([
+      const [statsRes, userRes, clientsRes, tasksRes] = await Promise.all([
         api.get('/dashboard/stats'),
-        getSessionUser().then((user) => ({ data: user || {} })).catch(() => ({ data: {} }))
+        getSessionUser().then((sessionUser) => ({ data: sessionUser || {} })).catch(() => ({ data: {} })),
+        api.get('/clients?limit=300').catch(() => ({ data: [] })),
+        api.get('/taches').catch(() => ({ data: [] })),
       ])
-      setStats(statsRes.data)
+
+      setStats(statsRes.data || null)
       setUser(userRes.data || {})
+      setClients(normalizeRows(clientsRes.data))
+      setTasks(normalizeRows(tasksRes.data))
+      setSnapshotTs(Date.now())
     } catch {
-      console.error('Impossible de charger le dashboard.')
+      console.error('Impossible de charger le cockpit.')
     } finally {
       setLoading(false)
     }
   }, [])
 
+  // Le chargement initial hydrate toutes les tuiles en une seule passe.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAllData() }, [loadAllData])
 
-  const kpis = useMemo(() => {
-    const pendingTasks = stats?.tachesAFaire ?? stats?.tasksPending ?? stats?.tasks_pending ?? 0
-    const overdueTasks = stats?.tachesEnRetard ?? stats?.tasksOverdue ?? stats?.tasks_overdue ?? 0
-    return [
-      { title: 'Clients actifs', value: stats?.totalClients || 0, icon: Users, accent: '#7c3aed', subtitle: stats?.nouveauxClientsMois ? `+${stats.nouveauxClientsMois} ce mois` : null },
-      { title: 'Contrats en cours', value: stats?.contratsActifs || 0, icon: FileText, accent: '#06b6d4', subtitle: stats?.contratsUrgents ? `${stats.contratsUrgents} urgents` : null },
-      { title: 'CA Mensuel', value: stats?.primeTotale || 0, format: 'currency', icon: Euro, accent: '#8b5cf6', subtitle: stats?.commissionsMois ? `${fmtEur(stats.commissionsMois)} commissions` : null },
-      { title: 'Tâches à faire', value: pendingTasks, icon: Calendar, accent: '#f59e0b', subtitle: overdueTasks ? `${overdueTasks} en retard` : null },
+  const metrics = useMemo(() => {
+    const statusMap = stats?.clientsParStatut || {}
+    const activeClients = Number(statusMap.actif || 0) || clients.filter((c) => normalizeStatus(c.status || c.statut) === 'actif').length
+    const prospects = Number(statusMap.prospect || 0) || clients.filter((c) => normalizeStatus(c.status || c.statut) === 'prospect').length
+    const atRiskClients = Number(statusMap.a_risque || 0) || clients.filter((c) => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70).length
+
+    const urgentTasks = tasks.filter((task) => {
+      if (isTaskDone(task)) return false
+      const p = String(task.priorite || '').toLowerCase()
+      const due = toTimestamp(task.echeance || task.due_date || task.date_echeance)
+      const dueSoon = due !== null && snapshotTs > 0 && (due - snapshotTs) <= 48 * 3600 * 1000
+      return p === 'urgente' || p === 'haute' || dueSoon
+    }).length
+
+    return {
+      activeClients,
+      prospects,
+      atRiskClients,
+      urgentTasks,
+      activeContracts: Number(stats?.contratsActifs || 0),
+      annualPrime: Number(stats?.primeTotale || 0),
+    }
+  }, [stats, clients, tasks, snapshotTs])
+
+  const insights = useMemo(() => {
+    const list = []
+
+    const renewalAlerts = Array.isArray(stats?.alertes) ? stats.alertes.slice(0, 2) : []
+    renewalAlerts.forEach((item) => {
+      const fullName = `${item.prenom || ''} ${item.nom || ''}`.trim() || 'Client'
+      const days = Number(item.jours_restants || 0)
+      list.push({
+        text: `${fullName} arrive à échéance dans ${days} jours (${item.type_contrat || 'contrat'}).`,
+        icon: Calendar,
+        accent: '#f59e0b',
+        route: '/contrats',
+        highlight: days <= 15,
+      })
+    })
+
+    const risky = [...clients]
+      .filter((c) => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70)
+      .sort((a, b) => Number(b.risk_score ?? b.score_risque ?? b.riskScore ?? 0) - Number(a.risk_score ?? a.score_risque ?? a.riskScore ?? 0))
+      .slice(0, 2)
+    risky.forEach((c) => {
+      const name = `${c.prenom || ''} ${c.nom || ''}`.trim() || c.name || 'Client'
+      const score = Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0)
+      list.push({
+        text: `${name} présente un risque élevé (${score}/100) : action de rétention recommandée.`,
+        icon: AlertTriangle,
+        accent: '#ef4444',
+        route: `/clients/${c.id}`,
+        highlight: true,
+      })
+    })
+
+    const opportunities = [...clients]
+      .filter((c) => normalizeStatus(c.status || c.statut) === 'actif')
+      .filter((c) => Number(c.contracts_count ?? c.nb_contrats ?? 1) <= 1)
+      .slice(0, 2)
+    opportunities.forEach((c) => {
+      const name = `${c.prenom || ''} ${c.nom || ''}`.trim() || c.name || 'Client'
+      list.push({
+        text: `${name} est mono-contrat : proposer un multi-équipement cette semaine.`,
+        icon: Briefcase,
+        accent: '#7c3aed',
+        route: `/clients/${c.id}`,
+      })
+    })
+
+    const overdueTasks = tasks
+      .filter((t) => !isTaskDone(t))
+      .filter((t) => {
+        const due = toTimestamp(t.echeance || t.due_date || t.date_echeance)
+        return due !== null && snapshotTs > 0 && due < snapshotTs
+      })
+      .slice(0, 2)
+    overdueTasks.forEach((task) => {
+      list.push({
+        text: `Tâche en retard: ${task.titre || task.title || 'Action à traiter'} — prioriser aujourd'hui.`,
+        icon: Bell,
+        accent: '#d97706',
+        route: '/taches',
+      })
+    })
+
+    return list.slice(0, 6)
+  }, [stats, clients, tasks, snapshotTs])
+
+  const chartData = useMemo(() => {
+    const rows = Array.isArray(stats?.revenus6Mois) ? stats.revenus6Mois : []
+    const cleaned = rows.map((r) => ({ label: r.mois || '-', value: Number(r.revenue || 0) }))
+    const max = cleaned.reduce((acc, row) => Math.max(acc, row.value), 0)
+    return { rows: cleaned, max }
+  }, [stats])
+
+  const statusDistribution = useMemo(() => {
+    const statusMap = stats?.clientsParStatut || {}
+    const entries = [
+      { label: 'Prospects', value: Number(statusMap.prospect || 0), color: '#7c3aed' },
+      { label: 'Actifs', value: Number(statusMap.actif || 0), color: '#06b6d4' },
+      { label: 'À risque', value: Number(statusMap.a_risque || 0), color: '#ef4444' },
+      { label: 'Perdus', value: Number(statusMap.perdu || statusMap['résilié'] || 0), color: '#9ca3af' },
     ]
+    const total = entries.reduce((acc, item) => acc + item.value, 0)
+    return { entries, total }
   }, [stats])
 
   const userName = user?.first_name || user?.firstName || ''
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -143,17 +289,15 @@ export default function Dashboard() {
     )
   }
 
-  // Empty state — aucun client
-  const isEmpty = !stats || (stats.totalClients === 0 && stats.contratsActifs === 0)
+  const isEmpty = !stats || (metrics.activeClients === 0 && metrics.activeContracts === 0)
 
   return (
     <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <div className="px-4 md:px-8 py-6 md:py-8" style={{ maxWidth: 1280, margin: '0 auto' }}>
-        
-        {/* Header cockpit */}
+
         <AuroraPageHeader
           title="Dashboard"
-          subtitle="Pilotage quotidien, priorités ARK et portefeuille courtage."
+          subtitle="Cockpit courtier: priorités ARK, risques, échéances et actions commerciales."
           badge="Cockpit"
           dark
           actions={
@@ -163,127 +307,149 @@ export default function Dashboard() {
           }
         />
 
+        <CockpitCommandCenter
+          userName={userName}
+          activeClients={metrics.activeClients}
+          activeContracts={metrics.activeContracts}
+          urgentTasks={metrics.urgentTasks}
+          navigate={navigate}
+        />
+
         {isEmpty ? (
-          /* ─── EMPTY STATE ─── */
-          <>
-            <CockpitCommandCenter userName={userName} stats={stats} navigate={navigate} />
-            <AuroraEmptyState
-              title="Votre portefeuille est prêt à prendre forme."
-              description="Ajoutez votre premier client pour débloquer le cockpit COURTIA. ARK analysera automatiquement votre portefeuille."
-              action={{ label: 'Ajouter un client', href: '/clients/new' }}
-            />
-          </>
+          <AuroraEmptyState
+            title="Votre cockpit est prêt."
+            description="Ajoutez vos premiers clients et contrats pour activer les priorités ARK, les alertes d'échéance et les recommandations métier."
+            action={{ label: 'Ajouter un client', href: '/clients/new' }}
+          />
         ) : (
           <>
-            <CockpitCommandCenter userName={userName} stats={stats} navigate={navigate} />
-            {/* KPI row */}
             <div className="flex gap-4 mb-6 flex-wrap">
-              {kpis.map((k, i) => <KpiCard key={i} {...k} />)}
+              <KpiCard title="Clients actifs" value={metrics.activeClients} format="number" icon={Users} accent="#7c3aed" />
+              <KpiCard title="Prospects" value={metrics.prospects} format="number" icon={TrendingUp} accent="#06b6d4" />
+              <KpiCard title="Contrats actifs" value={metrics.activeContracts} format="number" icon={FileText} accent="#8b5cf6" />
+              <KpiCard title="Prime annuelle" value={metrics.annualPrime} format="currency" icon={Euro} accent="#10b981" />
+              <KpiCard title="Tâches urgentes" value={metrics.urgentTasks} format="number" icon={Calendar} accent="#f59e0b" />
+              <KpiCard title="Clients à risque" value={metrics.atRiskClients} format="number" icon={AlertTriangle} accent="#ef4444" />
             </div>
 
-            {/* Morning Brief — ARK Insights */}
             <AuroraCard padding={20} className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={16} color="#7c3aed" />
-                <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>ARK prépare un brief métier exploitable</h3>
-                <AuroraBadge>Aperçu contextualisé</AuroraBadge>
+                <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>Priorités ARK du jour</h3>
+                <AuroraBadge>{insights.length} signaux</AuroraBadge>
               </div>
-              <div className="grid sm:grid-cols-2 gap-2">
-                <InsightRow icon={Bell} accent="#f59e0b" highlight>Ce client arrive à échéance dans 18 jours — relancez-le.</InsightRow>
-                <InsightRow icon={TrendingUp} accent="#7c3aed">Ce prospect chaud n'a pas été relancé depuis 7 jours.</InsightRow>
-                <InsightRow icon={FileText} accent="#06b6d4">Ce dossier manque une pièce justificative.</InsightRow>
-                <InsightRow icon={Users} accent="#8b5cf6">Cette famille peut être multi-équipée — opportunité +340€.</InsightRow>
-              </div>
+
+              {insights.length === 0 ? (
+                <AuroraEmptyState
+                  compact
+                  title="Aucun signal urgent pour le moment"
+                  description="Continuez à enrichir clients, contrats et tâches pour activer davantage de recommandations ARK." 
+                />
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {insights.map((item, idx) => (
+                    <InsightRow
+                      key={`${item.text}-${idx}`}
+                      icon={item.icon}
+                      text={item.text}
+                      accent={item.accent}
+                      highlight={item.highlight}
+                      onClick={() => navigate(item.route)}
+                    />
+                  ))}
+                </div>
+              )}
+
               <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
                 <AuroraButton variant="ghost" size="sm" onClick={() => navigate('/morning-brief')}>
-                  Voir le brief complet <ArrowRight size={12} />
+                  Ouvrir le Morning Brief complet <ArrowRight size={12} />
                 </AuroraButton>
               </div>
             </AuroraCard>
 
-            {/* Middle row: Chart + Distribution */}
             <div className="flex gap-4 mb-6 flex-wrap">
               <AuroraCard padding={20} className="flex-[3] min-w-[280px]">
                 <h3 className="text-sm font-bold mb-1" style={{ color: '#0a0a0a' }}>Évolution du portefeuille</h3>
-                <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Aperçu de démonstration tant que l’historique complet n’est pas connecté.</p>
-                <div className="flex items-end gap-2 h-32">
-                  {[
-                    { label: 'Jan', value: 18.4 }, { label: 'Fév', value: 21.2 },
-                    { label: 'Mar', value: 19.8 }, { label: 'Avr', value: 24.5 },
-                    { label: 'Mai', value: 23.2 }, { label: 'Juin', value: 28.5 },
-                  ].map((d, i) => {
-                    const h = (d.value / 30) * 100
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div className="w-full rounded-t-md transition-all" style={{
-                          height: `${h}%`,
-                          background: `linear-gradient(180deg, #7c3aed, #a78bfa)`,
-                          minHeight: 4,
-                        }} />
-                        <span className="text-[10px] font-medium" style={{ color: 'rgba(0,0,0,0.35)' }}>{d.label}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#10b981' }}>
-                  <TrendingUp size={12} /> Aperçu tendance
-                </div>
+                <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Primes observées sur les 6 derniers mois (contrats actifs).</p>
+
+                {chartData.rows.length === 0 ? (
+                  <AuroraEmptyState compact title="Historique insuffisant" description="Les données mensuelles apparaîtront dès que des contrats actifs seront historisés." />
+                ) : (
+                  <div className="flex items-end gap-2 h-32">
+                    {chartData.rows.map((row) => {
+                      const h = chartData.max > 0 ? Math.max(4, (row.value / chartData.max) * 100) : 4
+                      return (
+                        <div key={row.label} className="flex-1 flex flex-col items-center gap-1">
+                          <div className="w-full rounded-t-md transition-all" style={{ height: `${h}%`, background: 'linear-gradient(180deg, #7c3aed, #a78bfa)' }} />
+                          <span className="text-[10px] font-medium" style={{ color: 'rgba(0,0,0,0.35)' }}>{row.label}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </AuroraCard>
 
-              <AuroraCard padding={20} className="flex-[1.5] min-w-[200px]">
-                <h3 className="text-sm font-bold mb-1" style={{ color: '#0a0a0a' }}>Répartition</h3>
-                <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Données illustratives en attente d’agrégation portefeuille.</p>
-                {[
-                  { label: 'Prospects', value: 18, color: '#7c3aed' },
-                  { label: 'Actifs', value: 42, color: '#06b6d4' },
-                  { label: 'Inactifs', value: 5, color: '#9ca3af' },
-                ].map((item, i) => {
-                  const total = 65
-                  const pct = ((item.value / total) * 100).toFixed(0)
-                  return (
-                    <div key={i} className="mb-2">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>{item.label}</span>
-                        <span className="font-bold" style={{ color: '#0a0a0a' }}>{item.value} ({pct}%)</span>
+              <AuroraCard padding={20} className="flex-[1.5] min-w-[220px]">
+                <h3 className="text-sm font-bold mb-1" style={{ color: '#0a0a0a' }}>Répartition clients</h3>
+                <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Segments portefeuille: prospect, actif, risque, perdu.</p>
+
+                {statusDistribution.total === 0 ? (
+                  <AuroraEmptyState compact title="Aucune répartition disponible" description="Ajoutez des clients pour voir la distribution métier." />
+                ) : (
+                  statusDistribution.entries.map((item) => {
+                    const pct = Math.round((item.value / statusDistribution.total) * 100)
+                    return (
+                      <div key={item.label} className="mb-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>{item.label}</span>
+                          <span className="font-bold" style={{ color: '#0a0a0a' }}>{item.value} ({pct}%)</span>
+                        </div>
+                        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: item.color }} />
+                        </div>
                       </div>
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.05)' }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: item.color }} />
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
               </AuroraCard>
             </div>
 
-            {/* Échéances */}
             <AuroraCard padding={20}>
               <h3 className="text-sm font-bold mb-3" style={{ color: '#0a0a0a' }}>
                 <Calendar size={16} className="inline mr-2" color="#7c3aed" />
                 Échéances à venir
               </h3>
-              <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Exemples de signaux métier affichés pour démonstration.</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                {[
-                  { date: '25 mai', label: 'Renouvellement — M. Martin', urgent: true },
-                  { date: '28 mai', label: 'RDV — Mme Dubois', urgent: false },
-                  { date: '2 juin', label: 'Soumission — M. Petit', urgent: false },
-                  { date: '5 juin', label: 'Relance — M. Bernard', urgent: true },
-                ].map((e, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-                    style={{ background: e.urgent ? '#f59e0b08' : 'transparent', border: `0.5px solid ${e.urgent ? '#f59e0b20' : 'rgba(0,0,0,0.04)'}` }}
-                  >
-                    <AuroraBadge color={e.urgent ? '#f59e0b' : '#7c3aed'} size="sm">{e.date}</AuroraBadge>
-                    <span className="font-medium" style={{ color: 'rgba(0,0,0,0.7)' }}>{e.label}</span>
-                  </div>
-                ))}
-              </div>
+
+              {Array.isArray(stats?.alertes) && stats.alertes.length > 0 ? (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {stats.alertes.map((alert, idx) => {
+                    const fullName = `${alert.prenom || ''} ${alert.nom || ''}`.trim() || 'Client'
+                    const days = Number(alert.jours_restants || 0)
+                    const urgent = days <= 15
+                    return (
+                      <button
+                        key={`${fullName}-${idx}`}
+                        type="button"
+                        onClick={() => navigate('/contrats')}
+                        className="text-left flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+                        style={{ background: urgent ? '#f59e0b08' : 'transparent', border: `0.5px solid ${urgent ? '#f59e0b20' : 'rgba(0,0,0,0.04)'}` }}
+                      >
+                        <AuroraBadge color={urgent ? '#f59e0b' : '#7c3aed'} size="sm">J-{days}</AuroraBadge>
+                        <span className="font-medium" style={{ color: 'rgba(0,0,0,0.7)' }}>{fullName} · {alert.type_contrat || 'Contrat'}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <AuroraEmptyState compact title="Aucune échéance proche" description="Aucune échéance à moins de 90 jours sur vos contrats actifs." />
+              )}
             </AuroraCard>
           </>
         )}
 
         <AuroraDivider variant="subtle" />
         <div className="text-center text-[11px]" style={{ color: 'rgba(0,0,0,0.15)' }}>
-          COURTIA — Cockpit intelligent
+          COURTIA — Cockpit intelligent courtier
         </div>
       </div>
     </div>

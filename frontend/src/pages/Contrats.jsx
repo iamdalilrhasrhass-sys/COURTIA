@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Calendar, FileText, Search } from 'lucide-react'
 import api from '../api'
@@ -9,6 +9,8 @@ import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import '../styles/design-system.css'
+
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
 
 // Mock data with varied statuses
 const MOCK_CONTRATS = [
@@ -58,6 +60,8 @@ function KanbanCard({ contrat, borderColor, onNavigate }) {
     : daysLeft !== null && daysLeft <= 90
       ? 'Préparer ajustement tarifaire'
       : 'Suivi standard'
+  const dateEffet = contrat.date_effet ? new Date(contrat.date_effet).toLocaleDateString('fr-FR') : '—'
+  const numero = contrat.numero || '—'
 
   return (
     <BubbleCard hover padding={16} onClick={() => onNavigate(contrat.client_id)}>
@@ -86,6 +90,16 @@ function KanbanCard({ contrat, borderColor, onNavigate }) {
         </div>
         <span className="text-xs font-semibold text-gray-700 truncate">{clientName}</span>
       </div>
+      <div className="grid grid-cols-2 gap-2 mb-2 text-[11px]">
+        <div>
+          <p style={{ color: 'var(--text-tertiary)' }}>N° contrat</p>
+          <p className="font-semibold text-gray-800 truncate">{numero}</p>
+        </div>
+        <div className="text-right">
+          <p style={{ color: 'var(--text-tertiary)' }}>Date effet</p>
+          <p className="font-semibold text-gray-800">{dateEffet}</p>
+        </div>
+      </div>
       {/* Amount & Date */}
       <div className="flex justify-between items-end pt-2" style={{ borderTop: 'var(--border-fine)' }}>
         <div>
@@ -110,26 +124,60 @@ export default function Contrats() {
   const [contrats, setContrats] = useState([])
   const [loading, setLoading] = useState(true)
   const [useMock, setUseMock] = useState(false)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
+  const [typeFilter, setTypeFilter] = useState('tous')
+  const [onlyNearExpiry, setOnlyNearExpiry] = useState(false)
   const [sortBy, setSortBy] = useState('echeance')
   const navigate = useNavigate()
 
-  useEffect(() => { fetchContrats() }, [])
-
-  async function fetchContrats() {
+  const fetchContrats = useCallback(async () => {
     try {
       setLoading(true)
+      setError('')
       const res = await api.get('/contrats')
-      const data = Array.isArray(res.data) ? res.data : []
-      setContrats(data.length > 0 ? data : MOCK_CONTRATS)
-      setUseMock(data.length === 0)
-    } catch (err) {
+      const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : [])
+      if (data.length > 0) {
+        setContrats(data)
+        setUseMock(false)
+        return
+      }
+
+      if (USE_MOCKS) {
+        setContrats(MOCK_CONTRATS)
+        setUseMock(true)
+        setError('Mode simulation activé (VITE_USE_MOCKS=true).')
+      } else {
+        setContrats([])
+        setUseMock(false)
+      }
+    } catch {
       console.error('Impossible de charger les contrats.')
-      setContrats(MOCK_CONTRATS)
-      setUseMock(true)
+      if (USE_MOCKS) {
+        setContrats(MOCK_CONTRATS)
+        setUseMock(true)
+        setError('Mode simulation activé (API indisponible).')
+      } else {
+        setContrats([])
+        setUseMock(false)
+        setError('Impossible de charger les contrats pour le moment.')
+      }
     } finally { setLoading(false) }
-  }
+  }, [])
+
+  // Chargement initial des contrats du portefeuille.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchContrats() }, [fetchContrats])
+
+  const availableTypes = useMemo(() => {
+    const unique = new Set()
+    ;(contrats || []).forEach((c) => {
+      const type = String(c.type_contrat || '').trim()
+      if (type) unique.add(type)
+    })
+    return ['tous', ...Array.from(unique).sort((a, b) => a.localeCompare(b))]
+  }, [contrats])
 
   const displayedContrats = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -149,6 +197,23 @@ export default function Contrats() {
       rows = rows.filter((c) => String(c.statut || c.status || '').toLowerCase() === statusFilter)
     }
 
+    if (typeFilter !== 'tous') {
+      rows = rows.filter((c) => String(c.type_contrat || '').toLowerCase() === typeFilter.toLowerCase())
+    }
+
+    if (onlyNearExpiry) {
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      const maxDate = new Date(now)
+      maxDate.setDate(maxDate.getDate() + 45)
+      rows = rows.filter((c) => {
+        if (!c.date_echeance) return false
+        const d = new Date(c.date_echeance)
+        d.setHours(0, 0, 0, 0)
+        return d >= now && d <= maxDate
+      })
+    }
+
     rows.sort((a, b) => {
       if (sortBy === 'prime') return Number(b.prime_annuelle || 0) - Number(a.prime_annuelle || 0)
       if (sortBy === 'compagnie') return String(a.compagnie || '').localeCompare(String(b.compagnie || ''))
@@ -158,7 +223,7 @@ export default function Contrats() {
     })
 
     return rows
-  }, [contrats, search, statusFilter, sortBy])
+  }, [contrats, search, statusFilter, typeFilter, onlyNearExpiry, sortBy])
 
   const kanbanData = useMemo(() => {
     const grouped = {
@@ -207,11 +272,17 @@ export default function Contrats() {
 
         {useMock && (
           <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
-            Aperçu démonstration : les contrats affichés sont fictifs car aucune donnée réelle n’a été chargée.
+            {error || 'Mode simulation activé (données fictives).'}
           </div>
         )}
 
-        <div className="mb-5 grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {!useMock && error && (
+          <div className="mb-5 rounded-2xl border border-red-200/40 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="mb-5 grid grid-cols-1 lg:grid-cols-5 gap-3">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -226,8 +297,23 @@ export default function Contrats() {
             <option value="actif">Actif</option>
             <option value="renouvellement">Renouvellement</option>
             <option value="brouillon">Brouillon</option>
-            <option value="resilie">Résilié</option>
+              <option value="resilie">Résilié</option>
+            </select>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
+            {availableTypes.map((type) => (
+              <option key={type} value={type}>
+                {type === 'tous' ? 'Tous types' : type}
+              </option>
+            ))}
           </select>
+          <label className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              checked={onlyNearExpiry}
+              onChange={(e) => setOnlyNearExpiry(e.target.checked)}
+            />
+            Échéance proche (45j)
+          </label>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
             <option value="echeance">Tri: échéance proche</option>
             <option value="prime">Tri: prime annuelle</option>
@@ -268,7 +354,7 @@ export default function Contrats() {
                         <KanbanCard
                           contrat={c}
                           borderColor={col.borderColor}
-                          onNavigate={(id) => navigate(`/client/${id}`)}
+                          onNavigate={(id) => navigate(`/clients/${id}`)}
                         />
                       </div>
                     )) : (

@@ -4,12 +4,14 @@ const fs = require('fs')
 const path = require('path')
 const { chromium } = require('playwright')
 
-const PREVIEW_URL = process.env.PREVIEW_URL || process.argv[2]
+const TARGET_URL = process.env.PREVIEW_URL || process.env.PROD_URL || process.argv[2]
 
-if (!PREVIEW_URL) {
-  console.error('Usage: PREVIEW_URL=https://... node backend/scripts/preview-smoke-playwright.js')
+if (!TARGET_URL) {
+  console.error('Usage: PREVIEW_URL=https://... or PROD_URL=https://... node backend/scripts/preview-smoke-playwright.js')
   process.exit(2)
 }
+
+const RUN_MODE = process.env.PROD_URL ? 'prod' : 'preview'
 
 function parsePreviewInput(inputUrl) {
   const parsed = new URL(inputUrl)
@@ -20,7 +22,7 @@ function parsePreviewInput(inputUrl) {
   }
 }
 
-const PREVIEW_CONFIG = parsePreviewInput(PREVIEW_URL)
+const PREVIEW_CONFIG = parsePreviewInput(TARGET_URL)
 const PREVIEW_BASE_URL = PREVIEW_CONFIG.baseUrl
 
 const ACCOUNTS = {
@@ -54,6 +56,44 @@ function recordFailure(scope, message) {
 
 function recordInfo(scope, message) {
   findings.push({ level: 'info', scope, message })
+}
+
+function buildReport(base, startedAt) {
+  return {
+    previewUrl: base,
+    runMode: RUN_MODE,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    summary: {
+      failures: findings.filter((f) => f.level === 'error').length,
+      doubleApiRequests: doubleApiRequests.length,
+      authMe429Responses: authMe429Responses.length,
+      authLogin429Responses: authLogin429Responses.length,
+      consoleIssues: consoleIssues.length,
+      networkErrors: networkResponses.filter((r) => r.status >= 400).length,
+    },
+    findings,
+    routeChecks,
+    responsiveChecks,
+    doubleApiRequests,
+    authMe429Responses,
+    authLogin429Responses,
+    consoleIssues,
+    networkErrors: networkResponses.filter((r) => r.status >= 400),
+    sampledApiHosts: Array.from(new Set(networkRequests
+      .map((r) => {
+        try { return new URL(r.url).origin } catch { return null }
+      })
+      .filter(Boolean))),
+  }
+}
+
+function writeReport(report) {
+  const outDir = path.resolve(__dirname, '..', 'test-results')
+  fs.mkdirSync(outDir, { recursive: true })
+  const outFile = path.join(outDir, `${RUN_MODE}-smoke-report.json`)
+  fs.writeFileSync(outFile, JSON.stringify(report, null, 2))
+  return outFile
 }
 
 function attachObservers(page, scope) {
@@ -417,37 +457,8 @@ async function main() {
       recordInfo('network:auth-me-429', 'No 429 response detected on /api/auth/me')
     }
 
-    const report = {
-      previewUrl: base,
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      summary: {
-        failures: findings.filter((f) => f.level === 'error').length,
-        doubleApiRequests: doubleApiRequests.length,
-        authMe429Responses: authMe429Responses.length,
-        authLogin429Responses: authLogin429Responses.length,
-        consoleIssues: consoleIssues.length,
-        networkErrors: networkResponses.filter((r) => r.status >= 400).length,
-      },
-      findings,
-      routeChecks,
-      responsiveChecks,
-      doubleApiRequests,
-      authMe429Responses,
-      authLogin429Responses,
-      consoleIssues,
-      networkErrors: networkResponses.filter((r) => r.status >= 400),
-      sampledApiHosts: Array.from(new Set(networkRequests
-        .map((r) => {
-          try { return new URL(r.url).origin } catch { return null }
-        })
-        .filter(Boolean))),
-    }
-
-    const outDir = path.resolve(__dirname, '..', 'test-results')
-    fs.mkdirSync(outDir, { recursive: true })
-    const outFile = path.join(outDir, 'preview-smoke-report.json')
-    fs.writeFileSync(outFile, JSON.stringify(report, null, 2))
+    const report = buildReport(base, startedAt)
+    const outFile = writeReport(report)
 
     console.log(JSON.stringify(report, null, 2))
     console.log(`\nReport saved: ${outFile}`)
@@ -455,7 +466,11 @@ async function main() {
     const hasFailures = report.summary.failures > 0
     process.exit(hasFailures ? 1 : 0)
   } catch (err) {
-    console.error('Smoke run failed:', err)
+    recordFailure('smoke', err?.message || 'unexpected smoke failure')
+    const report = buildReport(base, startedAt)
+    const outFile = writeReport(report)
+    console.error(JSON.stringify(report, null, 2))
+    console.error(`\nReport saved: ${outFile}`)
     process.exit(1)
   } finally {
     await browser.close()
