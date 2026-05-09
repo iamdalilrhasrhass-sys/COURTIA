@@ -212,6 +212,7 @@ export default function App() {
           <Route path="/taches"        element={<Taches />} />
           <Route path="/rapports"      element={<Rapports />} />
           <Route path="/parametres"    element={<Parametres />} />
+          <Route path="/parametres/integrations" element={<Parametres />} />
           <Route path="/academy"       element={<Academy />} />
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
