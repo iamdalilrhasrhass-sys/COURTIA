@@ -354,7 +354,7 @@ export default function Parametres() {
                             {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
                         </ul>
                     </div>
-                    <button onClick={() => navigate('/abonnement')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Upgrader mon plan</button>
+                    <button onClick={() => navigate('/billing')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Gérer mon abonnement</button>
                 </div>
               </div>
             </section>
