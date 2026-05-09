@@ -167,7 +167,7 @@ export const usePlanStore = create((set, get) => ({
         features: subscription.features || {},
         loading: false,
       })
-    } catch (err) {
+    } catch (_err) {
       // Fallback: essayer l'ancienne route /plans/info
       try {
         const res = await api.get('/plans/info')
@@ -185,7 +185,7 @@ export const usePlanStore = create((set, get) => ({
           features: data.features || planDef.feature_map,
           loading: false,
         })
-      } catch (fallbackErr) {
+      } catch (_fallbackErr) {
         set({ loading: false, error: "Impossible de charger votre offre pour le moment." })
       }
     }

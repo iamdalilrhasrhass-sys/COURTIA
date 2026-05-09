@@ -26,7 +26,7 @@ export default function AdminSystem() {
 
     // Frontend visible
     try {
-      const r = await fetch('https://courtiark.fr', { mode: 'no-cors' })
+      const _r = await fetch('https://courtiark.fr', { mode: 'no-cors' })
       results.frontend = { ok: true, url: 'courtiark.fr' }
     } catch { results.frontend = { ok: false, error: 'Inaccessible' } }
 

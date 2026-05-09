@@ -14,7 +14,7 @@ export default function ClientsList() {
   const deleteClient = useClientStore((state) => state.deleteClient)
   const setSelectedClient = useClientStore((state) => state.setSelectedClient)
   const token = useAuthStore((state) => state.token)
-  const { isMobile } = useResponsive()
+  const { _isMobile } = useResponsive()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [selectedForEdit, setSelectedForEdit] = useState(null)

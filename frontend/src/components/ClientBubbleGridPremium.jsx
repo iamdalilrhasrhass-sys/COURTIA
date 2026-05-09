@@ -61,7 +61,7 @@ function clientOpacity(client) {
 }
 
 /* ═══════════ AURORA HALO (ring around bubble) ═══════════ */
-function AuroraRing({ colors, size, selected }) {
+function AuroraRing({ colors, _size, selected }) {
   const [outer] = colors
   return (
     <div style={{
@@ -259,7 +259,7 @@ function EmptyCockpit() {
 }
 
 /* ═══════════ COCKPIT HEADER ═══════════ */
-function CockpitHeader({ total, mode }) {
+function CockpitHeader({ total, _mode }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
