@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase } from 'lucide-react'
+import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase, Shield } from 'lucide-react'
 import api from '../api'
 import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
@@ -12,9 +12,15 @@ const NAV_ITEMS = [
   { id: 'securite', label: 'Sécurité', icon: Lock },
   { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'conformite', label: 'Conformité', icon: Shield },
   { id: 'integrations', label: 'Intégrations', icon: Link },
 ]
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
+const COMPLIANCE_FIELDS = [
+  ['orias', 'Numéro ORIAS'],
+  ['cabinet', 'Nom du cabinet'],
+  ['telephone', 'Téléphone cabinet'],
+]
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
 
@@ -369,6 +375,39 @@ export default function Parametres() {
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
+              </div>
+            </section>
+
+            <section id="conformite" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Conformité DDA</h2>
+              <p className="text-sm text-white/50 mb-5">Informations utilisées pour générer les FIC, mandats et devoirs de conseil.</p>
+              <div className="courtia-depth-card rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                  COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation et de la remise des documents au client.
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {COMPLIANCE_FIELDS.map(([key, label]) => (
+                    <label key={key} className="text-xs font-semibold text-gray-600">
+                      {label}
+                      <input
+                        value={form[key] || ''}
+                        onChange={e => setForm({ ...form, [key]: e.target.value })}
+                        className={`${inputClass} mt-1`}
+                        placeholder={label}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleProfileSubmit}
+                    disabled={saving}
+                    className="rounded-lg bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 disabled:opacity-60"
+                  >
+                    {saving ? 'Sauvegarde...' : 'Sauvegarder la conformité'}
+                  </button>
+                </div>
               </div>
             </section>
 
