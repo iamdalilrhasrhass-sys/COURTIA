@@ -22,11 +22,14 @@ export default function AdminSidebar() {
 
   return (
     <aside style={{
-      width: 220, minHeight: '100vh', background: '#0a0a0a',
-      borderRight: '1px solid rgba(255,255,255,0.06)',
+      width: 220, minHeight: '100vh',
+      background: 'linear-gradient(180deg, rgba(6,10,24,0.92), rgba(2,6,18,0.94))',
+      borderRight: '1px solid rgba(255,255,255,0.10)',
       display: 'flex', flexDirection: 'column',
       position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 50,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      backdropFilter: 'blur(14px)',
+      boxShadow: '0 24px 60px rgba(0,0,0,0.38)',
     }}>
       {/* Header */}
       <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -56,6 +59,7 @@ export default function AdminSidebar() {
                 background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
+                transform: active ? 'translateX(1px)' : 'translateX(0)',
               }}
             >
               <link.icon size={15} />

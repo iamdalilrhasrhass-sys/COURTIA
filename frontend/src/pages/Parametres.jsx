@@ -293,7 +293,7 @@ export default function Parametres() {
             <section id="profil" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Profil</h2>
               <p className="text-sm text-white/50 mb-5">Informations publiques et coordonnées.</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handleProfileSubmit}>
                   <div className="p-6 space-y-5">
                     <div className="flex items-center gap-6">
@@ -320,7 +320,7 @@ export default function Parametres() {
             <section id="securite" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Sécurité</h2>
               <p className="text-sm text-white/50 mb-5">Changez votre mot de passe.</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handlePasswordSubmit}>
                     <div className="p-6 space-y-5">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -340,7 +340,7 @@ export default function Parametres() {
             <section id="abonnement" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Abonnement</h2>
               <p className="text-sm text-white/50 mb-5">Gérez votre abonnement et consultez vos factures.</p>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-3">
@@ -362,7 +362,7 @@ export default function Parametres() {
             <section id="notifications" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Notifications</h2>
               <p className="text-sm text-white/50 mb-5">Choisissez comment nous pouvons vous contacter.</p>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
                 <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} setEnabled={() => { setNotifications({...notifications, echeances: !notifications.echeances}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
@@ -401,7 +401,7 @@ export default function Parametres() {
                   const canSync = Boolean(meta.syncPath) && (row.status === 'connected' || row.status === 'authorization_received' || row.status === 'configured')
 
                   return (
-                    <div key={provider} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div key={provider} className="courtia-depth-card rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 rounded-xl bg-blue-50 p-2 text-blue-700">
@@ -475,7 +475,7 @@ export default function Parametres() {
                 })}
               </div>
 
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="courtia-depth-card mt-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="text-sm font-bold text-gray-900">Make / Zapier / Webhooks</h3>
                   <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700">

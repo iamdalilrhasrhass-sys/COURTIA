@@ -16,6 +16,8 @@ const ENABLE_GROWTH_LEADS_SMOKE = String(process.env.SMOKE_GROWTH_LEADS || '').t
 const SKIP_RESPONSIVE = String(process.env.SMOKE_SKIP_RESPONSIVE || '').trim() === '1'
 const STEP_DELAY_MS = Number(process.env.SMOKE_STEP_DELAY_MS || 700)
 const LIGHT_MODE = String(process.env.SMOKE_LIGHT || '').trim() === '1'
+const LOGIN_RETRIES = Math.max(0, Number.parseInt(process.env.SMOKE_LOGIN_RETRIES || '0', 10) || 0)
+const LOGIN_RETRY_WAIT_MS = Math.max(1000, Number.parseInt(process.env.SMOKE_LOGIN_RETRY_WAIT_MS || '65000', 10) || 65000)
 
 function parsePreviewInput(inputUrl) {
   const parsed = new URL(inputUrl)
@@ -180,29 +182,39 @@ async function waitForAppIdle(page) {
 async function login(page, accountKey) {
   const account = ACCOUNTS[accountKey]
   const scope = `login:${accountKey}`
-  await page.goto(`${normalizeBase(PREVIEW_BASE_URL)}/login`, { waitUntil: 'domcontentloaded' })
-  await page.waitForSelector('input[type="email"]', { timeout: 30000 })
-  await page.locator('input[type="email"]').fill(account.email)
-  await page.locator('input[type="password"]').first().fill(account.password)
+  const attempts = LOGIN_RETRIES + 1
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    await page.goto(`${normalizeBase(PREVIEW_BASE_URL)}/login`, { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('input[type="email"]', { timeout: 30000 })
+    await page.locator('input[type="email"]').fill(account.email)
+    await page.locator('input[type="password"]').first().fill(account.password)
 
-  const submit = page.getByRole('button', { name: /ouvrir mon cockpit|connexion|se connecter/i }).first()
-  await Promise.all([
-    submit.click(),
-    page.waitForTimeout(1200),
-  ])
-  await waitForAppIdle(page)
+    const submit = page.getByRole('button', { name: /ouvrir mon cockpit|connexion|se connecter/i }).first()
+    await Promise.all([
+      submit.click(),
+      page.waitForTimeout(1200),
+    ])
+    await waitForAppIdle(page)
 
-  if (page.url().includes('/login')) {
+    if (!page.url().includes('/login')) {
+      const token = await page.evaluate(() => localStorage.getItem('courtia_token') || localStorage.getItem('token'))
+      if (!token) {
+        throw new Error(`Login failed (${accountKey}): token missing in localStorage`)
+      }
+      recordInfo(scope, `Logged in at ${page.url()}`)
+      return
+    }
+
     const errorText = await page.locator('.auth-error').first().textContent().catch(() => '')
+    const rateLimited = /trop de tentatives|too many/i.test(String(errorText || ''))
+    if (rateLimited && attempt < attempts) {
+      recordInfo(scope, `Rate-limited login (${attempt}/${attempts}) — waiting ${Math.round(LOGIN_RETRY_WAIT_MS / 1000)}s before retry`)
+      await page.waitForTimeout(LOGIN_RETRY_WAIT_MS)
+      continue
+    }
+
     throw new Error(`Login failed (${accountKey}): ${errorText || 'still on /login'}`)
   }
-
-  const token = await page.evaluate(() => localStorage.getItem('courtia_token') || localStorage.getItem('token'))
-  if (!token) {
-    throw new Error(`Login failed (${accountKey}): token missing in localStorage`)
-  }
-
-  recordInfo(scope, `Logged in at ${page.url()}`)
 }
 
 async function checkCurrentRole(page, accountKey) {
