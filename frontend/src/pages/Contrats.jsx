@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Calendar, FileText, Search } from 'lucide-react'
 import api from '../api'
@@ -115,21 +115,23 @@ export default function Contrats() {
   const [sortBy, setSortBy] = useState('echeance')
   const navigate = useNavigate()
 
-  useEffect(() => { fetchContrats() }, [])
-
-  async function fetchContrats() {
+  const fetchContrats = useCallback(async () => {
     try {
       setLoading(true)
       const res = await api.get('/contrats')
       const data = Array.isArray(res.data) ? res.data : []
       setContrats(data.length > 0 ? data : MOCK_CONTRATS)
       setUseMock(data.length === 0)
-    } catch (err) {
+    } catch {
       console.error('Impossible de charger les contrats.')
       setContrats(MOCK_CONTRATS)
       setUseMock(true)
     } finally { setLoading(false) }
-  }
+  }, [])
+
+  // Chargement initial des contrats du portefeuille.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchContrats() }, [fetchContrats])
 
   const displayedContrats = useMemo(() => {
     const q = search.trim().toLowerCase()

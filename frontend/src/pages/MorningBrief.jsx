@@ -472,6 +472,8 @@ export default function MorningBrief() {
     }
   }, [])
 
+  // Hydratation initiale du brief et du score portefeuille.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchPriorities(); fetchScore() }, [fetchPriorities, fetchScore])
 
   const handleRegenerate = async () => {
@@ -608,33 +610,6 @@ export default function MorningBrief() {
               </>
             )}
 
-            {/* Bandeau plan (conservé pour compatibilité) */}
-            {false && (
-              <motion.div
-                style={{ marginTop: 12, background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', border: '0.5px solid #bfdbfe', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1d4ed8', margin: '0 0 2px' }}>
-                    Actions masquées
-                  </p>
-                  <p style={{ fontSize: 12, color: '#3b82f6', margin: 0 }}>
-                    Passez à Pro pour accéder à toutes vos actions
-                  </p>
-                </div>
-                <motion.button
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                  onClick={() => navigate('/billing?plan=pro')}
-                  style={{
-                    padding: '7px 14px', background: '#2563eb', color: 'white',
-                    border: 'none', borderRadius: 7, cursor: 'pointer',
-                    fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif', flexShrink: 0
-                  }}
-                >
-                  Débloquer
-                </motion.button>
-              </motion.div>
-            )}
           </motion.div>
 
           {/* Colonne droite — Score + Métriques */}
