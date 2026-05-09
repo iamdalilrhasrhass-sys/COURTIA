@@ -27,11 +27,7 @@ export default function AdminCostsDashboard() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetchCostData()
-  }, [])
-
-  const fetchCostData = async () => {
+  async function fetchCostData() {
     try {
       setLoading(true)
       setError('')
@@ -56,6 +52,14 @@ export default function AdminCostsDashboard() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCostData()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   const exportCsv = () => {
     window.location.href = buildApiUrl('/admin/costs/export?format=csv', API_URL)

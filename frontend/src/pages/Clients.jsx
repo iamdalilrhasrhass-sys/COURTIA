@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle } from 'lucide-react'
 import api from '../api'
@@ -59,10 +59,7 @@ const StatusBadge = ({ status }) => {
 
 const ScoreGauge = ({ score }) => {
   const s = Math.min(100, Math.max(0, Number(score) || 0))
-  let color = '#10b981'
-  if (s >= 70) color = '#10b981'
-  else if (s >= 40) color = '#f59e0b'
-  else color = '#ef4444'
+  const color = s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#ef4444'
   const size = 48, strokeWidth = 4, radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (s / 100) * circumference
@@ -155,9 +152,7 @@ export default function Clients() {
   const navigate = useNavigate()
   const PER_PAGE = 15
 
-  useEffect(() => { fetchClients() }, [])
-
-  async function fetchClients() {
+  const fetchClients = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -182,7 +177,11 @@ export default function Clients() {
       }
     }
     finally { setLoading(false) }
-  }
+  }, [])
+
+  // Chargement initial de la liste clients.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchClients() }, [fetchClients])
   
   const filteredClients = useMemo(() => {
     return (clients || []).filter(c => {
@@ -442,6 +441,14 @@ export default function Clients() {
                   const nextEcheance = client.next_echeance
                     ? new Date(client.next_echeance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
                     : 'Non renseignée'
+                  const lastInteraction = client.last_contact || client.last_interaction || client.updated_at || null
+                  const lastInteractionLabel = lastInteraction
+                    ? new Date(lastInteraction).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Aucune interaction'
+                  const numericContracts = Number(contractsCount)
+                  const opportunityLabel = Number.isFinite(numericContracts) && numericContracts <= 1
+                    ? 'Multi-équipement à proposer'
+                    : 'Fidélisation / upsell'
                   const actionLabel = riskScore >= 70
                     ? 'Relance prioritaire'
                     : riskScore >= 40
@@ -479,6 +486,14 @@ export default function Clients() {
                         <div>
                           <p style={{ color: 'var(--text-tertiary)' }}>Action ARK</p>
                           <p className="font-semibold text-gray-900">{actionLabel}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Dernière interaction</p>
+                          <p className="font-semibold text-gray-900">{lastInteractionLabel}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Opportunité</p>
+                          <p className="font-semibold text-gray-900">{opportunityLabel}</p>
                         </div>
                       </div>
 

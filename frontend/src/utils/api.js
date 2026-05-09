@@ -21,12 +21,7 @@ function buildHeaders() {
 
 async function handleResponse(res) {
   if (res.status === 401) {
-    let body = {}
-    try {
-      body = await res.clone().json()
-    } catch {
-      body = {}
-    }
+    const body = await res.clone().json().catch(() => ({}))
 
     if (shouldClearSessionOnUnauthorized(res.url, body)) {
       clearStoredSession()

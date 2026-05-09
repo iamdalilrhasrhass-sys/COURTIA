@@ -27,7 +27,6 @@ function KPICard({ label, value, sub }) {
 function DaysBadge({ days }) {
   const veryUrgent = days <= 7
   const urgent = days <= 30
-  const soon = days <= 90
 
   let bg, color
   if (veryUrgent) { bg = '#fee2e2'; color = '#dc2626' }
@@ -57,6 +56,8 @@ export default function Rapports() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [portfolio, setPortfolio] = useState(null)
+  const [clients, setClients] = useState([])
+  const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -65,12 +66,26 @@ export default function Rapports() {
   async function loadAll() {
     setLoading(true); setError('')
     try {
-      const [statsRes, portfolioRes] = await Promise.allSettled([
+      const [statsRes, portfolioRes, clientsRes, tasksRes] = await Promise.allSettled([
         api.get('/dashboard/stats'),
-        api.get('/stats/portfolio')
+        api.get('/stats/portfolio'),
+        api.get('/clients?limit=1000'),
+        api.get('/taches')
       ])
       if (statsRes.status === 'fulfilled') setStats(statsRes.value?.data || null)
       if (portfolioRes.status === 'fulfilled') setPortfolio(portfolioRes.value?.data || null)
+      if (portfolioRes.status === 'fulfilled') {
+        const rawClients = portfolioRes.value?.data?.clients || []
+        if (Array.isArray(rawClients) && rawClients.length > 0) setClients(rawClients)
+      }
+      if (clientsRes.status === 'fulfilled') {
+        const rows = Array.isArray(clientsRes.value?.data) ? clientsRes.value.data : (clientsRes.value?.data?.data || [])
+        if (Array.isArray(rows)) setClients(rows)
+      }
+      if (tasksRes.status === 'fulfilled') {
+        const rows = Array.isArray(tasksRes.value?.data) ? tasksRes.value.data : (tasksRes.value?.data?.data || [])
+        if (Array.isArray(rows)) setTasks(rows)
+      }
 
       if (statsRes.status !== 'fulfilled' && portfolioRes.status !== 'fulfilled') {
         setError('Impossible de charger les statistiques')
@@ -87,6 +102,20 @@ export default function Rapports() {
   const top10 = portfolio?.top10Loyalty || []
   const renewals = portfolio?.renewalWindows || stats?.alertes || []
   const arkActivity = portfolio?.arkActivity || null
+  const statusMap = stats?.clientsParStatut || {}
+  const totalClients = Number(stats?.totalClients || clients.length || 0)
+  const activeClients = Number(statusMap.actif || clients.filter((c) => String(c.status || c.statut || '').toLowerCase() === 'actif').length)
+  const prospectsCount = Number(statusMap.prospect || clients.filter((c) => String(c.status || c.statut || '').toLowerCase() === 'prospect').length)
+  const lostCount = Number(statusMap.perdu || statusMap['résilié'] || clients.filter((c) => ['perdu', 'résilié', 'resilie'].includes(String(c.status || c.statut || '').toLowerCase())).length)
+  const atRiskCount = Number(statusMap.a_risque || clients.filter((c) => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70).length)
+  const overdueTasksCount = tasks.filter((t) => {
+    const status = String(t.statut || t.status || '').toLowerCase()
+    if (['terminee', 'done', 'completed'].includes(status)) return false
+    const ts = t.echeance ? new Date(t.echeance).getTime() : null
+    return ts && !Number.isNaN(ts) && ts < Date.now()
+  }).length
+  const renewals30 = renewals.filter((r) => Number(r.jours_restants || 999) <= 30).length
+  const renewals60 = renewals.filter((r) => Number(r.jours_restants || 999) <= 60).length
 
   const card = { background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px', marginBottom: 16 }
   const thStyle = { padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'white', background: '#0a0a0a', textTransform: 'uppercase', letterSpacing: 0.8, whiteSpace: 'nowrap' }
@@ -139,10 +168,14 @@ export default function Rapports() {
 
         {/* KPIs */}
         <div className="rp-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-          <KPICard label="Clients actifs" value={stats?.totalClients ?? '—'} sub="dans le portefeuille" />
+          <KPICard label="Clients total" value={totalClients} sub="portefeuille" />
+          <KPICard label="Clients actifs" value={activeClients} sub="base active" />
+          <KPICard label="Prospects" value={prospectsCount} sub="à convertir" />
+          <KPICard label="Perdus / résiliés" value={lostCount} sub="à analyser" />
           <KPICard label="Contrats actifs" value={stats?.contratsActifs ?? '—'} sub="en cours" />
-          <KPICard label="Commission mois" value={fmtEur(stats?.commissionsMois)} sub="ce mois-ci" />
-          <KPICard label="Prime portefeuille" value={fmtEur(stats?.primeTotale)} sub="total annuel" />
+          <KPICard label="Prime annuelle" value={fmtEur(stats?.primeTotale)} sub="total cumulé" />
+          <KPICard label="Échéances 30/60j" value={`${renewals30}/${renewals60}`} sub="contrats à traiter" />
+          <KPICard label="Tâches en retard" value={overdueTasksCount} sub={`Clients à risque: ${atRiskCount}`} />
         </div>
 
         {/* Répartition portefeuille */}
