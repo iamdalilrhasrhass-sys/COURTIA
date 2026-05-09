@@ -80,7 +80,7 @@ export default function ARKChatTab({ clientId, client }) {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const chatEndRef = useRef(null);
+  const messageListRef = useRef(null);
   const textareaRef = useRef(null);
   const clientName = `${client.prenom} ${client.nom}`;
 
@@ -114,7 +114,11 @@ export default function ARKChatTab({ clientId, client }) {
   };
 
   useEffect(() => { adjustTextareaHeight(); }, [inputValue]);
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isSending]);
+  useEffect(() => {
+    const listEl = messageListRef.current;
+    if (!listEl) return;
+    listEl.scrollTo({ top: listEl.scrollHeight, behavior: 'smooth' });
+  }, [messages, isSending]);
 
   const handleSendMessage = async (content) => {
     const msg = (content || inputValue).trim();
@@ -167,7 +171,7 @@ export default function ARKChatTab({ clientId, client }) {
       </div>
 
       {/* Zone messages */}
-      <div className="flex-1 px-5 py-5 space-y-4 overflow-y-auto">
+      <div ref={messageListRef} className="flex-1 px-5 py-5 space-y-4 overflow-y-auto">
         {isLoading
           ? <div className="flex justify-center items-center h-full"><div className="w-6 h-6 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin"/></div>
           : <>
@@ -187,7 +191,6 @@ export default function ARKChatTab({ clientId, client }) {
                   </div>
                 </motion.div>
               )}
-              <div ref={chatEndRef} />
             </>
         }
       </div>

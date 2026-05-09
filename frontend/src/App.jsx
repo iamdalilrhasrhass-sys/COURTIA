@@ -25,6 +25,7 @@ const ReachInbox = lazy(() => import('./pages/ReachInbox'))
 const ReachProspectDetail = lazy(() => import('./pages/ReachProspectDetail'))
 const ReachMap = lazy(() => import('./pages/ReachMap'))
 const ReachSettings = lazy(() => import('./pages/ReachSettings'))
+const Partners = lazy(() => import('./pages/Partners'))
 const Capitia = lazy(() => import('./pages/Capitia'))
 const AnalyticsExecutive = lazy(() => import('./pages/AnalyticsExecutive'))
 const Abonnement = lazy(() => import('./pages/Abonnement'))
@@ -107,13 +108,13 @@ function AppLayout() {
   }, [handleKeyDown])
 
   return (
-    <div className="courtia-cockpit-shell" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div className="courtia-cockpit-shell" style={{ display: 'flex', minHeight: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'clip', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <div className="courtia-cockpit-aurora" aria-hidden="true" />
       <div className="courtia-cockpit-watermark" aria-hidden="true">
         <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
       </div>
       <Sidebar />
-      <main className="courtia-cockpit-main flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <main className="courtia-cockpit-main flex-1 min-w-0 ml-0 md:ml-[240px] pt-14 md:pt-0 overflow-x-hidden" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <ImpersonationBanner />
         <div style={{ flex: 1 }}>
           <Outlet />
@@ -209,6 +210,7 @@ export default function App() {
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
+          <Route path="/partners"      element={<Partners />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
