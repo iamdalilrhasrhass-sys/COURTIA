@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Sun, Users, UserPlus, FileText, BarChart2,
-  Sparkles, CheckSquare, PieChart, Settings, Zap, Search, Command
+  Sparkles, CheckSquare, PieChart, Settings, Zap, Search, Command, Euro
 } from 'lucide-react'
 
 const ACTIONS = [
@@ -16,6 +16,7 @@ const ACTIONS = [
   { id: 'capitia',       label: 'CAPITIA',           desc: 'Module financement IOBSP',            path: '/capitia',       icon: Sparkles,        cat: 'Navigation' },
   { id: 'taches',        label: 'Tâches',            desc: 'Suivi des tâches en cours',           path: '/taches',        icon: CheckSquare,     cat: 'Navigation' },
   { id: 'rapports',      label: 'Rapports',          desc: 'Rapports et exports PDF',             path: '/rapports',      icon: PieChart,        cat: 'Navigation' },
+  { id: 'commissions',   label: 'Commissions',       desc: 'Suivi par compagnie et apporteur',    path: '/commissions',   icon: Euro,            cat: 'Navigation' },
   { id: 'parametres',    label: 'Paramètres',        desc: 'Configuration du compte',             path: '/parametres',    icon: Settings,        cat: 'Navigation' },
   { id: 'ark',           label: 'Ouvrir ARK',        desc: 'Lancer l\'assistant IA COURTIA',      action: () => window.dispatchEvent(new Event('ark:open')), icon: Zap, cat: 'Action' },
 ]

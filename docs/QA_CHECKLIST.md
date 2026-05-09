@@ -24,9 +24,11 @@
 15. vérifier timeline interactions dans fiche client (onglet Activité)
 16. documents DDA : `/documents`, onglet `Documents DDA`
 17. fiche client : générer une FIC si ORIAS renseigné, sinon vérifier message ORIAS propre
-18. tentative `/admin` => refus propre
-19. tentative `/admin/costs` => refus propre
-20. logout
+18. commissions : `/commissions`, état vide ou tableau lisible
+19. fiche client : onglet `Commissions` visible et état propre
+20. tentative `/admin` => refus propre
+21. tentative `/admin/costs` => refus propre
+22. logout
 
 ## Parcours smoke admin
 
@@ -60,6 +62,15 @@
 - Yousign absent: bouton “Envoyer à signer” affiche un message configuration requise
 - archivage propre via `/api/documents/:id/archive`
 - audit log document généré / archivé
+
+## Contrôles commissions
+
+- `/commissions` charge sans casser le cockpit
+- `GET /api/commissions/stats?year=2026` retourne agrégats ou état vide
+- import CSV affiche un rapport importé / non rapproché
+- export CSV génère un fichier local
+- `/clients/:id` onglet `Commissions` affiche les commissions liées ou un état vide
+- le feature flag `v1_commissions` désactivé renvoie un état “fonctionnalité désactivée” propre
 
 ## Responsive rapide
 
