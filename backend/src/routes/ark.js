@@ -4,6 +4,15 @@ const OpenAI = require('openai')
 const { verifyToken } = require('../middleware/auth')
 const { requireUnderLimit } = require('../middleware/planGuard')
 const { incrementUsage } = require('../services/planService')
+const pool = require('../db')
+const { requireCabinetFeature } = require('../middleware/cabinetAccess')
+const {
+  buildAndStoreMorningBrief,
+  chargeArkRun,
+  computeAndStoreRiskScores,
+  ensureArkBudget,
+  rewriteFallback,
+} = require('../services/arkProactiveService')
 
 // Initialisation client DeepSeek (compatible OpenAI SDK)
 const openai = new OpenAI({
@@ -13,6 +22,155 @@ const openai = new OpenAI({
 
 // Log au démarrage pour vérifier la clé
 console.log('ARK init - DEEPSEEK_API_KEY présente:', !!process.env.DEEPSEEK_API_KEY)
+
+function getCurrentUserId(req) {
+  return Number(req.user?.userId || req.user?.id || 0)
+}
+
+function normalizeRecommendation(row = {}) {
+  return {
+    ...row,
+    suggested_action: typeof row.suggested_action === 'string'
+      ? JSON.parse(row.suggested_action || '{}')
+      : (row.suggested_action || {}),
+  }
+}
+
+const proactiveGuard = requireCabinetFeature('v1_ark_proactive')
+
+router.get('/budget', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const budget = await ensureArkBudget(req.app.locals.pool || pool, userId)
+    res.json({
+      ...budget,
+      mode: process.env.ANTHROPIC_API_KEY ? 'llm_ready' : 'local_fallback',
+      configuration_required: !process.env.ANTHROPIC_API_KEY,
+    })
+  } catch (err) {
+    res.status(500).json({ error: 'ark_budget_unavailable', message: 'Budget ARK indisponible.' })
+  }
+})
+
+router.post('/score-clients', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const rows = await computeAndStoreRiskScores(req.app.locals.pool || pool, userId)
+    res.json({ data: rows, total: rows.length })
+  } catch (err) {
+    res.status(500).json({ error: 'ark_score_failed', message: 'Calcul des scores ARK impossible.' })
+  }
+})
+
+router.post('/morning-brief', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const result = await buildAndStoreMorningBrief(req.app.locals.pool || pool, userId)
+    res.json({
+      ...result,
+      mode: result.source === 'deterministic_fallback' ? 'local_fallback' : 'llm_ready',
+      configuration_required: !process.env.ANTHROPIC_API_KEY,
+    })
+  } catch (err) {
+    if (err.status === 402) {
+      return res.status(402).json({
+        error: 'ark_budget_exceeded',
+        message: 'ARK est temporairement suspendu pour ce cabinet car le plafond mensuel est atteint.',
+      })
+    }
+    res.status(500).json({ error: 'ark_morning_brief_failed', message: 'Morning Brief ARK indisponible.' })
+  }
+})
+
+router.get('/recommendations', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const result = await (req.app.locals.pool || pool).query(
+      `SELECT ar.*, CONCAT(c.first_name, ' ', c.last_name) AS client_name
+       FROM ark_recommendations ar
+       LEFT JOIN clients c ON c.id = ar.client_id
+       WHERE ar.user_id = $1
+         AND ar.dismissed_at IS NULL
+         AND (ar.expires_at IS NULL OR ar.expires_at > NOW())
+       ORDER BY ar.priority DESC, ar.created_at DESC
+       LIMIT 50`,
+      [userId]
+    )
+    res.json({ data: result.rows.map(normalizeRecommendation), total: result.rows.length })
+  } catch (err) {
+    res.status(500).json({ error: 'ark_recommendations_unavailable', message: 'Recommandations ARK indisponibles.' })
+  }
+})
+
+router.post('/recommendations/:id/act', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    const id = Number(req.params.id)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const result = await (req.app.locals.pool || pool).query(
+      `UPDATE ark_recommendations
+       SET acted_on_at = NOW()
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [id, userId]
+    )
+    if (!result.rows[0]) return res.status(404).json({ error: 'recommendation_not_found' })
+    res.json(normalizeRecommendation(result.rows[0]))
+  } catch (err) {
+    res.status(500).json({ error: 'ark_recommendation_action_failed', message: 'Action ARK impossible.' })
+  }
+})
+
+router.post('/recommendations/:id/dismiss', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    const id = Number(req.params.id)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const result = await (req.app.locals.pool || pool).query(
+      `UPDATE ark_recommendations
+       SET dismissed_at = NOW()
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [id, userId]
+    )
+    if (!result.rows[0]) return res.status(404).json({ error: 'recommendation_not_found' })
+    res.json(normalizeRecommendation(result.rows[0]))
+  } catch (err) {
+    res.status(500).json({ error: 'ark_recommendation_dismiss_failed', message: 'Masquage ARK impossible.' })
+  }
+})
+
+router.post('/rewrite', proactiveGuard, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+    const text = String(req.body?.text || '').trim()
+    const mode = String(req.body?.mode || 'rephrase')
+    if (!text) return res.status(400).json({ error: 'text_required', message: 'Texte requis.' })
+    const rewritten = rewriteFallback(text, mode)
+    await chargeArkRun(req.app.locals.pool || pool, {
+      userId,
+      feature: `rewrite.${mode}`,
+      model: process.env.ARK_LIGHT_MODEL || 'local-fallback',
+      inputTokens: Math.ceil(text.length / 4),
+      outputTokens: Math.ceil(rewritten.length / 4),
+      status: process.env.ANTHROPIC_API_KEY ? 'llm_ready_fallback_text' : 'local_fallback',
+    })
+    res.json({
+      text: rewritten,
+      mode,
+      source: process.env.ANTHROPIC_API_KEY ? 'llm_ready_with_local_fallback' : 'local_fallback',
+      configuration_required: !process.env.ANTHROPIC_API_KEY,
+    })
+  } catch (err) {
+    if (err.status === 402) return res.status(402).json({ error: 'ark_budget_exceeded' })
+    res.status(500).json({ error: 'ark_rewrite_failed', message: 'Réécriture ARK indisponible.' })
+  }
+})
 
 /**
  * POST /api/ark/chat

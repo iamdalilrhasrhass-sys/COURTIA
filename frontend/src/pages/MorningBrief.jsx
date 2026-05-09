@@ -110,6 +110,35 @@ function getBreakdownLabel(key, value) {
   return key.replace(/_/g, ' ')
 }
 
+function mapArkRecommendation(card = {}) {
+  const action = card.suggested_action || {}
+  const target = action.target || {}
+  const clientId = card.client_id || (target.type === 'client' ? target.id : null)
+  return {
+    id: `ark-${card.id || card.kind || card.title}`,
+    clientId,
+    clientNom: card.client_name || 'Priorité ARK',
+    titre: card.title || 'Action recommandée',
+    sousTitre: card.rationale || 'ARK a détecté un signal portefeuille à traiter.',
+    cta: {
+      label: action.label || (clientId ? 'Ouvrir la fiche' : 'Voir le cockpit'),
+      target: clientId ? `/clients/${clientId}` : '/dashboard',
+    },
+  }
+}
+
+function splitArkRecommendations(cards = []) {
+  const grouped = { critiques: [], importantes: [], suggerees: [] }
+  cards.slice(0, 5).forEach((card) => {
+    const mapped = mapArkRecommendation(card)
+    const priority = Number(card.priority || 0)
+    if (priority >= 85) grouped.critiques.push(mapped)
+    else if (priority >= 65) grouped.importantes.push(mapped)
+    else grouped.suggerees.push(mapped)
+  })
+  return grouped
+}
+
 // ─── Skeletons ─────────────────────────────────────────────────────────────────
 
 function Shimmer({ w = '100%', h = 20, r = 8, mb = 0 }) {
@@ -413,6 +442,7 @@ export default function MorningBrief() {
   const [currentPlan, setCurrentPlan] = useState(null)
   const [integrationEvents, setIntegrationEvents] = useState([])
   const [whatsappThreads, setWhatsappThreads] = useState([])
+  const [briefSource, setBriefSource] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -462,11 +492,24 @@ export default function MorningBrief() {
       const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
       const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
       const taches   = Array.isArray(tachesRes.data) ? tachesRes.data : (tachesRes.data?.data || [])
-      setPriorities(computeDailyPriorities(clients, contrats, taches))
       setIntegrationEvents(Array.isArray(eventsRes?.data?.rows) ? eventsRes.data.rows : [])
       setWhatsappThreads(Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [])
+
+      const proactive = await api.post('/ark/morning-brief').catch(() => null)
+      const proactiveCards = Array.isArray(proactive?.data?.cards) ? proactive.data.cards : []
+      if (proactiveCards.length > 0) {
+        setPriorities(splitArkRecommendations(proactiveCards))
+        setBriefSource({
+          mode: proactive.data?.mode || 'local_fallback',
+          configurationRequired: Boolean(proactive.data?.configuration_required),
+        })
+      } else {
+        setPriorities(computeDailyPriorities(clients, contrats, taches))
+        setBriefSource({ mode: 'local_fallback', configurationRequired: true })
+      }
     } catch {
       setPriorities({ critiques: [], importantes: [], suggerees: [] })
+      setBriefSource({ mode: 'local_fallback', configurationRequired: true })
     } finally {
       setBriefLoading(false)
     }
@@ -603,6 +646,11 @@ export default function MorningBrief() {
               {!briefLoading && totalPriorities > 0 && (
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', background: '#f0ede8', padding: '2px 8px', borderRadius: 20 }}>
                   {totalPriorities}
+                </span>
+              )}
+              {!briefLoading && briefSource && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#5b4df5', background: '#eef2ff', padding: '2px 8px', borderRadius: 20 }}>
+                  {briefSource.configurationRequired ? 'ARK mode local' : 'ARK IA prête'}
                 </span>
               )}
             </div>
