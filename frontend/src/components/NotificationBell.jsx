@@ -1,52 +1,97 @@
 import { useState } from 'react'
-import { Bell, AlertCircle, CheckCircle, Info } from 'lucide-react'
+import { Bell, AlertCircle, Info, Check } from 'lucide-react'
+import api from '../api'
 
 export default function NotificationBell() {
   const [showPanel, setShowPanel] = useState(false)
-  const [alerts] = useState([
-    { id: 1, type: 'urgent', title: 'Contrat expirant', msg: 'Auto - Jean Dupont expire dans 15j', time: '2h' },
-    { id: 2, type: 'warning', title: 'Prospect stagnant', msg: 'ABC Corp bloqué depuis 20j', time: '5h' },
-    { id: 3, type: 'info', title: 'Nouveau client', msg: 'Marie Martin enregistrée', time: '1j' }
-  ])
+  const [alerts, setAlerts] = useState([])
+  const [unread, setUnread] = useState(0)
+  const [loading, setLoading] = useState(false)
 
-  const unread = alerts.length
+  async function loadNotifications() {
+    setLoading(true)
+    try {
+      const res = await api.get('/notifications?limit=8')
+      setAlerts(Array.isArray(res?.data?.rows) ? res.data.rows : [])
+      setUnread(Number(res?.data?.unread || 0))
+    } catch {
+      setAlerts([])
+      setUnread(0)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function markAllRead() {
+    try {
+      await api.post('/notifications/read-all')
+      await loadNotifications()
+    } catch {
+      // Non bloquant: le panneau restera consultable.
+    }
+  }
 
   return (
     <div className="relative">
       <button
-        onClick={() => setShowPanel(!showPanel)}
-        className="relative p-2 hover:bg-slate-700 rounded-lg transition"
+        onClick={() => {
+          setShowPanel(!showPanel)
+          if (!showPanel) loadNotifications()
+        }}
+        className="relative rounded-xl border border-white/10 bg-white/[0.06] p-2 text-white shadow-lg shadow-black/20 backdrop-blur-xl transition hover:bg-white/[0.1]"
+        aria-label="Notifications"
       >
-        <Bell size={20} className="text-cyan" />
+        <Bell size={18} />
         {unread > 0 && (
-          <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
             {unread}
           </span>
         )}
       </button>
 
       {showPanel && (
-        <div className="absolute right-0 top-12 w-80 glass rounded-lg p-4 shadow-2xl z-50 max-h-96 overflow-y-auto">
-          <h3 className="font-bold text-cyan mb-4">Alertes ({unread})</h3>
-          <div className="space-y-3">
-            {alerts.map(alert => (
-              <div key={alert.id} className={`p-3 rounded-lg border-l-4 ${
-                alert.type === 'urgent' ? 'bg-red-500/10 border-red-500' :
-                alert.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500' :
-                'bg-blue-500/10 border-blue-500'
-              }`}>
-                <div className="flex items-start gap-2">
-                  {alert.type === 'urgent' && <AlertCircle size={16} className="text-red-500 mt-1" />}
-                  {alert.type === 'warning' && <AlertCircle size={16} className="text-yellow-500 mt-1" />}
-                  {alert.type === 'info' && <Info size={16} className="text-blue-500 mt-1" />}
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm text-white">{alert.title}</p>
-                    <p className="text-xs text-slate-400 mt-1">{alert.msg}</p>
-                    <p className="text-xs text-slate-500 mt-2">{alert.time}</p>
+        <div className="absolute right-0 top-12 z-50 max-h-96 w-80 overflow-y-auto rounded-2xl border border-white/12 bg-[#090b1d]/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-white">Notifications</h3>
+              <p className="text-[11px] text-white/45">{unread} non lue{unread > 1 ? 's' : ''}</p>
+            </div>
+            {unread > 0 && (
+              <button onClick={markAllRead} className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-white/75 hover:bg-white/10">
+                <Check size={12} />
+                Tout lu
+              </button>
+            )}
+          </div>
+          <div className="space-y-2">
+            {loading && <p className="rounded-xl bg-white/5 p-3 text-xs text-white/55">Chargement…</p>}
+            {!loading && alerts.length === 0 && (
+              <p className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-center text-xs text-white/55">
+                Aucune notification pour le moment. COURTIA fera remonter les échéances, tâches et signaux ARK ici.
+              </p>
+            )}
+            {!loading && alerts.map(alert => {
+              const urgent = ['urgent', 'danger', 'error'].includes(String(alert.severity || alert.type).toLowerCase())
+              const warning = ['warning', 'warn'].includes(String(alert.severity || alert.type).toLowerCase())
+              return (
+                <a
+                  key={alert.id}
+                  href={alert.link || '#'}
+                  className={`block rounded-xl border p-3 no-underline ${
+                    urgent ? 'border-rose-400/30 bg-rose-500/10' : warning ? 'border-amber-300/30 bg-amber-400/10' : 'border-cyan-300/20 bg-cyan-400/10'
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    {urgent || warning ? <AlertCircle size={15} className={urgent ? 'mt-0.5 text-rose-300' : 'mt-0.5 text-amber-200'} /> : <Info size={15} className="mt-0.5 text-cyan-200" />}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-white">{alert.title}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-white/58">{alert.body || alert.message || alert.msg}</p>
+                      <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-white/35">{alert.kind || alert.type || 'info'}</p>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </a>
+              )
+            })}
           </div>
         </div>
       )}

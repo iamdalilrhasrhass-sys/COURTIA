@@ -94,6 +94,17 @@
 - Morning Brief affiche un badge `ARK mode local` ou `ARK IA prête`
 - dépassement budget: API 402 propre, pas d’écran blanc
 
+## Contrôles notifications / templates / recherche
+
+- cloche notifications visible dans l’app connectée
+- `GET /api/notifications` retourne `rows` et `unread` sans faux exemples
+- `POST /api/notifications/read-all` marque les notifications comme lues
+- Cmd+K ouvre la recherche globale
+- `GET /api/search?q=sophie` retourne clients / contrats / actions si données disponibles
+- Paramètres > Templates affiche les templates email / WhatsApp système
+- `GET /api/templates` ne renvoie aucun secret et inclut `relance_echeance`
+- Rapports affiche l’activité ARK et les signaux commissions si disponibles
+
 ## Responsive rapide
 
 - desktop
