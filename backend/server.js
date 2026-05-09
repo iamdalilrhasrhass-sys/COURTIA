@@ -3,6 +3,10 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const app = express()
+const logger = require('./src/lib/logger')
+const { initSentry, captureException } = require('./src/sentry')
+
+initSentry()
 
 app.use(helmet({ contentSecurityPolicy: false }))
 
@@ -56,8 +60,7 @@ if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
     res.on('finish', () => {
       const durationMs = Date.now() - startedAt
       const status = res.statusCode
-      // Log structuré sans secrets/tokens
-      console.log(JSON.stringify({
+      logger.info({
         type: 'http_request',
         method: req.method,
         path: req.originalUrl,
@@ -66,7 +69,7 @@ if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
         ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null,
         user_agent: String(req.headers['user-agent'] || '').slice(0, 200),
         at: new Date().toISOString(),
-      }))
+      })
     })
     next()
   })
@@ -219,6 +222,7 @@ const extensionRouter      = require('./src/routes/extension')
 const partnersRouter       = require('./src/routes/partners')
 const notificationsRouter  = require('./src/routes/notifications')
 const webhooksRouter       = require('./src/routes/webhooks')
+const featureFlagsRouter   = require('./src/routes/featureFlags')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -252,6 +256,7 @@ app.use('/api/documents',       verifyToken, documentsRouter)
 app.use('/api/dda',             verifyToken, ddaQuizRouter)
 app.use('/api/analytics',       verifyToken, analyticsRouter)
 app.use('/api/plans',           verifyToken, plansRouter)
+app.use('/api/feature-flags',   verifyToken, featureFlagsRouter)
 app.use('/api/import',          verifyToken, importRouter)
 app.use('/api/imports',         verifyToken, importsRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
@@ -344,8 +349,8 @@ app.use((req, res) => {
 })
 
 app.use((err, req, res, next) => {
-  console.error('Erreur non gérée:', err.message)
-  console.error(err.stack)
+  logger.error({ err, path: req.originalUrl, method: req.method }, 'Erreur non gérée')
+  captureException(err, { path: req.originalUrl, method: req.method, userId: req.user?.id || req.user?.userId })
   res.status(err.status || 500).json({ error: 'Erreur serveur', details: err.message })
 })
 

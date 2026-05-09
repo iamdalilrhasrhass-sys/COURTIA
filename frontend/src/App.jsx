@@ -45,6 +45,7 @@ const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
 const LegalCookies = lazy(() => import('./pages/LegalCookies'))
 const LegalConditionsUtilisation = lazy(() => import('./pages/LegalConditionsUtilisation'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
+const DevUi = lazy(() => import('./pages/DevUi'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
@@ -183,6 +184,7 @@ export default function App() {
         <Route path="/legal/cookies" element={<LegalCookies />} />
         <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
+        <Route path="/dev/ui" element={<DevUi />} />
         <Route path="/" element={<LandingPublic />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
