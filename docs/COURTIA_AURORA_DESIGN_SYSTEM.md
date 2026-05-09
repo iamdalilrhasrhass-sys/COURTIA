@@ -124,3 +124,20 @@
 - Pastels excessifs
 - Fête foraine multicolore
 - Halo qui cache le contenu
+
+## V1 hardening Aurora / 3D
+
+Ajouts PR12 :
+
+- `BubbleOrb` : bulles irisées décoratives en arrière-plan uniquement.
+- `ScrollReveal3D` : apparition douce au scroll avec reduced-motion respecté.
+- `TiltCard` : relief hover desktop non bloquant.
+- `PremiumSection` : section éditoriale Aurora réutilisable.
+- `AnimatedMetric` : métrique cockpit animée.
+- `FloatingActionBadge` : badge d’action ARK / priorité.
+- `PremiumTable` : table lisible avec surface glass.
+- `PremiumSkeleton` : chargement premium.
+- `PremiumTabs` : navigation segmentée cohérente.
+- `PremiumModal` : modal glass accessible avec backdrop.
+
+Règles : les bulles restent derrière le contenu, les effets respectent `prefers-reduced-motion`, et la lisibilité métier prime toujours sur l’effet visuel.
