@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Upload, File, Download, RefreshCw, Clock, MessageSquare, Send } from 'lucide-react'
+import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Upload, File, Download, RefreshCw, Clock, MessageSquare, Send, Euro } from 'lucide-react'
 import api from '../api'
 import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
+import { formatCommissionCurrency, getCommissionStatusMeta, summarizeCommissions } from '../lib/commissions'
 import ContratsTab from '../components/ContratsTab'
 import TachesTab from '../components/TachesTab'
 import ARKChatTab from '../components/ARKChatTab'
@@ -490,6 +491,106 @@ function DocumentsTab({ client, setClient, clientId }) {
   )
 }
 
+function CommissionsTab({ clientId, navigate }) {
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadCommissions() {
+      try {
+        setLoading(true)
+        setError('')
+        const res = await api.get(`/commissions?client_id=${clientId}`)
+        if (!cancelled) setRows(Array.isArray(res.data?.data) ? res.data.data : [])
+      } catch (err) {
+        if (!cancelled) {
+          const status = err?.response?.status
+          setError(status === 403 ? 'Suivi commissions désactivé pour ce cabinet.' : 'Commissions indisponibles.')
+          setRows([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadCommissions()
+    return () => { cancelled = true }
+  }, [clientId])
+
+  const summary = summarizeCommissions(rows)
+
+  if (loading) {
+    return (
+      <div className="space-y-2 py-2">
+        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-100/70" />)}
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="rounded-2xl border border-amber-200/40 bg-amber-50/80 p-4 text-sm font-semibold text-amber-800">{error}</div>
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <Euro size={34} className="mx-auto mb-3 text-gray-300" />
+        <p className="font-bold text-gray-900">Aucune commission liée</p>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-gray-500">Importez un relevé compagnie ou ajoutez une commission depuis la page Commissions.</p>
+        <button
+          onClick={() => navigate('/commissions')}
+          className="mt-4 rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white"
+        >
+          Ouvrir Commissions
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-2xl bg-white/70 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Attendu</p>
+          <p className="mt-1 text-sm font-black text-gray-900">{formatCommissionCurrency(summary.expected)}</p>
+        </div>
+        <div className="rounded-2xl bg-white/70 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Reçu</p>
+          <p className="mt-1 text-sm font-black text-emerald-700">{formatCommissionCurrency(summary.received)}</p>
+        </div>
+        <div className="rounded-2xl bg-white/70 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Reste</p>
+          <p className="mt-1 text-sm font-black text-amber-700">{formatCommissionCurrency(summary.pending)}</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {rows.map((row) => {
+          const status = getCommissionStatusMeta(row.status)
+          return (
+            <div key={row.id} className="rounded-2xl border border-gray-100 bg-white/80 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-gray-900">{row.insurer}</p>
+                  <p className="text-xs text-gray-500">{row.type_contrat || 'Contrat'} · {row.period_month}/{row.period_year}</p>
+                </div>
+                <span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: status.tone === 'success' ? 'rgba(16,185,129,0.14)' : 'rgba(59,130,246,0.12)', color: status.tone === 'success' ? '#047857' : '#1d4ed8' }}>
+                  {status.label}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-xs">
+                <span className="text-gray-500">Attendu {formatCommissionCurrency(row.expected_amount_eur)}</span>
+                <span className="font-bold text-gray-900">Reçu {formatCommissionCurrency(row.received_amount_eur)}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const CANAL_ICON = {
   email: Mail,
   sms: MessageSquare,
@@ -752,6 +853,7 @@ const TABS_CONFIG = [
   { id: 'activite', label: 'Activité', icon: Activity },
   { id: 'contrats', label: 'Contrats', icon: Shield },
   { id: 'taches', label: 'Tâches', icon: CheckSquare },
+  { id: 'commissions', label: 'Commissions', icon: Euro },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'historique', label: 'Historique', icon: Clock },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
@@ -873,6 +975,8 @@ export default function ClientDetail() {
         return <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} />
       case 'taches':
         return <TachesTab taches={taches} clientId={client.id} navigate={navigate} />
+      case 'commissions':
+        return <CommissionsTab clientId={client.id} navigate={navigate} />
       case 'activite':
         return (
           <ClientInteractionsTimeline

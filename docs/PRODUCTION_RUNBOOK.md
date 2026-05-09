@@ -96,3 +96,20 @@ Si Yousign affiche “configuration requise” :
 2. vérifier `YOUSIGN_WEBHOOK_SECRET`
 3. vérifier l’URL webhook dans Yousign
 4. relancer `npm --prefix backend test -- yousignService.test.js --runInBand`
+
+## Commissions
+
+- feature flag : `v1_commissions`
+- migration : `018_v1_commissions.sql`
+- rollback : `down/018_v1_commissions.down.sql`
+- page : `/commissions`
+- fiche client : onglet `Commissions`
+- API principale : `/api/commissions`
+- saisie par contrat : `/api/contracts/:id/commissions`
+
+Si la page commissions est vide :
+
+1. vérifier que le contrat existe dans `quotes`
+2. vérifier que le client du contrat appartient au courtier connecté
+3. vérifier le format CSV (`compagnie,contrat_ref,periode,montant_attendu,montant_recu,statut,notes`)
+4. relancer `npm --prefix backend test -- commissionService.test.js --runInBand`
