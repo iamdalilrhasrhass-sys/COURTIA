@@ -152,3 +152,29 @@ Si ARK renvoie `ark_budget_exceeded` :
 2. vérifier `ark_budgets.hard_cap_micro_eur`
 3. décider d’un override admin ou attendre le reset mensuel
 4. relancer `npm --prefix backend test -- arkProactiveService.test.js --runInBand`
+
+## Notifications / Templates / Cmd+K
+
+- feature flag : `v1_notifications_search_reporting`
+- migration : `021_v1_notifications_search_reporting.sql`
+- rollback : `down/021_v1_notifications_search_reporting.down.sql`
+- routes principales :
+  - `GET /api/notifications`
+  - `POST /api/notifications/:id/read`
+  - `POST /api/notifications/read-all`
+  - `GET /api/templates`
+  - `POST /api/templates`
+  - `PATCH /api/templates/:id`
+  - `GET /api/search?q=...`
+- UI :
+  - cloche notifications dans le cockpit
+  - Cmd+K global relié à la recherche backend
+  - Paramètres > Templates
+  - Rapports enrichis ARK / commissions
+
+Si Cmd+K ne remonte pas de résultats :
+
+1. vérifier `feature_flags.v1_notifications_search_reporting`
+2. vérifier `GET /api/search?q=<terme>` connecté
+3. vérifier que les tables `clients`, `quotes`, `documents` existent
+4. relancer `npm --prefix backend test -- searchService.test.js templateService.test.js --runInBand`

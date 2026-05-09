@@ -58,6 +58,8 @@ export default function Rapports() {
   const [portfolio, setPortfolio] = useState(null)
   const [clients, setClients] = useState([])
   const [tasks, setTasks] = useState([])
+  const [commissionStats, setCommissionStats] = useState(null)
+  const [arkRecommendations, setArkRecommendations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -66,11 +68,13 @@ export default function Rapports() {
   async function loadAll() {
     setLoading(true); setError('')
     try {
-      const [statsRes, portfolioRes, clientsRes, tasksRes] = await Promise.allSettled([
+      const [statsRes, portfolioRes, clientsRes, tasksRes, commissionsRes, arkRes] = await Promise.allSettled([
         api.get('/dashboard/stats'),
         api.get('/stats/portfolio'),
         api.get('/clients?limit=1000'),
-        api.get('/taches')
+        api.get('/taches'),
+        api.get(`/commissions/stats?year=${new Date().getFullYear()}`),
+        api.get('/ark/recommendations'),
       ])
       if (statsRes.status === 'fulfilled') setStats(statsRes.value?.data || null)
       if (portfolioRes.status === 'fulfilled') setPortfolio(portfolioRes.value?.data || null)
@@ -85,6 +89,11 @@ export default function Rapports() {
       if (tasksRes.status === 'fulfilled') {
         const rows = Array.isArray(tasksRes.value?.data) ? tasksRes.value.data : (tasksRes.value?.data?.data || [])
         if (Array.isArray(rows)) setTasks(rows)
+      }
+      if (commissionsRes.status === 'fulfilled') setCommissionStats(commissionsRes.value?.data || null)
+      if (arkRes.status === 'fulfilled') {
+        const rows = Array.isArray(arkRes.value?.data?.data) ? arkRes.value.data.data : (arkRes.value?.data?.rows || [])
+        setArkRecommendations(Array.isArray(rows) ? rows : [])
       }
 
       if (statsRes.status !== 'fulfilled' && portfolioRes.status !== 'fulfilled') {
@@ -116,6 +125,7 @@ export default function Rapports() {
   }).length
   const renewals30 = renewals.filter((r) => Number(r.jours_restants || 999) <= 30).length
   const renewals60 = renewals.filter((r) => Number(r.jours_restants || 999) <= 60).length
+  const commissionTotal = Number(commissionStats?.totals?.received_amount_cents || commissionStats?.total_received_cents || 0) / 100
 
   const card = { background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 12, padding: '24px 28px', marginBottom: 16 }
   const thStyle = { padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'white', background: '#0a0a0a', textTransform: 'uppercase', letterSpacing: 0.8, whiteSpace: 'nowrap' }
@@ -332,11 +342,14 @@ export default function Rapports() {
         {/* Activité ARK */}
         <div className="rp-card" style={card}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a', margin: '0 0 20px', letterSpacing: 0.3 }}>ACTIVITÉ ARK</h2>
-          <div className="rp-ark-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="rp-ark-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             {[
               { label: 'Conversations ce mois', value: arkActivity?.conversationsMois ?? '—' },
               { label: 'Clients analysés', value: arkActivity?.clientsAnalyses ?? '—' },
-              { label: 'Recommandations', value: arkActivity?.recommandations ?? '—' }
+              { label: 'Recommandations', value: arkRecommendations.length || arkActivity?.recommandations || '—' },
+              { label: 'Commissions suivies', value: commissionTotal ? fmtEur(commissionTotal) : '—' },
+              { label: 'Top opportunités ARK', value: arkRecommendations.filter((item) => item.kind === 'multi_equipment').length || '—' },
+              { label: 'Échéances 30/60', value: `${renewals30}/${renewals60}` }
             ].map(item => (
               <div key={item.label} style={{ background: '#fafaf8', border: '0.5px solid #e8e6e0', borderRadius: 10, padding: '18px 20px', textAlign: 'center' }}>
                 <p style={{ fontSize: 28, fontWeight: 500, color: '#0a0a0a', margin: '0 0 6px', letterSpacing: -0.5 }}>{item.value}</p>
