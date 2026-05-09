@@ -7,6 +7,7 @@ const PROVIDER_META = {
   outlook: { label: 'Outlook', icon: Mail, color: '#2563eb' },
   task: { label: 'Tâche', icon: ListChecks, color: '#7c3aed' },
   contract: { label: 'Contrat', icon: FileText, color: '#0f766e' },
+  document: { label: 'Document', icon: FileText, color: '#7c3aed' },
   ark: { label: 'ARK', icon: Bot, color: '#d97706' },
 }
 

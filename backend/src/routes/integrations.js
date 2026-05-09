@@ -29,7 +29,10 @@ const router = express.Router()
 
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000
 const GOOGLE_CALENDAR_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
-const GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+const GMAIL_SCOPES = [
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.send',
+]
 
 const WHATSAPP_TEMPLATES = [
   {
@@ -113,16 +116,22 @@ function withUserId(req, res) {
   return userId
 }
 
-function getGoogleConfig() {
+function getGoogleConfig(provider = 'google_calendar') {
+  const normalized = String(provider || '').toLowerCase()
+  const redirectUri =
+    normalized === 'gmail'
+      ? (process.env.GOOGLE_GMAIL_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI || '')
+      : (process.env.GOOGLE_CALENDAR_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI || '')
+
   return {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    redirectUri: process.env.GOOGLE_REDIRECT_URI || '',
+    redirectUri,
   }
 }
 
-function isGoogleConfigured() {
-  const conf = getGoogleConfig()
+function isGoogleConfigured(provider = 'google_calendar') {
+  const conf = getGoogleConfig(provider)
   return Boolean(conf.clientId && conf.clientSecret && conf.redirectUri)
 }
 
@@ -145,8 +154,8 @@ function buildProviderReadiness(provider) {
   if (normalized === 'google_calendar' || normalized === 'gmail') {
     return {
       provider: normalized,
-      configured: isGoogleConfigured(),
-      oauthReady: isGoogleConfigured(),
+      configured: isGoogleConfigured(normalized),
+      oauthReady: isGoogleConfigured(normalized),
       encryptionReady: hasEncryptionKey(),
     }
   }
@@ -187,6 +196,37 @@ async function resolveClientFromCalendarEvent(pool, userId, event = {}) {
   }
 
   return null
+}
+
+function parseEmailAddress(value = '') {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+  const angled = raw.match(/<([^>]+)>/)
+  const candidate = angled?.[1] || raw
+  const normalized = String(candidate).trim().toLowerCase()
+  if (!normalized.includes('@')) return null
+  return normalized
+}
+
+function extractFirstEmailFromHeader(value = '') {
+  const text = String(value || '')
+  const parts = text.split(',').map((part) => parseEmailAddress(part)).filter(Boolean)
+  return parts[0] || null
+}
+
+function buildGmailRawMessage({ from, to, subject, textBody }) {
+  const lines = [
+    `To: ${to}`,
+    `Subject: ${subject || '(Sans objet)'}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset="UTF-8"',
+    '',
+    textBody || '',
+  ]
+  if (from) {
+    lines.unshift(`From: ${from}`)
+  }
+  return Buffer.from(lines.join('\r\n'), 'utf8').toString('base64url')
 }
 
 async function mapStatuses(pool, userId) {
@@ -346,14 +386,14 @@ router.get('/google-calendar/callback', async (req, res) => {
     return res.status(400).send(htmlCallbackResponse('Connexion Google incomplète', 'Aucun code OAuth reçu.'))
   }
 
-  const googleConfig = getGoogleConfig()
+  const googleConfig = getGoogleConfig('google_calendar')
   let tokenExchangeOk = false
   let tokenExchangeError = null
   let encryptedAccessToken = null
   let encryptedRefreshToken = null
   let tokenExpiresAt = null
 
-  if (isGoogleConfigured()) {
+  if (isGoogleConfigured('google_calendar')) {
     try {
       const oauthClient = new OAuth2Client(googleConfig.clientId, googleConfig.clientSecret, googleConfig.redirectUri)
       const tokenResponse = await oauthClient.getToken(code)
@@ -416,16 +456,79 @@ router.get('/gmail/callback', async (req, res) => {
     return res.status(400).send(htmlCallbackResponse('Connexion Gmail refusée', 'La connexion Gmail a été refusée.'))
   }
 
+  if (!code) {
+    await upsertIntegration(pool, userId, 'gmail', {
+      status: 'pending_oauth',
+      scopes: GMAIL_SCOPES,
+      metadata: {
+        oauth_completed_at: new Date().toISOString(),
+        token_exchange_error: 'oauth_code_missing',
+      },
+    })
+    return res.status(400).send(htmlCallbackResponse('Connexion Gmail incomplète', 'Aucun code OAuth Gmail reçu.'))
+  }
+
+  const googleConfig = getGoogleConfig('gmail')
+  let tokenExchangeOk = false
+  let tokenExchangeError = null
+  let encryptedAccessToken = null
+  let encryptedRefreshToken = null
+  let tokenExpiresAt = null
+  let externalAccountEmail = null
+
+  if (isGoogleConfigured('gmail')) {
+    try {
+      if (!hasEncryptionKey()) {
+        throw new Error('ENCRYPTION_KEY missing')
+      }
+
+      const oauthClient = new OAuth2Client(googleConfig.clientId, googleConfig.clientSecret, googleConfig.redirectUri)
+      const tokenResponse = await oauthClient.getToken(code)
+      const tokens = tokenResponse.tokens || {}
+
+      encryptedAccessToken = encryptSecret(tokens.access_token)
+      encryptedRefreshToken = encryptSecret(tokens.refresh_token)
+      if (tokens.expiry_date) {
+        tokenExpiresAt = new Date(tokens.expiry_date)
+      }
+
+      if (tokens.access_token) {
+        const profileResponse = await axios.get('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+          timeout: 12000,
+        }).catch(() => null)
+
+        externalAccountEmail = profileResponse?.data?.emailAddress
+          ? String(profileResponse.data.emailAddress).toLowerCase()
+          : null
+      }
+
+      tokenExchangeOk = Boolean(encryptedAccessToken)
+    } catch (err) {
+      tokenExchangeError = err.message
+    }
+  } else {
+    tokenExchangeError = 'google_oauth_not_configured'
+  }
+
   await upsertIntegration(pool, userId, 'gmail', {
-    status: code ? 'authorization_received' : 'pending_oauth',
+    status: tokenExchangeOk ? 'connected' : 'authorization_received',
+    external_account_email: externalAccountEmail,
+    access_token_encrypted: encryptedAccessToken,
+    refresh_token_encrypted: encryptedRefreshToken,
+    token_expires_at: tokenExpiresAt,
     scopes: GMAIL_SCOPES,
     metadata: {
       oauth_completed_at: new Date().toISOString(),
-      token_exchange: 'not_implemented_v1',
+      token_exchange_error: tokenExchangeError,
     },
   })
 
-  return res.status(200).send(htmlCallbackResponse('Connexion Gmail enregistrée', 'L\'architecture OAuth Gmail est prête. La synchronisation pourra être activée avec l\'échange de token serveur.'))
+  if (tokenExchangeOk) {
+    return res.status(200).send(htmlCallbackResponse('Gmail connecté', 'Votre compte Gmail est maintenant connecté à COURTIA.'))
+  }
+
+  return res.status(200).send(htmlCallbackResponse('Autorisation Gmail reçue', 'Autorisation reçue, mais l’échange de token Gmail n’a pas pu être finalisé automatiquement.'))
 })
 
 router.get('/outlook/callback', async (req, res) => {
@@ -478,7 +581,7 @@ router.get('/status', async (req, res) => {
       providers: PROVIDERS,
       environment: {
         encryptionReady: hasEncryptionKey(),
-        googleConfigured: isGoogleConfigured(),
+        googleConfigured: isGoogleConfigured('google_calendar') || isGoogleConfigured('gmail'),
         outlookConfigured: isOutlookConfigured(),
         whatsappConfigured: Boolean(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID),
       },
@@ -500,8 +603,8 @@ router.get('/google-calendar/status', async (req, res) => {
     return res.json({
       provider: 'google_calendar',
       status: row?.status || 'disconnected',
-      configured: isGoogleConfigured(),
-      oauthReady: isGoogleConfigured(),
+      configured: isGoogleConfigured('google_calendar'),
+      oauthReady: isGoogleConfigured('google_calendar'),
       encryptionReady: hasEncryptionKey(),
       external_account_email: row?.external_account_email || null,
       last_sync_at: row?.last_sync_at || null,
@@ -520,7 +623,7 @@ router.post('/google-calendar/connect', async (req, res) => {
     const pool = req.app.locals.pool
     await ensureIntegrationsSchema(pool)
 
-    if (!isGoogleConfigured()) {
+    if (!isGoogleConfigured('google_calendar')) {
       await upsertIntegration(pool, userId, 'google_calendar', {
         status: 'configuration_required',
         metadata: { config_missing: true },
@@ -538,7 +641,7 @@ router.post('/google-calendar/connect', async (req, res) => {
       nonce: crypto.randomBytes(10).toString('hex'),
     })
 
-    const conf = getGoogleConfig()
+    const conf = getGoogleConfig('google_calendar')
     const oauthClient = new OAuth2Client(conf.clientId, conf.clientSecret, conf.redirectUri)
     const authUrl = oauthClient.generateAuthUrl({
       access_type: 'offline',
@@ -906,8 +1009,10 @@ router.get('/gmail/status', async (req, res) => {
     return res.json({
       provider: 'gmail',
       status: row?.status || 'disconnected',
-      configured: isGoogleConfigured(),
-      oauthReady: isGoogleConfigured(),
+      configured: isGoogleConfigured('gmail'),
+      oauthReady: isGoogleConfigured('gmail'),
+      encryptionReady: hasEncryptionKey(),
+      external_account_email: row?.external_account_email || null,
       last_sync_at: row?.last_sync_at || null,
       metadata: row?.metadata || {},
     })
@@ -923,7 +1028,7 @@ router.post('/gmail/connect', async (req, res) => {
     if (!userId) return
     const pool = req.app.locals.pool
 
-    if (!isGoogleConfigured()) {
+    if (!isGoogleConfigured('gmail')) {
       await upsertIntegration(pool, userId, 'gmail', {
         status: 'configuration_required',
         metadata: { config_missing: true },
@@ -941,7 +1046,7 @@ router.post('/gmail/connect', async (req, res) => {
       nonce: crypto.randomBytes(10).toString('hex'),
     })
 
-    const conf = getGoogleConfig()
+    const conf = getGoogleConfig('gmail')
     const oauthClient = new OAuth2Client(conf.clientId, conf.clientSecret, conf.redirectUri)
     const authUrl = oauthClient.generateAuthUrl({
       access_type: 'offline',
@@ -986,21 +1091,230 @@ router.post('/gmail/sync', async (req, res) => {
     if (!userId) return
     const pool = req.app.locals.pool
 
-    const row = await getIntegration(pool, userId, 'gmail')
-    if (!row || (row.status !== 'connected' && row.status !== 'authorization_received')) {
+    const integration = await getIntegrationSecrets(pool, userId, 'gmail')
+    if (!integration || (integration.status !== 'connected' && integration.status !== 'authorization_received')) {
       return res.status(400).json({ error: 'gmail_not_connected' })
     }
+
+    const accessToken = decryptSecret(integration.access_token_encrypted)
+    if (!accessToken) {
+      return res.status(400).json({
+        error: 'gmail_token_missing',
+        details: 'Token Gmail absent côté serveur. Reconnectez Gmail depuis Paramètres.',
+      })
+    }
+
+    const listResponse = await axios.get('https://gmail.googleapis.com/gmail/v1/users/me/messages', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: {
+        maxResults: 15,
+        q: 'newer_than:30d',
+      },
+      timeout: 15000,
+    })
+
+    const messages = Array.isArray(listResponse?.data?.messages) ? listResponse.data.messages : []
+    const savedRows = []
+
+    for (const message of messages) {
+      const messageId = String(message.id || '').trim()
+      if (!messageId) continue
+
+      const dedupe = await pool.query(
+        `SELECT id
+         FROM client_interactions
+         WHERE user_id = $1 AND provider = 'gmail' AND external_id = $2
+         LIMIT 1`,
+        [userId, messageId]
+      )
+      if (dedupe.rowCount) continue
+
+      const detailResponse = await axios.get(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { format: 'metadata', metadataHeaders: ['From', 'To', 'Subject', 'Date'] },
+        timeout: 15000,
+      })
+
+      const payloadHeaders = Array.isArray(detailResponse?.data?.payload?.headers)
+        ? detailResponse.data.payload.headers
+        : []
+      const headersMap = {}
+      for (const h of payloadHeaders) {
+        const key = String(h?.name || '').toLowerCase()
+        if (!key) continue
+        headersMap[key] = h?.value || ''
+      }
+
+      const fromEmail = extractFirstEmailFromHeader(headersMap.from)
+      const toEmail = extractFirstEmailFromHeader(headersMap.to)
+      const accountEmail = String(integration.external_account_email || '').toLowerCase()
+      const peerEmail = accountEmail && fromEmail === accountEmail ? toEmail : fromEmail
+      const matchedClient = peerEmail ? await findClientByEmail(pool, userId, peerEmail) : null
+      const direction = accountEmail && fromEmail === accountEmail ? 'out' : 'in'
+      const subject = String(headersMap.subject || 'Email')
+      const snippet = String(detailResponse?.data?.snippet || '').slice(0, 320)
+
+      const created = await recordClientInteraction(pool, {
+        user_id: userId,
+        client_id: matchedClient?.id || null,
+        provider: 'gmail',
+        direction,
+        external_id: messageId,
+        subject,
+        body_preview: snippet || 'Email synchronisé',
+        occurred_at: headersMap.date ? new Date(headersMap.date) : new Date(),
+        metadata: {
+          from: fromEmail,
+          to: toEmail,
+          thread_id: detailResponse?.data?.threadId || null,
+        },
+      })
+
+      if (created) {
+        savedRows.push(created)
+      }
+    }
+
+    await upsertIntegration(pool, userId, 'gmail', {
+      status: 'connected',
+      scopes: GMAIL_SCOPES,
+      last_sync_at: new Date(),
+      metadata: {
+        last_sync_count: savedRows.length,
+      },
+    })
 
     return res.json({
       success: true,
       provider: 'gmail',
-      status: row.status,
-      synced: 0,
-      details: 'Synchronisation Gmail V1: endpoint prêt, token exchange serveur à finaliser.',
+      status: 'connected',
+      synced: savedRows.length,
+      rows: savedRows,
+      details: savedRows.length
+        ? 'Synchronisation Gmail terminée.'
+        : 'Aucun nouvel email à synchroniser.',
     })
   } catch (err) {
     console.error('[integrations] gmail sync error:', err.message)
-    return res.status(500).json({ error: 'gmail_sync_failed' })
+    return res.status(500).json({
+      error: 'gmail_sync_failed',
+      details: err.response?.data?.error?.message || err.message,
+    })
+  }
+})
+
+router.post('/gmail/send', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+    const pool = req.app.locals.pool
+    const body = req.body || {}
+
+    const clientId = Number(body.clientId || body.client_id || 0)
+    let to = parseEmailAddress(body.to)
+    const subject = String(body.subject || '(Sans objet)').trim().slice(0, 200)
+    const textBody = String(body.message || body.body || '').trim()
+
+    if (!to && clientId > 0) {
+      const clientResult = await pool.query(
+        `SELECT id, email
+         FROM clients
+         WHERE id = $1 AND courtier_id = $2
+         LIMIT 1`,
+        [clientId, userId]
+      )
+      const clientRow = clientResult.rows[0] || null
+      to = parseEmailAddress(clientRow?.email || '')
+    }
+
+    if (!to) {
+      return res.status(400).json({ error: 'gmail_to_missing' })
+    }
+    if (!textBody) {
+      return res.status(400).json({ error: 'gmail_message_missing' })
+    }
+
+    const integration = await getIntegrationSecrets(pool, userId, 'gmail')
+    if (!integration || integration.status !== 'connected') {
+      return res.status(400).json({ error: 'gmail_not_connected' })
+    }
+
+    const accessToken = decryptSecret(integration.access_token_encrypted)
+    if (!accessToken) {
+      return res.status(400).json({
+        error: 'gmail_token_missing',
+        details: 'Reconnectez Gmail pour activer l’envoi.',
+      })
+    }
+
+    const fromAddress = parseEmailAddress(integration.external_account_email) || 'me'
+    const raw = buildGmailRawMessage({
+      from: fromAddress === 'me' ? '' : fromAddress,
+      to,
+      subject,
+      textBody,
+    })
+
+    const sendResponse = await axios.post(
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+      { raw },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 15000,
+      }
+    )
+
+    let matchedClient = null
+    if (clientId > 0) {
+      const byId = await pool.query(
+        'SELECT id FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1',
+        [clientId, userId]
+      )
+      matchedClient = byId.rows[0] || null
+    }
+    if (!matchedClient) {
+      matchedClient = await findClientByEmail(pool, userId, to)
+    }
+
+    await recordClientInteraction(pool, {
+      user_id: userId,
+      client_id: matchedClient?.id || null,
+      provider: 'gmail',
+      direction: 'out',
+      external_id: sendResponse?.data?.id || null,
+      subject,
+      body_preview: textBody.slice(0, 320),
+      occurred_at: new Date(),
+      metadata: {
+        to,
+        thread_id: sendResponse?.data?.threadId || null,
+      },
+    })
+
+    await upsertIntegration(pool, userId, 'gmail', {
+      status: 'connected',
+      last_sync_at: new Date(),
+      metadata: {
+        last_outbound_email_at: new Date().toISOString(),
+      },
+    })
+
+    return res.json({
+      success: true,
+      provider: 'gmail',
+      sent: true,
+      message_id: sendResponse?.data?.id || null,
+      thread_id: sendResponse?.data?.threadId || null,
+    })
+  } catch (err) {
+    console.error('[integrations] gmail send error:', err.response?.data || err.message)
+    return res.status(500).json({
+      error: 'gmail_send_failed',
+      details: err.response?.data?.error?.message || err.message,
+    })
   }
 })
 
@@ -1139,4 +1453,10 @@ router.get('/client/:clientId/interactions', async (req, res) => {
 module.exports = {
   router,
   listClientInteractions,
+  __internals: {
+    parseEmailAddress,
+    extractFirstEmailFromHeader,
+    buildGmailRawMessage,
+    buildProviderReadiness,
+  },
 }

@@ -11,6 +11,38 @@ const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
 
 const router = express.Router();
+let ensureBrokerProfileSchemaPromise = null;
+
+async function ensureBrokerProfileSchema() {
+  if (!ensureBrokerProfileSchemaPromise) {
+    ensureBrokerProfileSchemaPromise = (async () => {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS broker_profiles (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+          cabinet TEXT,
+          orias TEXT,
+          telephone TEXT,
+          adresse TEXT,
+          ville TEXT,
+          code_postal TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
+      await pool.query(`
+        ALTER TABLE broker_profiles
+          ADD COLUMN IF NOT EXISTS rc_pro TEXT,
+          ADD COLUMN IF NOT EXISTS cabinet_email TEXT,
+          ADD COLUMN IF NOT EXISTS cabinet_phone TEXT,
+          ADD COLUMN IF NOT EXISTS representant_legal TEXT,
+          ADD COLUMN IF NOT EXISTS dda_mentions TEXT;
+      `);
+    })();
+  }
+  return ensureBrokerProfileSchemaPromise;
+}
 
 // Public
 router.post('/register', authController.register);
@@ -25,6 +57,7 @@ router.post('/refresh', authController.refresh);
  */
 router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
   try {
+    await ensureBrokerProfileSchema();
     const userId = req.user.id;
 
     const userResult = await pool.query(
@@ -41,7 +74,8 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
 
     // Récupérer le profil courtier si existant
     const profileResult = await pool.query(
-      `SELECT cabinet, orias, telephone, adresse, ville, code_postal
+      `SELECT cabinet, orias, telephone, adresse, ville, code_postal,
+              rc_pro, cabinet_email, cabinet_phone, representant_legal, dda_mentions
        FROM broker_profiles WHERE user_id = $1`,
       [userId]
     );
@@ -62,7 +96,12 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       telephone: brokerProfile.telephone || '',
       adresse: brokerProfile.adresse || '',
       ville: brokerProfile.ville || '',
-      code_postal: brokerProfile.code_postal || ''
+      code_postal: brokerProfile.code_postal || '',
+      rc_pro: brokerProfile.rc_pro || '',
+      cabinet_email: brokerProfile.cabinet_email || '',
+      cabinet_phone: brokerProfile.cabinet_phone || '',
+      representant_legal: brokerProfile.representant_legal || '',
+      dda_mentions: brokerProfile.dda_mentions || '',
     });
   } catch (err) {
     console.error('GET /api/auth/me error:', err.message);
@@ -75,8 +114,23 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
  */
 router.put('/me', verifyTokenMiddleware, async (req, res) => {
   try {
+    await ensureBrokerProfileSchema();
     const userId = req.user.id;
-    const { first_name, last_name, cabinet, orias, telephone, adresse, ville, code_postal } = req.body;
+    const {
+      first_name,
+      last_name,
+      cabinet,
+      orias,
+      telephone,
+      adresse,
+      ville,
+      code_postal,
+      rc_pro,
+      cabinet_email,
+      cabinet_phone,
+      representant_legal,
+      dda_mentions,
+    } = req.body;
 
     // Update users table
     await pool.query(
@@ -88,15 +142,22 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
     const existing = await pool.query('SELECT id FROM broker_profiles WHERE user_id = $1', [userId]);
     if (existing.rows.length > 0) {
       await pool.query(
-        `UPDATE broker_profiles SET cabinet=$1, orias=$2, telephone=$3, adresse=$4, ville=$5, code_postal=$6, updated_at=NOW()
-         WHERE user_id=$7`,
-        [cabinet, orias, telephone, adresse, ville, code_postal, userId]
+        `UPDATE broker_profiles
+         SET cabinet=$1, orias=$2, telephone=$3, adresse=$4, ville=$5, code_postal=$6,
+             rc_pro=$7, cabinet_email=$8, cabinet_phone=$9, representant_legal=$10, dda_mentions=$11,
+             updated_at=NOW()
+         WHERE user_id=$12`,
+        [cabinet, orias, telephone, adresse, ville, code_postal, rc_pro, cabinet_email, cabinet_phone, representant_legal, dda_mentions, userId]
       );
     } else {
       await pool.query(
-        `INSERT INTO broker_profiles (user_id, cabinet, orias, telephone, adresse, ville, code_postal, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())`,
-        [userId, cabinet, orias, telephone, adresse, ville, code_postal]
+        `INSERT INTO broker_profiles (
+          user_id, cabinet, orias, telephone, adresse, ville, code_postal,
+          rc_pro, cabinet_email, cabinet_phone, representant_legal, dda_mentions,
+          created_at, updated_at
+         )
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW())`,
+        [userId, cabinet, orias, telephone, adresse, ville, code_postal, rc_pro, cabinet_email, cabinet_phone, representant_legal, dda_mentions]
       );
     }
 

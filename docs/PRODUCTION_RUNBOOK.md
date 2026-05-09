@@ -63,3 +63,19 @@ npm --prefix backend run qa:prod-smoke
 
 - vérifier `buildApiUrl` frontend (`frontend/src/api/sessionPolicy.js`)
 - relancer tests unitaires frontend + smoke
+
+## Sprint métier courtier DDA (opérations)
+
+### Vérification conformité
+- ouvrir `/parametres` et vérifier les champs conformité cabinet
+- générer un document DDA sur une fiche client, puis passer le statut en `envoye` et `signe`
+- vérifier la présence de l’entrée dans la timeline client
+
+### Vérification intégrations
+- Google Agenda: `status` + `events`
+- Gmail: `status` + `sync` + `send` depuis fiche client
+- si variables absentes, vérifier le message "configuration requise" (pas de faux connecté)
+
+### Vérification onboarding
+- ouvrir `/onboarding`
+- vérifier que la progression est persistée (rechargement page)

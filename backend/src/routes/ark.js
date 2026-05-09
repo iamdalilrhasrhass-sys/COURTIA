@@ -56,6 +56,55 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
           clientData.taches = []
         }
       }
+      if (!Array.isArray(clientData.documents_dda)) {
+        try {
+          const docsRes = await pool.query(
+            `SELECT document_type, document_status, document_version, created_at
+             FROM generated_documents
+             WHERE client_id = $1
+             ORDER BY created_at DESC
+             LIMIT 10`,
+            [clientData.id]
+          )
+          clientData.documents_dda = docsRes.rows || []
+        } catch (e) {
+          console.error('ARK auto-fetch documents failed:', e.message)
+          clientData.documents_dda = []
+        }
+      }
+      if (!Array.isArray(clientData.events)) {
+        try {
+          const eventsRes = await pool.query(
+            `SELECT title, start_time, end_time, status
+             FROM calendar_events
+             WHERE client_id = $1
+             ORDER BY start_time ASC NULLS LAST
+             LIMIT 5`,
+            [clientData.id]
+          )
+          clientData.events = eventsRes.rows || []
+        } catch (e) {
+          console.error('ARK auto-fetch events failed:', e.message)
+          clientData.events = []
+        }
+      }
+      if (!Array.isArray(clientData.emails)) {
+        try {
+          const emailsRes = await pool.query(
+            `SELECT provider, direction, subject, occurred_at
+             FROM client_interactions
+             WHERE client_id = $1
+               AND provider IN ('gmail', 'outlook')
+             ORDER BY occurred_at DESC NULLS LAST
+             LIMIT 6`,
+            [clientData.id]
+          )
+          clientData.emails = emailsRes.rows || []
+        } catch (e) {
+          console.error('ARK auto-fetch emails failed:', e.message)
+          clientData.emails = []
+        }
+      }
     }
 
     if (!process.env.DEEPSEEK_API_KEY) {
@@ -109,6 +158,18 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
         ? clientData.taches_actives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\\n')
         : '  Aucune tâche active'
 
+      const docsStr = Array.isArray(clientData.documents_dda) && clientData.documents_dda.length > 0
+        ? clientData.documents_dda.map(d => `  • ${d.document_type} — statut ${d.document_status || 'genere'} (v${d.document_version || 1})`).join('\\n')
+        : '  Aucun document DDA généré'
+
+      const eventsStr = Array.isArray(clientData.events) && clientData.events.length > 0
+        ? clientData.events.map(e => `  • ${e.title || 'RDV'} — ${e.start_time ? new Date(e.start_time).toLocaleString('fr-FR') : 'date inconnue'}`).join('\\n')
+        : '  Aucun rendez-vous agenda lié'
+
+      const emailsStr = Array.isArray(clientData.emails) && clientData.emails.length > 0
+        ? clientData.emails.map(e => `  • ${e.direction === 'out' ? 'Sortant' : 'Entrant'} — ${e.subject || 'Email'} (${e.occurred_at ? new Date(e.occurred_at).toLocaleDateString('fr-FR') : 'date inconnue'})`).join('\\n')
+        : '  Aucun échange email récent'
+
       const scoreRisque = clientData.risk_score || clientData.score_risque || 'NC'
       
       systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert en courtage d'assurance français (DDA, ORIAS, Loi Hamon, Loi Châtel). Date : ${today}
@@ -129,11 +190,21 @@ ${contratsStr}
 ═══ TÂCHES EN COURS ═══
 ${tachesStr}
 
+═══ DOCUMENTS DDA ═══
+${docsStr}
+
+═══ RDV AGENDA ═══
+${eventsStr}
+
+═══ EMAILS RÉCENTS ═══
+${emailsStr}
+
 RÈGLE ABSOLUE : Si le message contient une instruction JSON, tu dois répondre UNIQUEMENT en JSON valide avec ce schéma exact et rien d'autre :
 {"resume":"string ≤200 chars","points":["string ≤100","string ≤100","string ≤100"],"actions":[{"label":"string","priorite":"haute|moyenne|basse","impact":"string"}]}
 Maximum 3 points, maximum 3 actions. Pas de markdown, pas de texte hors JSON.
 
-Si le message ne demande pas de JSON : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.`
+Si le message ne demande pas de JSON : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.
+Quand pertinent, propose explicitement: créer tâche, générer document DDA manquant, préparer email, préparer rendez-vous.`
     } else {
       systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert assurance française. Date : ${today}
 Expertise : portefeuille, cross-sell, fidélisation, réglementation DDA/ORIAS/Loi Hamon.

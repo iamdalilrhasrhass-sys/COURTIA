@@ -35,7 +35,7 @@ export default function Paywall({ feature, plan }) {
             disabled={loading === 'pro'}
             className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold text-sm hover:shadow-lg transition-all disabled:opacity-50"
           >
-            {loading === 'pro' ? 'Redirection...' : 'Passer Pro — 159€/mois'}
+            {loading === 'pro' ? 'Redirection...' : 'Passer Pro — 199€/mois'}
           </button>
           <button
             onClick={() => upgrade('premium')}

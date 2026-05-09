@@ -44,6 +44,8 @@ const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
 const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
 const LegalCookies = lazy(() => import('./pages/LegalCookies'))
 const LegalConditionsUtilisation = lazy(() => import('./pages/LegalConditionsUtilisation'))
+const Securite = lazy(() => import('./pages/Securite'))
+const RGPD = lazy(() => import('./pages/RGPD'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
@@ -182,6 +184,8 @@ export default function App() {
         <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
         <Route path="/legal/cookies" element={<LegalCookies />} />
         <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
+        <Route path="/securite" element={<Securite />} />
+        <Route path="/rgpd" element={<RGPD />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
 

@@ -61,3 +61,14 @@
 PREVIEW_URL="https://<preview>?_vercel_share=<token>" npm --prefix backend run qa:preview-smoke
 npm --prefix backend run qa:prod-smoke
 ```
+
+## Sprint métier DDA & intégrations (P0)
+
+- [ ] `/parametres` affiche les champs conformité (ORIAS, RC Pro, représentant légal, mentions DDA)
+- [ ] `/documents` + fiche client permettent la génération DDA (`fic`, `mandat_courtage`, `devoir_conseil`, `synthese_client`)
+- [ ] changement de statut document fonctionne (`brouillon`, `genere`, `envoye`, `signe`, `archive`)
+- [ ] `/api/integrations/google-calendar/status` renvoie un état cohérent
+- [ ] `/api/integrations/gmail/status` renvoie un état cohérent
+- [ ] envoi Gmail depuis fiche client retourne succès ou message de configuration requis (pas d’état fake)
+- [ ] `/onboarding` reste utilisable et progression reprenable
+- [ ] `/billing` expose un parcours self-serve ou un état de configuration explicite

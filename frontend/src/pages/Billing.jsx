@@ -113,7 +113,7 @@ export default function Billing() {
                     ? 'Sur devis — pas de checkout direct'
                     : p.code === 'starter'
                       ? `0 € aujourd’hui, puis 89 € HT / mois après le ${p.trial_days}e jour (106,80 € TTC avec TVA 20 %).`
-                      : `0 € aujourd’hui, puis 159 € HT / mois après le ${p.trial_days}e jour (190,80 € TTC avec TVA 20 %).`}
+                      : `0 € aujourd’hui, puis 199 € HT / mois après le ${p.trial_days}e jour (238,80 € TTC avec TVA 20 %).`}
                 </div>
               </div>
               {p.code !== 'premium' ? (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase } from 'lucide-react'
+import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase, ShieldCheck } from 'lucide-react'
 import api from '../api'
 import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
@@ -9,6 +9,7 @@ import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
+  { id: 'conformite', label: 'Conformité', icon: ShieldCheck },
   { id: 'securite', label: 'Sécurité', icon: Lock },
   { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -94,7 +95,22 @@ export default function Parametres() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', cabinet: '', orias: '', telephone: '' })
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    cabinet: '',
+    orias: '',
+    telephone: '',
+    adresse: '',
+    ville: '',
+    code_postal: '',
+    rc_pro: '',
+    cabinet_email: '',
+    cabinet_phone: '',
+    representant_legal: '',
+    dda_mentions: '',
+  })
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
   const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
@@ -117,7 +133,22 @@ export default function Parametres() {
 
       primeSessionUserCache(data)
       setProfile(data)
-      setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
+      setForm({
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+        email: data.email || '',
+        cabinet: data.cabinet || '',
+        orias: data.orias || '',
+        telephone: data.telephone || '',
+        adresse: data.adresse || '',
+        ville: data.ville || '',
+        code_postal: data.code_postal || '',
+        rc_pro: data.rc_pro || '',
+        cabinet_email: data.cabinet_email || '',
+        cabinet_phone: data.cabinet_phone || '',
+        representant_legal: data.representant_legal || '',
+        dda_mentions: data.dda_mentions || '',
+      })
     } catch {
       toast.error('Impossible de charger le profil')
     } finally {
@@ -224,7 +255,7 @@ export default function Parametres() {
   const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
 
   const planConfig = {
-    pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 159, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
+    pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 199, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
     starter: { label: "L'Essentiel", classes: 'bg-emerald-100 text-emerald-700', price: 89, features: ["Jusqu'à 200 clients", 'Scores & Segments', 'Module Tâches'] },
     elite: { label: 'Le Réseau', classes: 'bg-violet-100 text-violet-700', price: 350, features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
     founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: null, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'], noSubscriptionText: 'Offre en cours de configuration' }
@@ -314,6 +345,42 @@ export default function Parametres() {
                   </div>
                   <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="submit" disabled={saving} className="px-5 py-2.5 bg-[#2563eb] text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
                 </form>
+              </div>
+            </section>
+
+            <section id="conformite" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Conformité</h2>
+              <p className="text-sm text-white/50 mb-5">Informations cabinet et mentions DDA pour les documents métier.</p>
+              <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
+                <div className="p-6 space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label htmlFor="cabinet_email" className={labelClass}>Email cabinet</label><input id="cabinet_email" type="email" value={form.cabinet_email} onChange={e => setForm({ ...form, cabinet_email: e.target.value })} className={inputClass} /></div>
+                    <div><label htmlFor="cabinet_phone" className={labelClass}>Téléphone cabinet</label><input id="cabinet_phone" type="tel" value={form.cabinet_phone} onChange={e => setForm({ ...form, cabinet_phone: e.target.value })} className={inputClass} /></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label htmlFor="rc_pro" className={labelClass}>RC Pro</label><input id="rc_pro" value={form.rc_pro} onChange={e => setForm({ ...form, rc_pro: e.target.value })} className={inputClass} /></div>
+                    <div><label htmlFor="representant_legal" className={labelClass}>Représentant légal</label><input id="representant_legal" value={form.representant_legal} onChange={e => setForm({ ...form, representant_legal: e.target.value })} className={inputClass} /></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2"><label htmlFor="adresse" className={labelClass}>Adresse cabinet</label><input id="adresse" value={form.adresse} onChange={e => setForm({ ...form, adresse: e.target.value })} className={inputClass} /></div>
+                    <div><label htmlFor="code_postal" className={labelClass}>Code postal</label><input id="code_postal" value={form.code_postal} onChange={e => setForm({ ...form, code_postal: e.target.value })} className={inputClass} /></div>
+                  </div>
+                  <div><label htmlFor="ville" className={labelClass}>Ville</label><input id="ville" value={form.ville} onChange={e => setForm({ ...form, ville: e.target.value })} className={inputClass} /></div>
+                  <div>
+                    <label htmlFor="dda_mentions" className={labelClass}>Mentions DDA</label>
+                    <textarea
+                      id="dda_mentions"
+                      value={form.dda_mentions}
+                      onChange={e => setForm({ ...form, dda_mentions: e.target.value })}
+                      rows={3}
+                      className={inputClass}
+                      placeholder="Ex: COURTIA aide à structurer et tracer le devoir de conseil. La décision finale reste humaine."
+                    />
+                  </div>
+                  <p className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                    COURTIA aide à structurer et tracer le devoir de conseil. Cette aide n’est pas une garantie de conformité réglementaire automatique.
+                  </p>
+                </div>
               </div>
             </section>
 

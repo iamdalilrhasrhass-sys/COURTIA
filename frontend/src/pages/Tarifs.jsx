@@ -84,7 +84,7 @@ const plans = [
   },
   {
     name: 'Le Cabinet',
-    price: '159',
+    price: '199',
     desc: 'Pour cabinet en croissance',
     popular: true,
     features: {

@@ -153,7 +153,7 @@ router.get('/:id/interactions', async (req, res) => {
       return res.status(404).json({ error: 'Client non trouvé' })
     }
 
-    const [storedInteractions, taskRows, contractRows] = await Promise.all([
+    const [storedInteractions, taskRows, contractRows, documentRows] = await Promise.all([
       listClientInteractions(pool, userId, clientId, { limit }),
       pool.query(
         `SELECT id, title, status, start_time, created_at
@@ -170,6 +170,14 @@ router.get('/:id/interactions', async (req, res) => {
          ORDER BY created_at DESC
          LIMIT 30`,
         [clientId]
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `SELECT id, document_type, document_status, document_version, created_at
+         FROM generated_documents
+         WHERE client_id = $1 AND courtier_id = $2
+         ORDER BY created_at DESC
+         LIMIT 30`,
+        [clientId, userId]
       ).catch(() => ({ rows: [] })),
     ])
 
@@ -208,7 +216,18 @@ router.get('/:id/interactions', async (req, res) => {
       }
     })
 
-    const merged = [...storedInteractions, ...mappedTasks, ...mappedContracts]
+    const mappedDocuments = (documentRows.rows || []).map((document) => ({
+      id: `document-${document.id}`,
+      provider: 'document',
+      direction: 'system',
+      subject: `Document ${document.document_type || 'métier'}`,
+      body_preview: `Statut: ${document.document_status || 'genere'} • Version: ${document.document_version || 1}`,
+      occurred_at: document.created_at,
+      metadata: { document_id: document.id },
+      source: 'generated_documents',
+    }))
+
+    const merged = [...storedInteractions, ...mappedTasks, ...mappedContracts, ...mappedDocuments]
       .sort((a, b) => {
         const aTs = new Date(a.occurred_at || a.created_at || 0).getTime()
         const bTs = new Date(b.occurred_at || b.created_at || 0).getTime()
