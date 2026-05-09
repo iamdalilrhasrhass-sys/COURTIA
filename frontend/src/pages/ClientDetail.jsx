@@ -785,7 +785,7 @@ export default function ClientDetail() {
 
   // ─── RENDER ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
       <BubbleBackground intensity="normal" />
 
       {/* Violet Iridescent Score Bubble Tooltip */}
@@ -898,7 +898,7 @@ export default function ClientDetail() {
         </div>
 
         {/* 4-part layout: ScoreSidebar + 3 columns */}
-        <div className="flex flex-col lg:flex-row">
+        <div className="flex flex-col lg:flex-row overflow-x-hidden">
           {/* LEFT: ScoreSidebar */}
           <ScoreSidebar
             scores={scores}
@@ -907,15 +907,15 @@ export default function ClientDetail() {
           />
 
           {/* MAIN CONTENT: 4 columns with responsive wrap */}
-          <div className="flex-1 flex flex-col lg:flex-row gap-3 p-3 min-w-0 xl:flex-nowrap lg:flex-wrap">
+          <div className="flex-1 flex flex-col lg:flex-row lg:flex-wrap gap-3 p-3 min-w-0">
 
             {/* Column 1: InfosTab (Identité + Profil d'assurance) */}
-            <div className="xl:w-[26%] lg:w-[48%] flex-shrink-0">
+            <div className="w-full lg:flex-[1_1_320px] xl:max-w-[340px]">
               <InfosTab client={client} />
             </div>
 
             {/* Column 2: Tabs (Activité / Contrats / Tâches / Documents / Historique) */}
-            <div className="flex-1 xl:w-[32%] lg:w-[48%] min-w-0">
+            <div className="w-full lg:flex-[1_1_460px] min-w-0">
               <BubbleCard hover={false} padding={0}>
                 {/* Tab navigation */}
                 <div className="flex overflow-x-auto" style={{ borderBottom: 'var(--border-fine)' }}>
@@ -968,7 +968,7 @@ export default function ClientDetail() {
             </div>
 
             {/* Column 3: Contracts (vertical mini cards) */}
-            <div className="xl:w-[22%] lg:w-full lg:order-last xl:order-none flex-shrink-0">
+            <div className="w-full lg:flex-[1_1_280px] xl:max-w-[320px] lg:order-last xl:order-none">
               <BubbleCard hover={false} padding={12}>
                 <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: 'var(--border-fine)' }}>
                   <Shield size={14} style={{ color: 'var(--accent-violet)' }} />
@@ -1020,7 +1020,7 @@ export default function ClientDetail() {
             </div>
 
             {/* Column 4: ARK Chat (INTACT — DO NOT TOUCH) */}
-            <div className="xl:w-[20%] lg:w-full flex-shrink-0">
+            <div className="w-full lg:flex-[1_1_320px] xl:max-w-[360px]">
               <div style={{ position: 'sticky', top: 24 }}>
                 <BubbleCard hover={false} padding={12}>
                   <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: 'var(--border-fine)' }}>
