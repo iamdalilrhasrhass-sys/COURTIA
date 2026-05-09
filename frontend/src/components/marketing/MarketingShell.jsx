@@ -15,6 +15,8 @@ export default function MarketingShell({ activePath = '/', children }) {
   return (
     <div className="mk-page">
       <div className="mk-grid-overlay" aria-hidden="true" />
+      <div className="courtia-bubble-orb courtia-bubble-orb--pearl mk-ambient-orb mk-ambient-orb--one" aria-hidden="true" />
+      <div className="courtia-bubble-orb courtia-bubble-orb--cyan mk-ambient-orb mk-ambient-orb--two" aria-hidden="true" />
       <div className="mk-shell courtia-depth-stage">
         <div className="mk-nav-wrap">
           <header className="mk-nav">
