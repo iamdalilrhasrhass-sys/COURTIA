@@ -14,6 +14,7 @@ export default function AuroraCard({
   onClick
 }) {
   const [isHovered, setIsHovered] = useState(false)
+  const [tilt, setTilt] = useState({ x: 0, y: 0 })
 
   const glowStyles = {
     subtle: {
@@ -32,25 +33,47 @@ export default function AuroraCard({
 
   const g = glowStyles[glow] || glowStyles.subtle
 
+  const handleMouseMove = (event) => {
+    if (!hover) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const dx = (event.clientX - rect.left) / rect.width - 0.5
+    const dy = (event.clientY - rect.top) / rect.height - 0.5
+    setTilt({
+      x: Number((-dy * 1.8).toFixed(2)),
+      y: Number((dx * 1.8).toFixed(2)),
+    })
+  }
+
   return (
     <div
       className={className}
       onClick={onClick}
       onMouseEnter={() => hover && setIsHovered(true)}
-      onMouseLeave={() => hover && setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => {
+        if (!hover) return
+        setIsHovered(false)
+        setTilt({ x: 0, y: 0 })
+      }}
       style={{
         position: 'relative',
-        background: 'rgba(255,255,255,0.78)',
+        background: `
+          linear-gradient(150deg, rgba(255,255,255,0.90), rgba(255,255,255,0.78)),
+          radial-gradient(circle at 16% 12%, rgba(124,58,237,0.10), transparent 34%),
+          radial-gradient(circle at 86% 8%, rgba(34,211,238,0.09), transparent 34%)
+        `,
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
         borderRadius: 24,
-        border: `0.5px solid ${g.borderColor}`,
+        border: `0.5px solid ${isHovered && hover ? 'rgba(124,58,237,0.22)' : g.borderColor}`,
         padding,
         boxShadow: g.boxShadow,
-        transform: isHovered && hover ? 'translateY(-2px)' : 'translateY(0)',
+        transform: `perspective(1500px) translateY(${isHovered && hover ? -2 : 0}px) rotateX(${isHovered && hover ? tilt.x : 0}deg) rotateY(${isHovered && hover ? tilt.y : 0}deg)`,
         transition: 'transform 220ms cubic-bezier(0.16,1,0.3,1), box-shadow 220ms cubic-bezier(0.16,1,0.3,1), border-color 220ms cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
+        transformStyle: 'preserve-3d',
+        willChange: 'transform',
         ...style,
       }}
     >

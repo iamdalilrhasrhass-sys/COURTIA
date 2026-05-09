@@ -9,6 +9,8 @@ import ContratsTab from '../components/ContratsTab'
 import TachesTab from '../components/TachesTab'
 import ARKChatTab from '../components/ARKChatTab'
 import ClientInteractionsTimeline from '../components/ClientInteractionsTimeline'
+
+const INTERACTIONS_TIMELINE_API_ENABLED = String(import.meta.env.VITE_CLIENT_INTERACTIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
@@ -676,11 +678,14 @@ export default function ClientDetail() {
       try {
         setLoading(true); setError(null)
         setInteractionsLoading(true)
+        const interactionsPromise = INTERACTIONS_TIMELINE_API_ENABLED
+          ? api.get(`/clients/${id}/interactions?limit=40`).catch(() => ({ data: { rows: [] } }))
+          : Promise.resolve({ data: { rows: [] } })
         const [clientRes, contratsRes, tachesRes, interactionsRes] = await Promise.all([
           api.get(`/clients/${id}`),
           api.get(`/clients/${id}/contrats`),
           api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] })),
-          api.get(`/clients/${id}/interactions?limit=40`).catch(() => ({ data: { rows: [] } })),
+          interactionsPromise,
         ])
         setClient(clientRes.data)
         setContrats(Array.isArray(contratsRes.data) ? contratsRes.data : [])
@@ -707,6 +712,11 @@ export default function ClientDetail() {
   }, [id])
 
   const reloadInteractions = async () => {
+    if (!INTERACTIONS_TIMELINE_API_ENABLED) {
+      setInteractions([])
+      setInteractionsError('')
+      return
+    }
     try {
       setInteractionsLoading(true)
       const res = await api.get(`/clients/${id}/interactions?limit=40`)
