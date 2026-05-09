@@ -22,6 +22,8 @@ const GENERATED_STATUS = {
   generated: { label: 'Généré', bg: 'rgba(59,130,246,0.14)', color: '#1d4ed8' },
   sent_to_sign: { label: 'Signature envoyée', bg: 'rgba(245,158,11,0.16)', color: '#b45309' },
   signed: { label: 'Signé', bg: 'rgba(16,185,129,0.16)', color: '#047857' },
+  refused: { label: 'Refusé', bg: 'rgba(239,68,68,0.16)', color: '#b91c1c' },
+  expired: { label: 'Expiré', bg: 'rgba(148,163,184,0.16)', color: '#475569' },
   archived: { label: 'Archivé', bg: 'rgba(17,24,39,0.10)', color: '#374151' },
 }
 
@@ -71,10 +73,11 @@ export default function Documents() {
   const {
     documents, generatedDocuments, _requests, submissions, stats,
     fetchDocuments, fetchGeneratedDocuments, fetchRequests, fetchSubmissions, fetchStats,
-    uploadDocument, deleteDocument, updateDocumentStatus, generateDdaDocument, _loading,
+    uploadDocument, deleteDocument, updateDocumentStatus, generateDdaDocument, sendGeneratedDocumentToSign, _loading,
   } = useDocumentInboxStore()
   const [ddaForm, setDdaForm] = useState({ clientId: '', type: 'fic', contractId: '' })
   const [generatingDda, setGeneratingDda] = useState(false)
+  const [signingDocId, setSigningDocId] = useState(null)
 
   // Chargement initial des listes documents via actions Zustand stables sur cette page.
   /* eslint-disable react-hooks/exhaustive-deps */
@@ -117,6 +120,19 @@ export default function Documents() {
       toast.error(String(msg))
     } finally {
       setGeneratingDda(false)
+    }
+  }
+
+  const handleSendToSign = async (doc) => {
+    setSigningDocId(doc.id)
+    try {
+      await sendGeneratedDocumentToSign(doc.id, {}, doc.client_id)
+      toast.success('Document envoyé à signer via Yousign')
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Yousign configuration requise'
+      toast.error(String(msg))
+    } finally {
+      setSigningDocId(null)
     }
   }
 
@@ -318,6 +334,16 @@ export default function Documents() {
                           <p style={{ fontSize: 11, color: '#6B7280', margin: '3px 0 0' }}>Client {doc.client_name || `#${doc.client_id}`} · version {doc.template_version} · {formatDate(doc.created_at)}</p>
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 999, padding: '4px 9px', background: status.bg, color: status.color }}>{status.label}</span>
+                        {doc.status === 'generated' && (
+                          <button
+                            type="button"
+                            onClick={() => handleSendToSign(doc)}
+                            disabled={signingDocId === doc.id}
+                            style={{ padding: '7px 10px', borderRadius: 10, border: '1px solid rgba(91,77,245,0.22)', background: signingDocId === doc.id ? '#EEF2FF' : 'rgba(91,77,245,0.08)', color: '#5B4DF5', fontSize: 11, fontWeight: 800, cursor: signingDocId === doc.id ? 'wait' : 'pointer' }}
+                          >
+                            {signingDocId === doc.id ? 'Envoi...' : 'Envoyer à signer'}
+                          </button>
+                        )}
                         <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" style={{ padding: '7px 10px', borderRadius: 10, background: '#111827', color: '#fff', fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>PDF</a>
                       </div>
                     )

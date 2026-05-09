@@ -219,6 +219,7 @@ function DocumentsTab({ client, setClient, clientId }) {
   const [generatedDocs, setGeneratedDocs] = useState([])
   const [generatedLoading, setGeneratedLoading] = useState(false)
   const [generatingType, setGeneratingType] = useState('')
+  const [signingDocId, setSigningDocId] = useState(null)
 
   const loadGeneratedDocs = async () => {
     try {
@@ -250,6 +251,20 @@ function DocumentsTab({ client, setClient, clientId }) {
       toast.error(String(msg))
     } finally {
       setGeneratingType('')
+    }
+  }
+
+  const sendToSign = async (doc) => {
+    setSigningDocId(doc.id)
+    try {
+      await api.post(`/documents/${doc.id}/send-to-sign`, {})
+      toast.success('Document envoyé à signer via Yousign')
+      await loadGeneratedDocs()
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Yousign configuration requise'
+      toast.error(String(msg))
+    } finally {
+      setSigningDocId(null)
     }
   }
 
@@ -365,6 +380,16 @@ function DocumentsTab({ client, setClient, clientId }) {
                 <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" className="rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] font-bold text-white">
                   PDF
                 </a>
+                {doc.status === 'generated' && (
+                  <button
+                    type="button"
+                    onClick={() => sendToSign(doc)}
+                    disabled={signingDocId === doc.id}
+                    className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-700 disabled:opacity-60"
+                  >
+                    {signingDocId === doc.id ? 'Envoi...' : 'Signer'}
+                  </button>
+                )}
               </div>
             ))
           )}
