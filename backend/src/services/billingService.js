@@ -56,9 +56,16 @@ async function ensureBillingFoundation() {
     INSERT INTO billing_plans (code, display_name, price_amount_cents, currency, interval, is_active)
     VALUES
       ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
-      ('pro', 'Pro', 15900, 'EUR', 'month', TRUE),
+      ('pro', 'Pro', 19900, 'EUR', 'month', TRUE),
+      ('cabinet', 'Cabinet', 39900, 'EUR', 'month', TRUE),
       ('premium', 'Premium', NULL, 'EUR', 'month', TRUE)
-    ON CONFLICT (code) DO NOTHING;
+    ON CONFLICT (code) DO UPDATE SET
+      display_name = EXCLUDED.display_name,
+      price_amount_cents = EXCLUDED.price_amount_cents,
+      currency = EXCLUDED.currency,
+      interval = EXCLUDED.interval,
+      is_active = EXCLUDED.is_active,
+      updated_at = NOW();
   `);
 
   await pool.query(`
@@ -208,7 +215,7 @@ async function ensureBillingFoundation() {
 function normalizePlanCode(code) {
   if (!code) return null;
   const v = String(code).trim().toLowerCase();
-  return ['starter', 'pro', 'premium'].includes(v) ? v : null;
+  return ['starter', 'pro', 'cabinet', 'premium'].includes(v) ? v : null;
 }
 
 function getPlans() {
