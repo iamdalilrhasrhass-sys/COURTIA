@@ -441,6 +441,14 @@ export default function Clients() {
                   const nextEcheance = client.next_echeance
                     ? new Date(client.next_echeance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
                     : 'Non renseignée'
+                  const lastInteraction = client.last_contact || client.last_interaction || client.updated_at || null
+                  const lastInteractionLabel = lastInteraction
+                    ? new Date(lastInteraction).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Aucune interaction'
+                  const numericContracts = Number(contractsCount)
+                  const opportunityLabel = Number.isFinite(numericContracts) && numericContracts <= 1
+                    ? 'Multi-équipement à proposer'
+                    : 'Fidélisation / upsell'
                   const actionLabel = riskScore >= 70
                     ? 'Relance prioritaire'
                     : riskScore >= 40
@@ -478,6 +486,14 @@ export default function Clients() {
                         <div>
                           <p style={{ color: 'var(--text-tertiary)' }}>Action ARK</p>
                           <p className="font-semibold text-gray-900">{actionLabel}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Dernière interaction</p>
+                          <p className="font-semibold text-gray-900">{lastInteractionLabel}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-tertiary)' }}>Opportunité</p>
+                          <p className="font-semibold text-gray-900">{opportunityLabel}</p>
                         </div>
                       </div>
 
