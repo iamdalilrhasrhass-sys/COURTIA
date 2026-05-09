@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildApiUrl,
+  clearStoredSession,
   getAuthToken,
   shouldClearSessionOnUnauthorized
 } from './sessionPolicy'
@@ -29,5 +30,20 @@ describe('sessionPolicy', () => {
     expect(buildApiUrl('/document-inbox/stats', '/api')).toBe('/api/document-inbox/stats')
     expect(buildApiUrl('/api/dashboard/stats', 'https://api.courtiark.fr/api')).toBe('https://api.courtiark.fr/api/dashboard/stats')
     expect(buildApiUrl('/dashboard/stats', 'https://api.courtiark.fr')).toBe('https://api.courtiark.fr/api/dashboard/stats')
+    expect(buildApiUrl('/clients', 'https://api.courtiark.fr')).toBe('https://api.courtiark.fr/api/clients')
+    expect(buildApiUrl('/clients', 'https://api.courtiark.fr/api')).toBe('https://api.courtiark.fr/api/clients')
+    expect(buildApiUrl('clients', '/api')).toBe('/api/clients')
+    expect(buildApiUrl('/api/clients', '/api')).toBe('/api/clients')
+    expect(buildApiUrl('', '/api')).toBe('/api')
+  })
+
+  it('clears both legacy and current session keys', () => {
+    const removeCalls = []
+    const storage = {
+      removeItem: (key) => removeCalls.push(key),
+    }
+
+    clearStoredSession(storage)
+    expect(removeCalls).toEqual(['courtia_token', 'token', 'courtia_user', 'user'])
   })
 })

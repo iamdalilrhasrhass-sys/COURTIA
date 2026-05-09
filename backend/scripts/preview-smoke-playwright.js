@@ -294,9 +294,20 @@ async function classifyAdminAccess(page, route, accountKey) {
     await page.getByText('Accès administrateur requis', { exact: false }).first().isVisible().catch(() => false) ||
     await page.getByText('Admin Center protégé', { exact: false }).first().isVisible().catch(() => false) ||
     await page.getByText('Accès refusé', { exact: false }).first().isVisible().catch(() => false)
-  const costsVisible =
-    await page.getByText('Tableau de bord Coûts IA', { exact: false }).first().isVisible().catch(() => false) ||
-    await page.getByText('Coûts IA ARK', { exact: false }).first().isVisible().catch(() => false)
+  const expectedGrantMarkers = {
+    '/admin': ['Admin Center', 'Administration'],
+    '/admin/costs': ['Tableau de bord Coûts IA', 'Coûts IA ARK'],
+    '/admin/growth-leads': ['Growth Leads', 'Leads total', 'Demandes de démo'],
+  }
+  const markers = expectedGrantMarkers[route] || []
+  let grantMarkerVisible = false
+  for (const marker of markers) {
+    const visible = await page.getByText(marker, { exact: false }).first().isVisible().catch(() => false)
+    if (visible) {
+      grantMarkerVisible = true
+      break
+    }
+  }
 
   const result = {
     route,
@@ -304,16 +315,30 @@ async function classifyAdminAccess(page, route, accountKey) {
     currentUrl: page.url(),
     redirectedToDashboard,
     forbidden,
-    granted: costsVisible || (pathname.startsWith('/admin') && !forbidden),
+    granted: pathname.startsWith(route) && !forbidden && grantMarkerVisible,
+    grantMarkerVisible,
   }
-
-  routeChecks.push({ route: `${route} (${accountKey})`, ok: !redirectedToDashboard, details: redirectedToDashboard ? 'Unexpected redirect to /dashboard' : '', currentUrl: page.url() })
+  const unknown = !redirectedToDashboard && !forbidden && !result.granted
+  routeChecks.push({
+    route: `${route} (${accountKey})`,
+    ok: !redirectedToDashboard && !unknown,
+    details: redirectedToDashboard
+      ? 'Unexpected redirect to /dashboard'
+      : unknown
+        ? `Unable to classify access on ${route}: no forbidden marker and no expected admin marker`
+        : '',
+    currentUrl: page.url(),
+  })
 
   if (redirectedToDashboard) {
     recordFailure(`admin:${route}:${accountKey}`, 'Route redirects to /dashboard (should be explicit admin grant/deny)')
+  } else if (unknown) {
+    recordFailure(`admin:${route}:${accountKey}`, `Unknown access state on ${route}`)
   } else {
-    recordInfo(`admin:${route}:${accountKey}`, `Outcome: ${forbidden ? 'forbidden' : result.granted ? 'granted' : 'unknown'}`)
+    recordInfo(`admin:${route}:${accountKey}`, `Outcome: ${forbidden ? 'forbidden' : 'granted'}`)
   }
+
+  return result
 }
 
 async function logout(page) {
@@ -416,11 +441,18 @@ async function main() {
     await checkRoute(page, '/parametres', ['Paramètres'])
     await checkRoute(page, '/taches', ['Tâches'])
     await checkRoute(page, '/contrats', ['Contrats'])
+    await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])
 
     await runResponsiveChecks(page)
 
-    await classifyAdminAccess(page, '/admin', 'e2e')
-    await classifyAdminAccess(page, '/admin/costs', 'e2e')
+    const e2eAdmin = await classifyAdminAccess(page, '/admin', 'e2e')
+    const e2eCosts = await classifyAdminAccess(page, '/admin/costs', 'e2e')
+    const e2eGrowth = await classifyAdminAccess(page, '/admin/growth-leads', 'e2e')
+    for (const check of [e2eAdmin, e2eCosts, e2eGrowth]) {
+      if (check && !check.forbidden) {
+        recordFailure(`admin:${check.route}:e2e`, 'Expected non-admin forbidden access')
+      }
+    }
     await logout(page)
     let dalilLogged = false
     try {
@@ -435,12 +467,19 @@ async function main() {
       if (dalilRole !== 'admin' && dalilRole !== 'super_admin') {
         recordFailure('role:dalil', `Expected admin/super_admin, got "${dalilRole || 'unknown'}"`)
       }
-      await classifyAdminAccess(page, '/admin', 'dalil')
-      await classifyAdminAccess(page, '/admin/costs', 'dalil')
+      const dalilAdmin = await classifyAdminAccess(page, '/admin', 'dalil')
+      const dalilCosts = await classifyAdminAccess(page, '/admin/costs', 'dalil')
+      const dalilGrowth = await classifyAdminAccess(page, '/admin/growth-leads', 'dalil')
+      for (const check of [dalilAdmin, dalilCosts, dalilGrowth]) {
+        if (check && !check.granted) {
+          recordFailure(`admin:${check.route}:dalil`, 'Expected admin/super_admin granted access')
+        }
+      }
       await logout(page)
     } else {
       routeChecks.push({ route: '/admin (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
       routeChecks.push({ route: '/admin/costs (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
+      routeChecks.push({ route: '/admin/growth-leads (dalil)', ok: false, details: 'Skipped: dalil login failed', currentUrl: page.url() })
     }
 
     await desktop.close()

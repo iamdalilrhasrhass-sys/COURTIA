@@ -37,7 +37,13 @@ const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
-const Tarifs = lazy(() => import('./pages/Tarifs'))
+const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
+const FonctionnalitesPublic = lazy(() => import('./pages/FonctionnalitesPublic'))
+const DemoPublic = lazy(() => import('./pages/DemoPublic'))
+const ContactPublic = lazy(() => import('./pages/ContactPublic'))
+const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
+const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
+const LegalCookies = lazy(() => import('./pages/LegalCookies'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
@@ -47,6 +53,7 @@ const AdminSystem = lazy(() => import('./pages/AdminSystem'))
 const AdminLogs = lazy(() => import('./pages/AdminLogs'))
 const AdminSupport = lazy(() => import('./pages/AdminSupport'))
 const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
+const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Components
@@ -164,7 +171,13 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
-        <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/fonctionnalites" element={<FonctionnalitesPublic />} />
+        <Route path="/tarifs" element={<TarifsPublic />} />
+        <Route path="/demo" element={<DemoPublic />} />
+        <Route path="/contact" element={<ContactPublic />} />
+        <Route path="/legal/mentions-legales" element={<LegalMentionsLegales />} />
+        <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
+        <Route path="/legal/cookies" element={<LegalCookies />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
 
@@ -215,6 +228,7 @@ export default function App() {
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/users/:id" element={<AdminUserDetail />} />
           <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/growth-leads" element={<AdminGrowthLeads />} />
           <Route path="/admin/costs" element={<AdminCostsDashboard />} />
           <Route path="/admin/system" element={<AdminSystem />} />
           <Route path="/admin/logs" element={<AdminLogs />} />
