@@ -34,6 +34,10 @@ async function ensureDemoRequestsTable(pool) {
       phone TEXT,
       city TEXT,
       team_size TEXT,
+      current_tools TEXT,
+      wants_google_calendar BOOLEAN DEFAULT false,
+      wants_whatsapp BOOLEAN DEFAULT false,
+      wants_email_sync BOOLEAN DEFAULT false,
       message TEXT,
       consent BOOLEAN DEFAULT false,
       source TEXT DEFAULT 'landing',
@@ -48,6 +52,10 @@ async function ensureDemoRequestsTable(pool) {
   await pool.query('CREATE INDEX IF NOT EXISTS idx_demo_requests_created_at ON demo_requests(created_at DESC);')
   await pool.query('CREATE INDEX IF NOT EXISTS idx_demo_requests_status ON demo_requests(status);')
   await pool.query('CREATE INDEX IF NOT EXISTS idx_demo_requests_email ON demo_requests(email);')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS current_tools TEXT;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS wants_google_calendar BOOLEAN DEFAULT false;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS wants_whatsapp BOOLEAN DEFAULT false;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS wants_email_sync BOOLEAN DEFAULT false;')
 }
 
 async function ensureMarketingEventsTable(pool) {
@@ -83,10 +91,12 @@ router.post('/demo-request', async (req, res) => {
     const insert = await pool.query(
       `INSERT INTO demo_requests (
          first_name, last_name, company_name, email, phone, city, team_size,
+         current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
          message, consent, source
        )
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING id, first_name, last_name, company_name, email, city, team_size, status, source, created_at`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       RETURNING id, first_name, last_name, company_name, email, city, team_size, current_tools,
+                 wants_google_calendar, wants_whatsapp, wants_email_sync, status, source, created_at`,
       [
         payload.first_name,
         payload.last_name,
@@ -95,6 +105,10 @@ router.post('/demo-request', async (req, res) => {
         payload.phone,
         payload.city,
         payload.team_size,
+        payload.current_tools,
+        payload.wants_google_calendar,
+        payload.wants_whatsapp,
+        payload.wants_email_sync,
         payload.message,
         payload.consent,
         payload.source,
@@ -175,6 +189,7 @@ router.get('/demo-requests', verifyToken, requireAdmin, async (req, res) => {
 
     const rows = await pool.query(
       `SELECT id, first_name, last_name, company_name, email, phone, city, team_size,
+              current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
               message, consent, source, status, opt_out, notes, created_at, updated_at,
               CASE
                 WHEN team_size ILIKE '%10-20%' OR team_size ILIKE '%11-20%' THEN 'A'
@@ -274,6 +289,7 @@ router.get('/demo-requests/export', verifyToken, requireAdmin, async (req, res) 
 
     const rows = await pool.query(
       `SELECT id, first_name, last_name, company_name, email, phone, city, team_size,
+              current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
               status, source, consent, opt_out, created_at, updated_at
        FROM demo_requests
        ORDER BY created_at DESC`
@@ -281,6 +297,7 @@ router.get('/demo-requests/export', verifyToken, requireAdmin, async (req, res) 
 
     const header = [
       'id', 'first_name', 'last_name', 'company_name', 'email', 'phone', 'city', 'team_size',
+      'current_tools', 'wants_google_calendar', 'wants_whatsapp', 'wants_email_sync',
       'status', 'source', 'consent', 'opt_out', 'created_at', 'updated_at'
     ]
 

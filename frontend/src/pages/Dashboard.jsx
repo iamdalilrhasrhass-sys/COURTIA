@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Briefcase,
   CheckSquare,
+  MessageSquare,
 } from 'lucide-react'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
@@ -144,21 +145,28 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState({ first_name: '', last_name: '' })
   const [snapshotTs, setSnapshotTs] = useState(0)
+  const [integrationSignals, setIntegrationSignals] = useState({ events: [], threads: [] })
 
   const loadAllData = useCallback(async () => {
     try {
       setLoading(true)
-      const [statsRes, userRes, clientsRes, tasksRes] = await Promise.all([
+      const [statsRes, userRes, clientsRes, tasksRes, eventsRes, threadsRes] = await Promise.all([
         api.get('/dashboard/stats'),
         getSessionUser().then((sessionUser) => ({ data: sessionUser || {} })).catch(() => ({ data: {} })),
         api.get('/clients?limit=300').catch(() => ({ data: [] })),
         api.get('/taches').catch(() => ({ data: [] })),
+        api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } })),
+        api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } })),
       ])
 
       setStats(statsRes.data || null)
       setUser(userRes.data || {})
       setClients(normalizeRows(clientsRes.data))
       setTasks(normalizeRows(tasksRes.data))
+      setIntegrationSignals({
+        events: Array.isArray(eventsRes?.data?.rows) ? eventsRes.data.rows : [],
+        threads: Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [],
+      })
       setSnapshotTs(Date.now())
     } catch {
       console.error('Impossible de charger le cockpit.')
@@ -257,8 +265,40 @@ export default function Dashboard() {
       })
     })
 
+    const agendaToday = integrationSignals.events
+      .filter((event) => event.start_time)
+      .filter((event) => {
+        const start = toTimestamp(event.start_time)
+        if (!start || !snapshotTs) return false
+        const sameDay = new Date(start).toDateString() === new Date(snapshotTs).toDateString()
+        return sameDay && start >= snapshotTs
+      })
+      .slice(0, 2)
+
+    agendaToday.forEach((event) => {
+      const when = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      list.push({
+        text: `Rendez-vous agenda à ${when}: ${event.title || 'Événement client'}${event.client_id ? ' (lié client)' : ''}.`,
+        icon: Calendar,
+        accent: '#2563eb',
+        route: '/parametres',
+      })
+    })
+
+    const whatsappPending = integrationSignals.threads
+      .filter((thread) => thread.last_message_at)
+      .slice(0, 1)
+    whatsappPending.forEach((thread) => {
+      list.push({
+        text: `Message WhatsApp récent${thread.phone ? ` (${thread.phone})` : ''}: réponse conseillée aujourd'hui.`,
+        icon: MessageSquare,
+        accent: '#16a34a',
+        route: '/parametres',
+      })
+    })
+
     return list.slice(0, 6)
-  }, [stats, clients, tasks, snapshotTs])
+  }, [stats, clients, tasks, snapshotTs, integrationSignals])
 
   const chartData = useMemo(() => {
     const rows = Array.isArray(stats?.revenus6Mois) ? stats.revenus6Mois : []
@@ -364,6 +404,34 @@ export default function Dashboard() {
                 <AuroraButton variant="ghost" size="sm" onClick={() => navigate('/morning-brief')}>
                   Ouvrir le Morning Brief complet <ArrowRight size={12} />
                 </AuroraButton>
+              </div>
+            </AuroraCard>
+
+            <AuroraCard padding={20} className="mb-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>Cockpit connecté</h3>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    Agenda, WhatsApp et emails enrichissent ARK dès que les intégrations sont activées.
+                  </p>
+                </div>
+                <AuroraButton variant="secondary" size="sm" onClick={() => navigate('/parametres')}>
+                  Ouvrir les intégrations
+                </AuroraButton>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                  <span className="font-semibold">Rendez-vous sync:</span>{' '}
+                  <span>{fmtNum(integrationSignals.events.length)}</span>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                  <span className="font-semibold">Threads WhatsApp:</span>{' '}
+                  <span>{fmtNum(integrationSignals.threads.length)}</span>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                  <span className="font-semibold">Statut:</span>{' '}
+                  <span>{integrationSignals.events.length + integrationSignals.threads.length > 0 ? 'Activable' : 'À connecter'}</span>
+                </div>
               </div>
             </AuroraCard>
 

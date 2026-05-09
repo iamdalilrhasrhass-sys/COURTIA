@@ -10,10 +10,11 @@
 2. Problème métier reconnu
 3. Solution ARK + cockpit
 4. Fonctionnalités concrètes
-5. Comparatif CRM générique vs COURTIA
-6. Tarifs avec Pro (159€) mis en avant
-7. FAQ de réassurance
-8. Formulaire démo connecté backend
+5. Intégrations (Google Agenda / WhatsApp Business / Gmail / Outlook)
+6. Comparatif CRM générique vs COURTIA
+7. Tarifs avec Pro (159€) mis en avant
+8. FAQ de réassurance
+9. Formulaire démo connecté backend
 
 ## CTA principaux
 
