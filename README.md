@@ -149,6 +149,24 @@ Les interactions multi-canaux sont exposées dans la fiche client via:
 
 - `GET /api/clients/:id/interactions`
 
+Activation front contrôlée:
+
+- `VITE_INTEGRATIONS_API_ENABLED=true` active les appels API d’intégration
+- valeur par défaut (absente/false): UI visible avec état "configuration requise", sans appels backend d’intégration
+
+Endpoints complémentaires:
+
+- import clients explicite:
+  - `POST /api/import/clients/preview`
+  - `POST /api/import/clients/confirm`
+- notifications in-app:
+  - `GET /api/notifications`
+  - `POST /api/notifications/:id/read`
+  - `POST /api/notifications/read-all`
+- webhooks automation:
+  - `POST /api/webhooks/incoming`
+  - `POST /api/webhooks/outgoing/test`
+
 ## Growth leads
 
 Pipeline dans `growth/leads`:
@@ -185,4 +203,16 @@ Workflow recommandé:
 - `docs/RGPD_INTEGRATIONS.md`
 - `docs/GROWTH_PLAYBOOK.md`
 - `docs/LANDING_PAGE_STRATEGY.md`
+- `docs/WEBHOOKS_AUTOMATION_ROADMAP.md`
+- `docs/SENTRY_SETUP.md`
+- `docs/NEW_CABINET_SETUP.md`
 - `growth/leads/RGPD_PROSPECTION.md`
+
+Kit démo commercial:
+
+- `sales/demo/DEMO_SCRIPT.md`
+- `sales/demo/COURTIA_PITCH_2_MIN.md`
+- `sales/demo/COURTIA_PITCH_10_MIN.md`
+- `sales/demo/FAQ_COMMERCIALE.md`
+- `sales/demo/OBJECTIONS_COURTIERS.md`
+- `sales/demo/EMAIL_AFTER_DEMO.md`

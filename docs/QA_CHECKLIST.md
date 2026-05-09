@@ -7,20 +7,24 @@
 
 ## Parcours smoke courtier
 
-1. login e2e
-2. dashboard
-3. clients
-4. clic bulle client → fiche client
-5. contrats liés
-6. tâches liées
-7. rapports
-8. paramètres
-9. morning brief
-10. vérifier bloc intégrations dans paramètres
-11. vérifier timeline interactions dans fiche client (onglet Activité)
-12. tentative `/admin` => refus propre
-13. tentative `/admin/costs` => refus propre
-14. logout
+1. landing `/` (CTA visible)
+2. `/demo` (formulaire)
+3. login e2e
+4. dashboard
+5. clients
+6. clic bulle client → fiche client
+7. contrats liés
+8. tâches liées
+9. rapports
+10. paramètres (intégrations visibles)
+11. onboarding `/onboarding`
+12. import `/import`
+13. billing `/billing`
+14. morning brief
+15. vérifier timeline interactions dans fiche client (onglet Activité)
+16. tentative `/admin` => refus propre
+17. tentative `/admin/costs` => refus propre
+18. logout
 
 ## Parcours smoke admin
 

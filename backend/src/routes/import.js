@@ -3,8 +3,112 @@ const router = express.Router()
 const multer = require('multer')
 const pool = require('../db')
 const verifyToken = require('../middleware/authMiddleware')
+const importService = require('../services/importService')
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+
+function getSafeUserId(req) {
+  return importService.safeUserId(req.user)
+}
+
+// ============================================================
+// V2 alias — Import clients explicite demandé par le runbook GTM
+// POST /api/import/clients/preview
+// ============================================================
+router.post('/clients/preview', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    const userId = getSafeUserId(req)
+    if (!userId) {
+      return res.status(401).json({ error: 'auth_required', message: 'Authentification requise.' })
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'validation_error', message: 'Fichier requis.' })
+    }
+
+    const filename = String(req.file.originalname || '').toLowerCase()
+    if (!filename.match(/\.(csv|xlsx|xls)$/)) {
+      return res.status(400).json({ error: 'validation_error', message: 'Format non supporté. Utilisez CSV, XLS ou XLSX.' })
+    }
+
+    const { headers, rows } = importService.parseWorkbookFromBuffer(req.file.buffer)
+    const suggestedMapping = importService.suggestMapping(headers)
+    const previewStats = importService.getPreviewStats({ headers, rows, mapping: suggestedMapping })
+
+    const job = await importService.createImportJob({
+      userId,
+      filename: req.file.originalname || 'clients_import',
+      headers,
+      rows,
+      mapping: suggestedMapping,
+      summary: previewStats,
+    })
+
+    return res.json({
+      success: true,
+      import_job_id: job.id,
+      status: job.status,
+      headers,
+      suggested_mapping: suggestedMapping,
+      preview: previewStats.preview_rows,
+      stats: {
+        total_rows: previewStats.total_rows,
+        valid_rows_estimate: previewStats.valid_rows_estimate,
+        error_rows_estimate: previewStats.error_rows_estimate,
+        unknown_columns: previewStats.unknown_columns,
+      },
+      message: 'Prévisualisation clients générée. Vérifiez le mapping puis confirmez l’import.',
+    })
+  } catch (error) {
+    if (error.message === 'import_too_many_rows') {
+      return res.status(413).json({
+        error: 'import_too_many_rows',
+        message: `Fichier trop volumineux. Limite actuelle: ${importService.MAX_ROWS} lignes.`,
+      })
+    }
+    if (['import_empty_sheet', 'import_empty_file', 'import_missing_headers'].includes(error.message)) {
+      return res.status(400).json({ error: error.message, message: 'Le fichier importé est invalide ou incomplet.' })
+    }
+    return res.status(500).json({ error: 'import_preview_failed', message: 'Prévisualisation import indisponible pour le moment.' })
+  }
+})
+
+// ============================================================
+// V2 alias — Import clients confirm
+// POST /api/import/clients/confirm
+// ============================================================
+router.post('/clients/confirm', verifyToken, async (req, res) => {
+  try {
+    const userId = getSafeUserId(req)
+    if (!userId) {
+      return res.status(401).json({ error: 'auth_required', message: 'Authentification requise.' })
+    }
+
+    const importJobId = Number(req.body?.import_job_id || 0)
+    const mapping = req.body?.mapping || null
+    if (!importJobId) {
+      return res.status(400).json({ error: 'validation_error', message: 'import_job_id requis.' })
+    }
+
+    const result = await importService.commitImportJob({
+      jobId: importJobId,
+      userId,
+      mapping,
+    })
+
+    return res.json({
+      success: true,
+      import_job_id: importJobId,
+      status: 'completed',
+      summary: result,
+      message: 'Import clients confirmé avec succès.',
+    })
+  } catch (error) {
+    if (error.code === 'IMPORT_JOB_NOT_FOUND') {
+      return res.status(404).json({ error: 'import_job_not_found', message: 'Import introuvable pour cet utilisateur.' })
+    }
+    return res.status(500).json({ error: 'import_confirm_failed', message: 'Confirmation import indisponible pour le moment.' })
+  }
+})
 
 // POST /api/import/preview — analyse le fichier, retourne mapping suggéré
 router.post('/preview', verifyToken, upload.single('file'), async (req, res) => {

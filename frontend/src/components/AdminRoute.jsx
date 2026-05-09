@@ -6,6 +6,7 @@ import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 import AuroraButton from './brand/AuroraButton'
 import { getCourtiaAdminToken } from '../lib/adminApi'
 import { getSessionUser } from '../api/sessionUser'
+import { isAdminRole } from '../lib/roles'
 
 function decodeRoleFromToken(token = '') {
   try {
@@ -36,7 +37,7 @@ export default function AdminRoute({ children }) {
       }
       if (!role) role = decodeRoleFromToken(token)
 
-      if (role === 'admin' || role === 'super_admin') {
+      if (isAdminRole(role)) {
         setStatus('granted')
         return
       }
