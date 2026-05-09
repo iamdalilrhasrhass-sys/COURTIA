@@ -99,7 +99,7 @@ expired
 archived
 ```
 
-La signature électronique Yousign est prévue dans la PR suivante.
+La signature électronique Yousign est disponible en mode activable si les variables `YOUSIGN_API_KEY` et `YOUSIGN_WEBHOOK_SECRET` sont configurées.
 
 ## Tests manuels
 
@@ -117,6 +117,5 @@ La signature électronique Yousign est prévue dans la PR suivante.
 
 - PDF simple généré côté backend via PDFKit.
 - Pas encore de DOCX natif.
-- Pas encore de signature Yousign active dans cette PR.
+- La signature Yousign dégrade en état “configuration requise” si les secrets backend sont absents.
 - Pas d'analyse juridique automatique du contenu.
-

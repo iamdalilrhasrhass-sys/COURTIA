@@ -57,6 +57,7 @@
 - génération FIC OK avec ORIAS
 - PDF téléchargeable via `/api/documents/:id/download`
 - document visible dans `/documents`
+- Yousign absent: bouton “Envoyer à signer” affiche un message configuration requise
 - archivage propre via `/api/documents/:id/archive`
 - audit log document généré / archivé
 

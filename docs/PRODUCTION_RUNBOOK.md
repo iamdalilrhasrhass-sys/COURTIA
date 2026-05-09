@@ -74,7 +74,7 @@ npm --prefix backend run qa:prod-smoke
 - rollback : `down/016_v1_dda_documents.down.sql`
 - prérequis utilisateur : ORIAS dans Paramètres > Conformité
 - stockage V1 : table `documents_blob`
-- signature électronique : prévue via Yousign dans la PR suivante
+- signature électronique : Yousign activable via `YOUSIGN_API_KEY` + `YOUSIGN_WEBHOOK_SECRET`
 
 Si la génération échoue :
 
@@ -82,3 +82,17 @@ Si la génération échoue :
 2. vérifier tables `documents`, `documents_blob`, `document_activity_log`
 3. vérifier `audit_log`
 4. relancer `npm --prefix backend test -- documentDdaService.test.js --runInBand`
+
+## Yousign
+
+- feature flag : `v1_yousign_signature`
+- migration : `017_v1_yousign_signature.sql`
+- rollback : `down/017_v1_yousign_signature.down.sql`
+- webhook : `/api/documents/yousign/webhook`
+
+Si Yousign affiche “configuration requise” :
+
+1. vérifier `YOUSIGN_API_KEY`
+2. vérifier `YOUSIGN_WEBHOOK_SECRET`
+3. vérifier l’URL webhook dans Yousign
+4. relancer `npm --prefix backend test -- yousignService.test.js --runInBand`

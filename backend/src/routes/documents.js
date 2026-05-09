@@ -25,10 +25,82 @@ const {
   renderDdaPlainText,
   getDdaFileName,
 } = require('../services/documentDdaService')
-
-router.use(verifyToken)
+const {
+  getConfigStatus: getYousignConfigStatus,
+  verifyWebhookSignature,
+  mapWebhookStatus,
+  extractSignatureRequestId,
+  extractEventId,
+  createSignatureRequest,
+} = require('../services/yousignService')
 
 const VALID_TEMPLATES = ['attestation_assurance', 'proposition_commerciale', 'courrier_resiliation']
+
+router.post('/yousign/webhook', async (req, res) => {
+  try {
+    const config = getYousignConfigStatus()
+    if (config.missing.includes('YOUSIGN_WEBHOOK_SECRET')) {
+      return res.status(503).json({
+        error: 'configuration_required',
+        message: 'YOUSIGN_WEBHOOK_SECRET est requis pour vérifier les webhooks Yousign.',
+        missing: ['YOUSIGN_WEBHOOK_SECRET'],
+      })
+    }
+
+    const signature = req.headers['x-yousign-signature-256'] ||
+      req.headers['x-yousign-signature'] ||
+      req.headers['yousign-signature'] ||
+      req.headers['x-hub-signature-256']
+    const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body || {}), 'utf8')
+    if (!verifyWebhookSignature(rawBody, signature)) {
+      return res.status(400).json({ error: 'invalid_signature', message: 'Signature webhook Yousign invalide.' })
+    }
+
+    const event = req.body || {}
+    const eventType = event.event_name || event.event || event.type || 'unknown'
+    const eventId = extractEventId(event)
+    const signatureRequestId = extractSignatureRequestId(event)
+    const status = mapWebhookStatus(eventType)
+    const signedStoragePath = event.data?.signed_document_download_url ||
+      event.data?.download_url ||
+      event.data?.documents?.[0]?.download_url ||
+      null
+
+    await pool.query(
+      `INSERT INTO yousign_webhook_events (event_id, event_type, signature_request_id, payload)
+       VALUES ($1,$2,$3,$4::jsonb)
+       ON CONFLICT (event_id) DO NOTHING`,
+      [eventId, eventType, signatureRequestId, JSON.stringify(event)]
+    )
+
+    if (signatureRequestId && status) {
+      const update = await pool.query(
+        `UPDATE documents
+         SET status = $1,
+             signed_at = CASE WHEN $1 = 'signed' THEN NOW() ELSE signed_at END,
+             signed_storage_path = COALESCE($3, signed_storage_path),
+             updated_at = NOW()
+         WHERE yousign_signature_id = $2
+         RETURNING id, user_id, type`,
+        [status, signatureRequestId, signedStoragePath]
+      )
+      for (const document of update.rows) {
+        await pool.query(
+          `INSERT INTO document_activity_log (document_id, user_id, action, metadata)
+           VALUES ($1,$2,$3,$4::jsonb)`,
+          [document.id, document.user_id, `yousign.${status}`, JSON.stringify({ event_id: eventId, event_type: eventType, signature_request_id: signatureRequestId })]
+        )
+      }
+    }
+
+    return res.json({ success: true, received: true, status: status || 'ignored' })
+  } catch (err) {
+    logger.error({ error: err.message }, 'yousign webhook failed')
+    return res.status(500).json({ error: 'server_error', message: 'Webhook Yousign non traité.' })
+  }
+})
+
+router.use(verifyToken)
 
 function getCurrentUserId(req) {
   return Number(req.user?.userId || req.user?.id || 0)
@@ -198,6 +270,107 @@ async function generateDdaDocument(req, res, documentType) {
       title: definition.title,
       download_url: `/api/documents/${documentRow.id}/download`,
       file_name: fileName,
+    },
+  })
+}
+
+function buildSignerFromDocument(body = {}, documentRow = {}) {
+  const variables = documentRow.variables || {}
+  const client = variables.client || {}
+  const rawName = String(client.name || '').trim()
+  const parts = rawName.split(/\s+/).filter(Boolean)
+  return {
+    email: body.email || body.signer?.email || client.email || '',
+    firstName: body.first_name || body.firstName || body.signer?.first_name || body.signer?.firstName || parts[0] || 'Client',
+    lastName: body.last_name || body.lastName || body.signer?.last_name || body.signer?.lastName || parts.slice(1).join(' ') || 'COURTIA',
+    phone: body.phone || body.signer?.phone || client.phone || '',
+  }
+}
+
+async function sendDocumentToYousign(req, res) {
+  const userId = getCurrentUserId(req)
+  const documentId = Number(req.params.id)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  if (!documentId) return res.status(400).json({ error: 'document_required', message: 'Document invalide.' })
+
+  if (req.user?.role !== 'super_admin') {
+    const enabled = await isFeatureEnabled({ userId, key: 'v1_yousign_signature' })
+    if (!enabled) {
+      return res.status(403).json({
+        error: 'feature_disabled',
+        message: 'La signature électronique Yousign est désactivée pour ce cabinet.',
+        feature_flag: 'v1_yousign_signature',
+      })
+    }
+  }
+
+  const result = await pool.query(
+    `SELECT d.*, db.content, db.mime_type, db.file_name
+     FROM documents d
+     JOIN documents_blob db ON db.document_id = d.id
+     WHERE d.id = $1 AND d.user_id = $2
+     LIMIT 1`,
+    [documentId, userId]
+  )
+  const documentRow = result.rows[0]
+  if (!documentRow) return res.status(404).json({ error: 'not_found', message: 'Document introuvable.' })
+  if (documentRow.status === 'archived') return res.status(400).json({ error: 'document_archived', message: 'Un document archivé ne peut pas être envoyé à signer.' })
+
+  const signer = buildSignerFromDocument(req.body || {}, documentRow)
+  if (!signer.email) {
+    return res.status(400).json({
+      error: 'signer_email_required',
+      message: 'Email signataire requis pour envoyer le document à signer.',
+    })
+  }
+
+  const config = getYousignConfigStatus()
+  if (!config.configured) {
+    return res.status(503).json({
+      error: 'configuration_required',
+      provider: 'yousign',
+      missing: config.missing,
+      message: 'Yousign n’est pas configuré. Renseignez YOUSIGN_API_KEY et YOUSIGN_WEBHOOK_SECRET côté backend.',
+    })
+  }
+
+  const signature = await createSignatureRequest({
+    document: {
+      id: documentRow.id,
+      title: documentRow.title || documentRow.type,
+      fileName: documentRow.file_name,
+      mimeType: documentRow.mime_type,
+      content: documentRow.content,
+    },
+    signer,
+  })
+
+  await pool.query(
+    `UPDATE documents
+     SET status = 'sent_to_sign', yousign_signature_id = $1, updated_at = NOW()
+     WHERE id = $2 AND user_id = $3`,
+    [signature.providerRequestId, documentId, userId]
+  )
+  await pool.query(
+    `INSERT INTO document_activity_log (document_id, user_id, action, metadata)
+     VALUES ($1,$2,'sent_to_sign',$3::jsonb)`,
+    [documentId, userId, JSON.stringify({ provider: 'yousign', signature_request_id: signature.providerRequestId, signer_email: signer.email })]
+  )
+  await logAudit({
+    userId,
+    entityType: 'document',
+    entityId: documentId,
+    action: 'document.sent_to_sign',
+    metadata: { provider: 'yousign', signature_request_id: signature.providerRequestId, signer_email: signer.email },
+    req,
+  })
+
+  return res.json({
+    success: true,
+    data: {
+      id: documentId,
+      status: 'sent_to_sign',
+      yousign_signature_id: signature.providerRequestId,
     },
   })
 }
@@ -542,6 +715,28 @@ router.post('/:id/archive', async (req, res) => {
   } catch (err) {
     logger.error({ error: err.message }, 'documents archive failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+router.get('/yousign/status', async (req, res) => {
+  const config = getYousignConfigStatus()
+  return res.json({
+    success: true,
+    data: {
+      provider: 'yousign',
+      configured: config.configured,
+      missing: config.missing,
+      status: config.configured ? 'ready' : 'configuration_required',
+    },
+  })
+})
+
+router.post('/:id/send-to-sign', async (req, res) => {
+  try {
+    return await sendDocumentToYousign(req, res)
+  } catch (err) {
+    logger.error({ error: err.message, document_id: req.params?.id }, 'documents send to yousign failed')
+    return res.status(500).json({ error: 'server_error', message: 'Envoi Yousign impossible.' })
   }
 })
 
