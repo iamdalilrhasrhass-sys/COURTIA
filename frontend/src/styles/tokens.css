@@ -1,0 +1,262 @@
+:root {
+  --c-bg-deep: #07091a;
+  --c-bg-mid: #0e1230;
+  --c-bg-soft: #161b3d;
+
+  --c-glass-1: rgba(255, 255, 255, 0.04);
+  --c-glass-2: rgba(255, 255, 255, 0.07);
+  --c-glass-border: rgba(255, 255, 255, 0.08);
+  --c-glass-border-strong: rgba(255, 255, 255, 0.16);
+
+  --c-aurora-cyan: #6cf0ff;
+  --c-aurora-violet: #b97aff;
+  --c-aurora-pearl: #ffe7c2;
+  --c-aurora-rose: #ff8fb8;
+
+  --c-text-primary: #f4f6ff;
+  --c-text-secondary: rgba(244, 246, 255, 0.72);
+  --c-text-muted: rgba(244, 246, 255, 0.48);
+
+  --c-success: #5de3a1;
+  --c-warning: #ffc76a;
+  --c-danger: #ff6f8c;
+  --c-info: #6cf0ff;
+
+  --c-halo-cyan: 0 0 80px rgba(108, 240, 255, 0.18);
+  --c-halo-violet: 0 0 80px rgba(185, 122, 255, 0.18);
+
+  --c-radius-sm: 8px;
+  --c-radius-md: 14px;
+  --c-radius-lg: 22px;
+  --c-radius-xl: 32px;
+
+  --c-font-display: 'Cabinet Grotesk', 'Manrope', system-ui, sans-serif;
+  --c-font-body: 'Inter', system-ui, sans-serif;
+}
+
+.courtia-token-surface {
+  color: var(--c-text-primary);
+  background:
+    radial-gradient(circle at 20% 12%, rgba(185, 122, 255, 0.14), transparent 28rem),
+    radial-gradient(circle at 86% 18%, rgba(108, 240, 255, 0.12), transparent 30rem),
+    linear-gradient(180deg, var(--c-bg-deep), var(--c-bg-mid));
+}
+
+.courtia-glass-card {
+  position: relative;
+  border: 1px solid var(--c-glass-border);
+  border-radius: var(--c-radius-lg);
+  background:
+    linear-gradient(145deg, var(--c-glass-2), var(--c-glass-1)),
+    radial-gradient(circle at 12% 8%, rgba(108, 240, 255, 0.08), transparent 26rem);
+  color: var(--c-text-primary);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.courtia-glass-card:hover {
+  border-color: var(--c-glass-border-strong);
+  box-shadow: var(--c-halo-violet), 0 24px 80px rgba(0, 0, 0, 0.24);
+}
+
+.courtia-aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--c-bg-deep), var(--c-bg-mid));
+}
+
+.courtia-aurora-bg__halo,
+.courtia-halo {
+  position: absolute;
+  display: block;
+  width: 42rem;
+  height: 42rem;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.3;
+}
+
+.courtia-aurora-bg__halo--violet,
+.courtia-halo--violet {
+  left: -10rem;
+  top: -8rem;
+  background: rgba(185, 122, 255, 0.34);
+}
+
+.courtia-aurora-bg__halo--cyan,
+.courtia-halo--cyan {
+  right: -12rem;
+  top: 12rem;
+  background: rgba(108, 240, 255, 0.22);
+}
+
+.courtia-aurora-bg__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.026) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at 50% 20%, black, transparent 76%);
+}
+
+.courtia-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--c-radius-md);
+  border: 1px solid transparent;
+  padding: 0.65rem 1rem;
+  font-family: var(--c-font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.courtia-button:hover {
+  transform: translateY(-1px);
+}
+
+.courtia-button--primary {
+  background: linear-gradient(135deg, var(--c-aurora-violet), var(--c-aurora-cyan));
+  box-shadow: var(--c-halo-violet);
+}
+
+.courtia-button--secondary {
+  border-color: var(--c-glass-border-strong);
+  background: var(--c-glass-2);
+}
+
+.courtia-button--ghost {
+  background: transparent;
+  color: var(--c-text-secondary);
+}
+
+.courtia-button--danger {
+  background: rgba(255, 111, 140, 0.18);
+  border-color: rgba(255, 111, 140, 0.32);
+}
+
+.courtia-input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--c-glass-border);
+  border-radius: var(--c-radius-md);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--c-text-primary);
+  font-family: var(--c-font-body);
+  outline: none;
+  padding: 0.65rem 0.85rem;
+}
+
+.courtia-input:focus {
+  border-color: rgba(108, 240, 255, 0.42);
+  box-shadow: 0 0 0 3px rgba(108, 240, 255, 0.12);
+}
+
+.courtia-select option {
+  color: #0f172a;
+}
+
+.courtia-badge,
+.courtia-status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--c-glass-border);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--c-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+}
+
+.courtia-badge--success,
+.courtia-status-pill--success {
+  border-color: rgba(93, 227, 161, 0.28);
+  color: var(--c-success);
+}
+
+.courtia-badge--warning,
+.courtia-status-pill--warning {
+  border-color: rgba(255, 199, 106, 0.3);
+  color: var(--c-warning);
+}
+
+.courtia-badge--danger,
+.courtia-status-pill--danger {
+  border-color: rgba(255, 111, 140, 0.34);
+  color: var(--c-danger);
+}
+
+.courtia-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.courtia-empty-state h3,
+.courtia-dev-ui h1,
+.courtia-dev-ui h2 {
+  margin: 0;
+  font-family: var(--c-font-display);
+}
+
+.courtia-empty-state p,
+.courtia-dev-ui p {
+  color: var(--c-text-secondary);
+}
+
+.courtia-dev-ui {
+  min-height: 100vh;
+  padding: 5rem clamp(1rem, 4vw, 4rem);
+}
+
+.courtia-dev-ui section,
+.courtia-dev-ui > .courtia-glass-card,
+.courtia-dev-ui > .courtia-empty-state {
+  max-width: 1040px;
+  margin: 0 auto 1.5rem;
+}
+
+.courtia-dev-ui h1 {
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.95;
+}
+
+.courtia-dev-ui__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.courtia-dev-ui__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.courtia-dev-ui__grid > div {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (max-width: 760px) {
+  .courtia-dev-ui__grid,
+  .courtia-empty-state {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
