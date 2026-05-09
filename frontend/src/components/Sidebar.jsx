@@ -39,6 +39,7 @@ const NAV_ITEMS = [
   { path: '/rapports', label: 'Rapports', icon: BarChart2 },
   { path: '/morning-brief', label: 'Morning Brief', icon: Zap },
   { path: '/parametres', label: 'Paramètres', icon: Settings },
+  { path: '/equipe', label: 'Équipe', icon: Users },
   { separator: true, label: 'ACQUISITION' },
   { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
   { separator: true, label: 'MODULES' },

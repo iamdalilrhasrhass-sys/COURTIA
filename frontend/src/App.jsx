@@ -31,9 +31,12 @@ const Abonnement = lazy(() => import('./pages/Abonnement'))
 const Billing = lazy(() => import('./pages/Billing'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
-const Onboarding = lazy(() => import('./pages/BillingOnboarding'))
+const BillingOnboarding = lazy(() => import('./pages/BillingOnboarding'))
+const CabinetOnboarding = lazy(() => import('./pages/CabinetOnboarding'))
 const DataOnboarding = lazy(() => import('./pages/Onboarding'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
+const Equipe = lazy(() => import('./pages/Equipe'))
+const InviteAccept = lazy(() => import('./pages/InviteAccept'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
@@ -184,17 +187,20 @@ export default function App() {
         <Route path="/legal/cookies" element={<LegalCookies />} />
         <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
+        <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/dev/ui" element={<DevUi />} />
         <Route path="/" element={<LandingPublic />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route path="/onboarding"    element={<Onboarding />} />
-          <Route path="/onboarding/cabinet" element={<Onboarding />} />
+          <Route path="/onboarding"    element={<CabinetOnboarding />} />
+          <Route path="/onboarding/cabinet" element={<CabinetOnboarding />} />
+          <Route path="/onboarding/billing" element={<BillingOnboarding />} />
           <Route path="/onboarding/import" element={<DataOnboarding />} />
           <Route path="/onboarding/integrations" element={<Parametres />} />
           <Route path="/onboarding/ark" element={<MorningBrief />} />
           <Route path="/import"        element={<ImportPortfolio />} />
+          <Route path="/equipe"        element={<Equipe />} />
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
