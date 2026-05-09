@@ -179,6 +179,37 @@ async function createPdfBufferFromText({ title, text }) {
   })
 }
 
+async function getLinkedContractForDocument(contractId, clientId) {
+  if (!contractId) return {}
+
+  try {
+    const contractResult = await pool.query('SELECT * FROM contracts WHERE id = $1 AND client_id = $2 LIMIT 1', [contractId, clientId])
+    if (contractResult.rows[0]) return contractResult.rows[0]
+  } catch (err) {
+    if (!isMissingTable(err)) throw err
+  }
+
+  const quoteResult = await pool.query(
+    `SELECT id,
+            client_id,
+            status,
+            quote_data->>'type_contrat' AS type,
+            quote_data->>'type' AS contract_type,
+            quote_data->>'compagnie' AS company,
+            quote_data->>'insurer' AS insurer,
+            quote_data->>'numero' AS number,
+            quote_data->>'numero_contrat' AS policy_number,
+            quote_data->>'prime_annuelle' AS annual_premium,
+            quote_data->>'date_effet' AS start_date,
+            quote_data->>'date_echeance' AS end_date
+     FROM quotes
+     WHERE id = $1 AND client_id = $2
+     LIMIT 1`,
+    [contractId, clientId]
+  )
+  return quoteResult.rows[0] || {}
+}
+
 async function generateDdaDocument(req, res, documentType) {
   const userId = getCurrentUserId(req)
   const body = req.body || {}
@@ -194,10 +225,7 @@ async function generateDdaDocument(req, res, documentType) {
   const client = clientResult.rows[0]
   if (!client) return res.status(404).json({ error: 'not_found', message: 'Client introuvable' })
 
-  const contractResult = contractId
-    ? await pool.query('SELECT * FROM contracts WHERE id = $1 AND client_id = $2 LIMIT 1', [contractId, clientId])
-    : { rows: [] }
-  const contract = contractResult.rows[0] || {}
+  const contract = await getLinkedContractForDocument(contractId, clientId)
   const { cabinet, courtier } = await getCourtierContext(userId)
   if (req.user?.role !== 'super_admin') {
     const enabled = await isFeatureEnabled({
