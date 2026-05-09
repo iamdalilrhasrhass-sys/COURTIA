@@ -31,12 +31,20 @@ This document is the source of truth for runtime configuration. Never commit rea
 
 ## Stripe
 
+Checkout utilise les Prices Stripe, pas les anciens Plans Stripe. En mode `BILLING_MODE=test`, les variables `*_TEST` sont prioritaires si présentes.
+
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_PRICE_STARTER`
 - `STRIPE_PRICE_PRO`
 - `STRIPE_PRICE_CABINET`
+- `STRIPE_CUSTOMER_PORTAL_RETURN_URL`
 - `FRONTEND_URL`
+- `STRIPE_SECRET_KEY_TEST` (optionnel, priorité en mode test)
+- `STRIPE_WEBHOOK_SECRET_TEST` (optionnel, priorité en mode test)
+- `STRIPE_STARTER_PRICE_ID_TEST` (optionnel)
+- `STRIPE_PRO_PRICE_ID_TEST` (optionnel)
+- `STRIPE_CABINET_PRICE_ID_TEST` (optionnel)
 
 ## WhatsApp Business
 

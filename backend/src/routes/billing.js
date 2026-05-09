@@ -6,6 +6,8 @@ const billingService = require('../services/billingService');
 const stripeService = require('../services/stripeService');
 const legalAcceptanceService = require('../services/legalAcceptanceService');
 const emailService = require('../services/emailService');
+const logger = require('../lib/logger');
+const { insertStripePaymentEventIfNew } = require('../services/billingWebhookService');
 
 const router = express.Router();
 
@@ -19,8 +21,109 @@ function getClientIp(req) {
 
 function cleanPlanLabel(planCode) {
   if (planCode === 'pro') return 'Pro';
+  if (planCode === 'cabinet') return 'Cabinet';
   if (planCode === 'starter') return 'Starter';
   return 'Premium';
+}
+
+function isMissingOptionalTableError(err) {
+  return err?.code === '42P01';
+}
+
+async function resolveBillingOwnerContext(organizationId) {
+  const result = await pool.query(
+    `SELECT op.owner_user_id,
+            cm.cabinet_id
+       FROM organization_profiles op
+       LEFT JOIN cabinet_members cm
+         ON cm.user_id = op.owner_user_id
+        AND cm.removed_at IS NULL
+       WHERE op.id=$1
+       ORDER BY CASE WHEN cm.role='owner' THEN 0 ELSE 1 END, cm.created_at ASC
+       LIMIT 1`,
+    [organizationId]
+  );
+  return result.rows[0] || { owner_user_id: null, cabinet_id: null };
+}
+
+async function upsertBillingSubscriptionRecord({
+  organizationId,
+  planCode,
+  status,
+  stripeCustomerId,
+  stripeSubscriptionId,
+  currentPeriodEnd,
+  cancelAtPeriodEnd,
+}) {
+  try {
+    const context = await resolveBillingOwnerContext(organizationId);
+    await pool.query(
+      `INSERT INTO billing_subscriptions (
+        organization_id, cabinet_id, user_id, stripe_customer_id, stripe_subscription_id,
+        plan, status, current_period_end, cancel_at_period_end, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+      ON CONFLICT (organization_id) DO UPDATE SET
+        cabinet_id = EXCLUDED.cabinet_id,
+        user_id = EXCLUDED.user_id,
+        stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, billing_subscriptions.stripe_customer_id),
+        stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, billing_subscriptions.stripe_subscription_id),
+        plan = EXCLUDED.plan,
+        status = EXCLUDED.status,
+        current_period_end = EXCLUDED.current_period_end,
+        cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+        updated_at = NOW()`,
+      [
+        organizationId,
+        context.cabinet_id || null,
+        context.owner_user_id || null,
+        stripeCustomerId || null,
+        stripeSubscriptionId || null,
+        planCode,
+        status,
+        currentPeriodEnd || null,
+        !!cancelAtPeriodEnd,
+      ]
+    );
+  } catch (err) {
+    if (!isMissingOptionalTableError(err)) {
+      logger.warn({ error: err.message, organization_id: organizationId }, 'billing_subscriptions sync skipped');
+    }
+  }
+}
+
+async function upsertBillingInvoiceRecord({ organizationId, invoice, status }) {
+  try {
+    const context = await resolveBillingOwnerContext(organizationId);
+    await pool.query(
+      `INSERT INTO billing_invoices (
+        id, organization_id, cabinet_id, user_id, amount_due_cents, amount_paid_cents,
+        currency, status, hosted_invoice_url, pdf_url, created_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        amount_due_cents = EXCLUDED.amount_due_cents,
+        amount_paid_cents = EXCLUDED.amount_paid_cents,
+        currency = EXCLUDED.currency,
+        status = EXCLUDED.status,
+        hosted_invoice_url = EXCLUDED.hosted_invoice_url,
+        pdf_url = EXCLUDED.pdf_url`,
+      [
+        invoice.id,
+        organizationId,
+        context.cabinet_id || null,
+        context.owner_user_id || null,
+        invoice.amount_due || 0,
+        invoice.amount_paid || 0,
+        invoice.currency || 'eur',
+        status,
+        invoice.hosted_invoice_url || null,
+        invoice.invoice_pdf || null,
+      ]
+    );
+  } catch (err) {
+    if (!isMissingOptionalTableError(err)) {
+      logger.warn({ error: err.message, organization_id: organizationId, invoice_id: invoice.id }, 'billing_invoices sync skipped');
+    }
+  }
 }
 
 async function findAcceptanceId({ organizationId, userId, planCode, explicitAcceptanceId }) {
@@ -171,18 +274,6 @@ async function markUserSubscription({ userId, planCode, status, stripeCustomerId
   );
 }
 
-async function insertPaymentEventIfNew(event, organizationId = null, subscriptionId = null) {
-  const inserted = await pool.query(
-    `INSERT INTO payment_events (
-      provider, event_id, event_type, organization_id, subscription_id, processed_at, is_idempotent, payload_json, created_at
-    ) VALUES ('stripe', $1, $2, $3, $4, NOW(), TRUE, $5::jsonb, NOW())
-    ON CONFLICT (event_id) DO NOTHING
-    RETURNING id`,
-    [event.id, event.type, organizationId, subscriptionId, JSON.stringify(event)]
-  );
-  return inserted.rows.length > 0;
-}
-
 async function findOrganizationByStripeCustomer(customerId) {
   const row = await pool.query(
     'SELECT organization_id FROM customer_billing_profiles WHERE stripe_customer_id=$1 LIMIT 1',
@@ -277,6 +368,16 @@ async function handleStripeEvent(event) {
       );
     }
 
+    await upsertBillingSubscriptionRecord({
+      organizationId,
+      planCode,
+      status: subStatus,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscriptionId,
+      currentPeriodEnd,
+      cancelAtPeriodEnd,
+    });
+
     if (userId) {
       await markUserSubscription({
         userId,
@@ -324,6 +425,16 @@ async function handleStripeEvent(event) {
       trialStartAt,
       trialEndAt,
       currentPeriodStart,
+      currentPeriodEnd,
+      cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+    });
+
+    await upsertBillingSubscriptionRecord({
+      organizationId,
+      planCode,
+      status: subStatus,
+      stripeCustomerId: customerId || null,
+      stripeSubscriptionId: providerSubscriptionId,
       currentPeriodEnd,
       cancelAtPeriodEnd: !!sub.cancel_at_period_end,
     });
@@ -377,6 +488,12 @@ async function handleStripeEvent(event) {
       ]
     );
 
+    await upsertBillingInvoiceRecord({
+      organizationId,
+      invoice,
+      status: invoice.status || (type === 'invoice.paid' ? 'paid' : 'payment_failed'),
+    });
+
     if (subRowId) {
       const nextStatus = type === 'invoice.paid' ? 'active' : 'past_due';
       await pool.query(
@@ -396,6 +513,7 @@ router.get('/plans', async (_req, res) => {
       billing_mode: stripeService.getBillingMode(),
       trial_days: billingService.TRIAL_DAYS,
       fiscal_label: billingService.FISCAL_LABEL,
+      stripe_configuration: stripeService.getConfigurationStatus(),
       plans: billingService.getPlans(),
     });
   } catch (_err) {
@@ -478,10 +596,12 @@ async function createCheckoutSessionHandler(req, res) {
     }
 
     if (!stripeService.isConfigured()) {
+      const configuration = stripeService.getConfigurationStatus();
       return res.status(503).json({
         success: false,
-        error: 'billing_test_mode_not_configured',
-        message: 'Billing test mode non configuré côté backend.',
+        error: 'stripe_configuration_required',
+        message: 'Configuration Stripe requise côté backend avant de lancer un checkout.',
+        stripe_configuration: configuration,
       });
     }
 
@@ -489,8 +609,9 @@ async function createCheckoutSessionHandler(req, res) {
     if (!priceId) {
       return res.status(503).json({
         success: false,
-        error: 'missing_test_price_id',
-        message: 'Price ID test manquant pour ce plan.',
+        error: 'stripe_price_configuration_required',
+        message: `Price ID Stripe manquant pour le plan ${cleanPlanLabel(planCode)}.`,
+        stripe_configuration: stripeService.getConfigurationStatus(),
       });
     }
 
@@ -537,6 +658,7 @@ async function createCheckoutSessionHandler(req, res) {
 }
 
 router.post('/create-checkout-session', verifyToken, createCheckoutSessionHandler);
+router.post('/checkout-session', verifyToken, createCheckoutSessionHandler);
 router.post('/checkout', verifyToken, createCheckoutSessionHandler);
 
 router.get('/status', verifyToken, async (req, res) => {
@@ -548,6 +670,7 @@ router.get('/status', verifyToken, async (req, res) => {
       success: true,
       billing_mode: stripeService.getBillingMode(),
       fiscal_label: billingService.FISCAL_LABEL,
+      stripe_configuration: stripeService.getConfigurationStatus(),
       status,
     });
   } catch (_err) {
@@ -575,8 +698,9 @@ async function createPortalSessionHandler(req, res) {
     if (!stripeService.isConfigured()) {
       return res.status(503).json({
         success: false,
-        error: 'billing_test_mode_not_configured',
-        message: 'Billing test mode non configuré côté backend.',
+        error: 'stripe_configuration_required',
+        message: 'Configuration Stripe requise côté backend avant d’ouvrir le portail client.',
+        stripe_configuration: stripeService.getConfigurationStatus(),
       });
     }
 
@@ -592,6 +716,7 @@ async function createPortalSessionHandler(req, res) {
 }
 
 router.post('/create-portal-session', verifyToken, createPortalSessionHandler);
+router.post('/portal-session', verifyToken, createPortalSessionHandler);
 router.post('/portal', verifyToken, createPortalSessionHandler);
 
 router.post('/cancel-trial', verifyToken, async (req, res) => {
@@ -602,8 +727,9 @@ router.post('/cancel-trial', verifyToken, async (req, res) => {
     if (!stripeService.isConfigured()) {
       return res.status(503).json({
         success: false,
-        error: 'billing_test_mode_not_configured',
-        message: 'Billing test mode non configuré côté backend.',
+        error: 'stripe_configuration_required',
+        message: 'Configuration Stripe requise côté backend avant de gérer l’abonnement.',
+        stripe_configuration: stripeService.getConfigurationStatus(),
       });
     }
 
@@ -634,7 +760,7 @@ router.post('/cancel-trial', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/webhook', async (req, res) => {
+async function stripeWebhookHandler(req, res) {
   try {
     await billingService.ensureBillingFoundation();
     if (!stripeService.isConfigured()) {
@@ -645,7 +771,7 @@ router.post('/webhook', async (req, res) => {
     if (!signature) return res.status(400).json({ error: 'missing_signature' });
 
     const event = stripeService.constructWebhookEvent(req.rawBody, signature);
-    const newEvent = await insertPaymentEventIfNew(event, null, null);
+    const newEvent = await insertStripePaymentEventIfNew(pool, event, null, null);
     if (!newEvent) {
       return res.status(200).json({ received: true, idempotent: true });
     }
@@ -676,6 +802,9 @@ router.post('/webhook', async (req, res) => {
   } catch (_err) {
     return res.status(400).json({ error: 'invalid_webhook' });
   }
-});
+}
+
+router.post('/webhook', stripeWebhookHandler);
+router.post('/stripe-webhook', stripeWebhookHandler);
 
 module.exports = router;
