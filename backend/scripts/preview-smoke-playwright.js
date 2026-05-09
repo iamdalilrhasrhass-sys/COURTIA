@@ -15,6 +15,7 @@ const RUN_MODE = process.env.PROD_URL ? 'prod' : 'preview'
 const ENABLE_GROWTH_LEADS_SMOKE = String(process.env.SMOKE_GROWTH_LEADS || '').trim() === '1'
 const SKIP_RESPONSIVE = String(process.env.SMOKE_SKIP_RESPONSIVE || '').trim() === '1'
 const STEP_DELAY_MS = Number(process.env.SMOKE_STEP_DELAY_MS || 700)
+const LIGHT_MODE = String(process.env.SMOKE_LIGHT || '').trim() === '1'
 
 function parsePreviewInput(inputUrl) {
   const parsed = new URL(inputUrl)
@@ -529,15 +530,20 @@ async function main() {
     await checkIntegrationsPanel(page)
     await checkRoute(page, '/taches', ['Tâches'])
     await checkRoute(page, '/contrats', ['Contrats'])
-    await checkRoute(page, '/billing', ['Statut abonnement', 'Plans disponibles'])
-    await checkRoute(page, '/onboarding', ['Onboarding cabinet'])
-    await checkRoute(page, '/import', ['Import portefeuille V1'])
-    await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])
 
-    if (!SKIP_RESPONSIVE) {
+    if (!LIGHT_MODE) {
+      await checkRoute(page, '/billing', ['Statut abonnement', 'Plans disponibles'])
+      await checkRoute(page, '/onboarding', ['Onboarding cabinet'])
+      await checkRoute(page, '/import', ['Import portefeuille V1'])
+      await checkRoute(page, '/route-inconnue-courtia', ['Page introuvable'])
+    } else {
+      recordInfo('smoke', 'LIGHT mode enabled: skipping /billing, /onboarding, /import and 404 route checks')
+    }
+
+    if (!SKIP_RESPONSIVE && !LIGHT_MODE) {
       await runResponsiveChecks(page)
     } else {
-      recordInfo('responsive', 'Responsive checks skipped (SMOKE_SKIP_RESPONSIVE=1)')
+      recordInfo('responsive', `Responsive checks skipped (${LIGHT_MODE ? 'SMOKE_LIGHT=1' : 'SMOKE_SKIP_RESPONSIVE=1'})`)
     }
 
     const e2eChecks = [
