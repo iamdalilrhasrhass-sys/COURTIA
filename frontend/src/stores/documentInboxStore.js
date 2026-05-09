@@ -68,6 +68,18 @@ const useDocumentInboxStore = create((set, get) => ({
     }
   },
 
+  sendGeneratedDocumentToSign: async (id, signer = {}, clientId) => {
+    try {
+      const res = await apiPost(`/api/documents/${id}/send-to-sign`, signer)
+      await get().fetchGeneratedDocuments(clientId)
+      return res.data
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Impossible d’envoyer ce document à signer.'
+      set({ error: message })
+      throw err
+    }
+  },
+
   fetchClientDocuments: async (clientId) => {
     set({ loading: true, error: null })
     try {

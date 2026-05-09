@@ -54,6 +54,12 @@ Checkout utilise les Prices Stripe, pas les anciens Plans Stripe. En mode `BILLI
 - `WHATSAPP_BUSINESS_ACCOUNT_ID`
 - `WHATSAPP_APP_SECRET`
 
+## Yousign
+
+- `YOUSIGN_API_KEY`: clé API Yousign v3 utilisée côté backend uniquement.
+- `YOUSIGN_WEBHOOK_SECRET`: secret HMAC pour vérifier les webhooks entrants.
+- `YOUSIGN_BASE_URL`: optionnel, défaut `https://api.yousign.app/v3`.
+
 ## Anthropic / ARK
 
 - `ANTHROPIC_API_KEY`
