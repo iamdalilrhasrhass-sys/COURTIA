@@ -767,7 +767,7 @@ function LeadModal({ onClose }) {
   )
 }
 
-function StateC({ data, onRefresh }) {
+function StateC({ _data, onRefresh }) {
   const navigate = useNavigate()
   const [simulators, setSimulators] = useState([])
   const [partners, setPartners] = useState([])

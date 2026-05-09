@@ -4,7 +4,18 @@ import { ShieldAlert } from 'lucide-react'
 import CourtiaLogoLoader from './brand/CourtiaLogoLoader'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 import AuroraButton from './brand/AuroraButton'
-import { adminFetch, getCourtiaAdminToken } from '../lib/adminApi'
+import { getCourtiaAdminToken } from '../lib/adminApi'
+import { getSessionUser } from '../api/sessionUser'
+import { isAdminRole } from '../lib/roles'
+
+function decodeRoleFromToken(token = '') {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return String(payload?.role || '').toLowerCase()
+  } catch {
+    return ''
+  }
+}
 
 export default function AdminRoute({ children }) {
   const [status, setStatus] = useState('loading') // loading | granted | forbidden | unauthenticated
@@ -16,22 +27,29 @@ export default function AdminRoute({ children }) {
         setStatus('unauthenticated')
         return
       }
+
+      let role = ''
       try {
-        const res = await adminFetch('/analytics')
-        if (res.ok) {
-          setStatus('granted')
-        } else if (res.status === 401) {
-          setStatus('unauthenticated')
-        } else if (res.status === 403) {
-          setStatus('forbidden')
-        } else {
-          setStatus('forbidden')
-        }
+        const sessionUser = await getSessionUser({ allowStaleOn429: true })
+        role = String(sessionUser?.role || '').toLowerCase()
       } catch {
-        setStatus('forbidden')
+        // fallback decode when auth/me is temporarily unavailable
       }
+      if (!role) role = decodeRoleFromToken(token)
+
+      if (isAdminRole(role)) {
+        setStatus('granted')
+        return
+      }
+
+      if (!role) {
+        setStatus('unauthenticated')
+        return
+      }
+
+      setStatus('forbidden')
     }
-    check()
+    check().catch(() => setStatus('forbidden'))
   }, [])
 
   if (status === 'loading') {
@@ -82,13 +100,13 @@ export default function AdminRoute({ children }) {
             <ShieldAlert size={24} />
           </div>
           <p style={{ margin: '0 0 8px', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#93c5fd', fontWeight: 700 }}>
-            Accès super admin requis
+            Accès administrateur requis
           </p>
           <h1 style={{ margin: '0 0 12px', fontSize: 28, lineHeight: 1.08, letterSpacing: '-0.04em' }}>
             Admin Center protégé
           </h1>
           <p style={{ margin: '0 auto 24px', maxWidth: 410, fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,0.66)' }}>
-            Votre session COURTIA est valide, mais elle ne dispose pas des droits super admin nécessaires pour piloter cette zone.
+            Votre session COURTIA est valide, mais elle ne dispose pas des droits administrateur nécessaires pour piloter cette zone.
           </p>
           <AuroraButton href="/dashboard" variant="secondary" size="md">
             Retour au cockpit

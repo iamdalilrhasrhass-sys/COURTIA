@@ -72,7 +72,7 @@ export default function Onboarding() {
         }
       })
       setMapping(autoMapping)
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erreur lors de l\'analyse du fichier')
     }
   }
@@ -98,7 +98,7 @@ export default function Onboarding() {
         setAnalysis({ imported: 42, duplicates: 3, errors: 1, total: 46 })
         setAnalyzing(false)
       }, 2000)
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erreur lors de l\'import')
     } finally {
       setImporting(false)

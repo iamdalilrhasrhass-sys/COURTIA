@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import api from '../api'
 
-const usePartnerStore = create((set, get) => ({
+const usePartnerStore = create((set, _get) => ({
   partners: [],
   stats: null,
   loading: false,
@@ -22,7 +22,7 @@ const usePartnerStore = create((set, get) => ({
     try {
       const { data } = await api.get('/partners/stats')
       set({ stats: data })
-    } catch (err) { /* silencieux */ }
+    } catch (_err) { /* silencieux */ }
   },
 
   createPartner: async (partner) => {

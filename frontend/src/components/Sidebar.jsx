@@ -5,10 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
   Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, HeartHandshake
+  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, HeartHandshake, Euro
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
+import { clearStoredSession } from '../api/sessionPolicy'
+import { resetSessionUserCache } from '../api/sessionUser'
+import { isAdminRole } from '../lib/roles'
 
 const theme = {
   accent: '#5B4DF5',
@@ -33,15 +36,19 @@ const NAV_ITEMS = [
   { path: '/clients', label: 'Clients', icon: Users },
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
+  { path: '/rapports', label: 'Rapports', icon: BarChart2 },
+  { path: '/morning-brief', label: 'Morning Brief', icon: Zap },
+  { path: '/parametres', label: 'Paramètres', icon: Settings },
+  { path: '/equipe', label: 'Équipe', icon: Users },
   { separator: true, label: 'ACQUISITION' },
   { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
   { separator: true, label: 'MODULES' },
   { path: '/academy', label: 'Academy', icon: GraduationCap, badge: 'Nouveau' },
   { path: '/documents', label: 'Documents', icon: FolderOpen },
+  { path: '/commissions', label: 'Commissions', icon: Euro },
   { path: '/browser-pilot', label: 'Browser Pilot', icon: Globe, badge: 'Bêta' },
   { path: '/partners', label: 'Partenaires', icon: HeartHandshake, badge: 'Prospection' },
   { path: '/analytics', label: 'Analyses', icon: BarChart2 },
-  { path: '/parametres', label: 'Paramètres', icon: Settings },
   { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
 ]
 
@@ -61,11 +68,6 @@ export default function Sidebar() {
   const [user, setUser] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Ferme le menu mobile quand on change de page
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname])
-
   useEffect(() => {
     const updateUserState = () => {
       try {
@@ -81,11 +83,16 @@ export default function Sidebar() {
   }, [])
 
   function logout() {
-    localStorage.removeItem('courtia_token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('courtia_user');
-    navigate('/login');
-    toast.success('Déconnexion réussie');
+    clearStoredSession()
+    resetSessionUserCache()
+    sessionStorage.removeItem('courtia_token')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('courtia_user')
+    sessionStorage.removeItem('user')
+    setUser(null)
+    window.dispatchEvent(new Event('profileUpdated'))
+    navigate('/login')
+    toast.success('Déconnexion réussie')
   }
 
   // Normalise l'utilisateur (support camelCase du login + snake_case de /me)
@@ -95,6 +102,11 @@ export default function Sidebar() {
   const userFirstName = user ? (user.first_name || user.firstName || '') : ''
   const userLastName = user ? (user.last_name || user.lastName || '') : ''
   const userEmail = user?.email || ''
+  const userRole = (user?.role || '').toLowerCase()
+  const isAdmin = isAdminRole(userRole)
+  const navItems = isAdmin
+    ? [...NAV_ITEMS, { separator: true, label: 'ADMIN' }, { path: '/admin/costs', label: 'Admin', icon: Shield }]
+    : NAV_ITEMS
 
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === path
@@ -136,7 +148,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '24px 10px', overflowY: 'auto' }}>
-        {NAV_ITEMS.map((item, idx) => {
+        {navItems.map((item, idx) => {
           if (item.separator) {
             return (
               <div key={`sep-${idx}`} style={{ padding: '16px 12px 6px' }}>
@@ -159,7 +171,10 @@ export default function Sidebar() {
           return (
             <React.Fragment key={item.path}>
               <button
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  setMobileOpen(false)
+                  navigate(item.path)
+                }}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -210,7 +225,10 @@ export default function Sidebar() {
                 return (
                   <button
                     key={sub.path}
-                    onClick={() => navigate(sub.path)}
+                    onClick={() => {
+                      setMobileOpen(false)
+                      navigate(sub.path)
+                    }}
                     style={{
                       width: '100%',
                       display: 'flex',
@@ -254,7 +272,10 @@ export default function Sidebar() {
       {/* ARK Button */}
       <div style={{ padding: '4px 14px 12px' }}>
         <button
-          onClick={() => navigate('/capitia')}
+          onClick={() => {
+            setMobileOpen(false)
+            navigate('/capitia')
+          }}
           style={{
             width: '100%',
             display: 'flex',
@@ -374,7 +395,7 @@ export default function Sidebar() {
       </AnimatePresence>
 
       {/* SIDEBAR DESKTOP */}
-      <div style={{ display: 'none' }} className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
+      <div className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
         {sidebarContent}
       </div>
 

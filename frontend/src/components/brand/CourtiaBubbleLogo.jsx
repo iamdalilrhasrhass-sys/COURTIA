@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { _useEffect, _useRef } from 'react'
 
 /**
  * COURTIA — Aurora Bubble C

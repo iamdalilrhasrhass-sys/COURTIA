@@ -10,11 +10,11 @@ export const arkCache = {
       const { ts, data } = JSON.parse(raw)
       if (Date.now() - ts > TTL_MS) { localStorage.removeItem(key(type, clientId)); return null }
       return data
-    } catch { return null }
+    } catch (_err) { return null }
   },
 
   set(type, clientId, data) {
-    try { localStorage.setItem(key(type, clientId), JSON.stringify({ ts: Date.now(), data })) } catch {}
+    try { localStorage.setItem(key(type, clientId), JSON.stringify({ ts: Date.now(), data })) } catch (_err) { /* noop */ }
   },
 
   invalidate(clientId) {
@@ -22,6 +22,6 @@ export const arkCache = {
       Object.keys(localStorage)
         .filter(k => k.startsWith(`ark_`) && k.endsWith(`_${clientId}`))
         .forEach(k => localStorage.removeItem(k))
-    } catch {}
+    } catch (_err) { /* noop */ }
   }
 }

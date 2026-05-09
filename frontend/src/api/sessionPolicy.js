@@ -21,28 +21,59 @@ function getRequestPath(requestUrl = '') {
   }
 }
 
+const ABSOLUTE_URL_RE = /^https?:\/\//i
+
+export function normalizeApiBase(baseUrl = import.meta.env.VITE_API_URL || '/api') {
+  const base = String(baseUrl || '').trim()
+  if (!base || base === '/api') return ''
+
+  return base
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '')
+}
+
 export function getAuthToken(read = (key) => localStorage.getItem(key)) {
   return read('courtia_token') || read('token') || ''
 }
 
 export function clearStoredSession(storage = localStorage) {
-  storage.removeItem('courtia_token')
-  storage.removeItem('token')
-  storage.removeItem('courtia_user')
-  storage.removeItem('user')
+  const storages = [storage]
+  if (typeof window !== 'undefined' && storage === localStorage && window.sessionStorage) {
+    storages.push(window.sessionStorage)
+  }
+
+  storages.forEach((target) => {
+    target.removeItem('courtia_token')
+    target.removeItem('token')
+    target.removeItem('courtia_user')
+    target.removeItem('user')
+  })
 }
 
 export function buildApiUrl(path, baseUrl = import.meta.env.VITE_API_URL || '/api') {
-  const base = String(baseUrl || '').replace(/\/$/, '')
-  let target = String(path || '')
-  target = target.startsWith('/') ? target : `/${target}`
-
-  if (!base) return target
-  if (base.endsWith('/api') && target.startsWith('/api/')) {
-    target = target.replace(/^\/api/, '')
+  const targetRaw = String(path || '').trim()
+  if (!targetRaw) {
+    const normalizedBase = normalizeApiBase(baseUrl)
+    return normalizedBase ? `${normalizedBase}/api` : '/api'
   }
 
-  return `${base}${target}`
+  if (ABSOLUTE_URL_RE.test(targetRaw)) return targetRaw
+
+  let target = targetRaw.startsWith('/') ? targetRaw : `/${targetRaw}`
+
+  // collapse accidental double slashes in path (excluding protocol handled above)
+  target = target.replace(/\/{2,}/g, '/')
+
+  if (!target.startsWith('/api/')) {
+    if (target === '/api') {
+      target = '/api'
+    } else {
+      target = `/api${target}`
+    }
+  }
+
+  const normalizedBase = normalizeApiBase(baseUrl)
+  return normalizedBase ? `${normalizedBase}${target}` : target
 }
 
 export function shouldClearSessionOnUnauthorized(requestUrl = '', responseData = {}) {

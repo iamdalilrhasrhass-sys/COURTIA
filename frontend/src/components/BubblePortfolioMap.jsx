@@ -110,7 +110,7 @@ export default function BubblePortfolioMap({
   const svgRef = useRef(null)
   const tooltipRef = useRef(null)
   const simRef = useRef(null)
-  const animRef = useRef(null)
+  const _animRef = useRef(null)
   const [filter, setFilter] = useState('all')
   const [clients] = useState(() => externalClients && externalClients.length > 0 ? externalClients : generateMockClients())
 
@@ -218,7 +218,7 @@ export default function BubblePortfolioMap({
       })
 
       /* Hover */
-      group.addEventListener('mouseenter', (e) => {
+      group.addEventListener('mouseenter', (_e) => {
         const tip = tooltipRef.current
         if (!tip) return
         const c = n.client

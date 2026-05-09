@@ -1,11 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, CreditCard, Activity, FileText, LifeBuoy, Shield } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Activity, FileText, LifeBuoy, Shield, BrainCircuit } from 'lucide-react'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 
 const links = [
     { to: '/admin', icon: LayoutDashboard, label: "Vue d'ensemble" },
   { to: '/admin/users', icon: Users, label: 'Courtiers' },
   { to: '/admin/subscriptions', icon: CreditCard, label: 'Abonnements' },
+  { to: '/admin/growth-leads', icon: Users, label: 'Growth Leads' },
+  { to: '/admin/costs', icon: BrainCircuit, label: 'Coûts ARK' },
   { to: '/admin/system', icon: Activity, label: 'Système' },
   { to: '/admin/logs', icon: FileText, label: 'Journaux' },
   { to: '/admin/support', icon: LifeBuoy, label: 'Support' },
@@ -13,14 +15,21 @@ const links = [
 
 export default function AdminSidebar() {
   const location = useLocation()
+  const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
+  const visibleLinks = growthLeadsEnabled
+    ? links
+    : links.filter((link) => link.to !== '/admin/growth-leads')
 
   return (
     <aside style={{
-      width: 220, minHeight: '100vh', background: '#0a0a0a',
-      borderRight: '1px solid rgba(255,255,255,0.06)',
+      width: 220, minHeight: '100vh',
+      background: 'linear-gradient(180deg, rgba(6,10,24,0.92), rgba(2,6,18,0.94))',
+      borderRight: '1px solid rgba(255,255,255,0.10)',
       display: 'flex', flexDirection: 'column',
       position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 50,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      backdropFilter: 'blur(14px)',
+      boxShadow: '0 24px 60px rgba(0,0,0,0.38)',
     }}>
       {/* Header */}
       <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -36,7 +45,7 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '12px 10px' }}>
-        {links.map(link => {
+        {visibleLinks.map(link => {
           const active = location.pathname === link.to || (link.to !== '/admin' && location.pathname.startsWith(link.to))
           return (
             <NavLink
@@ -50,6 +59,7 @@ export default function AdminSidebar() {
                 background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
+                transform: active ? 'translateX(1px)' : 'translateX(0)',
               }}
             >
               <link.icon size={15} />

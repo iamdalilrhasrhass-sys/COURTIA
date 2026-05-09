@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, _useMemo } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { TrendingUp, Users, FileText, Percent, Star, CheckSquare } from 'lucide-react'
 import api from '../api'
@@ -107,7 +107,7 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
   const xScale = (i) => padding.left + (i / (data.length - 1)) * (chartW - padding.left - padding.right)
   const yScale = (v) => padding.top + (1 - (v - min) / range) * (chartH - padding.top - padding.bottom)
 
-  const points = data.map((d, i) => `${xScale(i)},${yScale(d.value)}`).join(' ')
+  const _points = data.map((d, i) => `${xScale(i)},${yScale(d.value)}`).join(' ')
 
   const pathD = data.reduce((acc, d, i) => {
     const x = xScale(i)
@@ -242,7 +242,7 @@ export default function AnalyticsExecutive() {
 
   const activeClients = stats?.clientsParStatut?.actif || 0
   const prospects = stats?.clientsParStatut?.prospect || 0
-  const conversionRate = (activeClients + prospects > 0)
+  const _conversionRate = (activeClients + prospects > 0)
     ? (activeClients / (activeClients + prospects)) * 100
     : 0
 

@@ -2,6 +2,7 @@ import axios from 'axios'
 import * as prompts from './prompts.js'
 import { validateArkResponse } from './schema.js'
 import { arkCache } from './cache.js'
+import { buildApiUrl } from '../../api/sessionPolicy'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
@@ -51,7 +52,7 @@ export async function askArk(type, client, scores, contrats) {
   const message = `${context}\n\nMission: ${type}`
 
   const res = await axios.post(
-    `${API_URL}/api/ark/chat`,
+    buildApiUrl('/ark/chat', API_URL),
     { message, clientData: client, conversationHistory: [] },
     { headers: { Authorization: `Bearer ${getToken()}` }, timeout: 90000 }
   )

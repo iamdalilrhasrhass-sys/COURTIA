@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Sun, Users, UserPlus, FileText, BarChart2,
-  Sparkles, CheckSquare, PieChart, Settings, Zap, Search, Command
+  Sparkles, CheckSquare, PieChart, Settings, Zap, Search, Command, Euro
 } from 'lucide-react'
+import api from '../../api'
 
 const ACTIONS = [
   { id: 'dashboard',     label: 'Tableau de bord',  desc: 'Vue d\'ensemble de votre activité',   path: '/dashboard',     icon: LayoutDashboard, cat: 'Navigation' },
@@ -16,6 +17,7 @@ const ACTIONS = [
   { id: 'capitia',       label: 'CAPITIA',           desc: 'Module financement IOBSP',            path: '/capitia',       icon: Sparkles,        cat: 'Navigation' },
   { id: 'taches',        label: 'Tâches',            desc: 'Suivi des tâches en cours',           path: '/taches',        icon: CheckSquare,     cat: 'Navigation' },
   { id: 'rapports',      label: 'Rapports',          desc: 'Rapports et exports PDF',             path: '/rapports',      icon: PieChart,        cat: 'Navigation' },
+  { id: 'commissions',   label: 'Commissions',       desc: 'Suivi par compagnie et apporteur',    path: '/commissions',   icon: Euro,            cat: 'Navigation' },
   { id: 'parametres',    label: 'Paramètres',        desc: 'Configuration du compte',             path: '/parametres',    icon: Settings,        cat: 'Navigation' },
   { id: 'ark',           label: 'Ouvrir ARK',        desc: 'Lancer l\'assistant IA COURTIA',      action: () => window.dispatchEvent(new Event('ark:open')), icon: Zap, cat: 'Action' },
 ]
@@ -29,12 +31,24 @@ export default function CommandPalette({ open, onClose }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [selectedIdx, setSelectedIdx] = useState(0)
+  const [remoteResults, setRemoteResults] = useState([])
   const inputRef = useRef(null)
   const listRef = useRef(null)
 
-  const filtered = ACTIONS.filter(a =>
+  const localFiltered = ACTIONS.filter(a =>
     fuzzy(query, a.label) || fuzzy(query, a.desc)
   )
+  const remoteActions = remoteResults.map((row) => ({
+    id: `remote-${row.type}-${row.id}`,
+    label: row.title,
+    desc: row.subtitle,
+    path: row.path,
+    icon: row.type === 'client' ? Users : row.type === 'contrat' ? FileText : row.type === 'document' ? FileText : Zap,
+    cat: row.type === 'action' ? 'Action' : row.type,
+  }))
+  const filtered = query.trim().length >= 2
+    ? [...remoteActions, ...localFiltered.filter((item) => !remoteActions.some((remote) => remote.path === item.path))].slice(0, 12)
+    : localFiltered
 
   // Reset on open
   useEffect(() => {
@@ -49,6 +63,26 @@ export default function CommandPalette({ open, onClose }) {
   useEffect(() => {
     setSelectedIdx(0)
   }, [query])
+
+  useEffect(() => {
+    let cancelled = false
+    const value = query.trim()
+    if (value.length < 2 || !open) {
+      return () => { cancelled = true }
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/search?q=${encodeURIComponent(value)}&limit=8`)
+        if (!cancelled) setRemoteResults(Array.isArray(res?.data?.rows) ? res.data.rows : [])
+      } catch {
+        if (!cancelled) setRemoteResults([])
+      }
+    }, 160)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [query, open])
 
   // Scroll selected item into view
   useEffect(() => {

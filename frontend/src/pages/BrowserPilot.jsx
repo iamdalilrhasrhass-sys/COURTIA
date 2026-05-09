@@ -164,8 +164,8 @@ export default function BrowserPilot() {
     { type: 'screenshot' },
   ])
   const [dryRun, setDryRun] = useState(true)
-  const [showApproval, setShowApproval] = useState(null)
-  const [expandedTask, setExpandedTask] = useState(null)
+  const [_showApproval, setShowApproval] = useState(null)
+  const [_expandedTask, _setExpandedTask] = useState(null)
 
   const {
     tasks, currentTask, status, serviceStatus,
@@ -192,7 +192,7 @@ export default function BrowserPilot() {
     setActions(actions.filter((_, i) => i !== index))
   }
 
-  const moveAction = (index, dir) => {
+  const _moveAction = (index, dir) => {
     const newActions = [...actions]
     const target = index + dir
     if (target < 0 || target >= newActions.length) return
@@ -205,7 +205,7 @@ export default function BrowserPilot() {
     try {
       await createTask(actions, dryRun, true)
       toast.success('Tâche lancée')
-    } catch (err) {
+    } catch (_err) {
       toast.error("Impossible de lancer la tâche de navigation.")
     }
   }
@@ -215,7 +215,7 @@ export default function BrowserPilot() {
       await approveTask(taskId)
       toast.success('Tâche exécutée !')
       setShowApproval(null)
-    } catch (err) {
+    } catch (_err) {
       toast.error("Impossible d'exécuter la tâche de navigation.")
     }
   }
@@ -226,7 +226,7 @@ export default function BrowserPilot() {
     try {
       await createTask(preset.actions, true, true)
       toast.success(`Préréglage "${preset.name}" lancé`)
-    } catch (err) {
+    } catch (_err) {
       toast.error("Impossible de lancer le préréglage de navigation.")
     }
   }
@@ -237,7 +237,9 @@ export default function BrowserPilot() {
       const interval = setInterval(async () => {
         try {
           await fetchTask(currentTask.taskId)
-        } catch {}
+        } catch (_err) {
+          // Ignore polling transient errors, they are surfaced in the status panel.
+        }
         if (status !== 'running') clearInterval(interval)
       }, 2000)
       return () => clearInterval(interval)

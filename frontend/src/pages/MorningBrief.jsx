@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sun, Zap, TrendingUp, RefreshCw, ChevronRight,
-  AlertCircle, CheckCircle2, Clock, BarChart2, UserPlus
+  AlertCircle, CheckCircle2, Clock, BarChart2, UserPlus, CalendarDays, MessageSquare
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import { getSessionUser } from '../api/sessionUser'
 import PageTransition from '../components/ui/PageTransition'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
 import PremiumTooltip from '../components/ui/PremiumTooltip'
 import PremiumEmptyState from '../components/ui/PremiumEmptyState'
 import { computeDailyPriorities } from '../lib/priorities'
+const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
@@ -25,6 +27,18 @@ function getGreeting() {
 function formatDate() {
   return new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  })
+}
+
+function formatShortDateTime(value) {
+  if (!value) return 'Date inconnue'
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return 'Date inconnue'
+  return d.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -94,6 +108,35 @@ function getBreakdownValue(value) {
 function getBreakdownLabel(key, value) {
   if (value && typeof value === 'object' && value.label) return value.label
   return key.replace(/_/g, ' ')
+}
+
+function mapArkRecommendation(card = {}) {
+  const action = card.suggested_action || {}
+  const target = action.target || {}
+  const clientId = card.client_id || (target.type === 'client' ? target.id : null)
+  return {
+    id: `ark-${card.id || card.kind || card.title}`,
+    clientId,
+    clientNom: card.client_name || 'Priorité ARK',
+    titre: card.title || 'Action recommandée',
+    sousTitre: card.rationale || 'ARK a détecté un signal portefeuille à traiter.',
+    cta: {
+      label: action.label || (clientId ? 'Ouvrir la fiche' : 'Voir le cockpit'),
+      target: clientId ? `/clients/${clientId}` : '/dashboard',
+    },
+  }
+}
+
+function splitArkRecommendations(cards = []) {
+  const grouped = { critiques: [], importantes: [], suggerees: [] }
+  cards.slice(0, 5).forEach((card) => {
+    const mapped = mapArkRecommendation(card)
+    const priority = Number(card.priority || 0)
+    if (priority >= 85) grouped.critiques.push(mapped)
+    else if (priority >= 65) grouped.importantes.push(mapped)
+    else grouped.suggerees.push(mapped)
+  })
+  return grouped
 }
 
 // ─── Skeletons ─────────────────────────────────────────────────────────────────
@@ -397,32 +440,76 @@ export default function MorningBrief() {
   const [scoreError, setScoreError] = useState(null)
   const [regenerating, setRegenerating] = useState(false)
   const [currentPlan, setCurrentPlan] = useState(null)
+  const [integrationEvents, setIntegrationEvents] = useState([])
+  const [whatsappThreads, setWhatsappThreads] = useState([])
+  const [briefSource, setBriefSource] = useState(null)
 
   useEffect(() => {
-    api.get('/auth/me')
-      .then(res => {
-        if (res.data?.first_name) setFirstName(res.data.first_name)
-        if (res.data?.plan) setCurrentPlan(res.data.plan)
-      })
-      .catch(() => {
-        api.get('/plans/info').then(r => { if (r.data?.plan) setCurrentPlan(r.data.plan) }).catch(() => {})
-      })
+    let cancelled = false
+    const loadSession = async () => {
+      try {
+        const user = await getSessionUser()
+        if (cancelled) return
+        if (user?.first_name) setFirstName(user.first_name)
+        if (user?.plan) {
+          setCurrentPlan(user.plan)
+          return
+        }
+      } catch {
+        // fallback below
+      }
+
+      try {
+        const planResponse = await api.get('/plans/info')
+        if (!cancelled && planResponse.data?.plan) {
+          setCurrentPlan(planResponse.data.plan)
+        }
+      } catch {
+        // optional plan info
+      }
+    }
+
+    loadSession()
+    return () => { cancelled = true }
   }, [])
 
   const fetchPriorities = useCallback(async () => {
     setBriefLoading(true)
     try {
-      const [clientsRes, contratsRes, tachesRes] = await Promise.all([
+      const eventsRequest = INTEGRATIONS_API_ENABLED
+        ? api.get('/integrations/google-calendar/events?limit=6').catch(() => ({ data: { rows: [] } }))
+        : Promise.resolve({ data: { rows: [] } })
+      const threadsRequest = INTEGRATIONS_API_ENABLED
+        ? api.get('/integrations/whatsapp/threads?limit=6').catch(() => ({ data: { rows: [] } }))
+        : Promise.resolve({ data: { rows: [] } })
+      const [clientsRes, contratsRes, tachesRes, eventsRes, threadsRes] = await Promise.all([
         api.get('/clients?limit=1000').catch(() => ({ data: [] })),
         api.get('/contrats').catch(() => ({ data: [] })),
         api.get('/taches').catch(() => ({ data: [] })),
+        eventsRequest,
+        threadsRequest,
       ])
       const clients  = Array.isArray(clientsRes.data) ? clientsRes.data : (clientsRes.data?.data || [])
       const contrats = Array.isArray(contratsRes.data) ? contratsRes.data : (contratsRes.data?.data || [])
       const taches   = Array.isArray(tachesRes.data) ? tachesRes.data : (tachesRes.data?.data || [])
-      setPriorities(computeDailyPriorities(clients, contrats, taches))
+      setIntegrationEvents(Array.isArray(eventsRes?.data?.rows) ? eventsRes.data.rows : [])
+      setWhatsappThreads(Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [])
+
+      const proactive = await api.post('/ark/morning-brief').catch(() => null)
+      const proactiveCards = Array.isArray(proactive?.data?.cards) ? proactive.data.cards : []
+      if (proactiveCards.length > 0) {
+        setPriorities(splitArkRecommendations(proactiveCards))
+        setBriefSource({
+          mode: proactive.data?.mode || 'local_fallback',
+          configurationRequired: Boolean(proactive.data?.configuration_required),
+        })
+      } else {
+        setPriorities(computeDailyPriorities(clients, contrats, taches))
+        setBriefSource({ mode: 'local_fallback', configurationRequired: true })
+      }
     } catch {
       setPriorities({ critiques: [], importantes: [], suggerees: [] })
+      setBriefSource({ mode: 'local_fallback', configurationRequired: true })
     } finally {
       setBriefLoading(false)
     }
@@ -453,6 +540,8 @@ export default function MorningBrief() {
     }
   }, [])
 
+  // Hydratation initiale du brief et du score portefeuille.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchPriorities(); fetchScore() }, [fetchPriorities, fetchScore])
 
   const handleRegenerate = async () => {
@@ -559,6 +648,11 @@ export default function MorningBrief() {
                   {totalPriorities}
                 </span>
               )}
+              {!briefLoading && briefSource && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#5b4df5', background: '#eef2ff', padding: '2px 8px', borderRadius: 20 }}>
+                  {briefSource.configurationRequired ? 'ARK mode local' : 'ARK IA prête'}
+                </span>
+              )}
             </div>
 
             {briefLoading ? (
@@ -589,33 +683,6 @@ export default function MorningBrief() {
               </>
             )}
 
-            {/* Bandeau plan (conservé pour compatibilité) */}
-            {false && (
-              <motion.div
-                style={{ marginTop: 12, background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', border: '0.5px solid #bfdbfe', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1d4ed8', margin: '0 0 2px' }}>
-                    Actions masquées
-                  </p>
-                  <p style={{ fontSize: 12, color: '#3b82f6', margin: 0 }}>
-                    Passez à Pro pour accéder à toutes vos actions
-                  </p>
-                </div>
-                <motion.button
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                  onClick={() => navigate('/billing?plan=pro')}
-                  style={{
-                    padding: '7px 14px', background: '#2563eb', color: 'white',
-                    border: 'none', borderRadius: 7, cursor: 'pointer',
-                    fontSize: 12, fontWeight: 600, fontFamily: 'Arial, sans-serif', flexShrink: 0
-                  }}
-                >
-                  Débloquer
-                </motion.button>
-              </motion.div>
-            )}
           </motion.div>
 
           {/* Colonne droite — Score + Métriques */}
@@ -704,6 +771,49 @@ export default function MorningBrief() {
                   )}
                 </div>
               )}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+              style={{
+                background: 'white',
+                border: '0.5px solid #e8e6e0',
+                borderRadius: 16,
+                padding: 18
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <CalendarDays size={15} color="#0a0a0a" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a' }}>Signaux intégrations</span>
+              </div>
+              <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 10px' }}>
+                Agenda et WhatsApp enrichissent les priorités ARK dès qu’ils sont connectés.
+              </p>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+                    Rendez-vous synchronisés: {integrationEvents.length}
+                  </p>
+                  {integrationEvents.slice(0, 1).map((event) => (
+                    <p key={event.id || event.external_event_id} style={{ margin: '4px 0 0', fontSize: 11, color: '#334155' }}>
+                      {event.title || 'Événement'} · {formatShortDateTime(event.start_time)}
+                    </p>
+                  ))}
+                </div>
+                <div style={{ background: '#f0fdf4', border: '0.5px solid #bbf7d0', borderRadius: 10, padding: '10px 12px' }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#14532d' }}>
+                    Threads WhatsApp: {whatsappThreads.length}
+                  </p>
+                  {whatsappThreads.slice(0, 1).map((thread) => (
+                    <p key={thread.id || thread.phone} style={{ margin: '4px 0 0', fontSize: 11, color: '#166534' }}>
+                      <MessageSquare size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: '-1px' }} />
+                      {thread.last_message_preview || 'Dernier message client'}
+                    </p>
+                  ))}
+                </div>
+              </div>
             </motion.div>
 
             {/* Raccourcis */}

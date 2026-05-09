@@ -28,7 +28,7 @@ export default function ScrollCamera3D({ children }) {
     const origins = new Map()
 
     function recalcOrigins() {
-      const vh = window.innerHeight
+      const _vh = window.innerHeight
       depthEls.forEach(el => {
         const rect = el.getBoundingClientRect()
         origins.set(el, window.scrollY + rect.top + rect.height / 2)

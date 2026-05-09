@@ -89,7 +89,7 @@ const afterIndicators = [
 // Petit icône décoratif façon fichier / post-it
 function DecorativeIcons({ type }) {
   const isBefore = type === 'before'
-  const baseColor = isBefore ? 'text-white/10' : 'text-white/15'
+  const _baseColor = isBefore ? 'text-white/10' : 'text-white/15'
   return (
     <div className={`absolute ${isBefore ? '-top-4 -right-4' : '-top-4 -right-4'} opacity-30 pointer-events-none`}>
       {isBefore ? (

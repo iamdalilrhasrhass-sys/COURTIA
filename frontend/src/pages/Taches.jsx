@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Check, Plus, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -10,6 +11,8 @@ import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import AuroraButton from '../components/brand/AuroraButton'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
+
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
 
 const PRIORITY_SECTIONS = [
   { id: 'urgente',   label: 'Urgentes',   color: '#dc2626', bgLight: 'rgba(220,38,38,0.04)', border: '0.5px solid rgba(220,38,38,0.15)' },
@@ -46,7 +49,7 @@ const isOverdue = (d) => {
   return date < today
 }
 
-function TaskRow({ task, priorityColor, onComplete }) {
+function TaskRow({ task, priorityColor, onComplete, onOpenClient }) {
   const clientName = task.client_nom
     ? `${task.client_nom} ${task.client_prenom || ''}`.trim()
     : null
@@ -103,9 +106,34 @@ function TaskRow({ task, priorityColor, onComplete }) {
           {task.titre}
         </span>
         {clientName && (
-          <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', marginTop: 2, display: 'block' }}>
-            {clientName}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', display: 'block' }}>
+              {clientName}
+            </span>
+            {task.client_id && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenClient(task.client_id) }}
+                style={{
+                  border: 'none',
+                  background: 'rgba(37,99,235,0.08)',
+                  color: '#1d4ed8',
+                  borderRadius: 9999,
+                  padding: '1px 8px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Ouvrir client
+              </button>
+            )}
+            {String(task.source || task.origin || '').toLowerCase().includes('ark') && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#7c3aed', background: 'rgba(124,58,237,0.1)', borderRadius: 9999, padding: '1px 7px' }}>
+                Source ARK
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -159,9 +187,13 @@ function TaskRow({ task, priorityColor, onComplete }) {
 }
 
 export default function Taches() {
+  const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [useMock, setUseMock] = useState(false)
+  const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('tous')
+  const [urgencyFilter, setUrgencyFilter] = useState('toutes')
 
   useEffect(() => {
     fetchAll()
@@ -169,30 +201,64 @@ export default function Taches() {
 
   async function fetchAll() {
     setLoading(true)
+    setError('')
     try {
       const { data } = await api.get('/taches')
       setTasks(Array.isArray(data) ? data : [])
       setUseMock(false)
     } catch {
-      // Fallback to mock data if API fails
-      setTasks(MOCK_TASKS)
-      setUseMock(true)
+      if (USE_MOCKS) {
+        setTasks(MOCK_TASKS)
+        setUseMock(true)
+        setError('Mode démonstration actif: affichage des tâches de test.')
+      } else {
+        setTasks([])
+        setUseMock(false)
+        setError('Impossible de charger les tâches pour le moment.')
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const status = String(task.statut || task.status || '').toLowerCase()
+      const priority = String(task.priorite || '').toLowerCase()
+      const due = task.echeance ? new Date(task.echeance) : null
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      if (due) due.setHours(0, 0, 0, 0)
+
+      const statusOk = statusFilter === 'tous'
+        ? true
+        : statusFilter === 'terminee'
+          ? status === 'terminee'
+          : status !== 'terminee'
+
+      const urgencyOk = urgencyFilter === 'toutes'
+        ? true
+        : urgencyFilter === 'retard'
+          ? Boolean(due && due < now && status !== 'terminee')
+          : urgencyFilter === 'urgente'
+            ? priority === 'urgente' || priority === 'haute'
+            : true
+
+      return statusOk && urgencyOk
+    })
+  }, [tasks, statusFilter, urgencyFilter])
+
   // Group tasks by priority
   const tasksByPriority = useMemo(() => {
     const grouped = {}
     PRIORITY_SECTIONS.forEach((s) => { grouped[s.id] = [] })
-    tasks.forEach((t) => {
+    filteredTasks.forEach((t) => {
       const p = t.priorite || 'normale'
       if (grouped[p]) grouped[p].push(t)
       else grouped['normale'].push(t)
     })
     return grouped
-  }, [tasks])
+  }, [filteredTasks])
 
   async function handleComplete(id) {
     if (useMock) {
@@ -205,7 +271,7 @@ export default function Taches() {
       return
     }
     try {
-      await api.put(`/api/taches/${id}`, { statut: 'terminee' })
+      await api.put(`/taches/${id}`, { statut: 'terminee' })
       setTasks((prev) =>
         prev.map((t) =>
           t.id === id ? { ...t, statut: 'terminee' } : t
@@ -246,9 +312,60 @@ export default function Taches() {
           <BubbleBadge color="rgba(0,0,0,0.4)" size="md">{totalCount} total</BubbleBadge>
         </div>
 
+        <div className="mb-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('tous')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusFilter === 'tous' ? 'bg-black text-white border-black' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Tous statuts
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('ouvert')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusFilter === 'ouvert' ? 'bg-black text-white border-black' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            À traiter
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('terminee')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${statusFilter === 'terminee' ? 'bg-black text-white border-black' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Terminées
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrgencyFilter('toutes')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${urgencyFilter === 'toutes' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Toutes urgences
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrgencyFilter('urgente')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${urgencyFilter === 'urgente' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            Priorité haute/urgente
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrgencyFilter('retard')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${urgencyFilter === 'retard' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/70 text-gray-700 border-gray-200'}`}
+          >
+            En retard
+          </button>
+        </div>
+
         {useMock && (
           <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/80 px-4 py-3 text-sm font-medium text-amber-900 shadow-sm">
             Aperçu démonstration : les tâches affichées sont fictives car l’API tâches n’a pas répondu.
+          </div>
+        )}
+
+        {!useMock && error && (
+          <div className="mb-5 rounded-2xl border border-red-200/40 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
+            {error}
           </div>
         )}
 
@@ -308,6 +425,7 @@ export default function Taches() {
                           task={task}
                           priorityColor={section.color}
                           onComplete={handleComplete}
+                          onOpenClient={(clientId) => navigate(`/clients/${clientId}`)}
                         />
                       ))}
                     </AnimatePresence>
@@ -338,6 +456,7 @@ export default function Taches() {
                               task={task}
                               priorityColor={section.color}
                               onComplete={() => {}}
+                              onOpenClient={(clientId) => navigate(`/clients/${clientId}`)}
                             />
                           ))}
                         </div>

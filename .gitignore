@@ -28,6 +28,8 @@ build/
 # Logs
 logs/
 *.log
+backend/test-results/
+frontend/test-results/
 
 # Misc
 .cache
@@ -47,6 +49,9 @@ out/
 .vercel/
 landing/.vercel/
 frontend/.vercel/
+
+# Marketing render temps
+marketing/videos/exports/tmp-*/
 
 # Secrets / keys
 *.pem

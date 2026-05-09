@@ -3,21 +3,51 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const app = express()
+const logger = require('./src/lib/logger')
+const { initSentry, captureException } = require('./src/sentry')
+
+initSentry()
 
 app.use(helmet({ contentSecurityPolicy: false }))
+
+const trustProxyEnv = process.env.TRUST_PROXY
+if (trustProxyEnv === undefined || trustProxyEnv === '') {
+  app.set('trust proxy', 1)
+} else if (trustProxyEnv === 'true') {
+  app.set('trust proxy', true)
+} else if (trustProxyEnv === 'false') {
+  app.set('trust proxy', false)
+} else {
+  const trustProxyInt = Number.parseInt(trustProxyEnv, 10)
+  app.set('trust proxy', Number.isFinite(trustProxyInt) ? trustProxyInt : 1)
+}
 
 const pool = require('./src/db')
 app.locals.pool = pool
 
-// Rate limit global
-const { globalLimiter, arkLimiter, authLimiter } = require('./src/middleware/rateLimit')
-app.use(globalLimiter)
+// Rate limiting
+const { apiLimiter, healthLimiter, arkLimiter } = require('./src/middleware/rateLimit')
+app.use('/api', apiLimiter)
+app.use('/health', healthLimiter)
+app.use('/api/health', healthLimiter)
 
-app.use(cors({ origin: ['https://courtia.vercel.app', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173'], credentials: true }))
+const defaultCorsOrigins = ['https://courtia.vercel.app', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173']
+const envCorsOrigins = String(process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean)
+const corsOrigins = Array.from(new Set([...defaultCorsOrigins, ...envCorsOrigins]))
+app.use(cors({ origin: corsOrigins, credentials: true }))
 app.use(express.json({
   // We need the raw body for Stripe webhook verification
   verify: (req, res, buf) => {
-    if (req.originalUrl.startsWith('/api/stripe/webhook') || req.originalUrl.startsWith('/api/billing/webhook')) {
+    if (
+      req.originalUrl.startsWith('/api/stripe/webhook') ||
+      req.originalUrl.startsWith('/api/billing/webhook') ||
+      req.originalUrl.startsWith('/api/billing/stripe-webhook') ||
+      req.originalUrl.startsWith('/api/documents/yousign/webhook') ||
+      req.originalUrl.startsWith('/api/integrations/whatsapp/webhook')
+    ) {
       req.rawBody = buf
     }
   }
@@ -29,6 +59,27 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block')
   next()
 })
+
+if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
+  app.use((req, res, next) => {
+    const startedAt = Date.now()
+    res.on('finish', () => {
+      const durationMs = Date.now() - startedAt
+      const status = res.statusCode
+      logger.info({
+        type: 'http_request',
+        method: req.method,
+        path: req.originalUrl,
+        status,
+        duration_ms: durationMs,
+        ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null,
+        user_agent: String(req.headers['user-agent'] || '').slice(0, 200),
+        at: new Date().toISOString(),
+      })
+    })
+    next()
+  })
+}
 
 // ==================== AUTH MIDDLEWARE ====================
 
@@ -63,8 +114,26 @@ function arkRateLimit(req, res, next) {
 
 // ==================== HEALTH (public) ====================
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'crm-assurance-backend', timestamp: new Date().toISOString(), uptime: process.uptime() })
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1')
+    res.json({
+      status: 'ok',
+      api: 'ok',
+      db: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    })
+  } catch (err) {
+    res.status(503).json({
+      status: 'degraded',
+      api: 'ok',
+      db: 'error',
+      error: err.message,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    })
+  }
 })
 
 app.get('/api/health', (req, res) => {
@@ -147,6 +216,8 @@ const stripeRouter         = require('./src/routes/stripe')
 const billingRouter        = require('./src/routes/billing')
 const plansRouter          = require('./src/routes/plans')
 const messagingRoutes      = require('./src/routes/messaging')
+const leadsRouter          = require('./src/routes/leads')
+const { router: integrationsRouter } = require('./src/routes/integrations')
 const importRouter         = require('./src/routes/import')
 const importsRouter        = require('./src/routes/imports')
 const reachRouter          = require('./src/routes/reach')
@@ -155,24 +226,39 @@ const documentInboxRouter  = require('./src/routes/documentInbox')
 const browserPilotRouter   = require('./src/routes/browserPilot')
 const extensionRouter      = require('./src/routes/extension')
 const partnersRouter       = require('./src/routes/partners')
+const notificationsRouter  = require('./src/routes/notifications')
+const webhooksRouter       = require('./src/routes/webhooks')
+const featureFlagsRouter   = require('./src/routes/featureFlags')
+const cabinetMembersRouter = require('./src/routes/cabinetMembers')
+const inviteRouter         = require('./src/routes/invite')
+const { router: commissionsRouter } = require('./src/routes/commissions')
+const contractsAliasRouter = require('./src/routes/contractsAlias')
+const searchRouter         = require('./src/routes/search')
+const templatesRouter      = require('./src/routes/templates')
 
 // Public
-app.use('/api/auth',   authLimiter, authRouter)
+app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
 app.use('/api/billing', billingRouter)
+app.use('/api/leads', leadsRouter)
+app.use('/api/integrations', integrationsRouter)
+app.use('/api/webhooks', webhooksRouter)
+app.use('/api/invite', inviteRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
 app.use('/api/clients',         verifyToken, clientsRouter)
 app.use('/api/clients',         verifyToken, clientTagsRouter)
 app.use('/api/contrats',        verifyToken, contratsRouter)
+app.use('/api/contracts',       verifyToken, contractsAliasRouter)
 app.use('/api/taches',          verifyToken, tachesRouter)
 app.use('/api/ark',             verifyToken, arkRateLimit, arkRouter)
 app.use('/api/admin',           verifyToken, adminCostsRouter)
 // Routes Super Admin (back-office propriétaire COURTIA) — verifyToken + superAdminGuard inclus dans le routeur
 app.use('/api/admin/super',    adminSuperAdminRouter)
 app.use('/api/onboarding',      verifyToken, onboardingRouter)
+app.use('/api/cabinet/members', verifyToken, cabinetMembersRouter)
 app.use('/api/stats',           verifyToken, statsRouter)
 app.use('/api/portfolio',       verifyToken, portfolioRouter)
 app.use('/api/financing',       verifyToken, financingRouter)
@@ -182,9 +268,13 @@ app.use('/api/kanban',          verifyToken, kanbanRouter)
 app.use('/api/email-templates', verifyToken, emailTemplatesRouter)
 app.use('/api/automations',     verifyToken, automationsRouter)
 app.use('/api/documents',       verifyToken, documentsRouter)
+app.use('/api/commissions',     verifyToken, commissionsRouter)
 app.use('/api/dda',             verifyToken, ddaQuizRouter)
 app.use('/api/analytics',       verifyToken, analyticsRouter)
 app.use('/api/plans',           verifyToken, plansRouter)
+app.use('/api/feature-flags',   verifyToken, featureFlagsRouter)
+app.use('/api/search',          verifyToken, searchRouter)
+app.use('/api/templates',       verifyToken, templatesRouter)
 app.use('/api/import',          verifyToken, importRouter)
 app.use('/api/imports',         verifyToken, importsRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
@@ -193,6 +283,7 @@ app.use('/api/document-inbox', verifyToken, documentInboxRouter)
 app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 app.use('/api/extension',      verifyToken, extensionRouter)
 app.use('/api/partners',       verifyToken, partnersRouter)
+app.use('/api/notifications',  notificationsRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
@@ -276,8 +367,8 @@ app.use((req, res) => {
 })
 
 app.use((err, req, res, next) => {
-  console.error('Erreur non gérée:', err.message)
-  console.error(err.stack)
+  logger.error({ err, path: req.originalUrl, method: req.method }, 'Erreur non gérée')
+  captureException(err, { path: req.originalUrl, method: req.method, userId: req.user?.id || req.user?.userId })
   res.status(err.status || 500).json({ error: 'Erreur serveur', details: err.message })
 })
 

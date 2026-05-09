@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const { buildBillingTemplate } = require('../emails/templates/billingTemplates');
+const logger = require('../lib/logger');
 
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'disabled';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@courtia.fr';
@@ -39,7 +40,7 @@ function createTransporter() {
 
 async function sendEmail({ to, subject, html, text }) {
   if (!isEmailEnabled()) {
-    console.log(`[Email] disabled - skipped "${subject}" to ${Array.isArray(to) ? to.join(',') : to}`);
+    logger.info({ payload: { to, subject } }, 'Email disabled - skipped send');
     return { skipped: true, reason: 'email_disabled' };
   }
 
@@ -54,7 +55,7 @@ async function sendEmail({ to, subject, html, text }) {
     });
     return { success: true };
   } catch (err) {
-    console.error('[Email] send failed:', err.message);
+    logger.error({ err, payload: { to, subject } }, 'Email send failed');
     return { success: false, error: 'send_failed' };
   }
 }

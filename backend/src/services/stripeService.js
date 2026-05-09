@@ -1,4 +1,5 @@
 let stripeClient = null;
+const STRIPE_API_VERSION = '2026-02-25.clover';
 
 function getBillingMode() {
   return (process.env.BILLING_MODE || 'test').toLowerCase();
@@ -7,7 +8,7 @@ function getBillingMode() {
 function getStripeSecretKey() {
   const mode = getBillingMode();
   if (mode === 'test') {
-    return process.env.STRIPE_SECRET_KEY_TEST || null;
+    return process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY || null;
   }
   return process.env.STRIPE_SECRET_KEY || null;
 }
@@ -15,7 +16,7 @@ function getStripeSecretKey() {
 function getWebhookSecret() {
   const mode = getBillingMode();
   if (mode === 'test') {
-    return process.env.STRIPE_WEBHOOK_SECRET_TEST || null;
+    return process.env.STRIPE_WEBHOOK_SECRET_TEST || process.env.STRIPE_WEBHOOK_SECRET || null;
   }
   return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
@@ -26,19 +27,46 @@ function getPriceId(planCode) {
   if (plan === 'premium') return null;
 
   if (mode === 'test') {
-    if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || null;
-    if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || null;
+    if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
+    if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
+    if (plan === 'cabinet') return process.env.STRIPE_CABINET_PRICE_ID_TEST || process.env.STRIPE_PRICE_CABINET || null;
     return null;
   }
 
   if (plan === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
   if (plan === 'pro') return process.env.STRIPE_PRICE_PRO || null;
+  if (plan === 'cabinet') return process.env.STRIPE_PRICE_CABINET || null;
   return null;
 }
 
 function isConfigured() {
   const key = getStripeSecretKey();
   return !!key;
+}
+
+function getConfigurationStatus() {
+  const missing = [];
+  const mode = getBillingMode();
+  const secretKey = getStripeSecretKey();
+  const webhookSecret = getWebhookSecret();
+  const requiredPricePlans = ['starter', 'pro', 'cabinet'];
+
+  if (!secretKey) missing.push('STRIPE_SECRET_KEY');
+  for (const plan of requiredPricePlans) {
+    if (!getPriceId(plan)) {
+      missing.push(`STRIPE_PRICE_${plan.toUpperCase()}`);
+    }
+  }
+  if (!webhookSecret) missing.push('STRIPE_WEBHOOK_SECRET');
+
+  return {
+    mode,
+    configured: !!secretKey,
+    checkout_ready: !!secretKey && requiredPricePlans.every((plan) => !!getPriceId(plan)),
+    webhook_ready: !!secretKey && !!webhookSecret,
+    missing,
+    api_version: STRIPE_API_VERSION,
+  };
 }
 
 function getStripeClient() {
@@ -48,7 +76,7 @@ function getStripeClient() {
   if (stripeClient) return stripeClient;
 
   const Stripe = require('stripe');
-  stripeClient = new Stripe(getStripeSecretKey(), { apiVersion: '2024-06-20' });
+  stripeClient = new Stripe(getStripeSecretKey(), { apiVersion: STRIPE_API_VERSION });
   return stripeClient;
 }
 
@@ -127,6 +155,7 @@ module.exports = {
   getWebhookSecret,
   getPriceId,
   isConfigured,
+  getConfigurationStatus,
   getStripeClient,
   createOrReuseCustomer,
   createSubscriptionCheckoutSession,

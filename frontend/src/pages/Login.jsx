@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api'
+import { primeSessionUserCache } from '../api/sessionUser'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -462,6 +463,7 @@ export default function Login() {
       localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
       if (user) localStorage.setItem('user', JSON.stringify(user))
+      if (user) primeSessionUserCache(user)
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')

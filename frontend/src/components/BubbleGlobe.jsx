@@ -378,7 +378,7 @@ export default function BubbleGlobe({
 
     const animate = () => {
       const elapsed = clock.getElapsedTime()
-      const delta = clock.getDelta()
+      const _delta = clock.getDelta()
 
       // Update uniforms
       bubbleMat.uniforms.u_time.value = elapsed
@@ -440,7 +440,7 @@ export default function BubbleGlobe({
       window.removeEventListener('mousemove', handleMouse)
       window.removeEventListener('resize', handleResize)
       renderer.dispose()
-      bubbleGeom.dispose()
+      sphereGeom.dispose()
       bubbleMat.dispose()
       glowGeom.dispose()
       glowMat.dispose()

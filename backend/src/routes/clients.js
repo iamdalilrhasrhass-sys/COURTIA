@@ -5,6 +5,7 @@ const { calculateRiskScore } = require('../utils/riskCalculator');
 const { requireUnderLimit } = require('../middleware/planGuard');
 const { getUserPlanInfo } = require('../services/planService');
 const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
+const { listClientInteractions } = require('../services/integrationsStore');
 const Anthropic = require('@anthropic-ai/sdk');
 
 /**
@@ -23,9 +24,26 @@ router.get('/', async (req, res) => {
         id, first_name as prenom, last_name as nom, 
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
+        status, risk_score,
         bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
-        notes, created_at, company_name, type as segment
+        notes, created_at, company_name, type as segment,
+        city, postal_code, silent_alert, last_contact, loyalty_score, lifetime_value,
+        (
+          SELECT COUNT(*)::int
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status = 'actif'
+        ) AS contracts_count,
+        (
+          SELECT COALESCE(SUM(NULLIF(q.quote_data->>'prime_annuelle', '')::numeric), 0)
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status = 'actif'
+        ) AS prime_totale,
+        (
+          SELECT MIN(NULLIF(q.quote_data->>'date_echeance', '')::date)
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status = 'actif'
+        ) AS next_echeance
       FROM clients 
       WHERE courtier_id = $3
       ORDER BY created_at DESC
@@ -61,10 +79,12 @@ router.get('/:id', async (req, res) => {
         id, first_name as prenom, last_name as nom,
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
+        status, risk_score,
         bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
         notes, created_at, company_name, type as segment,
-        loyalty_score, lifetime_value, civility, postal_code, city, country
+        loyalty_score, lifetime_value, civility, postal_code, city, country,
+        silent_alert, last_contact
       FROM clients WHERE id = $1 AND courtier_id = $2`,
       [req.params.id, req.user.id]
     );
@@ -87,11 +107,14 @@ router.get('/:id/contrats', async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const result = await pool.query(
-      `SELECT id,
+      `SELECT q.id,
+              q.client_id,
+              q.status,
+              q.status as statut,
               quote_data->>'type_contrat' as type_contrat,
               quote_data->>'compagnie' as compagnie,
+              quote_data->>'numero' as numero,
               (quote_data->>'prime_annuelle')::numeric as prime_annuelle,
-              status as statut,
               (quote_data->>'date_effet')::date as date_effet,
               (quote_data->>'date_echeance')::date as date_echeance
        FROM quotes q
@@ -104,6 +127,104 @@ router.get('/:id/contrats', async (req, res) => {
   } catch (err) {
     console.error('GET /api/clients/:id/contrats error:', err.message)
     res.status(500).json({ error: err.message })
+  }
+})
+
+/**
+ * GET /api/clients/:id/interactions — Timeline interactions multi-canaux
+ */
+router.get('/:id/interactions', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    const clientId = Number.parseInt(req.params.id, 10)
+    const userId = req.user.id
+    const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 300)
+
+    if (!Number.isFinite(clientId) || clientId <= 0) {
+      return res.status(400).json({ error: 'invalid_client_id' })
+    }
+
+    const ownResult = await pool.query(
+      'SELECT id FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1',
+      [clientId, userId]
+    )
+
+    if (!ownResult.rowCount) {
+      return res.status(404).json({ error: 'Client non trouvé' })
+    }
+
+    const [storedInteractions, taskRows, contractRows] = await Promise.all([
+      listClientInteractions(pool, userId, clientId, { limit }),
+      pool.query(
+        `SELECT id, title, status, start_time, created_at
+         FROM appointments
+         WHERE client_id = $1 AND user_id = $2
+         ORDER BY COALESCE(start_time, created_at) DESC
+         LIMIT 30`,
+        [clientId, userId]
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `SELECT id, status, quote_data, created_at
+         FROM quotes
+         WHERE client_id = $1
+         ORDER BY created_at DESC
+         LIMIT 30`,
+        [clientId]
+      ).catch(() => ({ rows: [] })),
+    ])
+
+    const mappedTasks = (taskRows.rows || []).map((task) => ({
+      id: `task-${task.id}`,
+      provider: 'task',
+      direction: 'system',
+      subject: `Tâche: ${task.title || 'Action'}`,
+      body_preview: `Statut: ${task.status || 'a_faire'}`,
+      occurred_at: task.start_time || task.created_at,
+      metadata: { task_id: task.id, status: task.status || null },
+      source: 'appointments',
+    }))
+
+    const mappedContracts = (contractRows.rows || []).map((contract) => {
+      let quoteData = contract.quote_data || {}
+      if (typeof contract.quote_data === 'string') {
+        try {
+          quoteData = JSON.parse(contract.quote_data)
+        } catch {
+          quoteData = {}
+        }
+      }
+      const typeContrat = quoteData.type_contrat || 'Contrat'
+      const compagnie = quoteData.compagnie || 'Compagnie'
+      const echeance = quoteData.date_echeance || null
+      return {
+        id: `contract-${contract.id}`,
+        provider: 'contract',
+        direction: 'system',
+        subject: `${typeContrat} - ${compagnie}`,
+        body_preview: echeance ? `Échéance: ${echeance}` : `Statut: ${contract.status || 'actif'}`,
+        occurred_at: contract.created_at,
+        metadata: { contract_id: contract.id, status: contract.status || null, quote_data: quoteData },
+        source: 'quotes',
+      }
+    })
+
+    const merged = [...storedInteractions, ...mappedTasks, ...mappedContracts]
+      .sort((a, b) => {
+        const aTs = new Date(a.occurred_at || a.created_at || 0).getTime()
+        const bTs = new Date(b.occurred_at || b.created_at || 0).getTime()
+        return bTs - aTs
+      })
+      .slice(0, limit)
+
+    return res.json({
+      success: true,
+      client_id: clientId,
+      count: merged.length,
+      rows: merged,
+    })
+  } catch (err) {
+    console.error('GET /api/clients/:id/interactions error:', err.message)
+    return res.status(500).json({ error: 'client_interactions_unavailable' })
   }
 })
 
