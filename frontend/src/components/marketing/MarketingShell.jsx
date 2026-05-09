@@ -46,6 +46,7 @@ export default function MarketingShell({ activePath = '/', children }) {
             <Link to="/legal/mentions-legales">Mentions légales</Link>
             <Link to="/legal/confidentialite">Confidentialité</Link>
             <Link to="/legal/cookies">Cookies</Link>
+            <Link to="/legal/conditions-utilisation">Conditions</Link>
             <Link to="/login">Se connecter</Link>
           </div>
         </footer>

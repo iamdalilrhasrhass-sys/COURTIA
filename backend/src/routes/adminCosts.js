@@ -11,11 +11,12 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
+const { isAdminRole } = require('../constants/roles');
 
 // Middleware admin
 const requireAdmin = (req, res, next) => {
   const role = String(req.user?.role || '').toLowerCase();
-  if (!req.user || (role !== 'admin' && role !== 'super_admin')) {
+  if (!req.user || !isAdminRole(role)) {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();

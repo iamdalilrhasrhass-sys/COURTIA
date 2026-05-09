@@ -23,6 +23,7 @@ const { processInboundEmail } = require('../services/inboundProcessor');
 const { getWhatsAppStatus } = require('../services/whatsappService');
 const { getIMAPStatus } = require('../services/imapService');
 const { runDailyRelances } = require('../jobs/relanceScheduler');
+const { isAdminRole } = require('../constants/roles');
 
 // ─── Helper : extraire userId du JWT ────────────────────────
 function getUserId(req) {
@@ -324,7 +325,7 @@ router.post('/relance/trigger-all', verifyToken, async (req, res) => {
     );
 
     const role = userResult.rows[0]?.role;
-    if (role !== 'admin' && role !== 'superadmin') {
+    if (!isAdminRole(role)) {
       return res.status(403).json({
         success: false,
         error: 'Accès réservé aux administrateurs',

@@ -7,7 +7,7 @@ function getBillingMode() {
 function getStripeSecretKey() {
   const mode = getBillingMode();
   if (mode === 'test') {
-    return process.env.STRIPE_SECRET_KEY_TEST || null;
+    return process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY || null;
   }
   return process.env.STRIPE_SECRET_KEY || null;
 }
@@ -15,7 +15,7 @@ function getStripeSecretKey() {
 function getWebhookSecret() {
   const mode = getBillingMode();
   if (mode === 'test') {
-    return process.env.STRIPE_WEBHOOK_SECRET_TEST || null;
+    return process.env.STRIPE_WEBHOOK_SECRET_TEST || process.env.STRIPE_WEBHOOK_SECRET || null;
   }
   return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
@@ -26,8 +26,8 @@ function getPriceId(planCode) {
   if (plan === 'premium') return null;
 
   if (mode === 'test') {
-    if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || null;
-    if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || null;
+    if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
+    if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
     return null;
   }
 

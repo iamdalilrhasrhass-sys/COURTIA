@@ -27,7 +27,13 @@ app.use('/api', apiLimiter)
 app.use('/health', healthLimiter)
 app.use('/api/health', healthLimiter)
 
-app.use(cors({ origin: ['https://courtia.vercel.app', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173'], credentials: true }))
+const defaultCorsOrigins = ['https://courtia.vercel.app', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173']
+const envCorsOrigins = String(process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean)
+const corsOrigins = Array.from(new Set([...defaultCorsOrigins, ...envCorsOrigins]))
+app.use(cors({ origin: corsOrigins, credentials: true }))
 app.use(express.json({
   // We need the raw body for Stripe webhook verification
   verify: (req, res, buf) => {
@@ -43,6 +49,28 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block')
   next()
 })
+
+if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
+  app.use((req, res, next) => {
+    const startedAt = Date.now()
+    res.on('finish', () => {
+      const durationMs = Date.now() - startedAt
+      const status = res.statusCode
+      // Log structuré sans secrets/tokens
+      console.log(JSON.stringify({
+        type: 'http_request',
+        method: req.method,
+        path: req.originalUrl,
+        status,
+        duration_ms: durationMs,
+        ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null,
+        user_agent: String(req.headers['user-agent'] || '').slice(0, 200),
+        at: new Date().toISOString(),
+      }))
+    })
+    next()
+  })
+}
 
 // ==================== AUTH MIDDLEWARE ====================
 
@@ -189,6 +217,8 @@ const documentInboxRouter  = require('./src/routes/documentInbox')
 const browserPilotRouter   = require('./src/routes/browserPilot')
 const extensionRouter      = require('./src/routes/extension')
 const partnersRouter       = require('./src/routes/partners')
+const notificationsRouter  = require('./src/routes/notifications')
+const webhooksRouter       = require('./src/routes/webhooks')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -197,6 +227,7 @@ app.use('/api/stripe', stripeRouter) // Handles public webhook and protected che
 app.use('/api/billing', billingRouter)
 app.use('/api/leads', leadsRouter)
 app.use('/api/integrations', integrationsRouter)
+app.use('/api/webhooks', webhooksRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
@@ -229,6 +260,7 @@ app.use('/api/document-inbox', verifyToken, documentInboxRouter)
 app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 app.use('/api/extension',      verifyToken, extensionRouter)
 app.use('/api/partners',       verifyToken, partnersRouter)
+app.use('/api/notifications',  notificationsRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 

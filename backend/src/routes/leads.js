@@ -5,6 +5,7 @@ const {
   sanitizeDemoRequestPayload,
   validateDemoRequestPayload,
 } = require('../services/demoRequestService')
+const { isAdminRole } = require('../constants/roles')
 
 const router = express.Router()
 
@@ -17,7 +18,7 @@ const ALLOWED_EVENT_NAMES = new Set([
 
 function requireAdmin(req, res, next) {
   const role = String(req.user?.role || '').toLowerCase()
-  if (role !== 'admin' && role !== 'super_admin') {
+  if (!isAdminRole(role)) {
     return res.status(403).json({ error: 'Admin access required' })
   }
   return next()

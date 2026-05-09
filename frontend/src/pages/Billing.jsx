@@ -30,12 +30,13 @@ export default function Billing() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
   }, [])
 
   async function manageSubscription() {
     try {
-      const res = await api.post('/billing/create-portal-session')
+      const res = await api.post('/billing/portal')
       if (res.data?.url) window.location.href = res.data.url
     } catch (err) {
       setError(err.response?.data?.message || 'Portail client indisponible pour le moment.')
@@ -79,13 +80,16 @@ export default function Billing() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
         <section style={panel}>
           <h3 style={title}>Statut abonnement</h3>
-          <Info label="Plan" value={status?.plan_name || status?.plan_code || 'Starter'} />
-          <Info label="Statut" value={status?.status || 'not_started'} />
+          <Info label="Plan" value={status?.plan_name || status?.plan_code || 'Aucun abonnement actif'} />
+          <Info label="Statut" value={status?.status || 'inactive'} />
           <Info label="Fin essai" value={status?.trial_end_at ? new Date(status.trial_end_at).toLocaleString('fr-FR') : '—'} />
           <Info label="Fin période" value={status?.current_period_end ? new Date(status.current_period_end).toLocaleString('fr-FR') : '—'} />
           <Info label="Customer Stripe" value={status?.stripe_customer_id_masked || '—'} />
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
+            <button type="button" onClick={() => navigate('/onboarding?plan=pro')} style={btnPrimary}>
+              <CreditCard size={14} /> Passer à Pro
+            </button>
             <button type="button" onClick={() => navigate('/onboarding')} style={btnPrimary}>
               <CreditCard size={14} /> Activer / modifier mon essai
             </button>

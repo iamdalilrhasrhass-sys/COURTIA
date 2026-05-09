@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Upload, Database, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react'
 import api from '../api'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
@@ -39,8 +39,6 @@ export default function ImportPortfolio() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
-  const mappingEntries = useMemo(() => Object.entries(suggestedMapping || {}), [suggestedMapping])
-
   async function loadHistory() {
     setLoadingHistory(true)
     try {
@@ -63,7 +61,7 @@ export default function ImportPortfolio() {
 
     setLoadingPreview(true)
     try {
-      const res = await api.post('/imports/preview', formData, {
+      const res = await api.post('/import/clients/preview', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
@@ -98,7 +96,7 @@ export default function ImportPortfolio() {
     setError('')
     setResult(null)
     try {
-      const res = await api.post('/imports/commit', {
+      const res = await api.post('/import/clients/confirm', {
         import_job_id: importJobId,
         mapping: suggestedMapping,
       })

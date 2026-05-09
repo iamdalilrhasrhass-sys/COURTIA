@@ -205,6 +205,10 @@ export default function LandingPublic() {
             <h3>Gmail / Outlook</h3>
             <p>Architecture OAuth prête pour centraliser les échanges email métier.</p>
           </article>
+          <article className="mk-card">
+            <h3>Webhooks Make / Zapier</h3>
+            <p>Automations prêtes via webhooks entrants/sortants (activation progressive cabinet).</p>
+          </article>
         </div>
       </section>
 
@@ -298,6 +302,28 @@ export default function LandingPublic() {
         </div>
       </section>
 
+      <section className="mk-section" id="roi">
+        <span className="mk-eyebrow"><BarChart3 size={12} /> Valeur métier</span>
+        <h2 className="mk-section-title">Combien vaut une relance oubliée ?</h2>
+        <p className="mk-section-sub">
+          COURTIA ne promet pas de miracle. Le produit vise à mieux suivre le portefeuille et à réduire les oublis opérationnels.
+        </p>
+        <div className="mk-grid">
+          {[
+            'Repérer les clients à risque avant qu’ils ne partent.',
+            'Préparer les rendez-vous avec le contexte client complet.',
+            'Mieux suivre les échéances et les tâches prioritaires.',
+            'Centraliser agenda, WhatsApp, emails et actions métier.',
+            'Aider le cabinet à prioriser les dossiers à forte valeur.',
+            'Réduire les pertes liées aux relances tardives ou manquées.',
+          ].map((line) => (
+            <article key={line} className="mk-card">
+              <p>{line}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="mk-section" id="social-proof">
         <span className="mk-eyebrow"><Sparkles size={12} /> Bêta privée</span>
         <h2 className="mk-section-title">Ouverture progressive aux premiers cabinets partenaires</h2>
@@ -310,7 +336,7 @@ export default function LandingPublic() {
         <span className="mk-eyebrow"><ArrowRight size={12} /> Demande de démo</span>
         <h2 className="mk-section-title">Votre portefeuille mérite mieux qu\'un tableau figé.</h2>
         <p className="mk-section-sub">
-          Demandez une démo et voyons ensemble comment transformer vos données en actions commerciales quotidiennes.
+          Votre portefeuille devient vivant. Chaque matin, ARK transforme vos données en priorités actionnables.
         </p>
         <div style={{ marginTop: 16 }}>
           <DemoRequestForm />
