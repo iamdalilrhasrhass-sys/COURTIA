@@ -45,7 +45,8 @@ app.use(express.json({
       req.originalUrl.startsWith('/api/stripe/webhook') ||
       req.originalUrl.startsWith('/api/billing/webhook') ||
       req.originalUrl.startsWith('/api/billing/stripe-webhook') ||
-      req.originalUrl.startsWith('/api/documents/yousign/webhook')
+      req.originalUrl.startsWith('/api/documents/yousign/webhook') ||
+      req.originalUrl.startsWith('/api/integrations/whatsapp/webhook')
     ) {
       req.rawBody = buf
     }
