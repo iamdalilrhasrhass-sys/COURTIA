@@ -25,9 +25,9 @@ This document is the source of truth for runtime configuration. Never commit rea
 
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REDIRECT_URI`
-- `GOOGLE_CALENDAR_REDIRECT_URI`
-- `GOOGLE_GMAIL_REDIRECT_URI`
+- `GOOGLE_REDIRECT_URI`: callback OAuth combiné Google Agenda + Gmail (`/api/integrations/google/oauth/callback`).
+- `GOOGLE_CALENDAR_REDIRECT_URI`: callback optionnel Agenda seul (`/api/integrations/google-calendar/callback`).
+- `GOOGLE_GMAIL_REDIRECT_URI`: callback optionnel Gmail seul (`/api/integrations/gmail/callback`).
 
 ## Stripe
 
