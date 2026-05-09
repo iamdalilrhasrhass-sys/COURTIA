@@ -4,7 +4,7 @@ import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } fro
 
 // ─── Feature Configuration ────────────────────────────────────────────────────
 
-const featureLabels = {
+const _featureLabels = {
   morning_brief: 'Morning Brief',
   client_score: 'Score Client ARK',
   tags_kanban: 'Tags & Kanban',

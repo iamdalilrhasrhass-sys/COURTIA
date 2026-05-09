@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useParams } from 'react-router-dom'
 import {
   Upload, Check, AlertCircle, Clock, FileText, ArrowLeft,
   Shield, Lock, X, File, FileImage, FileSpreadsheet,
@@ -32,11 +31,6 @@ const FILE_ICONS = {
   'image/heic': FileImage,
 }
 
-function formatDate(d) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
 function formatFileSize(bytes) {
   if (bytes < 1024) return bytes + ' o'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko'
@@ -45,7 +39,6 @@ function formatFileSize(bytes) {
 
 export default function PublicDocumentUpload() {
   const { token } = useParams()
-  const navigate = useNavigate()
 
   const [requestInfo, setRequestInfo] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -77,7 +70,7 @@ export default function PublicDocumentUpload() {
         } else {
           throw new Error('Erreur lors du chargement')
         }
-      } catch (err) {
+      } catch (_err) {
         setError("Ce lien de dépôt n'est plus valide. Contactez votre courtier pour en obtenir un nouveau.")
       }
       setLoading(false)
@@ -149,7 +142,7 @@ export default function PublicDocumentUpload() {
           created_at: new Date().toISOString(),
         }])
         toast.success(`${file.name} envoyé avec succès !`)
-      } catch (err) {
+      } catch (_err) {
         toast.error(`${file.name} : impossible de transmettre ce fichier. Vérifiez qu'il n'est pas corrompu puis réessayez.`)
       }
     }
@@ -164,7 +157,9 @@ export default function PublicDocumentUpload() {
         const data = await res.json()
         if (data.success) setRequestInfo(data.data)
       }
-    } catch {}
+    } catch (_err) {
+      // Non bloquant: la vue conserve les fichiers envoyés localement.
+    }
   }
 
   if (loading) {

@@ -9,8 +9,9 @@ Séquence:
 - BOUM Fiche client → POP "Vue 360"
 - BOUM Contrats → POP "Échéances sous contrôle"
 - BOUM Tâches → POP "Actions à traiter"
+- BOUM Google Agenda → POP "Rendez-vous préparés"
+- BOUM WhatsApp Business → POP "Conversations centralisées"
 - BOUM Morning Brief → POP "Plan de journée intelligent"
-- BOUM Rapports → POP "Pilotage cabinet"
 - BOUM Admin Costs → POP "Coûts IA maîtrisés"
 
 Final:

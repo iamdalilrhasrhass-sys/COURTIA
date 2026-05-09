@@ -59,7 +59,7 @@ function TaskCard({ task, onEdit, onDelete }) {
   )
 }
 
-function TaskModal({ task, clientId, onSave, onClose }) {
+function TaskModal({ task, _clientId, onSave, onClose }) {
   const [form, setForm] = useState({ titre: '', description: '', priorite: 'normale', echeance: '' })
   
   useEffect(() => { if (task) { setForm({ ...task, echeance: task.echeance ? task.echeance.split('T')[0] : '' }) } else { setForm({ titre: '', description: '', priorite: 'normale', echeance: '' }) } }, [task])
@@ -89,7 +89,7 @@ function TaskModal({ task, clientId, onSave, onClose }) {
   )
 }
 
-export default function TachesTab({ taches: initialTaches = [], clientId, navigate }) {
+export default function TachesTab({ taches: initialTaches = [], clientId, _navigate }) {
   const [taches, setTaches] = useState(initialTaches)
   const [showModal, setShowModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)

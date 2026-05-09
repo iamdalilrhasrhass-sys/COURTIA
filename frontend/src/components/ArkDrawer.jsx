@@ -29,7 +29,7 @@ export default function ArkDrawer({ isOpen, onClose, token }) {
       })
       const data = await res.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply || 'Erreur' }])
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erreur ARK')
     } finally {
       setLoading(false)
