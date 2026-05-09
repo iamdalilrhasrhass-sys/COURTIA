@@ -15,7 +15,7 @@ export default function MarketingShell({ activePath = '/', children }) {
   return (
     <div className="mk-page">
       <div className="mk-grid-overlay" aria-hidden="true" />
-      <div className="mk-shell">
+      <div className="mk-shell courtia-depth-stage">
         <div className="mk-nav-wrap">
           <header className="mk-nav">
             <Link to="/" className="mk-brand" aria-label="COURTIA Home">
