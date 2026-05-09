@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase } from 'lucide-react'
 import api from '../api'
@@ -90,7 +90,8 @@ const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
 
 export default function Parametres() {
   const navigate = useNavigate()
-  const [activeSection, setActiveSection] = useState('profil')
+  const location = useLocation()
+  const [activeSection, setActiveSection] = useState(() => (location.pathname.endsWith('/integrations') ? 'integrations' : 'profil'))
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -107,6 +108,7 @@ export default function Parametres() {
     fetchProfile()
     if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
   }, [])
+
 
   async function fetchProfile(options = {}) {
     const { force = false, silent = false } = options
