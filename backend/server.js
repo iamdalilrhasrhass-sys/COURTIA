@@ -223,6 +223,8 @@ const partnersRouter       = require('./src/routes/partners')
 const notificationsRouter  = require('./src/routes/notifications')
 const webhooksRouter       = require('./src/routes/webhooks')
 const featureFlagsRouter   = require('./src/routes/featureFlags')
+const cabinetMembersRouter = require('./src/routes/cabinetMembers')
+const inviteRouter         = require('./src/routes/invite')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -232,6 +234,7 @@ app.use('/api/billing', billingRouter)
 app.use('/api/leads', leadsRouter)
 app.use('/api/integrations', integrationsRouter)
 app.use('/api/webhooks', webhooksRouter)
+app.use('/api/invite', inviteRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
@@ -244,6 +247,7 @@ app.use('/api/admin',           verifyToken, adminCostsRouter)
 // Routes Super Admin (back-office propriétaire COURTIA) — verifyToken + superAdminGuard inclus dans le routeur
 app.use('/api/admin/super',    adminSuperAdminRouter)
 app.use('/api/onboarding',      verifyToken, onboardingRouter)
+app.use('/api/cabinet/members', verifyToken, cabinetMembersRouter)
 app.use('/api/stats',           verifyToken, statsRouter)
 app.use('/api/portfolio',       verifyToken, portfolioRouter)
 app.use('/api/financing',       verifyToken, financingRouter)
