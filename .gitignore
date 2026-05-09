@@ -29,6 +29,7 @@ build/
 logs/
 *.log
 backend/test-results/
+frontend/test-results/
 
 # Misc
 .cache

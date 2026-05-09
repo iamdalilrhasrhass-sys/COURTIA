@@ -130,3 +130,12 @@
 PREVIEW_URL="https://<preview>?_vercel_share=<token>" npm --prefix backend run qa:preview-smoke
 npm --prefix backend run qa:prod-smoke
 ```
+
+## Contrôles PR12 Aurora / hardening
+
+- `/dev/ui` affiche les primitives Aurora / 3D sans erreur runtime.
+- Les bulles décoratives restent `pointer-events: none` et derrière le contenu.
+- Les effets respectent `prefers-reduced-motion`.
+- `npm --prefix frontend run build` reste OK.
+- Le bundle ne grossit pas brutalement hors nouveaux chunks attendus.
+- Le garde-fou double préfixe API reste à zéro.
