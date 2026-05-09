@@ -206,3 +206,12 @@ Docs associées :
 - `docs/SECURITY_OVERVIEW.md`
 - `docs/RGPD_DPA.md`
 - `docs/HELP_CENTER.md`
+
+## Contrôle admin Dalil / super_admin
+
+- super_admin doit être accepté comme rôle admin complet.
+- /api/auth/me doit retourner role=super_admin.
+- /admin et /admin/costs doivent être granted.
+- Ne jamais hardcoder un email pour contourner l'accès admin.
+- En production, PM2 doit pointer vers la DB crm_assurance.
+- Vérifier avec pm2 env courtia-api après chaque changement d'environnement.
