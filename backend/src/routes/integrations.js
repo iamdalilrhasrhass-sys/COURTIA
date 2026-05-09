@@ -4,7 +4,9 @@ const axios = require('axios')
 const { OAuth2Client } = require('google-auth-library')
 
 const { verifyToken } = require('../middleware/auth')
+const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const { getJwtSecret } = require('../utils/jwtSecret')
+const logger = require('../lib/logger')
 const {
   PROVIDERS,
   getUserId,
@@ -20,45 +22,34 @@ const {
   listClientInteractions,
   listWhatsappThreads,
   upsertWhatsappThread,
+  findWhatsappConversationByPhone,
+  upsertWhatsappConversation,
+  insertWhatsappMessage,
   findClientByPhone,
   findClientByEmail,
 } = require('../services/integrationsStore')
 const { hasEncryptionKey, encryptSecret, decryptSecret } = require('../services/integrationSecrets')
+const {
+  GOOGLE_CALENDAR_SCOPES,
+  GMAIL_SCOPES,
+  GOOGLE_COMBINED_SCOPES,
+  getGoogleConfig,
+  isGoogleConfigured,
+  encodeGmailRawMessage,
+  extractGmailMessageSummary,
+} = require('../services/googleIntegrationService')
+const {
+  buildWhatsappPayload,
+  getWhatsappTemplates,
+  isWhatsappWindowOpen,
+  parseWhatsappWebhookMessages,
+  sanitizeWhatsappPhone,
+  verifyMetaSignature,
+} = require('../services/whatsappBusinessService')
 
 const router = express.Router()
 
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000
-const GOOGLE_CALENDAR_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
-const GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-
-const WHATSAPP_TEMPLATES = [
-  {
-    key: 'relance_echeance',
-    label: 'Relance échéance',
-    body: 'Bonjour {{prenom}}, votre échéance de contrat approche. Souhaitez-vous que nous préparions le renouvellement ensemble ?'
-  },
-  {
-    key: 'demande_pieces',
-    label: 'Demande de pièces',
-    body: 'Bonjour {{prenom}}, pour finaliser votre dossier, pouvez-vous nous envoyer les pièces manquantes aujourd\'hui ?'
-  },
-  {
-    key: 'confirmation_rdv',
-    label: 'Confirmation rendez-vous',
-    body: 'Bonjour {{prenom}}, je vous confirme notre rendez-vous du {{date}} à {{heure}}. À très vite.'
-  },
-  {
-    key: 'relance_prospect',
-    label: 'Relance prospect',
-    body: 'Bonjour {{prenom}}, je reviens vers vous concernant votre projet d\'assurance. Un créneau de 10 minutes cette semaine ?'
-  },
-  {
-    key: 'suivi_apres_appel',
-    label: 'Suivi après appel',
-    body: 'Merci pour notre échange {{prenom}}. Je vous envoie la proposition et reste disponible pour vos questions.'
-  },
-]
-
 function getStateSecret() {
   return process.env.ENCRYPTION_KEY || getJwtSecret()
 }
@@ -101,7 +92,7 @@ function maskSecretValue(value) {
 }
 
 function sanitizePhone(phone) {
-  return String(phone || '').replace(/[^0-9+]/g, '')
+  return sanitizeWhatsappPhone(phone)
 }
 
 function withUserId(req, res) {
@@ -111,19 +102,6 @@ function withUserId(req, res) {
     return null
   }
   return userId
-}
-
-function getGoogleConfig() {
-  return {
-    clientId: process.env.GOOGLE_CLIENT_ID || '',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    redirectUri: process.env.GOOGLE_REDIRECT_URI || '',
-  }
-}
-
-function isGoogleConfigured() {
-  const conf = getGoogleConfig()
-  return Boolean(conf.clientId && conf.clientSecret && conf.redirectUri)
 }
 
 function getOutlookConfig() {
@@ -145,8 +123,8 @@ function buildProviderReadiness(provider) {
   if (normalized === 'google_calendar' || normalized === 'gmail') {
     return {
       provider: normalized,
-      configured: isGoogleConfigured(),
-      oauthReady: isGoogleConfigured(),
+      configured: isGoogleConfigured(normalized),
+      oauthReady: isGoogleConfigured(normalized),
       encryptionReady: hasEncryptionKey(),
     }
   }
@@ -223,6 +201,138 @@ function htmlCallbackResponse(title, body) {
 </head><body><div class="card"><h1>${title}</h1><p>${body}</p><p>Vous pouvez fermer cet onglet et revenir dans COURTIA.</p></div></body></html>`
 }
 
+async function fetchGoogleAccountEmail(accessToken) {
+  if (!accessToken) return null
+  try {
+    const response = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: 10000,
+    })
+    return response.data?.email || null
+  } catch (err) {
+    logger.warn({ error: err.message }, 'google account email lookup failed')
+    return null
+  }
+}
+
+async function exchangeGoogleAuthorizationCode(provider, code) {
+  if (!isGoogleConfigured(provider)) {
+    return { ok: false, error: 'google_oauth_not_configured' }
+  }
+  if (!hasEncryptionKey()) {
+    return { ok: false, error: 'encryption_key_missing' }
+  }
+
+  try {
+    const googleConfig = getGoogleConfig(provider)
+    const oauthClient = new OAuth2Client(googleConfig.clientId, googleConfig.clientSecret, googleConfig.redirectUri)
+    const tokenResponse = await oauthClient.getToken(code)
+    const tokens = tokenResponse.tokens || {}
+    const accountEmail = await fetchGoogleAccountEmail(tokens.access_token)
+
+    return {
+      ok: Boolean(tokens.access_token),
+      accessTokenEncrypted: encryptSecret(tokens.access_token),
+      refreshTokenEncrypted: encryptSecret(tokens.refresh_token),
+      tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+      accountEmail,
+      error: tokens.access_token ? null : 'google_access_token_missing',
+    }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+}
+
+function emailFromAddress(value = '') {
+  const text = String(value || '').trim()
+  const match = text.match(/<([^>]+)>/)
+  return String(match?.[1] || text).trim().toLowerCase()
+}
+
+async function recordEmailThread(pool, userId, clientId, summary, direction = 'inbound') {
+  try {
+    const thread = await pool.query(
+      `INSERT INTO email_threads (
+        user_id, client_id, provider, external_thread_id, subject, last_message_at,
+        participants, ark_tags, created_at, updated_at
+      ) VALUES ($1,$2,'gmail',$3,$4,$5,$6,$7,NOW(),NOW())
+      ON CONFLICT (user_id, provider, external_thread_id) DO UPDATE SET
+        client_id = COALESCE(EXCLUDED.client_id, email_threads.client_id),
+        subject = COALESCE(EXCLUDED.subject, email_threads.subject),
+        last_message_at = GREATEST(email_threads.last_message_at, EXCLUDED.last_message_at),
+        participants = EXCLUDED.participants,
+        updated_at = NOW()
+      RETURNING id`,
+      [
+        userId,
+        clientId || null,
+        summary.threadId || summary.messageId,
+        summary.subject,
+        summary.sentAt || new Date(),
+        [summary.from, summary.to].filter(Boolean),
+        [],
+      ]
+    )
+
+    await pool.query(
+      `INSERT INTO email_messages (
+        thread_id, external_message_id, from_address, to_addresses, subject,
+        body_preview, sent_at, direction, ark_summary, created_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+      ON CONFLICT (thread_id, external_message_id) DO UPDATE SET
+        body_preview = EXCLUDED.body_preview,
+        sent_at = EXCLUDED.sent_at,
+        direction = EXCLUDED.direction`,
+      [
+        thread.rows[0].id,
+        summary.messageId,
+        summary.from || '',
+        summary.to ? [summary.to] : [],
+        summary.subject || null,
+        summary.snippet || '',
+        summary.sentAt || new Date(),
+        direction,
+        summary.snippet || null,
+      ]
+    )
+  } catch (err) {
+    if (err?.code !== '42P01') {
+      logger.warn({ error: err.message, user_id: userId }, 'gmail thread persistence skipped')
+    }
+  }
+}
+
+async function upsertOAuthTokenRecord(pool, userId, exchange, scopes = GOOGLE_COMBINED_SCOPES) {
+  if (!exchange?.ok || !exchange.accessTokenEncrypted) return
+  try {
+    await pool.query(
+      `INSERT INTO oauth_tokens (
+        user_id, provider, account_email, access_token_enc, refresh_token_enc,
+        scopes, expires_at, last_sync_at, status, created_at
+      ) VALUES ($1,'google',$2,$3,$4,$5,$6,NOW(),'active',NOW())
+      ON CONFLICT (user_id, provider, account_email) DO UPDATE SET
+        access_token_enc = EXCLUDED.access_token_enc,
+        refresh_token_enc = COALESCE(EXCLUDED.refresh_token_enc, oauth_tokens.refresh_token_enc),
+        scopes = EXCLUDED.scopes,
+        expires_at = EXCLUDED.expires_at,
+        last_sync_at = NOW(),
+        status = 'active'`,
+      [
+        userId,
+        exchange.accountEmail || `google-user-${userId}`,
+        exchange.accessTokenEncrypted,
+        exchange.refreshTokenEncrypted,
+        scopes,
+        exchange.tokenExpiresAt,
+      ]
+    )
+  } catch (err) {
+    if (err?.code !== '42P01') {
+      logger.warn({ error: err.message, user_id: userId }, 'oauth token mirror skipped')
+    }
+  }
+}
+
 // Public webhook endpoint (Meta verification challenge)
 router.get('/whatsapp/webhook', async (req, res) => {
   const mode = req.query['hub.mode']
@@ -241,81 +351,107 @@ router.post('/whatsapp/webhook', async (req, res) => {
   const pool = req.app.locals.pool
   await ensureIntegrationsSchema(pool)
 
-  const payload = req.body || {}
-  const entries = Array.isArray(payload.entry) ? payload.entry : []
+  const signature = verifyMetaSignature({
+    rawBody: req.rawBody,
+    signatureHeader: req.get('x-hub-signature-256'),
+    appSecret: process.env.WHATSAPP_APP_SECRET,
+  })
+
+  if (!signature.configured) {
+    return res.status(503).json({ error: 'whatsapp_app_secret_missing' })
+  }
+  if (!signature.valid) {
+    return res.status(403).json({ error: 'whatsapp_signature_invalid' })
+  }
 
   try {
-    for (const entry of entries) {
-      const changes = Array.isArray(entry.changes) ? entry.changes : []
-      for (const change of changes) {
-        const value = change.value || {}
-        const metadata = value.metadata || {}
-        const phoneNumberId = metadata.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID || null
+    const messages = parseWhatsappWebhookMessages(req.body || {})
 
-        const messages = Array.isArray(value.messages) ? value.messages : []
-        for (const message of messages) {
-          const fromPhone = sanitizePhone(message.from)
-          if (!fromPhone) continue
-
-          const messageText = message?.text?.body || message?.button?.text || message?.interactive?.button_reply?.title || '[message whatsapp]'
-          const occurredAt = message?.timestamp ? new Date(Number(message.timestamp) * 1000) : new Date()
-
-          let userId = null
-          if (phoneNumberId) {
-            const owner = await pool.query(
-              `SELECT user_id
-               FROM integrations
-               WHERE provider = 'whatsapp_business'
-                 AND metadata->>'phone_number_id' = $1
-               ORDER BY updated_at DESC
-               LIMIT 1`,
-              [String(phoneNumberId)]
-            )
-            userId = owner.rows[0]?.user_id ? Number(owner.rows[0].user_id) : null
-          }
-
-          if (!userId) {
-            continue
-          }
-
-          const client = await findClientByPhone(pool, userId, fromPhone)
-
-          await upsertWhatsappThread(pool, {
-            user_id: userId,
-            client_id: client?.id || null,
-            phone: fromPhone,
-            external_thread_id: fromPhone,
-            last_message_preview: String(messageText).slice(0, 220),
-            last_message_at: occurredAt,
-            status: 'open',
-            metadata: {
-              webhook: true,
-              message_id: message.id || null,
-              contact_name: value.contacts?.[0]?.profile?.name || null,
-            },
-          })
-
-          await recordClientInteraction(pool, {
-            user_id: userId,
-            client_id: client?.id || null,
-            provider: 'whatsapp_business',
-            direction: 'in',
-            external_id: message.id || null,
-            subject: 'Message WhatsApp entrant',
-            body_preview: String(messageText).slice(0, 320),
-            occurred_at: occurredAt,
-            metadata: {
-              phone_number_id: phoneNumberId,
-              from: fromPhone,
-            },
-          })
-        }
+    for (const message of messages) {
+      let userId = null
+      if (message.phoneNumberId) {
+        const owner = await pool.query(
+          `SELECT user_id
+           FROM integrations
+           WHERE provider = 'whatsapp_business'
+             AND metadata->>'phone_number_id' = $1
+           ORDER BY updated_at DESC
+           LIMIT 1`,
+          [String(message.phoneNumberId)]
+        )
+        userId = owner.rows[0]?.user_id ? Number(owner.rows[0].user_id) : null
       }
+
+      if (!userId) continue
+
+      const client = await findClientByPhone(pool, userId, message.phone)
+      const preview = String(message.text || '').slice(0, 320)
+
+      await upsertWhatsappThread(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        phone: message.phone,
+        external_thread_id: message.phone,
+        last_message_preview: preview.slice(0, 220),
+        last_message_at: message.occurredAt,
+        status: 'open',
+        metadata: {
+          webhook: true,
+          message_id: message.messageId,
+          contact_name: message.contactName,
+          message_type: message.type,
+        },
+      })
+
+      const conversation = await upsertWhatsappConversation(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        phone_e164: message.phone,
+        external_conversation_id: message.phone,
+        last_message_preview: preview.slice(0, 220),
+        last_message_at: message.occurredAt,
+        status: 'open',
+        metadata: {
+          phone_number_id: message.phoneNumberId,
+          contact_name: message.contactName,
+        },
+      })
+
+      if (conversation?.id) {
+        await insertWhatsappMessage(pool, {
+          conversation_id: conversation.id,
+          external_id: message.messageId || `in-${message.phone}-${Date.now()}`,
+          direction: 'inbound',
+          body_preview: preview,
+          media_type: message.type === 'text' ? null : message.type,
+          status: 'received',
+          sent_at: message.occurredAt,
+          metadata: {
+            phone_number_id: message.phoneNumberId,
+            raw_type: message.type,
+          },
+        })
+      }
+
+      await recordClientInteraction(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        provider: 'whatsapp_business',
+        direction: 'in',
+        external_id: message.messageId,
+        subject: 'Message WhatsApp entrant',
+        body_preview: preview,
+        occurred_at: message.occurredAt,
+        metadata: {
+          phone_number_id: message.phoneNumberId,
+          from: message.phone,
+        }
+      })
     }
 
     return res.status(200).json({ received: true })
   } catch (err) {
-    console.error('[integrations] whatsapp webhook error:', err.message)
+    logger.error({ error: err.message }, 'integrations whatsapp webhook failed')
     return res.status(500).json({ error: 'whatsapp_webhook_store_failed' })
   }
 })
@@ -346,49 +482,23 @@ router.get('/google-calendar/callback', async (req, res) => {
     return res.status(400).send(htmlCallbackResponse('Connexion Google incomplète', 'Aucun code OAuth reçu.'))
   }
 
-  const googleConfig = getGoogleConfig()
-  let tokenExchangeOk = false
-  let tokenExchangeError = null
-  let encryptedAccessToken = null
-  let encryptedRefreshToken = null
-  let tokenExpiresAt = null
-
-  if (isGoogleConfigured()) {
-    try {
-      const oauthClient = new OAuth2Client(googleConfig.clientId, googleConfig.clientSecret, googleConfig.redirectUri)
-      const tokenResponse = await oauthClient.getToken(code)
-      const tokens = tokenResponse.tokens || {}
-
-      if (!hasEncryptionKey()) {
-        throw new Error('ENCRYPTION_KEY missing')
-      }
-
-      encryptedAccessToken = encryptSecret(tokens.access_token)
-      encryptedRefreshToken = encryptSecret(tokens.refresh_token)
-      if (tokens.expiry_date) {
-        tokenExpiresAt = new Date(tokens.expiry_date)
-      }
-      tokenExchangeOk = Boolean(encryptedAccessToken)
-    } catch (err) {
-      tokenExchangeError = err.message
-    }
-  } else {
-    tokenExchangeError = 'google_oauth_not_configured'
-  }
+  const exchange = await exchangeGoogleAuthorizationCode('google_calendar', code)
 
   await upsertIntegration(pool, userId, 'google_calendar', {
-    status: tokenExchangeOk ? 'connected' : 'authorization_received',
-    access_token_encrypted: encryptedAccessToken,
-    refresh_token_encrypted: encryptedRefreshToken,
-    token_expires_at: tokenExpiresAt,
+    status: exchange.ok ? 'connected' : 'authorization_received',
+    external_account_email: exchange.accountEmail,
+    access_token_encrypted: exchange.accessTokenEncrypted,
+    refresh_token_encrypted: exchange.refreshTokenEncrypted,
+    token_expires_at: exchange.tokenExpiresAt,
     scopes: GOOGLE_CALENDAR_SCOPES,
     metadata: {
       oauth_completed_at: new Date().toISOString(),
-      token_exchange_error: tokenExchangeError,
+      token_exchange_error: exchange.error,
     },
   })
+  await upsertOAuthTokenRecord(pool, userId, exchange, GOOGLE_CALENDAR_SCOPES)
 
-  if (tokenExchangeOk) {
+  if (exchange.ok) {
     return res.status(200).send(htmlCallbackResponse('Google Agenda connecté', 'Votre compte Google Agenda est maintenant connecté à COURTIA.'))
   }
 
@@ -416,16 +526,79 @@ router.get('/gmail/callback', async (req, res) => {
     return res.status(400).send(htmlCallbackResponse('Connexion Gmail refusée', 'La connexion Gmail a été refusée.'))
   }
 
+  const exchange = code ? await exchangeGoogleAuthorizationCode('gmail', code) : { ok: false, error: 'google_code_missing' }
+
   await upsertIntegration(pool, userId, 'gmail', {
-    status: code ? 'authorization_received' : 'pending_oauth',
+    status: exchange.ok ? 'connected' : (code ? 'authorization_received' : 'pending_oauth'),
+    external_account_email: exchange.accountEmail,
+    access_token_encrypted: exchange.accessTokenEncrypted,
+    refresh_token_encrypted: exchange.refreshTokenEncrypted,
+    token_expires_at: exchange.tokenExpiresAt,
     scopes: GMAIL_SCOPES,
     metadata: {
       oauth_completed_at: new Date().toISOString(),
-      token_exchange: 'not_implemented_v1',
+      token_exchange_error: exchange.error,
     },
   })
+  await upsertOAuthTokenRecord(pool, userId, exchange, GMAIL_SCOPES)
 
-  return res.status(200).send(htmlCallbackResponse('Connexion Gmail enregistrée', 'L\'architecture OAuth Gmail est prête. La synchronisation pourra être activée avec l\'échange de token serveur.'))
+  if (exchange.ok) {
+    return res.status(200).send(htmlCallbackResponse('Gmail connecté', 'Votre compte Gmail est maintenant connecté à COURTIA.'))
+  }
+
+  return res.status(200).send(htmlCallbackResponse('Connexion Gmail enregistrée', 'Autorisation reçue, mais l\'échange de token n\'a pas pu être finalisé automatiquement. Vérifiez la configuration backend.'))
+})
+
+router.get('/google/oauth/callback', async (req, res) => {
+  const pool = req.app.locals.pool
+  await ensureIntegrationsSchema(pool)
+
+  const statePayload = parseState(req.query.state)
+  if (!statePayload || statePayload.provider !== 'google') {
+    return res.status(400).send(htmlCallbackResponse('Connexion Google invalide', 'Le state OAuth est invalide ou expiré. Recommencez depuis COURTIA.'))
+  }
+
+  const userId = Number(statePayload.userId)
+  const code = String(req.query.code || '')
+  const providerError = String(req.query.error || '')
+
+  if (providerError) {
+    await Promise.all([
+      upsertIntegration(pool, userId, 'google_calendar', { status: 'oauth_denied', metadata: { last_oauth_error: providerError } }),
+      upsertIntegration(pool, userId, 'gmail', { status: 'oauth_denied', metadata: { last_oauth_error: providerError } }),
+    ])
+    return res.status(400).send(htmlCallbackResponse('Connexion Google refusée', 'L’autorisation Google a été refusée.'))
+  }
+
+  if (!code) {
+    return res.status(400).send(htmlCallbackResponse('Connexion Google incomplète', 'Aucun code OAuth reçu.'))
+  }
+
+  const exchange = await exchangeGoogleAuthorizationCode('google', code)
+  const sharedPatch = {
+    status: exchange.ok ? 'connected' : 'authorization_received',
+    external_account_email: exchange.accountEmail,
+    access_token_encrypted: exchange.accessTokenEncrypted,
+    refresh_token_encrypted: exchange.refreshTokenEncrypted,
+    token_expires_at: exchange.tokenExpiresAt,
+    metadata: {
+      oauth_completed_at: new Date().toISOString(),
+      token_exchange_error: exchange.error,
+      combined_google_oauth: true,
+    },
+  }
+
+  await Promise.all([
+    upsertIntegration(pool, userId, 'google_calendar', { ...sharedPatch, scopes: GOOGLE_CALENDAR_SCOPES }),
+    upsertIntegration(pool, userId, 'gmail', { ...sharedPatch, scopes: GMAIL_SCOPES }),
+    upsertOAuthTokenRecord(pool, userId, exchange, GOOGLE_COMBINED_SCOPES),
+  ])
+
+  if (exchange.ok) {
+    return res.status(200).send(htmlCallbackResponse('Google connecté', 'Google Agenda et Gmail sont maintenant connectés à COURTIA.'))
+  }
+
+  return res.status(200).send(htmlCallbackResponse('Autorisation Google reçue', 'Autorisation reçue, mais l’échange de token n’a pas pu être finalisé automatiquement. Vérifiez la configuration backend.'))
 })
 
 router.get('/outlook/callback', async (req, res) => {
@@ -478,15 +651,123 @@ router.get('/status', async (req, res) => {
       providers: PROVIDERS,
       environment: {
         encryptionReady: hasEncryptionKey(),
-        googleConfigured: isGoogleConfigured(),
+        googleConfigured: isGoogleConfigured('google'),
+        googleCalendarConfigured: isGoogleConfigured('google_calendar'),
+        gmailConfigured: isGoogleConfigured('gmail'),
         outlookConfigured: isOutlookConfigured(),
         whatsappConfigured: Boolean(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID),
       },
       timestamp: new Date().toISOString(),
     })
   } catch (err) {
-    console.error('[integrations] GET /status error:', err.message)
+    logger.error({ error: err.message }, 'integrations status failed')
     return res.status(500).json({ error: 'integrations_status_failed' })
+  }
+})
+
+router.get('/google/status', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    const userId = withUserId(req, res)
+    if (!userId) return
+
+    await ensureIntegrationsSchema(pool)
+    const [calendar, gmail] = await Promise.all([
+      getIntegration(pool, userId, 'google_calendar'),
+      getIntegration(pool, userId, 'gmail'),
+    ])
+
+    return res.json({
+      success: true,
+      provider: 'google',
+      configured: isGoogleConfigured('google'),
+      encryptionReady: hasEncryptionKey(),
+      calendar: {
+        status: calendar?.status || 'disconnected',
+        external_account_email: calendar?.external_account_email || null,
+        last_sync_at: calendar?.last_sync_at || null,
+        configured: isGoogleConfigured('google_calendar'),
+      },
+      gmail: {
+        status: gmail?.status || 'disconnected',
+        external_account_email: gmail?.external_account_email || null,
+        last_sync_at: gmail?.last_sync_at || null,
+        configured: isGoogleConfigured('gmail'),
+      },
+    })
+  } catch (err) {
+    logger.error({ error: err.message }, 'integrations google status failed')
+    return res.status(500).json({ error: 'google_status_failed' })
+  }
+})
+
+router.get('/google/oauth/start', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    const userId = withUserId(req, res)
+    if (!userId) return
+
+    await ensureIntegrationsSchema(pool)
+    if (!isGoogleConfigured('google')) {
+      await Promise.all([
+        upsertIntegration(pool, userId, 'google_calendar', { status: 'configuration_required', metadata: { config_missing: true } }),
+        upsertIntegration(pool, userId, 'gmail', { status: 'configuration_required', metadata: { config_missing: true } }),
+      ])
+      return res.status(400).json({
+        error: 'google_not_configured',
+        details: 'Configurez GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET et GOOGLE_REDIRECT_URI.',
+      })
+    }
+
+    const state = signState({
+      userId,
+      provider: 'google',
+      issuedAt: Date.now(),
+      nonce: crypto.randomBytes(10).toString('hex'),
+    })
+    const conf = getGoogleConfig('google')
+    const oauthClient = new OAuth2Client(conf.clientId, conf.clientSecret, conf.redirectUri)
+    const authUrl = oauthClient.generateAuthUrl({
+      access_type: 'offline',
+      prompt: 'consent',
+      scope: GOOGLE_COMBINED_SCOPES,
+      include_granted_scopes: true,
+      state,
+    })
+
+    await Promise.all([
+      upsertIntegration(pool, userId, 'google_calendar', { status: 'pending_oauth', scopes: GOOGLE_CALENDAR_SCOPES, metadata: { oauth_started_at: new Date().toISOString(), combined_google_oauth: true } }),
+      upsertIntegration(pool, userId, 'gmail', { status: 'pending_oauth', scopes: GMAIL_SCOPES, metadata: { oauth_started_at: new Date().toISOString(), combined_google_oauth: true } }),
+    ])
+
+    return res.json({ success: true, provider: 'google', authUrl })
+  } catch (err) {
+    logger.error({ error: err.message }, 'integrations google oauth start failed')
+    return res.status(500).json({ error: 'google_oauth_start_failed' })
+  }
+})
+
+router.post('/google/disconnect', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    const userId = withUserId(req, res)
+    if (!userId) return
+
+    const [calendar, gmail] = await Promise.all([
+      disconnectIntegration(pool, userId, 'google_calendar'),
+      disconnectIntegration(pool, userId, 'gmail'),
+    ])
+    return res.json({
+      success: true,
+      provider: 'google',
+      integrations: {
+        google_calendar: calendar || { provider: 'google_calendar', status: 'disconnected' },
+        gmail: gmail || { provider: 'gmail', status: 'disconnected' },
+      },
+    })
+  } catch (err) {
+    logger.error({ error: err.message }, 'integrations google disconnect failed')
+    return res.status(500).json({ error: 'google_disconnect_failed' })
   }
 })
 
@@ -500,15 +781,15 @@ router.get('/google-calendar/status', async (req, res) => {
     return res.json({
       provider: 'google_calendar',
       status: row?.status || 'disconnected',
-      configured: isGoogleConfigured(),
-      oauthReady: isGoogleConfigured(),
+      configured: isGoogleConfigured('google_calendar'),
+      oauthReady: isGoogleConfigured('google_calendar'),
       encryptionReady: hasEncryptionKey(),
       external_account_email: row?.external_account_email || null,
       last_sync_at: row?.last_sync_at || null,
       metadata: row?.metadata || {},
     })
   } catch (err) {
-    console.error('[integrations] google status error:', err.message)
+    logger.error({ error: err.message }, 'integrations google calendar status failed')
     return res.status(500).json({ error: 'google_calendar_status_failed' })
   }
 })
@@ -520,7 +801,7 @@ router.post('/google-calendar/connect', async (req, res) => {
     const pool = req.app.locals.pool
     await ensureIntegrationsSchema(pool)
 
-    if (!isGoogleConfigured()) {
+    if (!isGoogleConfigured('google_calendar')) {
       await upsertIntegration(pool, userId, 'google_calendar', {
         status: 'configuration_required',
         metadata: { config_missing: true },
@@ -538,7 +819,7 @@ router.post('/google-calendar/connect', async (req, res) => {
       nonce: crypto.randomBytes(10).toString('hex'),
     })
 
-    const conf = getGoogleConfig()
+    const conf = getGoogleConfig('google_calendar')
     const oauthClient = new OAuth2Client(conf.clientId, conf.clientSecret, conf.redirectUri)
     const authUrl = oauthClient.generateAuthUrl({
       access_type: 'offline',
@@ -558,7 +839,7 @@ router.post('/google-calendar/connect', async (req, res) => {
 
     return res.json({ success: true, provider: 'google_calendar', authUrl })
   } catch (err) {
-    console.error('[integrations] google connect error:', err.message)
+    logger.error({ error: err.message }, 'integrations google calendar connect failed')
     return res.status(500).json({ error: 'google_calendar_connect_failed' })
   }
 })
@@ -572,12 +853,12 @@ router.post('/google-calendar/disconnect', async (req, res) => {
     const updated = await disconnectIntegration(pool, userId, 'google_calendar')
     return res.json({ success: true, integration: updated || { provider: 'google_calendar', status: 'disconnected' } })
   } catch (err) {
-    console.error('[integrations] google disconnect error:', err.message)
+    logger.error({ error: err.message }, 'integrations google calendar disconnect failed')
     return res.status(500).json({ error: 'google_calendar_disconnect_failed' })
   }
 })
 
-router.post('/google-calendar/sync', async (req, res) => {
+async function syncGoogleCalendarHandler(req, res) {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
@@ -673,15 +954,18 @@ router.post('/google-calendar/sync', async (req, res) => {
       timestamp: new Date().toISOString(),
     })
   } catch (err) {
-    console.error('[integrations] google sync error:', err.message)
+    logger.error({ error: err.message }, 'integrations google calendar sync failed')
     return res.status(500).json({
       error: 'google_calendar_sync_failed',
       details: err.response?.data?.error?.message || err.message,
     })
   }
-})
+}
 
-router.get('/google-calendar/events', async (req, res) => {
+router.post('/google-calendar/sync', syncGoogleCalendarHandler)
+router.post('/calendar/sync', syncGoogleCalendarHandler)
+
+async function listGoogleCalendarEventsHandler(req, res) {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
@@ -691,12 +975,15 @@ router.get('/google-calendar/events', async (req, res) => {
     const events = await listCalendarEvents(pool, userId, { provider: 'google_calendar', limit })
     return res.json({ success: true, provider: 'google_calendar', count: events.length, rows: events })
   } catch (err) {
-    console.error('[integrations] google events error:', err.message)
+    logger.error({ error: err.message }, 'integrations google calendar events failed')
     return res.status(500).json({ error: 'google_calendar_events_failed' })
   }
-})
+}
 
-router.get('/whatsapp/status', async (req, res) => {
+router.get('/google-calendar/events', listGoogleCalendarEventsHandler)
+router.get('/calendar/events', listGoogleCalendarEventsHandler)
+
+router.get('/whatsapp/status', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
@@ -720,12 +1007,12 @@ router.get('/whatsapp/status', async (req, res) => {
       },
     })
   } catch (err) {
-    console.error('[integrations] whatsapp status error:', err.message)
+    logger.error({ error: err.message }, 'integrations whatsapp status failed')
     return res.status(500).json({ error: 'whatsapp_status_failed' })
   }
 })
 
-router.post('/whatsapp/configure', async (req, res) => {
+router.post('/whatsapp/configure', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
@@ -756,19 +1043,23 @@ router.post('/whatsapp/configure', async (req, res) => {
         : 'Configuration incomplète. Vérifiez WHATSAPP_ACCESS_TOKEN et WHATSAPP_PHONE_NUMBER_ID.',
     })
   } catch (err) {
-    console.error('[integrations] whatsapp configure error:', err.message)
+    logger.error({ error: err.message }, 'integrations whatsapp configure failed')
     return res.status(500).json({ error: 'whatsapp_configure_failed' })
   }
 })
 
-router.post('/whatsapp/send', async (req, res) => {
+router.post('/whatsapp/send', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
 
     const body = req.body || {}
-    const message = String(body.message || '').trim()
+    const message = String(body.message || body.body || '').trim()
+    const templateId = String(body.templateId || body.template_id || '').trim()
+    const templateVariables = Array.isArray(body.templateVariables || body.template_variables)
+      ? (body.templateVariables || body.template_variables)
+      : []
     let to = sanitizePhone(body.to)
     const clientId = Number(body.clientId || body.client_id || 0)
 
@@ -789,11 +1080,13 @@ router.post('/whatsapp/send', async (req, res) => {
       return res.status(400).json({ error: 'whatsapp_to_missing' })
     }
 
-    if (!message) {
+    if (!message && !templateId) {
       return res.status(400).json({ error: 'whatsapp_message_missing' })
     }
 
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
+    const integration = await getIntegration(pool, userId, 'whatsapp_business')
+    const metadata = integration?.metadata || {}
+    const phoneNumberId = metadata.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID
     const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
 
     if (!phoneNumberId || !accessToken) {
@@ -803,16 +1096,32 @@ router.post('/whatsapp/send', async (req, res) => {
       })
     }
 
+    const conversation = await findWhatsappConversationByPhone(pool, userId, to)
+    const textAllowed = templateId || isWhatsappWindowOpen(conversation?.last_message_at)
+    if (!textAllowed) {
+      return res.status(400).json({
+        error: 'whatsapp_template_required',
+        details: 'La fenêtre client 24h est fermée. Utilisez un template Meta approuvé.',
+        templates: getWhatsappTemplates(),
+      })
+    }
+
     const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`
+    let whatsappPayload
+    try {
+      whatsappPayload = buildWhatsappPayload({
+        to,
+        message,
+        templateId,
+        templateVariables,
+        language: body.language || 'fr',
+      })
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'whatsapp_payload_invalid' })
+    }
     const response = await axios.post(
       url,
-      {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to,
-        type: 'text',
-        text: { body: message },
-      },
+      whatsappPayload,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -826,18 +1135,50 @@ router.post('/whatsapp/send', async (req, res) => {
       client = await findClientByPhone(pool, userId, to)
     }
 
+    const preview = message || `Template ${templateId}`
     await upsertWhatsappThread(pool, {
       user_id: userId,
       client_id: client?.id || null,
       phone: to,
       external_thread_id: to,
-      last_message_preview: message.slice(0, 220),
+      last_message_preview: preview.slice(0, 220),
       last_message_at: new Date(),
       status: 'open',
       metadata: {
         last_message_direction: 'out',
+        template_id: templateId || null,
       },
     })
+
+    const savedConversation = await upsertWhatsappConversation(pool, {
+      user_id: userId,
+      client_id: client?.id || null,
+      phone_e164: to,
+      external_conversation_id: to,
+      last_message_preview: preview.slice(0, 220),
+      last_message_at: new Date(),
+      status: 'open',
+      metadata: {
+        last_message_direction: 'outbound',
+        phone_number_id: phoneNumberId,
+      },
+    })
+
+    if (savedConversation?.id) {
+      await insertWhatsappMessage(pool, {
+        conversation_id: savedConversation.id,
+        external_id: response.data?.messages?.[0]?.id || `out-${Date.now()}`,
+        direction: 'outbound',
+        body_preview: preview.slice(0, 320),
+        status: response.data?.messages?.[0]?.message_status || 'sent',
+        template_id: templateId || null,
+        sent_at: new Date(),
+        metadata: {
+          payload_type: whatsappPayload.type,
+          phone_number_id: phoneNumberId,
+        },
+      })
+    }
 
     await recordClientInteraction(pool, {
       user_id: userId,
@@ -846,11 +1187,12 @@ router.post('/whatsapp/send', async (req, res) => {
       direction: 'out',
       external_id: response.data?.messages?.[0]?.id || null,
       subject: 'Message WhatsApp envoyé',
-      body_preview: message.slice(0, 320),
+      body_preview: preview.slice(0, 320),
       occurred_at: new Date(),
       metadata: {
         to,
         phone_number_id: phoneNumberId,
+        template_id: templateId || null,
       },
     })
 
@@ -869,7 +1211,7 @@ router.post('/whatsapp/send', async (req, res) => {
       response: response.data,
     })
   } catch (err) {
-    console.error('[integrations] whatsapp send error:', err.response?.data || err.message)
+    logger.error({ error: err.message }, 'integrations whatsapp send failed')
     return res.status(500).json({
       error: 'whatsapp_send_failed',
       details: err.response?.data?.error?.message || err.message,
@@ -877,23 +1219,24 @@ router.post('/whatsapp/send', async (req, res) => {
   }
 })
 
-router.get('/whatsapp/threads', async (req, res) => {
+router.get('/whatsapp/threads', requireCabinetFeature('v1_whatsapp_business'), async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
 
     const limit = Number(req.query.limit || 50)
-    const rows = await listWhatsappThreads(pool, userId, { limit })
+    const clientId = req.query.client_id || req.query.clientId || null
+    const rows = await listWhatsappThreads(pool, userId, { limit, clientId })
     return res.json({ success: true, provider: 'whatsapp_business', count: rows.length, rows })
   } catch (err) {
-    console.error('[integrations] whatsapp threads error:', err.message)
+    logger.error({ error: err.message }, 'integrations whatsapp threads failed')
     return res.status(500).json({ error: 'whatsapp_threads_failed' })
   }
 })
 
-router.get('/whatsapp/templates', async (_req, res) => {
-  return res.json({ success: true, provider: 'whatsapp_business', templates: WHATSAPP_TEMPLATES })
+router.get('/whatsapp/templates', requireCabinetFeature('v1_whatsapp_business'), async (_req, res) => {
+  return res.json({ success: true, provider: 'whatsapp_business', templates: getWhatsappTemplates() })
 })
 
 router.get('/gmail/status', async (req, res) => {
@@ -906,13 +1249,13 @@ router.get('/gmail/status', async (req, res) => {
     return res.json({
       provider: 'gmail',
       status: row?.status || 'disconnected',
-      configured: isGoogleConfigured(),
-      oauthReady: isGoogleConfigured(),
+      configured: isGoogleConfigured('gmail'),
+      oauthReady: isGoogleConfigured('gmail'),
       last_sync_at: row?.last_sync_at || null,
       metadata: row?.metadata || {},
     })
   } catch (err) {
-    console.error('[integrations] gmail status error:', err.message)
+    logger.error({ error: err.message }, 'integrations gmail status failed')
     return res.status(500).json({ error: 'gmail_status_failed' })
   }
 })
@@ -923,7 +1266,7 @@ router.post('/gmail/connect', async (req, res) => {
     if (!userId) return
     const pool = req.app.locals.pool
 
-    if (!isGoogleConfigured()) {
+    if (!isGoogleConfigured('gmail')) {
       await upsertIntegration(pool, userId, 'gmail', {
         status: 'configuration_required',
         metadata: { config_missing: true },
@@ -941,7 +1284,7 @@ router.post('/gmail/connect', async (req, res) => {
       nonce: crypto.randomBytes(10).toString('hex'),
     })
 
-    const conf = getGoogleConfig()
+    const conf = getGoogleConfig('gmail')
     const oauthClient = new OAuth2Client(conf.clientId, conf.clientSecret, conf.redirectUri)
     const authUrl = oauthClient.generateAuthUrl({
       access_type: 'offline',
@@ -961,7 +1304,7 @@ router.post('/gmail/connect', async (req, res) => {
 
     return res.json({ success: true, provider: 'gmail', authUrl })
   } catch (err) {
-    console.error('[integrations] gmail connect error:', err.message)
+    logger.error({ error: err.message }, 'integrations gmail connect failed')
     return res.status(500).json({ error: 'gmail_connect_failed' })
   }
 })
@@ -975,7 +1318,7 @@ router.post('/gmail/disconnect', async (req, res) => {
     const updated = await disconnectIntegration(pool, userId, 'gmail')
     return res.json({ success: true, integration: updated || { provider: 'gmail', status: 'disconnected' } })
   } catch (err) {
-    console.error('[integrations] gmail disconnect error:', err.message)
+    logger.error({ error: err.message }, 'integrations gmail disconnect failed')
     return res.status(500).json({ error: 'gmail_disconnect_failed' })
   }
 })
@@ -986,21 +1329,148 @@ router.post('/gmail/sync', async (req, res) => {
     if (!userId) return
     const pool = req.app.locals.pool
 
-    const row = await getIntegration(pool, userId, 'gmail')
+    const row = await getIntegrationSecrets(pool, userId, 'gmail')
     if (!row || (row.status !== 'connected' && row.status !== 'authorization_received')) {
       return res.status(400).json({ error: 'gmail_not_connected' })
     }
 
+    const accessToken = decryptSecret(row.access_token_encrypted)
+    if (!accessToken) {
+      return res.json({
+        success: false,
+        provider: 'gmail',
+        status: row.status,
+        synced: 0,
+        details: 'Token Gmail non disponible côté serveur. Connexion prête mais sync API inactive.',
+      })
+    }
+
+    const list = await axios.get('https://gmail.googleapis.com/gmail/v1/users/me/messages', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: { maxResults: Math.min(Number(req.body?.limit || 10), 25), q: 'newer_than:30d' },
+      timeout: 15000,
+    })
+    const messages = Array.isArray(list.data?.messages) ? list.data.messages : []
+    let synced = 0
+
+    for (const message of messages) {
+      const detail = await axios.get(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { format: 'metadata', metadataHeaders: ['From', 'To', 'Subject', 'Date'] },
+        timeout: 15000,
+      })
+      const summary = extractGmailMessageSummary(detail.data || {})
+      const matchedEmail = emailFromAddress(summary.from) || emailFromAddress(summary.to)
+      const client = matchedEmail ? await findClientByEmail(pool, userId, matchedEmail) : null
+
+      await recordEmailThread(pool, userId, client?.id || null, summary, 'inbound')
+      await recordClientInteraction(pool, {
+        user_id: userId,
+        client_id: client?.id || null,
+        provider: 'gmail',
+        direction: 'in',
+        external_id: summary.messageId,
+        subject: summary.subject,
+        body_preview: summary.snippet,
+        occurred_at: summary.sentAt,
+        metadata: {
+          thread_id: summary.threadId,
+          from: summary.from,
+          to: summary.to,
+        },
+      })
+      synced += 1
+    }
+
+    await upsertIntegration(pool, userId, 'gmail', {
+      status: 'connected',
+      scopes: GMAIL_SCOPES,
+      last_sync_at: new Date(),
+      metadata: { last_sync_count: synced },
+    })
+
     return res.json({
       success: true,
       provider: 'gmail',
-      status: row.status,
-      synced: 0,
-      details: 'Synchronisation Gmail V1: endpoint prêt, token exchange serveur à finaliser.',
+      status: 'connected',
+      synced,
+      details: synced > 0 ? 'Messages Gmail synchronisés.' : 'Aucun message récent à synchroniser.',
     })
   } catch (err) {
-    console.error('[integrations] gmail sync error:', err.message)
-    return res.status(500).json({ error: 'gmail_sync_failed' })
+    logger.error({ error: err.message }, 'integrations gmail sync failed')
+    return res.status(500).json({ error: 'gmail_sync_failed', details: err.response?.data?.error?.message || err.message })
+  }
+})
+
+router.post('/gmail/send', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+    const pool = req.app.locals.pool
+
+    const row = await getIntegrationSecrets(pool, userId, 'gmail')
+    if (!row || row.status !== 'connected') {
+      return res.status(400).json({ error: 'gmail_not_connected' })
+    }
+
+    const accessToken = decryptSecret(row.access_token_encrypted)
+    if (!accessToken) {
+      return res.status(400).json({ error: 'gmail_token_missing', details: 'Reconnectez Gmail pour obtenir un token serveur chiffré.' })
+    }
+
+    const body = req.body || {}
+    const clientId = Number(body.client_id || body.clientId || 0) || null
+    let to = String(body.to || '').trim()
+    let client = null
+    if (clientId) {
+      const clientResult = await pool.query('SELECT id, email FROM clients WHERE id=$1 LIMIT 1', [clientId])
+      client = clientResult.rows[0] || null
+      to = to || client?.email || ''
+    }
+
+    if (!to || !body.subject || !body.body) {
+      return res.status(400).json({ error: 'gmail_message_invalid', details: 'Champs requis: to, subject, body.' })
+    }
+
+    const raw = encodeGmailRawMessage({
+      to,
+      from: row.external_account_email || undefined,
+      subject: body.subject,
+      body: body.body,
+    })
+    const sent = await axios.post(
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+      { raw },
+      { headers: { Authorization: `Bearer ${accessToken}` }, timeout: 15000 }
+    )
+
+    const summary = {
+      messageId: sent.data?.id || null,
+      threadId: sent.data?.threadId || null,
+      from: row.external_account_email || '',
+      to,
+      subject: body.subject,
+      sentAt: new Date(),
+      snippet: String(body.body).slice(0, 220),
+    }
+
+    await recordEmailThread(pool, userId, client?.id || clientId || null, summary, 'outbound')
+    await recordClientInteraction(pool, {
+      user_id: userId,
+      client_id: client?.id || clientId || null,
+      provider: 'gmail',
+      direction: 'out',
+      external_id: summary.messageId,
+      subject: body.subject,
+      body_preview: summary.snippet,
+      occurred_at: summary.sentAt,
+      metadata: { thread_id: summary.threadId, to },
+    })
+
+    return res.json({ success: true, provider: 'gmail', message_id: summary.messageId, thread_id: summary.threadId })
+  } catch (err) {
+    logger.error({ error: err.message }, 'integrations gmail send failed')
+    return res.status(500).json({ error: 'gmail_send_failed', details: err.response?.data?.error?.message || err.message })
   }
 })
 
@@ -1020,7 +1490,7 @@ router.get('/outlook/status', async (req, res) => {
       metadata: row?.metadata || {},
     })
   } catch (err) {
-    console.error('[integrations] outlook status error:', err.message)
+    logger.error({ error: err.message }, 'integrations outlook status failed')
     return res.status(500).json({ error: 'outlook_status_failed' })
   }
 })
@@ -1068,7 +1538,7 @@ router.post('/outlook/connect', async (req, res) => {
 
     return res.json({ success: true, provider: 'outlook', authUrl })
   } catch (err) {
-    console.error('[integrations] outlook connect error:', err.message)
+    logger.error({ error: err.message }, 'integrations outlook connect failed')
     return res.status(500).json({ error: 'outlook_connect_failed' })
   }
 })
@@ -1082,7 +1552,7 @@ router.post('/outlook/disconnect', async (req, res) => {
     const updated = await disconnectIntegration(pool, userId, 'outlook')
     return res.json({ success: true, integration: updated || { provider: 'outlook', status: 'disconnected' } })
   } catch (err) {
-    console.error('[integrations] outlook disconnect error:', err.message)
+    logger.error({ error: err.message }, 'integrations outlook disconnect failed')
     return res.status(500).json({ error: 'outlook_disconnect_failed' })
   }
 })
@@ -1106,7 +1576,7 @@ router.post('/outlook/sync', async (req, res) => {
       details: 'Synchronisation Outlook V1: endpoint prêt, token exchange serveur à finaliser.',
     })
   } catch (err) {
-    console.error('[integrations] outlook sync error:', err.message)
+    logger.error({ error: err.message }, 'integrations outlook sync failed')
     return res.status(500).json({ error: 'outlook_sync_failed' })
   }
 })
@@ -1131,7 +1601,7 @@ router.get('/client/:clientId/interactions', async (req, res) => {
     const rows = await listClientInteractions(pool, userId, clientId, { limit })
     return res.json({ success: true, client_id: clientId, count: rows.length, rows })
   } catch (err) {
-    console.error('[integrations] client interactions error:', err.message)
+    logger.error({ error: err.message }, 'integrations client interactions failed')
     return res.status(500).json({ error: 'client_interactions_failed' })
   }
 })

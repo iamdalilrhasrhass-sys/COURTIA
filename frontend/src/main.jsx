@@ -2,11 +2,14 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
+import './styles/tokens.css'
 import './styles/design-system.css'
 import './styles/mobile-responsive.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { initSentry } from './lib/sentry'
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+initSentry()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || 'placeholder'} onScriptLoadError={() => console.warn('Google OAuth: No client ID configured — login with Google disabled')}>

@@ -1,20 +1,23 @@
 /**
  * planService.js — Source unique de vérité pour les plans COURTIA
- * Plans unifiés : starter (89€), pro (159€), premium (sur devis)
+ * Plans V1 : starter (89€), pro (199€), cabinet (399€), premium (sur devis)
  */
 
 const pool = require('../db');
+const logger = require('../lib/logger');
 const BILLING_MODE = process.env.BILLING_MODE || 'test';
 
 function stripePriceFor(planCode) {
   if (BILLING_MODE === 'test') {
     if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
     if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
+    if (planCode === 'cabinet') return process.env.STRIPE_CABINET_PRICE_ID_TEST || process.env.STRIPE_PRICE_CABINET || null;
     if (planCode === 'premium') return null;
   }
   if (planCode === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
   if (planCode === 'pro') return process.env.STRIPE_PRICE_PRO || null;
-  if (planCode === 'premium') return process.env.STRIPE_PRICE_CABINET || process.env.STRIPE_PRICE_PREMIUM || null;
+  if (planCode === 'cabinet') return process.env.STRIPE_PRICE_CABINET || null;
+  if (planCode === 'premium') return null;
   return null;
 }
 
@@ -54,10 +57,10 @@ const PLANS = {
   },
   pro: {
     name: 'Pro',
-    price: 159,
+    price: 199,
     currency: 'EUR',
     interval: 'month',
-    description: 'La solution complète pour les professionnels — OFFRE RECOMMANDÉE',
+    description: 'La solution complète pour les courtiers qui veulent ARK, les intégrations et les documents métier.',
     highlighted: true,
     features: {
       ark_basic: true,
@@ -66,7 +69,40 @@ const PLANS = {
       automations: true,
       advanced_reports: true,
       premium_support: false,
-      multi_user: false,
+      multi_user: true,
+      csv_import: true,
+      crm_full: true,
+      scoring: true,
+      morning_brief: true,
+      integrations_google_calendar: true,
+      integrations_whatsapp: true,
+      integrations_email_sync: true,
+      admin_costs: true,
+    },
+    limits: {
+      max_clients: 1500,
+      max_contrats: Infinity,
+      max_ark_messages: 2000,
+      max_pdf_generations: 200,
+      max_users: 3,
+    },
+    stripe_price_id: stripePriceFor('pro'),
+  },
+  cabinet: {
+    name: 'Cabinet',
+    price: 399,
+    currency: 'EUR',
+    interval: 'month',
+    description: 'Pour les cabinets structurés avec plusieurs collaborateurs et pilotage avancé.',
+    highlighted: false,
+    features: {
+      ark_basic: true,
+      ark_full: true,
+      reach: true,
+      automations: true,
+      advanced_reports: true,
+      premium_support: true,
+      multi_user: true,
       csv_import: true,
       crm_full: true,
       scoring: true,
@@ -79,11 +115,11 @@ const PLANS = {
     limits: {
       max_clients: Infinity,
       max_contrats: Infinity,
-      max_ark_messages: 2000,
-      max_pdf_generations: 200,
-      max_users: 1,
+      max_ark_messages: 5000,
+      max_pdf_generations: Infinity,
+      max_users: 10,
     },
-    stripe_price_id: stripePriceFor('pro'),
+    stripe_price_id: stripePriceFor('cabinet'),
   },
   premium: {
     name: 'Premium',
@@ -202,7 +238,7 @@ async function getUserPlanInfo(userId) {
       limits: plan.limits,
     };
   } catch (error) {
-    console.error('[planService] getUserPlanInfo error:', error.message);
+    logger.warn({ error: error.message }, 'planService.getUserPlanInfo failed');
     return { plan: DEFAULT_PLAN, ...PLANS[DEFAULT_PLAN], subscription_status: null };
   }
 }

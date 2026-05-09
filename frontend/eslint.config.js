@@ -28,6 +28,7 @@ export default defineConfig([
         argsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_',
       }],
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
       // Progressive cleanup: keep these high-signal React compiler rules visible
       // while avoiding blocking CI on legacy patterns already covered by smoke tests.
       'react-hooks/set-state-in-effect': 'warn',

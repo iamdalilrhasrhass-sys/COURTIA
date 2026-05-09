@@ -31,20 +31,31 @@ const Abonnement = lazy(() => import('./pages/Abonnement'))
 const Billing = lazy(() => import('./pages/Billing'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
-const Onboarding = lazy(() => import('./pages/BillingOnboarding'))
+const BillingOnboarding = lazy(() => import('./pages/BillingOnboarding'))
+const CabinetOnboarding = lazy(() => import('./pages/CabinetOnboarding'))
 const DataOnboarding = lazy(() => import('./pages/Onboarding'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
+const Equipe = lazy(() => import('./pages/Equipe'))
+const InviteAccept = lazy(() => import('./pages/InviteAccept'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
+const Commissions = lazy(() => import('./pages/Commissions'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
 const DemoPublic = lazy(() => import('./pages/DemoPublic'))
 const ContactPublic = lazy(() => import('./pages/ContactPublic'))
+const SecurityPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.SecurityPublic })))
+const RgpdPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.RgpdPublic })))
+const ChangelogPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.ChangelogPublic })))
+const RoadmapPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.RoadmapPublic })))
+const HelpPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.HelpPublic })))
+const StatusPublic = lazy(() => import('./pages/TrustPages').then((mod) => ({ default: mod.StatusPublic })))
 const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
 const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
 const LegalCookies = lazy(() => import('./pages/LegalCookies'))
 const LegalConditionsUtilisation = lazy(() => import('./pages/LegalConditionsUtilisation'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
+const DevUi = lazy(() => import('./pages/DevUi'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
@@ -64,6 +75,7 @@ import AdminLayout from './components/AdminLayout'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
+import NotificationBell from './components/NotificationBell'
 import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
@@ -111,6 +123,8 @@ function AppLayout() {
       <div className="courtia-cockpit-watermark" aria-hidden="true">
         <CourtiaBubbleLogo size="100%" animated={false} showHalo showFoam showSpecular />
       </div>
+      <div className="courtia-bubble-orb courtia-bubble-orb--violet courtia-bubble-orb--app-left" aria-hidden="true" />
+      <div className="courtia-bubble-orb courtia-bubble-orb--cyan courtia-bubble-orb--app-right" aria-hidden="true" />
       <Sidebar />
       <main className="courtia-cockpit-main courtia-depth-stage flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <ImpersonationBanner />
@@ -128,6 +142,9 @@ function AppLayout() {
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+      <div style={{ position: 'fixed', right: 20, bottom: 68, zIndex: 200 }}>
+        <NotificationBell />
+      </div>
 
       {/* Bouton de secours Cmd+K */}
       <button
@@ -178,21 +195,31 @@ export default function App() {
         <Route path="/tarifs" element={<TarifsPublic />} />
         <Route path="/demo" element={<DemoPublic />} />
         <Route path="/contact" element={<ContactPublic />} />
+        <Route path="/securite" element={<SecurityPublic />} />
+        <Route path="/rgpd" element={<RgpdPublic />} />
+        <Route path="/changelog" element={<ChangelogPublic />} />
+        <Route path="/roadmap" element={<RoadmapPublic />} />
+        <Route path="/aide" element={<HelpPublic />} />
+        <Route path="/status" element={<StatusPublic />} />
         <Route path="/legal/mentions-legales" element={<LegalMentionsLegales />} />
         <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
         <Route path="/legal/cookies" element={<LegalCookies />} />
         <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
+        <Route path="/invite/:token" element={<InviteAccept />} />
+        <Route path="/dev/ui" element={<DevUi />} />
         <Route path="/" element={<LandingPublic />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route path="/onboarding"    element={<Onboarding />} />
-          <Route path="/onboarding/cabinet" element={<Onboarding />} />
+          <Route path="/onboarding"    element={<CabinetOnboarding />} />
+          <Route path="/onboarding/cabinet" element={<CabinetOnboarding />} />
+          <Route path="/onboarding/billing" element={<BillingOnboarding />} />
           <Route path="/onboarding/import" element={<DataOnboarding />} />
           <Route path="/onboarding/integrations" element={<Parametres />} />
           <Route path="/onboarding/ark" element={<MorningBrief />} />
           <Route path="/import"        element={<ImportPortfolio />} />
+          <Route path="/equipe"        element={<Equipe />} />
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
@@ -204,9 +231,11 @@ export default function App() {
           <Route path="/taches"        element={<Taches />} />
           <Route path="/rapports"      element={<Rapports />} />
           <Route path="/parametres"    element={<Parametres />} />
+          <Route path="/parametres/integrations" element={<Parametres />} />
           <Route path="/academy"       element={<Academy />} />
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
+          <Route path="/commissions"   element={<Commissions />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />

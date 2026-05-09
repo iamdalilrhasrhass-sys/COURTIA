@@ -15,6 +15,8 @@ export default function MarketingShell({ activePath = '/', children }) {
   return (
     <div className="mk-page">
       <div className="mk-grid-overlay" aria-hidden="true" />
+      <div className="courtia-bubble-orb courtia-bubble-orb--pearl mk-ambient-orb mk-ambient-orb--one" aria-hidden="true" />
+      <div className="courtia-bubble-orb courtia-bubble-orb--cyan mk-ambient-orb mk-ambient-orb--two" aria-hidden="true" />
       <div className="mk-shell courtia-depth-stage">
         <div className="mk-nav-wrap">
           <header className="mk-nav">
@@ -45,6 +47,10 @@ export default function MarketingShell({ activePath = '/', children }) {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link to="/legal/mentions-legales">Mentions légales</Link>
             <Link to="/legal/confidentialite">Confidentialité</Link>
+            <Link to="/securite">Sécurité</Link>
+            <Link to="/rgpd">RGPD</Link>
+            <Link to="/status">Status</Link>
+            <Link to="/aide">Aide</Link>
             <Link to="/legal/cookies">Cookies</Link>
             <Link to="/legal/conditions-utilisation">Conditions</Link>
             <Link to="/login">Se connecter</Link>

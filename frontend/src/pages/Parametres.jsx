@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase } from 'lucide-react'
+import { User, Lock, Bell, CreditCard, Eye, EyeOff, Check, AlertTriangle, ListTodo, Sunrise, Sparkles, Link, RefreshCw, CalendarDays, MessageSquare, Mail, Briefcase, Shield } from 'lucide-react'
 import api from '../api'
 import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
@@ -12,9 +12,16 @@ const NAV_ITEMS = [
   { id: 'securite', label: 'Sécurité', icon: Lock },
   { id: 'abonnement', label: 'Abonnement', icon: CreditCard },
   { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'templates', label: 'Templates', icon: Mail },
+  { id: 'conformite', label: 'Conformité', icon: Shield },
   { id: 'integrations', label: 'Intégrations', icon: Link },
 ]
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
+const COMPLIANCE_FIELDS = [
+  ['orias', 'Numéro ORIAS'],
+  ['cabinet', 'Nom du cabinet'],
+  ['telephone', 'Téléphone cabinet'],
+]
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
 
@@ -90,7 +97,8 @@ const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
 
 export default function Parametres() {
   const navigate = useNavigate()
-  const [activeSection, setActiveSection] = useState('profil')
+  const location = useLocation()
+  const [activeSection, setActiveSection] = useState(() => (location.pathname.endsWith('/integrations') ? 'integrations' : 'profil'))
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -102,11 +110,15 @@ export default function Parametres() {
   const [integrationsLoading, setIntegrationsLoading] = useState(false)
   const [integrationAction, setIntegrationAction] = useState('')
   const [whatsappConfig, setWhatsappConfig] = useState({ phone_number_id: '', business_account_id: '' })
+  const [templates, setTemplates] = useState([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
 
   useEffect(() => {
     fetchProfile()
     if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
+    fetchTemplates()
   }, [])
+
 
   async function fetchProfile(options = {}) {
     const { force = false, silent = false } = options
@@ -162,6 +174,18 @@ export default function Parametres() {
       if (!silent) toast.error('Impossible de charger les intégrations')
     } finally {
       if (!silent) setIntegrationsLoading(false)
+    }
+  }
+
+  async function fetchTemplates() {
+    setTemplatesLoading(true)
+    try {
+      const res = await api.get('/templates')
+      setTemplates(Array.isArray(res?.data?.rows) ? res.data.rows : [])
+    } catch {
+      setTemplates([])
+    } finally {
+      setTemplatesLoading(false)
     }
   }
 
@@ -354,7 +378,7 @@ export default function Parametres() {
                             {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
                         </ul>
                     </div>
-                    <button onClick={() => navigate('/abonnement')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Upgrader mon plan</button>
+                    <button onClick={() => navigate('/billing')} className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg hover:shadow-blue-500/30">Gérer mon abonnement</button>
                 </div>
               </div>
             </section>
@@ -367,6 +391,77 @@ export default function Parametres() {
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
                 <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
+              </div>
+            </section>
+
+            <section id="templates" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Templates messages</h2>
+              <p className="text-sm text-white/50 mb-5">Modèles email et WhatsApp utilisés par ARK pour préparer les relances.</p>
+              <div className="courtia-depth-card rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <p className="text-xs text-gray-500">Templates système et modèles cabinet. Les variables utilisent le format <code>{'{{client}}'}</code>.</p>
+                  <button
+                    type="button"
+                    onClick={fetchTemplates}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Actualiser
+                  </button>
+                </div>
+                {templatesLoading ? (
+                  <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">Chargement des templates…</p>
+                ) : templates.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                    Les templates seront disponibles dès que la migration PR10 sera appliquée.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {templates.slice(0, 8).map((tpl) => (
+                      <div key={tpl.id || `${tpl.channel}-${tpl.kind}-${tpl.name}`} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <h3 className="text-sm font-bold text-gray-900">{tpl.name}</h3>
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">{tpl.channel}</span>
+                        </div>
+                        {tpl.subject && <p className="mb-1 text-xs font-semibold text-gray-700">{tpl.subject}</p>}
+                        <p className="line-clamp-3 text-xs leading-relaxed text-gray-500">{tpl.body_text}</p>
+                        <p className="mt-3 text-[10px] uppercase tracking-[0.12em] text-gray-400">{tpl.scope} · {tpl.kind}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section id="conformite" className="scroll-mt-8">
+              <h2 className="text-xl font-bold text-white mb-1">Conformité DDA</h2>
+              <p className="text-sm text-white/50 mb-5">Informations utilisées pour générer les FIC, mandats et devoirs de conseil.</p>
+              <div className="courtia-depth-card rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                  COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation et de la remise des documents au client.
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {COMPLIANCE_FIELDS.map(([key, label]) => (
+                    <label key={key} className="text-xs font-semibold text-gray-600">
+                      {label}
+                      <input
+                        value={form[key] || ''}
+                        onChange={e => setForm({ ...form, [key]: e.target.value })}
+                        className={`${inputClass} mt-1`}
+                        placeholder={label}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleProfileSubmit}
+                    disabled={saving}
+                    className="rounded-lg bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 disabled:opacity-60"
+                  >
+                    {saving ? 'Sauvegarde...' : 'Sauvegarder la conformité'}
+                  </button>
+                </div>
               </div>
             </section>
 

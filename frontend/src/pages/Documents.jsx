@@ -10,6 +10,23 @@ import toast from 'react-hot-toast'
 import useDocumentInboxStore from '../stores/documentInboxStore'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 
+const DDA_DOCUMENT_TYPES = [
+  { value: 'fic', label: 'FIC', desc: 'Fiche d’information et de conseil' },
+  { value: 'mandat_courtage', label: 'Mandat', desc: 'Mandat de courtage' },
+  { value: 'devoir_conseil', label: 'Devoir conseil', desc: 'Traçabilité du conseil fourni' },
+  { value: 'attestation', label: 'Attestation', desc: 'Synthèse client ou attestation' },
+]
+
+const GENERATED_STATUS = {
+  draft: { label: 'Brouillon', bg: 'rgba(148,163,184,0.16)', color: '#64748b' },
+  generated: { label: 'Généré', bg: 'rgba(59,130,246,0.14)', color: '#1d4ed8' },
+  sent_to_sign: { label: 'Signature envoyée', bg: 'rgba(245,158,11,0.16)', color: '#b45309' },
+  signed: { label: 'Signé', bg: 'rgba(16,185,129,0.16)', color: '#047857' },
+  refused: { label: 'Refusé', bg: 'rgba(239,68,68,0.16)', color: '#b91c1c' },
+  expired: { label: 'Expiré', bg: 'rgba(148,163,184,0.16)', color: '#475569' },
+  archived: { label: 'Archivé', bg: 'rgba(17,24,39,0.10)', color: '#374151' },
+}
+
 const CATEGORIES = [
   { value: 'piece_identite', label: 'Pièce d\'identité' },
   { value: 'permis', label: 'Permis de conduire' },
@@ -54,17 +71,24 @@ export default function Documents() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const {
-    documents, _requests, submissions, stats,
-    fetchDocuments, fetchRequests, fetchSubmissions, fetchStats,
-    uploadDocument, deleteDocument, updateDocumentStatus, _loading,
+    documents, generatedDocuments, _requests, submissions, stats,
+    fetchDocuments, fetchGeneratedDocuments, fetchRequests, fetchSubmissions, fetchStats,
+    uploadDocument, deleteDocument, updateDocumentStatus, generateDdaDocument, sendGeneratedDocumentToSign, _loading,
   } = useDocumentInboxStore()
+  const [ddaForm, setDdaForm] = useState({ clientId: '', type: 'fic', contractId: '' })
+  const [generatingDda, setGeneratingDda] = useState(false)
+  const [signingDocId, setSigningDocId] = useState(null)
 
+  // Chargement initial des listes documents via actions Zustand stables sur cette page.
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     fetchDocuments()
+    fetchGeneratedDocuments()
     fetchRequests()
     fetchSubmissions()
     fetchStats()
   }, [refreshKey])
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const filteredDocs = documents.filter(d => {
     if (searchTerm) {
@@ -78,8 +102,38 @@ export default function Documents() {
   const tabContent = {
     'a-traiter': filteredDocs.filter(d => ['reçu', 'en_analyse', 'à_vérifier'].includes(d.status)),
     'classes': filteredDocs.filter(d => ['accepté', 'rejeté'].includes(d.status)),
+    'dda': generatedDocuments || [],
     'manquantes': [], // sera calculé plus bas
     'envoyes': submissions,
+  }
+
+  const handleGenerateDda = async (e) => {
+    e.preventDefault()
+    if (!ddaForm.clientId || !ddaForm.type) return toast.error('Client et type de document requis')
+    setGeneratingDda(true)
+    try {
+      await generateDdaDocument({ clientId: ddaForm.clientId, contractId: ddaForm.contractId, type: ddaForm.type })
+      toast.success('Document DDA généré')
+      setDdaForm(f => ({ ...f, contractId: '' }))
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Génération impossible'
+      toast.error(String(msg))
+    } finally {
+      setGeneratingDda(false)
+    }
+  }
+
+  const handleSendToSign = async (doc) => {
+    setSigningDocId(doc.id)
+    try {
+      await sendGeneratedDocumentToSign(doc.id, {}, doc.client_id)
+      toast.success('Document envoyé à signer via Yousign')
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Yousign configuration requise'
+      toast.error(String(msg))
+    } finally {
+      setSigningDocId(null)
+    }
   }
 
   return (
@@ -128,6 +182,7 @@ export default function Documents() {
         {[
           { key: 'a-traiter', label: 'À traiter', count: tabContent['a-traiter'].length },
           { key: 'classes', label: 'Classés', count: tabContent['classes'].length },
+          { key: 'dda', label: 'Documents DDA', count: tabContent.dda.length },
           { key: 'manquantes', label: 'Pièces manquantes', count: 0 },
           { key: 'envoyes', label: 'Envoyés assurance', count: tabContent['envoyes'].length },
         ].map(tab => (
@@ -233,6 +288,68 @@ export default function Documents() {
                 </tbody>
               </table>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'dda' && (
+            <div style={{ display: 'grid', gap: 16 }}>
+              <form onSubmit={handleGenerateDda} style={{ background: 'linear-gradient(135deg, rgba(91,77,245,0.14), rgba(108,240,255,0.08))', border: '1px solid rgba(91,77,245,0.18)', borderRadius: 18, padding: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: '#5B4DF5', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Conformité courtier</p>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111827', margin: 0 }}>Générer un document métier DDA</h3>
+                    <p style={{ fontSize: 12, color: '#6B7280', margin: '5px 0 0', maxWidth: 620 }}>COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation finale.</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <input value={ddaForm.clientId} onChange={e => setDdaForm(f => ({ ...f, clientId: e.target.value }))} placeholder="ID client" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(17,24,39,0.12)', fontSize: 13, minWidth: 110 }} />
+                    <input value={ddaForm.contractId} onChange={e => setDdaForm(f => ({ ...f, contractId: e.target.value }))} placeholder="ID contrat optionnel" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(17,24,39,0.12)', fontSize: 13, minWidth: 150 }} />
+                    <select value={ddaForm.type} onChange={e => setDdaForm(f => ({ ...f, type: e.target.value }))} style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(17,24,39,0.12)', fontSize: 13, background: '#fff' }}>
+                      {DDA_DOCUMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                    <button type="submit" disabled={generatingDda} style={{ padding: '9px 14px', borderRadius: 10, border: 'none', background: generatingDda ? '#9CA3AF' : '#5B4DF5', color: '#fff', fontSize: 13, fontWeight: 800, cursor: generatingDda ? 'not-allowed' : 'pointer' }}>
+                      {generatingDda ? 'Génération...' : 'Générer'}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+                  {DDA_DOCUMENT_TYPES.map(t => (
+                    <span key={t.value} style={{ fontSize: 11, color: '#374151', background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(255,255,255,0.75)', borderRadius: 999, padding: '5px 9px' }}>
+                      <strong>{t.label}</strong> — {t.desc}
+                    </span>
+                  ))}
+                </div>
+              </form>
+
+              {tabContent.dda.length === 0 ? (
+                <AuroraEmptyState icon={FileText} title="Aucun document DDA généré" subtitle="Générez une FIC, un mandat ou un devoir de conseil depuis ce panneau." />
+              ) : (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {tabContent.dda.map(doc => {
+                    const status = GENERATED_STATUS[doc.status] || GENERATED_STATUS.generated
+                    return (
+                      <div key={doc.id} style={{ background: '#fff', border: '1px solid #EEF0F5', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <FileText size={18} style={{ color: '#5B4DF5' }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13, fontWeight: 800, color: '#111827', margin: 0 }}>{doc.title || doc.type}</p>
+                          <p style={{ fontSize: 11, color: '#6B7280', margin: '3px 0 0' }}>Client {doc.client_name || `#${doc.client_id}`} · version {doc.template_version} · {formatDate(doc.created_at)}</p>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 999, padding: '4px 9px', background: status.bg, color: status.color }}>{status.label}</span>
+                        {doc.status === 'generated' && (
+                          <button
+                            type="button"
+                            onClick={() => handleSendToSign(doc)}
+                            disabled={signingDocId === doc.id}
+                            style={{ padding: '7px 10px', borderRadius: 10, border: '1px solid rgba(91,77,245,0.22)', background: signingDocId === doc.id ? '#EEF2FF' : 'rgba(91,77,245,0.08)', color: '#5B4DF5', fontSize: 11, fontWeight: 800, cursor: signingDocId === doc.id ? 'wait' : 'pointer' }}
+                          >
+                            {signingDocId === doc.id ? 'Envoi...' : 'Envoyer à signer'}
+                          </button>
+                        )}
+                        <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" style={{ padding: '7px 10px', borderRadius: 10, background: '#111827', color: '#fff', fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>PDF</a>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 
