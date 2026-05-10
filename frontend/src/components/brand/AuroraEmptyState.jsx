@@ -21,17 +21,23 @@ export default function AuroraEmptyState({
   icon,
   title,
   description,
+  subtitle,
   action,
   compact = false,
   dark = false,
   className = '',
 }) {
+  const IconComponent = (typeof icon === 'function' || (icon && typeof icon === 'object' && icon.$$typeof && !React.isValidElement(icon)))
+    ? icon
+    : null
+  const descriptionText = description || subtitle
+
   return (
     <div className={`flex flex-col items-center justify-center text-center ${compact ? 'py-8 px-4' : 'py-16 px-6'} ${className}`}>
       {/* Bulle Aurora ou icône custom */}
       {icon ? (
         <div className="mb-4 text-gray-300/60">
-          {icon}
+          {IconComponent ? <IconComponent size={compact ? 28 : 34} /> : icon}
         </div>
       ) : (
         <div className="mb-5 opacity-50">
@@ -53,12 +59,12 @@ export default function AuroraEmptyState({
       </h3>
 
       {/* Description */}
-      {description && (
+      {descriptionText && (
         <p
           className={`${compact ? 'text-xs' : 'text-sm'} max-w-sm leading-relaxed`}
           style={{ color: dark ? 'rgba(255,255,255,0.3)' : '#9CA3AF' }}
         >
-          {description}
+          {descriptionText}
         </p>
       )}
 

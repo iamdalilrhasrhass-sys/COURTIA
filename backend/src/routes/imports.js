@@ -29,7 +29,7 @@ router.post('/preview', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'validation_error', message: 'Format non supporté. Utilisez CSV, XLS ou XLSX.' });
     }
 
-    const { headers, rows } = importService.parseWorkbookFromBuffer(req.file.buffer);
+    const { headers, rows } = importService.parseWorkbookFromBuffer(req.file.buffer, req.file);
     const suggestedMapping = importService.suggestMapping(headers);
     const previewStats = importService.getPreviewStats({ headers, rows, mapping: suggestedMapping });
 
