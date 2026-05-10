@@ -6,6 +6,24 @@ jest.mock('../db', () => ({
 const importService = require('./importService')
 
 describe('importService preview and mapping', () => {
+  it('parses UTF-8 CSV headers with French accents without mojibake', () => {
+    const csv = [
+      'Prénom,Nom,Courriel,Téléphone',
+      'Sophie,Martin,sophie@example.com,06 12 34 56 78',
+    ].join('\n')
+
+    const parsed = importService.parseWorkbookFromBuffer(Buffer.from(csv, 'utf8'), {
+      originalname: 'clients.csv',
+      mimetype: 'text/csv',
+    })
+
+    expect(parsed.headers).toEqual(['Prénom', 'Nom', 'Courriel', 'Téléphone'])
+    expect(importService.suggestMapping(parsed.headers)).toMatchObject({
+      prenom: 'Prénom',
+      telephone: 'Téléphone',
+    })
+  })
+
   it('validates all rows in simulation stats and reports unknown columns', () => {
     const headers = ['Prénom', 'Nom', 'Email', 'Téléphone', 'Notes', 'Colonne libre']
     const rows = [

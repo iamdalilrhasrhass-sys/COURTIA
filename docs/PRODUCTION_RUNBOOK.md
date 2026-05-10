@@ -12,7 +12,10 @@
 ```bash
 vercel inspect https://courtia.vercel.app --timeout=120s
 npm --prefix backend run qa:prod-smoke
+pm2 restart courtia-api --update-env
 ```
+
+Pour tout changement d'environnement backend, utiliser uniquement `pm2 restart courtia-api --update-env`. Ne pas utiliser `pm2 reload` pour propager des variables.
 
 ## Rollback
 

@@ -21,6 +21,26 @@ This document is the source of truth for runtime configuration. Never commit rea
 - `SENTRY_DSN_BACKEND`: backend Sentry DSN. If missing, backend Sentry is disabled cleanly.
 - `VITE_SENTRY_DSN_FRONTEND`: frontend Sentry DSN. If missing, frontend Sentry is disabled cleanly.
 
+## Email transactionnel
+
+- `RESEND_API_KEY`: clé Resend backend. Si absente, aucun email n'est envoyé et l'API retourne `configuration_required`.
+- `EMAIL_FROM`: expéditeur email transactionnel.
+- `SUPPORT_EMAIL`: adresse support affichée/utilisée dans les messages opérationnels.
+- `DPO_EMAIL`: contact DPO/RGPD.
+
+## SMS
+
+- `SMS_PROVIDER`: `twilio` ou `generic`.
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`: requis si `SMS_PROVIDER=twilio`.
+- `SMS_GATEWAY_URL`, `SMS_GATEWAY_TOKEN`: requis si `SMS_PROVIDER=generic`.
+- Sans configuration complète, les relances SMS restent en `Configuration SMS requise` et aucun faux envoi n'est déclaré.
+
+## Product Analytics
+
+- `POSTHOG_KEY`: clé PostHog optionnelle.
+- `POSTHOG_HOST`: hôte PostHog optionnel, défaut `https://app.posthog.com`.
+- Sans `POSTHOG_KEY`, aucun tracking externe n'est effectué; les événements restent dans `product_events` si l'API les journalise.
+
 ## Google
 
 - `GOOGLE_CLIENT_ID`
