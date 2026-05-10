@@ -18,7 +18,7 @@ const {
 
 // Initialisation client DeepSeek (compatible OpenAI SDK)
 const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
+  apiKey: process.env.DEEPSEEK_API_KEY || 'dummy_key_to_prevent_startup_crash',
   baseURL: 'https://api.deepseek.com/v1'
 })
 
