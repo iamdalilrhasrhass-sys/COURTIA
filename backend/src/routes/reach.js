@@ -12,7 +12,7 @@ const router = express.Router();
 
 // DeepSeek client for AI features
 const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
+  apiKey: process.env.DEEPSEEK_API_KEY || 'dummy_key',
   baseURL: 'https://api.deepseek.com/v1'
 });
 
