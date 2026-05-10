@@ -117,6 +117,17 @@
 - Toutes les pages restent Aurora premium, lisibles et responsives.
 - Les pages ne déclarent jamais Google / WhatsApp / Stripe / Yousign comme actifs sans configuration.
 
+## Sprint pré-démo client
+
+- Parcours public: `/`, `/tarifs`, `/demo`, `/contact`, `/securite`, `/rgpd`, `/aide`, `/status`, `/changelog`, `/roadmap`, `/legal/confidentialite`, `/legal/conditions-utilisation`, `/legal/cgv`, `/legal/dpa`, `/legal/sous-traitants`.
+- Parcours courtier: login, dashboard, Morning Brief, clients, contrats, tâches, rapports, documents, commissions, import, paramètres, intégrations, billing, équipe, onboarding, logout.
+- Parcours admin: login Dalil, `/api/auth/me`, rôle `super_admin`, `/admin`, `/admin/costs`, feedback, system, logout.
+- Import: CSV UTF-8 avec accents, XLSX, colonnes manquantes, doublons, fichier vide, mauvais format.
+- No fake: email/SMS/Google/WhatsApp/Yousign/Stripe/ARK doivent afficher un statut réel ou `Configuration requise` / `Prêt à connecter` / `Mode local`.
+- UX démo: aucun bouton visible ne doit annoncer un succès si l'action nécessite une configuration absente.
+- Empty states: expliquer pourquoi c'est vide, quoi faire ensuite, quel bouton utiliser.
+- Mobile: dashboard, clients, import, documents, billing, commissions, admin costs et pages publiques sans scroll horizontal.
+
 ## Responsive rapide
 
 - desktop

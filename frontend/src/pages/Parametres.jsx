@@ -154,7 +154,7 @@ export default function Parametres() {
 
   function handlePasswordSubmit(e) {
     e.preventDefault()
-    toast('Fonctionnalité bientôt disponible.', { icon: '🚧' })
+    toast('Configuration requise : le changement de mot de passe est traité par support pendant la bêta.', { icon: 'ℹ️' })
   }
 
   async function fetchIntegrations({ silent = false } = {}) {
@@ -354,20 +354,23 @@ export default function Parametres() {
 
             <section id="securite" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Sécurité</h2>
-              <p className="text-sm text-white/50 mb-5">Changez votre mot de passe.</p>
+              <p className="text-sm text-white/50 mb-5">Accès et récupération de compte.</p>
               <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handlePasswordSubmit}>
                     <div className="p-6 space-y-5">
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                        <strong>Configuration requise.</strong> Le changement de mot de passe autonome sera activé avec le provider email sécurisé. Pour la bêta, une demande support déclenche la procédure de réinitialisation.
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {[ {id: 'current', label: 'Actuel'}, {id: 'new', label: 'Nouveau'}, {id: 'confirm', label: 'Confirmer'} ].map(p => (
                           <div key={p.id}>
                             <label htmlFor={`${p.id}_password`} className={labelClass}>Mot de passe {p.label}</label>
-                            <div className="relative"><input id={`${p.id}_password`} type={showPass[p.id] ? 'text' : 'password'} value={passwords[p.id]} onChange={e => setPasswords({...passwords, [p.id]: e.target.value})} className={inputClass} /><button type="button" onClick={() => setShowPass({...showPass, [p.id]: !showPass[p.id]})} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass[p.id] ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
+                            <div className="relative"><input id={`${p.id}_password`} type={showPass[p.id] ? 'text' : 'password'} value={passwords[p.id]} onChange={e => setPasswords({...passwords, [p.id]: e.target.value})} disabled placeholder="Indisponible en libre-service" className={`${inputClass} bg-gray-100 cursor-not-allowed`} /><button type="button" disabled onClick={() => setShowPass({...showPass, [p.id]: !showPass[p.id]})} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 cursor-not-allowed">{showPass[p.id] ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="submit" className="px-5 py-2.5 bg-white text-gray-800 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors shadow-sm">Changer</button></div>
+                    <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="button" onClick={() => { toast('Configuration requise : ouvrez une demande support pour réinitialiser le mot de passe.', { icon: 'ℹ️' }); navigate('/contact') }} className="px-5 py-2.5 bg-white text-gray-800 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors shadow-sm">Contacter le support</button></div>
                 </form>
               </div>
             </section>
@@ -615,11 +618,11 @@ export default function Parametres() {
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="text-sm font-bold text-gray-900">Make / Zapier / Webhooks</h3>
                   <span className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700">
-                    Bientôt disponible
+                    Prêt à connecter
                   </span>
                 </div>
                 <p className="text-xs text-gray-600">
-                  Les endpoints backend sont prêts (`/api/webhooks/incoming` et `/api/webhooks/outgoing/test`) pour brancher vos automatisations cabinet.
+                  Les endpoints backend existent pour brancher vos automatisations cabinet. Activez un secret webhook avant tout usage réel.
                 </p>
               </div>
             </section>

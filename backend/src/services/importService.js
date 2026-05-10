@@ -58,8 +58,16 @@ function normalizeRows(rawRows = []) {
   return rawRows.map((row) => (Array.isArray(row) ? row : []));
 }
 
-function parseWorkbookFromBuffer(fileBuffer) {
-  const workbook = XLSX.read(fileBuffer, { type: 'buffer', cellDates: false });
+function isCsvUpload(file = {}) {
+  const name = String(file.originalname || '').toLowerCase();
+  const mime = String(file.mimetype || '').toLowerCase();
+  return name.endsWith('.csv') || mime.includes('csv') || mime.startsWith('text/');
+}
+
+function parseWorkbookFromBuffer(fileBuffer, file = {}) {
+  const workbook = isCsvUpload(file)
+    ? XLSX.read(Buffer.from(fileBuffer).toString('utf8').replace(/^\uFEFF/, ''), { type: 'string', cellDates: false })
+    : XLSX.read(fileBuffer, { type: 'buffer', cellDates: false });
   const firstSheet = workbook.SheetNames[0];
   if (!firstSheet) {
     throw new Error('import_empty_sheet');

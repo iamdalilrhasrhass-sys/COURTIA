@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Upload, Database, CheckCircle2, AlertTriangle, RefreshCw, Download, TableProperties } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Upload, Database, CheckCircle2, AlertTriangle, RefreshCw, Download, TableProperties, Users, Sparkles, ListTodo } from 'lucide-react'
 import api from '../api'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 
@@ -33,6 +34,7 @@ const CSV_TEMPLATE = [
 ]
 
 export default function ImportPortfolio() {
+  const navigate = useNavigate()
   const [file, setFile] = useState(null)
   const [importJobId, setImportJobId] = useState(null)
   const [headers, setHeaders] = useState([])
@@ -133,6 +135,7 @@ export default function ImportPortfolio() {
         title="Import clients"
         subtitle="Importez votre fichier client, COURTIA vous aide à mapper les colonnes."
         badge="Données"
+        dark
       />
 
       <div style={stepsBar}>
@@ -170,7 +173,16 @@ export default function ImportPortfolio() {
 
       {error && (
         <div style={errorBox}>
-          <AlertTriangle size={14} /> {error}
+          <AlertTriangle size={14} />
+          <div>
+            <strong>{error}</strong>
+            <p style={{ margin: '4px 0 0', color: 'rgba(254,205,211,0.82)' }}>
+              Vérifiez le format CSV/XLSX ou repartez du template COURTIA pour éviter les colonnes ambiguës.
+            </p>
+          </div>
+          <button type="button" onClick={downloadTemplate} style={errorActionBtn}>
+            Template CSV
+          </button>
         </div>
       )}
 
@@ -272,6 +284,17 @@ export default function ImportPortfolio() {
             <Stat label="Tâches importées" value={result.imported_tasks ?? 0} />
             <Stat label="Doublons" value={result.duplicate_rows ?? 0} />
             <Stat label="Erreurs" value={result.error_rows ?? 0} />
+          </div>
+          <div style={nextActions}>
+            <button type="button" onClick={() => navigate('/clients')} style={nextActionBtn}>
+              <Users size={14} /> Voir les clients importés
+            </button>
+            <button type="button" onClick={() => navigate('/morning-brief')} style={nextActionBtn}>
+              <Sparkles size={14} /> Lancer ARK
+            </button>
+            <button type="button" onClick={() => navigate('/taches')} style={nextActionBtn}>
+              <ListTodo size={14} /> Créer une tâche de relance
+            </button>
           </div>
         </div>
       )}
@@ -413,8 +436,21 @@ const errorBox = {
   padding: '10px 12px',
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
   gap: 6,
   fontSize: 12,
+}
+
+const errorActionBtn = {
+  border: '1px solid rgba(254,205,211,0.55)',
+  background: 'rgba(255,255,255,0.08)',
+  color: '#fff1f2',
+  borderRadius: 8,
+  padding: '7px 10px',
+  fontSize: 11,
+  fontWeight: 800,
+  cursor: 'pointer',
 }
 
 const statCard = {
@@ -470,6 +506,27 @@ const ctaBtn = {
   alignItems: 'center',
   gap: 6,
   cursor: 'pointer',
+}
+
+const nextActions = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 14,
+}
+
+const nextActionBtn = {
+  border: '1px solid rgba(142,234,255,0.28)',
+  background: 'rgba(34,211,238,0.08)',
+  color: '#e0faff',
+  borderRadius: 10,
+  padding: '9px 11px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  cursor: 'pointer',
+  fontSize: 12,
+  fontWeight: 800,
 }
 
 const refreshBtn = {
