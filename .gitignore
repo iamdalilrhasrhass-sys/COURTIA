@@ -62,3 +62,11 @@ id_rsa
 id_ecdsa
 id_ed25519
 secrets/
+.vercel
+
+# Document storage (LOT 4)
+/storage/
+/backend/storage/
+uploads/
+*.uploaded
+tmp-uploads/
