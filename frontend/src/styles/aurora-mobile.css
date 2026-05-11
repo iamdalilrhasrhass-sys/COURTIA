@@ -1,0 +1,809 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   AURORA DESIGN SYSTEM — Mobile Responsive Layer
+   COURTIA V2 • iOS-grade mobile experience
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. CSS CUSTOM PROPERTIES — Mobile Overrides
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  :root {
+    /* Spacing — tighter on mobile */
+    --aurora-space-xs: 4px;
+    --aurora-space-sm: 8px;
+    --aurora-space-md: 12px;
+    --aurora-space-lg: 16px;
+    --aurora-space-xl: 20px;
+    --aurora-space-2xl: 28px;
+    --aurora-space-3xl: 36px;
+
+    /* Typography — slightly smaller */
+    --aurora-text-xs: 0.7rem;
+    --aurora-text-sm: 0.8rem;
+    --aurora-text-base: 0.9rem;
+    --aurora-text-lg: 1rem;
+    --aurora-text-xl: 1.15rem;
+    --aurora-text-2xl: 1.35rem;
+    --aurora-text-3xl: 1.6rem;
+
+    /* Border radius — softer on mobile */
+    --aurora-radius-lg: 16px;
+    --aurora-radius-xl: 20px;
+    --aurora-radius-2xl: 24px;
+
+    /* Z-index for mobile layers */
+    --aurora-z-bottom-nav: 1000;
+    --aurora-z-sheet-overlay: 1100;
+    --aurora-z-sheet: 1200;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. VISIBILITY UTILITIES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Hidden on mobile */
+@media (max-width: 768px) {
+  .aurora-mobile-hidden {
+    display: none !important;
+  }
+}
+
+/* Shown only on mobile */
+.aurora-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .aurora-mobile-only {
+    display: block !important;
+  }
+
+  .aurora-mobile-only-flex {
+    display: flex !important;
+  }
+
+  .aurora-mobile-only-grid {
+    display: grid !important;
+  }
+
+  .aurora-mobile-only-inline {
+    display: inline !important;
+  }
+
+  .aurora-mobile-only-inline-flex {
+    display: inline-flex !important;
+  }
+}
+
+/* Desktop only */
+@media (min-width: 769px) {
+  .aurora-desktop-only {
+    display: block;
+  }
+
+  .aurora-desktop-only-flex {
+    display: flex;
+  }
+
+  .aurora-mobile-only,
+  .aurora-mobile-only-flex,
+  .aurora-mobile-only-grid,
+  .aurora-mobile-only-inline,
+  .aurora-mobile-only-inline-flex {
+    display: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. CARD ADJUSTMENTS — Mobile
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .aurora-card {
+    padding: var(--aurora-space-md);
+    border-radius: var(--aurora-radius-lg);
+  }
+
+  .aurora-card-header {
+    padding: var(--aurora-space-sm) var(--aurora-space-md);
+  }
+
+  .aurora-card-body {
+    padding: var(--aurora-space-md);
+  }
+
+  .aurora-card-footer {
+    padding: var(--aurora-space-sm) var(--aurora-space-md);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. TABLE → CARDS TRANSFORMATION
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Desktop table styles */
+.aurora-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.aurora-table-header {
+  display: table-header-group;
+}
+
+.aurora-table-body {
+  display: table-row-group;
+}
+
+.aurora-table-row {
+  display: table-row;
+}
+
+.aurora-table-cell {
+  display: table-cell;
+  padding: var(--aurora-space-md);
+  border-bottom: 1px solid var(--aurora-border);
+  vertical-align: middle;
+}
+
+.aurora-table-header-cell {
+  display: table-cell;
+  padding: var(--aurora-space-md);
+  font-weight: 600;
+  text-align: left;
+  color: var(--aurora-text-muted);
+  font-size: var(--aurora-text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--aurora-border);
+}
+
+/* Mobile: table becomes stacked cards */
+@media (max-width: 768px) {
+  .aurora-table {
+    display: flex;
+    flex-direction: column;
+    gap: var(--aurora-space-sm);
+  }
+
+  .aurora-table-header {
+    display: none;
+  }
+
+  .aurora-table-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--aurora-space-sm);
+  }
+
+  .aurora-table-row {
+    display: flex;
+    flex-direction: column;
+    background: var(--aurora-surface);
+    border: 1px solid var(--aurora-border);
+    border-radius: var(--aurora-radius-lg);
+    padding: var(--aurora-space-md);
+    gap: var(--aurora-space-xs);
+  }
+
+  .aurora-table-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--aurora-space-xs) 0;
+    border-bottom: none;
+  }
+
+  .aurora-table-cell::before {
+    content: attr(data-label);
+    font-weight: 500;
+    color: var(--aurora-text-muted);
+    font-size: var(--aurora-text-sm);
+    flex-shrink: 0;
+    margin-right: var(--aurora-space-md);
+  }
+
+  .aurora-table-cell:last-child {
+    border-bottom: none;
+  }
+
+  .aurora-table-header-cell {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. INPUT ANTI-ZOOM iOS (16px minimum)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .aurora-input,
+  .aurora-textarea,
+  .aurora-select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. TAP TARGETS — Minimum 44px (Apple HIG)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .aurora-btn,
+  .aurora-icon-btn,
+  .aurora-tap-target,
+  button,
+  [role="button"],
+  a.aurora-link {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Checkbox and radio larger touch area */
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Links in lists need padding */
+  .aurora-list-item {
+    min-height: 48px;
+    padding: var(--aurora-space-sm) var(--aurora-space-md);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. SAFE AREA — iOS notch/home indicator
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .aurora-safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .aurora-safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .aurora-safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .aurora-safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .aurora-safe-area-all {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   8. BOTTOM NAV SPACER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.aurora-bottom-nav-spacer {
+  padding-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .aurora-bottom-nav-spacer {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   9. BOTTOM SHEET / DRAWER STYLES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Overlay backdrop */
+.aurora-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--aurora-z-sheet-overlay, 1100);
+  touch-action: none;
+}
+
+/* Sheet container */
+.aurora-sheet-content {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--aurora-surface);
+  border-top-left-radius: var(--aurora-radius-2xl, 24px);
+  border-top-right-radius: var(--aurora-radius-2xl, 24px);
+  z-index: var(--aurora-z-sheet, 1200);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Glassmorphism variant */
+.aurora-sheet-content--glass {
+  background: rgba(var(--aurora-surface-rgb, 255, 255, 255), 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dark mode glass */
+[data-theme="dark"] .aurora-sheet-content--glass,
+.dark .aurora-sheet-content--glass {
+  background: rgba(var(--aurora-surface-rgb, 30, 30, 30), 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Handle grip */
+.aurora-sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: var(--aurora-space-sm) 0;
+  flex-shrink: 0;
+}
+
+.aurora-sheet-handle-bar {
+  width: 36px;
+  height: 5px;
+  background: var(--aurora-text-muted);
+  opacity: 0.3;
+  border-radius: 3px;
+}
+
+/* Sheet header */
+.aurora-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--aurora-space-sm) var(--aurora-space-lg);
+  border-bottom: 1px solid var(--aurora-border);
+  flex-shrink: 0;
+}
+
+.aurora-sheet-title {
+  font-size: var(--aurora-text-lg);
+  font-weight: 600;
+  color: var(--aurora-text);
+  margin: 0;
+}
+
+.aurora-sheet-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--aurora-surface-elevated, rgba(0, 0, 0, 0.05));
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--aurora-text-muted);
+  transition: all 0.2s ease;
+}
+
+.aurora-sheet-close:hover {
+  background: var(--aurora-surface-hover);
+  color: var(--aurora-text);
+}
+
+/* Sheet body */
+.aurora-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--aurora-space-lg);
+  padding-bottom: max(var(--aurora-space-lg), env(safe-area-inset-bottom));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   10. BOTTOM NAVIGATION BAR
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.aurora-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .aurora-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(var(--aurora-surface-rgb, 255, 255, 255), 0.8);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid var(--aurora-border);
+    z-index: var(--aurora-z-bottom-nav, 1000);
+    justify-content: space-around;
+    align-items: flex-start;
+  }
+
+  [data-theme="dark"] .aurora-bottom-nav,
+  .dark .aurora-bottom-nav {
+    background: rgba(var(--aurora-surface-rgb, 20, 20, 20), 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+.aurora-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--aurora-space-sm);
+  min-width: 64px;
+  height: 64px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--aurora-text-muted);
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.aurora-bottom-nav-item:hover {
+  color: var(--aurora-text);
+}
+
+.aurora-bottom-nav-item--active {
+  color: var(--aurora-primary);
+}
+
+.aurora-bottom-nav-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 2px;
+  position: relative;
+}
+
+.aurora-bottom-nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Active indicator halo */
+.aurora-bottom-nav-indicator {
+  position: absolute;
+  top: 6px;
+  width: 48px;
+  height: 28px;
+  background: rgba(var(--aurora-primary-rgb, 139, 92, 246), 0.15);
+  border-radius: 14px;
+  z-index: -1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   11. MOBILE LIST ITEMS (for More drawer etc)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.aurora-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aurora-mobile-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--aurora-space-md);
+  padding: var(--aurora-space-md) var(--aurora-space-lg);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--aurora-text);
+  font-size: var(--aurora-text-base);
+  font-weight: 500;
+  border-radius: var(--aurora-radius-md);
+  transition: background 0.15s ease;
+  min-height: 52px;
+}
+
+.aurora-mobile-list-item:hover {
+  background: var(--aurora-surface-hover);
+}
+
+.aurora-mobile-list-item:active {
+  background: var(--aurora-surface-active);
+}
+
+.aurora-mobile-list-item-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--aurora-radius-md);
+  background: var(--aurora-surface-elevated, rgba(0, 0, 0, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aurora-primary);
+  flex-shrink: 0;
+}
+
+.aurora-mobile-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.aurora-mobile-list-item-title {
+  font-weight: 500;
+  color: var(--aurora-text);
+}
+
+.aurora-mobile-list-item-subtitle {
+  font-size: var(--aurora-text-sm);
+  color: var(--aurora-text-muted);
+  margin-top: 2px;
+}
+
+.aurora-mobile-list-item-chevron {
+  color: var(--aurora-text-muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.aurora-mobile-list-item--danger {
+  color: var(--aurora-error);
+}
+
+.aurora-mobile-list-item--danger .aurora-mobile-list-item-icon {
+  background: rgba(var(--aurora-error-rgb, 239, 68, 68), 0.1);
+  color: var(--aurora-error);
+}
+
+/* Separator */
+.aurora-mobile-list-separator {
+  height: 1px;
+  background: var(--aurora-border);
+  margin: var(--aurora-space-sm) var(--aurora-space-lg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   12. MOBILE HEADER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .aurora-mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: var(--aurora-space-sm);
+    padding: var(--aurora-space-sm) var(--aurora-space-md);
+    padding-top: max(var(--aurora-space-sm), env(safe-area-inset-top));
+    background: rgba(var(--aurora-surface-rgb, 255, 255, 255), 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--aurora-border);
+    min-height: 56px;
+  }
+
+  [data-theme="dark"] .aurora-mobile-header,
+  .dark .aurora-mobile-header {
+    background: rgba(var(--aurora-surface-rgb, 20, 20, 20), 0.85);
+  }
+
+  .aurora-mobile-header-back {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--aurora-primary);
+    margin-left: -8px;
+  }
+
+  .aurora-mobile-header-title {
+    flex: 1;
+    font-size: var(--aurora-text-lg);
+    font-weight: 600;
+    color: var(--aurora-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .aurora-mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--aurora-space-xs);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   13. MOBILE CARD STACKING (for table-to-cards)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.aurora-mobile-card-stack {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .aurora-mobile-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--aurora-space-sm);
+  }
+
+  .aurora-desktop-table {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .aurora-desktop-table {
+    display: table;
+    width: 100%;
+  }
+
+  .aurora-mobile-card-stack {
+    display: none;
+  }
+}
+
+.aurora-mobile-card {
+  background: var(--aurora-surface);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-lg);
+  padding: var(--aurora-space-md);
+}
+
+.aurora-mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--aurora-space-xs) 0;
+}
+
+.aurora-mobile-card-row:not(:last-child) {
+  border-bottom: 1px solid var(--aurora-border-light, rgba(0,0,0,0.05));
+}
+
+.aurora-mobile-card-label {
+  font-size: var(--aurora-text-sm);
+  color: var(--aurora-text-muted);
+  font-weight: 500;
+}
+
+.aurora-mobile-card-value {
+  font-size: var(--aurora-text-base);
+  color: var(--aurora-text);
+  text-align: right;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   14. PULL TO REFRESH INDICATOR (optional enhancement)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.aurora-pull-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.2s ease;
+}
+
+.aurora-pull-indicator--active {
+  height: 60px;
+}
+
+.aurora-pull-indicator-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--aurora-border);
+  border-top-color: var(--aurora-primary);
+  border-radius: 50%;
+  animation: aurora-spin 0.8s linear infinite;
+}
+
+@keyframes aurora-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   15. TOUCH FEEDBACK
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .aurora-touch-feedback {
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+
+  .aurora-touch-feedback:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   16. SCROLL CONTAINERS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.aurora-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.aurora-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+.aurora-scroll-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   17. MISC MOBILE UTILITIES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* Full width buttons on mobile */
+  .aurora-btn-mobile-full {
+    width: 100%;
+  }
+
+  /* Stack buttons vertically */
+  .aurora-btn-stack-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--aurora-space-sm);
+  }
+
+  .aurora-btn-stack-mobile > * {
+    width: 100%;
+  }
+
+  /* Remove horizontal padding on mobile for edge-to-edge */
+  .aurora-mobile-edge {
+    margin-left: calc(var(--aurora-space-md) * -1);
+    margin-right: calc(var(--aurora-space-md) * -1);
+    padding-left: var(--aurora-space-md);
+    padding-right: var(--aurora-space-md);
+  }
+
+  /* Compact text */
+  .aurora-mobile-compact {
+    font-size: var(--aurora-text-sm);
+  }
+}
