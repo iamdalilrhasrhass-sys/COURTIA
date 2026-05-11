@@ -1,11 +1,11 @@
 -- SEED DÉMO COURTIA
 -- Usage : psql -U postgres -h 127.0.0.1 -d crm_assurance -f seed-demo.sql
--- Compte : e2e@courtia.fr / TestE2E2026!
+-- Compte : e2e@courtiark.fr / TestE2E2026!
 
 BEGIN;
 
 -- NETTOYAGE (optionnel, commenter pour ajouter sans effacer)
--- DELETE FROM taches WHERE user_id = (SELECT id FROM users WHERE email = 'e2e@courtia.fr');
+-- DELETE FROM taches WHERE user_id = (SELECT id FROM users WHERE email = 'e2e@courtiark.fr');
 -- DELETE FROM quotes WHERE client_id IN (SELECT id FROM clients WHERE email LIKE '%test.fr');
 -- DELETE FROM clients WHERE email LIKE '%test.fr';
 

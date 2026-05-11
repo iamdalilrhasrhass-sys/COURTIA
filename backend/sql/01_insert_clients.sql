@@ -1,7 +1,7 @@
 -- ============================================
--- ÉTAPE 2A: INSERT 40 CLIENTS (demo@courtia.fr)
+-- ÉTAPE 2A: INSERT 40 CLIENTS (demo@courtiark.fr)
 -- ============================================
--- Tous les clients liés à courtier_id = 1 (demo@courtia.fr)
+-- Tous les clients liés à courtier_id = 1 (demo@courtiark.fr)
 -- Champs assurance complets: bonus_malus, annees_permis, nb_sinistres_3ans, zone_geographique, profession, situation_familiale
 
 INSERT INTO clients (
