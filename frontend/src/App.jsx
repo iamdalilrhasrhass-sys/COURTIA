@@ -87,6 +87,7 @@ import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
 import NotificationBell from './components/NotificationBell'
 import FeedbackButton from './components/FeedbackButton'
+import ArkBubble from './components/ark/ArkBubble'
 import ProtectedRoute from './components/ProtectedRoute'
 import CourtiaBubbleLogo from './components/brand/CourtiaBubbleLogo'
 import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
@@ -157,6 +158,7 @@ function AppLayout() {
         <NotificationBell />
       </div>
       <FeedbackButton />
+      <ArkBubble />
 
       {/* Bouton de secours Cmd+K */}
       <button

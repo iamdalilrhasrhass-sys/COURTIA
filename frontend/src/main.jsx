@@ -7,6 +7,7 @@ import './styles/design-system.css'
 import './styles/mobile-responsive.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { initSentry } from './lib/sentry'
+import { ArkContextProvider } from './components/ark/ArkContextProvider'
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 initSentry()
@@ -14,7 +15,9 @@ initSentry()
 ReactDOM.createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || 'configuration-required'}>
     <React.StrictMode>
-      <App />
+      <ArkContextProvider>
+        <App />
+      </ArkContextProvider>
     </React.StrictMode>
   </GoogleOAuthProvider>
 )
