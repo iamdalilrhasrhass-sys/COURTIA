@@ -278,6 +278,11 @@ const clientDocumentsRouter = require('./src/routes/clientDocuments')
 const insuranceProvidersRouter = require('./src/routes/insuranceProviders')
 const quotesComparatorRouter   = require('./src/routes/quotesComparator')
 
+// LOT 6 — Modules Métier avec IA
+const devisRouter        = require('./src/routes/devis')
+const relancesRouter     = require('./src/routes/relances')
+const opportunitesRouter = require('./src/routes/opportunites')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -335,6 +340,11 @@ app.use('/api', clientDocumentsRouter)
 // LOT 5 — Comparateur Multi-Compagnies (auth mixte: providers public, integrations protected)
 app.use('/api', insuranceProvidersRouter)
 app.use('/api/comparator', quotesComparatorRouter)
+
+// LOT 6 — Modules Métier avec IA (protected)
+app.use('/api/devis',        verifyToken, devisRouter)
+app.use('/api/relances',     verifyToken, relancesRouter)
+app.use('/api/opportunites', verifyToken, opportunitesRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
