@@ -304,6 +304,16 @@ const portalClientRouter  = require('./src/routes/portalClient')  // routes clie
 const claimsRouter = require('./src/routes/claims')
 const betaRouter   = require('./src/routes/beta')
 
+// LOT 20 — Signature Électronique + Reporting + Calendrier
+const signaturesRouter = require('./src/routes/signatures')
+const reportingRouter  = require('./src/routes/reporting')
+const calendarRouter   = require('./src/routes/calendar')
+
+// LOT 21-22 — WhatsApp Business + ARK Chat + Commissions Auto + Comptabilité
+const whatsappMetaRouter = require('./src/routes/whatsappMeta')
+const arkChatRouter      = require('./src/routes/arkChat')
+const accountingRouter   = require('./src/routes/accounting')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -387,6 +397,16 @@ app.use('/api/portal',       portalClientRouter)               // routes client 
 // LOT 18 — Module Sinistres + Marketing Beta
 app.use('/api/claims',       verifyToken, claimsRouter)
 app.use('/api/beta',         betaRouter)  // public (inscription beta)
+
+// LOT 20 — Signature Électronique + Reporting + Calendrier
+app.use('/api/signatures',   signaturesRouter)  // auth mixte (webhook public)
+app.use('/api/reporting',    verifyToken, reportingRouter)
+app.use('/api/calendar',     calendarRouter)    // auth mixte (callback public)
+
+// LOT 21-22 — WhatsApp Business + ARK Chat + Commissions Auto + Comptabilité
+app.use('/api/whatsapp',     whatsappMetaRouter) // auth mixte (webhook public)
+app.use('/api/ark-chat',     arkChatRouter)      // auth client portail
+app.use('/api/accounting',   verifyToken, accountingRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
