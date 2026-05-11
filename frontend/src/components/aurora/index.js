@@ -66,6 +66,9 @@ export { AuroraAvatar, default as AuroraAvatarDefault } from './AuroraAvatar';
 // PageHeader
 export { AuroraPageHeader, default as AuroraPageHeaderDefault } from './AuroraPageHeader';
 
+// Layout (La Bulle shell)
+export { AuroraLayout, default as AuroraLayoutDefault } from './AuroraLayout';
+
 // Breadcrumb
 export { AuroraBreadcrumb, default as AuroraBreadcrumbDefault } from './AuroraBreadcrumb';
 

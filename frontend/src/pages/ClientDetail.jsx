@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { VibeBackdrop } from '../components/vibe'
 import {
   ArrowLeft, User, Mail, Phone, MapPin, Building, AlertTriangle,
   Calendar, Sparkles, Shield, FileText, Clock, Target, TrendingUp,
@@ -855,14 +856,17 @@ export default function ClientDetail() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: T.bg,
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      minHeight: '100vh', background: 'transparent',
+      fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      position: 'relative',
+      perspective: 1400,
     }}>
+      <VibeBackdrop intensity={0.85} />
       {/* ── Header ────────────────────────────────────────────────────── */}
       <header style={{
         padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         borderBottom: `1px solid ${T.cardBorder}`,
-        background: 'rgba(5,5,16,0.85)', backdropFilter: 'blur(12px)',
+        background: 'rgba(2,1,8,0.65)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         position: 'sticky', top: 0, zIndex: 50,
       }}>
         <button

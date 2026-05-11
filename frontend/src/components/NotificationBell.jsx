@@ -1,26 +1,37 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Bell, AlertCircle, Info, Check } from 'lucide-react'
 import api from '../api'
+
+const POLL_INTERVAL_MS = 60_000
 
 export default function NotificationBell() {
   const [showPanel, setShowPanel] = useState(false)
   const [alerts, setAlerts] = useState([])
   const [unread, setUnread] = useState(0)
   const [loading, setLoading] = useState(false)
+  const pollRef = useRef(null)
 
-  async function loadNotifications() {
-    setLoading(true)
+  const loadNotifications = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
-      const res = await api.get('/notifications?limit=8')
+      const res = await api.get('/notifications?limit=12')
       setAlerts(Array.isArray(res?.data?.rows) ? res.data.rows : [])
       setUnread(Number(res?.data?.unread || 0))
     } catch {
-      setAlerts([])
-      setUnread(0)
+      if (!silent) {
+        setAlerts([])
+        setUnread(0)
+      }
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadNotifications(true)
+    pollRef.current = setInterval(() => loadNotifications(true), POLL_INTERVAL_MS)
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [loadNotifications])
 
   async function markAllRead() {
     try {

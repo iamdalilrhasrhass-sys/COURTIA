@@ -176,6 +176,80 @@ router.get('/statement/:year/:month/pdf', async (req, res) => {
   }
 })
 
+// ─── LOT VIBE — Barèmes commissions (catalogue compagnies) ─────────────────
+
+const DEFAULT_BAREMES = {
+  Aurora:  { Auto: 12, Habitation: 14, Santé: 8,  Prévoyance: 18, 'RC Pro': 16, 'Flotte Auto': 11, MRH: 13, Cyber: 20, Décennale: 15, PJ: 22 },
+  Novalia: { Auto: 11, Habitation: 13, Santé: 9,  Prévoyance: 17, 'RC Pro': 15, 'Flotte Auto': 12, MRH: 14, Cyber: 19, Décennale: 14, PJ: 20 },
+  Helios:  { Auto: 10, Habitation: 15, Santé: 7,  Prévoyance: 16, 'RC Pro': 14, 'Flotte Auto': 10, MRH: 12, Cyber: 18, Décennale: 13, PJ: 19 },
+  Serenis: { Auto: 13, Habitation: 12, Santé: 10, Prévoyance: 19, 'RC Pro': 17, 'Flotte Auto': 13, MRH: 15, Cyber: 21, Décennale: 16, PJ: 23 },
+  Atlas:   { Auto: 12, Habitation: 13, Santé: 8,  Prévoyance: 17, 'RC Pro': 18, 'Flotte Auto': 12, MRH: 14, Cyber: 22, Décennale: 15, PJ: 21 },
+  Oria:    { Auto: 11, Habitation: 14, Santé: 9,  Prévoyance: 16, 'RC Pro': 15, 'Flotte Auto': 11, MRH: 13, Cyber: 19, Décennale: 14, PJ: 20 },
+  Nivalis: { Auto: 12, Habitation: 13, Santé: 8,  Prévoyance: 18, 'RC Pro': 16, 'Flotte Auto': 12, MRH: 14, Cyber: 20, Décennale: 17, PJ: 22 },
+  Solenys: { Auto: 10, Habitation: 12, Santé: 10, Prévoyance: 15, 'RC Pro': 13, 'Flotte Auto': 9,  MRH: 11, Cyber: 17, Décennale: 12, PJ: 18 },
+}
+
+router.get('/baremes', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool
+    let rows = []
+    try {
+      const r = await pool.query(
+        `SELECT compagnie, produit, rate_percent, rate_recurring_percent
+         FROM commission_baremes
+         WHERE is_active = true AND user_id IS NULL AND cabinet_id IS NULL
+         ORDER BY compagnie, produit`
+      )
+      rows = r.rows || []
+    } catch (_) {
+      rows = []
+    }
+
+    // Fallback : si la table n'existe pas ou est vide, on renvoie le catalogue par défaut
+    if (!rows.length) {
+      rows = Object.entries(DEFAULT_BAREMES).flatMap(([compagnie, produits]) =>
+        Object.entries(produits).map(([produit, rate]) => ({
+          compagnie,
+          produit,
+          rate_percent: rate,
+          rate_recurring_percent: Number((rate * 0.6).toFixed(1)),
+        }))
+      )
+    }
+
+    res.json({ data: rows, total: rows.length })
+  } catch (err) {
+    res.status(500).json({ error: err.message, message: 'Impossible de récupérer les barèmes.' })
+  }
+})
+
+router.post('/calculator', async (req, res) => {
+  try {
+    const { compagnie, produit, prime_annuelle, recurrence } = req.body || {}
+    if (!compagnie || !produit) {
+      return res.status(400).json({ error: 'compagnie_produit_required' })
+    }
+    const rate = DEFAULT_BAREMES[compagnie]?.[produit] ?? null
+    if (rate === null) {
+      return res.status(404).json({ error: 'bareme_not_found', message: `Pas de barème pour ${compagnie} / ${produit}` })
+    }
+    const factor = recurrence === 'recurring' ? 0.6 : 1
+    const prime = Number(prime_annuelle || 0)
+    const commission = (prime * rate * factor) / 100
+    res.json({
+      compagnie,
+      produit,
+      rate_percent: rate,
+      effective_rate_percent: Number((rate * factor).toFixed(3)),
+      prime_annuelle: prime,
+      commission_annuelle: Number(commission.toFixed(2)),
+      commission_mensuelle: Number((commission / 12).toFixed(2)),
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 module.exports = {
   router,
   saveCommissionForContract,
