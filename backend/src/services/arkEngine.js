@@ -262,15 +262,199 @@ async function callArkStructured(options) {
   })
 }
 
+// Modèles Vision
+const VISION_MODEL = process.env.ARK_VISION_MODEL || 'claude-sonnet-4-5-20250929'
+
+// Pricing Vision (même pricing que texte pour Claude)
+const VISION_PRICING = MODEL_PRICING
+
+/**
+ * Appel Claude Vision pour analyse d'images/documents
+ *
+ * @param {Object} options
+ * @param {string} options.system - Prompt système
+ * @param {string} options.user - Prompt utilisateur
+ * @param {Array} options.images - [{buffer: Buffer, mediaType: 'image/png'|'image/jpeg'|'application/pdf'}]
+ * @param {Object} options.context - Contexte additionnel
+ * @param {number} options.maxTokens - Tokens max
+ * @param {boolean} options.jsonMode - Mode JSON
+ * @param {string} options.model - Modèle (défaut: claude-sonnet-4-5)
+ * @param {number} options.userId - ID utilisateur
+ * @param {string} options.route - Route/feature pour logging
+ * @returns {Promise<Object>} { text, structured, usage, latencyMs, model, costUsd }
+ */
+async function callArkVision(options) {
+  const {
+    system,
+    user,
+    images = [],
+    context = {},
+    maxTokens = 2048,
+    model = VISION_MODEL,
+    jsonMode = false,
+    userId = null,
+    clientId = null,
+    route = 'vision'
+  } = options
+
+  const startTime = Date.now()
+
+  // Rate limiting
+  if (userId) {
+    const rateCheck = checkRateLimit(userId)
+    if (!rateCheck.allowed) {
+      const waitSec = Math.ceil((rateCheck.resetAt - Date.now()) / 1000)
+      throw new Error('Rate limit dépassé. Réessayez dans ' + waitSec + 's')
+    }
+  }
+
+  // Construire le prompt système enrichi
+  let enrichedSystem = system
+  if (context && Object.keys(context).length > 0) {
+    const contextEntries = Object.entries(context).filter(function(e) {
+      return e[1] !== null && e[1] !== undefined
+    })
+    const contextStr = contextEntries.map(function(e) {
+      const k = e[0], v = e[1]
+      if (typeof v === 'object') return k + ': ' + JSON.stringify(v, null, 2)
+      return k + ': ' + v
+    }).join('\n')
+
+    enrichedSystem = system + '\n\n=== CONTEXTE ===\n' + contextStr
+  }
+
+  if (jsonMode) {
+    enrichedSystem += '\n\nIMPORTANT: Tu DOIS répondre UNIQUEMENT avec un objet JSON valide. Pas de texte avant ou après.'
+  }
+
+  // Construire le contenu multimodal
+  const content = []
+
+  // Ajouter les images
+  for (const img of images) {
+    if (!img.buffer) continue
+
+    const base64 = img.buffer.toString('base64')
+    const mediaType = img.mediaType || 'image/png'
+
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: mediaType,
+        data: base64
+      }
+    })
+  }
+
+  // Ajouter le texte utilisateur
+  content.push({
+    type: 'text',
+    text: user
+  })
+
+  let anthropic
+  try {
+    anthropic = getAnthropicClient()
+  } catch (err) {
+    return {
+      text: null,
+      error: 'configuration_required',
+      message: 'Clé API Anthropic non configurée. Ajoutez ANTHROPIC_API_KEY.',
+      usage: { inputTokens: 0, outputTokens: 0 },
+      latencyMs: Date.now() - startTime,
+      model: null
+    }
+  }
+
+  let currentModel = model
+  let attempts = 0
+  const maxAttempts = 2
+
+  while (attempts < maxAttempts) {
+    attempts++
+
+    try {
+      const response = await anthropic.messages.create({
+        model: currentModel,
+        max_tokens: maxTokens,
+        system: enrichedSystem,
+        messages: [{ role: 'user', content: content }]
+      })
+
+      const latencyMs = Date.now() - startTime
+      const text = response.content[0] ? response.content[0].text : ''
+      const usage = {
+        inputTokens: response.usage ? response.usage.input_tokens : 0,
+        outputTokens: response.usage ? response.usage.output_tokens : 0
+      }
+
+      await logArkCall({
+        userId, clientId, route,
+        model: currentModel,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        latencyMs, success: true
+      })
+
+      let structured = null
+      if (jsonMode) {
+        try {
+          let cleanText = text.trim()
+          if (cleanText.startsWith('```json')) {
+            cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+          } else if (cleanText.startsWith('```')) {
+            cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
+          }
+          structured = JSON.parse(cleanText)
+        } catch (parseErr) {
+          logger.warn({ error: parseErr.message, text: text.substring(0, 200) }, 'Vision JSON parsing failed')
+        }
+      }
+
+      return {
+        text, structured, usage, latencyMs,
+        model: currentModel,
+        costUsd: computeCost(currentModel, usage.inputTokens, usage.outputTokens)
+      }
+
+    } catch (err) {
+      const latencyMs = Date.now() - startTime
+
+      const isRateLimited = err.status === 429 || err.status === 529
+      const isOverloaded = err.message && err.message.includes('overload')
+      if ((isRateLimited || isOverloaded) && currentModel !== FALLBACK_MODEL) {
+        logger.warn({ error: err.message, model: currentModel }, 'ARK Vision switching to fallback model')
+        currentModel = FALLBACK_MODEL
+        continue
+      }
+
+      await logArkCall({
+        userId, clientId, route,
+        model: currentModel,
+        inputTokens: 0, outputTokens: 0,
+        latencyMs, success: false,
+        errorMessage: err.message
+      })
+
+      throw err
+    }
+  }
+
+  throw new Error('Max attempts reached')
+}
+
 module.exports = {
   callArk,
   callArkLight,
   callArkStructured,
+  callArkVision,
   checkRateLimit,
   computeCost,
   logArkCall,
   DEFAULT_MODEL,
   FALLBACK_MODEL,
   LIGHT_MODEL,
+  VISION_MODEL,
   MODEL_PRICING
 }
