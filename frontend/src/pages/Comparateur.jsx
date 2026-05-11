@@ -4,6 +4,7 @@ import {
   Shield, Zap, Crown, Star, ArrowRight,
 } from 'lucide-react'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
@@ -94,6 +95,8 @@ export default function Comparateur() {
   return (
     <>
       <VibeBackdrop intensity="medium" />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <PageHeader
           breadcrumb={[{ label: 'ARK IA', to: '/assistant-ark' }, { label: 'Comparateur 8 compagnies' }]}

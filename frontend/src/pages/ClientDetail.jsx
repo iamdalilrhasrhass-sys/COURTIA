@@ -8,6 +8,7 @@ import {
   ChevronRight, Target, Bell, Zap, Heart,
 } from 'lucide-react'
 import { VibeBackdrop } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -407,6 +408,8 @@ export default function ClientDetail() {
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '20px 24px 48px' }}>
       <VibeBackdrop intensity={0.7} />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{
         position: 'fixed', width: 500, height: 500, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)',

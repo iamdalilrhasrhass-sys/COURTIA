@@ -7,6 +7,7 @@ import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import { VibeBackdrop } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -295,6 +296,8 @@ export default function Parametres() {
   return (
     <div className="min-h-screen bg-transparent font-sans" style={{ position: 'relative', perspective: 1400 }}>
       <VibeBackdrop intensity={0.7} />
+      <Particles count={35} />
+      <ScrollGlow />
       <main className="p-4 md:p-8 max-w-6xl mx-auto" style={{ position: 'relative', zIndex: 1 }}>
         <AuroraPageHeader
           title="Paramètres"

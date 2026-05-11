@@ -7,6 +7,7 @@ import {
   Shield, Zap, ChevronRight,
 } from 'lucide-react'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import api from '../api'
 
 const T = {
@@ -202,6 +203,8 @@ export default function SantePortefeuille() {
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '24px 24px 48px' }}>
       <VibeBackdrop intensity={0.75} />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{
         position: 'fixed', width: 600, height: 600, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)',

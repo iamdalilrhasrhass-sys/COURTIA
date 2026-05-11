@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Shield, FileCheck, UserCheck, FileText, Download, AlertCircle, Loader2 } from 'lucide-react'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
@@ -59,6 +60,8 @@ export default function Conformite() {
   return (
     <>
       <VibeBackdrop intensity="low" />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <PageHeader
           breadcrumb={[{ label: 'Cabinet', to: '/parametres' }, { label: 'Conformité' }]}

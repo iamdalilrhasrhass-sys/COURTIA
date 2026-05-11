@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { FileSpreadsheet, FileText, Download, Calculator, TrendingUp, Sparkles, GitCompareArrows, ChevronRight } from 'lucide-react'
 import { VibeBackdrop } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
@@ -102,6 +103,8 @@ export default function CommissionsCalculator() {
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '24px 24px 48px' }}>
       <VibeBackdrop intensity={0.75} />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{
         position: 'fixed', width: 500, height: 500, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(91,77,245,0.06) 0%, transparent 70%)',
