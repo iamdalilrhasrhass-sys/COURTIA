@@ -18,8 +18,8 @@ export function applySeo({ title, description, canonicalPath, ogTitle, ogDescrip
   ensureMeta('meta[property="og:title"]', { property: 'og:title' }).setAttribute('content', ogTitle || title || '')
   ensureMeta('meta[property="og:description"]', { property: 'og:description' }).setAttribute('content', ogDescription || descValue)
   ensureMeta('meta[property="og:type"]', { property: 'og:type' }).setAttribute('content', ogType)
-  ensureMeta('meta[property="og:url"]', { property: 'og:url' }).setAttribute('content', `https://courtia.vercel.app${canonicalPath || '/'}`)
-  ensureMeta('meta[property="og:image"]', { property: 'og:image' }).setAttribute('content', 'https://courtia.vercel.app/og-courtia.png')
+  ensureMeta('meta[property="og:url"]', { property: 'og:url' }).setAttribute('content', `https://app.courtiark.fr${canonicalPath || '/'}`)
+  ensureMeta('meta[property="og:image"]', { property: 'og:image' }).setAttribute('content', 'https://app.courtiark.fr/og-courtia.png')
   ensureMeta('meta[name="twitter:card"]', { name: 'twitter:card' }).setAttribute('content', 'summary_large_image')
 
   let link = document.head.querySelector('link[rel="canonical"]')
@@ -28,5 +28,5 @@ export function applySeo({ title, description, canonicalPath, ogTitle, ogDescrip
     link.setAttribute('rel', 'canonical')
     document.head.appendChild(link)
   }
-  link.setAttribute('href', `https://courtia.vercel.app${canonicalPath || '/'}`)
+  link.setAttribute('href', `https://app.courtiark.fr${canonicalPath || '/'}`)
 }

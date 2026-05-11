@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
   Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, HeartHandshake, Euro
+  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, 
+  HeartHandshake, Euro, ChevronRight, Sun, Briefcase, CalendarDays,
+  TrendingUp, Sparkles, Bell, Clock, UserPlus, HelpCircle, MessageSquare,
+  RefreshCw
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -13,60 +16,127 @@ import { clearStoredSession } from '../api/sessionPolicy'
 import { resetSessionUserCache } from '../api/sessionUser'
 import { isAdminRole } from '../lib/roles'
 
-const theme = {
-  accent: '#5B4DF5',
-  accentLight: '#EEECFE',
-  activeBg: 'rgba(91, 77, 245, 0.10)',
-  text: '#ffffff',
-  textMuted: '#6B7280',
-  textDim: '#9CA3AF',
+// ─── Design tokens ─────────────────────────────────────────────────
+const t = {
+  bg: '#080808',
   border: 'rgba(255,255,255,0.06)',
   borderLight: 'rgba(255,255,255,0.10)',
-  hoverBg: 'rgba(255,255,255,0.05)',
+  text: '#ffffff',
+  textMuted: '#9CA3AF',
+  textDim: '#6B7280',
+  accent: '#5B4DF5',
+  accentBg: 'rgba(91, 77, 245, 0.08)',
+  activeBg: 'rgba(91, 77, 245, 0.10)',
+  activeBorder: 'rgba(91, 77, 245, 0.30)',
+  hoverBg: 'rgba(255,255,255,0.04)',
+  arkAccent: '#8B5CF6',
 }
 
-const getInitials = (firstName, lastName) => {
-  const f = (firstName || '').charAt(0)
-  const l = (lastName || '').charAt(0)
-  return (f + l).toUpperCase() || '?'
-}
-
-const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { path: '/clients', label: 'Clients', icon: Users },
-  { path: '/contrats', label: 'Contrats', icon: FileText },
-  { path: '/taches', label: 'Tâches', icon: CheckSquare },
-  { path: '/rapports', label: 'Rapports', icon: BarChart2 },
-  { path: '/morning-brief', label: 'Morning Brief', icon: Zap },
-  { path: '/parametres', label: 'Paramètres', icon: Settings },
-  { path: '/equipe', label: 'Équipe', icon: Users },
-  { separator: true, label: 'ACQUISITION' },
-  { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
-  { separator: true, label: 'MODULES' },
-  { path: '/academy', label: 'Academy', icon: GraduationCap, badge: 'Nouveau' },
-  { path: '/documents', label: 'Documents', icon: FolderOpen },
-  { path: '/commissions', label: 'Commissions', icon: Euro },
-  { path: '/browser-pilot', label: 'Browser Pilot', icon: Globe, badge: 'Bêta' },
-  { path: '/partners', label: 'Partenaires', icon: HeartHandshake, badge: 'Prospection' },
-  { path: '/analytics', label: 'Analyses', icon: BarChart2 },
-  { path: '/abonnement', label: 'Abonnement', icon: CreditCard },
+// ─── Accordéon des univers ─────────────────────────────────────────
+const UNIVERSE_GROUPS = [
+  {
+    id: 'pilotage',
+    label: 'Pilotage',
+    icon: Sun,
+    items: [
+      { path: '/dashboard',     label: 'Tableau de bord', icon: LayoutDashboard },
+      { path: '/morning-brief', label: 'Morning Brief',   icon: Sparkles },
+      { path: '/rapports',      label: 'Rapports',        icon: BarChart2 },
+      { path: '/analytics',     label: 'Analytics',       icon: TrendingUp },
+    ]
+  },
+  {
+    id: 'portefeuille',
+    label: 'Portefeuille',
+    icon: Briefcase,
+    items: [
+      { path: '/clients',   label: 'Clients',   icon: Users },
+      { path: '/contrats',  label: 'Contrats',  icon: FileText },
+      { path: '/devis',     label: 'Devis',     icon: Euro },
+      { path: '/documents', label: 'Documents', icon: FolderOpen },
+    ]
+  },
+  {
+    id: 'actions',
+    label: 'Actions',
+    icon: Zap,
+    items: [
+      { path: '/taches',       label: 'Tâches',        icon: CheckSquare },
+      { path: '/relances',     label: 'Relances',      icon: Bell },
+      { path: '/opportunites', label: 'Opportunités',  icon: TrendingUp },
+      { path: '/rendez-vous',  label: 'Rendez-vous',   icon: CalendarDays },
+    ]
+  },
+  {
+    id: 'acquisition',
+    label: 'Acquisition',
+    icon: Target,
+    items: [
+      { path: '/reach',          label: 'REACH',       icon: Target },
+      { path: '/prospection',    label: 'Prospection', icon: UserPlus },
+      { path: '/partenaires',    label: 'Partenaires', icon: HeartHandshake },
+      { path: '/commissions',    label: 'Commissions', icon: Euro },
+    ]
+  },
+  {
+    id: 'ark-ia',
+    label: 'ARK IA',
+    icon: Sparkles,
+    items: [
+      { path: '/assistant-ark', label: 'Assistant ARK',       icon: MessageSquare },
+      { path: '/capitia',       label: 'Recommandations',   icon: TrendingUp },
+      { path: '/capitia',       label: 'Historique IA',     icon: Clock },
+    ]
+  },
+  {
+    id: 'cabinet',
+    label: 'Cabinet',
+    icon: Settings,
+    items: [
+      { path: '/equipe',        label: 'Équipe',        icon: Users },
+      { path: '/parametres',    label: 'Paramètres',    icon: Settings },
+      { path: '/abonnement',    label: 'Abonnement',    icon: CreditCard },
+      { path: '/import',        label: 'Import',        icon: RefreshCw },
+    ]
+  },
+  {
+    id: 'ressources',
+    label: 'Ressources',
+    icon: HelpCircle,
+    items: [
+      { path: '/academy', label: 'Academy',  icon: GraduationCap },
+      { path: '/aide',    label: 'Aide',     icon: HelpCircle },
+      { path: '/status',  label: 'Statut',   icon: Shield },
+    ]
+  },
 ]
 
-const REACH_SUB_ITEMS = [
-  { path: '/reach', label: 'Dashboard', icon: Target },
-  { path: '/reach/search', label: 'Recherche', icon: Search },
-  { path: '/reach/prospects', label: 'Prospects', icon: Users },
-  { path: '/reach/campaigns', label: 'Campagnes', icon: Send },
-  { path: '/reach/inbox', label: 'Inbox', icon: Inbox },
-  { path: '/reach/map', label: 'Carte', icon: MapPin },
-  { path: '/reach/settings', label: 'Réglages', icon: Settings },
-]
-
+// ─── Sidebar ───────────────────────────────────────────────────────
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState(() => {
+    // Auto-ouvrir le groupe actif au montage
+    const initial = {}
+    UNIVERSE_GROUPS.forEach(g => { initial[g.id] = false })
+    return initial
+  })
+
+  // Auto-ouvrir le groupe contenant la route active
+  useEffect(() => {
+    const activeGroup = UNIVERSE_GROUPS.find(g =>
+      g.items.some(item => 
+        item.path === '/dashboard' 
+          ? location.pathname === '/dashboard' 
+          : location.pathname.startsWith(item.path)
+      )
+    )
+    if (activeGroup && !openGroups[activeGroup.id]) {
+      setOpenGroups(prev => ({ ...prev, [activeGroup.id]: true }))
+    }
+  }, [location.pathname])
 
   useEffect(() => {
     const updateUserState = () => {
@@ -75,9 +145,7 @@ export default function Sidebar() {
         if (storedUser) setUser(JSON.parse(storedUser))
       } catch (e) { console.error("Failed to parse user from localStorage", e) }
     }
-
     updateUserState()
-
     window.addEventListener('profileUpdated', updateUserState)
     return () => window.removeEventListener('profileUpdated', updateUserState)
   }, [])
@@ -95,7 +163,19 @@ export default function Sidebar() {
     toast.success('Déconnexion réussie')
   }
 
-  // Normalise l'utilisateur (support camelCase du login + snake_case de /me)
+  function toggleGroup(id) {
+    setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  function isItemActive(path) {
+    if (path === '/dashboard') return location.pathname === path
+    return location.pathname.startsWith(path)
+  }
+
+  function isGroupActive(group) {
+    return group.items.some(item => isItemActive(item.path))
+  }
+
   const userName = user
     ? ((user.first_name || user.firstName || '') + ' ' + (user.last_name || user.lastName || '')).trim()
     : 'Chargement...'
@@ -104,23 +184,22 @@ export default function Sidebar() {
   const userEmail = user?.email || ''
   const userRole = (user?.role || '').toLowerCase()
   const isAdmin = isAdminRole(userRole)
-  const navItems = isAdmin
-    ? [...NAV_ITEMS, { separator: true, label: 'ADMIN' }, { path: '/admin', label: 'Admin', icon: Shield }]
-    : NAV_ITEMS
 
-  const isActive = (path) => {
-    if (path === '/dashboard') return location.pathname === path
-    return location.pathname.startsWith(path)
+  const getInitials = (firstName, lastName) => {
+    const f = (firstName || '').charAt(0)
+    const l = (lastName || '').charAt(0)
+    return (f + l).toUpperCase() || '?'
   }
 
+  // ─── Rendu du contenu sidebar ──────────────────────────────────
   const sidebarContent = (
     <aside style={{
       width: 240,
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: '#080808',
-      borderRight: `1px solid ${theme.border}`,
+      background: t.bg,
+      borderRight: `1px solid ${t.border}`,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       {/* Logo */}
@@ -130,14 +209,14 @@ export default function Sidebar() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: `1px solid ${theme.borderLight}`,
+        borderBottom: `1px solid ${t.borderLight}`,
       }}>
         <CourtiaMiniLogo size={28} />
         <button
           onClick={() => setMobileOpen(false)}
           style={{
             display: 'none',
-            padding: 6, color: theme.textMuted, borderRadius: 8,
+            padding: 6, color: t.textMuted, borderRadius: 8,
             background: 'none', border: 'none', cursor: 'pointer',
           }}
           className="md:hidden"
@@ -147,126 +226,151 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '24px 10px', overflowY: 'auto' }}>
-        {navItems.map((item, idx) => {
-          if (item.separator) {
-            return (
-              <div key={`sep-${idx}`} style={{ padding: '16px 12px 6px' }}>
-                <p style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: '0.12em',
-                  color: theme.textMuted,
-                  textTransform: 'uppercase',
-                  margin: 0,
-                }}>{item.label}</p>
-              </div>
-            )
-          }
-
-          const active = isActive(item.path)
-          const Icon = item.icon
-          const isOnReach = location.pathname.startsWith('/reach')
+      <nav style={{ flex: 1, padding: '12px 8px', overflowY: 'auto' }}>
+        {UNIVERSE_GROUPS.map(group => {
+          const active = isGroupActive(group)
+          const open = openGroups[group.id]
+          const GroupIcon = group.icon
 
           return (
-            <React.Fragment key={item.path}>
+            <div key={group.id} style={{ marginBottom: 4 }}>
+              {/* Groupe header */}
               <button
-                onClick={() => {
-                  setMobileOpen(false)
-                  navigate(item.path)
-                }}
+                onClick={() => toggleGroup(group.id)}
                 style={{
                   width: '100%',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
                   padding: '8px 12px',
-                  marginBottom: 2,
                   borderRadius: 8,
                   fontSize: 13,
                   fontWeight: active ? 600 : 500,
-                  color: active ? theme.text : theme.textMuted,
-                  background: active ? theme.activeBg : 'transparent',
+                  color: active ? t.text : t.textMuted,
+                  background: active ? t.activeBg : 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.12s ease',
+                  transition: 'all 0.15s ease',
                   textAlign: 'left',
-                  borderLeft: active ? `2px solid ${theme.accent}` : '2px solid transparent',
+                  borderLeft: active ? `2px solid ${t.accent}` : '2px solid transparent',
                   paddingLeft: active ? 10 : 12,
                 }}
                 onMouseEnter={e => {
                   if (!active) {
-                    e.currentTarget.style.background = theme.hoverBg
-                    e.currentTarget.style.color = theme.text
+                    e.currentTarget.style.background = t.hoverBg
+                    e.currentTarget.style.color = t.text
                   }
                 }}
                 onMouseLeave={e => {
                   if (!active) {
                     e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.color = theme.textMuted
+                    e.currentTarget.style.color = t.textMuted
                   }
                 }}
               >
-                <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span style={{
-                    fontSize: 9, fontWeight: 700, marginLeft: 'auto',
-                    padding: '1px 6px', borderRadius: 6,
-                    background: theme.accent, color: '#fff',
-                  }}>{item.badge}</span>
-                )}
+                <GroupIcon size={16} strokeWidth={active ? 2.2 : 1.8} />
+                <span style={{ flex: 1 }}>{group.label}</span>
+                <motion.div
+                  animate={{ rotate: open ? 90 : 0 }}
+                  transition={{ duration: 0.15 }}
+                  style={{ display: 'flex' }}
+                >
+                  <ChevronRight size={14} color={active ? t.accent : t.textDim} />
+                </motion.div>
               </button>
 
-              {/* REACH sub-navigation */}
-              {item.hasSub && isOnReach && REACH_SUB_ITEMS.map(sub => {
-                const subActive = location.pathname === sub.path
-                const SubIcon = sub.icon
-                return (
-                  <button
-                    key={sub.path}
-                    onClick={() => {
-                      setMobileOpen(false)
-                      navigate(sub.path)
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '6px 12px 6px 38px',
-                      marginBottom: 0,
-                      borderRadius: 6,
-                      fontSize: 11.5,
-                      fontWeight: subActive ? 600 : 500,
-                      color: subActive ? theme.accent : theme.textMuted,
-                      background: subActive ? theme.activeBg : 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.12s ease',
-                      textAlign: 'left',
-                    }}
-                    onMouseEnter={e => {
-                      if (!subActive) {
-                        e.currentTarget.style.background = theme.hoverBg
-                        e.currentTarget.style.color = theme.text
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!subActive) {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = theme.textMuted
-                      }
-                    }}
+              {/* Sous-items (accordéon) */}
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    style={{ overflow: 'hidden' }}
                   >
-                    <SubIcon size={13} strokeWidth={subActive ? 1.8 : 1.5} />
-                    <span>{sub.label}</span>
-                  </button>
-                )
-              })}
-            </React.Fragment>
+                    <div style={{ padding: '2px 0 6px' }}>
+                      {group.items.map(item => {
+                        const itemActive = isItemActive(item.path)
+                        const ItemIcon = item.icon
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => {
+                              setMobileOpen(false)
+                              navigate(item.path)
+                            }}
+                            style={{
+                              width: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              padding: '6px 12px 6px 40px',
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: itemActive ? 600 : 500,
+                              color: itemActive ? t.accent : t.textMuted,
+                              background: itemActive ? t.accentBg : 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              transition: 'all 0.12s ease',
+                              textAlign: 'left',
+                            }}
+                            onMouseEnter={e => {
+                              if (!itemActive) {
+                                e.currentTarget.style.background = t.hoverBg
+                                e.currentTarget.style.color = t.text
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              if (!itemActive) {
+                                e.currentTarget.style.background = 'transparent'
+                                e.currentTarget.style.color = t.textMuted
+                              }
+                            }}
+                          >
+                            <ItemIcon size={13} strokeWidth={itemActive ? 1.8 : 1.5} />
+                            <span>{item.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )
         })}
+
+        {/* Admin */}
+        {isAdmin && (
+          <div style={{ marginTop: 8, marginBottom: 4 }}>
+            <button
+              onClick={() => { setMobileOpen(false); navigate('/admin') }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 12px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: location.pathname.startsWith('/admin') ? 600 : 500,
+                color: location.pathname.startsWith('/admin') ? t.text : t.textMuted,
+                background: location.pathname.startsWith('/admin') ? t.activeBg : 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                textAlign: 'left',
+                borderLeft: location.pathname.startsWith('/admin') ? `2px solid ${t.accent}` : '2px solid transparent',
+                paddingLeft: location.pathname.startsWith('/admin') ? 10 : 12,
+              }}
+            >
+              <Shield size={16} />
+              <span>Admin</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* ARK Button */}
@@ -274,7 +378,7 @@ export default function Sidebar() {
         <button
           onClick={() => {
             setMobileOpen(false)
-            navigate('/capitia')
+            navigate('/assistant-ark')
           }}
           style={{
             width: '100%',
@@ -286,23 +390,23 @@ export default function Sidebar() {
             borderRadius: 8,
             fontSize: 12,
             fontWeight: 600,
-            color: theme.accent,
-            background: 'rgba(91, 77, 245, 0.08)',
-            border: `1px solid ${theme.accent}25`,
+            color: t.arkAccent,
+            background: 'rgba(139, 92, 246, 0.08)',
+            border: '1px solid rgba(139, 92, 246, 0.20)',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(91, 77, 245, 0.16)'; e.currentTarget.style.borderColor = `${theme.accent}40` }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(91, 77, 245, 0.08)'; e.currentTarget.style.borderColor = `${theme.accent}25` }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139, 92, 246, 0.16)'; e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.30)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139, 92, 246, 0.08)'; e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.20)' }}
         >
-          <Zap size={13} /> ARK Intelligence
+          <Sparkles size={13} /> ARK Intelligence
         </button>
       </div>
 
       {/* Profil utilisateur */}
       <div style={{
         padding: '12px 16px',
-        borderTop: `1px solid ${theme.borderLight}`,
+        borderTop: `1px solid ${t.borderLight}`,
         display: 'flex',
         alignItems: 'center',
         gap: 10,
@@ -311,45 +415,43 @@ export default function Sidebar() {
           width: 30,
           height: 30,
           borderRadius: 8,
-          background: theme.activeBg,
-          color: theme.accent,
+          background: t.accentBg,
+          color: t.accent,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 700,
           fontSize: 11,
           flexShrink: 0,
-          letterSpacing: '-0.01em',
         }}>
           {user ? getInitials(userFirstName, userLastName) : '?'}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: theme.text, margin: 0, truncate: true, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</p>
-          <p style={{ fontSize: 10, color: theme.textMuted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</p>
+          <p style={{ fontSize: 12, fontWeight: 600, color: t.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</p>
+          <p style={{ fontSize: 10, color: t.textMuted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</p>
         </div>
         <button
           onClick={logout}
           style={{
             padding: 4,
-            color: theme.textMuted,
+            color: t.textMuted,
             borderRadius: 6,
             background: 'none',
             border: 'none',
             cursor: 'pointer',
             transition: 'color 0.12s',
-            lineHeight: 0,
           }}
           onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
-          onMouseLeave={e => e.currentTarget.style.color = theme.textMuted}
+          onMouseLeave={e => e.currentTarget.style.color = t.textMuted}
           title="Déconnexion"
         >
           <LogOut size={14} />
         </button>
       </div>
-
     </aside>
   )
 
+  // ─── Rendu ──────────────────────────────────────────────────────
   return (
     <>
       {/* BOUTON HAMBURGER MOBILE */}
@@ -357,14 +459,13 @@ export default function Sidebar() {
         onClick={() => setMobileOpen(true)}
         style={{
           position: 'fixed',
-          top: 10,
-          left: 10,
+          top: 10, left: 10,
           zIndex: 60,
           padding: 8,
-          background: '#080808',
-          border: `1px solid ${theme.borderLight}`,
+          background: t.bg,
+          border: `1px solid ${t.borderLight}`,
           borderRadius: 8,
-          color: theme.text,
+          color: t.text,
           cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
         }}
@@ -384,8 +485,7 @@ export default function Sidebar() {
             transition={{ duration: 0.15 }}
             onClick={() => setMobileOpen(false)}
             style={{
-              position: 'fixed',
-              inset: 0,
+              position: 'fixed', inset: 0,
               background: 'rgba(0,0,0,0.5)',
               zIndex: 55,
             }}
@@ -408,11 +508,8 @@ export default function Sidebar() {
             exit={{ x: -280 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              height: '100vh',
-              zIndex: 60,
+              position: 'fixed', top: 0, left: 0,
+              height: '100vh', zIndex: 60,
               boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
             }}
             className="md:hidden"
