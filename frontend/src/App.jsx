@@ -102,8 +102,10 @@ const Beta = lazy(() => import('./pages/Beta'))
 const CommissionsCalculator = lazy(() => import('./pages/CommissionsCalculator'))
 const Comparateur = lazy(() => import('./pages/Comparateur'))
 const SantePortefeuille = lazy(() => import('./pages/SantePortefeuille'))
-// LOT FEATURES KILLERS — F1 ARK Predictive Intelligence
+// LOT FEATURES KILLERS — F1 ARK Predictive Intelligence + F5 Objectifs + F6 Conformité
 const ArkIntelligence = lazy(() => import('./pages/ArkIntelligence'))
+const Objectifs = lazy(() => import('./pages/Objectifs'))
+const Conformite = lazy(() => import('./pages/Conformite'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
 // Components
@@ -404,6 +406,8 @@ export default function App() {
           <Route path="/comparateur" element={<Comparateur />} />
           <Route path="/sante-portefeuille" element={<SantePortefeuille />} />
           <Route path="/ark-intelligence" element={<ArkIntelligence />} />
+          <Route path="/objectifs" element={<Objectifs />} />
+          <Route path="/conformite" element={<Conformite />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />

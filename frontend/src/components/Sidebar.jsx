@@ -39,6 +39,7 @@ const UNIVERSES = [
     items: [
       { path: '/dashboard',     label: 'Cockpit',       icon: LayoutDashboard },
       { path: '/morning-brief', label: 'Morning Brief', icon: Sunrise },
+      { path: '/objectifs',     label: 'Objectifs',     icon: Target },
       { path: '/rapports',      label: 'Rapports',      icon: BarChart3 },
       { path: '/analytics',     label: 'Analytics',     icon: BarChart2 },
     ],
@@ -94,6 +95,7 @@ const UNIVERSES = [
     glyph: '⚙️',
     items: [
       { path: '/equipe',     label: 'Équipe',      icon: Building2 },
+      { path: '/conformite', label: 'Conformité',  icon: Shield },
       { path: '/parametres', label: 'Paramètres',  icon: Settings },
       { path: '/abonnement', label: 'Abonnement',  icon: CreditCard },
       { path: '/import',     label: 'Import',      icon: Database },

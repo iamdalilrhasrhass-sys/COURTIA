@@ -179,4 +179,93 @@ router.get('/:id/runs', async (req, res) => {
   }
 })
 
+// ────────────────────────────────────────────────────────────────────────
+// GET /api/automations/templates — Templates pré-faits (LOT F4)
+// ────────────────────────────────────────────────────────────────────────
+const TEMPLATES = [
+  {
+    key: 'welcome_new_client',
+    name: 'Bienvenue nouveau client',
+    description: 'Onboarding 30 jours pour fidéliser dès le départ',
+    trigger_type: 'new_client',
+    icon: '🎉',
+    steps: [
+      { day: 0, type: 'email', template: 'welcome', subject: 'Bienvenue chez {{cabinet.name}} !' },
+      { day: 7, type: 'sms', body: 'Bonjour {{client.prenom}}, première semaine OK ? On est là si besoin.' },
+      { day: 30, type: 'email', template: 'nps_survey', subject: 'Votre avis nous intéresse' },
+    ],
+  },
+  {
+    key: 'contract_renewal',
+    name: 'Échéance contrat',
+    description: 'Préparation renouvellement J-90 → J-7 avec proposition tarif',
+    trigger_type: 'contract_expiring',
+    icon: '🔄',
+    steps: [
+      { day: -90, type: 'task', title: 'Préparer comparatif renouvellement' },
+      { day: -60, type: 'email', template: 'pre_renewal' },
+      { day: -30, type: 'email', template: 'renewal_proposal' },
+      { day: -7, type: 'sms', body: '{{client.prenom}}, votre contrat arrive à échéance, on en parle ?' },
+    ],
+  },
+  {
+    key: 'silent_client_wake',
+    name: 'Réveil client silencieux',
+    description: 'Détection silence 90j → email perso + tâche appel',
+    trigger_type: 'silent',
+    icon: '📞',
+    steps: [
+      { day: 0, type: 'email', template: 'reconnect', subject: 'On pense à vous, {{client.prenom}}' },
+      { day: 14, type: 'task', title: 'Appel relance — silence 100j' },
+    ],
+  },
+  {
+    key: 'birthday',
+    name: 'Anniversaire client',
+    description: 'Geste émotionnel J-7 + offre cross-sell soft',
+    trigger_type: 'birthday',
+    icon: '🎂',
+    steps: [
+      { day: -7, type: 'email', template: 'birthday_offer', subject: 'Joyeux anniversaire {{client.prenom}} !' },
+      { day: 0, type: 'sms', body: 'Joyeux anniversaire {{client.prenom}} 🎉' },
+    ],
+  },
+  {
+    key: 'claim_closed',
+    name: 'Sinistre traité',
+    description: 'Confirmation J+1 + enquête satisfaction J+15',
+    trigger_type: 'claim_closed',
+    icon: '✅',
+    steps: [
+      { day: 1, type: 'email', template: 'claim_closed_confirmation' },
+      { day: 15, type: 'email', template: 'satisfaction_survey', subject: 'Comment s\'est passé votre dossier ?' },
+    ],
+  },
+]
+
+router.get('/templates', async (_req, res) => {
+  return res.json({ ok: true, templates: TEMPLATES })
+})
+
+// POST /api/automations/from-template — Instancier une automation depuis un template
+router.post('/from-template', requireFeature('automations'), async (req, res) => {
+  try {
+    const courtier_id = req.user.userId
+    const { template_key } = req.body || {}
+    const tpl = TEMPLATES.find(t => t.key === template_key)
+    if (!tpl) return res.status(404).json({ error: 'template_not_found' })
+
+    const result = await pool.query(`
+      INSERT INTO automations (courtier_id, name, description, trigger_type, trigger_config, steps, template_key, is_active)
+      VALUES ($1, $2, $3, $4, '{}'::jsonb, $5::jsonb, $6, true)
+      RETURNING *
+    `, [courtier_id, tpl.name, tpl.description, tpl.trigger_type, JSON.stringify(tpl.steps), tpl.key])
+
+    return res.json({ ok: true, automation: result.rows[0] })
+  } catch (err) {
+    console.error('[POST /automations/from-template]', err.message)
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
 module.exports = router

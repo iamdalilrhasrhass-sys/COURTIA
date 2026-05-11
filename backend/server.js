@@ -319,9 +319,11 @@ const publicApiRouter    = require('./src/routes/publicApi')
 const marketplaceRouter  = require('./src/routes/marketplace')
 const enterpriseRouter   = require('./src/routes/enterprise')
 
-// LOT FEATURES KILLERS — F1 (ARK Predictive Intelligence) + F2 (Comparator Engine temps réel)
+// LOT FEATURES KILLERS — F1..F6
 const arkIntelligenceRouter = require('./src/routes/arkIntelligence')
 const comparatorEngineRouter = require('./src/routes/comparatorEngine')
+const objectifsAdvancedRouter = require('./src/routes/objectifsAdvanced')
+const conformiteRouter = require('./src/routes/conformite')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -425,9 +427,11 @@ app.use('/api/developer',    verifyToken, require('./src/routes/developer'))  //
 
 app.use('/api/messaging',    messagingRoutes)
 
-// LOT FEATURES KILLERS — F1 + F2 (auth gérée dans les routers)
+// LOT FEATURES KILLERS — F1..F6 (auth gérée dans les routers)
 app.use('/api/ark-intelligence',  arkIntelligenceRouter)
 app.use('/api/comparator-engine', comparatorEngineRouter)
+app.use('/api',                   objectifsAdvancedRouter)   // /objectifs/* + /commissions/dashboard
+app.use('/api/conformite',        conformiteRouter)
 
 // ==================== PORTFOLIO CRON (03h00 Europe/Paris) ====================
 
