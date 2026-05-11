@@ -293,6 +293,9 @@ const composeRouter      = require('./src/routes/compose')
 // LOT 10 — Document Vision (extraction automatique RIB, carte grise, etc.)
 const docvisionRouter    = require('./src/routes/docvision')
 
+// LOT 11 — Quote Intelligence (briefs personnalisés par compagnie)
+const quoteIntelRouter   = require('./src/routes/quoteIntel')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -365,6 +368,9 @@ app.use('/api/compose',      verifyToken, composeRouter)
 
 // LOT 10 — Document Vision (extraction automatique RIB, carte grise, etc., protected)
 app.use('/api/docvision',    verifyToken, docvisionRouter)
+
+// LOT 11 — Quote Intelligence (briefs personnalisés par compagnie, protected)
+app.use('/api/quote-intel',  verifyToken, quoteIntelRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
