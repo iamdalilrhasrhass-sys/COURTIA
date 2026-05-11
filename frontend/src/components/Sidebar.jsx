@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, TrendingUp,
   Settings, LogOut, Shield, Menu, X, Calculator, GitCompareArrows,
   Activity, ChevronRight, Sparkles, HelpCircle, GraduationCap,
+  Sunrise, BarChart3, BarChart2, FileSignature, FolderOpen, Phone,
+  Briefcase, CalendarDays, Target, Search, Globe, Users2, Wallet,
+  Bot, Building2, CreditCard, Database, BookOpen,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -12,40 +15,98 @@ import { clearStoredSession } from '../api/sessionPolicy'
 import { resetSessionUserCache } from '../api/sessionUser'
 import { isAdminRole } from '../lib/roles'
 
-// ─── Design tokens ────────────────────────────────────────────────
-const t = {
+// ─── Aurora tokens ─────────────────────────────────────────────
+const T = {
   bg: '#080808',
   border: 'rgba(255,255,255,0.06)',
   borderLight: 'rgba(255,255,255,0.10)',
   text: '#ffffff',
-  textMuted: '#9CA3AF',
-  textDim: '#6B7280',
-  accent: '#8B5CF6',
-  accentBg: 'rgba(139, 92, 246, 0.10)',
-  activeBorder: 'rgba(139, 92, 246, 0.30)',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  textDim: '#4B5563',
+  accent: '#5B4DF5',
+  ark: '#8B5CF6',
   hoverBg: 'rgba(255,255,255,0.04)',
+  activeBg: 'rgba(91,77,245,0.10)',
 }
 
-// ─── 8 items principaux (microcopy court) ─────────────────────────
-const PRIMARY = [
-  { path: '/dashboard',    label: 'Accueil',       icon: LayoutDashboard },
-  { path: '/clients',      label: 'Clients',       icon: Users },
-  { path: '/contrats',     label: 'Contrats',      icon: FileText },
-  { path: '/opportunites', label: 'Opportunités',  icon: TrendingUp },
-  { path: '/taches',       label: 'Tâches',        icon: CheckSquare },
-]
-
-// ─── Outils (collapsable) ─────────────────────────────────────────
-const TOOLS = [
-  { path: '/commissions/calculator', label: 'Commissions',  icon: Calculator },
-  { path: '/comparateur',            label: 'Comparer',     icon: GitCompareArrows },
-  { path: '/sante-portefeuille',     label: 'Santé',        icon: Activity },
-]
-
-const RESOURCES = [
-  { path: '/assistant-ark', label: 'ARK',     icon: Sparkles },
-  { path: '/academy',       label: 'Academy', icon: GraduationCap },
-  { path: '/aide',          label: 'Aide',    icon: HelpCircle },
+// ─── 7 UNIVERS COURTIA ─────────────────────────────────────────
+const UNIVERSES = [
+  {
+    id: 'pilotage',
+    label: 'PILOTAGE',
+    glyph: '🎯',
+    items: [
+      { path: '/dashboard',     label: 'Cockpit',       icon: LayoutDashboard },
+      { path: '/morning-brief', label: 'Morning Brief', icon: Sunrise },
+      { path: '/rapports',      label: 'Rapports',      icon: BarChart3 },
+      { path: '/analytics',     label: 'Analytics',     icon: BarChart2 },
+    ],
+  },
+  {
+    id: 'portefeuille',
+    label: 'PORTEFEUILLE',
+    glyph: '📊',
+    items: [
+      { path: '/clients',   label: 'Clients',   icon: Users },
+      { path: '/contrats',  label: 'Contrats',  icon: FileText },
+      { path: '/devis',     label: 'Devis',     icon: FileSignature },
+      { path: '/documents', label: 'Documents', icon: FolderOpen },
+    ],
+  },
+  {
+    id: 'actions',
+    label: 'ACTIONS',
+    glyph: '⚡',
+    items: [
+      { path: '/taches',        label: 'Tâches',         icon: CheckSquare },
+      { path: '/relances',      label: 'Relances',       icon: Phone },
+      { path: '/opportunites',  label: 'Opportunités',   icon: Target },
+      { path: '/rendez-vous',   label: 'Rendez-vous',    icon: CalendarDays },
+    ],
+  },
+  {
+    id: 'acquisition',
+    label: 'ACQUISITION',
+    glyph: '🚀',
+    items: [
+      { path: '/prospection',  label: 'Prospection', icon: Search },
+      { path: '/reach',        label: 'REACH',       icon: Globe },
+      { path: '/partenaires',  label: 'Partenaires', icon: Users2 },
+      { path: '/commissions',  label: 'Commissions', icon: Wallet },
+    ],
+  },
+  {
+    id: 'ark',
+    label: 'ARK IA',
+    glyph: '🤖',
+    items: [
+      { path: '/assistant-ark',         label: 'Assistant ARK',     icon: Bot },
+      { path: '/comparateur',           label: 'Comparateur',       icon: GitCompareArrows },
+      { path: '/sante-portefeuille',    label: 'Santé portefeuille',icon: Activity },
+      { path: '/commissions/calculator',label: 'Calc. commissions', icon: Calculator },
+    ],
+  },
+  {
+    id: 'cabinet',
+    label: 'CABINET',
+    glyph: '⚙️',
+    items: [
+      { path: '/equipe',     label: 'Équipe',      icon: Building2 },
+      { path: '/parametres', label: 'Paramètres',  icon: Settings },
+      { path: '/abonnement', label: 'Abonnement',  icon: CreditCard },
+      { path: '/import',     label: 'Import',      icon: Database },
+    ],
+  },
+  {
+    id: 'ressources',
+    label: 'RESSOURCES',
+    glyph: '📚',
+    items: [
+      { path: '/academy', label: 'Academy', icon: GraduationCap },
+      { path: '/aide',    label: 'Aide',    icon: HelpCircle },
+    ],
+  },
 ]
 
 export default function Sidebar() {
@@ -53,10 +114,21 @@ export default function Sidebar() {
   const location = useLocation()
   const [user, setUser] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [toolsOpen, setToolsOpen] = useState(() =>
-    TOOLS.some(i => location.pathname.startsWith(i.path))
-  )
-  const [moreOpen, setMoreOpen] = useState(false)
+
+  // ─── Univers : ouverts par défaut, repli au clic ────────────
+  const initialOpen = useMemo(() => {
+    const map = {}
+    UNIVERSES.forEach(u => {
+      map[u.id] = u.items.some(it => location.pathname.startsWith(it.path))
+        || ['pilotage', 'portefeuille', 'actions'].includes(u.id) // ces 3 ouverts par défaut
+    })
+    return map
+  }, []) // eslint-disable-line
+  const [openMap, setOpenMap] = useState(initialOpen)
+
+  function toggleUniverse(id) {
+    setOpenMap(m => ({ ...m, [id]: !m[id] }))
+  }
 
   useEffect(() => {
     const update = () => {
@@ -92,11 +164,12 @@ export default function Sidebar() {
   const userLast  = user?.last_name  || user?.lastName  || ''
   const userName  = (userFirst + ' ' + userLast).trim() || 'Utilisateur'
   const userEmail = user?.email || ''
+  const userCabinet = user?.cabinet_name || user?.cabinetName || ''
   const isAdmin = isAdminRole((user?.role || '').toLowerCase())
   const initials = ((userFirst[0] || '') + (userLast[0] || '')).toUpperCase() || '?'
 
-  // ── ITEM ROW ──────────────────────────────────────────────────
-  function ItemRow({ item, depth = 0 }) {
+  // ─── Item ─────────────────────────────────────────────────
+  function Item({ item }) {
     const active = isActive(item.path)
     const Icon = item.icon
     return (
@@ -107,204 +180,181 @@ export default function Sidebar() {
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          padding: depth ? '7px 12px 7px 36px' : '8px 12px',
-          borderRadius: 8,
+          padding: '7px 12px 7px 26px',
+          borderRadius: 6,
           fontSize: 13,
           fontWeight: active ? 600 : 500,
-          color: active ? t.text : t.textMuted,
-          background: active ? t.accentBg : 'transparent',
+          color: active ? T.text : T.textSecondary,
+          background: active ? T.activeBg : 'transparent',
           border: 'none',
           cursor: 'pointer',
           textAlign: 'left',
           transition: 'background 0.15s, color 0.15s',
-          borderLeft: active ? `2px solid ${t.accent}` : '2px solid transparent',
-          paddingLeft: active ? (depth ? 34 : 10) : (depth ? 36 : 12),
+          borderLeft: active ? `2px solid ${T.accent}` : '2px solid transparent',
         }}
         onMouseEnter={(e) => {
-          if (!active) { e.currentTarget.style.background = t.hoverBg; e.currentTarget.style.color = t.text }
+          if (!active) { e.currentTarget.style.background = T.hoverBg; e.currentTarget.style.color = T.text }
         }}
         onMouseLeave={(e) => {
-          if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted }
+          if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.textSecondary }
         }}
       >
-        <Icon size={15} strokeWidth={active ? 2 : 1.7} />
+        <Icon size={14} strokeWidth={active ? 2 : 1.7} style={{ opacity: active ? 1 : 0.75, flexShrink: 0 }} />
         <span>{item.label}</span>
       </button>
     )
   }
 
-  // ── SECTION TITLE ─────────────────────────────────────────────
-  function SectionTitle({ label }) {
+  // ─── Univers (accordéon) ──────────────────────────────────
+  function Universe({ u }) {
+    const open = !!openMap[u.id]
+    const hasActive = u.items.some(it => isActive(it.path))
     return (
-      <div style={{
-        fontSize: 10,
-        fontWeight: 700,
-        color: t.textDim,
-        letterSpacing: '0.10em',
-        textTransform: 'uppercase',
-        padding: '14px 12px 6px',
-      }}>{label}</div>
+      <div style={{ marginBottom: 2 }}>
+        <button
+          onClick={() => toggleUniverse(u.id)}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 12px',
+            borderRadius: 6,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: hasActive ? T.text : T.textMuted,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = T.text}
+          onMouseLeave={e => e.currentTarget.style.color = hasActive ? T.text : T.textMuted}
+        >
+          <span style={{ fontSize: 12, opacity: 0.9 }}>{u.glyph}</span>
+          <span style={{ flex: 1, textAlign: 'left' }}>{u.label}</span>
+          <motion.div animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.15 }} style={{ display: 'flex' }}>
+            <ChevronRight size={11} />
+          </motion.div>
+        </button>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, paddingBottom: 4 }}>
+                {u.items.map(item => <Item key={item.path} item={item} />)}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     )
   }
 
-  // ── CONTENT ───────────────────────────────────────────────────
+  // ─── Contenu ──────────────────────────────────────────────
   const sidebarContent = (
     <aside style={{
       width: 240,
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: t.bg,
-      borderRight: `1px solid ${t.border}`,
+      background: T.bg,
+      borderRight: `1px solid ${T.border}`,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
-      {/* Logo */}
+      {/* Logo COURTIA */}
       <div style={{
-        padding: '18px 20px',
-        height: 65,
+        padding: '16px 18px',
+        height: 60,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: `1px solid ${t.borderLight}`,
+        borderBottom: `1px solid ${T.borderLight}`,
       }}>
-        <CourtiaMiniLogo size={28} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CourtiaMiniLogo size={26} />
+        </div>
         <button
           onClick={() => setMobileOpen(false)}
-          style={{ display: 'none', padding: 6, color: t.textMuted, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ display: 'none', padding: 6, color: T.textMuted, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer' }}
           className="md:hidden"
         >
           <X size={20} />
         </button>
       </div>
 
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: '8px', overflowY: 'auto' }}>
-        <SectionTitle label="Principal" />
-        {PRIMARY.map(item => <ItemRow key={item.path} item={item} />)}
-
-        {/* Outils (collapsable) */}
-        <div style={{ marginTop: 4 }}>
-          <button
-            onClick={() => setToolsOpen(v => !v)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '8px 12px',
-              borderRadius: 8,
-              fontSize: 10,
-              fontWeight: 700,
-              color: t.textDim,
-              letterSpacing: '0.10em',
-              textTransform: 'uppercase',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              marginTop: 8,
-            }}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>Outils</span>
-            <motion.div animate={{ rotate: toolsOpen ? 90 : 0 }} transition={{ duration: 0.15 }} style={{ display: 'flex' }}>
-              <ChevronRight size={12} />
-            </motion.div>
-          </button>
-          <AnimatePresence initial={false}>
-            {toolsOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                style={{ overflow: 'hidden' }}
-              >
-                {TOOLS.map(item => <ItemRow key={item.path} item={item} />)}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Plus (collapsable) */}
-        <div style={{ marginTop: 4 }}>
-          <button
-            onClick={() => setMoreOpen(v => !v)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '8px 12px',
-              borderRadius: 8,
-              fontSize: 10,
-              fontWeight: 700,
-              color: t.textDim,
-              letterSpacing: '0.10em',
-              textTransform: 'uppercase',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              marginTop: 4,
-            }}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>Plus</span>
-            <motion.div animate={{ rotate: moreOpen ? 90 : 0 }} transition={{ duration: 0.15 }} style={{ display: 'flex' }}>
-              <ChevronRight size={12} />
-            </motion.div>
-          </button>
-          <AnimatePresence initial={false}>
-            {moreOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                style={{ overflow: 'hidden' }}
-              >
-                {RESOURCES.map(item => <ItemRow key={item.path} item={item} />)}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      {/* Nav : 7 univers */}
+      <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
+        {UNIVERSES.map(u => <Universe key={u.id} u={u} />)}
 
         {isAdmin && (
-          <>
-            <SectionTitle label="Admin" />
-            <ItemRow item={{ path: '/admin', label: 'Admin', icon: Shield }} />
-          </>
+          <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+            <Item item={{ path: '/admin', label: 'Admin', icon: Shield }} />
+          </div>
         )}
       </nav>
 
-      {/* Paramètres */}
-      <div style={{ padding: '8px', borderTop: `1px solid ${t.borderLight}` }}>
-        <ItemRow item={{ path: '/parametres', label: 'Paramètres', icon: Settings }} />
+      {/* Bandeau ARK Intelligence */}
+      <div style={{
+        margin: '0 10px 8px',
+        padding: '10px 12px',
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(91,77,245,0.06))',
+        border: `1px solid rgba(139,92,246,0.18)`,
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        cursor: 'pointer',
+      }}
+      onClick={() => { setMobileOpen(false); navigate('/morning-brief') }}>
+        <div style={{
+          width: 26, height: 26, borderRadius: 8,
+          background: 'rgba(139,92,246,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Sparkles size={13} color={T.ark} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.text, letterSpacing: '0.02em' }}>ARK Intelligence</div>
+          <div style={{ fontSize: 10, color: T.textMuted }}>3 priorités aujourd'hui</div>
+        </div>
       </div>
 
       {/* Profil */}
       <div style={{
-        padding: '12px 16px',
-        borderTop: `1px solid ${t.borderLight}`,
+        padding: '12px 14px',
+        borderTop: `1px solid ${T.borderLight}`,
         display: 'flex',
         alignItems: 'center',
         gap: 10,
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: 8,
-          background: t.accentBg, color: t.accent,
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.30), rgba(91,77,245,0.18))',
+          color: T.text,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontWeight: 700, fontSize: 11, flexShrink: 0,
+          border: `1px solid rgba(139,92,246,0.25)`,
         }}>
           {initials}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: t.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</p>
-          <p style={{ fontSize: 10, color: t.textMuted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</p>
+          <p style={{ fontSize: 12, fontWeight: 600, color: T.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</p>
+          <p style={{ fontSize: 10, color: T.textMuted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userCabinet || userEmail}</p>
         </div>
         <button
           onClick={logout}
           title="Déconnexion"
-          style={{ padding: 4, color: t.textMuted, borderRadius: 6, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ padding: 4, color: T.textMuted, borderRadius: 6, background: 'none', border: 'none', cursor: 'pointer' }}
           onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
-          onMouseLeave={e => e.currentTarget.style.color = t.textMuted}
+          onMouseLeave={e => e.currentTarget.style.color = T.textMuted}
         >
           <LogOut size={14} />
         </button>
@@ -319,8 +369,8 @@ export default function Sidebar() {
         onClick={() => setMobileOpen(true)}
         style={{
           position: 'fixed', top: 10, left: 10, zIndex: 60,
-          padding: 8, background: t.bg, border: `1px solid ${t.borderLight}`,
-          borderRadius: 8, color: t.text, cursor: 'pointer',
+          padding: 8, background: T.bg, border: `1px solid ${T.borderLight}`,
+          borderRadius: 8, color: T.text, cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
         }}
         className="flex md:hidden"

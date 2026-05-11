@@ -277,6 +277,7 @@ export default function App() {
           <Route path="/devis"        element={<Devis />} />
           <Route path="/relances"     element={<Relances />} />
           <Route path="/opportunites" element={<Opportunites />} />
+          <Route path="/rendez-vous"  element={<Taches />} />
           <Route path="/partenaires"  element={<Partenaires />} />
           <Route path="/prospection"  element={<Prospection />} />
           <Route path="/assistant-ark" element={<Capitia />} />
