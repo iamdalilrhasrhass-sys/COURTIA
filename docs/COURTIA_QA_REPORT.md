@@ -664,9 +664,9 @@
 
 | Test | Résultat | Preuve |
 |---|---|---|
-| Register nouvel utilisateur | ✅ OK | dalil.test.2026.01@courtia.fr créé, dashboard affiché |
+| Register nouvel utilisateur | ✅ OK | dalil.test.2026.01@courtiark.fr créé, dashboard affiché |
 | Login mauvais mot de passe | ✅ OK | "Email ou mot de passe incorrect." — message contextuel |
-| Login bon mot de passe | ✅ OK | demo@courtia.fr → "Bonjour Test" — nouveau design premium |
+| Login bon mot de passe | ✅ OK | demo@courtiark.fr → "Bonjour Test" — nouveau design premium |
 | Dashboard après login | ✅ OK | Dashboard cockpit Aurora affiché |
 | Refresh dashboard | ✅ OK | Utilisateur reste connecté |
 | Console | ✅ OK | 0 erreur |

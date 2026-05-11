@@ -2,12 +2,12 @@
 
 ## 1. Problème constaté
 - **URL testée** : https://courtia.vercel.app/login
-- **Email testé** : demo@courtia.fr
+- **Email testé** : demo@courtiark.fr
 - **Message affiché** : "Une erreur est survenue. Vérifiez vos identifiants."
 - **Impact** : Bloquant — impossible de se connecter avec le compte demo
 
 ## 2. Cause exacte
-- **Cause réelle** : Le mot de passe du compte demo@courtia.fr (id=9) était inconnu/différent de TestCourtia2026!
+- **Cause réelle** : Le mot de passe du compte demo@courtiark.fr (id=9) était inconnu/différent de TestCourtia2026!
 - **Ce qui n'était PAS en cause** :
   - Backend → répondait correctement (401 "Invalid email or password")
   - API URL → correcte (le register fonctionnait)
@@ -19,10 +19,10 @@
 - **Preuve** : curl backend → 401 "Invalid email or password" ; inscription nouveau compte → succès immédiat
 
 ## 3. Tests effectués
-- ✅ Test inscription nouveau compte (dalil.test.2026.01@courtia.fr) → succès, dashboard affiché
-- ✅ Test login backend curl avec demo@courtia.fr avant reset → 401 (mot de passe incorrect)
+- ✅ Test inscription nouveau compte (dalil.test.2026.01@courtiark.fr) → succès, dashboard affiché
+- ✅ Test login backend curl avec demo@courtiark.fr avant reset → 401 (mot de passe incorrect)
 - ✅ Test login backend curl après reset → 200, token reçu
-- ✅ Test login frontend demo@courtia.fr après reset → succès, dashboard "Bonjour Test"
+- ✅ Test login frontend demo@courtiark.fr après reset → succès, dashboard "Bonjour Test"
 - ✅ Dashboard accessible après login
 - ✅ Console : 0 erreur
 - ✅ Refresh dashboard : utilisateur reste connecté
@@ -30,13 +30,13 @@
 
 ## 4. Correction appliquée
 - **Fichiers modifiés** : Aucun. Reset du password_hash en base de données uniquement.
-- **Compte test réinitialisé** : demo@courtia.fr (id=9)
+- **Compte test réinitialisé** : demo@courtiark.fr (id=9)
 - **Rôle** : broker
 - **Statut** : trialing (essai)
 - **Mot de passe de test confirmé** : TestCourtia2026!
 
 ## 5. Résultats finaux
-- ✅ Login production : fonctionne avec demo@courtia.fr / TestCourtia2026!
+- ✅ Login production : fonctionne avec demo@courtiark.fr / TestCourtia2026!
 - ✅ Dashboard accessible : "Bonjour Test" après connexion
 - ✅ Console : 0 erreur
 - ✅ Backend health : online, API OK
@@ -51,7 +51,7 @@ ssh root@72.62.187.63 "pm2 status && curl -s http://127.0.0.1:9998/api/health"
 # Test login backend (avant correction)
 curl -s -X POST http://127.0.0.1:9998/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"demo@courtia.fr","password":"TestCourtia2026!"}'
+  -d '{"email":"demo@courtiark.fr","password":"TestCourtia2026!"}'
 # → 401 "Invalid email or password"
 
 # Test login backend (après correction)
@@ -78,8 +78,8 @@ git push origin main
 
 ## 9. Conclusion honnête
 - ✅ Login réparé : OUI
-- ✅ Compte demo utilisable : OUI (demo@courtia.fr / TestCourtia2026!)
-- ✅ Inscription utilisable : OUI (testé avec dalil.test.2026.01@courtia.fr)
+- ✅ Compte demo utilisable : OUI (demo@courtiark.fr / TestCourtia2026!)
+- ✅ Inscription utilisable : OUI (testé avec dalil.test.2026.01@courtiark.fr)
 - ✅ COURTIA testable par Dalil : OUI
 
 **Cause réelle** : Simple mismatch de mot de passe sur le compte demo. Le flux d'authentification (register, login, JWT, redirection, dashboard, refresh) fonctionne parfaitement. Aucun bug code. Aucune correction de code nécessaire.

@@ -36,7 +36,7 @@
 | `/login` | OK |
 | `/register` | OK |
 | `/register?plan=pro` | OK |
-| `mailto:contact@courtia.fr` | OK |
+| `mailto:contact@courtiark.fr` | OK |
 
 ## CTA obligatoires
 

@@ -78,7 +78,7 @@ Audit statique OK :
 - `/register`
 - `/register?plan=pro`
 - `/login`
-- `mailto:contact@courtia.fr`
+- `mailto:contact@courtiark.fr`
 
 Aucun lien `/contact` restant dans la landing.
 

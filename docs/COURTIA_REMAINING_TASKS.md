@@ -51,7 +51,7 @@
 - [x] Import portefeuille V1: fondation API `/api/imports` + UI `/import` + stratégie documentée
 
 ## P0 — Bloquant plateforme complète
-- [x] Login demo@courtia.fr — mot de passe réinitialisé, flux OK
+- [x] Login demo@courtiark.fr — mot de passe réinitialisé, flux OK
 
 - [x] Admin Center API mismatch — frontend aligné sur `/api/admin/super/*`, écran broker refusé propre, suppression de `/app/dashboard`.
 

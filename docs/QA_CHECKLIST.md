@@ -2,7 +2,7 @@
 
 ## Comptes test
 
-- Courtier e2e: `e2e@courtia.fr / courtia2026`
+- Courtier e2e: `e2e@courtiark.fr / courtia2026`
 - Super admin: `dalil@repairebrise.fr / pass123`
 
 ## Parcours smoke courtier
