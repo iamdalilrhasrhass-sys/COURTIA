@@ -283,6 +283,9 @@ const devisRouter        = require('./src/routes/devis')
 const relancesRouter     = require('./src/routes/relances')
 const opportunitesRouter = require('./src/routes/opportunites')
 
+// LOT 7 — ARK Watch (surveillance proactive)
+const arkWatchRouter     = require('./src/routes/arkWatch')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -345,6 +348,9 @@ app.use('/api/comparator', quotesComparatorRouter)
 app.use('/api/devis',        verifyToken, devisRouter)
 app.use('/api/relances',     verifyToken, relancesRouter)
 app.use('/api/opportunites', verifyToken, opportunitesRouter)
+
+// LOT 7 — ARK Watch (surveillance proactive, protected)
+app.use('/api/ark-watch',    verifyToken, arkWatchRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
