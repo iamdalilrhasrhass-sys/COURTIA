@@ -1162,4 +1162,341 @@ router.post('/campaigns/from-playbook/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// F8 — Reach Outbound : sequences builder + AI writer + KPIs
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SEQUENCE_TEMPLATES = {
+  courtier_independant_croissance: {
+    name: 'Courtier indépendant qui veut grossir',
+    description: '5 touches sur 21 j — éveil, valeur, preuve sociale, urgence, dernier mot.',
+    steps: [
+      { day_offset: 0, channel: 'email',
+        subject: 'Doubler son book sans embaucher — c\'est possible ?',
+        template: 'Bonjour {{firstName}},\n\nJe suis tombé sur {{company}} et je me suis dit : combien de devis perdez-vous chaque semaine faute de temps de relance ?\n\nLes courtiers indépendants qu\'on accompagne automatisent leurs relances avec ARK et signent 30 % de devis en plus.\n\nÇa vous intéresse d\'en parler 15 min ?\n\n— Dalil' },
+      { day_offset: 3, channel: 'email',
+        subject: 'Re: relances automatiques',
+        template: 'Bonjour {{firstName}},\n\nQuestion rapide : sur 100 devis envoyés en 2025, combien sont restés sans réponse ?\n\nLa réponse moyenne du marché : 35 %.\nAvec ARK : 12 %.\n\nUn rapide call cette semaine ?' },
+      { day_offset: 7, channel: 'task',
+        title: 'Appel à froid {{company}}',
+        template: 'Suite à 2 emails — ouvrir avec angle "relances perdues = CA perdu".' },
+      { day_offset: 14, channel: 'email',
+        subject: '{{firstName}}, un dernier message',
+        template: 'Bonjour {{firstName}},\n\nJe respecte votre temps — donc dernier message.\n\nSi un jour vous voulez tester ARK 30 jours sans engagement, mon agenda : https://calendly.com/courtiark/15min\n\nBelle continuation,\n— Dalil' },
+      { day_offset: 21, channel: 'email',
+        subject: 'Étude de cas — Cabinet Moreau (Lyon)',
+        template: '{{firstName}}, dernière chose : voici comment Moreau a passé de 12 à 28 contrats/mois en 60 j avec ARK.\n\nPDF : https://courtiark.fr/cases/moreau\n\nBonne lecture !' },
+    ],
+  },
+  cabinet_petite_equipe_croissance: {
+    name: 'Cabinet 2-5 personnes en croissance',
+    description: 'Séquence focus organisation : pas le CA, mais le chaos opérationnel.',
+    steps: [
+      { day_offset: 0, channel: 'email',
+        subject: 'Question pour {{company}} (2-5 personnes)',
+        template: 'Bonjour {{firstName}},\n\nQuand on est entre 2 et 5 dans un cabinet, le chaos est partout : 3 outils différents, des relances qui partent en double, des devis perdus.\n\nARK unifie tout dans une seule interface, IA native.\n\n15 min pour voir si ça matche ?' },
+      { day_offset: 3, channel: 'email',
+        subject: 'Coût du chaos chez {{company}} ?',
+        template: '{{firstName}}, calcul rapide : 2 collaborateurs × 4 h/sem en saisie = 32 h/mois.\n\nÀ 25 €/h = 800 €. ARK = 99 €/mois.\n\nRetour sur investissement immédiat. On en parle ?' },
+      { day_offset: 7, channel: 'task',
+        title: 'Suivi téléphonique {{company}}',
+        template: 'Angle : libérer 30 h/mois d\'équipe.' },
+      { day_offset: 14, channel: 'email',
+        subject: 'Démo ARK 12 min — pour {{company}}',
+        template: 'Bonjour {{firstName}},\n\nJe vous propose une démo enregistrée de 12 min, sans rendez-vous : https://courtiark.fr/demo\n\nSi ça résonne, on parle. Sinon, no stress.' },
+      { day_offset: 21, channel: 'email',
+        subject: 'Dernier message {{firstName}}',
+        template: 'Pas envie de relancer indéfiniment. Si jamais vous voulez tester un mois — répondez "GO" à ce mail. Belle journée !' },
+    ],
+  },
+  courtier_perd_temps_relances: {
+    name: 'Courtier qui perd du temps en relances',
+    description: 'Angle 100 % opérationnel : relances auto J+3 / J+7 / J+14.',
+    steps: [
+      { day_offset: 0, channel: 'email',
+        subject: 'Vos relances tournent toutes seules — ou pas ?',
+        template: 'Bonjour {{firstName}},\n\nCombien de relances avez-vous faites cette semaine ?\nSi la réponse est "trop", on a un truc pour vous.\n\nARK fait J+3, J+7, J+14 automatiquement, avec ton humain.\n\n15 min pour voir ?' },
+      { day_offset: 3, channel: 'email',
+        subject: 'Re: relances qui tournent seules',
+        template: 'Hier j\'ai parlé à un courtier qui faisait 40 relances/sem manuellement.\nDepuis ARK : 0 relance manuelle. Et + 30 % de signatures.\n\nVous voulez le même résultat ?' },
+      { day_offset: 7, channel: 'sms',
+        template: '{{firstName}}, mes mails passent dans vos spams ? On en parle 2 min ?' },
+      { day_offset: 14, channel: 'email',
+        subject: '{{firstName}}, j\'arrête là',
+        template: 'Dernier message — si un jour vous voulez tester, mon agenda : https://calendly.com/courtiark/15min' },
+      { day_offset: 21, channel: 'task',
+        title: 'Appel final {{company}}',
+        template: 'Dernière chance — laisser un message vocal court.' },
+    ],
+  },
+}
+
+// GET /api/reach/templates — liste des templates de séquences
+router.get('/templates', verifyToken, async (req, res) => {
+  const items = Object.entries(SEQUENCE_TEMPLATES).map(([key, tpl]) => ({
+    key,
+    name: tpl.name,
+    description: tpl.description,
+    steps_count: tpl.steps.length,
+    duration_days: Math.max(...tpl.steps.map(s => s.day_offset || 0)),
+  }))
+  res.json(wrap(items))
+})
+
+router.get('/templates/:key', verifyToken, async (req, res) => {
+  const tpl = SEQUENCE_TEMPLATES[req.params.key]
+  if (!tpl) return res.status(404).json(err('template_not_found'))
+  res.json(wrap({ key: req.params.key, ...tpl }))
+})
+
+// POST /api/reach/sequences/from-template — crée séquence à partir template
+router.post('/sequences/from-template', verifyToken, async (req, res) => {
+  try {
+    const { template_key, name, audience_id = null } = req.body
+    const tpl = SEQUENCE_TEMPLATES[template_key]
+    if (!tpl) return res.status(404).json(err('template_not_found'))
+    const r = await pool.query(`
+      INSERT INTO reach_sequences (user_id, audience_id, name, channel, template, steps_json, template_key, status)
+      VALUES ($1, $2, $3, 'multi', $4, $5::jsonb, $6, 'draft')
+      RETURNING *
+    `, [
+      req.user.id, audience_id, name || tpl.name, tpl.name,
+      JSON.stringify(tpl.steps), template_key,
+    ])
+    res.status(201).json(wrap(r.rows[0]))
+  } catch (e) {
+    console.error('[reach] sequence from-template', e.message)
+    res.status(500).json(err('create_failed'))
+  }
+})
+
+// POST /api/reach/sequences/:id/launch — lance une séquence sur prospects
+router.post('/sequences/:id/launch', verifyToken, async (req, res) => {
+  try {
+    const seqId = parseInt(req.params.id, 10)
+    const { prospect_ids = [] } = req.body
+    if (!Array.isArray(prospect_ids) || prospect_ids.length === 0) {
+      return res.status(400).json(err('no_prospects'))
+    }
+    const { rows: seqRows } = await pool.query(
+      `SELECT id, steps_json FROM reach_sequences WHERE id = $1 AND user_id = $2`,
+      [seqId, req.user.id]
+    )
+    if (!seqRows[0]) return res.status(404).json(err('sequence_not_found'))
+    const steps = Array.isArray(seqRows[0].steps_json) ? seqRows[0].steps_json : []
+    if (steps.length === 0) return res.status(400).json(err('sequence_has_no_steps'))
+
+    let created = 0
+    for (const pid of prospect_ids) {
+      try {
+        await pool.query(`
+          INSERT INTO reach_sequence_runs (sequence_id, prospect_id, current_step, status, next_run_at)
+          VALUES ($1, $2, 0, 'active', NOW())
+          ON CONFLICT (sequence_id, prospect_id) DO NOTHING
+        `, [seqId, pid])
+        created++
+      } catch (_) {}
+    }
+    await pool.query(`UPDATE reach_sequences SET status='active', updated_at=NOW() WHERE id=$1`, [seqId])
+    res.json(wrap({ launched: created, total: prospect_ids.length }))
+  } catch (e) {
+    console.error('[reach] launch sequence', e.message)
+    res.status(500).json(err('launch_failed'))
+  }
+})
+
+// GET /api/reach/kpis — KPIs outbound (calcul à la volée + sparkline 30 j)
+router.get('/kpis', verifyToken, async (req, res) => {
+  try {
+    const u = req.user.id
+    const { rows: msgStats } = await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE sent_at IS NOT NULL) AS sent,
+             COUNT(*) FILTER (WHERE opened_at IS NOT NULL) AS opens,
+             COUNT(*) FILTER (WHERE clicked_at IS NOT NULL) AS clicks,
+             COUNT(*) FILTER (WHERE replied_at IS NOT NULL) AS replies
+      FROM reach_messages
+      WHERE prospect_id IN (SELECT id FROM reach_prospects WHERE user_id = $1)
+        AND sent_at >= NOW() - INTERVAL '30 days'
+    `, [u]).catch(() => ({ rows: [{ sent: 0, opens: 0, clicks: 0, replies: 0 }] }))
+
+    const { rows: rdv } = await pool.query(`
+      SELECT COUNT(*)::int AS total FROM reach_prospects
+      WHERE user_id = $1 AND status IN ('rdv_pris', 'interesse')
+    `, [u]).catch(() => ({ rows: [{ total: 0 }] }))
+
+    const { rows: converted } = await pool.query(`
+      SELECT COUNT(*)::int AS total FROM reach_prospects
+      WHERE user_id = $1 AND status = 'signe'
+    `, [u]).catch(() => ({ rows: [{ total: 0 }] }))
+
+    const sent = parseInt(msgStats[0]?.sent || 0)
+    const opens = parseInt(msgStats[0]?.opens || 0)
+    const clicks = parseInt(msgStats[0]?.clicks || 0)
+    const replies = parseInt(msgStats[0]?.replies || 0)
+    const pct = (n, d) => d > 0 ? Math.round((n / d) * 10000) / 100 : 0
+
+    // Sparkline 30 j (par jour)
+    const { rows: spark } = await pool.query(`
+      SELECT to_char(date_trunc('day', sent_at), 'YYYY-MM-DD') AS d,
+             COUNT(*)::int AS sent,
+             COUNT(*) FILTER (WHERE opened_at IS NOT NULL)::int AS opens,
+             COUNT(*) FILTER (WHERE replied_at IS NOT NULL)::int AS replies
+      FROM reach_messages
+      WHERE prospect_id IN (SELECT id FROM reach_prospects WHERE user_id = $1)
+        AND sent_at >= NOW() - INTERVAL '30 days'
+      GROUP BY 1 ORDER BY 1 ASC
+    `, [u]).catch(() => ({ rows: [] }))
+
+    // Heatmap day×hour
+    const { rows: heatmap } = await pool.query(`
+      SELECT EXTRACT(DOW FROM sent_at)::int AS dow,
+             EXTRACT(HOUR FROM sent_at)::int AS hour,
+             COUNT(*) FILTER (WHERE opened_at IS NOT NULL)::int AS opens,
+             COUNT(*)::int AS sent
+      FROM reach_messages
+      WHERE prospect_id IN (SELECT id FROM reach_prospects WHERE user_id = $1)
+        AND sent_at >= NOW() - INTERVAL '90 days'
+      GROUP BY 1, 2
+    `, [u]).catch(() => ({ rows: [] }))
+
+    res.json(wrap({
+      sent, opens, clicks, replies,
+      open_rate: pct(opens, sent),
+      click_rate: pct(clicks, sent),
+      reply_rate: pct(replies, sent),
+      meeting_rate: pct(parseInt(rdv[0]?.total || 0), sent),
+      meetings: parseInt(rdv[0]?.total || 0),
+      converted: parseInt(converted[0]?.total || 0),
+      sparkline: spark,
+      heatmap,
+    }))
+  } catch (e) {
+    console.error('[reach] kpis', e.message)
+    res.status(500).json(err('kpis_failed'))
+  }
+})
+
+// POST /api/reach/ai-write — génère un email IA pour un prospect/contexte
+router.post('/ai-write', verifyToken, async (req, res) => {
+  try {
+    const { prompt, channel = 'email', tone = 'pro_chaleureux', prospect_id = null } = req.body
+    if (!prompt || prompt.trim().length < 5) return res.status(400).json(err('prompt_too_short'))
+
+    let prospectInfo = ''
+    if (prospect_id) {
+      const { rows } = await pool.query('SELECT * FROM reach_prospects WHERE id = $1 AND user_id = $2', [prospect_id, req.user.id])
+      if (rows[0]) {
+        const p = rows[0]
+        prospectInfo = `\nPROSPECT: ${p.company_name || ''} — ${p.contact_first_name || ''} ${p.contact_last_name || ''} — ${p.role || ''} — ${p.city || ''} — secteur ${p.category || ''} — score ${p.opportunity_score}.`
+      }
+    }
+
+    const systemMsg = `Tu es ARK Writer, copywriter senior spécialisé courtage assurance.
+Tu écris des emails ${channel === 'sms' ? 'SMS courts' : 'cold email B2B'} ${tone}, sans buzzword, sans "je me permets".
+Format de sortie : JSON strict { subject, body }. Body en français, sans HTML.${prospectInfo}`
+
+    let draft = null
+    try {
+      // Tentative Anthropic d'abord
+      const Anthropic = require('@anthropic-ai/sdk')
+      if (process.env.ANTHROPIC_API_KEY) {
+        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+        const resp = await client.messages.create({
+          model: 'claude-3-5-sonnet-latest',
+          max_tokens: 600,
+          system: systemMsg,
+          messages: [{ role: 'user', content: prompt }],
+        })
+        const raw = resp.content?.[0]?.text || ''
+        try { draft = JSON.parse(raw.replace(/```json/g, '').replace(/```/g, '').trim()) }
+        catch { draft = { subject: 'Une question rapide', body: raw } }
+      }
+    } catch (e) {
+      // Fallback DeepSeek/OpenAI
+    }
+
+    if (!draft) {
+      try {
+        const resp = await openai.chat.completions.create({
+          model: 'deepseek-chat',
+          messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }],
+          response_format: { type: 'json_object' },
+          max_tokens: 600,
+        })
+        const raw = resp.choices?.[0]?.message?.content || '{}'
+        draft = JSON.parse(raw)
+      } catch (_) {
+        // Fallback déterministe
+        draft = {
+          subject: prompt.split('\n')[0].slice(0, 60) || 'Une question rapide',
+          body: `Bonjour {{firstName}},\n\n${prompt}\n\nUn créneau pour échanger 15 min ?\n\n— Dalil`
+        }
+      }
+    }
+
+    // Trace
+    await pool.query(`
+      INSERT INTO reach_ai_drafts (user_id, prompt, channel, draft, variant)
+      VALUES ($1, $2, $3, $4, 'v1')
+    `, [req.user.id, prompt, channel, JSON.stringify(draft)]).catch(() => {})
+
+    res.json(wrap(draft))
+  } catch (e) {
+    console.error('[reach] ai-write', e.message)
+    res.status(500).json(err('ai_write_failed'))
+  }
+})
+
+// POST /api/reach/prospects/import — import CSV (texte brut) → bulk create
+router.post('/prospects/import', verifyToken, async (req, res) => {
+  try {
+    const { csv = '', delimiter = ',' } = req.body
+    if (!csv || csv.trim().length < 5) return res.status(400).json(err('empty_csv'))
+    const lines = csv.split(/\r?\n/).filter(Boolean)
+    if (lines.length < 2) return res.status(400).json(err('csv_no_data'))
+    const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase())
+    const findIdx = (...keys) => {
+      for (const k of keys) {
+        const idx = headers.indexOf(k)
+        if (idx !== -1) return idx
+      }
+      return -1
+    }
+    const idxCompany = findIdx('company', 'entreprise', 'societe')
+    const idxFirst = findIdx('first_name', 'prenom', 'firstname')
+    const idxLast = findIdx('last_name', 'nom', 'lastname')
+    const idxEmail = findIdx('email', 'mail')
+    const idxPhone = findIdx('phone', 'telephone', 'tel')
+    const idxCity = findIdx('city', 'ville')
+    const idxRole = findIdx('role', 'poste')
+
+    let inserted = 0
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(delimiter).map(c => c.trim())
+      const row = {
+        company_name: idxCompany >= 0 ? cols[idxCompany] : '',
+        contact_first_name: idxFirst >= 0 ? cols[idxFirst] : '',
+        contact_last_name: idxLast >= 0 ? cols[idxLast] : '',
+        email: idxEmail >= 0 ? cols[idxEmail] : '',
+        phone: idxPhone >= 0 ? cols[idxPhone] : '',
+        city: idxCity >= 0 ? cols[idxCity] : '',
+        role: idxRole >= 0 ? cols[idxRole] : '',
+      }
+      if (!row.email && !row.phone && !row.company_name) continue
+      try {
+        await pool.query(`
+          INSERT INTO reach_prospects
+            (user_id, company_name, contact_first_name, contact_last_name, email, phone, city, role, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'nouveau')
+        `, [req.user.id, row.company_name, row.contact_first_name, row.contact_last_name, row.email, row.phone, row.city, row.role])
+        inserted++
+      } catch (_) {}
+    }
+    res.json(wrap({ inserted, total: lines.length - 1 }))
+  } catch (e) {
+    console.error('[reach] import csv', e.message)
+    res.status(500).json(err('import_failed'))
+  }
+})
+
 module.exports = router;
