@@ -9,7 +9,7 @@
     "test": "jest",
     "migrate": "node scripts/migrate.js",
     "qa:preview-smoke": "node scripts/preview-smoke-playwright.js",
-    "qa:prod-smoke": "PROD_URL=https://courtia.vercel.app node scripts/preview-smoke-playwright.js"
+    "qa:prod-smoke": "PROD_URL=https://app.courtiark.fr node scripts/preview-smoke-playwright.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

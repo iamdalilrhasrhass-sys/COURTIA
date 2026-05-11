@@ -11,11 +11,11 @@ describe('redaction', () => {
 
   it('redacts sensitive object keys deeply', () => {
     const redacted = redactValue({
-      email: 'broker@courtia.fr',
+      email: 'broker@courtiark.fr',
       nested: { refresh_token: 'secret-token', phone: '0612345678' },
     })
 
-    expect(redacted.email).toBe('br***@courtia.fr')
+    expect(redacted.email).toBe('br***@courtiark.fr')
     expect(redacted.nested.refresh_token).toBe('[REDACTED]')
     expect(redacted.nested.phone).toBe('***5678')
   })
