@@ -1141,4 +1141,192 @@ router.get('/client/:id/recommendations', verifyToken, async (req, res) => {
   }
 })
 
+// ────────────────────────────────────────────────────────────────────────
+// /api/ark/priorities — Priorités du jour pour le cockpit COURTIA
+// Combine : recommandations actives + échéances proches + clients silencieux
+// ────────────────────────────────────────────────────────────────────────
+router.get('/priorities', verifyToken, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    const limit = Math.min(parseInt(req.query.limit || '8', 10), 20)
+    const items = []
+
+    // 1) Recommandations ARK actives non traitées
+    try {
+      const recos = await pool.query(
+        `SELECT id, client_id, kind, priority, title, rationale, suggested_action, created_at
+         FROM ark_recommendations
+         WHERE user_id=$1 AND acted_on_at IS NULL AND dismissed_at IS NULL
+           AND (expires_at IS NULL OR expires_at >= NOW())
+         ORDER BY priority DESC, created_at DESC
+         LIMIT $2`, [userId, limit])
+      for (const r of recos.rows) {
+        items.push({
+          id: `reco-${r.id}`,
+          kind: r.kind,
+          level: r.priority >= 80 ? 'urgent' : r.priority >= 60 ? 'haut' : 'moyen',
+          score: r.priority,
+          title: r.title,
+          rationale: r.rationale,
+          client_id: r.client_id,
+          cta: (r.suggested_action && r.suggested_action.label) || 'Traiter',
+          source: 'ark',
+          at: r.created_at,
+        })
+      }
+    } catch (e) { logger.warn({ err: e }, 'ARK priorities — recos query failed') }
+
+    // 2) Échéances proches (≤30j) via quotes
+    if (items.length < limit) {
+      try {
+        const ech = await pool.query(
+          `SELECT q.id, q.client_id, q.quote_data,
+                  c.first_name, c.last_name,
+                  EXTRACT(DAY FROM NULLIF(q.quote_data->>'date_echeance','')::date - NOW())::int AS jours
+           FROM quotes q
+           JOIN clients c ON c.id=q.client_id
+           WHERE c.courtier_id=$1 AND q.status='actif'
+             AND NULLIF(q.quote_data->>'date_echeance','')::date BETWEEN NOW() AND NOW()+INTERVAL '30 days'
+           ORDER BY NULLIF(q.quote_data->>'date_echeance','')::date ASC
+           LIMIT $2`, [userId, limit - items.length])
+        for (const e of ech.rows) {
+          const name = [e.first_name, e.last_name].filter(Boolean).join(' ') || 'Client'
+          const produit = e.quote_data?.type_contrat || 'Contrat'
+          items.push({
+            id: `ech-${e.id}`,
+            kind: 'echeance',
+            level: e.jours <= 14 ? 'urgent' : 'haut',
+            score: 70 - Math.max(0, Math.min(30, e.jours||0)),
+            title: `Renouvellement ${produit} — ${name}`,
+            rationale: `J-${e.jours} • ${Number(e.quote_data?.prime_annuelle || 0).toLocaleString('fr-FR')}€`,
+            client_id: e.client_id,
+            cta: 'Préparer',
+            source: 'echeance',
+            at: new Date().toISOString(),
+          })
+        }
+      } catch (e) { logger.warn({ err: e }, 'ARK priorities — echeances query failed') }
+    }
+
+    // 3) Clients silencieux >45j
+    if (items.length < limit) {
+      try {
+        const sil = await pool.query(
+          `SELECT id, first_name, last_name, last_contact, risk_score
+           FROM clients
+           WHERE courtier_id=$1 AND (silent_alert IS TRUE OR last_contact < NOW() - INTERVAL '45 days')
+           ORDER BY last_contact NULLS LAST, risk_score DESC
+           LIMIT $2`, [userId, limit - items.length])
+        for (const c of sil.rows) {
+          const name = [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Client'
+          const days = c.last_contact ? Math.floor((Date.now() - new Date(c.last_contact).getTime())/86400000) : null
+          items.push({
+            id: `sil-${c.id}`,
+            kind: 'silencieux',
+            level: (days||0) >= 60 ? 'urgent' : 'haut',
+            score: Math.min(100, 50 + (days||0)),
+            title: `Client silencieux — ${name}`,
+            rationale: days ? `${days} jours sans contact` : 'Pas d\'interaction récente',
+            client_id: c.id,
+            cta: 'Relancer',
+            source: 'silence',
+            at: new Date().toISOString(),
+          })
+        }
+      } catch (e) { logger.warn({ err: e }, 'ARK priorities — silencieux query failed') }
+    }
+
+    res.json({ generated_at: new Date().toISOString(), priorities: items.slice(0, limit) })
+  } catch (err) {
+    logger.error({ err }, 'ARK priorities failed')
+    res.status(500).json({ error: 'ark_priorities_failed', message: err.message })
+  }
+})
+
+// ────────────────────────────────────────────────────────────────────────
+// /api/ark/clients/:id/insight — Insight ARK pour fiche client
+// ────────────────────────────────────────────────────────────────────────
+router.get('/clients/:id/insight', verifyToken, async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    const clientId = parseInt(req.params.id, 10)
+    if (!Number.isFinite(clientId)) return res.status(400).json({ error: 'invalid_client_id' })
+
+    let client = null
+    let contracts = []
+    let recos = []
+
+    try {
+      const cli = await pool.query(
+        `SELECT id, first_name, last_name, type, status, risk_score, loyalty_score, last_contact, silent_alert, lifetime_value
+         FROM clients WHERE id=$1 AND courtier_id=$2`, [clientId, userId])
+      client = cli.rows[0] || null
+    } catch (_) {}
+
+    try {
+      const ct = await pool.query(
+        `SELECT id, status, quote_data,
+                EXTRACT(DAY FROM NULLIF(quote_data->>'date_echeance','')::date - NOW())::int AS jours
+         FROM quotes WHERE client_id=$1 AND status='actif'`, [clientId])
+      contracts = ct.rows || []
+    } catch (_) {}
+
+    try {
+      const rc = await pool.query(
+        `SELECT id, kind, priority, title, rationale, suggested_action
+         FROM ark_recommendations
+         WHERE user_id=$1 AND client_id=$2 AND acted_on_at IS NULL AND dismissed_at IS NULL
+         ORDER BY priority DESC, created_at DESC LIMIT 5`, [userId, clientId])
+      recos = rc.rows || []
+    } catch (_) {}
+
+    if (!client) {
+      return res.json({
+        client_id: clientId,
+        headline: 'Profil client à enrichir',
+        recommendations: [],
+        signals: [],
+      })
+    }
+
+    const signals = []
+    if (client.silent_alert) signals.push({ kind: 'silent', level: 'high', label: 'Client silencieux détecté' })
+    if (client.risk_score != null && client.risk_score >= 60) signals.push({ kind: 'risk', level: 'high', label: `Risque ${client.risk_score}%` })
+    const echProches = contracts.filter(c => c.jours != null && c.jours <= 60 && c.jours >= 0)
+    if (echProches.length) signals.push({ kind: 'echeance', level: echProches.some(c=>c.jours<=21)?'high':'medium', label: `${echProches.length} échéance(s) <60j` })
+    if (contracts.length === 0) signals.push({ kind: 'no_contract', level: 'low', label: 'Aucun contrat actif' })
+
+    let headline = `Profil ${client.type || 'client'} actif`
+    if (echProches.some(c=>c.jours<=30)) {
+      const next = echProches.sort((a,b)=>a.jours-b.jours)[0]
+      const produit = next.quote_data?.type_contrat || 'Contrat'
+      headline = `Renouvellement ${produit} dans ${next.jours} jours — préparer un comparatif avant échéance.`
+    } else if (client.silent_alert) {
+      headline = 'Client silencieux — relance prioritaire recommandée pour préserver la relation.'
+    } else if (contracts.length === 1) {
+      headline = 'Monocontrat — opportunité multi-équipement détectée.'
+    } else if (recos.length) {
+      headline = recos[0].title
+    }
+
+    res.json({
+      client_id: clientId,
+      headline,
+      signals,
+      recommendations: recos.map(r => ({
+        id: r.id,
+        kind: r.kind,
+        priority: r.priority,
+        title: r.title,
+        rationale: r.rationale,
+        action: r.suggested_action,
+      })),
+      generated_at: new Date().toISOString(),
+    })
+  } catch (err) {
+    logger.error({ err }, 'ARK client insight failed')
+    res.status(500).json({ error: 'ark_insight_failed', message: err.message })
+  }
+})
+
 module.exports = router
