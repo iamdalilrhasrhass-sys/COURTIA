@@ -3,7 +3,7 @@ import {
   Sparkles, FileText, Send, Loader2, Trophy, TrendingDown,
   Shield, Zap, Crown, Star, ArrowRight,
 } from 'lucide-react'
-import { VibeBackdrop } from '../components/vibe'
+import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'

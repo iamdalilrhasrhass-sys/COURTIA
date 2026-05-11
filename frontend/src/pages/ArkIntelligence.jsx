@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
-import { VibeBackdrop } from '../components/vibe'
+import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import api from '../api'
 import toast from 'react-hot-toast'
 

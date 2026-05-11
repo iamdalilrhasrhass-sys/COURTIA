@@ -4,7 +4,7 @@ import {
   Plus, Search, X, UserCheck, UserPlus, AlertTriangle, Users, MapPin,
   Upload, LayoutGrid, Rows, Sparkles, TrendingUp, Heart, ChevronRight,
 } from 'lucide-react'
-import { VibeBackdrop } from '../components/vibe'
+import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 
 // ─── Aurora tokens ─────────────────────────────────────────────
 const T = {
@@ -336,6 +336,7 @@ export default function Clients() {
         top: -150, right: -100, pointerEvents: 'none', zIndex: 0,
       }} />
 
+      <VibeScrollSection parallax={12}>
       <main style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto' }}>
 
         {/* HEADER */}
@@ -461,6 +462,7 @@ export default function Clients() {
           </p>
         )}
       </main>
+      </VibeScrollSection>
     </div>
   )
 }

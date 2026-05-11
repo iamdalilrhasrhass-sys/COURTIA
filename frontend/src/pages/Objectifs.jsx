@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Target, TrendingUp, Trophy, Users, Crown, Award, Loader2, Sparkles } from 'lucide-react'
-import { VibeBackdrop } from '../components/vibe'
+import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
