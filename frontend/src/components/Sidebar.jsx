@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react'
-import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
-  Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, 
-  HeartHandshake, Euro, ChevronRight, Sun, Briefcase, CalendarDays,
-  TrendingUp, Sparkles, Bell, Clock, UserPlus, HelpCircle, MessageSquare,
-  RefreshCw, Calculator, GitCompareArrows, Activity
+  LayoutDashboard, Users, FileText, CheckSquare, TrendingUp,
+  Settings, LogOut, Shield, Menu, X, Calculator, GitCompareArrows,
+  Activity, ChevronRight, Sparkles, HelpCircle, GraduationCap,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -16,7 +12,7 @@ import { clearStoredSession } from '../api/sessionPolicy'
 import { resetSessionUserCache } from '../api/sessionUser'
 import { isAdminRole } from '../lib/roles'
 
-// ─── Design tokens ─────────────────────────────────────────────────
+// ─── Design tokens ────────────────────────────────────────────────
 const t = {
   bg: '#080808',
   border: 'rgba(255,255,255,0.06)',
@@ -24,133 +20,54 @@ const t = {
   text: '#ffffff',
   textMuted: '#9CA3AF',
   textDim: '#6B7280',
-  accent: '#5B4DF5',
-  accentBg: 'rgba(91, 77, 245, 0.08)',
-  activeBg: 'rgba(91, 77, 245, 0.10)',
-  activeBorder: 'rgba(91, 77, 245, 0.30)',
+  accent: '#8B5CF6',
+  accentBg: 'rgba(139, 92, 246, 0.10)',
+  activeBorder: 'rgba(139, 92, 246, 0.30)',
   hoverBg: 'rgba(255,255,255,0.04)',
-  arkAccent: '#8B5CF6',
 }
 
-// ─── Accordéon des univers ─────────────────────────────────────────
-const UNIVERSE_GROUPS = [
-  {
-    id: 'pilotage',
-    label: 'Pilotage',
-    icon: Sun,
-    items: [
-      { path: '/dashboard',     label: 'Tableau de bord', icon: LayoutDashboard },
-      { path: '/morning-brief', label: 'Morning Brief',   icon: Sparkles },
-      { path: '/rapports',      label: 'Rapports',        icon: BarChart2 },
-      { path: '/analytics',     label: 'Analytics',       icon: TrendingUp },
-    ]
-  },
-  {
-    id: 'portefeuille',
-    label: 'Portefeuille',
-    icon: Briefcase,
-    items: [
-      { path: '/clients',   label: 'Clients',   icon: Users },
-      { path: '/contrats',  label: 'Contrats',  icon: FileText },
-      { path: '/devis',     label: 'Devis',     icon: Euro },
-      { path: '/documents', label: 'Documents', icon: FolderOpen },
-    ]
-  },
-  {
-    id: 'actions',
-    label: 'Actions',
-    icon: Zap,
-    items: [
-      { path: '/taches',       label: 'Tâches',        icon: CheckSquare },
-      { path: '/relances',     label: 'Relances',      icon: Bell },
-      { path: '/opportunites', label: 'Opportunités',  icon: TrendingUp },
-      { path: '/rendez-vous',  label: 'Rendez-vous',   icon: CalendarDays },
-    ]
-  },
-  {
-    id: 'acquisition',
-    label: 'Acquisition',
-    icon: Target,
-    items: [
-      { path: '/reach',          label: 'REACH',       icon: Target },
-      { path: '/prospection',    label: 'Prospection', icon: UserPlus },
-      { path: '/partenaires',    label: 'Partenaires', icon: HeartHandshake },
-      { path: '/commissions',    label: 'Commissions', icon: Euro },
-      { path: '/commissions/calculator', label: 'Calculateur',  icon: Calculator },
-      { path: '/comparateur',    label: 'Comparateur IA', icon: GitCompareArrows },
-      { path: '/sante-portefeuille', label: 'Santé portefeuille', icon: Activity },
-    ]
-  },
-  {
-    id: 'ark-ia',
-    label: 'ARK IA',
-    icon: Sparkles,
-    items: [
-      { path: '/assistant-ark', label: 'Assistant ARK',       icon: MessageSquare },
-      { path: '/capitia',       label: 'Recommandations',   icon: TrendingUp },
-      { path: '/capitia',       label: 'Historique IA',     icon: Clock },
-    ]
-  },
-  {
-    id: 'cabinet',
-    label: 'Cabinet',
-    icon: Settings,
-    items: [
-      { path: '/equipe',        label: 'Équipe',        icon: Users },
-      { path: '/parametres',    label: 'Paramètres',    icon: Settings },
-      { path: '/abonnement',    label: 'Abonnement',    icon: CreditCard },
-      { path: '/import',        label: 'Import',        icon: RefreshCw },
-    ]
-  },
-  {
-    id: 'ressources',
-    label: 'Ressources',
-    icon: HelpCircle,
-    items: [
-      { path: '/academy', label: 'Academy',  icon: GraduationCap },
-      { path: '/aide',    label: 'Aide',     icon: HelpCircle },
-      { path: '/status',  label: 'Statut',   icon: Shield },
-    ]
-  },
+// ─── 8 items principaux (microcopy court) ─────────────────────────
+const PRIMARY = [
+  { path: '/dashboard',    label: 'Accueil',       icon: LayoutDashboard },
+  { path: '/clients',      label: 'Clients',       icon: Users },
+  { path: '/contrats',     label: 'Contrats',      icon: FileText },
+  { path: '/opportunites', label: 'Opportunités',  icon: TrendingUp },
+  { path: '/taches',       label: 'Tâches',        icon: CheckSquare },
 ]
 
-// ─── Sidebar ───────────────────────────────────────────────────────
+// ─── Outils (collapsable) ─────────────────────────────────────────
+const TOOLS = [
+  { path: '/commissions/calculator', label: 'Commissions',  icon: Calculator },
+  { path: '/comparateur',            label: 'Comparer',     icon: GitCompareArrows },
+  { path: '/sante-portefeuille',     label: 'Santé',        icon: Activity },
+]
+
+const RESOURCES = [
+  { path: '/assistant-ark', label: 'ARK',     icon: Sparkles },
+  { path: '/academy',       label: 'Academy', icon: GraduationCap },
+  { path: '/aide',          label: 'Aide',    icon: HelpCircle },
+]
+
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [openGroups, setOpenGroups] = useState(() => {
-    // Auto-ouvrir le groupe actif au montage
-    const initial = {}
-    UNIVERSE_GROUPS.forEach(g => { initial[g.id] = false })
-    return initial
-  })
-
-  // Auto-ouvrir le groupe contenant la route active
-  useEffect(() => {
-    const activeGroup = UNIVERSE_GROUPS.find(g =>
-      g.items.some(item => 
-        item.path === '/dashboard' 
-          ? location.pathname === '/dashboard' 
-          : location.pathname.startsWith(item.path)
-      )
-    )
-    if (activeGroup && !openGroups[activeGroup.id]) {
-      setOpenGroups(prev => ({ ...prev, [activeGroup.id]: true }))
-    }
-  }, [location.pathname])
+  const [toolsOpen, setToolsOpen] = useState(() =>
+    TOOLS.some(i => location.pathname.startsWith(i.path))
+  )
+  const [moreOpen, setMoreOpen] = useState(false)
 
   useEffect(() => {
-    const updateUserState = () => {
+    const update = () => {
       try {
-        const storedUser = localStorage.getItem('courtia_user')
-        if (storedUser) setUser(JSON.parse(storedUser))
-      } catch (e) { console.error("Failed to parse user from localStorage", e) }
+        const stored = localStorage.getItem('courtia_user')
+        if (stored) setUser(JSON.parse(stored))
+      } catch (_) {}
     }
-    updateUserState()
-    window.addEventListener('profileUpdated', updateUserState)
-    return () => window.removeEventListener('profileUpdated', updateUserState)
+    update()
+    window.addEventListener('profileUpdated', update)
+    return () => window.removeEventListener('profileUpdated', update)
   }, [])
 
   function logout() {
@@ -163,38 +80,74 @@ export default function Sidebar() {
     setUser(null)
     window.dispatchEvent(new Event('profileUpdated'))
     navigate('/login')
-    toast.success('Déconnexion réussie')
+    toast.success('Déconnexion ✓')
   }
 
-  function toggleGroup(id) {
-    setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  function isItemActive(path) {
+  function isActive(path) {
     if (path === '/dashboard') return location.pathname === path
     return location.pathname.startsWith(path)
   }
 
-  function isGroupActive(group) {
-    return group.items.some(item => isItemActive(item.path))
-  }
-
-  const userName = user
-    ? ((user.first_name || user.firstName || '') + ' ' + (user.last_name || user.lastName || '')).trim()
-    : 'Chargement...'
-  const userFirstName = user ? (user.first_name || user.firstName || '') : ''
-  const userLastName = user ? (user.last_name || user.lastName || '') : ''
+  const userFirst = user?.first_name || user?.firstName || ''
+  const userLast  = user?.last_name  || user?.lastName  || ''
+  const userName  = (userFirst + ' ' + userLast).trim() || 'Utilisateur'
   const userEmail = user?.email || ''
-  const userRole = (user?.role || '').toLowerCase()
-  const isAdmin = isAdminRole(userRole)
+  const isAdmin = isAdminRole((user?.role || '').toLowerCase())
+  const initials = ((userFirst[0] || '') + (userLast[0] || '')).toUpperCase() || '?'
 
-  const getInitials = (firstName, lastName) => {
-    const f = (firstName || '').charAt(0)
-    const l = (lastName || '').charAt(0)
-    return (f + l).toUpperCase() || '?'
+  // ── ITEM ROW ──────────────────────────────────────────────────
+  function ItemRow({ item, depth = 0 }) {
+    const active = isActive(item.path)
+    const Icon = item.icon
+    return (
+      <button
+        onClick={() => { setMobileOpen(false); navigate(item.path) }}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: depth ? '7px 12px 7px 36px' : '8px 12px',
+          borderRadius: 8,
+          fontSize: 13,
+          fontWeight: active ? 600 : 500,
+          color: active ? t.text : t.textMuted,
+          background: active ? t.accentBg : 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+          transition: 'background 0.15s, color 0.15s',
+          borderLeft: active ? `2px solid ${t.accent}` : '2px solid transparent',
+          paddingLeft: active ? (depth ? 34 : 10) : (depth ? 36 : 12),
+        }}
+        onMouseEnter={(e) => {
+          if (!active) { e.currentTarget.style.background = t.hoverBg; e.currentTarget.style.color = t.text }
+        }}
+        onMouseLeave={(e) => {
+          if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted }
+        }}
+      >
+        <Icon size={15} strokeWidth={active ? 2 : 1.7} />
+        <span>{item.label}</span>
+      </button>
+    )
   }
 
-  // ─── Rendu du contenu sidebar ──────────────────────────────────
+  // ── SECTION TITLE ─────────────────────────────────────────────
+  function SectionTitle({ label }) {
+    return (
+      <div style={{
+        fontSize: 10,
+        fontWeight: 700,
+        color: t.textDim,
+        letterSpacing: '0.10em',
+        textTransform: 'uppercase',
+        padding: '14px 12px 6px',
+      }}>{label}</div>
+    )
+  }
+
+  // ── CONTENT ───────────────────────────────────────────────────
   const sidebarContent = (
     <aside style={{
       width: 240,
@@ -217,196 +170,116 @@ export default function Sidebar() {
         <CourtiaMiniLogo size={28} />
         <button
           onClick={() => setMobileOpen(false)}
-          style={{
-            display: 'none',
-            padding: 6, color: t.textMuted, borderRadius: 8,
-            background: 'none', border: 'none', cursor: 'pointer',
-          }}
+          style={{ display: 'none', padding: 6, color: t.textMuted, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer' }}
           className="md:hidden"
         >
           <X size={20} />
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '12px 8px', overflowY: 'auto' }}>
-        {UNIVERSE_GROUPS.map(group => {
-          const active = isGroupActive(group)
-          const open = openGroups[group.id]
-          const GroupIcon = group.icon
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '8px', overflowY: 'auto' }}>
+        <SectionTitle label="Principal" />
+        {PRIMARY.map(item => <ItemRow key={item.path} item={item} />)}
 
-          return (
-            <div key={group.id} style={{ marginBottom: 4 }}>
-              {/* Groupe header */}
-              <button
-                onClick={() => toggleGroup(group.id)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '8px 12px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: active ? 600 : 500,
-                  color: active ? t.text : t.textMuted,
-                  background: active ? t.activeBg : 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  textAlign: 'left',
-                  borderLeft: active ? `2px solid ${t.accent}` : '2px solid transparent',
-                  paddingLeft: active ? 10 : 12,
-                }}
-                onMouseEnter={e => {
-                  if (!active) {
-                    e.currentTarget.style.background = t.hoverBg
-                    e.currentTarget.style.color = t.text
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!active) {
-                    e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.color = t.textMuted
-                  }
-                }}
+        {/* Outils (collapsable) */}
+        <div style={{ marginTop: 4 }}>
+          <button
+            onClick={() => setToolsOpen(v => !v)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 12px',
+              borderRadius: 8,
+              fontSize: 10,
+              fontWeight: 700,
+              color: t.textDim,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              marginTop: 8,
+            }}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>Outils</span>
+            <motion.div animate={{ rotate: toolsOpen ? 90 : 0 }} transition={{ duration: 0.15 }} style={{ display: 'flex' }}>
+              <ChevronRight size={12} />
+            </motion.div>
+          </button>
+          <AnimatePresence initial={false}>
+            {toolsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                style={{ overflow: 'hidden' }}
               >
-                <GroupIcon size={16} strokeWidth={active ? 2.2 : 1.8} />
-                <span style={{ flex: 1 }}>{group.label}</span>
-                <motion.div
-                  animate={{ rotate: open ? 90 : 0 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ display: 'flex' }}
-                >
-                  <ChevronRight size={14} color={active ? t.accent : t.textDim} />
-                </motion.div>
-              </button>
+                {TOOLS.map(item => <ItemRow key={item.path} item={item} />)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-              {/* Sous-items (accordéon) */}
-              <AnimatePresence initial={false}>
-                {open && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    style={{ overflow: 'hidden' }}
-                  >
-                    <div style={{ padding: '2px 0 6px' }}>
-                      {group.items.map(item => {
-                        const itemActive = isItemActive(item.path)
-                        const ItemIcon = item.icon
-                        return (
-                          <button
-                            key={item.path}
-                            onClick={() => {
-                              setMobileOpen(false)
-                              navigate(item.path)
-                            }}
-                            style={{
-                              width: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 8,
-                              padding: '6px 12px 6px 40px',
-                              borderRadius: 6,
-                              fontSize: 12,
-                              fontWeight: itemActive ? 600 : 500,
-                              color: itemActive ? t.accent : t.textMuted,
-                              background: itemActive ? t.accentBg : 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              transition: 'all 0.12s ease',
-                              textAlign: 'left',
-                            }}
-                            onMouseEnter={e => {
-                              if (!itemActive) {
-                                e.currentTarget.style.background = t.hoverBg
-                                e.currentTarget.style.color = t.text
-                              }
-                            }}
-                            onMouseLeave={e => {
-                              if (!itemActive) {
-                                e.currentTarget.style.background = 'transparent'
-                                e.currentTarget.style.color = t.textMuted
-                              }
-                            }}
-                          >
-                            <ItemIcon size={13} strokeWidth={itemActive ? 1.8 : 1.5} />
-                            <span>{item.label}</span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )
-        })}
+        {/* Plus (collapsable) */}
+        <div style={{ marginTop: 4 }}>
+          <button
+            onClick={() => setMoreOpen(v => !v)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 12px',
+              borderRadius: 8,
+              fontSize: 10,
+              fontWeight: 700,
+              color: t.textDim,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              marginTop: 4,
+            }}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>Plus</span>
+            <motion.div animate={{ rotate: moreOpen ? 90 : 0 }} transition={{ duration: 0.15 }} style={{ display: 'flex' }}>
+              <ChevronRight size={12} />
+            </motion.div>
+          </button>
+          <AnimatePresence initial={false}>
+            {moreOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                style={{ overflow: 'hidden' }}
+              >
+                {RESOURCES.map(item => <ItemRow key={item.path} item={item} />)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-        {/* Admin */}
         {isAdmin && (
-          <div style={{ marginTop: 8, marginBottom: 4 }}>
-            <button
-              onClick={() => { setMobileOpen(false); navigate('/admin') }}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '8px 12px',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: location.pathname.startsWith('/admin') ? 600 : 500,
-                color: location.pathname.startsWith('/admin') ? t.text : t.textMuted,
-                background: location.pathname.startsWith('/admin') ? t.activeBg : 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                textAlign: 'left',
-                borderLeft: location.pathname.startsWith('/admin') ? `2px solid ${t.accent}` : '2px solid transparent',
-                paddingLeft: location.pathname.startsWith('/admin') ? 10 : 12,
-              }}
-            >
-              <Shield size={16} />
-              <span>Admin</span>
-            </button>
-          </div>
+          <>
+            <SectionTitle label="Admin" />
+            <ItemRow item={{ path: '/admin', label: 'Admin', icon: Shield }} />
+          </>
         )}
       </nav>
 
-      {/* ARK Button */}
-      <div style={{ padding: '4px 14px 12px' }}>
-        <button
-          onClick={() => {
-            setMobileOpen(false)
-            navigate('/assistant-ark')
-          }}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            padding: '8px 12px',
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 600,
-            color: t.arkAccent,
-            background: 'rgba(139, 92, 246, 0.08)',
-            border: '1px solid rgba(139, 92, 246, 0.20)',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139, 92, 246, 0.16)'; e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.30)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139, 92, 246, 0.08)'; e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.20)' }}
-        >
-          <Sparkles size={13} /> ARK Intelligence
-        </button>
+      {/* Paramètres */}
+      <div style={{ padding: '8px', borderTop: `1px solid ${t.borderLight}` }}>
+        <ItemRow item={{ path: '/parametres', label: 'Paramètres', icon: Settings }} />
       </div>
 
-      {/* Profil utilisateur */}
+      {/* Profil */}
       <div style={{
         padding: '12px 16px',
         borderTop: `1px solid ${t.borderLight}`,
@@ -415,19 +288,12 @@ export default function Sidebar() {
         gap: 10,
       }}>
         <div style={{
-          width: 30,
-          height: 30,
-          borderRadius: 8,
-          background: t.accentBg,
-          color: t.accent,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 700,
-          fontSize: 11,
-          flexShrink: 0,
+          width: 30, height: 30, borderRadius: 8,
+          background: t.accentBg, color: t.accent,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 700, fontSize: 11, flexShrink: 0,
         }}>
-          {user ? getInitials(userFirstName, userLastName) : '?'}
+          {initials}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 12, fontWeight: 600, color: t.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</p>
@@ -435,18 +301,10 @@ export default function Sidebar() {
         </div>
         <button
           onClick={logout}
-          style={{
-            padding: 4,
-            color: t.textMuted,
-            borderRadius: 6,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'color 0.12s',
-          }}
+          title="Déconnexion"
+          style={{ padding: 4, color: t.textMuted, borderRadius: 6, background: 'none', border: 'none', cursor: 'pointer' }}
           onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
           onMouseLeave={e => e.currentTarget.style.color = t.textMuted}
-          title="Déconnexion"
         >
           <LogOut size={14} />
         </button>
@@ -454,22 +312,15 @@ export default function Sidebar() {
     </aside>
   )
 
-  // ─── Rendu ──────────────────────────────────────────────────────
   return (
     <>
-      {/* BOUTON HAMBURGER MOBILE */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
         style={{
-          position: 'fixed',
-          top: 10, left: 10,
-          zIndex: 60,
-          padding: 8,
-          background: t.bg,
-          border: `1px solid ${t.borderLight}`,
-          borderRadius: 8,
-          color: t.text,
-          cursor: 'pointer',
+          position: 'fixed', top: 10, left: 10, zIndex: 60,
+          padding: 8, background: t.bg, border: `1px solid ${t.borderLight}`,
+          borderRadius: 8, color: t.text, cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
         }}
         className="flex md:hidden"
@@ -478,7 +329,6 @@ export default function Sidebar() {
         <Menu size={20} />
       </button>
 
-      {/* OVERLAY MOBILE */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -487,22 +337,16 @@ export default function Sidebar() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={() => setMobileOpen(false)}
-            style={{
-              position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.5)',
-              zIndex: 55,
-            }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 55 }}
             className="md:hidden"
           />
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR DESKTOP */}
       <div className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
         {sidebarContent}
       </div>
 
-      {/* SIDEBAR MOBILE */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -510,11 +354,7 @@ export default function Sidebar() {
             animate={{ x: 0 }}
             exit={{ x: -280 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            style={{
-              position: 'fixed', top: 0, left: 0,
-              height: '100vh', zIndex: 60,
-              boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
-            }}
+            style={{ position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 60, boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
             className="md:hidden"
           >
             {sidebarContent}
