@@ -1,8 +1,8 @@
 // COURTIA ARK — Background Service Worker
 // Communication entre popup, content script et backend COURTIA
 
-const API_BASE = 'https://api.courtia.fr';
-const API_FALLBACK = 'https://courtia.vercel.app/api';
+const API_BASE = 'https://api.courtiark.fr';
+const API_FALLBACK = 'https://app.courtiark.fr/api';
 
 // ── Gestion du token ────────────────────────────────────────────────
 

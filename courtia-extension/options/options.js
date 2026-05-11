@@ -1,6 +1,6 @@
 // COURTIA ARK — Options page
 
-const API_BASE = 'https://api.courtia.fr';
+const API_BASE = 'https://api.courtiark.fr';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Charger les parametres
