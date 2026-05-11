@@ -70,3 +70,6 @@ secrets/
 uploads/
 *.uploaded
 tmp-uploads/
+
+# Test files (LOT 5)
+backend/test-vault.js
