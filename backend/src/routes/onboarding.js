@@ -200,4 +200,251 @@ router.post('/:clientId/responses', verifyToken, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOT 20 — ONBOARDING GAMIFIÉ : Badges et progression individuelle
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const GAMIFIED_STEPS = [
+  {
+    key: 'create_client',
+    title: 'Créez votre premier client',
+    description: 'Ajoutez une fiche client pour commencer à utiliser COURTIA',
+    badge: 'courtier_connecte',
+    badgeName: 'Courtier Connecté',
+    badgeIcon: '🤝',
+  },
+  {
+    key: 'analyze_portfolio',
+    title: 'Analysez votre portefeuille avec ARK',
+    description: 'Lancez une analyse ARK pour découvrir les insights de votre portefeuille',
+    badge: 'analyste_ark',
+    badgeName: 'Analyste ARK',
+    badgeIcon: '📊',
+  },
+  {
+    key: 'generate_document',
+    title: 'Générez votre premier document',
+    description: 'Utilisez ARK Compose pour créer un document DDA, IPID ou Devoir de Conseil',
+    badge: 'maitre_docs',
+    badgeName: 'Maître des Docs',
+    badgeIcon: '📄',
+  },
+  {
+    key: 'activate_ark_watch',
+    title: 'Activez ARK Watch',
+    description: 'Configurez la surveillance proactive de votre portefeuille',
+    badge: 'sentinelle',
+    badgeName: 'Sentinelle',
+    badgeIcon: '🛡️',
+  },
+  {
+    key: 'invite_colleague',
+    title: 'Invitez un collègue',
+    description: 'Partagez COURTIA avec un membre de votre équipe',
+    badge: 'ambassadeur',
+    badgeName: 'Ambassadeur',
+    badgeIcon: '🌟',
+  },
+];
+
+// GET /api/onboarding/gamified/progress — Récupère la progression gamifiée
+router.get('/gamified/progress', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+
+    const progressRes = await pool.query(
+      `SELECT * FROM onboarding_progress WHERE user_id = $1`,
+      [userId]
+    );
+
+    let progress = progressRes.rows[0];
+
+    // Créer l'entrée si elle n'existe pas
+    if (!progress) {
+      const insertRes = await pool.query(
+        `INSERT INTO onboarding_progress (user_id) VALUES ($1) RETURNING *`,
+        [userId]
+      );
+      progress = insertRes.rows[0];
+    }
+
+    const steps = GAMIFIED_STEPS.map(step => ({
+      ...step,
+      completed: progress[`step_${step.key}`] || false,
+      badgeEarned: progress[`badge_${step.badge}`] || false,
+    }));
+
+    const completedCount = steps.filter(s => s.completed).length;
+    const badgesEarned = steps.filter(s => s.badgeEarned).length;
+
+    res.json({
+      steps,
+      summary: {
+        totalSteps: GAMIFIED_STEPS.length,
+        completedSteps: completedCount,
+        totalBadges: GAMIFIED_STEPS.length,
+        badgesEarned,
+        progressPercent: Math.round((completedCount / GAMIFIED_STEPS.length) * 100),
+        allCompleted: progress.completed_at !== null,
+        completedAt: progress.completed_at,
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, 'Gamified progress error');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/onboarding/gamified/step/:step/complete — Marque une étape comme complète
+router.post('/gamified/step/:step/complete', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    const { step } = req.params;
+
+    const stepConfig = GAMIFIED_STEPS.find(s => s.key === step);
+    if (!stepConfig) {
+      return res.status(400).json({ error: 'Étape inconnue' });
+    }
+
+    // Mise à jour de la progression
+    const updateRes = await pool.query(
+      `UPDATE onboarding_progress
+       SET step_${step} = true,
+           badge_${stepConfig.badge} = true,
+           updated_at = NOW()
+       WHERE user_id = $1
+       RETURNING *`,
+      [userId]
+    );
+
+    let progress = updateRes.rows[0];
+
+    // Si pas de ligne, créer puis mettre à jour
+    if (!progress) {
+      await pool.query(
+        `INSERT INTO onboarding_progress (user_id, step_${step}, badge_${stepConfig.badge})
+         VALUES ($1, true, true)
+         ON CONFLICT (user_id) DO UPDATE
+         SET step_${step} = true, badge_${stepConfig.badge} = true, updated_at = NOW()
+         RETURNING *`,
+        [userId]
+      );
+      const refetch = await pool.query('SELECT * FROM onboarding_progress WHERE user_id = $1', [userId]);
+      progress = refetch.rows[0];
+    }
+
+    res.json({
+      success: true,
+      step: step,
+      badgeEarned: {
+        key: stepConfig.badge,
+        name: stepConfig.badgeName,
+        icon: stepConfig.badgeIcon,
+      },
+      progress: {
+        totalBadges: progress.total_badges || 0,
+        allCompleted: progress.completed_at !== null,
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, 'Gamified step complete error');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/onboarding/gamified/badges — Liste tous les badges
+router.get('/gamified/badges', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+
+    const progressRes = await pool.query(
+      `SELECT * FROM onboarding_progress WHERE user_id = $1`,
+      [userId]
+    );
+
+    const progress = progressRes.rows[0] || {};
+
+    const badges = GAMIFIED_STEPS.map(step => ({
+      key: step.badge,
+      name: step.badgeName,
+      icon: step.badgeIcon,
+      description: step.description,
+      earned: progress[`badge_${step.badge}`] || false,
+      earnedAt: progress[`badge_${step.badge}`] ? progress.updated_at : null,
+    }));
+
+    res.json({
+      badges,
+      totalEarned: badges.filter(b => b.earned).length,
+      totalAvailable: badges.length,
+    });
+  } catch (err) {
+    logger.error({ err }, 'Badges list error');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/onboarding/gamified/auto-check — Vérifie automatiquement les conditions
+router.post('/gamified/auto-check', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    const earnedBadges = [];
+
+    // Vérifier si l'utilisateur a des clients
+    const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients WHERE user_id = $1', [userId]);
+    if (parseInt(clientsRes.rows[0].count) > 0) {
+      const upd = await pool.query(
+        `UPDATE onboarding_progress SET step_create_client = true, badge_courtier_connecte = true WHERE user_id = $1 AND NOT step_create_client RETURNING *`,
+        [userId]
+      );
+      if (upd.rowCount > 0) earnedBadges.push({ key: 'courtier_connecte', name: 'Courtier Connecté', icon: '🤝' });
+    }
+
+    // Vérifier si l'utilisateur a des documents générés
+    const docsRes = await pool.query('SELECT COUNT(*) as count FROM documents WHERE user_id = $1 AND source = $2', [userId, 'ark_compose']);
+    if (parseInt(docsRes.rows[0].count) > 0) {
+      const upd = await pool.query(
+        `UPDATE onboarding_progress SET step_generate_document = true, badge_maitre_docs = true WHERE user_id = $1 AND NOT step_generate_document RETURNING *`,
+        [userId]
+      );
+      if (upd.rowCount > 0) earnedBadges.push({ key: 'maitre_docs', name: 'Maître des Docs', icon: '📄' });
+    }
+
+    // Vérifier ARK Watch activé
+    const arkWatchRes = await pool.query(
+      `SELECT COUNT(*) as count FROM ark_signals WHERE user_id = $1`,
+      [userId]
+    );
+    if (parseInt(arkWatchRes.rows[0].count) > 0) {
+      const upd = await pool.query(
+        `UPDATE onboarding_progress SET step_activate_ark_watch = true, badge_sentinelle = true WHERE user_id = $1 AND NOT step_activate_ark_watch RETURNING *`,
+        [userId]
+      );
+      if (upd.rowCount > 0) earnedBadges.push({ key: 'sentinelle', name: 'Sentinelle', icon: '🛡️' });
+    }
+
+    // Vérifier invitations envoyées
+    const invitesRes = await pool.query(
+      `SELECT COUNT(*) as count FROM cabinet_invitations WHERE invited_by_user_id = $1`,
+      [userId]
+    );
+    if (parseInt(invitesRes.rows[0].count) > 0) {
+      const upd = await pool.query(
+        `UPDATE onboarding_progress SET step_invite_colleague = true, badge_ambassadeur = true WHERE user_id = $1 AND NOT step_invite_colleague RETURNING *`,
+        [userId]
+      );
+      if (upd.rowCount > 0) earnedBadges.push({ key: 'ambassadeur', name: 'Ambassadeur', icon: '🌟' });
+    }
+
+    res.json({
+      checked: true,
+      newBadgesEarned: earnedBadges,
+      count: earnedBadges.length,
+    });
+  } catch (err) {
+    logger.error({ err }, 'Gamified auto-check error');
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
