@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { VibeBackdrop, VibeHeader, VibeScrollSection } from '../components/vibe'
 import {
   Plus,
   Search,
@@ -561,6 +562,7 @@ function ClientBubbleCard({ client, onClick }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
+      whileHover={{ rotateX: 4, rotateY: -4, y: -3, scale: 1.015 }}
       onClick={() => onClick(client.id)}
       style={{
         background: T.cardBg,
@@ -568,11 +570,14 @@ function ClientBubbleCard({ client, onClick }) {
         borderRadius: 16,
         padding: 20,
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
+        transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
         position: 'relative',
         overflow: 'hidden',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        transformStyle: 'preserve-3d',
+        willChange: 'transform',
         boxShadow: hovered ? `0 0 30px ${urg.glow}, 0 8px 32px rgba(0,0,0,0.3)` : '0 2px 8px rgba(0,0,0,0.2)',
-        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -1033,11 +1038,13 @@ export default function Clients() {
     <div
       style={{
         minHeight: '100vh',
-        background: T.bg,
+        background: 'transparent',
         color: T.text,
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+        fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+        perspective: 1400,
       }}
     >
+      <VibeBackdrop intensity={0.85} />
       {/* Ambient background glow */}
       <div
         style={{

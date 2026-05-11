@@ -1,10 +1,18 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import {
   TrendingUp, Target, Euro, Shield, Zap, Sparkles, Search, Plus,
-  ChevronRight, User, FileText, BarChart3, Star
+  ChevronRight, User, FileText, BarChart3, Star, Kanban, List as ListIcon
 } from 'lucide-react'
+import { VibeBackdrop, VibeHeader, VibeScrollSection, Vibe3DCard } from '../components/vibe'
+
+const KANBAN_STAGES = [
+  { id: 'prospect', label: 'Prospect', color: '#64748B', desc: 'À qualifier' },
+  { id: 'rdv',      label: 'RDV',      color: '#3B82F6', desc: 'Contact pris' },
+  { id: 'devis',    label: 'Devis',    color: '#F59E0B', desc: 'Proposition envoyée' },
+  { id: 'signe',    label: 'Signé',    color: '#22C55E', desc: 'Contrat finalisé' },
+]
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -42,10 +50,39 @@ function KpiCard({ icon: Icon, title, value, accent }) {
   )
 }
 
+function initStages(items) {
+  // Distribuer artificiellement les opps existantes dans les colonnes
+  const map = { prospect: [], rdv: [], devis: [], signe: [] }
+  items.forEach((o, i) => {
+    if (o.confiance < 50) map.prospect.push({ ...o, stage: 'prospect' })
+    else if (o.confiance < 65) map.rdv.push({ ...o, stage: 'rdv' })
+    else if (o.confiance < 80) map.devis.push({ ...o, stage: 'devis' })
+    else map.signe.push({ ...o, stage: 'signe' })
+  })
+  return map
+}
+
 export default function Opportunites() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Toutes')
+  const [viewMode, setViewMode] = useState('list') // 'list' | 'kanban'
+  const [columns, setColumns] = useState(() => initStages(DEMO_OPPORTUNITES))
+  const [dragging, setDragging] = useState(null) // { oppId, fromStage }
+
+  function moveOpp(oppId, fromStage, toStage) {
+    if (fromStage === toStage) return
+    setColumns(prev => {
+      const fromList = prev[fromStage] || []
+      const card = fromList.find(c => c.id === oppId)
+      if (!card) return prev
+      return {
+        ...prev,
+        [fromStage]: fromList.filter(c => c.id !== oppId),
+        [toStage]:   [{ ...card, stage: toStage }, ...(prev[toStage] || [])],
+      }
+    })
+  }
 
   const filtered = useMemo(() => {
     let list = DEMO_OPPORTUNITES
@@ -70,23 +107,29 @@ export default function Opportunites() {
   }), [])
 
   return (
-    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
+    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text, perspective: 1400 }}>
+      <VibeBackdrop intensity={0.85} color="#22C55E" />
       <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(34,197,94,0.03) 0%, transparent 70%)', top: -100, right: -100, pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <TrendingUp size={16} color={T.accent} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Acquisition</span>
-            </div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Opportunités</h1>
-            <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>ARK détecte le potentiel commercial de votre portefeuille.</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
-          </div>
-        </div>
+        <VibeHeader
+          kicker="ACQUISITION"
+          title="Opportunités"
+          subtitle="ARK détecte le potentiel commercial de votre portefeuille."
+          bubbleSize={50}
+          actions={(
+            <>
+              <button
+                onClick={() => setViewMode(viewMode === 'list' ? 'kanban' : 'list')}
+                style={btnStyle(null)}
+                title="Basculer vue"
+              >
+                {viewMode === 'list' ? <><Kanban size={13} /> Kanban</> : <><ListIcon size={13} /> Liste</>}
+              </button>
+              <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
+            </>
+          )}
+        />
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           <KpiCard icon={TrendingUp} title="Détectées" value={stats.total} />
@@ -117,48 +160,162 @@ export default function Opportunites() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {filtered.map(o => (
-            <motion.div key={o.id}
-              whileHover={{ borderColor: 'rgba(255,255,255,0.12)' }}
-              style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 12, padding: '14px 16px', transition: 'all 0.15s' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{o.client}</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: T.cardBg, color: T.textMuted }}>{o.type === 'prevoyance' ? 'Prévoyance' : o.type === 'cyber' ? 'Cyber' : o.type === 'multi' ? 'Multi-équipement' : 'Mono-produit'}</span>
+        {viewMode === 'list' ? (
+          <VibeScrollSection delay={0.05} parallax={12}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filtered.map((o, i) => (
+                <motion.div
+                  key={o.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.04 * i, duration: 0.42, ease: [0.16,1,0.3,1] }}
+                  whileHover={{ rotateX: 2, rotateY: -2, y: -2 }}
+                  style={{
+                    background: T.cardBg,
+                    border: '1px solid ' + T.cardBorder,
+                    borderRadius: 12,
+                    padding: '14px 16px',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    transformStyle: 'preserve-3d',
+                    willChange: 'transform',
+                    transition: 'background 0.15s, border-color 0.15s',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{o.client}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: T.cardBg, color: T.textMuted }}>{o.type === 'prevoyance' ? 'Prévoyance' : o.type === 'cyber' ? 'Cyber' : o.type === 'multi' ? 'Multi-équipement' : 'Mono-produit'}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: T.textSecondary, marginBottom: 4 }}>{o.produitActuel} → <strong style={{ color: T.success }}>{o.produitReco}</strong></div>
+                      <div style={{ display: 'flex', gap: 16, fontSize: 11, color: T.textSecondary, marginTop: 6 }}>
+                        <span style={{ color: T.success, fontWeight: 600 }}>{fmtEur(o.potentiel)}</span>
+                        <span>Confiance : <strong style={{ color: o.confiance >= 70 ? T.success : o.confiance >= 50 ? T.warning : T.textMuted }}>{o.confiance}%</strong></span>
+                      </div>
+                    </div>
+                    <div style={{ width: 60, height: 6, background: T.cardBg, borderRadius: 3, overflow: 'hidden', alignSelf: 'center' }}>
+                      <div style={{ width: o.confiance + '%', height: '100%', background: o.confiance >= 70 ? T.success : o.confiance >= 50 ? T.warning : T.textMuted, borderRadius: 3 }} />
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: T.textSecondary, marginBottom: 4 }}>{o.produitActuel} → <strong style={{ color: T.success }}>{o.produitReco}</strong></div>
-                  <div style={{ display: 'flex', gap: 16, fontSize: 11, color: T.textSecondary, marginTop: 6 }}>
-                    <span style={{ color: T.success, fontWeight: 600 }}>{fmtEur(o.potentiel)}</span>
-                    <span>Confiance : <strong style={{ color: o.confiance >= 70 ? T.success : o.confiance >= 50 ? T.warning : T.textMuted }}>{o.confiance}%</strong></span>
+                  {o.ark && (
+                    <div style={{ background: T.arkBg, border: '1px solid ' + T.arkBorder, borderRadius: 6, padding: '6px 10px', marginTop: 8, fontSize: 10, color: '#c4b5fd' }}>
+                      <Sparkles size={10} color={T.ark} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                      <strong style={{ color: '#a78bfa' }}>ARK :</strong> {o.ark}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                    <button style={actionBtnStyle(T.accent)}><Plus size={11} /> Créer devis</button>
+                    <button style={actionBtnStyle(null)}><FileText size={11} /> Argumentaire</button>
+                    <button onClick={() => navigate('/clients/' + o.id)} style={actionBtnStyle(T.ark)}><User size={11} /> Voir client</button>
                   </div>
-                </div>
-                <div style={{ width: 60, height: 6, background: T.cardBg, borderRadius: 3, overflow: 'hidden', alignSelf: 'center' }}>
-                  <div style={{ width: o.confiance + '%', height: '100%', background: o.confiance >= 70 ? T.success : o.confiance >= 50 ? T.warning : T.textMuted, borderRadius: 3 }} />
-                </div>
-              </div>
-              {o.ark && (
-                <div style={{ background: T.arkBg, border: '1px solid ' + T.arkBorder, borderRadius: 6, padding: '6px 10px', marginTop: 8, fontSize: 10, color: '#c4b5fd' }}>
-                  <Sparkles size={10} color={T.ark} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  <strong style={{ color: '#a78bfa' }}>ARK :</strong> {o.ark}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <button style={actionBtnStyle(T.accent)}><Plus size={11} /> Créer devis</button>
-                <button style={actionBtnStyle(null)}><FileText size={11} /> Argumentaire</button>
-                <button onClick={() => navigate('/clients/' + o.id)} style={actionBtnStyle(T.ark)}><User size={11} /> Voir client</button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                </motion.div>
+              ))}
+            </div>
 
-        {filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>
-            <TrendingUp size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ fontSize: 14 }}>Aucune opportunité trouvée.</p>
-          </div>
+            {filtered.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>
+                <TrendingUp size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
+                <p style={{ fontSize: 14 }}>Aucune opportunité trouvée.</p>
+              </div>
+            )}
+          </VibeScrollSection>
+        ) : (
+          /* ────────────────── KANBAN ────────────────── */
+          <LayoutGroup>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${KANBAN_STAGES.length}, minmax(220px, 1fr))`,
+                gap: 14,
+                overflowX: 'auto',
+                paddingBottom: 12,
+              }}
+            >
+              {KANBAN_STAGES.map(stage => {
+                const list = columns[stage.id] || []
+                const total = list.reduce((s, o) => s + o.potentiel, 0)
+                return (
+                  <div
+                    key={stage.id}
+                    onDragOver={(e) => { e.preventDefault() }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      if (dragging) {
+                        moveOpp(dragging.oppId, dragging.fromStage, stage.id)
+                        setDragging(null)
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${stage.color}22`,
+                      borderRadius: 14,
+                      padding: 10,
+                      minHeight: 360,
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingBottom: 10, borderBottom: `1px solid ${stage.color}22` }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 5, background: stage.color, boxShadow: `0 0 12px ${stage.color}` }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{stage.label}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{stage.desc}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, padding: '2px 8px', borderRadius: 10, background: `${stage.color}1A` }}>{list.length}</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>
+                      Potentiel cumulé : <strong style={{ color: T.success }}>{fmtEur(total)}</strong>
+                    </div>
+                    <AnimatePresence>
+                      {list.map((o) => (
+                        <motion.div
+                          key={o.id}
+                          layout
+                          draggable
+                          onDragStart={() => setDragging({ oppId: o.id, fromStage: stage.id })}
+                          onDragEnd={() => setDragging(null)}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          whileHover={{ rotateX: 3, rotateY: -3, y: -2, scale: 1.01 }}
+                          transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+                          style={{
+                            background: 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${T.cardBorder}`,
+                            borderRadius: 10,
+                            padding: 10,
+                            marginBottom: 8,
+                            cursor: 'grab',
+                            transformStyle: 'preserve-3d',
+                            willChange: 'transform',
+                          }}
+                        >
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: 4 }}>{o.client}</div>
+                          <div style={{ fontSize: 10, color: T.textSecondary, marginBottom: 6 }}>
+                            {o.produitActuel} → <strong style={{ color: T.success }}>{o.produitReco}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+                            <span style={{ color: T.success, fontWeight: 600 }}>{fmtEur(o.potentiel)}</span>
+                            <span style={{ color: o.confiance >= 70 ? T.success : o.confiance >= 50 ? T.warning : T.textMuted }}>{o.confiance}%</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    {list.length === 0 && (
+                      <div style={{ fontSize: 10, color: T.textMuted, textAlign: 'center', padding: 14, border: `1px dashed ${T.cardBorder}`, borderRadius: 8, marginTop: 6 }}>
+                        Déposez ici
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted, textAlign: 'center' }}>
+              <Sparkles size={11} style={{ verticalAlign: 'middle' }} color={T.ark} /> Glissez-déposez les opportunités entre colonnes pour faire évoluer leur statut.
+            </div>
+          </LayoutGroup>
         )}
       </div>
     </div>

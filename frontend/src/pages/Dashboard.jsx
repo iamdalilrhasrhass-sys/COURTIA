@@ -9,6 +9,7 @@ import { motion } from 'framer-motion'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
+import { VibeBackdrop, VibeHeader, VibeScrollSection, VibeStagger } from '../components/vibe'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const T = {
@@ -89,11 +90,18 @@ const PRIORITY_STYLE = {
 function KpiCard({ icon: Icon, title, value, format, accent, subtitle }) {
   const display = format === 'currency' ? fmtEur(value) : format === 'number' ? fmtNum(value) : value
   return (
-    <div style={{
-      background: T.cardBg, border: `1px solid ${T.cardBorder}`,
-      borderRadius: 12, padding: '16px 18px', flex: 1, minWidth: 150,
-      transition: 'all 0.15s',
-    }}
+    <motion.div
+      whileHover={{ rotateX: 4, rotateY: -4, y: -2, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+      style={{
+        background: T.cardBg, border: `1px solid ${T.cardBorder}`,
+        borderRadius: 12, padding: '16px 18px', flex: 1, minWidth: 150,
+        transition: 'background 0.15s, border-color 0.15s',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        transformStyle: 'preserve-3d',
+        willChange: 'transform',
+      }}
       onMouseEnter={e => { e.currentTarget.style.background = T.cardHover; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
       onMouseLeave={e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.cardBorder }}
     >
@@ -105,7 +113,7 @@ function KpiCard({ icon: Icon, title, value, format, accent, subtitle }) {
       </div>
       <div style={{ fontSize: 22, fontWeight: 800, color: T.text }}>{display}</div>
       {subtitle && <div style={{ marginTop: 4, fontSize: 11, fontWeight: 500, color: accent || T.accent }}>{subtitle}</div>}
-    </div>
+    </motion.div>
   )
 }
 
@@ -258,7 +266,8 @@ export default function Dashboard() {
   const isEmpty = !stats || (metrics.activeClients === 0 && metrics.activeContracts === 0)
 
   return (
-    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
+    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text, perspective: 1400 }}>
+      <VibeBackdrop intensity={0.9} />
       {/* HALOS */}
       <div style={{ position: 'fixed', width: 600, height: 600, background: 'radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)', top: -200, left: -200, pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(34,211,238,0.04) 0%, transparent 70%)', bottom: -100, right: -150, pointerEvents: 'none', zIndex: 0 }} />
@@ -266,16 +275,12 @@ export default function Dashboard() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
 
         {/* HEADER */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <Sparkles size={18} color={T.ark} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Cockpit ARK</span>
-          </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: T.text }}>
-            {userName ? `Bonjour ${userName}` : 'Tableau de bord'}
-          </h1>
-          <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>{dateFr}</p>
-        </div>
+        <VibeHeader
+          kicker="COCKPIT ARK"
+          title={userName ? `Bonjour ${userName}` : 'Tableau de bord'}
+          subtitle={dateFr}
+          bubbleSize={56}
+        />
 
         {/* ARK SYNTHESIS */}
         <div style={{
@@ -321,15 +326,22 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* KPIs */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              <KpiCard title="Clients actifs" value={metrics.activeClients} format="number" icon={Users} accent="#7C3AED" />
-              <KpiCard title="Prospects" value={metrics.prospects} format="number" icon={UserPlus} accent="#3B82F6" />
-              <KpiCard title="Contrats actifs" value={metrics.activeContracts} format="number" icon={FileText} accent="#8B5CF6" />
-              <KpiCard title="Prime annuelle" value={metrics.annualPrime} format="currency" icon={Euro} accent="#22C55E" />
-              <KpiCard title="Tâches urgentes" value={metrics.urgentTasks} format="number" icon={Bell} accent="#F59E0B" />
-              <KpiCard title="À risque" value={metrics.atRiskClients} format="number" icon={AlertTriangle} accent="#EF4444" />
-            </div>
+            {/* KPIs — Vibe stagger 3D */}
+            <VibeScrollSection delay={0.05} parallax={12}>
+              <VibeStagger
+                style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}
+                itemStyle={{ flex: '1 1 150px', minWidth: 150, display: 'flex' }}
+                delay={0.05}
+                base={0.05}
+              >
+                <KpiCard title="Clients actifs" value={metrics.activeClients} format="number" icon={Users} accent="#7C3AED" />
+                <KpiCard title="Prospects" value={metrics.prospects} format="number" icon={UserPlus} accent="#3B82F6" />
+                <KpiCard title="Contrats actifs" value={metrics.activeContracts} format="number" icon={FileText} accent="#8B5CF6" />
+                <KpiCard title="Prime annuelle" value={metrics.annualPrime} format="currency" icon={Euro} accent="#22C55E" />
+                <KpiCard title="Tâches urgentes" value={metrics.urgentTasks} format="number" icon={Bell} accent="#F59E0B" />
+                <KpiCard title="À risque" value={metrics.atRiskClients} format="number" icon={AlertTriangle} accent="#EF4444" />
+              </VibeStagger>
+            </VibeScrollSection>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
               {/* PRIORITÉS ARK */}

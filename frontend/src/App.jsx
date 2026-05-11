@@ -98,6 +98,10 @@ const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
 const AdminFeedback = lazy(() => import('./pages/AdminFeedback'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const Beta = lazy(() => import('./pages/Beta'))
+// LOT VIBE — Features concurrentielles courtiers
+const CommissionsCalculator = lazy(() => import('./pages/CommissionsCalculator'))
+const Comparateur = lazy(() => import('./pages/Comparateur'))
+const SantePortefeuille = lazy(() => import('./pages/SantePortefeuille'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
 // Components
@@ -304,6 +308,9 @@ export default function App() {
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
           <Route path="/commissions"   element={<Commissions />} />
+          <Route path="/commissions/calculator" element={<CommissionsCalculator />} />
+          <Route path="/comparateur" element={<Comparateur />} />
+          <Route path="/sante-portefeuille" element={<SantePortefeuille />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />

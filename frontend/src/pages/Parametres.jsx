@@ -6,6 +6,7 @@ import api from '../api'
 import { getSessionUser, primeSessionUserCache } from '../api/sessionUser'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
+import { VibeBackdrop } from '../components/vibe'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -292,8 +293,9 @@ export default function Parametres() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent font-sans">
-      <main className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-transparent font-sans" style={{ position: 'relative', perspective: 1400 }}>
+      <VibeBackdrop intensity={0.7} />
+      <main className="p-4 md:p-8 max-w-6xl mx-auto" style={{ position: 'relative', zIndex: 1 }}>
         <AuroraPageHeader
           title="Paramètres"
           subtitle="Gérez votre profil, vos préférences et votre abonnement."

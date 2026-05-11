@@ -8,7 +8,7 @@ import {
   Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, 
   HeartHandshake, Euro, ChevronRight, Sun, Briefcase, CalendarDays,
   TrendingUp, Sparkles, Bell, Clock, UserPlus, HelpCircle, MessageSquare,
-  RefreshCw
+  RefreshCw, Calculator, GitCompareArrows, Activity
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -76,6 +76,9 @@ const UNIVERSE_GROUPS = [
       { path: '/prospection',    label: 'Prospection', icon: UserPlus },
       { path: '/partenaires',    label: 'Partenaires', icon: HeartHandshake },
       { path: '/commissions',    label: 'Commissions', icon: Euro },
+      { path: '/commissions/calculator', label: 'Calculateur',  icon: Calculator },
+      { path: '/comparateur',    label: 'Comparateur IA', icon: GitCompareArrows },
+      { path: '/sante-portefeuille', label: 'Santé portefeuille', icon: Activity },
     ]
   },
   {

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { VibeBackdrop, VibeHeader, VibeScrollSection, Vibe3DCard } from '../components/vibe'
 import {
   FileText, Search, Plus, Upload, Zap, TrendingUp, Calendar, AlertTriangle,
   Shield, ChevronRight, Users, Euro, Clock, Briefcase, Sparkles,
@@ -59,10 +60,15 @@ function ContractCard({ c, navigate }) {
   const jourColor = c.jours <= 0 ? T.danger : c.jours <= 30 ? T.warning : T.success
   const statut = STATUT_STYLE[c.statut] || STATUT_STYLE.actif
   return (
-    <motion.div
-      whileHover={{ y: -2, borderColor: 'rgba(255,255,255,0.12)' }}
-      style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
+    <Vibe3DCard
       onClick={() => navigate(`/clients/${c.id}`)}
+      depth={10}
+      glowColor={c.ark ? T.ark : T.accent}
+      borderColor={T.cardBorder}
+      background={T.cardBg}
+      radius={12}
+      padding={14}
+      ariaLabel={`Contrat ${c.client} ${c.produit}`}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
@@ -80,7 +86,7 @@ function ContractCard({ c, navigate }) {
           <Sparkles size={10} color={T.ark} /> <strong style={{ color: '#a78bfa' }}>ARK :</strong> {c.ark}
         </div>
       )}
-    </motion.div>
+    </Vibe3DCard>
   )
 }
 
@@ -115,26 +121,25 @@ export default function Contrats() {
   }), [])
 
   return (
-    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
+    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text, perspective: 1400 }}>
+      <VibeBackdrop intensity={0.85} />
       <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)', top: -100, right: -100, pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
 
         {/* HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <Shield size={16} color={T.accent} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Portefeuille</span>
-            </div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Contrats</h1>
-            <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Suivez vos contrats, échéances et alertes portefeuille.</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => navigate('/contrats/new')} style={btnStyle(T.accent)}><Plus size={13} /> Ajouter</button>
-            <button style={btnStyle(null)}><Upload size={13} /> Importer</button>
-            <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
-          </div>
-        </div>
+        <VibeHeader
+          kicker="PORTEFEUILLE"
+          title="Contrats"
+          subtitle="Suivez vos contrats, échéances et alertes portefeuille."
+          bubbleSize={50}
+          actions={(
+            <>
+              <button onClick={() => navigate('/contrats/new')} style={btnStyle(T.accent)}><Plus size={13} /> Ajouter</button>
+              <button style={btnStyle(null)}><Upload size={13} /> Importer</button>
+              <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
+            </>
+          )}
+        />
 
         {/* KPIs */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -174,9 +179,20 @@ export default function Contrats() {
 
         {/* VIEW */}
         {viewMode === 'cards' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
-            {filtered.map(c => <ContractCard key={c.id} c={c} navigate={navigate} />)}
-          </div>
+          <VibeScrollSection delay={0.05} parallax={14}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+              {filtered.map((c, i) => (
+                <motion.div
+                  key={c.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.04 * i, ease: [0.16,1,0.3,1] }}
+                >
+                  <ContractCard c={c} navigate={navigate} />
+                </motion.div>
+              ))}
+            </div>
+          </VibeScrollSection>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
