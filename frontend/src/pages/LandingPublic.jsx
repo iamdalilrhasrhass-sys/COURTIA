@@ -1,26 +1,27 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { BubbleC } from '../design/BubbleC';
 import '../design/tokens.css';
 
 /**
- * LandingPublic — La Bulle, version EXACTE de la référence HTML.
- * Réplique stricte : fond cosmique, grid floor, 35 particules,
- * kicker JetBrains Mono + dot pulsant, bulle 520px, wordmark "courtia.",
- * tagline Instrument Serif italic.
+ * LandingPublic — La Bulle V2 PHOTO-RÉALISTE.
+ * Hero : réplique EXACTE de la référence HTML V2 (cosmos discret + 40 étoiles
+ * twinkle, kicker JetBrains Mono, bulle 480, wordmark, tagline,
+ * animations fade-in séquentielles, pas de grid floor, pas de particules drift).
  *
- * Sections supplémentaires en scroll 3D Framer Motion en dessous.
+ * Sections additionnelles (manifeste, powers, proof, pricing, footer) inchangées.
  */
 export default function LandingPublic() {
-  // Particules
-  const particles = useMemo(
+  // Étoiles V2 — 40 étoiles fines twinkle ease-in-out 3-8s, size 0.5-1.7px
+  const stars = useMemo(
     () =>
-      Array.from({ length: 35 }, () => ({
+      Array.from({ length: 40 }, () => ({
+        size: 0.5 + Math.random() * 1.2,
         left: Math.random() * 100,
-        duration: 10 + Math.random() * 20,
-        delay: -Math.random() * 20,
-        opacity: 0.3 + Math.random() * 0.5,
+        top: Math.random() * 100,
+        duration: 3 + Math.random() * 5,
+        delay: -Math.random() * 7,
       })),
     []
   );
@@ -29,53 +30,51 @@ export default function LandingPublic() {
     <>
       <style>{styles}</style>
 
-      {/* COSMOS BACKGROUND — exact */}
+      {/* COSMOS BACKGROUND V2 — très discret */}
       <div className="cosmos" />
-      <div className="floor" />
 
-      {/* PARTICULES — exact */}
-      <div className="particles" aria-hidden>
-        {particles.map((p, i) => (
+      {/* ÉTOILES V2 — 40 fines twinkle */}
+      <div className="stars" aria-hidden>
+        {stars.map((s, i) => (
           <span
             key={i}
-            className="particle"
+            className="star"
             style={{
-              left: `${p.left}vw`,
-              animationDuration: `${p.duration}s`,
-              animationDelay: `${p.delay}s`,
-              opacity: p.opacity,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              left: `${s.left}vw`,
+              top: `${s.top}vh`,
+              animationDuration: `${s.duration}s`,
+              animationDelay: `${s.delay}s`,
             }}
           />
         ))}
       </div>
 
-      {/* STAGE — exact réplique de ta référence */}
+      {/* STAGE V2 — flex column space-between, padding 42px, full-screen */}
       <section className="stage">
         <div className="kicker">
-          Courtia <span className="dot" /> L'IA Compagnon des Courtiers
+          Courtia <span className="pulse-dot" /> L'IA Compagnon
         </div>
 
-        <div className="bubble-stage">
-          <BubbleC size={520} />
+        <div className="bubble-frame">
+          <div className="bubble-hero">
+            <BubbleC size={480} />
+          </div>
         </div>
 
-        <h1 className="wordmark">
-          courtia<em>.</em>
-        </h1>
-        <p className="tagline">Une bulle d'intelligence pour celui qui protège.</p>
-
-        {/* CTA */}
-        <div className="cta-row">
-          <Link to="/register" className="cta-primary">
-            Essai gratuit 7 jours
-            <span className="arrow">→</span>
-          </Link>
-          <Link to="/login" className="cta-ghost">Voir le cockpit</Link>
-        </div>
-
-        <div className="scroll-hint">
-          <span className="scroll-dot" />
-          <span className="scroll-label">Faire défiler</span>
+        <div className="bottom-block">
+          <h1 className="wordmark">
+            courtia<em>.</em>
+          </h1>
+          <p className="tagline">Une bulle d'intelligence pour celui qui protège.</p>
+          <div className="cta-row">
+            <Link to="/register" className="cta-primary">
+              Essai gratuit 7 jours
+              <span className="arrow">→</span>
+            </Link>
+            <Link to="/login" className="cta-ghost">Voir le cockpit</Link>
+          </div>
         </div>
       </section>
 
@@ -316,64 +315,32 @@ html, body, #root {
   overflow-x: hidden;
 }
 
-/* ─── COSMIC BACKGROUND ─── */
+/* ─── COSMIC BACKGROUND V2 — très discret ─── */
 .cosmos {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 25% 30%, rgba(120,60,255,0.18) 0%, transparent 50%),
-    radial-gradient(ellipse at 75% 70%, rgba(255,80,180,0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(0,200,255,0.08) 0%, transparent 60%),
-    linear-gradient(180deg, #020108 0%, #08051A 50%, #060211 100%);
+    radial-gradient(ellipse at 50% 45%, rgba(90,40,180,0.10) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 80%, rgba(220,60,160,0.05) 0%, transparent 55%),
+    linear-gradient(180deg, #020108 0%, #06031A 50%, #020108 100%);
   z-index: 0;
   pointer-events: none;
 }
 
-.floor {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%) perspective(800px) rotateX(70deg);
-  width: 140vw;
-  height: 60vh;
-  background-image:
-    linear-gradient(rgba(180,100,255,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(180,100,255,0.06) 1px, transparent 1px);
-  background-size: 60px 60px;
-  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 80%);
-  mask-image: linear-gradient(to top, black 0%, transparent 80%);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* ─── PARTICLES ─── */
-.particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-.particle {
+/* ─── STARS V2 — 40 étoiles fines twinkle ─── */
+.stars { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.star {
   position: absolute;
-  width: 2px; height: 2px;
   background: #fff;
   border-radius: 50%;
-  opacity: 0;
-  animation: drift linear infinite;
+  animation: twinkle ease-in-out infinite;
 }
-@keyframes drift {
-  0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-10vh) translateX(40px); opacity: 0; }
+@keyframes twinkle {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.45; }
 }
 
-/* ─── BUBBLE ANIMATIONS ─── */
-@keyframes bubbleHaloShift {
-  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
-  50% { transform: scale(1.15) rotate(180deg); opacity: 1; }
-}
-@keyframes bubbleBreathe {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50% { transform: scale(1.025) translateY(-6px); }
-}
-
-/* ─── STAGE (HERO) ─── */
+/* ─── HERO STAGE V2 — space-between full-screen ─── */
 .stage {
   position: relative;
   z-index: 2;
@@ -381,19 +348,36 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 80px 40px 40px;
+  justify-content: space-between;
+  padding: 42px;
+  pointer-events: none;
 }
+.stage > * { pointer-events: auto; }
 
+/* KICKER V2 — JetBrains 10px letter-spacing 7px, dot 5px gradient + pulse */
 .kicker {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  letter-spacing: 6px;
+  letter-spacing: 7px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 60px;
+  color: rgba(255,255,255,0.38);
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  animation: fadeIn 1.5s 0.6s forwards;
 }
-.kicker .dot, .band-kicker .dot {
+.kicker .pulse-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4d9d, #a142f4);
+  box-shadow: 0 0 6px rgba(255,77,157,0.6);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+/* Dot legacy pour les autres band-kicker (sections) */
+.band-kicker .dot {
   display: inline-block;
   width: 6px; height: 6px;
   border-radius: 50%;
@@ -406,19 +390,55 @@ html, body, #root {
   0%, 100% { opacity: 0.5; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.4); }
 }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-.bubble-stage {
+/* BUBBLE FRAME V2 — center 480 max */
+.bubble-frame {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.bubble-hero {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1 / 1;
   position: relative;
-  margin-bottom: 50px;
+  opacity: 0;
+  animation: bubbleIn 1.8s 0.3s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.bubble-hero > .bubble-wrap,
+.bubble-hero > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+@keyframes bubbleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* BOTTOM BLOCK V2 — wordmark + tagline + CTA, fade-in 1.3s */
+.bottom-block {
+  text-align: center;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeIn 1.5s 1.3s forwards;
 }
 
 .wordmark {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 200;
-  font-size: clamp(48px, 8vw, 82px);
+  font-size: clamp(46px, 7vw, 72px);
   letter-spacing: -3px;
   line-height: 1;
-  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.65) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -437,21 +457,19 @@ html, body, #root {
 .tagline {
   font-family: 'Instrument Serif', serif;
   font-style: italic;
-  font-size: clamp(15px, 1.6vw, 18px);
-  color: rgba(255,255,255,0.5);
-  letter-spacing: -0.2px;
-  text-align: center;
-  max-width: 420px;
-  margin-bottom: 50px;
+  font-size: clamp(14px, 1.5vw, 18px);
+  color: rgba(255,255,255,0.52);
+  letter-spacing: -0.1px;
+  max-width: 440px;
+  margin: 0 auto 28px;
 }
 
-/* CTA */
+/* CTA Row */
 .cta-row {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 80px;
 }
 .cta-primary, .cta-ghost {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -481,28 +499,6 @@ html, body, #root {
   backdrop-filter: blur(20px);
 }
 .cta-ghost:hover { background: rgba(255,255,255,0.08); }
-
-.scroll-hint {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-.scroll-dot {
-  width: 1px;
-  height: 40px;
-  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent);
-  animation: scrollPulse 2.5s ease-in-out infinite;
-}
-@keyframes scrollPulse {
-  0%, 100% { opacity: 0.3; transform: scaleY(1); }
-  50% { opacity: 1; transform: scaleY(1.3); }
-}
 
 /* ─── BAND (sections) ─── */
 .band, .powers, .proof, .pricing {
@@ -790,9 +786,10 @@ html, body, #root {
 }
 
 @media (max-width: 600px) {
-  .kicker, .band-kicker { font-size: 9px; letter-spacing: 4px; margin-bottom: 32px; }
-  .bubble-stage { margin-bottom: 32px; }
-  .stage { padding: 60px 24px 40px; }
+  .kicker { font-size: 9px; letter-spacing: 5px; gap: 10px; }
+  .band-kicker { font-size: 9px; letter-spacing: 4px; margin-bottom: 32px; }
+  .stage { padding: 24px; }
+  .bubble-frame { padding: 0; }
   .band, .powers, .proof, .pricing { padding: 80px 24px; }
   .cta-row { flex-direction: column; width: 100%; }
   .cta-primary, .cta-ghost { justify-content: center; }
