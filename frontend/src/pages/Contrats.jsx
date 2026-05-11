@@ -73,7 +73,7 @@ function ContractCard({ c, navigate }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{c.client}</div>
-          <div style={{ fontSize: 11, color: T.textMuted }}>{c.produit} • {c.compaignie}</div>
+          <div style={{ fontSize: 11, color: T.textMuted }}>{c.produit} • {c.compagnie}</div>
         </div>
         <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
       </div>
@@ -100,7 +100,7 @@ export default function Contrats() {
     let list = DEMO_CONTRACTS
     if (search) {
       const q = search.toLowerCase()
-      list = list.filter(c => c.client.toLowerCase().includes(q) || c.produit.toLowerCase().includes(q) || c.compaignie.toLowerCase().includes(q))
+      list = list.filter(c => c.client.toLowerCase().includes(q) || c.produit.toLowerCase().includes(q) || c.compagnie.toLowerCase().includes(q))
     }
     if (filter === 'Actifs') list = list.filter(c => c.statut === 'actif')
     else if (filter === 'Renouvellement') list = list.filter(c => c.statut === 'renouvellement')
@@ -140,6 +140,45 @@ export default function Contrats() {
             </>
           )}
         />
+
+        {/* HIGHLIGHT echeance */}
+        <div
+          onClick={() => { setFilter('Échéance proche') }}
+          style={{
+            marginBottom: 16,
+            padding: '14px 16px',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.10), rgba(91,77,245,0.04))',
+            border: '1px solid rgba(245,158,11,0.25)',
+            borderRadius: 12,
+            display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <div style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: 'rgba(245,158,11,0.15)',
+            border: '1px solid rgba(245,158,11,0.30)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Calendar size={16} color={T.warning} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>
+              {stats.echeance30} contrats à échéance ce mois
+            </div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+              Préparez les renouvellements maintenant — ARK a déjà priorisé.
+            </div>
+          </div>
+          <button style={{
+            padding: '8px 14px', borderRadius: 8,
+            background: T.warning, color: '#fff', border: 'none',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}>
+            Préparer renouvellements <ChevronRight size={12} />
+          </button>
+        </div>
 
         {/* KPIs */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -214,7 +253,7 @@ export default function Contrats() {
                       onClick={() => navigate(`/clients/${c.id}`)}>
                       <td style={{ padding: '10px 12px', color: T.text, fontWeight: 600 }}>{c.client}</td>
                       <td style={{ padding: '10px 12px', color: T.textSecondary }}>{c.produit}</td>
-                      <td style={{ padding: '10px 12px', color: T.textMuted }}>{c.compaignie}</td>
+                      <td style={{ padding: '10px 12px', color: T.textMuted }}>{c.compagnie}</td>
                       <td style={{ padding: '10px 12px', color: T.text, fontWeight: 600 }}>{fmtEur(c.prime)}</td>
                       <td style={{ padding: '10px 12px', color: jourColor, fontWeight: 600 }}>
                         {c.jours <= 0 ? `Échu J+${Math.abs(c.jours)}` : `J-${c.jours}`}

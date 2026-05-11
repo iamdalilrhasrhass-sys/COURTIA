@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react'
-import { FileSpreadsheet, FileText, Download } from 'lucide-react'
+import { FileSpreadsheet, FileText, Download, Calculator, TrendingUp, Sparkles, GitCompareArrows, ChevronRight } from 'lucide-react'
 import { VibeBackdrop } from '../components/vibe'
-import PageHeader from '../components/PageHeader'
-import SimpleCard from '../components/SimpleCard'
 
 const T = {
-  text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
-  cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)',
-  accent: '#8B5CF6', success: '#22C55E',
+  text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
+  cardBg: 'rgba(255,255,255,0.03)', cardBgHover: 'rgba(255,255,255,0.06)',
+  cardBorder: 'rgba(255,255,255,0.06)', cardBorderLight: 'rgba(255,255,255,0.10)',
+  accent: '#5B4DF5', ark: '#8B5CF6', arkBg: 'rgba(139,92,246,0.10)', arkBorder: 'rgba(139,92,246,0.25)',
+  success: '#22C55E', warning: '#F59E0B', danger: '#EF4444', cyan: '#22D3EE',
 }
 
 const COMPAGNIES = ['Aurora', 'Novalia', 'Helios', 'Serenis', 'Atlas', 'Oria', 'Nivalis', 'Solenys']
@@ -38,21 +38,22 @@ function downloadBlob(name, mime, content) {
 const inputStyle = {
   width: '100%',
   padding: '11px 14px',
-  borderRadius: 10,
-  background: 'rgba(255,255,255,0.04)',
-  color: '#fff',
-  border: '1px solid rgba(255,255,255,0.10)',
-  fontSize: 14,
+  borderRadius: 9,
+  background: 'rgba(255,255,255,0.05)',
+  color: T.text,
+  border: `1px solid ${T.cardBorderLight}`,
+  fontSize: 13,
   outline: 'none',
+  transition: 'border-color 0.15s',
 }
 
 const labelStyle = {
   display: 'block',
-  fontSize: 11,
-  fontWeight: 600,
+  fontSize: 10,
+  fontWeight: 700,
   color: T.textMuted,
   textTransform: 'uppercase',
-  letterSpacing: '0.06em',
+  letterSpacing: '0.10em',
   marginBottom: 6,
 }
 
@@ -64,6 +65,18 @@ export default function CommissionsCalculator() {
   const taux = useMemo(() => BAREMES[compagnie]?.[produit] ?? 10, [compagnie, produit])
   const commission = useMemo(() => (Number(prime || 0) * taux) / 100, [prime, taux])
   const commissionMois = commission / 12
+
+  // comparateur autres compagnies
+  const comparison = useMemo(() => {
+    return COMPAGNIES.map(c => ({
+      compagnie: c,
+      taux: BAREMES[c]?.[produit] ?? 0,
+      commission: (Number(prime || 0) * (BAREMES[c]?.[produit] ?? 0)) / 100,
+    })).sort((a, b) => b.commission - a.commission)
+  }, [produit, prime])
+
+  const best = comparison[0]
+  const isBest = best?.compagnie === compagnie
 
   function exportCsv() {
     const csv = ['Compagnie;Produit;Prime;Taux;Commission',
@@ -87,90 +100,188 @@ export default function CommissionsCalculator() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', color: T.text, padding: '24px 20px 48px' }}>
-      <VibeBackdrop intensity={0.7} />
-      <main style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', color: T.text, padding: '24px 24px 48px' }}>
+      <VibeBackdrop intensity={0.75} />
+      <div style={{
+        position: 'fixed', width: 500, height: 500, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(91,77,245,0.06) 0%, transparent 70%)',
+        top: -150, right: -100, pointerEvents: 'none', zIndex: 0,
+      }} />
 
-        <PageHeader
-          title="Commissions"
-          subtitle="Calcul instantané selon le barème compagnie."
-        />
+      <main style={{ position: 'relative', zIndex: 1, maxWidth: 1080, margin: '0 auto' }}>
 
-        {/* Résultat géant */}
-        <SimpleCard padding={32} style={{
-          textAlign: 'center',
-          marginBottom: 20,
-          background: 'linear-gradient(135deg, rgba(139,92,246,0.10), rgba(34,211,238,0.04))',
-          border: '1px solid rgba(139,92,246,0.25)',
+        {/* HEADER */}
+        <header style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 6 }}>
+            ARK IA — Outils
+          </div>
+          <h1 style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 700, fontSize: 30, letterSpacing: '-0.025em',
+            color: T.text, margin: 0, lineHeight: 1.15,
+          }}>Calculateur de commissions</h1>
+          <p style={{ fontSize: 13, color: T.textSecondary, margin: '6px 0 0' }}>
+            Estimation instantanée selon le barème compagnie et comparaison cross-marché.
+          </p>
+        </header>
+
+        {/* Row : formulaire + résultat */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.1fr)', gap: 14,
+          marginBottom: 16,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-            Commission estimée
-          </div>
+          {/* Formulaire */}
           <div style={{
-            fontFamily: "'Fraunces', serif",
-            fontStyle: 'italic',
-            fontWeight: 500,
-            fontSize: 'clamp(48px, 8vw, 72px)',
-            lineHeight: 1,
-            color: '#fff',
-            letterSpacing: '-0.02em',
+            background: T.cardBg, border: `1px solid ${T.cardBorder}`,
+            borderRadius: 14, padding: 22, backdropFilter: 'blur(12px)',
           }}>
-            {fmtEur(commission)}
-          </div>
-          <div style={{ fontSize: 13, color: T.textSecondary, marginTop: 8 }}>
-            soit <strong style={{ color: '#fff' }}>{fmtEur(commissionMois)}</strong> / mois &middot;
-            taux <strong style={{ color: T.accent }}>{taux}%</strong>
-          </div>
-        </SimpleCard>
-
-        {/* 3 champs */}
-        <SimpleCard padding={24}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-            <div>
-              <label style={labelStyle}>Compagnie</label>
-              <select value={compagnie} onChange={e => setCompagnie(e.target.value)} style={inputStyle}>
-                {COMPAGNIES.map(c => <option key={c} value={c} style={{ background: '#0a0a18' }}>{c}</option>)}
-              </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+              <Calculator size={14} color={T.accent} />
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Paramètres</h3>
             </div>
-            <div>
-              <label style={labelStyle}>Produit</label>
-              <select value={produit} onChange={e => setProduit(e.target.value)} style={inputStyle}>
-                {PRODUITS.map(p => <option key={p} value={p} style={{ background: '#0a0a18' }}>{p}</option>)}
-              </select>
+            <div style={{ display: 'grid', gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Compagnie</label>
+                <select value={compagnie} onChange={e => setCompagnie(e.target.value)} style={inputStyle}>
+                  {COMPAGNIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Produit</label>
+                <select value={produit} onChange={e => setProduit(e.target.value)} style={inputStyle}>
+                  {PRODUITS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Prime annuelle (€)</label>
+                <input type="number" min="0" step="50" value={prime} onChange={e => setPrime(e.target.value)} style={inputStyle} />
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>Prime annuelle</label>
-              <input
-                type="number"
-                min={0}
-                step={50}
-                value={prime}
-                onChange={(e) => setPrime(Number(e.target.value))}
-                style={inputStyle}
-              />
+            <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+              <button onClick={exportCsv} style={btnGhost}>
+                <FileSpreadsheet size={13} /> Export CSV
+              </button>
+              <button onClick={exportPdf} style={btnGhost}>
+                <FileText size={13} /> PDF
+              </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-            <button onClick={exportPdf} style={btnGhost}>
-              <FileText size={13} /> PDF
-            </button>
-            <button onClick={exportCsv} style={btnGhost}>
-              <FileSpreadsheet size={13} /> CSV
-            </button>
+          {/* Résultat */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(91,77,245,0.10), rgba(139,92,246,0.04))',
+            border: `1px solid rgba(91,77,245,0.25)`,
+            borderRadius: 14, padding: 22,
+            backdropFilter: 'blur(12px)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: -50, right: -50, width: 180, height: 180,
+              borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)',
+              filter: 'blur(20px)', pointerEvents: 'none',
+            }} />
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <Sparkles size={14} color={T.ark} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.10em' }}>
+                  Commission estimée
+                </span>
+              </div>
+              <div style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 800, fontSize: 56, color: T.text,
+                letterSpacing: '-0.03em', lineHeight: 1,
+              }}>{fmtEur(commission)}</div>
+              <div style={{ fontSize: 13, color: T.textSecondary, marginTop: 8 }}>
+                <strong style={{ color: T.text }}>{taux}%</strong> de {fmtEur(prime)} • soit <strong style={{ color: T.success }}>{fmtEur(commissionMois)}</strong>/mois
+              </div>
+
+              {isBest && (
+                <div style={{
+                  marginTop: 14, padding: '10px 12px',
+                  background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: 9, fontSize: 12, color: T.success,
+                  display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600,
+                }}>
+                  <TrendingUp size={13} /> Meilleur taux du marché
+                </div>
+              )}
+              {!isBest && best && (
+                <div style={{
+                  marginTop: 14, padding: '10px 12px',
+                  background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
+                  borderRadius: 9, fontSize: 12, color: T.warning,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <Sparkles size={12} />
+                  <span>ARK : <strong style={{ color: T.text }}>{best.compagnie}</strong> propose <strong>{best.taux}%</strong> ({fmtEur(best.commission - commission)} de plus)</span>
+                </div>
+              )}
+            </div>
           </div>
-        </SimpleCard>
+        </div>
+
+        {/* Comparateur */}
+        <div style={{
+          background: T.cardBg, border: `1px solid ${T.cardBorder}`,
+          borderRadius: 14, padding: 18, backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <GitCompareArrows size={14} color={T.cyan} />
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>
+              Comparaison toutes compagnies — {produit} ({fmtEur(prime)})
+            </h3>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 540 }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  {['Compagnie', 'Taux', 'Commission/an', 'Commission/mois', 'Écart vs sélection'].map(h => (
+                    <th key={h} style={{
+                      textAlign: 'left', padding: '10px 14px', fontSize: 10,
+                      fontWeight: 700, color: T.textMuted, textTransform: 'uppercase',
+                      letterSpacing: '0.08em', borderBottom: `1px solid ${T.cardBorder}`,
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((row, i) => {
+                  const isSelected = row.compagnie === compagnie
+                  const ecart = row.commission - commission
+                  return (
+                    <tr key={row.compagnie} style={{
+                      borderBottom: `1px solid ${T.cardBorder}`,
+                      background: isSelected ? 'rgba(91,77,245,0.06)' : 'transparent',
+                    }}>
+                      <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 600, color: T.text }}>
+                        {i === 0 && <span style={{ marginRight: 6 }}>🏆</span>}
+                        {row.compagnie}
+                        {isSelected && <span style={{ marginLeft: 6, fontSize: 10, color: T.accent, fontWeight: 700 }}>(sélection)</span>}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: T.text, fontWeight: 700 }}>{row.taux}%</td>
+                      <td style={{ padding: '12px 14px', fontSize: 13, color: T.success, fontWeight: 700 }}>{fmtEur(row.commission)}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 12, color: T.textSecondary }}>{fmtEur(row.commission / 12)}</td>
+                      <td style={{ padding: '12px 14px', fontSize: 12, fontWeight: 600,
+                        color: ecart > 0 ? T.success : ecart < 0 ? T.danger : T.textMuted,
+                      }}>
+                        {ecart === 0 ? '—' : (ecart > 0 ? `+${fmtEur(ecart)}` : fmtEur(ecart))}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </main>
     </div>
   )
 }
 
 const btnGhost = {
-  padding: '8px 14px', borderRadius: 10,
-  background: 'rgba(255,255,255,0.04)',
-  color: '#fff',
-  border: '1px solid rgba(255,255,255,0.10)',
-  cursor: 'pointer',
-  fontSize: 12, fontWeight: 600,
-  display: 'inline-flex', alignItems: 'center', gap: 6,
+  padding: '8px 13px', background: 'rgba(255,255,255,0.04)', color: T.text,
+  border: `1px solid ${T.cardBorderLight}`, borderRadius: 8, cursor: 'pointer',
+  fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6,
 }
