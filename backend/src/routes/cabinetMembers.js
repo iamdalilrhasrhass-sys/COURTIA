@@ -61,7 +61,7 @@ router.post('/invite', requireRole('owner'), async (req, res) => {
       actorUserId: cabinetService.getSafeUserId(req.user),
       email,
       role,
-      frontendUrl: process.env.FRONTEND_URL || 'https://courtia.vercel.app',
+      frontendUrl: process.env.FRONTEND_URL || 'https://app.courtiark.fr',
     })
 
     const emailResult = await sendEmail({

@@ -14,7 +14,7 @@ const { verifyToken } = require('../middleware/auth');
 const { submitAttestation, getAttestationStatus } = require('../services/iobspService');
 const pool = require('../db');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://courtia.vercel.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://app.courtiark.fr';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/financing/iobsp/submit
