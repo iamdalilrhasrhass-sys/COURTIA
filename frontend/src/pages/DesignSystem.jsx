@@ -53,7 +53,7 @@ export function DesignSystem() {
 
       <Section title="Badges">
         <AuroraBadge>Default</AuroraBadge>
-        <AuroraBadge variant="success" dot>Success</AuroraBadge>
+        <AuroraBadge variant="success" dot>Succès</AuroraBadge>
         <AuroraBadge variant="warning" dot pulse>Warning</AuroraBadge>
         <AuroraBadge variant="error">Error</AuroraBadge>
         <AuroraBadge variant="info">Info</AuroraBadge>

@@ -15,9 +15,61 @@
 
 const express = require('express')
 const router = express.Router()
+const fs = require('fs')
+const path = require('path')
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
 const logger = require('../lib/logger')
+const { buildDevisPdf, buildPdfPath, shortId } = require('../services/devisPdfService')
+const {
+  scheduleRelancesForDevis,
+  cancelPendingRelancesForDevis,
+} = require('../services/devisRelanceService')
+const { sendEmail } = require('../services/emailService')
+
+function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
+
+async function ensureWizardSchema() {
+  try { await pool.query(`SELECT 1 FROM devis_wizard LIMIT 1`); return true }
+  catch (_) { return false }
+}
+
+async function loadCabinetMeta(userId) {
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.email, u.first_name, u.last_name, u.phone
+       FROM users u WHERE u.id = $1 LIMIT 1`, [userId]
+    )
+    const r = rows[0] || {}
+    const name = (r.first_name || r.last_name)
+      ? `Cabinet ${r.first_name || ''} ${r.last_name || ''}`.trim()
+      : 'COURTIA'
+    return { name, orias: '12345678', rcpro: '1234', email: r.email, phone: r.phone }
+  } catch (_) {
+    return { name: 'COURTIA', orias: '12345678', rcpro: '1234' }
+  }
+}
+
+async function loadClient(userId, clientId) {
+  if (!clientId) return null
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, first_name, last_name, company_name, email, phone, address, city, postal_code
+       FROM clients WHERE id = $1 AND (courtier_id = $2 OR broker_id = $2) LIMIT 1`,
+      [clientId, userId]
+    ).catch(() => ({ rows: [] }))
+    if (!rows[0]) {
+      const { rows: r2 } = await pool.query(
+        `SELECT id, first_name, last_name, company_name, email, phone, address, city, postal_code
+         FROM clients WHERE id = $1 LIMIT 1`, [clientId]
+      )
+      return r2[0] || null
+    }
+    return rows[0] || null
+  } catch (_) {
+    return null
+  }
+}
 
 // =============================================================================
 // SCHEMAS JSON pour les réponses ARK
@@ -598,6 +650,428 @@ Offre sélectionnée:
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/devis/:id/generate-proposal error')
     res.status(500).json({ error: 'Erreur ARK', details: err.message })
+  }
+})
+
+// ═════════════════════════════════════════════════════════════════════════════
+// F3 — DEVIS WIZARD 1-CLICK + PDF AURORA PREMIUM + RELANCES J+3 / J+7 / J+14
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── POST /api/devis/wizard/init — Sauvegarde brouillon (étape 1)
+router.post('/wizard/init', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const ok = await ensureWizardSchema()
+    if (!ok) return res.status(503).json({ error: 'schema_missing' })
+
+    const { client_id, product, preset = 'confort', garanties = {}, date_effet = null } = req.body || {}
+    if (!product) return res.status(400).json({ error: 'product_required' })
+
+    const client = await loadClient(userId, client_id)
+    const clientName = client
+      ? (client.company_name || `${client.first_name || ''} ${client.last_name || ''}`.trim())
+      : null
+    const cabinet = await loadCabinetMeta(userId)
+    const reference = shortId('DV')
+
+    const { rows } = await pool.query(`
+      INSERT INTO devis_wizard
+        (user_id, client_id, product, preset, garanties, status, reference,
+         client_email_cache, client_name_cache, cabinet_name_cache, validity_days)
+      VALUES ($1, $2, $3, $4, $5::jsonb, 'draft', $6, $7, $8, $9, 30)
+      RETURNING *
+    `, [
+      userId, client_id || null, product, preset,
+      JSON.stringify({ ...garanties, date_effet }),
+      reference,
+      client?.email || null,
+      clientName,
+      cabinet.name,
+    ])
+
+    await pool.query(
+      `INSERT INTO devis_activity (devis_id, user_id, event, payload)
+       VALUES ($1, $2, 'wizard_init', $3::jsonb)`,
+      [rows[0].id, userId, JSON.stringify({ product, preset })]
+    ).catch(() => {})
+
+    res.json({ ok: true, devis: rows[0] })
+  } catch (err) {
+    logger.error({ err: err.message }, 'devis wizard init')
+    res.status(500).json({ error: 'wizard_init_failed', message: err.message })
+  }
+})
+
+// ─── POST /api/devis/wizard/finalize — Génère PDF + crée devis prêts à envoyer
+router.post('/wizard/finalize', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const ok = await ensureWizardSchema()
+    if (!ok) return res.status(503).json({ error: 'schema_missing' })
+
+    const { devis_id, offers = [], ark_summary = '' } = req.body || {}
+    if (!devis_id) return res.status(400).json({ error: 'devis_id_required' })
+    if (!Array.isArray(offers) || offers.length === 0)
+      return res.status(400).json({ error: 'no_offers_selected' })
+
+    const { rows: existing } = await pool.query(
+      `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`,
+      [devis_id, userId]
+    )
+    if (!existing[0]) return res.status(404).json({ error: 'devis_not_found' })
+    const devis = existing[0]
+
+    const client = await loadClient(userId, devis.client_id)
+    const cabinet = await loadCabinetMeta(userId)
+
+    const clientName = devis.client_name_cache || (client
+      ? (client.company_name || `${client.first_name || ''} ${client.last_name || ''}`.trim())
+      : 'Client')
+    const clientPayload = {
+      name: clientName,
+      email: client?.email || devis.client_email_cache || '',
+      phone: client?.phone || '',
+      address: client ? [client.address, client.postal_code, client.city].filter(Boolean).join(' ') : '',
+    }
+
+    const pdfPath = buildPdfPath(userId, devis_id)
+    await buildDevisPdf({
+      cabinet,
+      client: clientPayload,
+      devis: {
+        reference: devis.reference,
+        product: devis.product,
+        preset: devis.preset,
+        validity_days: devis.validity_days || 30,
+        ark_summary,
+      },
+      offers,
+      outputPath: pdfPath,
+    })
+
+    const totalCents = Math.round((offers[0]?.prime_annuelle_eur || 0) * 100)
+    await pool.query(`
+      UPDATE devis_wizard
+      SET selected_providers = $1::jsonb,
+          pdf_path = $2,
+          total_premium_cents = $3,
+          ark_summary = $4,
+          status = CASE WHEN status = 'draft' THEN 'ready' ELSE status END,
+          updated_at = NOW(),
+          expires_at = NOW() + INTERVAL '30 days'
+      WHERE id = $5 AND user_id = $6
+    `, [JSON.stringify(offers), pdfPath, totalCents, ark_summary, devis_id, userId])
+
+    await pool.query(
+      `INSERT INTO devis_activity (devis_id, user_id, event, payload)
+       VALUES ($1, $2, 'wizard_finalize', $3::jsonb)`,
+      [devis_id, userId, JSON.stringify({ offers_count: offers.length })]
+    ).catch(() => {})
+
+    res.json({
+      ok: true,
+      devis_id,
+      reference: devis.reference,
+      pdf_url: `/api/devis/${devis_id}/pdf`,
+      preview_url: `/api/devis/${devis_id}/pdf?inline=1`,
+    })
+  } catch (err) {
+    logger.error({ err: err.message, stack: err.stack }, 'devis wizard finalize')
+    res.status(500).json({ error: 'wizard_finalize_failed', message: err.message })
+  }
+})
+
+// ─── GET /api/devis/:id/pdf — stream PDF brandé (téléchargement / inline)
+router.get('/:id/pdf', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const devisId = parseInt(req.params.id, 10)
+    const { rows } = await pool.query(
+      `SELECT pdf_path, reference FROM devis_wizard WHERE id = $1 AND user_id = $2`,
+      [devisId, userId]
+    )
+    if (!rows[0] || !rows[0].pdf_path) return res.status(404).json({ error: 'pdf_missing' })
+    if (!fs.existsSync(rows[0].pdf_path)) return res.status(404).json({ error: 'pdf_file_missing' })
+
+    const inline = req.query.inline === '1'
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition',
+      `${inline ? 'inline' : 'attachment'}; filename="${rows[0].reference || 'devis-' + devisId}.pdf"`)
+    fs.createReadStream(rows[0].pdf_path).pipe(res)
+  } catch (err) {
+    logger.error({ err: err.message }, 'devis pdf stream')
+    res.status(500).json({ error: 'pdf_stream_failed' })
+  }
+})
+
+// ─── POST /api/devis/:id/send — Envoie au client + déclenche relances
+router.post('/:id/send', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const devisId = parseInt(req.params.id, 10)
+    const { rows } = await pool.query(
+      `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`,
+      [devisId, userId]
+    )
+    if (!rows[0]) return res.status(404).json({ error: 'devis_not_found' })
+    const d = rows[0]
+
+    const email = (req.body?.email_to || d.client_email_cache || '').trim()
+    if (!email) return res.status(400).json({ error: 'no_client_email' })
+
+    const subject = req.body?.subject ||
+      `Votre proposition ${d.product} — ${d.cabinet_name_cache || 'COURTIA'}`
+    const message = req.body?.message ||
+      `Bonjour,\n\nVeuillez trouver ci-joint la proposition que je vous avais préparée.\nN'hésitez pas à me contacter pour toute question.\n\n— ${d.cabinet_name_cache || 'COURTIA'}`
+
+    const pdfLink = `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/devis/${devisId}`
+    const html = `
+      <div style="font-family:Inter,Arial;color:#1F2937;max-width:600px;margin:0 auto">
+        <div style="background:#050510;padding:24px;border-radius:12px 12px 0 0">
+          <h1 style="color:#FFF;margin:0;font-size:22px">${d.cabinet_name_cache || 'COURTIA'}</h1>
+          <p style="color:#A78BFA;margin:4px 0 0;font-size:12px">Proposition d'assurance — Aurora</p>
+        </div>
+        <div style="background:#FFF;padding:24px;border:1px solid #E5E7EB;border-radius:0 0 12px 12px">
+          <p>${message.replace(/\n/g, '<br>')}</p>
+          <p style="margin:24px 0">
+            <a href="${pdfLink}" style="background:#5B4DF5;color:#FFF;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Consulter & signer ma proposition</a>
+          </p>
+          <p style="color:#6B7280;font-size:12px">Référence : ${d.reference || 'DV-' + devisId}</p>
+          <p style="color:#6B7280;font-size:12px">Validité ${d.validity_days || 30} jours · ORIAS 12345678</p>
+        </div>
+      </div>
+    `
+    try {
+      await sendEmail({ to: email, subject, html })
+    } catch (e) {
+      logger.warn({ err: e.message }, 'devis send email failed (continuing)')
+    }
+
+    await pool.query(
+      `UPDATE devis_wizard
+         SET status = 'sent', sent_at = NOW(), client_email_cache = $1, updated_at = NOW()
+       WHERE id = $2 AND user_id = $3`,
+      [email, devisId, userId]
+    )
+
+    // Annule les anciennes relances, replanifie
+    await cancelPendingRelancesForDevis(devisId)
+    await scheduleRelancesForDevis(devisId)
+
+    await pool.query(
+      `INSERT INTO devis_activity (devis_id, user_id, event, payload)
+       VALUES ($1, $2, 'sent', $3::jsonb)`,
+      [devisId, userId, JSON.stringify({ to: email })]
+    ).catch(() => {})
+
+    res.json({ ok: true, sent_to: email, relances_planifiees: ['J+3', 'J+7', 'J+14'] })
+  } catch (err) {
+    logger.error({ err: err.message }, 'devis send')
+    res.status(500).json({ error: 'send_failed', message: err.message })
+  }
+})
+
+// ─── POST /api/devis/:id/relance — force une relance maintenant
+router.post('/:id/relance', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const devisId = parseInt(req.params.id, 10)
+    await pool.query(`
+      INSERT INTO devis_relances (devis_id, scheduled_at, channel, template_key, status)
+      VALUES ($1, NOW(), 'email', $2, 'scheduled')
+    `, [devisId, req.body?.template || 'J7'])
+
+    // Tick immédiat
+    const { processDueRelances } = require('../services/devisRelanceService')
+    const r = await processDueRelances()
+    res.json({ ok: true, ...r })
+  } catch (err) {
+    logger.error({ err: err.message }, 'devis relance force')
+    res.status(500).json({ error: 'relance_failed' })
+  }
+})
+
+// ─── POST /api/devis/:id/sign — marque signé
+router.post('/:id/sign', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const devisId = parseInt(req.params.id, 10)
+    await pool.query(
+      `UPDATE devis_wizard SET status = 'signed', signed_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND user_id = $2`, [devisId, userId]
+    )
+    await cancelPendingRelancesForDevis(devisId)
+    await pool.query(
+      `INSERT INTO devis_activity (devis_id, user_id, event, payload)
+       VALUES ($1, $2, 'signed', '{}'::jsonb)`, [devisId, userId]
+    ).catch(() => {})
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: 'sign_failed', message: err.message })
+  }
+})
+
+// ─── GET /api/devis/wizard/list — Liste wizard devis (séparé de quote_requests)
+router.get('/wizard/list', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const ok = await ensureWizardSchema()
+    if (!ok) return res.json({ items: [], stats: { total: 0, sent: 0, signed: 0, refused: 0 } })
+
+    const { status } = req.query
+    let sql = `
+      SELECT d.*, c.first_name, c.last_name, c.company_name, c.email AS c_email
+      FROM devis_wizard d
+      LEFT JOIN clients c ON c.id = d.client_id
+      WHERE d.user_id = $1
+    `
+    const params = [userId]
+    if (status && status !== 'all') {
+      sql += ` AND d.status = $2`
+      params.push(status)
+    }
+    sql += ` ORDER BY d.created_at DESC LIMIT 200`
+
+    const { rows } = await pool.query(sql, params)
+    const items = rows.map(r => ({
+      id: r.id,
+      reference: r.reference,
+      product: r.product,
+      preset: r.preset,
+      status: r.status,
+      total_premium_eur: Math.round((r.total_premium_cents || 0) / 100),
+      providers: r.selected_providers || [],
+      client_name: r.client_name_cache || r.company_name || `${r.first_name || ''} ${r.last_name || ''}`.trim() || '—',
+      client_email: r.c_email || r.client_email_cache,
+      sent_at: r.sent_at,
+      signed_at: r.signed_at,
+      created_at: r.created_at,
+      expires_at: r.expires_at,
+    }))
+    const stats = {
+      total: items.length,
+      draft: items.filter(i => i.status === 'draft' || i.status === 'ready').length,
+      sent: items.filter(i => i.status === 'sent' || i.status === 'opened').length,
+      signed: items.filter(i => i.status === 'signed').length,
+      refused: items.filter(i => i.status === 'refused').length,
+      expired: items.filter(i => i.status === 'expired').length,
+    }
+    res.json({ items, stats })
+  } catch (err) {
+    logger.error({ err: err.message }, 'devis wizard list')
+    res.status(500).json({ error: 'list_failed' })
+  }
+})
+
+// ─── GET /api/devis/wizard/:id — Détail wizard
+router.get('/wizard/:id', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const ok = await ensureWizardSchema()
+    if (!ok) return res.status(404).json({ error: 'not_found' })
+    const devisId = parseInt(req.params.id, 10)
+    const { rows } = await pool.query(
+      `SELECT d.*, c.first_name, c.last_name, c.company_name, c.email AS c_email, c.phone AS c_phone
+       FROM devis_wizard d
+       LEFT JOIN clients c ON c.id = d.client_id
+       WHERE d.id = $1 AND d.user_id = $2`, [devisId, userId]
+    )
+    if (!rows[0]) return res.status(404).json({ error: 'not_found' })
+    const d = rows[0]
+    const { rows: relances } = await pool.query(
+      `SELECT id, scheduled_at, sent_at, channel, template_key, status FROM devis_relances WHERE devis_id = $1 ORDER BY scheduled_at`,
+      [devisId]
+    )
+    const { rows: activity } = await pool.query(
+      `SELECT id, event, payload, created_at FROM devis_activity WHERE devis_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [devisId]
+    ).catch(() => ({ rows: [] }))
+
+    res.json({
+      devis: {
+        id: d.id,
+        reference: d.reference,
+        product: d.product,
+        preset: d.preset,
+        status: d.status,
+        total_premium_eur: Math.round((d.total_premium_cents || 0) / 100),
+        garanties: d.garanties,
+        providers: d.selected_providers || [],
+        ark_summary: d.ark_summary,
+        client: {
+          id: d.client_id,
+          name: d.client_name_cache || d.company_name || `${d.first_name || ''} ${d.last_name || ''}`.trim(),
+          email: d.c_email || d.client_email_cache,
+          phone: d.c_phone,
+        },
+        sent_at: d.sent_at,
+        opened_at: d.first_opened_at,
+        signed_at: d.signed_at,
+        expires_at: d.expires_at,
+        created_at: d.created_at,
+        pdf_url: d.pdf_path ? `/api/devis/${d.id}/pdf` : null,
+      },
+      relances,
+      activity,
+    })
+  } catch (err) {
+    logger.error({ err: err.message }, 'devis wizard detail')
+    res.status(500).json({ error: 'detail_failed' })
+  }
+})
+
+// ─── POST /api/devis/:id/duplicate — Duplique en brouillon
+router.post('/:id/duplicate', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const devisId = parseInt(req.params.id, 10)
+    const { rows } = await pool.query(
+      `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`, [devisId, userId]
+    )
+    if (!rows[0]) return res.status(404).json({ error: 'not_found' })
+    const src = rows[0]
+    const ref = shortId('DV')
+    const { rows: created } = await pool.query(`
+      INSERT INTO devis_wizard
+        (user_id, client_id, product, preset, garanties, selected_providers,
+         status, reference, client_email_cache, client_name_cache, cabinet_name_cache, validity_days)
+      VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,'draft',$7,$8,$9,$10,30)
+      RETURNING id, reference
+    `, [
+      userId, src.client_id, src.product, src.preset,
+      JSON.stringify(src.garanties || {}),
+      JSON.stringify(src.selected_providers || []),
+      ref, src.client_email_cache, src.client_name_cache, src.cabinet_name_cache,
+    ])
+    res.json({ ok: true, devis: created[0] })
+  } catch (err) {
+    res.status(500).json({ error: 'duplicate_failed', message: err.message })
+  }
+})
+
+// ─── POST /api/devis/:id/cancel — annule un devis
+router.post('/:id/cancel', async (req, res) => {
+  const userId = uid(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
+  try {
+    const devisId = parseInt(req.params.id, 10)
+    await pool.query(
+      `UPDATE devis_wizard SET status = 'refused', updated_at = NOW()
+       WHERE id = $1 AND user_id = $2`, [devisId, userId]
+    )
+    await cancelPendingRelancesForDevis(devisId)
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: 'cancel_failed' })
   }
 })
 

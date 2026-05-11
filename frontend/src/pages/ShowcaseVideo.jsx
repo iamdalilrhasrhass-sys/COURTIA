@@ -90,7 +90,7 @@ const STATUT_BG = { 'OK': T.successBg, 'À vérifier': T.warningBg, 'Manquant': 
 const URGENCE_COLORS = { 'Haute': T.danger, 'Moyenne': T.warning, 'Basse': T.success }
 
 const SIDEBAR_UNIVERS = [
-  { icon: Gauge, label: 'Pilotage', open: true, links: ['Dashboard', 'Morning Brief', 'Rapports'] },
+  { icon: Gauge, label: 'Pilotage', open: true, links: ['Cockpit', 'Morning Brief', 'Rapports'] },
   { icon: Users, label: 'Portefeuille', open: false, links: ['Clients', 'Contrats', 'Devis', 'Documents'] },
   { icon: Activity, label: 'Actions', open: false, links: ['Tâches', 'Relances', 'Opportunités'] },
   { icon: TrendingUp, label: 'Acquisition', open: false, links: ['Prospection'] },

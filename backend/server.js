@@ -522,4 +522,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 10000
 console.log('⚡ COURTIA Backend — ARK Enabled')
-app.listen(PORT, () => console.log('COURTIA backend port ' + PORT))
+app.listen(PORT, () => {
+  console.log('COURTIA backend port ' + PORT)
+  // ─── Workers asynchrones LOT F3/F8 ────────────────────────────
+  try {
+    const { startWorker: startDevisRelances } = require('./src/services/devisRelanceService')
+    startDevisRelances() // 1h
+  } catch (e) { logger.warn({ err: e.message }, 'devis relance worker boot') }
+  try {
+    const { startWorker: startReachWorker } = require('./src/services/reachSequenceWorker')
+    startReachWorker() // 15 min
+  } catch (e) { logger.warn({ err: e.message }, 'reach sequence worker boot') }
+})

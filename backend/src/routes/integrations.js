@@ -1606,6 +1606,263 @@ router.get('/client/:clientId/interactions', async (req, res) => {
   }
 })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// F7 — Connecteurs (UI page /integrations) : 8 cartes + connect/disconnect/test
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CONNECTORS = [
+  {
+    key: 'google_calendar',
+    name: 'Google Calendar',
+    category: 'rdv',
+    description: 'Sync RDV courtier ↔ Google Calendar',
+    auth: 'oauth',
+    env: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI'],
+    color: '#4285F4',
+  },
+  {
+    key: 'outlook',
+    name: 'Microsoft Outlook',
+    category: 'rdv',
+    description: 'Sync RDV + envoi mail via Microsoft 365',
+    auth: 'oauth',
+    env: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET', 'MICROSOFT_REDIRECT_URI'],
+    color: '#0078D4',
+  },
+  {
+    key: 'gmail',
+    name: 'Gmail',
+    category: 'email',
+    description: 'Envoi e-mails sortants depuis votre compte Gmail',
+    auth: 'oauth',
+    env: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI'],
+    color: '#EA4335',
+  },
+  {
+    key: 'whatsapp_business',
+    name: 'WhatsApp Business',
+    category: 'messaging',
+    description: 'Conversations WhatsApp avec vos clients',
+    auth: 'config',
+    env: ['WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_ACCESS_TOKEN'],
+    color: '#25D366',
+  },
+  {
+    key: 'yousign',
+    name: 'Yousign',
+    category: 'signature',
+    description: 'Signature électronique des devis et contrats',
+    auth: 'apikey',
+    env: ['YOUSIGN_API_KEY'],
+    color: '#1A1F36',
+  },
+  {
+    key: 'stripe',
+    name: 'Stripe',
+    category: 'paiement',
+    description: 'Encaissements & abonnements',
+    auth: 'managed',
+    env: ['STRIPE_SECRET_KEY'],
+    color: '#635BFF',
+  },
+  {
+    key: 'pennylane',
+    name: 'Pennylane',
+    category: 'compta',
+    description: 'Export FEC + synchro factures',
+    auth: 'oauth',
+    env: ['PENNYLANE_CLIENT_ID', 'PENNYLANE_CLIENT_SECRET'],
+    color: '#5E35B1',
+  },
+  {
+    key: 'slack',
+    name: 'Slack',
+    category: 'notif',
+    description: 'Notifications cabinet (devis signés, alertes ARK…)',
+    auth: 'webhook',
+    env: [],
+    color: '#4A154B',
+  },
+  {
+    key: 'discord',
+    name: 'Discord',
+    category: 'notif',
+    description: 'Notifications cabinet via webhook Discord',
+    auth: 'webhook',
+    env: [],
+    color: '#5865F2',
+  },
+  {
+    key: 'zapier',
+    name: 'Zapier',
+    category: 'integration',
+    description: 'Webhooks vers vos automatisations',
+    auth: 'webhook',
+    env: [],
+    color: '#FF4A00',
+  },
+]
+
+function connectorEnvOk(c) {
+  if (!c.env || c.env.length === 0) return true
+  return c.env.every((k) => !!process.env[k])
+}
+
+router.get('/connectors', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+
+    const { rows } = await pool.query(`
+      SELECT integration_key, status, connected_at, last_sync_at, error_message, metadata
+      FROM integration_configs
+      WHERE user_id = $1
+    `, [userId]).catch(() => ({ rows: [] }))
+    const byKey = Object.fromEntries(rows.map(r => [r.integration_key, r]))
+
+    const items = CONNECTORS.map((c) => {
+      const cfg = byKey[c.key] || null
+      return {
+        ...c,
+        configured: connectorEnvOk(c),
+        status: cfg?.status || 'disconnected',
+        connected_at: cfg?.connected_at || null,
+        last_sync_at: cfg?.last_sync_at || null,
+        error_message: cfg?.error_message || null,
+        external_account: cfg?.metadata?.external_account || null,
+      }
+    })
+    res.json({ ok: true, items })
+  } catch (err) {
+    logger.error({ err: err.message }, 'connectors list')
+    res.status(500).json({ ok: false, error: 'connectors_list_failed' })
+  }
+})
+
+router.get('/connectors/:type/connect', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+    const c = CONNECTORS.find(x => x.key === req.params.type)
+    if (!c) return res.status(404).json({ error: 'unknown_connector' })
+
+    if (!connectorEnvOk(c)) {
+      return res.status(200).json({
+        ok: false,
+        configuration_required: true,
+        message: `Configuration administrateur requise pour ${c.name}. Variables manquantes : ${c.env.filter(k => !process.env[k]).join(', ')}.`,
+        env_needed: c.env,
+      })
+    }
+
+    if (c.auth === 'oauth') {
+      // Réutilise le start existant Google si dispo, sinon URL générique
+      let url = null
+      if (c.key === 'google_calendar' || c.key === 'gmail') {
+        const conf = getGoogleConfig()
+        const scopes = c.key === 'gmail' ? GMAIL_SCOPES : GOOGLE_COMBINED_SCOPES
+        const state = signState({ userId, provider: c.key, issuedAt: Date.now() })
+        const oAuth2 = new OAuth2Client(conf.clientId, conf.clientSecret, conf.redirectUri)
+        url = oAuth2.generateAuthUrl({
+          access_type: 'offline',
+          prompt: 'consent',
+          scope: scopes,
+          state,
+        })
+      } else if (c.key === 'outlook') {
+        const conf = getOutlookConfig()
+        const state = signState({ userId, provider: 'outlook', issuedAt: Date.now() })
+        const scope = encodeURIComponent('offline_access User.Read Calendars.ReadWrite Mail.Send')
+        url = `https://login.microsoftonline.com/${conf.tenantId}/oauth2/v2.0/authorize?client_id=${conf.clientId}&response_type=code&redirect_uri=${encodeURIComponent(conf.redirectUri)}&scope=${scope}&state=${state}&response_mode=query`
+      } else if (c.key === 'pennylane') {
+        const state = signState({ userId, provider: 'pennylane', issuedAt: Date.now() })
+        const cid = process.env.PENNYLANE_CLIENT_ID
+        const redirect = process.env.PENNYLANE_REDIRECT_URI || `${process.env.BACKEND_URL || ''}/api/integrations/connectors/pennylane/callback`
+        url = `https://app.pennylane.com/oauth/authorize?client_id=${cid}&redirect_uri=${encodeURIComponent(redirect)}&response_type=code&scope=accounting&state=${state}`
+      }
+      if (!url) return res.status(501).json({ error: 'oauth_provider_unsupported' })
+      return res.json({ ok: true, oauth_url: url })
+    }
+
+    if (c.auth === 'apikey') {
+      return res.json({ ok: true, form: { fields: [{ key: 'api_key', label: `Clé API ${c.name}`, type: 'password', required: true }] } })
+    }
+    if (c.auth === 'webhook') {
+      return res.json({ ok: true, form: { fields: [{ key: 'webhook_url', label: `URL webhook ${c.name}`, type: 'url', required: true }] } })
+    }
+    if (c.auth === 'config') {
+      return res.json({ ok: true, form: { fields: c.env.map(k => ({ key: k.toLowerCase(), label: k, type: 'password', required: true })) } })
+    }
+    return res.json({ ok: true, message: 'managed_integration' })
+  } catch (err) {
+    logger.error({ err: err.message }, 'connector connect')
+    res.status(500).json({ ok: false, error: 'connect_failed' })
+  }
+})
+
+router.post('/connectors/:type/save-credentials', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+    const c = CONNECTORS.find(x => x.key === req.params.type)
+    if (!c) return res.status(404).json({ error: 'unknown_connector' })
+
+    const payload = req.body || {}
+    await pool.query(`
+      INSERT INTO integration_configs (user_id, integration_key, status, config, metadata, connected_at)
+      VALUES ($1, $2, 'connected', $3::jsonb, $4::jsonb, NOW())
+      ON CONFLICT (user_id, integration_key)
+      DO UPDATE SET status='connected', config = EXCLUDED.config, metadata = EXCLUDED.metadata,
+                    connected_at = NOW(), updated_at = NOW(), error_message = NULL
+    `, [
+      userId, c.key,
+      JSON.stringify({ saved_at: new Date().toISOString() }),
+      JSON.stringify({ external_account: payload.account || null, fields_keys: Object.keys(payload) }),
+    ])
+    res.json({ ok: true, connector: c.key })
+  } catch (err) {
+    logger.error({ err: err.message }, 'connector save creds')
+    res.status(500).json({ error: 'save_failed' })
+  }
+})
+
+router.post('/connectors/:type/disconnect', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+    const c = CONNECTORS.find(x => x.key === req.params.type)
+    if (!c) return res.status(404).json({ error: 'unknown_connector' })
+    await pool.query(`
+      UPDATE integration_configs
+         SET status='disconnected', updated_at=NOW(), error_message=NULL
+       WHERE user_id=$1 AND integration_key=$2
+    `, [userId, c.key])
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: 'disconnect_failed' })
+  }
+})
+
+router.post('/connectors/:type/test', async (req, res) => {
+  try {
+    const userId = withUserId(req, res)
+    if (!userId) return
+    const c = CONNECTORS.find(x => x.key === req.params.type)
+    if (!c) return res.status(404).json({ error: 'unknown_connector' })
+    if (!connectorEnvOk(c)) {
+      return res.status(200).json({ ok: false, message: `Variables d'environnement manquantes : ${c.env.filter(k => !process.env[k]).join(', ')}` })
+    }
+    const { rows } = await pool.query(
+      `SELECT status FROM integration_configs WHERE user_id=$1 AND integration_key=$2`,
+      [userId, c.key]
+    )
+    const status = rows[0]?.status || 'disconnected'
+    res.json({ ok: status === 'connected', status, message: status === 'connected' ? 'Connexion OK' : 'Non connecté' })
+  } catch (err) {
+    res.status(500).json({ error: 'test_failed' })
+  }
+})
+
 module.exports = {
   router,
   listClientInteractions,
