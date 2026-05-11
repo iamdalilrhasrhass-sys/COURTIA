@@ -285,6 +285,7 @@ const opportunitesRouter = require('./src/routes/opportunites')
 
 // LOT 7 — ARK Watch (surveillance proactive)
 const arkWatchRouter     = require('./src/routes/arkWatch')
+const voiceRouter        = require('./src/routes/voice')
 
 // LOT 8 — ARK Compose (génération documents conformité)
 const composeRouter      = require('./src/routes/compose')
@@ -354,6 +355,7 @@ app.use('/api/opportunites', verifyToken, opportunitesRouter)
 
 // LOT 7 — ARK Watch (surveillance proactive, protected)
 app.use('/api/ark-watch',    verifyToken, arkWatchRouter)
+app.use('/api/voice',        verifyToken, voiceRouter)
 
 // LOT 8 — ARK Compose (génération documents conformité, protected)
 app.use('/api/compose',      verifyToken, composeRouter)
