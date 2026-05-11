@@ -1,0 +1,463 @@
+openapi: 3.0.3
+info:
+  title: COURTIA Public API
+  description: |
+    API REST publique pour intégrer COURTIA avec vos outils (comptabilité, emailing, CRM, etc.)
+    
+    ## Authentification
+    Toutes les requêtes doivent inclure un header d'authentification :
+    ```
+    Authorization: Bearer sk-ark-XXXXXXXXXXXX
+    ```
+    
+    ## Rate Limiting
+    - 1000 requêtes par heure par clé API
+    - Headers de réponse : X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+    
+    ## Pagination
+    Les endpoints de liste supportent `limit` (max 1000) et `offset`.
+    
+  version: 1.0.0
+  contact:
+    name: COURTIA Support
+    email: api@courtiark.fr
+    url: https://courtiark.fr/aide
+
+servers:
+  - url: https://api.courtiark.fr/api/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Development
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: Clé API au format sk-ark-XXXX
+
+  schemas:
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        first_name:
+          type: string
+          example: "Jean"
+        last_name:
+          type: string
+          example: "Dupont"
+        email:
+          type: string
+          format: email
+          example: "jean.dupont@email.fr"
+        phone:
+          type: string
+          example: "+33612345678"
+        type:
+          type: string
+          enum: [individual, company]
+          example: "individual"
+        company_name:
+          type: string
+          nullable: true
+          example: null
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Contract:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        contract_number:
+          type: string
+          example: "CTR-2026-00123"
+        product_type:
+          type: string
+          example: "auto"
+        company:
+          type: string
+          example: "AXA"
+        premium_annual:
+          type: number
+          format: float
+          example: 850.00
+        status:
+          type: string
+          enum: [active, expired, cancelled, pending]
+          example: "active"
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        client_id:
+          type: integer
+        client_first_name:
+          type: string
+        client_last_name:
+          type: string
+
+    Commission:
+      type: object
+      properties:
+        id:
+          type: integer
+        contract_id:
+          type: integer
+        amount:
+          type: number
+          format: float
+          description: Montant en euros
+          example: 125.50
+        amount_cents:
+          type: integer
+          description: Montant en centimes
+          example: 12550
+        currency:
+          type: string
+          example: "EUR"
+        period_start:
+          type: string
+          format: date
+        period_end:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [pending, received, reconciled]
+        payment_date:
+          type: string
+          format: date
+          nullable: true
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        last_triggered_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+paths:
+  /me:
+    get:
+      summary: Informations du cabinet
+      description: Retourne les informations du cabinet authentifié
+      tags: [Cabinet]
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  cabinet_name:
+                    type: string
+                  plan:
+                    type: string
+                  api_key:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      scopes:
+                        type: array
+                        items:
+                          type: string
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /clients:
+    get:
+      summary: Liste des clients
+      description: Retourne la liste paginée des clients du cabinet
+      tags: [Clients]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: search
+          in: query
+          description: Recherche par nom, email ou entreprise
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '403':
+          description: Scope insuffisant (read:clients requis)
+
+  /clients/{id}:
+    get:
+      summary: Détail d'un client
+      tags: [Clients]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Détail du client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Client'
+        '404':
+          description: Client non trouvé
+
+  /contracts:
+    get:
+      summary: Liste des contrats
+      tags: [Contrats]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: client_id
+          in: query
+          description: Filtrer par client
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Filtrer par statut
+          schema:
+            type: string
+            enum: [active, expired, cancelled, pending]
+      responses:
+        '200':
+          description: Liste des contrats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contract'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /commissions:
+    get:
+      summary: Liste des commissions
+      tags: [Commissions]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: year
+          in: query
+          description: Filtrer par année
+          schema:
+            type: integer
+        - name: month
+          in: query
+          description: Filtrer par mois (1-12)
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, received, reconciled]
+      responses:
+        '200':
+          description: Liste des commissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Commission'
+                  summary:
+                    type: object
+                    properties:
+                      total_amount:
+                        type: number
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /webhooks:
+    get:
+      summary: Liste des webhooks
+      tags: [Webhooks]
+      responses:
+        '200':
+          description: Liste des webhooks configurés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+
+    post:
+      summary: Créer un webhook
+      tags: [Webhooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: "https://mon-app.com/webhooks/courtia"
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [client.created, client.updated, contract.created, contract.updated, commission.received]
+      responses:
+        '201':
+          description: Webhook créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  webhook:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      url:
+                        type: string
+                      events:
+                        type: array
+                        items:
+                          type: string
+                      secret:
+                        type: string
+                        description: Secret pour vérifier les signatures (retourné une seule fois)
+
+  /webhooks/{id}:
+    delete:
+      summary: Supprimer un webhook
+      tags: [Webhooks]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Webhook supprimé
+        '404':
+          description: Webhook non trouvé
+
+tags:
+  - name: Cabinet
+    description: Informations sur le cabinet authentifié
+  - name: Clients
+    description: Gestion des clients
+  - name: Contrats
+    description: Gestion des contrats
+  - name: Commissions
+    description: Suivi des commissions
+  - name: Webhooks
+    description: Configuration des webhooks pour notifications temps réel
