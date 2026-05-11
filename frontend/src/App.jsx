@@ -39,6 +39,14 @@ const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
 const BillingOnboarding = lazy(() => import('./pages/BillingOnboarding'))
 const CabinetOnboarding = lazy(() => import('./pages/CabinetOnboarding'))
 const DataOnboarding = lazy(() => import('./pages/Onboarding'))
+// LOT 13-15 — Pages V2 Premium Aurora
+const DashboardV2 = lazy(() => import('./pages/v2/DashboardV2'))
+const ClientsV2 = lazy(() => import('./pages/v2/ClientsV2'))
+const ArkWatchV2 = lazy(() => import('./pages/v2/ArkWatchV2'))
+const ComposeV2 = lazy(() => import('./pages/v2/ComposeV2'))
+const VoiceV2 = lazy(() => import('./pages/v2/VoiceV2'))
+const DocVisionV2 = lazy(() => import('./pages/v2/DocVisionV2'))
+const DesignSystem = lazy(() => import('./pages/DesignSystem'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Equipe = lazy(() => import('./pages/Equipe'))
 const InviteAccept = lazy(() => import('./pages/InviteAccept'))
@@ -257,6 +265,14 @@ export default function App() {
           <Route path="/parametres"    element={<Parametres />} />
           <Route path="/parametres/integrations" element={<Parametres />} />
           <Route path="/academy"       element={<Academy />} />
+          {/* LOT 13-15 — Routes V2 Premium Aurora */}
+          <Route path="/v2"            element={<DashboardV2 />} />
+          <Route path="/v2/clients"    element={<ClientsV2 />} />
+          <Route path="/v2/ark-watch"  element={<ArkWatchV2 />} />
+          <Route path="/v2/compose"    element={<ComposeV2 />} />
+          <Route path="/v2/voice"      element={<VoiceV2 />} />
+          <Route path="/v2/docvision"  element={<DocVisionV2 />} />
+          <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
           <Route path="/commissions"   element={<Commissions />} />
