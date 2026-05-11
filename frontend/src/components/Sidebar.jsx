@@ -7,7 +7,7 @@ import {
   Activity, ChevronRight, Sparkles, HelpCircle, GraduationCap,
   Sunrise, BarChart3, BarChart2, FileSignature, FolderOpen, Phone,
   Briefcase, CalendarDays, Target, Search, Globe, Users2, Wallet,
-  Bot, Building2, CreditCard, Database, BookOpen,
+  Bot, Building2, CreditCard, Database, BookOpen, Brain,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -82,6 +82,7 @@ const UNIVERSES = [
     glyph: '🤖',
     items: [
       { path: '/assistant-ark',         label: 'Assistant ARK',     icon: Bot },
+      { path: '/ark-intelligence',      label: 'Intelligence préd.',icon: Brain },
       { path: '/comparateur',           label: 'Comparateur',       icon: GitCompareArrows },
       { path: '/sante-portefeuille',    label: 'Santé portefeuille',icon: Activity },
       { path: '/commissions/calculator',label: 'Calc. commissions', icon: Calculator },
@@ -141,6 +142,23 @@ export default function Sidebar() {
     window.addEventListener('profileUpdated', update)
     return () => window.removeEventListener('profileUpdated', update)
   }, [])
+
+  // Sync mobile drawer with external topbar (AuroraMobileTopbar)
+  useEffect(() => {
+    const open = () => setMobileOpen(true)
+    const close = () => setMobileOpen(false)
+    window.addEventListener('courtia:open-sidebar', open)
+    window.addEventListener('courtia:close-sidebar', close)
+    return () => {
+      window.removeEventListener('courtia:open-sidebar', open)
+      window.removeEventListener('courtia:close-sidebar', close)
+    }
+  }, [])
+
+  // Close drawer on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   function logout() {
     clearStoredSession()
@@ -364,7 +382,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger */}
+      {/* Mobile hamburger — masqué : remplacé par AuroraMobileTopbar (courtia:open-sidebar event) */}
       <button
         onClick={() => setMobileOpen(true)}
         style={{
@@ -372,9 +390,10 @@ export default function Sidebar() {
           padding: 8, background: T.bg, border: `1px solid ${T.borderLight}`,
           borderRadius: 8, color: T.text, cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          display: 'none',
         }}
-        className="flex md:hidden"
-        aria-label="Ouvrir le menu"
+        aria-hidden="true"
+        tabIndex={-1}
       >
         <Menu size={20} />
       </button>

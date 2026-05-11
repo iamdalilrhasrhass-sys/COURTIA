@@ -102,6 +102,8 @@ const Beta = lazy(() => import('./pages/Beta'))
 const CommissionsCalculator = lazy(() => import('./pages/CommissionsCalculator'))
 const Comparateur = lazy(() => import('./pages/Comparateur'))
 const SantePortefeuille = lazy(() => import('./pages/SantePortefeuille'))
+// LOT FEATURES KILLERS — F1 ARK Predictive Intelligence
+const ArkIntelligence = lazy(() => import('./pages/ArkIntelligence'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
 // Components
@@ -120,6 +122,12 @@ import CourtiaLogoLoader from './components/brand/CourtiaLogoLoader'
 import RhasrhassSignature from './components/brand/RhasrhassSignature'
 import ErrorBoundary from './components/ErrorBoundary'
 
+// Mobile PWA — Aurora Bubble C
+import { AuroraMobileTopbar } from './components/aurora/AuroraMobileTopbar'
+import { AuroraBottomNav } from './components/aurora/AuroraBottomNav'
+import { AuroraMobileSheet } from './components/aurora/AuroraMobileSheet'
+import { AuroraMobileMore } from './components/aurora/AuroraMobileMore'
+
 // Stores / API
 import { usePlanStore } from './stores/planStore'
 import { onPaywallTriggered } from './api'
@@ -135,12 +143,41 @@ function ScrollToTop() {
 // Les pages enfants sont injectées via <Outlet /> (React Router nested routes)
 function AppLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const fetchPlanInfo = usePlanStore(s => s.fetchPlanInfo)
   const [paywallError, setPaywallError] = useState(null)
   const [cmdOpen, setCmdOpen] = useState(false)
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false)
+  const [notifCount, setNotifCount] = useState(0)
 
   useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
   useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
+
+  // Track mobile breakpoint
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 768px)')
+    const handler = (e) => setIsMobile(e.matches)
+    if (mq.addEventListener) mq.addEventListener('change', handler)
+    else mq.addListener(handler)
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler)
+      else mq.removeListener(handler)
+    }
+  }, [])
+
+  // Fetch notif count (light, cached, fails silently)
+  useEffect(() => {
+    let cancelled = false
+    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
+    if (!token) return
+    fetch('/api/notifications/unread-count', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && !cancelled && typeof d.count === 'number') setNotifCount(d.count) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [location.pathname])
 
   // Global Cmd+K / Ctrl+K listener
   const handleKeyDown = useCallback((e) => {
@@ -155,6 +192,14 @@ function AppLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('courtia_token')
+    localStorage.removeItem('token')
+    sessionStorage.removeItem('courtia_token')
+    sessionStorage.removeItem('token')
+    navigate('/login')
+  }, [navigate])
+
   return (
     <div className="courtia-cockpit-shell" style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <div className="courtia-cockpit-aurora" aria-hidden="true" />
@@ -164,7 +209,25 @@ function AppLayout() {
       <div className="courtia-bubble-orb courtia-bubble-orb--violet courtia-bubble-orb--app-left" aria-hidden="true" />
       <div className="courtia-bubble-orb courtia-bubble-orb--cyan courtia-bubble-orb--app-right" aria-hidden="true" />
       <Sidebar />
-      <main className="courtia-cockpit-main courtia-depth-stage flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Mobile Topbar — burger / logo / bell */}
+      {isMobile && (
+        <AuroraMobileTopbar
+          onMenuClick={() => window.dispatchEvent(new Event('courtia:open-sidebar'))}
+          onBellClick={() => navigate('/taches')}
+          notificationsCount={notifCount}
+        />
+      )}
+
+      <main
+        className="courtia-cockpit-main courtia-depth-stage flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0"
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          paddingBottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : 0,
+        }}
+      >
         <ImpersonationBanner />
         <div style={{ flex: 1 }}>
           <Outlet />
@@ -173,6 +236,7 @@ function AppLayout() {
           <RhasrhassSignature compact />
         </footer>
       </main>
+
       <PaywallModal
         open={!!paywallError}
         error={paywallError}
@@ -180,33 +244,60 @@ function AppLayout() {
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
-      <div style={{ position: 'fixed', right: 20, bottom: 68, zIndex: 200 }}>
-        <NotificationBell />
-      </div>
+
+      {/* NotificationBell — caché en mobile, présent dans la topbar */}
+      {!isMobile && (
+        <div style={{ position: 'fixed', right: 20, bottom: 68, zIndex: 200 }}>
+          <NotificationBell />
+        </div>
+      )}
       <FeedbackButton />
       <ArkBubble />
 
-      {/* Bouton de secours Cmd+K */}
-      <button
-        onClick={() => setCmdOpen(true)}
-        title="Ouvrir la palette (⌘K)"
-        style={{
-          position: 'fixed', bottom: 20, right: 20, zIndex: 200,
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 14px',
-          background: '#080808', color: 'white',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 10, cursor: 'pointer',
-          fontSize: 12, fontWeight: 600,          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
-        onMouseLeave={e => e.currentTarget.style.background = '#080808'}
+      {/* Bottom Nav mobile : Cockpit / Clients / ARK / Actions / Plus */}
+      {isMobile && (
+        <AuroraBottomNav
+          notificationsCount={notifCount}
+          onMoreClick={() => setMoreSheetOpen(true)}
+        />
+      )}
+
+      {/* More Sheet (drawer bottom) — features secondaires */}
+      <AuroraMobileSheet
+        open={moreSheetOpen}
+        onClose={() => setMoreSheetOpen(false)}
+        title="Plus"
+        snapPoints={['65%', '92%']}
       >
-        <span style={{ fontSize: 13 }}>⌘K</span>
-        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Recherche</span>
-      </button>
+        <AuroraMobileMore
+          onClose={() => setMoreSheetOpen(false)}
+          onLogout={handleLogout}
+        />
+      </AuroraMobileSheet>
+
+      {/* Bouton de secours Cmd+K — desktop only */}
+      {!isMobile && (
+        <button
+          onClick={() => setCmdOpen(true)}
+          title="Ouvrir la palette (⌘K)"
+          style={{
+            position: 'fixed', bottom: 20, right: 20, zIndex: 200,
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '8px 14px',
+            background: '#080808', color: 'white',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 10, cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
+          onMouseLeave={e => e.currentTarget.style.background = '#080808'}
+        >
+          <span style={{ fontSize: 13 }}>⌘K</span>
+          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Recherche</span>
+        </button>
+      )}
     </div>
   )
 }
@@ -312,6 +403,7 @@ export default function App() {
           <Route path="/commissions/calculator" element={<CommissionsCalculator />} />
           <Route path="/comparateur" element={<Comparateur />} />
           <Route path="/sante-portefeuille" element={<SantePortefeuille />} />
+          <Route path="/ark-intelligence" element={<ArkIntelligence />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
