@@ -44,7 +44,7 @@ describe('googleIntegrationService', () => {
   it('encodes an RFC 822 Gmail message as base64url', () => {
     const raw = encodeGmailRawMessage({
       to: 'client@example.com',
-      from: 'broker@courtia.fr',
+      from: 'broker@courtiark.fr',
       subject: 'Relance échéance',
       body: 'Bonjour, votre échéance approche.',
     })

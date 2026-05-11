@@ -43,7 +43,7 @@ describe('emailService transactional provider', () => {
 
   it('sends through Resend when RESEND_API_KEY is configured', async () => {
     process.env.RESEND_API_KEY = 're_test'
-    process.env.EMAIL_FROM = 'COURTIA <noreply@courtia.fr>'
+    process.env.EMAIL_FROM = 'COURTIA <noreply@courtiark.fr>'
     const axios = require('axios')
     axios.post.mockResolvedValue({ data: { id: 'email_123' } })
 
@@ -58,7 +58,7 @@ describe('emailService transactional provider', () => {
     expect(axios.post).toHaveBeenCalledWith(
       'https://api.resend.com/emails',
       expect.objectContaining({
-        from: 'COURTIA <noreply@courtia.fr>',
+        from: 'COURTIA <noreply@courtiark.fr>',
         to: ['client@example.com'],
         subject: 'Invitation',
       }),

@@ -162,7 +162,7 @@ async function createInvitation(pool, { actorUserId, email, role, frontendUrl })
     [actorMembership.cabinet_id, normalizedEmail, normalizedRole, tokenHash, tokenPreview, actorUserId, expiresAt]
   )
 
-  const baseUrl = String(frontendUrl || process.env.FRONTEND_URL || 'https://courtia.vercel.app').replace(/\/$/, '')
+  const baseUrl = String(frontendUrl || process.env.FRONTEND_URL || 'https://app.courtiark.fr').replace(/\/$/, '')
   return {
     invitation: result.rows[0],
     rawToken,

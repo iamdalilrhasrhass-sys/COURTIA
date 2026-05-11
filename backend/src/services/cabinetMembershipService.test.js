@@ -107,7 +107,7 @@ describe('cabinetMembershipService', () => {
   test('allows owner to create invitation and returns only the raw token once', async () => {
     const pool = createPoolMock()
     await service.ensureUserCabinet(pool, 1, { cabinet: 'Cabinet test' })
-    const invite = await service.createInvitation(pool, { actorUserId: 1, email: 'assistant@cabinet.fr', role: 'assistant', frontendUrl: 'https://courtia.vercel.app' })
+    const invite = await service.createInvitation(pool, { actorUserId: 1, email: 'assistant@cabinet.fr', role: 'assistant', frontendUrl: 'https://app.courtiark.fr' })
     expect(invite.invitation.email).toBe('assistant@cabinet.fr')
     expect(invite.inviteLink).toContain('/invite/')
     expect(invite.rawToken).toHaveLength(64)
@@ -118,13 +118,13 @@ describe('cabinetMembershipService', () => {
     const pool = createPoolMock()
     const owner = await service.ensureUserCabinet(pool, 1, { cabinet: 'Cabinet test' })
     pool.state.memberships.push({ id: 'member-2', cabinet_id: owner.cabinet_id, user_id: 2, role: 'manager' })
-    await expect(service.createInvitation(pool, { actorUserId: 2, email: 'viewer@cabinet.fr', role: 'viewer', frontendUrl: 'https://courtia.vercel.app' })).rejects.toMatchObject({ code: 'FORBIDDEN_ROLE' })
+    await expect(service.createInvitation(pool, { actorUserId: 2, email: 'viewer@cabinet.fr', role: 'viewer', frontendUrl: 'https://app.courtiark.fr' })).rejects.toMatchObject({ code: 'FORBIDDEN_ROLE' })
   })
 
   test('accepts an invitation once and creates the target membership', async () => {
     const pool = createPoolMock()
     await service.ensureUserCabinet(pool, 1, { cabinet: 'Cabinet test' })
-    const invite = await service.createInvitation(pool, { actorUserId: 1, email: 'broker@cabinet.fr', role: 'broker', frontendUrl: 'https://courtia.vercel.app' })
+    const invite = await service.createInvitation(pool, { actorUserId: 1, email: 'broker@cabinet.fr', role: 'broker', frontendUrl: 'https://app.courtiark.fr' })
     const accepted = await service.acceptInvitation(pool, { token: invite.rawToken, userId: 42 })
     expect(accepted.membership.role).toBe('broker')
     expect(accepted.membership.user_id).toBe(42)

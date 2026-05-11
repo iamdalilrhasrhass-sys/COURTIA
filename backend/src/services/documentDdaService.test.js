@@ -21,7 +21,7 @@ describe('documentDdaService', () => {
     const variables = buildDdaVariables({
       type: 'fic',
       client: { id: 12, first_name: 'Sophie', last_name: 'Martin', email: 'sophie@example.fr', ville: 'Paris' },
-      courtier: { first_name: 'Dalil', last_name: 'Rhasrhass', email: 'dalil@courtia.fr' },
+      courtier: { first_name: 'Dalil', last_name: 'Rhasrhass', email: 'dalil@courtiark.fr' },
       cabinet: { name: 'Cabinet Aurora', orias_number: '07000000' },
       contract: { type: 'Auto', company: 'Axa' },
     })
