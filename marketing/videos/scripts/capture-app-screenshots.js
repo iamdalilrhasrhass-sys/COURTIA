@@ -20,7 +20,7 @@ const BASE_URL = String(
   'https://courtia.vercel.app'
 ).replace(/\/+$/, '')
 
-const E2E_EMAIL = process.env.E2E_EMAIL || 'e2e@courtia.fr'
+const E2E_EMAIL = process.env.E2E_EMAIL || 'e2e@courtiark.fr'
 const DALIL_EMAIL = process.env.DALIL_EMAIL || 'dalil@repairebrise.fr'
 const DALIL_PASSWORD = process.env.DALIL_PASSWORD || 'pass123'
 

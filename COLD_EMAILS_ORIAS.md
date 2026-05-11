@@ -44,7 +44,7 @@ COURTIA fait 3 choses qu'aucun autre outil ne fait pour les courtiers français 
 3. **Alertes échéances J-90/J-30/J-15** : plus jamais un renouvellement raté.
 
 Vous pouvez tester avec un compte démo ici : https://courtia.vercel.app
-(demo@courtia.fr / Demo2026!)
+(demo@courtiark.fr / Demo2026!)
 
 Dalil
 
@@ -108,7 +108,7 @@ Je ne veux pas vous déranger davantage.
 
 Si COURTIA n'est pas fait pour vous maintenant, c'est tout à fait normal — peut-être que Excel ou votre outil actuel suffisent.
 
-Mais si jamais vous changez d'avis, je suis disponible : dalil@courtia.fr
+Mais si jamais vous changez d'avis, je suis disponible : dalil@courtiark.fr
 
 Bonne continuation,
 

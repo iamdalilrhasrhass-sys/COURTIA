@@ -96,7 +96,7 @@
 | Prix | ✅ Starter 89€, Pro 159€, Premium sur devis |
 | Checkout | ✅ URL valide générée pour Starter et Pro |
 | Essai 7 jours | ⚠️ Wording OK côté frontend, trial techniquement à vérifier dans Stripe |
-| Webhook | ⛔ Bloqué : nécessite URL HTTPS (api.courtia.fr + Certbot) |
+| Webhook | ⛔ Bloqué : nécessite URL HTTPS (api.courtiark.fr + Certbot) |
 | Verdict | ✅ CHECKOUT OK, Webhook bloqué par DNS |
 
 ---
@@ -147,7 +147,7 @@
 ## 11. Ce qui reste à faire plus tard
 | Sujet | Priorité | Bloquant ? |
 |-------|----------|------------|
-| api.courtia.fr / DNS IONOS | Haute | ❌ Webhook Stripe |
+| api.courtiark.fr / DNS IONOS | Haute | ❌ Webhook Stripe |
 | Certbot SSL VPS | Haute | ❌ Webhook Stripe |
 | Clé API DeepSeek à mettre à jour | Haute | ✅ Non bloquant (ARK indisponible) |
 | Pages légales (mentions, CGU, CGV) | Moyenne | ❌ Conformité |

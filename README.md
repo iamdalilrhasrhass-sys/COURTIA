@@ -19,7 +19,7 @@ COURTIA est un cockpit IA pour courtiers en assurance français.
 
 ## Environnements
 
-- Production app: [https://courtia.vercel.app](https://courtia.vercel.app)
+- Production app: [https://app.courtiark.fr](https://app.courtiark.fr)
 - API production: `https://api.courtiark.fr/api`
 
 ## Installation locale

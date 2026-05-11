@@ -176,7 +176,7 @@ psql postgresql://crm_user:password@localhost:5432/crm_assurance
 
 # Ajouter compte démo:
 INSERT INTO users (email, password, first_name, last_name, role, created_at)
-VALUES ('demo@courtia.fr', '$2b$10$...', 'Demo', 'Account', 'broker', NOW());
+VALUES ('demo@courtiark.fr', '$2b$10$...', 'Demo', 'Account', 'broker', NOW());
 
 # (Le mot de passe sera hashé avec bcrypt: demo2026)
 ```
@@ -186,7 +186,7 @@ VALUES ('demo@courtia.fr', '$2b$10$...', 'Demo', 'Account', 'broker', NOW());
 curl -X POST https://courtia-backend-xxxx.up.railway.app/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "email":"demo@courtia.fr",
+    "email":"demo@courtiark.fr",
     "password":"demo2026",
     "firstName":"Demo",
     "lastName":"Courtia"
@@ -279,7 +279,7 @@ Frontend URL: https://courtia.vercel.app
 
 Login:
 - Email: dalil@test.com / password123
-- Email: demo@courtia.fr / demo2026
+- Email: demo@courtiark.fr / demo2026
 
 Features Actives:
 ✅ Authentification JWT

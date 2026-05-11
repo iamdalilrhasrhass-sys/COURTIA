@@ -80,7 +80,7 @@ curl https://courtia-backend-production.up.railway.app/health
 # Test login
 curl -X POST https://courtia-backend-production.up.railway.app/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"demo@courtia.fr","password":"demo2026"}'
+  -d '{"email":"demo@courtiark.fr","password":"demo2026"}'
 
 # Test ARK
 curl -X POST https://courtia-backend-production.up.railway.app/api/ark/chat \
