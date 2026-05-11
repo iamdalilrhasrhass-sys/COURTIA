@@ -272,6 +272,7 @@ const searchRouter         = require('./src/routes/search')
 const templatesRouter      = require('./src/routes/templates')
 const feedbackRouter       = require('./src/routes/feedback')
 const adminFeedbackRouter  = require('./src/routes/adminFeedback')
+const clientDocumentsRouter = require('./src/routes/clientDocuments')
 
 // Public
 app.use('/api/auth',   authRouter)
@@ -323,6 +324,9 @@ app.use('/api/extension',      verifyToken, extensionRouter)
 app.use('/api/partners',       verifyToken, partnersRouter)
 app.use('/api/notifications',  notificationsRouter)
 app.use('/api/admin/feedback', verifyToken, adminFeedbackRouter)
+
+// Client Documents (LOT 4) — auth gérée par route (routes publiques + protégées)
+app.use('/api', clientDocumentsRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
