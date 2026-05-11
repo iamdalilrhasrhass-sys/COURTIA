@@ -12,6 +12,11 @@ import Rapports from './pages/Rapports'
 import Parametres from './pages/Parametres'
 import LandingPublic from './pages/LandingPublic'
 import MorningBrief from './pages/MorningBrief'
+import Devis from './pages/Devis'
+import Relances from './pages/Relances'
+import Opportunites from './pages/Opportunites'
+import Partenaires from './pages/Partenaires'
+import Prospection from './pages/Prospection'
 
 // Admin pages
 const ClientDetail = lazy(() => import('./pages/ClientDetail'))
@@ -41,6 +46,7 @@ const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const Commissions = lazy(() => import('./pages/Commissions'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
+const ShowcaseVideo = lazy(() => import('./pages/ShowcaseVideo'))
 const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
 const DemoPublic = lazy(() => import('./pages/DemoPublic'))
 const ContactPublic = lazy(() => import('./pages/ContactPublic'))
@@ -217,6 +223,7 @@ export default function App() {
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/dev/ui" element={<DevUi />} />
+        <Route path="/video-showcase" element={import.meta.env.DEV ? <ShowcaseVideo /> : <Navigate to="/" replace />} />
         <Route path="/" element={<LandingPublic />} />
 
         {/* Routes privées — ProtectedRoute avec plan gating */}
@@ -238,6 +245,12 @@ export default function App() {
           <Route path="/contrats"      element={<Contrats />} />
           <Route path="/contrats/new"  element={<ContratNew />} />
           <Route path="/taches"        element={<Taches />} />
+          <Route path="/devis"        element={<Devis />} />
+          <Route path="/relances"     element={<Relances />} />
+          <Route path="/opportunites" element={<Opportunites />} />
+          <Route path="/partenaires"  element={<Partenaires />} />
+          <Route path="/prospection"  element={<Prospection />} />
+          <Route path="/assistant-ark" element={<Capitia />} />
           <Route path="/rapports"      element={<Rapports />} />
           <Route path="/parametres"    element={<Parametres />} />
           <Route path="/parametres/integrations" element={<Parametres />} />
