@@ -16,6 +16,11 @@ const {
   rewriteFallback,
 } = require('../services/arkProactiveService')
 
+// LOT 3: Services ARK Anthropic Claude
+const { callArk, callArkLight, callArkStructured, checkRateLimit } = require('../services/arkEngine')
+const { getClientContext, getPortfolioContext, getMorningBriefContext, getMessageContext, getComplianceContext } = require('../services/arkContext')
+const { getPrompt, PROMPTS } = require('../services/arkPrompts')
+
 // Initialisation client DeepSeek (compatible OpenAI SDK)
 const openai = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'dummy_key_to_prevent_startup_crash',
@@ -574,276 +579,566 @@ Reponds UNIQUEMENT avec ce JSON:
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LOT 2 STUBS — Routes d'actions ARK (réponses mockées)
-// TODO: Implémenter avec Anthropic Claude dans LOT 3
+// LOT 3: Routes ARK avec Anthropic Claude (implémentation réelle)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function logArkStub(route, params = {}) {
-  console.log(`[ARK STUB] ${route}`, JSON.stringify(params))
-  logger.info({ route, params, stub: true }, 'ARK stub called')
+// Helper: obtenir userId de façon sécurisée
+function getArkUserId(req) {
+  return Number(req.user?.userId || req.user?.id || 0)
 }
 
-// POST /api/ark/actions — Exécuter une action ARK
-router.post('/actions', async (req, res) => {
-  logArkStub('/actions', { action: req.body?.action })
-  const action = req.body?.action || 'unknown'
+// Helper: valider clientId (numérique uniquement)
+function validateClientId(id) {
+  const parsed = parseInt(id, 10)
+  if (isNaN(parsed) || parsed <= 0) return null
+  return parsed
+}
 
-  res.json({
-    success: true,
-    mock: true,
-    action,
-    data: {
-      summary: `Action "${action}" simulée avec succès`,
-      cards: [{
-        type: 'info',
-        title: 'Action ARK Mock',
-        content: `L'action ${action} a été traitée (mode stub)`,
-        priority: 'medium',
-        action: { kind: 'navigate', label: 'Voir détails', target: { type: 'page', id: '/dashboard' } }
-      }],
-      meta: { model: 'stub-mock', tokens: { input: 0, output: 0 }, latencyMs: 50, cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Implémenter avec Anthropic Claude API'
-  })
+// POST /api/ark/actions — Dispatcher central des actions ARK
+router.post('/actions', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+
+    const { action, params = {}, context = {} } = req.body
+    if (!action) return res.status(400).json({ error: 'action_required', message: 'Action requise' })
+
+    logger.info({ userId, action, params }, 'ARK action requested')
+
+    const prompt = getPrompt('actions')
+    const result = await callArk({
+      system: prompt.system,
+      user: `Action demandée: ${action}\nParamètres: ${JSON.stringify(params)}\nContexte page: ${JSON.stringify(context)}`,
+      context: { action, params, pageContext: context },
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      route: 'actions'
+    })
+
+    if (result.error) {
+      return res.status(503).json({
+        error: result.error,
+        message: result.message,
+        configuration_required: true
+      })
+    }
+
+    res.json({
+      success: true,
+      action,
+      data: result.structured || { summary: result.text },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err }, 'ARK actions failed')
+    res.status(500).json({ error: 'ark_actions_failed', message: err.message })
+  }
 })
 
 // GET /api/ark/client/:id/brief — Résumé client compact
-router.get('/client/:id/brief', async (req, res) => {
-  const clientId = req.params.id
-  logArkStub('/client/:id/brief', { clientId })
+router.get('/client/:id/brief', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'client_brief',
-    data: {
-      clientId: Number(clientId),
-      summary: 'Client actif avec 3 contrats. Dernière interaction il y a 15 jours. Score fidélité: 78/100.',
-      keyPoints: [
-        'Portfolio diversifié: Auto + MRH + Santé',
-        'Échéance Auto dans 45 jours - préparer renouvellement',
-        'Opportunité Prévoyance détectée'
-      ],
-      suggestedActions: [
-        { kind: 'call', label: 'Appeler pour bilan', priority: 'high' },
-        { kind: 'email', label: 'Envoyer offre Prévoyance', priority: 'medium' },
-        { kind: 'task', label: 'Préparer renouvellement Auto', priority: 'high' }
-      ],
-      scores: { fidelite: 78, risque: 22, opportunite: 65 },
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Générer brief avec Claude Haiku'
-  })
+    const clientId = validateClientId(req.params.id)
+    if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
+
+    // Récupérer contexte client
+    const clientContext = await getClientContext(clientId, userId)
+    if (clientContext.error) {
+      return res.status(404).json({ error: clientContext.error, message: clientContext.message })
+    }
+
+    const prompt = getPrompt('clientBrief')
+    const result = await callArkLight({
+      system: prompt.system,
+      user: `Génère un brief pour ce client.`,
+      context: clientContext,
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      clientId,
+      route: 'client_brief'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'client_brief',
+      data: {
+        clientId,
+        ...(result.structured || { summary: result.text })
+      },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err, clientId: req.params.id }, 'ARK client brief failed')
+    res.status(500).json({ error: 'ark_client_brief_failed', message: err.message })
+  }
 })
 
 // GET /api/ark/client/:id/next-best-actions — Meilleures actions client
-router.get('/client/:id/next-best-actions', async (req, res) => {
-  const clientId = req.params.id
-  logArkStub('/client/:id/next-best-actions', { clientId })
+router.get('/client/:id/next-best-actions', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'next_best_actions',
-    data: {
-      clientId: Number(clientId),
-      actions: [
-        { rank: 1, kind: 'call', label: 'Appeler pour bilan annuel', rationale: 'Dernière interaction il y a 30+ jours', impact: 'high', estimatedTime: '15 min' },
-        { rank: 2, kind: 'email', label: 'Envoyer comparatif Auto', rationale: 'Échéance dans 45 jours', impact: 'high', estimatedTime: '10 min' },
-        { rank: 3, kind: 'task', label: 'Mettre à jour coordonnées', rationale: 'Email bounce détecté', impact: 'medium', estimatedTime: '5 min' }
-      ],
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Calculer NBA avec scoring ML'
-  })
+    const clientId = validateClientId(req.params.id)
+    if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
+
+    const clientContext = await getClientContext(clientId, userId)
+    if (clientContext.error) {
+      return res.status(404).json({ error: clientContext.error, message: clientContext.message })
+    }
+
+    const prompt = getPrompt('nextBestActions')
+    const result = await callArk({
+      system: prompt.system,
+      user: `Calcule les 5 meilleures actions pour ce client. Priorise selon urgence, valeur et probabilité de succès.`,
+      context: clientContext,
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      clientId,
+      route: 'next_best_actions'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'next_best_actions',
+      data: {
+        clientId,
+        ...(result.structured || { actions: [] })
+      },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err, clientId: req.params.id }, 'ARK next-best-actions failed')
+    res.status(500).json({ error: 'ark_nba_failed', message: err.message })
+  }
 })
 
 // POST /api/ark/client/:id/documents-analysis — Analyse documents client
-router.post('/client/:id/documents-analysis', async (req, res) => {
-  const clientId = req.params.id
-  const documents = req.body?.documents || []
-  logArkStub('/client/:id/documents-analysis', { clientId, docCount: documents.length })
+// NOTE: Implémentation complète avec OCR + Claude Vision prévue dans LOT 4
+router.post('/client/:id/documents-analysis', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'documents_analysis',
-    data: {
-      clientId: Number(clientId),
-      analyzedCount: documents.length,
-      results: [{
-        documentId: 'doc_mock_1',
-        type: 'contrat_assurance',
-        extractedData: { compagnie: 'AXA', typeContrat: 'Auto', primeAnnuelle: 620, dateEcheance: '2026-07-15' },
-        confidence: 0.92,
-        warnings: []
-      }],
-      summary: 'Documents analysés avec succès. 1 contrat détecté.',
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Implémenter OCR + analyse avec Claude Vision'
-  })
+    const clientId = validateClientId(req.params.id)
+    if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
+
+    const documents = req.body?.documents || []
+
+    logger.info({ userId, clientId, docCount: documents.length }, 'ARK documents-analysis requested (LOT 4 pending)')
+
+    // Pour LOT 3: retourner structure de base + indication LOT 4
+    res.json({
+      success: true,
+      action: 'documents_analysis',
+      data: {
+        clientId,
+        status: 'pending_implementation',
+        message: 'Analyse documentaire avancée disponible dans la prochaine version (LOT 4)',
+        analyzedCount: documents.length,
+        expectedCapabilities: [
+          'OCR des contrats et attestations',
+          'Extraction automatique des données clés',
+          'Détection des clauses importantes',
+          'Comparaison avec le marché',
+          'Alertes sur incohérences'
+        ],
+        basicAnalysis: documents.length > 0 ? {
+          documentsReceived: documents.length,
+          types: documents.map(d => d.type || 'unknown'),
+          totalSize: documents.reduce((sum, d) => sum + (d.size || 0), 0)
+        } : null,
+        plannedRelease: 'LOT 4'
+      },
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err, clientId: req.params.id }, 'ARK documents-analysis failed')
+    res.status(500).json({ error: 'ark_documents_analysis_failed', message: err.message })
+  }
 })
 
 // POST /api/ark/client/:id/quote-assistant — Assistant devis
-router.post('/client/:id/quote-assistant', async (req, res) => {
-  const clientId = req.params.id
-  logArkStub('/client/:id/quote-assistant', { clientId })
+router.post('/client/:id/quote-assistant', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'quote_assistant',
-    data: {
-      clientId: Number(clientId),
-      suggestions: {
-        recommendedProduct: 'MRH Confort Plus',
-        recommendedPrime: 520,
-        rationale: 'Profil client compatible. Meilleur rapport garanties/prix.',
-        alternatives: [
-          { product: 'MRH Essentiel', prime: 380, note: 'Économique mais couverture limitée' },
-          { product: 'MRH Premium', prime: 720, note: 'Couverture complète avec assistance' }
-        ]
+    const clientId = validateClientId(req.params.id)
+    if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
+
+    const { productType, needs, budget } = req.body || {}
+
+    const clientContext = await getClientContext(clientId, userId)
+    if (clientContext.error) {
+      return res.status(404).json({ error: clientContext.error, message: clientContext.message })
+    }
+
+    const prompt = getPrompt('quoteAssistant')
+    const userMessage = `Aide-moi à préparer un devis pour ce client.
+Type de produit souhaité: ${productType || 'Non spécifié'}
+Besoins exprimés: ${needs || 'À déterminer'}
+Budget indicatif: ${budget || 'Non communiqué'}`
+
+    const result = await callArk({
+      system: prompt.system,
+      user: userMessage,
+      context: {
+        ...clientContext,
+        quoteRequest: { productType, needs, budget }
       },
-      warnings: ['Vérifier la valeur du contenu déclarée', 'Proposer la garantie Vol si zone sensible'],
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Assistant intelligent avec Claude'
-  })
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      clientId,
+      route: 'quote_assistant'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'quote_assistant',
+      data: {
+        clientId,
+        ...(result.structured || {
+          analysis: result.text,
+          questionsToAsk: [],
+          documentsRequired: [],
+          coverageSuggestions: []
+        })
+      },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err, clientId: req.params.id }, 'ARK quote-assistant failed')
+    res.status(500).json({ error: 'ark_quote_assistant_failed', message: err.message })
+  }
 })
 
 // POST /api/ark/compliance-check — Vérification conformité
-router.post('/compliance-check', async (req, res) => {
-  const { clientId } = req.body || {}
-  logArkStub('/compliance-check', { clientId })
+router.post('/compliance-check', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'compliance_check',
-    data: {
-      clientId,
-      overallStatus: 'warning',
-      checks: [
-        { rule: 'DDA - Devoir de conseil', status: 'warning', message: 'Fiche de recueil des besoins non complétée', action: 'Compléter la fiche IPID' },
-        { rule: 'ORIAS - Vérification inscription', status: 'ok', message: 'Courtier enregistré et actif' },
-        { rule: 'Loi Hamon - Information résiliation', status: 'ok', message: 'Mention obligatoire présente' },
-        { rule: 'RGPD - Consentement', status: 'pending', message: 'Vérifier le consentement marketing' }
-      ],
-      recommendations: ['Compléter la fiche IPID avant signature', 'Faire signer le mandat de courtage'],
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Analyse conformité avec Claude Sonnet'
-  })
+    const { clientId } = req.body || {}
+    const parsedClientId = clientId ? validateClientId(clientId) : null
+
+    let complianceContext = {}
+    if (parsedClientId) {
+      complianceContext = await getComplianceContext(parsedClientId, userId)
+      if (complianceContext.error) {
+        return res.status(404).json({ error: complianceContext.error, message: complianceContext.message })
+      }
+    }
+
+    const prompt = getPrompt('complianceCheck')
+    const result = await callArk({
+      system: prompt.system,
+      user: parsedClientId
+        ? `Audite la conformité du dossier client.`
+        : `Génère un checklist de conformité générale pour un courtier.`,
+      context: complianceContext,
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      clientId: parsedClientId,
+      route: 'compliance_check'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'compliance_check',
+      data: {
+        clientId: parsedClientId,
+        ...(result.structured || {
+          overallStatus: 'unknown',
+          checks: [],
+          recommendations: []
+        })
+      },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err }, 'ARK compliance-check failed')
+    res.status(500).json({ error: 'ark_compliance_check_failed', message: err.message })
+  }
 })
 
 // GET /api/ark/portfolio-health — Santé portefeuille
-router.get('/portfolio-health', async (req, res) => {
-  logArkStub('/portfolio-health', { userId: req.user?.id })
+router.get('/portfolio-health', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'portfolio_health',
-    data: {
-      overallScore: 78,
-      scoreChange: -2,
-      period: 'month',
-      metrics: {
-        retention: { score: 85, label: 'Rétention', trend: 'stable' },
-        growth: { score: 72, label: 'Croissance', trend: 'up' },
-        diversification: { score: 68, label: 'Diversification', trend: 'down' },
-        profitability: { score: 82, label: 'Rentabilité', trend: 'stable' }
+    const portfolioContext = await getPortfolioContext(userId)
+
+    const prompt = getPrompt('portfolioHealth')
+    const result = await callArk({
+      system: prompt.system,
+      user: `Analyse la santé de mon portefeuille et génère un rapport.`,
+      context: portfolioContext,
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      route: 'portfolio_health'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'portfolio_health',
+      data: result.structured || {
+        overallScore: 0,
+        metrics: {},
+        alerts: [],
+        recommendations: []
       },
-      alerts: [
-        { severity: 'high', message: '5 contrats à échéance cette semaine' },
-        { severity: 'medium', message: '12 clients silencieux depuis 30+ jours' }
-      ],
-      recommendations: ['Prioriser les renouvellements', 'Lancer campagne réactivation'],
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Analyse portefeuille avec ML'
-  })
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err }, 'ARK portfolio-health failed')
+    res.status(500).json({ error: 'ark_portfolio_health_failed', message: err.message })
+  }
 })
 
-// POST /api/ark/generate — Générer contenu (email/sms/script)
-router.post('/generate', async (req, res) => {
-  const { type, context } = req.body || {}
-  logArkStub('/generate', { type, clientId: context?.clientId })
+// POST /api/ark/generate — Générer contenu (email/sms/whatsapp)
+// Alias: POST /api/ark/generate-message
+router.post('/generate', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  const templates = {
-    email: {
-      subject: 'Votre contrat arrive à échéance',
-      body: 'Bonjour [Prénom],\n\nJe me permets de vous contacter car votre contrat [Type] arrive à échéance le [Date].\n\nSeriez-vous disponible pour un échange téléphonique cette semaine ?\n\nBien cordialement,\n[Signature]'
-    },
-    sms: { content: 'Bonjour [Prénom], votre contrat [Type] arrive à échéance. Appelons-nous pour faire le point ? [Courtier]' },
-    call_script: {
-      intro: 'Bonjour M./Mme [Nom], c\'est [Courtier] de [Cabinet].',
-      context: 'Je vous appelle concernant votre contrat [Type] qui arrive à échéance.',
-      questions: ['Comment allez-vous ?', 'Des changements cette année ?', 'Satisfait des garanties ?'],
-      closing: 'Je vous envoie un comparatif par email. Quel est le meilleur moment pour vous rappeler ?'
+    const { type, clientId, channel, intent, tone, context: bodyContext } = req.body || {}
+    const messageChannel = channel || type || 'email'
+    const parsedClientId = clientId ? validateClientId(clientId) : (bodyContext?.clientId ? validateClientId(bodyContext.clientId) : null)
+
+    let messageContext = {}
+    if (parsedClientId) {
+      messageContext = await getMessageContext(parsedClientId, userId)
+      if (messageContext.error) {
+        return res.status(404).json({ error: messageContext.error, message: messageContext.message })
+      }
     }
-  }
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'generate',
-    data: {
-      type,
-      generated: templates[type] || templates.email,
-      variables: ['Prénom', 'Nom', 'Type', 'Date', 'Courtier', 'Cabinet', 'Signature'],
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Génération personnalisée avec Claude Haiku'
-  })
+    const prompt = getPrompt('generateMessage')
+    const userMessage = `Génère un message ${messageChannel.toUpperCase()} pour ce client.
+Intent: ${intent || 'relance'}
+Ton souhaité: ${tone || 'professionnel'}
+${bodyContext?.subject ? 'Sujet: ' + bodyContext.subject : ''}`
+
+    const result = await callArkLight({
+      system: prompt.system,
+      user: userMessage,
+      context: {
+        ...messageContext,
+        channel: messageChannel,
+        intent,
+        tone
+      },
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      clientId: parsedClientId,
+      route: 'generate_message'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'generate',
+      data: {
+        type: messageChannel,
+        clientId: parsedClientId,
+        generated: result.structured || { content: result.text },
+        variables: result.structured?.variables || []
+      },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err }, 'ARK generate failed')
+    res.status(500).json({ error: 'ark_generate_failed', message: err.message })
+  }
+})
+
+// Alias pour /generate-message
+router.post('/generate-message', verifyToken, async (req, res) => {
+  // Réutiliser la logique de /generate
+  req.url = '/generate'
+  router.handle(req, res)
 })
 
 // GET /api/ark/context-suggestions — Suggestions selon contexte page
-router.get('/context-suggestions', async (req, res) => {
-  const { page, clientId } = req.query
-  logArkStub('/context-suggestions', { page, clientId })
+router.get('/context-suggestions', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-  const suggestionsByPage = {
-    dashboard: [
-      { id: 's1', type: 'action', label: 'Voir le Morning Brief', priority: 'high' },
-      { id: 's2', type: 'info', label: '5 contrats à renouveler cette semaine', priority: 'high' }
-    ],
-    clients: [
-      { id: 's1', type: 'action', label: 'Filtrer les clients silencieux', priority: 'medium' }
-    ],
-    client_detail: [
-      { id: 's1', type: 'action', label: 'Générer un brief client', priority: 'high' },
-      { id: 's2', type: 'action', label: 'Voir les recommandations', priority: 'high' }
-    ],
-    devis: [
-      { id: 's1', type: 'action', label: 'Demander assistance ARK', priority: 'high' },
-      { id: 's2', type: 'action', label: 'Vérifier conformité', priority: 'high' }
+    const { page, clientId } = req.query
+    const parsedClientId = clientId ? validateClientId(clientId) : null
+
+    // Suggestions par page (optimisées, pas besoin d'appel LLM pour ça)
+    const suggestionsByPage = {
+      dashboard: [
+        { id: 's1', type: 'action', label: 'Voir le Morning Brief', priority: 'high', action: 'morning_brief' },
+        { id: 's2', type: 'action', label: 'Analyser la santé du portefeuille', priority: 'medium', action: 'portfolio_health' }
+      ],
+      clients: [
+        { id: 's1', type: 'action', label: 'Filtrer les clients à risque', priority: 'high', action: 'filter_risk' },
+        { id: 's2', type: 'action', label: 'Voir les opportunités cross-sell', priority: 'medium', action: 'recommendations' }
+      ],
+      client_detail: [
+        { id: 's1', type: 'action', label: 'Générer un brief client', priority: 'high', action: 'client_brief' },
+        { id: 's2', type: 'action', label: 'Calculer les meilleures actions', priority: 'high', action: 'next_best_actions' },
+        { id: 's3', type: 'action', label: 'Vérifier la conformité', priority: 'medium', action: 'compliance_check' }
+      ],
+      devis: [
+        { id: 's1', type: 'action', label: 'Assistant devis ARK', priority: 'high', action: 'quote_assistant' },
+        { id: 's2', type: 'action', label: 'Vérifier conformité DDA', priority: 'high', action: 'compliance_check' }
+      ],
+      calendar: [
+        { id: 's1', type: 'action', label: 'Préparer mes RDV du jour', priority: 'high', action: 'morning_brief' }
+      ]
+    }
+
+    const baseSuggestions = suggestionsByPage[page] || [
+      { id: 's0', type: 'info', label: 'ARK est prêt à vous aider', priority: 'low' }
     ]
-  }
 
-  res.json({
-    success: true,
-    mock: true,
-    action: 'context_suggestions',
-    data: {
-      page: page || 'unknown',
-      clientId: clientId || null,
-      suggestions: suggestionsByPage[page] || [{ id: 's0', type: 'info', label: 'ARK est prêt', priority: 'low' }],
-      availableActions: ['client_brief', 'recommendations', 'generate_email', 'generate_sms', 'call_script', 'compliance_check'],
-      meta: { model: 'stub-mock', cached: false }
-    },
-    timestamp: new Date().toISOString(),
-    todo: 'LOT 3: Suggestions contextuelles intelligentes'
-  })
+    // Si un client est sélectionné, ajouter des suggestions spécifiques
+    let clientSuggestions = []
+    if (parsedClientId) {
+      clientSuggestions = [
+        { id: 'cs1', type: 'action', label: 'Brief de ce client', priority: 'high', action: 'client_brief', clientId: parsedClientId },
+        { id: 'cs2', type: 'action', label: 'Générer un email', priority: 'medium', action: 'generate_email', clientId: parsedClientId }
+      ]
+    }
+
+    res.json({
+      success: true,
+      action: 'context_suggestions',
+      data: {
+        page: page || 'unknown',
+        clientId: parsedClientId,
+        suggestions: [...clientSuggestions, ...baseSuggestions].slice(0, 5),
+        availableActions: [
+          'morning_brief', 'client_brief', 'next_best_actions', 'recommendations',
+          'quote_assistant', 'compliance_check', 'portfolio_health',
+          'generate_email', 'generate_sms', 'generate_whatsapp'
+        ]
+      },
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err }, 'ARK context-suggestions failed')
+    res.status(500).json({ error: 'ark_context_suggestions_failed', message: err.message })
+  }
+})
+
+// GET /api/ark/client/:id/recommendations — Cross-sell recommendations
+router.get('/client/:id/recommendations', verifyToken, async (req, res) => {
+  try {
+    const userId = getArkUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+
+    const clientId = validateClientId(req.params.id)
+    if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
+
+    const clientContext = await getClientContext(clientId, userId)
+    if (clientContext.error) {
+      return res.status(404).json({ error: clientContext.error, message: clientContext.message })
+    }
+
+    const prompt = getPrompt('recommendations')
+    const result = await callArk({
+      system: prompt.system,
+      user: `Analyse ce client et détecte les opportunités de cross-sell et upsell.`,
+      context: clientContext,
+      maxTokens: prompt.maxTokens,
+      jsonMode: true,
+      userId,
+      clientId,
+      route: 'client_recommendations'
+    })
+
+    if (result.error) {
+      return res.status(503).json({ error: result.error, message: result.message })
+    }
+
+    res.json({
+      success: true,
+      action: 'recommendations',
+      data: {
+        clientId,
+        ...(result.structured || { recommendations: [], missingProducts: [] })
+      },
+      usage: result.usage,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (err) {
+    logger.error({ err, clientId: req.params.id }, 'ARK client recommendations failed')
+    res.status(500).json({ error: 'ark_recommendations_failed', message: err.message })
+  }
 })
 
 module.exports = router
