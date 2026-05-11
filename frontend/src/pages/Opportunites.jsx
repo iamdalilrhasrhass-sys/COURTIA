@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { Plus, Sparkles, TrendingUp, Target, Calendar, Euro } from 'lucide-react'
-import { VibeBackdrop } from '../components/vibe'
+import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
@@ -134,6 +134,7 @@ export default function Opportunites() {
         top: -200, left: -100, pointerEvents: 'none', zIndex: 0,
       }} />
 
+      <VibeScrollSection parallax={12}>
       <main style={{ position: 'relative', zIndex: 1, maxWidth: 1320, margin: '0 auto' }}>
 
         {/* HEADER */}
@@ -247,6 +248,7 @@ export default function Opportunites() {
         </LayoutGroup>
 
       </main>
+      </VibeScrollSection>
     </div>
   )
 }

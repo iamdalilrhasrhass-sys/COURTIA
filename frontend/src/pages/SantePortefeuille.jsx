@@ -6,7 +6,7 @@ import {
   TrendingUp, Sparkles, Activity, AlertTriangle, Target, Users,
   Shield, Zap, ChevronRight,
 } from 'lucide-react'
-import { VibeBackdrop, Vibe3DCard, VibeScrollSection, VibeStagger } from '../components/vibe'
+import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import api from '../api'
 
 const T = {
@@ -208,6 +208,7 @@ export default function SantePortefeuille() {
         top: -200, left: -100, pointerEvents: 'none', zIndex: 0,
       }} />
 
+      <VibeScrollSection parallax={12}>
       <main style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto' }}>
 
         {/* HEADER */}
@@ -230,11 +231,9 @@ export default function SantePortefeuille() {
         </header>
 
         {/* HERO : Gauge + score + état */}
-        <VibeScrollSection parallax={15}>
-        <Vibe3DCard depth={3} glow glowColor="#8B5CF6">
         <div style={{
-          marginBottom: 0,
-          background: 'transparent',
+          marginBottom: 18,
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(255,255,255,0.02))',
           border: `1px solid rgba(139,92,246,0.18)`,
           borderRadius: 16, padding: 24,
           display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap',
@@ -392,6 +391,7 @@ export default function SantePortefeuille() {
           </div>
         </div>
       </main>
+      </VibeScrollSection>
     </div>
   )
 }
