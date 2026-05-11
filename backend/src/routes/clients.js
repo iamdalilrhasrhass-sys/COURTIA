@@ -542,4 +542,84 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/:id/cross-sell
+// Détecte les produits non souscrits par le client + estime le potentiel
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/:id/cross-sell', async (req, res) => {
+  try {
+    const courtierId = req.user.id || req.user.userId;
+    const clientId   = parseInt(req.params.id, 10);
+    if (!Number.isFinite(clientId)) return res.status(400).json({ error: 'ID invalide' });
+
+    // Vérifier accès
+    const cliRes = await pool.query(
+      `SELECT id, first_name, last_name, type, status, profession, situation_familiale, lifetime_value
+       FROM clients WHERE id=$1 AND courtier_id=$2`, [clientId, courtierId]);
+    if (!cliRes.rows[0]) return res.status(404).json({ error: 'Client non trouvé' });
+    const client = cliRes.rows[0];
+
+    // Produits existants
+    let produitsExistants = [];
+    try {
+      const qr = await pool.query(
+        `SELECT DISTINCT LOWER(COALESCE(quote_data->>'type_contrat','')) AS produit
+         FROM quotes WHERE client_id=$1 AND status='actif'`, [clientId]);
+      produitsExistants = qr.rows.map(r => r.produit).filter(Boolean);
+    } catch (_) { /* fallthrough */ }
+
+    // Catalogue de référence — produits éligibles selon profil
+    const CATALOGUE = [
+      { code: 'auto',        label: 'Auto',         estPrime: 1100, profil: ['particulier','pro'] },
+      { code: 'mrh',         label: 'MRH',          estPrime: 480,  profil: ['particulier'] },
+      { code: 'habitation',  label: 'Habitation',   estPrime: 380,  profil: ['particulier'] },
+      { code: 'sante',       label: 'Santé',        estPrime: 720,  profil: ['particulier','pro'] },
+      { code: 'prevoyance',  label: 'Prévoyance',   estPrime: 520,  profil: ['particulier','pro'] },
+      { code: 'rc_pro',      label: 'RC Pro',       estPrime: 2400, profil: ['pro'] },
+      { code: 'pj',          label: 'Protection Juridique', estPrime: 220,  profil: ['particulier','pro'] },
+      { code: 'cyber',       label: 'Cyber',        estPrime: 1800, profil: ['pro'] },
+    ];
+
+    const typeNorm = (client.type || 'particulier').toLowerCase().includes('pro') ? 'pro' : 'particulier';
+    const has = (code) => produitsExistants.some(p => p.includes(code));
+
+    const opportunites = CATALOGUE
+      .filter(p => p.profil.includes(typeNorm))
+      .filter(p => !has(p.code) && !has(p.label.toLowerCase()))
+      .map(p => {
+        // Score : 80 pour produits "core" manquants, 60 pour autres
+        const isCore = ['rc_pro','sante','mrh','auto'].includes(p.code);
+        const score = isCore ? 82 : 65;
+        const rationale = isCore
+          ? `Profil ${typeNorm} sans ${p.label} — produit core manquant.`
+          : `Opportunité ${p.label} cohérente avec le profil.`;
+        return {
+          produit: p.code,
+          label: p.label,
+          prime_estimee: p.estPrime,
+          commission_estimee: Math.round(p.estPrime * 0.15),
+          score,
+          rationale,
+          cta: 'Créer devis',
+        };
+      })
+      .sort((a,b) => b.score - a.score)
+      .slice(0, 4);
+
+    const potentielCA = opportunites.reduce((s,o) => s + (o.prime_estimee || 0), 0);
+
+    res.json({
+      client_id: clientId,
+      client_type: typeNorm,
+      produits_existants: produitsExistants,
+      opportunites,
+      potentiel_ca_annuel: potentielCA,
+      generated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('GET /api/clients/:id/cross-sell error:', err.message);
+    res.status(500).json({ error: 'cross_sell_failed', message: err.message });
+  }
+});
+
 module.exports = router;
