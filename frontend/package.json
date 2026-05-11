@@ -14,6 +14,8 @@
     "@react-oauth/google": "^0.13.5",
     "@sentry/react": "^10.52.0",
     "axios": "^1.15.0",
+    "i18next": "^23.11.5",
+    "react-i18next": "^14.1.2",
     "canvas-confetti": "^1.9.4",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
