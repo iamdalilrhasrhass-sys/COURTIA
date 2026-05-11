@@ -1,0 +1,171 @@
+/* ============================================================
+   COURTIA · LA BULLE — Design Tokens
+   The single source of truth for the cosmic iridescent identity.
+   ============================================================ */
+
+:root {
+  --bg-deep: #020108;
+  --bg-mid:  #08051A;
+  --bg-soft: #0F0A28;
+
+  --surface-1: rgba(255, 255, 255, 0.02);
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --surface-3: rgba(255, 255, 255, 0.06);
+  --surface-glass: rgba(20, 12, 40, 0.55);
+
+  --border-faint:  rgba(255, 255, 255, 0.06);
+  --border-soft:   rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-iris:   rgba(180, 100, 255, 0.28);
+
+  --text-primary:  rgba(255, 255, 255, 0.96);
+  --text-soft:     rgba(255, 255, 255, 0.75);
+  --text-muted:    rgba(255, 255, 255, 0.50);
+  --text-faint:    rgba(255, 255, 255, 0.30);
+  --white-dim:     rgba(255, 255, 255, 0.50);
+  --white-faint:   rgba(255, 255, 255, 0.15);
+
+  --font-sans:   'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-serif:  'Fraunces', 'Times New Roman', serif;
+  --font-italic: 'Instrument Serif', 'Fraunces', serif;
+  --font-mono:   'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --iris-1: linear-gradient(135deg, #ff80e0, #c080ff, #80a8ff, #80f0d8, #fff080, #ff80b0);
+  --iris-2: linear-gradient(45deg,  #80f0d8, #80a8ff, #c080ff, #ff80e0, #ff80b0, #fff080);
+  --iris-3: conic-gradient(from 0deg, #ff80e0, #c080ff, #80a8ff, #80f0d8, #fff080, #ff80b0, #ff80e0);
+
+  --accent-gradient:      linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
+  --accent-gradient-soft: linear-gradient(90deg, rgba(255,77,157,0.18) 0%, rgba(161,66,244,0.18) 50%, rgba(66,133,244,0.18) 100%);
+
+  --gradient-pink-violet: linear-gradient(135deg, #ff4d9d 0%, #a142f4 100%);
+  --gradient-violet-blue: linear-gradient(135deg, #a142f4 0%, #4285f4 100%);
+  --gradient-cyan-violet: linear-gradient(135deg, #80f0d8 0%, #a142f4 100%);
+
+  --accent-pink:   #ff4d9d;
+  --accent-violet: #a142f4;
+  --accent-blue:   #4285f4;
+  --accent-cyan:   #80f0d8;
+  --accent-gold:   #fff080;
+
+  --glow-pink:   0 0 60px rgba(255, 77, 157, 0.35);
+  --glow-violet: 0 0 80px rgba(161, 66, 244, 0.30);
+  --glow-blue:   0 0 60px rgba(66, 133, 244, 0.25);
+  --glow-soft:   0 0 40px rgba(180, 100, 255, 0.18);
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
+
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 18px; --radius-xl: 24px;
+  --radius-2xl: 32px; --radius-full: 9999px;
+
+  --text-kicker: 10px;
+  --text-xs: 11px; --text-sm: 13px; --text-md: 15px; --text-lg: 18px;
+  --text-xl: 22px; --text-2xl: 28px; --text-3xl: 38px; --text-4xl: 52px;
+  --text-5xl: 72px; --text-6xl: 96px;
+
+  --kicker-letter-spacing: 6px;
+  --transition-fast: 0.18s ease;
+  --transition-base: 0.32s cubic-bezier(.2,.8,.2,1);
+  --transition-slow: 0.6s cubic-bezier(.2,.8,.2,1);
+}
+
+.la-bulle-kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-kicker);
+  letter-spacing: var(--kicker-letter-spacing);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 400;
+}
+.la-bulle-kicker::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  box-shadow: 0 0 12px rgba(255, 77, 157, 0.8);
+  animation: la-bulle-pulse 2.4s ease-in-out infinite;
+}
+
+.la-bulle-headline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin: 0;
+}
+
+.la-bulle-tagline {
+  font-family: var(--font-italic);
+  font-style: italic;
+  color: var(--white-dim);
+  font-size: var(--text-lg);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.la-bulle-wordmark {
+  font-family: var(--font-sans);
+  font-weight: 200;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: baseline;
+}
+.la-bulle-wordmark .dot {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 500;
+}
+
+@keyframes la-bulle-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+@keyframes la-bulle-breathe {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%      { transform: scale(1.025); filter: brightness(1.08); }
+}
+@keyframes la-bulle-float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+  50%      { transform: translateY(-30px) translateX(15px); opacity: 1; }
+}
+@keyframes la-bulle-iris-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes la-bulle-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.la-bulle-iris-border {
+  position: relative;
+  isolation: isolate;
+}
+.la-bulle-iris-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--iris-1);
+  background-size: 300% 300%;
+  animation: la-bulle-shimmer 8s linear infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
