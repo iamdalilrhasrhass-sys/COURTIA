@@ -1,949 +1,801 @@
-import { useEffect, useState, useRef } from 'react'
-import { motion, useScroll, useTransform, useSpring, AnimatePresence, useInView, animate } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import {
-  ArrowRight, Check, Brain, Eye, Mic, Menu, X,
-  LayoutDashboard, FileSearch, PenTool, Receipt,
-  ChevronDown, ShieldCheck, Sparkles
-} from 'lucide-react'
-import { applySeo } from '../lib/seo'
-import {
-  CosmosBackground,
-  BubbleC,
-  BubbleCMini,
-  BubbleCMedium,
-  BubbleCHero,
-  Kicker,
-  Headline,
-  Tagline,
-  Wordmark,
-} from '../design'
+import { useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { BubbleC } from '../design/BubbleC';
+import '../design/tokens.css';
 
-/* ============================================================
-   COURTIA · LA BULLE — Landing Public
-   Refonte complète : Cosmos + BubbleC + Typographie signature.
-   ============================================================ */
-
-const arkPowers = [
-  { icon: Eye,         title: 'ARK Watch',      subtitle: 'Surveillance proactive',   desc: 'Loi Hamon, Chatel, échéances critiques : ARK veille sur votre portefeuille 24/7 et déclenche les bons signaux au bon moment.', accent: '#80f0d8' },
-  { icon: Mic,         title: 'Voice Intake',   subtitle: 'Appel → Fiche en 30s',     desc: 'Parlez. Raccrochez. La fiche client est créée, structurée, classée. ARK extrait les actions critiques sans une ligne tapée.', accent: '#a142f4' },
-  { icon: FileSearch,  title: 'Doc Vision',     subtitle: 'OCR métier auto',          desc: 'Glissez un contrat PDF. ARK lit, comprend, range : garanties, exclusions, montants, échéances, IBAN — tout structuré.', accent: '#ff80e0' },
-  { icon: PenTool,     title: 'ARK Compose',    subtitle: 'Docs légaux auto',         desc: 'DDA, IPID, devoir de conseil, lettre de résiliation : ARK rédige le bon document, au bon ton, à la bonne signature.', accent: '#fff080' },
-  { icon: Receipt,     title: 'Quote Intel',    subtitle: 'Dispatch multi-compagnies', desc: 'Aurora, Novalia, Helios, Serenis : ARK envoie, compare, scoring, et vous recommande la meilleure offre pour le client.', accent: '#4285f4' },
-]
-
-const whyCourtia = [
-  { title: "Un cockpit, pas un CRM.",          desc: "Construit avec et pour des courtiers. Chaque pixel répond à un geste terrain. Aucune sur-couche inutile, aucune fonction décorative." },
-  { title: "ARK, votre compagnon IA.",         desc: "Une IA qui sait lire un contrat, écouter un appel, rédiger un courrier conforme et anticiper une résiliation. Pas un chatbot. Un coéquipier." },
-  { title: "Conformité ORIAS native.",         desc: "DDA, IPID, devoir de conseil, archivage signé : la conformité n'est plus une corvée, c'est un automatisme silencieux." },
-]
-
-const beforeAfter = [
-  { before: 'Excel + Post-it + mémoire',           after: "Tout centralisé, rien n'échappe" },
-  { before: 'Relances oubliées, clients perdus',    after: 'Alertes proactives, opportunités saisies' },
-  { before: 'Conformité fastidieuse',               after: 'Documents générés en 1 clic' },
-  { before: 'Données dispersées',                   after: 'Vision 360° de chaque client' },
-]
-
-const pricingPlans = [
-  { name: 'Starter',  price: '89',        period: '/mois HT', desc: 'Le courtier indépendant.',                features: ["Jusqu'à 200 clients", 'Cockpit ARK', 'ARK Watch (alertes)', 'Conformité ORIAS', 'Support email'], cta: 'Commencer', popular: false },
-  { name: 'Pro',      price: '159',       period: '/mois HT', desc: 'Le courtier ambitieux.',                  features: ['Clients illimités', 'Tous les modules ARK', 'Voice Intake + Doc Vision', 'Multi-utilisateurs (3)', 'Intégrations avancées', 'Support prioritaire'], cta: 'Essai gratuit 7 jours', popular: true },
-  { name: 'Cabinet',  price: 'Sur devis', period: '',         desc: 'Le cabinet structuré.',                   features: ['Utilisateurs illimités', 'Toutes fonctionnalités Pro', 'API & webhooks', 'SSO / SAML', 'Onboarding dédié', 'Account manager'], cta: 'Nous contacter', popular: false },
-]
-
-const stats = [
-  { value: 124, suffix: '',     label: 'courtiers à bord' },
-  { value: 3,   suffix: 'h',    label: 'gagnées par semaine' },
-  { value: 98,  suffix: '%',    label: 'de satisfaction' },
-]
-
-/* ----------- helpers ----------- */
-
-function CTAButton({ to, children, primary = false, ...rest }) {
-  return (
-    <Link
-      to={to}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '16px 28px',
-        borderRadius: 14,
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontWeight: 500,
-        fontSize: 15,
-        letterSpacing: '0.02em',
-        textDecoration: 'none',
-        position: 'relative',
-        overflow: 'hidden',
-        transition: 'transform 0.3s cubic-bezier(.2,.8,.2,1)',
-        background: primary
-          ? 'linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%)'
-          : 'rgba(255,255,255,0.04)',
-        color: primary ? '#ffffff' : 'rgba(255,255,255,0.85)',
-        border: primary ? 'none' : '1px solid rgba(255,255,255,0.15)',
-        boxShadow: primary ? '0 12px 40px rgba(161,66,244,0.35)' : 'none',
-        backdropFilter: primary ? 'none' : 'blur(8px)',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)' }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
-      {...rest}
-    >
-      {children}
-    </Link>
-  )
-}
-
-function ScrollIndicator() {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 1.6, duration: 0.8 }}
-      style={{
-        position: 'absolute',
-        bottom: 32,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 10,
-        pointerEvents: 'none',
-      }}
-    >
-      <Kicker dot={false}>SCROLL</Kicker>
-      <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <ChevronDown size={20} color="rgba(255,255,255,0.4)" />
-      </motion.div>
-    </motion.div>
-  )
-}
-
-/* Animated counter that fires when the section enters the viewport */
-function AnimatedNumber({ value, suffix = '' }) {
-  const ref = useRef(null)
-  const [display, setDisplay] = useState(0)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
-
-  useEffect(() => {
-    if (!inView) return
-    const controls = animate(0, value, {
-      duration: 1.8,
-      ease: [0.22, 1, 0.36, 1],
-      onUpdate: (v) => setDisplay(Math.round(v * 10) / 10),
-    })
-    return () => controls.stop()
-  }, [inView, value])
-
-  return (
-    <span ref={ref}>
-      {Number.isInteger(value) ? Math.round(display) : display}{suffix}
-    </span>
-  )
-}
-
-/* 3D card that rotates on scroll */
-function Scroll3DCard({ children, index = 0 }) {
-  const ref = useRef(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [25, 0, -10])
-  const opacity = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0, 1, 1, 0.4])
-  const y = useTransform(scrollYProgress, [0, 1], [60, -40])
-  const springRot = useSpring(rotateX, { stiffness: 80, damping: 20 })
-  const springY = useSpring(y, { stiffness: 80, damping: 20 })
-  return (
-    <motion.div
-      ref={ref}
-      style={{
-        rotateX: springRot,
-        y: springY,
-        opacity,
-        transformPerspective: 1200,
-        transformStyle: 'preserve-3d',
-      }}
-      transition={{ delay: index * 0.05 }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
+/**
+ * LandingPublic — La Bulle, version EXACTE de la référence HTML.
+ * Réplique stricte : fond cosmique, grid floor, 35 particules,
+ * kicker JetBrains Mono + dot pulsant, bulle 520px, wordmark "courtia.",
+ * tagline Instrument Serif italic.
+ *
+ * Sections supplémentaires en scroll 3D Framer Motion en dessous.
+ */
 export default function LandingPublic() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const containerRef = useRef(null)
-
-  useEffect(() => {
-    applySeo({
-      title: 'COURTIA — Une bulle d’intelligence pour le courtier.',
-      description: "COURTIA est le cockpit IA des courtiers. ARK Watch, Voice Intake, Doc Vision, ARK Compose et Quote Intel : une bulle d'intelligence pour celui qui protège.",
-    })
-  }, [])
+  // Particules
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 35 }, () => ({
+        left: Math.random() * 100,
+        duration: 10 + Math.random() * 20,
+        delay: -Math.random() * 20,
+        opacity: 0.3 + Math.random() * 0.5,
+      })),
+    []
+  );
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        minHeight: '100vh',
-        background: '#020108',
-        color: 'rgba(255,255,255,0.95)',
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        position: 'relative',
-        overflowX: 'hidden',
-      }}
-    >
-      {/* Fixed cosmos background */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
-        <CosmosBackground />
-      </div>
+    <>
+      <style>{styles}</style>
 
-      {/* ───────────────────────── NAV ───────────────────────── */}
-      <nav
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '20px 28px',
-          maxWidth: 1280,
-          margin: '0 auto',
-          position: 'relative',
-          zIndex: 50,
-        }}
-      >
-        <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-          <BubbleC size={36} animated={false} glow={false} />
-          <Wordmark size={22} />
-        </Link>
+      {/* COSMOS BACKGROUND — exact */}
+      <div className="cosmos" />
+      <div className="floor" />
 
-        <div className="lb-nav-links" style={{ display: 'none', alignItems: 'center', gap: 32 }}>
-          <a href="#why"     style={navLinkStyle}>Pourquoi</a>
-          <a href="#powers"  style={navLinkStyle}>ARK</a>
-          <a href="#proof"   style={navLinkStyle}>Preuves</a>
-          <a href="#pricing" style={navLinkStyle}>Tarifs</a>
-        </div>
-
-        <div className="lb-nav-cta" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/login" style={{ ...navLinkStyle, padding: '8px 14px' }}>Connexion</Link>
-          <CTAButton to="/register" primary>
-            Essai 7 jours <ArrowRight size={16} />
-          </CTAButton>
-        </div>
-
-        <button
-          className="lb-nav-burger"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Menu"
-          style={{
-            display: 'none',
-            background: 'none',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-          }}
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </nav>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
+      {/* PARTICULES — exact */}
+      <div className="particles" aria-hidden>
+        {particles.map((p, i) => (
+          <span
+            key={i}
+            className="particle"
             style={{
-              position: 'fixed',
-              top: 72,
-              left: 0,
-              right: 0,
-              zIndex: 100,
-              background: 'rgba(8,5,26,0.92)',
-              backdropFilter: 'blur(20px)',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-              padding: 24,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 18,
+              left: `${p.left}vw`,
+              animationDuration: `${p.duration}s`,
+              animationDelay: `${p.delay}s`,
+              opacity: p.opacity,
             }}
-          >
-            <a href="#why"     onClick={() => setMenuOpen(false)} style={navLinkStyle}>Pourquoi</a>
-            <a href="#powers"  onClick={() => setMenuOpen(false)} style={navLinkStyle}>ARK</a>
-            <a href="#proof"   onClick={() => setMenuOpen(false)} style={navLinkStyle}>Preuves</a>
-            <a href="#pricing" onClick={() => setMenuOpen(false)} style={navLinkStyle}>Tarifs</a>
-            <CTAButton to="/register" primary>Essai 7 jours <ArrowRight size={16} /></CTAButton>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─────────────────────── 1. HERO ─────────────────────── */}
-      <section
-        style={{
-          position: 'relative',
-          minHeight: 'calc(100vh - 80px)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 24px 100px',
-          textAlign: 'center',
-          zIndex: 1,
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          style={{ marginBottom: 32 }}
-        >
-          <Kicker>Courtia · L'IA Compagnon des Courtiers</Kicker>
-        </motion.div>
-
-        <motion.div
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ marginBottom: 28 }}
-        >
-          <div className="lb-hero-bubble">
-            <BubbleCHero />
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.7 }}
-          style={{ marginBottom: 14 }}
-        >
-          <Wordmark size={72} />
-        </motion.div>
-
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.7 }}
-          style={{ maxWidth: 720, marginBottom: 40 }}
-        >
-          <Tagline size={22} align="center">
-            Une bulle d'intelligence pour celui qui protège.
-          </Tagline>
-        </motion.div>
-
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.7 }}
-          style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}
-        >
-          <CTAButton to="/register" primary>
-            Essai gratuit 7 jours <ArrowRight size={16} />
-          </CTAButton>
-          <CTAButton to="/login">Voir le cockpit</CTAButton>
-        </motion.div>
-
-        <ScrollIndicator />
-      </section>
-
-      {/* ──────────── 2. POURQUOI COURTIA (scroll 3D) ──────────── */}
-      <section
-        id="why"
-        style={{
-          position: 'relative',
-          padding: '120px 24px',
-          zIndex: 1,
-          background: 'linear-gradient(180deg, transparent 0%, #08051A 50%, transparent 100%)',
-        }}
-      >
-        <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.7 }}
-            style={{ textAlign: 'center', marginBottom: 72 }}
-          >
-            <Kicker>Pourquoi courtia ?</Kicker>
-            <div style={{ height: 16 }} />
-            <Headline size="lg" align="center">
-              Trois certitudes. <br/>Aucun compromis.
-            </Headline>
-          </motion.div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 28 }}>
-            {whyCourtia.map((item, i) => (
-              <Scroll3DCard key={item.title} index={i}>
-                <div
-                  className="la-bulle-iris-border"
-                  style={{
-                    padding: 36,
-                    borderRadius: 24,
-                    background: 'rgba(8,5,26,0.65)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    minHeight: 320,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 20,
-                  }}
-                >
-                  <BubbleCMini size={64} />
-                  <h3 style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontStyle: 'italic',
-                    fontWeight: 300,
-                    fontSize: 28,
-                    lineHeight: 1.15,
-                    margin: 0,
-                    color: '#ffffff',
-                    letterSpacing: '-0.01em',
-                  }}>
-                    {item.title}
-                  </h3>
-                  <p style={{
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontSize: 14,
-                    lineHeight: 1.65,
-                    color: 'rgba(255,255,255,0.6)',
-                    margin: 0,
-                  }}>
-                    {item.desc}
-                  </p>
-                </div>
-              </Scroll3DCard>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────── 3. 5 SUPER-POUVOIRS ARK (horizontal snap) ─────────── */}
-      <section
-        id="powers"
-        style={{
-          position: 'relative',
-          padding: '120px 0',
-          zIndex: 1,
-        }}
-      >
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', marginBottom: 56 }}>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            style={{ textAlign: 'center' }}
-          >
-            <Kicker>Les 5 super-pouvoirs ARK</Kicker>
-            <div style={{ height: 16 }} />
-            <Headline size="lg" align="center">
-              L'intelligence,<br/>au bon endroit, au bon moment.
-            </Headline>
-            <div style={{ height: 18 }} />
-            <Tagline align="center">Cinq modules. Une seule mission : faire disparaître la friction.</Tagline>
-          </motion.div>
-        </div>
-
-        <div
-          className="lb-powers-scroll"
-          style={{
-            display: 'flex',
-            gap: 24,
-            padding: '24px max(24px, calc((100vw - 1232px) / 2)) 40px',
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {arkPowers.map((power, i) => {
-            const Icon = power.icon
-            return (
-              <motion.div
-                key={power.title}
-                initial={{ y: 50, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ delay: i * 0.1, duration: 0.7 }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                style={{
-                  flex: '0 0 360px',
-                  scrollSnapAlign: 'center',
-                  perspective: 1200,
-                }}
-              >
-                <div
-                  className="la-bulle-iris-border"
-                  style={{
-                    padding: 32,
-                    borderRadius: 28,
-                    background: 'linear-gradient(180deg, rgba(8,5,26,0.85) 0%, rgba(2,1,8,0.95) 100%)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    minHeight: 440,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 18,
-                    transformStyle: 'preserve-3d',
-                    boxShadow: `0 30px 80px rgba(0,0,0,0.4), 0 0 40px ${power.accent}22`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <BubbleCMini size={56} />
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 12,
-                      background: `${power.accent}18`,
-                      border: `1px solid ${power.accent}44`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <Icon size={20} color={power.accent} />
-                    </div>
-                  </div>
-
-                  <Kicker dot={false} color={power.accent}>{power.subtitle}</Kicker>
-
-                  <h3 style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontStyle: 'italic',
-                    fontWeight: 300,
-                    fontSize: 36,
-                    margin: 0,
-                    color: '#fff',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1,
-                  }}>
-                    {power.title}
-                  </h3>
-
-                  <p style={{
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontSize: 14,
-                    lineHeight: 1.7,
-                    color: 'rgba(255,255,255,0.65)',
-                    margin: 0,
-                    flex: 1,
-                  }}>
-                    {power.desc}
-                  </p>
-
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 11,
-                    letterSpacing: '3px',
-                    textTransform: 'uppercase',
-                    color: power.accent,
-                  }}>
-                    0{i + 1} / 05
-                  </div>
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* ─────────── 4. SOCIAL PROOF (compteurs animés) ─────────── */}
-      <section
-        id="proof"
-        style={{
-          position: 'relative',
-          padding: '120px 24px',
-          zIndex: 1,
-          background: 'linear-gradient(180deg, transparent 0%, rgba(15,10,40,0.7) 50%, transparent 100%)',
-        }}
-      >
-        <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            style={{ textAlign: 'center', marginBottom: 64 }}
-          >
-            <Kicker>Preuves de terrain</Kicker>
-            <div style={{ height: 16 }} />
-            <Headline size="md" align="center">Les chiffres ne mentent pas.</Headline>
-          </motion.div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 40 }}>
-            {stats.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.7 }}
-                style={{ textAlign: 'center' }}
-              >
-                <div style={{
-                  fontFamily: "'Fraunces', serif",
-                  fontStyle: 'italic',
-                  fontWeight: 300,
-                  fontSize: 'clamp(64px, 9vw, 128px)',
-                  lineHeight: 1,
-                  letterSpacing: '-0.04em',
-                  background: 'linear-gradient(135deg, #ff80e0 0%, #c080ff 50%, #80a8ff 100%)',
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  color: 'transparent',
-                  marginBottom: 12,
-                }}>
-                  <AnimatedNumber value={s.value} suffix={s.suffix} />
-                </div>
-                <Kicker dot={false}>{s.label}</Kicker>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────── 5. AVANT / APRÈS (split 3D) ─────────── */}
-      <section
-        id="transform"
-        style={{ position: 'relative', padding: '120px 24px', zIndex: 1 }}
-      >
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            style={{ textAlign: 'center', marginBottom: 72 }}
-          >
-            <Kicker>Avant / Après</Kicker>
-            <div style={{ height: 16 }} />
-            <Headline size="lg" align="center">
-              Sortez du tableur.<br/>Entrez dans la bulle.
-            </Headline>
-          </motion.div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {beforeAfter.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto 1fr',
-                  gap: 24,
-                  alignItems: 'center',
-                  padding: '24px 32px',
-                  borderRadius: 18,
-                  background: 'rgba(8,5,26,0.55)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                <div style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 13,
-                  color: 'rgba(255,255,255,0.35)',
-                  textDecoration: 'line-through',
-                  textDecorationColor: 'rgba(239,68,68,0.4)',
-                }}>
-                  {item.before}
-                </div>
-                <BubbleCMini size={32} animated={false} glow={false} />
-                <div style={{
-                  fontFamily: "'Fraunces', serif",
-                  fontStyle: 'italic',
-                  fontWeight: 400,
-                  fontSize: 20,
-                  color: '#fff',
-                  letterSpacing: '-0.01em',
-                }}>
-                  {item.after}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────── 6. TARIFS (glassmorphism) ─────────── */}
-      <section
-        id="pricing"
-        style={{
-          position: 'relative',
-          padding: '120px 24px',
-          zIndex: 1,
-          background: 'linear-gradient(180deg, transparent 0%, rgba(15,10,40,0.7) 50%, transparent 100%)',
-        }}
-      >
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            style={{ textAlign: 'center', marginBottom: 72 }}
-          >
-            <Kicker>Tarifs transparents</Kicker>
-            <div style={{ height: 16 }} />
-            <Headline size="lg" align="center">Choisissez votre orbite.</Headline>
-            <div style={{ height: 18 }} />
-            <Tagline align="center">Sans engagement. 7 jours pour tester en conditions réelles.</Tagline>
-          </motion.div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 28, alignItems: 'stretch' }}>
-            {pricingPlans.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ y: 40, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12, duration: 0.7 }}
-                whileHover={{ y: -8 }}
-                className={plan.popular ? 'la-bulle-iris-border' : ''}
-                style={{
-                  padding: 36,
-                  borderRadius: 28,
-                  background: plan.popular
-                    ? 'linear-gradient(180deg, rgba(20,12,40,0.85) 0%, rgba(8,5,26,0.95) 100%)'
-                    : 'rgba(8,5,26,0.55)',
-                  backdropFilter: 'blur(20px)',
-                  border: plan.popular ? '1px solid transparent' : '1px solid rgba(255,255,255,0.06)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 20,
-                  position: 'relative',
-                  minHeight: 540,
-                  boxShadow: plan.popular ? '0 30px 90px rgba(161,66,244,0.25)' : 'none',
-                }}
-              >
-                {plan.popular && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -14,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    padding: '6px 16px',
-                    borderRadius: 999,
-                    background: 'linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%)',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 10,
-                    letterSpacing: '3px',
-                    fontWeight: 500,
-                    color: 'white',
-                  }}>
-                    LE PRÉFÉRÉ
-                  </div>
-                )}
-
-                <Kicker dot={false}>{plan.name}</Kicker>
-                <Tagline size={15}>{plan.desc}</Tagline>
-
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontStyle: 'italic',
-                    fontWeight: 300,
-                    fontSize: plan.price === 'Sur devis' ? 36 : 64,
-                    letterSpacing: '-0.03em',
-                    color: '#fff',
-                    lineHeight: 1,
-                  }}>
-                    {plan.price === 'Sur devis' ? plan.price : `${plan.price} €`}
-                  </span>
-                  {plan.period && (
-                    <span style={{
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontSize: 13,
-                      color: 'rgba(255,255,255,0.45)',
-                    }}>{plan.period}</span>
-                  )}
-                </div>
-
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {plan.features.map((f, fi) => (
-                    <li key={fi} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      fontSize: 14,
-                      color: 'rgba(255,255,255,0.75)',
-                    }}>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 22,
-                        height: 22,
-                        borderRadius: '50%',
-                        background: 'rgba(128,240,216,0.12)',
-                        border: '1px solid rgba(128,240,216,0.3)',
-                      }}>
-                        <Check size={12} color="#80f0d8" />
-                      </span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <CTAButton to={plan.name === 'Cabinet' ? '/contact' : '/register'} primary={plan.popular}>
-                  {plan.cta} <ArrowRight size={14} />
-                </CTAButton>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────── 7. CTA FINAL ─────────── */}
-      <section
-        style={{
-          position: 'relative',
-          padding: '140px 24px',
-          zIndex: 1,
-          textAlign: 'center',
-        }}
-      >
-        <motion.div
-          initial={{ scale: 0.85, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ marginBottom: 32, display: 'inline-block' }}
-        >
-          <BubbleCMedium size={300} />
-        </motion.div>
-
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3, duration: 0.7 }}
-          style={{ maxWidth: 700, margin: '0 auto' }}
-        >
-          <Headline size="lg" align="center">
-            Rejoignez les premiers<br/>courtiers de demain.
-          </Headline>
-          <div style={{ height: 24 }} />
-          <Tagline align="center">7 jours d'essai. Aucune carte bancaire. La bulle vous attend.</Tagline>
-          <div style={{ height: 36 }} />
-          <CTAButton to="/register" primary>
-            Démarrer l'essai gratuit <ArrowRight size={18} />
-          </CTAButton>
-        </motion.div>
-      </section>
-
-      {/* ─────────── 8. FOOTER ─────────── */}
-      <footer
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          padding: '64px 24px 48px',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(2,1,8,0.85)',
-        }}
-      >
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 40,
-            marginBottom: 48,
-          }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <BubbleC size={32} animated={false} glow={false} />
-                <Wordmark size={20} />
-              </div>
-              <Tagline size={13}>L'IA compagnon du courtier. Conçue à Paris, propulsée par ARK.</Tagline>
-            </div>
-            <FooterCol title="Produit"  links={['ARK Watch', 'Voice Intake', 'Doc Vision', 'ARK Compose', 'Quote Intel']} />
-            <FooterCol title="Cabinet"  links={['Tarifs', 'Sécurité', 'Conformité ORIAS', 'API', 'Status']} />
-            <FooterCol title="Légal"    links={['Mentions légales', 'CGV', 'Confidentialité', 'RGPD', 'DPA']} />
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: 24,
-            borderTop: '1px solid rgba(255,255,255,0.04)',
-            flexWrap: 'wrap',
-            gap: 12,
-          }}>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: 2, color: 'rgba(255,255,255,0.35)', margin: 0, textTransform: 'uppercase' }}>
-              © 2026 COURTIA — Tous droits réservés
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <ShieldCheck size={14} color="#80f0d8" />
-              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
-                Hébergé en France · ORIAS conforme
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Responsive helpers — embedded so the file stays self-contained */}
-      <style>{`
-        @media (min-width: 900px) {
-          .lb-nav-links { display: flex !important; }
-        }
-        @media (max-width: 899px) {
-          .lb-nav-cta   { display: none !important; }
-          .lb-nav-burger { display: inline-flex !important; }
-        }
-        @media (max-width: 720px) {
-          .lb-hero-bubble svg { width: 320px !important; height: 320px !important; }
-        }
-        .lb-powers-scroll::-webkit-scrollbar { height: 6px; }
-        .lb-powers-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        .lb-powers-scroll::-webkit-scrollbar-thumb { background: rgba(180,100,255,0.25); border-radius: 3px; }
-      `}</style>
-    </div>
-  )
-}
-
-const navLinkStyle = {
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontSize: 13,
-  fontWeight: 400,
-  letterSpacing: '0.02em',
-  color: 'rgba(255,255,255,0.7)',
-  textDecoration: 'none',
-  transition: 'color 0.2s',
-}
-
-function FooterCol({ title, links }) {
-  return (
-    <div>
-      <div style={{
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
-        letterSpacing: 4,
-        color: 'rgba(255,255,255,0.4)',
-        textTransform: 'uppercase',
-        marginBottom: 18,
-      }}>
-        {title}
-      </div>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {links.map((l) => (
-          <li key={l}>
-            <a href="#" style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 13,
-              color: 'rgba(255,255,255,0.55)',
-              textDecoration: 'none',
-            }}>
-              {l}
-            </a>
-          </li>
+          />
         ))}
-      </ul>
-    </div>
-  )
+      </div>
+
+      {/* STAGE — exact réplique de ta référence */}
+      <section className="stage">
+        <div className="kicker">
+          Courtia <span className="dot" /> L'IA Compagnon des Courtiers
+        </div>
+
+        <div className="bubble-stage">
+          <BubbleC size={520} />
+        </div>
+
+        <h1 className="wordmark">
+          courtia<em>.</em>
+        </h1>
+        <p className="tagline">Une bulle d'intelligence pour celui qui protège.</p>
+
+        {/* CTA */}
+        <div className="cta-row">
+          <Link to="/register" className="cta-primary">
+            Essai gratuit 7 jours
+            <span className="arrow">→</span>
+          </Link>
+          <Link to="/login" className="cta-ghost">Voir le cockpit</Link>
+        </div>
+
+        <div className="scroll-hint">
+          <span className="scroll-dot" />
+          <span className="scroll-label">Faire défiler</span>
+        </div>
+      </section>
+
+      {/* SECTION 2 — Manifeste */}
+      <ManifesteSection />
+
+      {/* SECTION 3 — Les 5 super-pouvoirs */}
+      <PowersSection />
+
+      {/* SECTION 4 — Chiffres */}
+      <ProofSection />
+
+      {/* SECTION 5 — Tarifs */}
+      <PricingSection />
+
+      {/* SECTION 6 — Footer */}
+      <FooterSection />
+    </>
+  );
 }
 
+/* ─────────────────────────────────────────── */
+/* SECTIONS ADDITIONNELLES                     */
+/* ─────────────────────────────────────────── */
+
+function ManifesteSection() {
+  return (
+    <section className="band">
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Le manifeste
+        </div>
+        <h2 className="band-title">
+          Le courtage <em>mérite</em><br />une bulle d'intelligence.
+        </h2>
+        <p className="band-text">
+          Pendant des années, le courtier d'assurance a porté son métier seul.
+          Mille tâches invisibles. Mille relances oubliées. Mille opportunités
+          perdues dans le silence.
+        </p>
+        <p className="band-text">
+          COURTIA n'est pas un CRM. C'est <em>un compagnon</em>.
+          Une présence calme qui veille, comprend, et agit.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function PowersSection() {
+  const powers = [
+    {
+      tag: '01',
+      title: 'ARK Watch',
+      desc: "Surveille votre portefeuille 24/7. Détecte les opportunités Hamon, Chatel, les silences anormaux. Vous appelez au bon moment.",
+    },
+    {
+      tag: '02',
+      title: 'Voice Intake',
+      desc: "Un appel. Une transcription. Une fiche client complétée. Le CRM se remplit pendant que vous parlez.",
+    },
+    {
+      tag: '03',
+      title: 'Doc Vision',
+      desc: "RIB, CG, attestations. Photographiez. ARK lit, classe, injecte. Vous ne saisissez plus rien.",
+    },
+    {
+      tag: '04',
+      title: 'ARK Compose',
+      desc: "IPID, DDA, devoir de conseil. Un clic. Le PDF conforme est généré. Quinze minutes deviennent une seconde.",
+    },
+    {
+      tag: '05',
+      title: 'Quote Intel',
+      desc: "Dispatch automatique de devis à dix compagnies. Mails personnalisés. Vous choisissez la meilleure offre.",
+    },
+  ];
+
+  return (
+    <section className="powers">
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Les cinq pouvoirs
+        </div>
+        <h2 className="band-title">
+          ARK, votre <em>compagnon</em><br />d'intelligence.
+        </h2>
+      </div>
+      <div className="powers-grid">
+        {powers.map((p, i) => (
+          <PowerCard key={i} {...p} index={i} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PowerCard({ tag, title, desc, index }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  });
+  const y = useSpring(useTransform(scrollYProgress, [0, 1], [80, -80]), { stiffness: 80, damping: 20 });
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+
+  return (
+    <motion.div ref={ref} className="power-card" style={{ y, opacity }}>
+      <div className="power-bubble">
+        <BubbleC size={100} showHalo={false} />
+      </div>
+      <div className="power-tag">{tag}</div>
+      <h3 className="power-title">{title}</h3>
+      <p className="power-desc">{desc}</p>
+    </motion.div>
+  );
+}
+
+function ProofSection() {
+  const stats = [
+    { value: '+3h', label: 'gagnées par semaine' },
+    { value: '98%', label: 'de satisfaction' },
+    { value: '124', label: 'clients pilotes' },
+  ];
+  return (
+    <section className="proof">
+      <div className="proof-inner">
+        {stats.map((s, i) => (
+          <div className="proof-stat" key={i}>
+            <div className="proof-value">{s.value}</div>
+            <div className="proof-label">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PricingSection() {
+  const plans = [
+    {
+      name: 'Starter',
+      price: '89',
+      desc: 'L\'essentiel pour les courtiers indépendants',
+      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision', 'Support email'],
+    },
+    {
+      name: 'Pro',
+      price: '159',
+      desc: 'La puissance complète d\'ARK',
+      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK', 'Voice Intake + Quote Intel', 'Support prioritaire'],
+      featured: true,
+    },
+    {
+      name: 'Cabinet',
+      price: 'Sur devis',
+      desc: 'Pour les cabinets multi-courtiers',
+      features: ['Multi-utilisateurs', 'API publique', 'Onboarding dédié', 'SLA garanti'],
+    },
+  ];
+
+  return (
+    <section className="pricing">
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Tarifs
+        </div>
+        <h2 className="band-title">
+          Une bulle, <em>trois</em> formules.
+        </h2>
+      </div>
+      <div className="pricing-grid">
+        {plans.map((p, i) => (
+          <div className={`pricing-card ${p.featured ? 'featured' : ''}`} key={i}>
+            {p.featured && <div className="pricing-badge">Le choix de la sérénité</div>}
+            <h3 className="pricing-name">{p.name}</h3>
+            <div className="pricing-price">
+              {p.price === 'Sur devis' ? (
+                <span className="pricing-custom">Sur devis</span>
+              ) : (
+                <>
+                  <span className="pricing-currency">€</span>
+                  <span className="pricing-amount">{p.price}</span>
+                  <span className="pricing-period">HT/mois</span>
+                </>
+              )}
+            </div>
+            <p className="pricing-desc">{p.desc}</p>
+            <ul className="pricing-features">
+              {p.features.map((f, j) => <li key={j}>{f}</li>)}
+            </ul>
+            <Link to="/register" className={p.featured ? 'cta-primary' : 'cta-ghost'}>
+              {p.featured ? 'Commencer maintenant' : 'Choisir'}
+            </Link>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FooterSection() {
+  return (
+    <footer className="footer">
+      <div className="footer-bubble">
+        <BubbleC size={60} animated={false} showHalo={false} />
+      </div>
+      <div className="footer-wordmark">courtia<em>.</em></div>
+      <p className="footer-tagline">Une bulle d'intelligence pour celui qui protège.</p>
+      <div className="footer-links">
+        <Link to="/legal">Mentions légales</Link>
+        <Link to="/cgu">CGU</Link>
+        <Link to="/contact">Contact</Link>
+      </div>
+      <div className="footer-copy">© 2026 COURTIA — Tous droits réservés.</div>
+    </footer>
+  );
+}
+
+/* ─────────────────────────────────────────── */
+/* STYLES — Exacts de la référence + sections  */
+/* ─────────────────────────────────────────── */
+const styles = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400&display=swap');
+
+:root {
+  --bg-deep: #020108;
+  --bg-mid: #08051A;
+}
+
+html, body, #root {
+  background: var(--bg-deep);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* ─── COSMIC BACKGROUND ─── */
+.cosmos {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 25% 30%, rgba(120,60,255,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 70%, rgba(255,80,180,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(0,200,255,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #020108 0%, #08051A 50%, #060211 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.floor {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) perspective(800px) rotateX(70deg);
+  width: 140vw;
+  height: 60vh;
+  background-image:
+    linear-gradient(rgba(180,100,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,100,255,0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 80%);
+  mask-image: linear-gradient(to top, black 0%, transparent 80%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── PARTICLES ─── */
+.particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: drift linear infinite;
+}
+@keyframes drift {
+  0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-10vh) translateX(40px); opacity: 0; }
+}
+
+/* ─── BUBBLE ANIMATIONS ─── */
+@keyframes bubbleHaloShift {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.15) rotate(180deg); opacity: 1; }
+}
+@keyframes bubbleBreathe {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.025) translateY(-6px); }
+}
+
+/* ─── STAGE (HERO) ─── */
+.stage {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px 40px;
+}
+
+.kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 60px;
+}
+.kicker .dot, .band-kicker .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4d9d, #a142f4);
+  margin: 0 10px;
+  vertical-align: middle;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+.bubble-stage {
+  position: relative;
+  margin-bottom: 50px;
+}
+
+.wordmark {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 200;
+  font-size: clamp(48px, 8vw, 82px);
+  letter-spacing: -3px;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 14px;
+}
+.wordmark em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tagline {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(15px, 1.6vw, 18px);
+  color: rgba(255,255,255,0.5);
+  letter-spacing: -0.2px;
+  text-align: center;
+  max-width: 420px;
+  margin-bottom: 50px;
+}
+
+/* CTA */
+.cta-row {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 80px;
+}
+.cta-primary, .cta-ghost {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cta-primary {
+  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(161, 66, 244, 0.35);
+}
+.cta-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(161, 66, 244, 0.5); }
+.cta-primary .arrow { transition: transform 0.3s ease; }
+.cta-primary:hover .arrow { transform: translateX(4px); }
+.cta-ghost {
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+}
+.cta-ghost:hover { background: rgba(255,255,255,0.08); }
+
+.scroll-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.scroll-dot {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent);
+  animation: scrollPulse 2.5s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50% { opacity: 1; transform: scaleY(1.3); }
+}
+
+/* ─── BAND (sections) ─── */
+.band, .powers, .proof, .pricing {
+  position: relative;
+  z-index: 2;
+  padding: 140px 40px;
+}
+.band-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+.band-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 40px;
+}
+.band-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 200;
+  font-size: clamp(34px, 5vw, 64px);
+  letter-spacing: -2px;
+  line-height: 1.05;
+  margin-bottom: 40px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.band-title em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.band-text {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 28px;
+}
+.band-text em {
+  background: linear-gradient(90deg, #ff4d9d, #a142f4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ─── POWERS GRID ─── */
+.powers-grid {
+  max-width: 1280px;
+  margin: 80px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+.power-card {
+  position: relative;
+  background: rgba(8, 5, 26, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+}
+.power-bubble {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.power-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 8px;
+}
+.power-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+  color: #fff;
+}
+.power-desc {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.55);
+}
+
+/* ─── PROOF ─── */
+.proof-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 60px;
+}
+.proof-stat { text-align: center; }
+.proof-value {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(56px, 8vw, 96px);
+  background: linear-gradient(135deg, #ff80e0, #c080ff, #80a8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.proof-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ─── PRICING ─── */
+.pricing-grid {
+  max-width: 1100px;
+  margin: 80px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.pricing-card {
+  position: relative;
+  background: rgba(8, 5, 26, 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 24px;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+}
+.pricing-card.featured {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(rgba(8,5,26,0.7), rgba(8,5,26,0.7)) padding-box,
+    linear-gradient(135deg, #ff4d9d, #a142f4, #4285f4) border-box;
+}
+.pricing-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ff4d9d, #a142f4);
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: #fff;
+}
+.pricing-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 28px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.pricing-currency {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 200;
+  font-size: 24px;
+  color: rgba(255,255,255,0.7);
+}
+.pricing-amount {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 200;
+  font-size: 64px;
+  letter-spacing: -2px;
+  color: #fff;
+}
+.pricing-period, .pricing-custom {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+}
+.pricing-custom {
+  font-size: 32px;
+  color: #fff;
+}
+.pricing-desc {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 28px;
+}
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  flex: 1;
+}
+.pricing-features li {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 100px 40px 60px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.footer-bubble {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.footer-wordmark {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 200;
+  font-size: 32px;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.footer-wordmark em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  background: linear-gradient(90deg, #ff4d9d, #a142f4, #4285f4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.footer-tagline {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 40px;
+}
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+.footer-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+}
+.footer-links a:hover { color: rgba(255,255,255,0.8); }
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+}
+
+@media (max-width: 600px) {
+  .kicker, .band-kicker { font-size: 9px; letter-spacing: 4px; margin-bottom: 32px; }
+  .bubble-stage { margin-bottom: 32px; }
+  .stage { padding: 60px 24px 40px; }
+  .band, .powers, .proof, .pricing { padding: 80px 24px; }
+  .cta-row { flex-direction: column; width: 100%; }
+  .cta-primary, .cta-ghost { justify-content: center; }
+  .footer-links { flex-direction: column; gap: 16px; }
+}
+`;
