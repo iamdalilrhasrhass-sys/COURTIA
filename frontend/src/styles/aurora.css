@@ -1,0 +1,223 @@
+/**
+ * COURTIA Aurora Design System
+ * Tokens CSS — niveau Linear/Lovable/Raycast
+ * LOT 13
+ */
+
+:root {
+  /* BACKGROUND LAYERS */
+  --aurora-bg-deep: #050510;
+  --aurora-bg-base: #0A0A18;
+  --aurora-bg-elevated: #11112A;
+  --aurora-bg-surface: rgba(255,255,255,0.03);
+  --aurora-bg-surface-hover: rgba(255,255,255,0.06);
+  --aurora-bg-glass: rgba(15,15,40,0.6);
+  --aurora-bg-input: rgba(255,255,255,0.04);
+  --aurora-bg-input-focus: rgba(255,255,255,0.08);
+  
+  /* ACCENTS IRISES */
+  --aurora-violet: #8B5CF6;
+  --aurora-violet-soft: #A78BFA;
+  --aurora-violet-dark: #6D28D9;
+  --aurora-pink: #EC4899;
+  --aurora-pink-soft: #F472B6;
+  --aurora-cyan: #06B6D4;
+  --aurora-cyan-soft: #22D3EE;
+  --aurora-emerald: #10B981;
+  --aurora-emerald-soft: #34D399;
+  --aurora-amber: #F59E0B;
+  --aurora-amber-soft: #FBBF24;
+  --aurora-rose: #F43F5E;
+  --aurora-rose-soft: #FB7185;
+  --aurora-blue: #3B82F6;
+  --aurora-neutral: #64748B;
+  
+  /* GRADIENTS */
+  --aurora-gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  --aurora-gradient-cool: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+  --aurora-gradient-warm: linear-gradient(135deg, #EC4899 0%, #F59E0B 100%);
+  --aurora-gradient-success: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
+  --aurora-gradient-danger: linear-gradient(135deg, #F43F5E 0%, #EC4899 100%);
+  --aurora-halo-violet: radial-gradient(circle at 30% 30%, rgba(139,92,246,0.35) 0%, transparent 60%);
+  --aurora-halo-multi: radial-gradient(at 20% 30%, rgba(139,92,246,0.25) 0%, transparent 40%),
+                       radial-gradient(at 80% 20%, rgba(236,72,153,0.18) 0%, transparent 45%),
+                       radial-gradient(at 60% 80%, rgba(6,182,212,0.15) 0%, transparent 50%);
+  
+  /* BORDERS */
+  --aurora-border-soft: rgba(255,255,255,0.06);
+  --aurora-border-base: rgba(255,255,255,0.10);
+  --aurora-border-strong: rgba(255,255,255,0.20);
+  --aurora-border-violet: rgba(139,92,246,0.40);
+  --aurora-border-cyan: rgba(6,182,212,0.40);
+  --aurora-border-error: rgba(244,63,94,0.50);
+  --aurora-border-success: rgba(16,185,129,0.50);
+  
+  /* TEXT */
+  --aurora-text-primary: #F8FAFC;
+  --aurora-text-secondary: #CBD5E1;
+  --aurora-text-muted: #64748B;
+  --aurora-text-faint: #475569;
+  --aurora-text-inverse: #0F172A;
+  
+  /* SHADOWS */
+  --aurora-shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+  --aurora-shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+  --aurora-shadow-elevated: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(139,92,246,0.15);
+  --aurora-shadow-glow: 0 0 40px rgba(139,92,246,0.30);
+  --aurora-shadow-glow-strong: 0 0 60px rgba(139,92,246,0.50), 0 0 20px rgba(236,72,153,0.20);
+  --aurora-shadow-glow-cyan: 0 0 40px rgba(6,182,212,0.30);
+  --aurora-shadow-glow-pink: 0 0 40px rgba(236,72,153,0.30);
+  --aurora-shadow-focus: 0 0 0 3px rgba(139,92,246,0.35);
+  --aurora-shadow-focus-error: 0 0 0 3px rgba(244,63,94,0.35);
+  
+  /* SPACING (base 4px) */
+  --aurora-space-0: 0;
+  --aurora-space-1: 0.25rem;
+  --aurora-space-2: 0.5rem;
+  --aurora-space-3: 0.75rem;
+  --aurora-space-4: 1rem;
+  --aurora-space-5: 1.25rem;
+  --aurora-space-6: 1.5rem;
+  --aurora-space-8: 2rem;
+  --aurora-space-10: 2.5rem;
+  --aurora-space-12: 3rem;
+  --aurora-space-16: 4rem;
+  --aurora-space-20: 5rem;
+  --aurora-space-24: 6rem;
+  
+  /* RADII */
+  --aurora-radius-sm: 6px;
+  --aurora-radius-md: 10px;
+  --aurora-radius-lg: 14px;
+  --aurora-radius-xl: 20px;
+  --aurora-radius-2xl: 28px;
+  --aurora-radius-full: 9999px;
+  
+  /* TYPOGRAPHY */
+  --aurora-font-display: Inter, SF Pro Display, system-ui, sans-serif;
+  --aurora-font-body: Inter, system-ui, sans-serif;
+  --aurora-font-mono: JetBrains Mono, Fira Code, ui-monospace, monospace;
+  
+  --aurora-text-xs: 0.75rem;
+  --aurora-text-sm: 0.875rem;
+  --aurora-text-base: 1rem;
+  --aurora-text-lg: 1.125rem;
+  --aurora-text-xl: 1.25rem;
+  --aurora-text-2xl: 1.5rem;
+  --aurora-text-3xl: 1.875rem;
+  --aurora-text-4xl: 2.25rem;
+  --aurora-text-5xl: 3rem;
+  
+  --aurora-leading-tight: 1.25;
+  --aurora-leading-normal: 1.5;
+  --aurora-leading-relaxed: 1.625;
+  --aurora-tracking-tight: -0.025em;
+  --aurora-tracking-normal: 0;
+  --aurora-tracking-wide: 0.025em;
+  
+  /* ANIMATION */
+  --aurora-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --aurora-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --aurora-ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --aurora-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --aurora-duration-instant: 75ms;
+  --aurora-duration-fast: 150ms;
+  --aurora-duration-base: 250ms;
+  --aurora-duration-slow: 500ms;
+  --aurora-duration-slower: 700ms;
+  
+  /* Z-INDEX */
+  --aurora-z-dropdown: 100;
+  --aurora-z-sticky: 200;
+  --aurora-z-overlay: 300;
+  --aurora-z-modal: 400;
+  --aurora-z-toast: 500;
+  --aurora-z-tooltip: 600;
+}
+
+/* PREMIUM SCROLLBAR */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--aurora-border-base);
+  border-radius: var(--aurora-radius-full);
+  transition: background var(--aurora-duration-fast) var(--aurora-ease);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--aurora-border-strong); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* UTILITY CLASSES */
+.aurora-card {
+  background: var(--aurora-bg-surface);
+  border: 1px solid var(--aurora-border-soft);
+  border-radius: var(--aurora-radius-lg);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  transition: all var(--aurora-duration-base) var(--aurora-ease);
+}
+.aurora-card:hover {
+  background: var(--aurora-bg-surface-hover);
+  border-color: var(--aurora-border-base);
+  box-shadow: var(--aurora-shadow-elevated);
+  transform: translateY(-1px);
+}
+.aurora-card--static:hover { transform: none; box-shadow: var(--aurora-shadow-card); }
+
+.aurora-glass {
+  background: var(--aurora-bg-glass);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--aurora-border-soft);
+}
+.aurora-glass--strong {
+  background: rgba(15,15,40,0.85);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+}
+
+.aurora-glow { box-shadow: var(--aurora-shadow-glow); }
+.aurora-glow--strong { box-shadow: var(--aurora-shadow-glow-strong); }
+.aurora-glow--cyan { box-shadow: var(--aurora-shadow-glow-cyan); }
+.aurora-glow--pink { box-shadow: var(--aurora-shadow-glow-pink); }
+
+.aurora-text-gradient {
+  background: var(--aurora-gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.aurora-text-gradient--cool {
+  background: var(--aurora-gradient-cool);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.aurora-text-gradient--warm {
+  background: var(--aurora-gradient-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes aurora-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.aurora-shimmer {
+  background: linear-gradient(90deg, var(--aurora-bg-surface) 0%, rgba(255,255,255,0.08) 50%, var(--aurora-bg-surface) 100%);
+  background-size: 200% 100%;
+  animation: aurora-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes aurora-pulse-glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+.aurora-pulse-glow { animation: aurora-pulse-glow 2s ease-in-out infinite; }
+
+@keyframes aurora-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.aurora-spin { animation: aurora-spin 1s linear infinite; }
+
+.aurora-focus-ring:focus,
+.aurora-focus-ring:focus-visible { outline: none; box-shadow: var(--aurora-shadow-focus); }
+.aurora-focus-ring--error:focus,
+.aurora-focus-ring--error:focus-visible { box-shadow: var(--aurora-shadow-focus-error); }
+
+::selection { background: rgba(139,92,246,0.35); color: var(--aurora-text-primary); }
