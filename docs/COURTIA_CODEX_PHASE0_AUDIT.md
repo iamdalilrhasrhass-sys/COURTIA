@@ -208,7 +208,7 @@ Conclusion :
 ### P0
 
 1. Verifier login demo en Phase 1.
-   - Si `demo@courtia.fr` / `TestCourtia2026!` ne fonctionne pas, stopper la refonte et corriger l'auth avant tout.
+   - Si `demo@courtiark.fr` / `TestCourtia2026!` ne fonctionne pas, stopper la refonte et corriger l'auth avant tout.
 
 2. Corriger ou confirmer Admin Center avant de le declarer pret.
    - Mismatch actuel : frontend `/api/admin/*`, backend super admin `/api/admin/super/*`.

@@ -687,7 +687,7 @@
 - Responsive : left panel masqué sur mobile
 
 ### Tests
-- Login demo@courtia.fr → dashboard OK ✅
+- Login demo@courtiark.fr → dashboard OK ✅
 - Mauvais mot de passe → "Email ou mot de passe incorrect." ✅
 - Register /register?plan=pro → badge Pro + formulaire OK ✅
 - Console 0 erreur ✅
@@ -697,7 +697,7 @@
 
 ## P0 Login — Résolution (1er mai 2026)
 
-**Problème** : Login impossible avec demo@courtia.fr — "Une erreur est survenue"
+**Problème** : Login impossible avec demo@courtiark.fr — "Une erreur est survenue"
 **Cause** : Mot de passe demo incorrect (compte existait, flux auth fonctionnel)
 **Correction** : Reset password_hash sur VPS (bcryptjs, rounds=10)
 **Tests** : Inscription OK, login demo OK, dashboard OK, console 0

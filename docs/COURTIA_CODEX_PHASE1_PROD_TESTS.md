@@ -17,7 +17,7 @@ Objectif : verifier les parcours production essentiels avant toute refonte.
 ## 2. Login demo
 
 - URL : `https://courtia.vercel.app/login`
-- Identifiant teste : `demo@courtia.fr`
+- Identifiant teste : `demo@courtiark.fr`
 - Resultat initial : OK.
 - Route apres login : `https://courtia.vercel.app/dashboard`
 - Dashboard visible : oui, `Bonjour Test`, cockpit et empty state portefeuille visibles.
@@ -46,7 +46,7 @@ Decision :
 ## 3. Mauvais mot de passe
 
 - Identifiants :
-  - email : `demo@courtia.fr`
+  - email : `demo@courtiark.fr`
   - mot de passe : mauvais mot de passe de test
 - Message affiche : `Email ou mot de passe incorrect.`
 - Statut : OK.
