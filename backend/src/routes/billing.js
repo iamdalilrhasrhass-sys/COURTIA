@@ -617,7 +617,7 @@ async function createCheckoutSessionHandler(req, res) {
     }
 
     const { customerId } = await getOrCreateStripeCustomerForUser({ userId, organizationId: org.id });
-    const frontendUrl = process.env.FRONTEND_URL || 'https://courtia.vercel.app';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://app.courtiark.fr';
     const successUrl = `${frontendUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${frontendUrl}/billing/cancel`;
 
@@ -715,7 +715,7 @@ async function createPortalSessionHandler(req, res) {
     const org = await billingService.getOrCreateOrganization(userId);
     const { customerId } = await getOrCreateStripeCustomerForUser({ userId, organizationId: org.id });
 
-    const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://courtia.vercel.app'}/billing`;
+    const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/billing`;
     const portal = await stripeService.createPortalSession({ customerId, returnUrl });
     return res.json({ success: true, url: portal.url });
   } catch (_err) {
@@ -755,7 +755,7 @@ router.post('/cancel-trial', verifyToken, async (req, res) => {
       });
     }
 
-    const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://courtia.vercel.app'}/billing`;
+    const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/billing`;
     const portal = await stripeService.createPortalSession({ customerId, returnUrl });
     return res.json({
       success: true,
