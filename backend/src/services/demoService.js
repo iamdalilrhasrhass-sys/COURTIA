@@ -11,7 +11,7 @@ const demoService = {
          VALUES ($1, $2, $3, $4, $5, NOW())
          ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
          RETURNING id, email`,
-        ['demo@courtia.fr', hashedPassword, 'Demo', 'Account', 'broker']
+        ['demo@courtiark.fr', hashedPassword, 'Demo', 'Account', 'broker']
       );
 
       const userId = userResult.rows[0].id;
@@ -59,7 +59,7 @@ const demoService = {
   async resetDemoAccount(pool) {
     try {
       await pool.query('DELETE FROM clients WHERE email LIKE $1', ['%@demo.fr']);
-      await pool.query('DELETE FROM users WHERE email = $1', ['demo@courtia.fr']);
+      await pool.query('DELETE FROM users WHERE email = $1', ['demo@courtiark.fr']);
       
       await this.createDemoAccount(pool);
       

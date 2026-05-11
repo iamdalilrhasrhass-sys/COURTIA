@@ -32,7 +32,7 @@ const URL_ALLOWLIST = [
   'bing.com',
   'wikipedia.org',
   'github.com',
-  'courtiark.fr', 'www.courtiark.fr', 'courtia.vercel.app',
+  'courtiark.fr', 'www.courtiark.fr', 'app.courtiark.fr',
   'courtiark.vercel.app',
   'localhost',
   '127.0.0.1',
