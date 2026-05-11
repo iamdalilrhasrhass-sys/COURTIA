@@ -15,7 +15,7 @@ const FAQ = [
 export default function TarifsPublic() {
   useEffect(() => {
     applySeo({
-      title: 'Tarifs COURTIA — Starter 89€ / Pro 199€ / Cabinet 399€',
+      title: 'Tarifs COURTIA — Starter 89€ / Pro 159€ / Cabinet sur devis',
       description: 'Plans COURTIA pour courtiers assurance: Starter, Pro (offre principale), Cabinet et Premium sur devis.',
       canonicalPath: '/tarifs',
     })
@@ -46,7 +46,7 @@ export default function TarifsPublic() {
 
           <article className="mk-price-card featured">
             <p className="mk-price-eyebrow">Pro · recommandé</p>
-            <p className="mk-price">199€ <small>HT/mois</small></p>
+            <p className="mk-price">159€ <small>HT/mois</small></p>
             <ul className="mk-plain-list">
               <li>Morning Brief complet</li>
               <li>Clients à risque & relances intelligentes</li>
@@ -57,7 +57,7 @@ export default function TarifsPublic() {
 
           <article className="mk-price-card">
             <p className="mk-price-eyebrow">Cabinet</p>
-            <p className="mk-price">399€ <small>HT/mois</small></p>
+            <p className="mk-price">Sur devis</p>
             <ul className="mk-plain-list">
               <li>Multi-utilisateurs avancé</li>
               <li>Commissions et reporting cabinet</li>
@@ -66,18 +66,11 @@ export default function TarifsPublic() {
             </ul>
           </article>
 
-          <article className="mk-price-card">
-            <p className="mk-price-eyebrow">Premium</p>
-            <p className="mk-price">Sur devis</p>
-            <ul className="mk-plain-list">
-              <li>Multi-cabinet</li>
-              <li>Accompagnement dédié</li>
-              <li>Intégrations sur mesure</li>
-              <li>Support prioritaire</li>
-            </ul>
-          </article>
         </div>
+        <p className="mk-section-sub">Le plan Pro est le plus choisi par les courtiers indépendants.</p>
+      </section>
 
+      <section className="mk-section">
         <div className="mk-hero-actions" style={{ marginTop: 16 }}>
           <Link to="/demo" className="mk-button primary" onClick={onClickPricing}>
             Demander une démo <ArrowRight size={14} />
@@ -92,7 +85,7 @@ export default function TarifsPublic() {
         <div className="mk-card">
           <span className="mk-eyebrow"><Sparkles size={12} /> Positionnement commercial</span>
           <p className="mk-section-sub" style={{ marginTop: 10 }}>
-            COURTIA est prêt pour une bêta commerciale sérieuse à 89€ HT/mois et défendable à 199€ HT/mois avec ARK, intégrations et documents métier.
+            COURTIA est prêt pour une bêta commerciale sérieuse à 89€ HT/mois et défendable à 159€ HT/mois avec ARK, intégrations et documents métier.
           </p>
         </div>
       </section>

@@ -263,7 +263,7 @@ function planSummary(code) {
   if (code === 'starter') return 'Pour lancer COURTIA avec les fondations CRM et rapports simples.'
   if (code === 'pro') return 'L’offre principale avec ARK, documents, intégrations et cockpit complet.'
   if (code === 'cabinet') return 'Pour équipes multi-collaborateurs avec pilotage avancé et support renforcé.'
-  return 'Accompagnement sur mesure, intégrations avancées et déploiement premium.'
+  return 'Accompagnement sur mesure, intégrations avancées et déploiement cabinet.'
 }
 
 function planFeatures(code) {

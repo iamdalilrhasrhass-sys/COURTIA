@@ -107,7 +107,7 @@ const plans = [
   },
   {
     name: 'Le Réseau',
-    price: '350',
+    price: 'Sur devis',
     desc: 'Pour cabinet performant',
     popular: false,
     features: {
@@ -213,7 +213,7 @@ function PlanCard({ plan, index }) {
 
       <div className="mt-auto">
         <a
-          href="mailto:contact@courtia.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Essentiel"
+          href="mailto:contact@courtiark.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Essentiel"
           className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-200 ${
             plan.popular
               ? 'bg-[#534AB7] text-white hover:bg-[#4639a6] shadow-lg shadow-[#534AB7]/20'
@@ -481,7 +481,7 @@ export default function Tarifs() {
               cabinet.
             </p>
             <a
-              href="mailto:contact@courtia.fr"
+              href="mailto:contact@courtiark.fr"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#534AB7] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#534AB7]/20 transition-all hover:bg-[#4639a6] hover:shadow-xl hover:shadow-[#534AB7]/30"
             >
               <Mail size={18} />

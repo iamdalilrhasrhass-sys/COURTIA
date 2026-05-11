@@ -17,7 +17,7 @@ export default function LegalMentionsLegales() {
         <h1 className="mk-section-title">Mentions légales</h1>
         <div className="mk-card">
           <p>Éditeur: COURTIA (projet SaaS B2B dédié aux courtiers en assurance français).</p>
-          <p>Contact: contact@courtia.fr</p>
+          <p>Contact: contact@courtiark.fr</p>
           <p>Hébergement applicatif: Vercel (frontend) et infrastructure API dédiée.</p>
           <p>Responsable de publication: équipe fondatrice COURTIA.</p>
           <p>

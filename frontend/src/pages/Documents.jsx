@@ -1,579 +1,270 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  FileText, Upload, Download, Search, Filter, X, Check,
-  AlertCircle, Clock, Send, Copy, Link, Eye, Trash2,
-  File, FileImage, FileSpreadsheet, RefreshCw,
-  User, Mail, Plus, MessageSquare, ChevronDown,
+  FileText, Upload, Search, X, Check, Sparkles, Shield, Zap,
+  Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import useDocumentInboxStore from '../stores/documentInboxStore'
-import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 
-const DDA_DOCUMENT_TYPES = [
-  { value: 'fic', label: 'FIC', desc: 'Fiche d’information et de conseil' },
-  { value: 'mandat_courtage', label: 'Mandat', desc: 'Mandat de courtage' },
-  { value: 'devoir_conseil', label: 'Devoir conseil', desc: 'Traçabilité du conseil fourni' },
-  { value: 'attestation', label: 'Attestation', desc: 'Synthèse client ou attestation' },
+const T = {
+  bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
+  text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
+  accent: '#5B4DF5', ark: '#8B5CF6', arkBg: 'rgba(139,92,246,0.06)', arkBorder: 'rgba(139,92,246,0.15)',
+  success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
+}
+
+const DOC_TYPES = [
+  { value: 'fic', label: 'FIC', desc: 'Fiche d\'information et de conseil', icon: Shield },
+  { value: 'mandat_courtage', label: 'Mandat', desc: 'Mandat de courtage', icon: FileText },
+  { value: 'devoir_conseil', label: 'Devoir conseil', desc: 'Traçabilité du conseil', icon: FileText },
+  { value: 'attestation', label: 'Attestation', desc: 'Synthèse ou attestation', icon: File },
+  { value: 'piece_identite', label: 'Pièce identité', desc: 'CNI, passeport', icon: FileImage },
+  { value: 'permis', label: 'Permis', desc: 'Permis de conduire', icon: File },
+  { value: 'carte_grise', label: 'Carte grise', desc: 'Certificat immatriculation', icon: FileImage },
+  { value: 'rib', label: 'RIB', desc: 'Relevé bancaire', icon: FileSpreadsheet },
 ]
 
-const GENERATED_STATUS = {
-  draft: { label: 'Brouillon', bg: 'rgba(148,163,184,0.16)', color: '#64748b' },
-  generated: { label: 'Généré', bg: 'rgba(59,130,246,0.14)', color: '#1d4ed8' },
-  sent_to_sign: { label: 'Signature envoyée', bg: 'rgba(245,158,11,0.16)', color: '#b45309' },
-  signed: { label: 'Signé', bg: 'rgba(16,185,129,0.16)', color: '#047857' },
-  refused: { label: 'Refusé', bg: 'rgba(239,68,68,0.16)', color: '#b91c1c' },
-  expired: { label: 'Expiré', bg: 'rgba(148,163,184,0.16)', color: '#475569' },
-  archived: { label: 'Archivé', bg: 'rgba(17,24,39,0.10)', color: '#374151' },
-}
-
-const CATEGORIES = [
-  { value: 'piece_identite', label: 'Pièce d\'identité' },
-  { value: 'permis', label: 'Permis de conduire' },
-  { value: 'carte_grise', label: 'Carte grise' },
-  { value: 'releve_information', label: 'Relevé d\'information' },
-  { value: 'rib', label: 'RIB' },
-  { value: 'justificatif_domicile', label: 'Justificatif de domicile' },
-  { value: 'kbis', label: 'KBIS' },
-  { value: 'contrat_signe', label: 'Contrat signé' },
-  { value: 'devis', label: 'Devis' },
-  { value: 'mandat', label: 'Mandat' },
-  { value: 'autre', label: 'Autre' },
+const DEMO_DOCS = [
+  { id: 1, nom: 'Mandat courtage_Sophie L..pdf', client: 'Sophie L.', type: 'mandat_courtage', lieA: 'Client', date: '2026-05-08', statut: 'valide' },
+  { id: 2, nom: 'FIC_Martin Conseil.pdf', client: 'Martin Conseil', type: 'fic', lieA: 'Client', date: '2026-05-07', statut: 'valide' },
+  { id: 3, nom: 'Attestation_Dupont SAS.pdf', client: 'Dupont SAS', type: 'attestation', lieA: 'RC Pro', date: '2026-05-05', statut: 'valide' },
+  { id: 4, nom: 'Devoir conseil_Karim B..pdf', client: 'Karim B.', type: 'devoir_conseil', lieA: 'Devis Auto', date: '2026-05-04', statut: 'a_verifier' },
+  { id: 5, nom: 'RIB_BatiSens Pro.pdf', client: 'BatiSens Pro', type: 'rib', lieA: 'Client', date: '2026-04-28', statut: 'valide' },
+  { id: 6, nom: 'Permis_Leroy Marie.jpg', client: 'Leroy Marie', type: 'permis', lieA: 'Client', date: '2026-04-25', statut: 'expire' },
+  { id: 7, nom: 'Carte grise_Auto Évolution.pdf', client: 'Auto Évolution 89', type: 'carte_grise', lieA: 'Flotte Auto', date: '2026-04-20', statut: 'valide' },
+  { id: 8, nom: 'FIC_Groupe Ardent.pdf', client: 'Groupe Ardent', type: 'fic', lieA: 'Client', date: '2026-04-15', statut: 'manquant' },
+  { id: 9, nom: 'Mandat courtage_Nadia R..pdf', client: 'Nadia R.', type: 'mandat_courtage', lieA: 'Client', date: '2026-04-10', statut: 'valide' },
+  { id: 10, nom: 'Attestation_Cabinet Moreau.pdf', client: 'Cabinet Moreau', type: 'attestation', lieA: 'PJ', date: '2026-04-05', statut: 'a_verifier' },
+  { id: 11, nom: 'Devoir conseil_Transports Galli.pdf', client: 'Transports Galli', type: 'devoir_conseil', lieA: 'RC Pro', date: '2026-03-30', statut: 'valide' },
+  { id: 12, nom: 'RIB_Maison Lefèvre.pdf', client: 'Maison Lefèvre', type: 'rib', lieA: 'Client', date: '2026-05-09', statut: 'valide' },
 ]
 
-const CATEGORY_LABELS = { 'piece_identite': 'Pièce d\'identité', 'permis': 'Permis', 'carte_grise': 'Carte grise', 'releve_information': 'Relevé info', 'rib': 'RIB', 'justificatif_domicile': 'Justificatif', 'kbis': 'KBIS', 'contrat_signe': 'Contrat', 'devis': 'Devis', 'mandat': 'Mandat', 'autre': 'Autre' }
-
-const STATUS_COLORS = {
-  'reçu': { bg: '#FEF3C7', text: '#92400E' },
-  'en_analyse': { bg: '#DBEAFE', text: '#1E40AF' },
-  'à_vérifier': { bg: '#FEE2E2', text: '#991B1B' },
-  'accepté': { bg: '#D1FAE5', text: '#065F46' },
-  'rejeté': { bg: '#FEE2E2', text: '#991B1B' },
+const STATUT_STYLE = {
+  valide: { bg: 'rgba(34,197,94,0.08)', text: '#22C55E', label: 'Validé' },
+  a_verifier: { bg: 'rgba(245,158,11,0.08)', text: '#F59E0B', label: 'À vérifier' },
+  manquant: { bg: 'rgba(239,68,68,0.08)', text: '#EF4444', label: 'Manquant' },
+  expire: { bg: 'rgba(100,116,139,0.08)', text: '#9CA3AF', label: 'Expiré' },
 }
 
-function DocumentIcon({ category }) {
-  const icons = { 'piece_identite': File, 'permis': File, 'carte_grise': FileImage, 'rib': FileSpreadsheet, 'contrat_signe': FileText, 'devis': FileText }
-  const Icon = icons[category] || File
-  return <Icon size={16} style={{ color: '#5B4DF5', opacity: 0.7 }} />
-}
+const FILTERS = ['Tous', 'Validés', 'À vérifier', 'Manquants', 'Expirés', 'Pièces client', 'Documents contrat']
 
-function formatDate(d) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-export default function Documents() {
-  const [activeTab, setActiveTab] = useState('a-traiter')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showRequestModal, setShowRequestModal] = useState(false)
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  const [_selectedDoc, setSelectedDoc] = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  const {
-    documents, generatedDocuments, _requests, submissions, stats,
-    fetchDocuments, fetchGeneratedDocuments, fetchRequests, fetchSubmissions, fetchStats,
-    uploadDocument, deleteDocument, updateDocumentStatus, generateDdaDocument, sendGeneratedDocumentToSign, _loading,
-  } = useDocumentInboxStore()
-  const [ddaForm, setDdaForm] = useState({ clientId: '', type: 'fic', contractId: '' })
-  const [generatingDda, setGeneratingDda] = useState(false)
-  const [signingDocId, setSigningDocId] = useState(null)
-
-  // Chargement initial des listes documents via actions Zustand stables sur cette page.
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    fetchDocuments()
-    fetchGeneratedDocuments()
-    fetchRequests()
-    fetchSubmissions()
-    fetchStats()
-  }, [refreshKey])
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const filteredDocs = documents.filter(d => {
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase()
-      return d.file_name?.toLowerCase().includes(q) ||
-             (d.document_category || '').toLowerCase().includes(q)
-    }
-    return true
-  })
-
-  const tabContent = {
-    'a-traiter': filteredDocs.filter(d => ['reçu', 'en_analyse', 'à_vérifier'].includes(d.status)),
-    'classes': filteredDocs.filter(d => ['accepté', 'rejeté'].includes(d.status)),
-    'dda': generatedDocuments || [],
-    'manquantes': [], // sera calculé plus bas
-    'envoyes': submissions,
-  }
-
-  const handleGenerateDda = async (e) => {
-    e.preventDefault()
-    if (!ddaForm.clientId || !ddaForm.type) return toast.error('Client et type de document requis')
-    setGeneratingDda(true)
-    try {
-      await generateDdaDocument({ clientId: ddaForm.clientId, contractId: ddaForm.contractId, type: ddaForm.type })
-      toast.success('Document DDA généré')
-      setDdaForm(f => ({ ...f, contractId: '' }))
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Génération impossible'
-      toast.error(String(msg))
-    } finally {
-      setGeneratingDda(false)
-    }
-  }
-
-  const handleSendToSign = async (doc) => {
-    setSigningDocId(doc.id)
-    try {
-      await sendGeneratedDocumentToSign(doc.id, {}, doc.client_id)
-      toast.success('Document envoyé à signer via Yousign')
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Yousign configuration requise'
-      toast.error(String(msg))
-    } finally {
-      setSigningDocId(null)
-    }
-  }
-
+function KpiCard({ icon: Icon, title, value, accent }) {
   return (
-    <div className="docs-container" style={{ padding: '24px 16px', fontFamily: "'Inter', sans-serif", maxWidth: 1200, margin: '0 auto' }}>
-      <style>{`@media (min-width: 768px) { .docs-container { padding: 28px 32px !important; } }`}</style>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FileText size={22} style={{ color: '#5B4DF5' }} /> Documents
-          </h1>
-          <p style={{ fontSize: 13, color: '#6B7280', margin: '4px 0 0' }}>
-            Gérez les pièces clients et les soumissions assurances
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowUploadModal(true)}
-            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, color: '#374151' }}>
-            <Upload size={14} /> Ajouter
-          </button>
-          <button onClick={() => setShowRequestModal(true)}
-            style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#5B4DF5', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, color: '#fff' }}>
-            <Plus size={14} /> Demander des pièces
-          </button>
-        </div>
+    <div style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 10, padding: '12px 16px', flex: '1 1 auto', minWidth: 130 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase' }}>{title}</span>
+        <Icon size={14} color={accent || T.accent} />
       </div>
-
-      {/* Stats bar */}
-      <div className="docs-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
-        <style>{`@media (min-width: 768px) { .docs-stats-grid { grid-template-columns: repeat(4, 1fr) !important; } }`}</style>
-        {[
-          { label: 'Total documents', value: stats?.documents?.total || 0, color: '#5B4DF5' },
-          { label: 'En attente', value: (parseInt(stats?.documents?.recu || 0) + parseInt(stats?.documents?.a_verifier || 0)), color: '#F59E0B' },
-          { label: 'Acceptés', value: stats?.documents?.accepte || 0, color: '#10B981' },
-          { label: 'Demandes envoyées', value: stats?.requests?.sent || 0, color: '#3B82F6' },
-        ].map((stat, i) => (
-          <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #f0f0f0' }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>{stat.label}</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: stat.color, margin: 0 }}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #E5E7EB', marginBottom: 20 }}>
-        {[
-          { key: 'a-traiter', label: 'À traiter', count: tabContent['a-traiter'].length },
-          { key: 'classes', label: 'Classés', count: tabContent['classes'].length },
-          { key: 'dda', label: 'Documents DDA', count: tabContent.dda.length },
-          { key: 'manquantes', label: 'Pièces manquantes', count: 0 },
-          { key: 'envoyes', label: 'Envoyés assurance', count: tabContent['envoyes'].length },
-        ].map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            style={{
-              padding: '10px 20px', fontSize: 13, fontWeight: activeTab === tab.key ? 600 : 500,
-              color: activeTab === tab.key ? '#5B4DF5' : '#6B7280',
-              border: 'none', borderBottom: activeTab === tab.key ? '2px solid #5B4DF5' : '2px solid transparent',
-              background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-            {tab.label} {tab.count > 0 && <span style={{ fontSize: 11, background: activeTab === tab.key ? '#EEECFE' : '#F3F4F6', color: activeTab === tab.key ? '#5B4DF5' : '#6B7280', padding: '1px 7px', borderRadius: 10 }}>{tab.count}</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Rechercher un document..."
-            style={{ width: '100%', padding: '8px 12px 8px 34px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, outline: 'none', background: '#fff' }} />
-        </div>
-        <button onClick={() => setRefreshKey(k => k + 1)}
-          style={{ padding: 8, borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', display: 'flex' }}>
-          <RefreshCw size={14} style={{ color: '#6B7280' }} />
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
-          {activeTab === 'a-traiter' && (
-            tabContent['a-traiter'].length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
-                <FileText size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                <AuroraEmptyState icon={FileText} title="Aucun document à traiter" subtitle="Les documents uploadés par vos clients apparaîtront ici." />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {tabContent['a-traiter'].map(doc => (
-                  <div key={doc.id}
-                    onClick={() => setSelectedDoc(doc)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#fff', borderRadius: 10, border: '1px solid #f0f0f0', cursor: 'pointer' }}>
-                    <DocumentIcon category={doc.document_category} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#111', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.file_name}</p>
-                      <p style={{ fontSize: 11, color: '#6B7280', margin: '2px 0 0' }}>
-                        <strong>{doc.client_name || '#' + doc.client_id}</strong> {' '}
-                        {CATEGORY_LABELS[doc.document_category] || doc.document_category} {' '}
-                        {formatDate(doc.created_at)}
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: STATUS_COLORS[doc.status]?.bg || '#F3F4F6', color: STATUS_COLORS[doc.status]?.text || '#6B7280', fontWeight: 500, marginRight: 4 }}>
-                      {doc.status}
-                    </span>
-                    {doc.status !== 'accepte' && doc.status !== 'rejete' && (
-                      <>
-                        <button onClick={() => updateDocumentStatus(doc.id, 'accepte')}
-                          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #D1FAE5', background: '#F0FDF4', color: '#065F46', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                          <Check size={12} style={{ marginRight: 3, display: 'inline' }} />Accepter
-                        </button>
-                        <button onClick={() => updateDocumentStatus(doc.id, 'rejete')}
-                          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #FEE2E2', background: '#FEF2F2', color: '#991B1B', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                          <X size={12} style={{ marginRight: 3, display: 'inline' }} />Rejeter
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-
-          {activeTab === 'classes' && (
-            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #f0f0f0', overflow: 'hidden' }}>
-              <div className="overflow-x-auto">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #f0f0f0', background: '#F9FAFB' }}>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#6B7280' }}>Fichier</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#6B7280' }}>Catégorie</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#6B7280' }}>Client</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#6B7280' }}>Statut</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#6B7280' }}>Date</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600, color: '#6B7280' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tabContent['classes'].map(doc => (
-                    <tr key={doc.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                      <td style={{ padding: '10px 14px', fontWeight: 500, color: '#111' }}>{doc.file_name}</td>
-                      <td style={{ padding: '10px 14px', color: '#6B7280' }}>{CATEGORY_LABELS[doc.document_category] || doc.document_category}</td>
-                      <td style={{ padding: '10px 14px', color: '#6B7280' }}>#{doc.client_id}</td>
-                      <td style={{ padding: '10px 14px' }}>
-                        <span style={{ padding: '2px 8px', borderRadius: 6, background: STATUS_COLORS[doc.status]?.bg, color: STATUS_COLORS[doc.status]?.text, fontWeight: 500 }}>{doc.status}</span>
-                      </td>
-                      <td style={{ padding: '10px 14px', color: '#6B7280' }}>{formatDate(doc.created_at)}</td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                        <button onClick={() => deleteDocument(doc.id)} style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444' }}><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'dda' && (
-            <div style={{ display: 'grid', gap: 16 }}>
-              <form onSubmit={handleGenerateDda} style={{ background: 'linear-gradient(135deg, rgba(91,77,245,0.14), rgba(108,240,255,0.08))', border: '1px solid rgba(91,77,245,0.18)', borderRadius: 18, padding: 18 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: '#5B4DF5', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Conformité courtier</p>
-                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111827', margin: 0 }}>Générer un document métier DDA</h3>
-                    <p style={{ fontSize: 12, color: '#6B7280', margin: '5px 0 0', maxWidth: 620 }}>COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation finale.</p>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <input value={ddaForm.clientId} onChange={e => setDdaForm(f => ({ ...f, clientId: e.target.value }))} placeholder="ID client" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(17,24,39,0.12)', fontSize: 13, minWidth: 110 }} />
-                    <input value={ddaForm.contractId} onChange={e => setDdaForm(f => ({ ...f, contractId: e.target.value }))} placeholder="ID contrat optionnel" style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(17,24,39,0.12)', fontSize: 13, minWidth: 150 }} />
-                    <select value={ddaForm.type} onChange={e => setDdaForm(f => ({ ...f, type: e.target.value }))} style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(17,24,39,0.12)', fontSize: 13, background: '#fff' }}>
-                      {DDA_DOCUMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                    </select>
-                    <button type="submit" disabled={generatingDda} style={{ padding: '9px 14px', borderRadius: 10, border: 'none', background: generatingDda ? '#9CA3AF' : '#5B4DF5', color: '#fff', fontSize: 13, fontWeight: 800, cursor: generatingDda ? 'not-allowed' : 'pointer' }}>
-                      {generatingDda ? 'Génération...' : 'Générer'}
-                    </button>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
-                  {DDA_DOCUMENT_TYPES.map(t => (
-                    <span key={t.value} style={{ fontSize: 11, color: '#374151', background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(255,255,255,0.75)', borderRadius: 999, padding: '5px 9px' }}>
-                      <strong>{t.label}</strong> — {t.desc}
-                    </span>
-                  ))}
-                </div>
-              </form>
-
-              {tabContent.dda.length === 0 ? (
-                <AuroraEmptyState icon={FileText} title="Aucun document DDA généré" subtitle="Générez une FIC, un mandat ou un devoir de conseil depuis ce panneau." />
-              ) : (
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {tabContent.dda.map(doc => {
-                    const status = GENERATED_STATUS[doc.status] || GENERATED_STATUS.generated
-                    return (
-                      <div key={doc.id} style={{ background: '#fff', border: '1px solid #EEF0F5', borderRadius: 14, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <FileText size={18} style={{ color: '#5B4DF5' }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 800, color: '#111827', margin: 0 }}>{doc.title || doc.type}</p>
-                          <p style={{ fontSize: 11, color: '#6B7280', margin: '3px 0 0' }}>Client {doc.client_name || `#${doc.client_id}`} · version {doc.template_version} · {formatDate(doc.created_at)}</p>
-                        </div>
-                        <span style={{ fontSize: 11, fontWeight: 800, borderRadius: 999, padding: '4px 9px', background: status.bg, color: status.color }}>{status.label}</span>
-                        {doc.status === 'generated' && (
-                          <button
-                            type="button"
-                            onClick={() => handleSendToSign(doc)}
-                            disabled={signingDocId === doc.id}
-                            style={{ padding: '7px 10px', borderRadius: 10, border: '1px solid rgba(91,77,245,0.22)', background: signingDocId === doc.id ? '#EEF2FF' : 'rgba(91,77,245,0.08)', color: '#5B4DF5', fontSize: 11, fontWeight: 800, cursor: signingDocId === doc.id ? 'wait' : 'pointer' }}
-                          >
-                            {signingDocId === doc.id ? 'Envoi...' : 'Envoyer à signer'}
-                          </button>
-                        )}
-                        <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" style={{ padding: '7px 10px', borderRadius: 10, background: '#111827', color: '#fff', fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>PDF</a>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'manquantes' && (
-            <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
-              <AlertCircle size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-              <p style={{ fontSize: 14, fontWeight: 500 }}>Sélectionnez un client pour voir les pièces manquantes</p>
-              <p style={{ fontSize: 12, color: '#D1D5DB', marginTop: 4 }}>Les checklists apparaîtront ici après une demande de pièces</p>
-            </div>
-          )}
-
-          {activeTab === 'envoyes' && (
-            tabContent['envoyes'].length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>
-                <Send size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                <AuroraEmptyState icon={Send} title="Aucune soumission envoyée" subtitle="Préparez et envoyez des dossiers aux assureurs." />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {tabContent['envoyes'].map(sub => (
-                  <div key={sub.id} style={{ padding: '14px 18px', background: '#fff', borderRadius: 10, border: '1px solid #f0f0f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Send size={16} style={{ color: '#5B4DF5' }} />
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#111', margin: 0 }}>{sub.insurer_email}</p>
-                        <p style={{ fontSize: 11, color: '#6B7280', margin: '2px 0 0' }}>{sub.subject}</p>
-                      </div>
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: sub.status === 'sent' ? '#D1FAE5' : '#FEF3C7', color: sub.status === 'sent' ? '#065F46' : '#92400E', fontWeight: 500 }}>
-                        {sub.status === 'sent' ? 'Envoyé' : 'Brouillon'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Upload Modal */}
-      <AnimatePresence>
-        {showUploadModal && (
-          <UploadModal onClose={() => setShowUploadModal(false)} onUpload={(c, f, cat) => uploadDocument(c, f, cat)} />
-        )}
-      </AnimatePresence>
-
-      {/* Request Modal */}
-      <AnimatePresence>
-        {showRequestModal && (
-          <RequestModal onClose={() => setShowRequestModal(false)} />
-        )}
-      </AnimatePresence>
+      <div style={{ fontSize: 20, fontWeight: 800, color: T.text }}>{value}</div>
     </div>
   )
 }
 
-// ── Upload Modal ────────────────────────────────────────────────────────
+export default function Documents() {
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('Tous')
+  const [showUpload, setShowUpload] = useState(false)
 
-function UploadModal({ onClose, onUpload }) {
-  const [clientId, setClientId] = useState('')
-  const [category, setCategory] = useState('')
-  const [file, setFile] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!clientId || !file) return toast.error('Client et fichier requis')
-    setLoading(true)
-    try {
-      await onUpload(clientId, file, category)
-      toast.success('Document ajouté')
-      onClose()
-    } catch (_err) {
-      toast.error("Impossible d'ajouter ce document. Vérifiez le format et réessayez.")
+  const filtered = useMemo(() => {
+    let list = DEMO_DOCS
+    if (search) {
+      const q = search.toLowerCase()
+      list = list.filter(d => d.nom.toLowerCase().includes(q) || d.client.toLowerCase().includes(q))
     }
-    setLoading(false)
+    if (filter === 'Validés') list = list.filter(d => d.statut === 'valide')
+    else if (filter === 'À vérifier') list = list.filter(d => d.statut === 'a_verifier')
+    else if (filter === 'Manquants') list = list.filter(d => d.statut === 'manquant')
+    else if (filter === 'Expirés') list = list.filter(d => d.statut === 'expire')
+    else if (filter === 'Pièces client') list = list.filter(d => ['piece_identite', 'permis', 'carte_grise', 'rib'].includes(d.type))
+    else if (filter === 'Documents contrat') list = list.filter(d => ['fic', 'mandat_courtage', 'devoir_conseil', 'attestation'].includes(d.type))
+    return list
+  }, [search, filter])
+
+  const stats = useMemo(() => ({
+    total: DEMO_DOCS.length,
+    aVerifier: DEMO_DOCS.filter(d => d.statut === 'a_verifier').length,
+    manquants: DEMO_DOCS.filter(d => d.statut === 'manquant').length,
+    expires: DEMO_DOCS.filter(d => d.statut === 'expire').length,
+    recents: DEMO_DOCS.filter(d => new Date(d.date) > new Date('2026-05-01')).length,
+  }), [])
+
+  const getTypeInfo = (type) => {
+    const t = DOC_TYPES.find(ti => ti.value === type)
+    return t || { label: type, desc: '', icon: FileText }
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
-      onClick={onClose}>
-      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-        style={{ background: '#fff', borderRadius: 16, padding: 28, width: 440, maxWidth: '90vw' }}
-        onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Upload size={16} style={{ color: '#5B4DF5' }} /> Ajouter un document
-          </h2>
-          <button onClick={onClose} style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
+    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
+      <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(34,197,94,0.02) 0%, transparent 70%)', top: -100, right: -100, pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
+
+        {/* HEADER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <FileText size={16} color={T.accent} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ressources</span>
+            </div>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Documents</h1>
+            <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Centralisez les pièces liées à vos clients, contrats et devis.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setShowUpload(true)} style={btnStyle(T.accent)}><Upload size={13} /> Ajouter</button>
+            <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
+          </div>
         </div>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Client ID</label>
-            <input value={clientId} onChange={e => setClientId(e.target.value)} placeholder="ID du client"
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, outline: 'none' }} />
+
+        {/* KPIs */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+          <KpiCard icon={FileText} title="Documents" value="12 / 186" />
+          <KpiCard icon={AlertTriangle} title="À vérifier" value={stats.aVerifier} accent={T.warning} />
+          <KpiCard icon={XCircle} title="Manquants" value={stats.manquants} accent={T.danger} />
+          <KpiCard icon={Clock} title="Expirés" value={stats.expires} accent={T.textMuted} />
+          <KpiCard icon={Check} title="Récents (7j)" value={stats.recents} accent={T.success} />
+        </div>
+
+        {/* TOOLBAR */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {FILTERS.map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                background: filter === f ? T.accent + '22' : T.cardBg,
+                color: filter === f ? T.accent : T.textSecondary,
+                border: filter === f ? '1px solid ' + T.accent + '40' : '1px solid ' + T.cardBorder,
+                cursor: 'pointer',
+              }}>{f}</button>
+            ))}
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Catégorie</label>
-            <select value={category} onChange={e => setCategory(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, outline: 'none', background: '#fff' }}>
-              <option value="">Détection auto</option>
-              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+          <div style={{ position: 'relative' }}>
+            <Search size={14} color={T.textMuted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+            <input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} style={{
+              padding: '8px 12px 8px 32px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+              background: T.cardBg, color: T.text, border: '1px solid ' + T.cardBorder,
+              width: 200, outline: 'none',
+            }} />
           </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Fichier</label>
-            <input type="file" onChange={e => setFile(e.target.files[0])} accept=".pdf,.jpg,.jpeg,.png,.heic"
-              style={{ width: '100%', padding: 6, borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13 }} />
+        </div>
+
+        {/* ARK ALERT */}
+        {stats.manquants > 0 && (
+          <div style={{
+            background: 'rgba(139,92,246,0.04)', border: '1px solid ' + T.arkBorder,
+            borderRadius: 10, padding: '10px 16px', marginBottom: 16,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <Sparkles size={14} color={T.ark} />
+            <span style={{ fontSize: 12, color: '#c4b5fd', flex: 1 }}>
+              <strong style={{ color: '#a78bfa' }}>ARK</strong> a détecté {stats.manquants} document(s) manquant(s) et {stats.aVerifier} à vérifier. Centralisez toutes les pièces pour sécuriser vos dossiers.
+            </span>
           </div>
-          <button type="submit" disabled={loading}
-            style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: loading ? '#9CA3AF' : '#5B4DF5', color: '#fff', fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}>
-            {loading ? 'Upload...' : 'Uploader'}
-          </button>
-        </form>
-      </motion.div>
-    </motion.div>
+        )}
+
+        {/* TABLE */}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid ' + T.cardBorder }}>
+                {['Document', 'Client', 'Type', 'Associé à', 'Date', 'Statut', ''].map(h => (
+                  <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: T.textMuted, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(d => {
+                const statut = STATUT_STYLE[d.statut] || STATUT_STYLE.valide
+                const typeInfo = getTypeInfo(d.type)
+                const TypeIcon = typeInfo.icon
+                return (
+                  <tr key={d.id}
+                    style={{ borderBottom: '1px solid ' + T.cardBorder, cursor: 'pointer' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = T.cardHover }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                    onClick={() => navigate('/clients')}
+                  >
+                    <td style={{ padding: '10px 12px', color: T.text, fontWeight: 500 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <TypeIcon size={14} color={T.textMuted} />
+                        <span>{d.nom}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 12px', color: T.textSecondary }}>{d.client}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: T.cardBg, color: T.textMuted }}>{typeInfo.label}</span>
+                    </td>
+                    <td style={{ padding: '10px 12px', color: T.textSecondary }}>{d.lieA}</td>
+                    <td style={{ padding: '10px 12px', color: T.textMuted }}>{new Date(d.date).toLocaleDateString('fr-FR')}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={e => e.stopPropagation()} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><Eye size={14} color={T.textMuted} /></button>
+                        <button onClick={e => e.stopPropagation()} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><Download size={14} color={T.textMuted} /></button>
+                        <button onClick={e => e.stopPropagation()} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><Sparkles size={14} color={T.ark} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>
+            <FileText size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
+            <p style={{ fontSize: 14 }}>Aucun document trouvé.</p>
+          </div>
+        )}
+
+        {/* UPLOAD MODAL */}
+        <AnimatePresence>
+          {showUpload && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={() => setShowUpload(false)}
+            >
+              <motion.div initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 10 }}
+                style={{
+                  background: '#0d0d1a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24,
+                  maxWidth: 480, width: '90%',
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Ajouter un document</h3>
+                  <button onClick={() => setShowUpload(false)} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><X size={16} color={T.textMuted} /></button>
+                </div>
+                <div style={{
+                  border: '2px dashed rgba(255,255,255,0.08)', borderRadius: 12, padding: '40px 20px',
+                  textAlign: 'center', marginBottom: 16,
+                }}>
+                  <Upload size={32} color={T.textMuted} style={{ marginBottom: 12 }} />
+                  <p style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>Glissez un fichier ici</p>
+                  <p style={{ fontSize: 11, color: T.textMuted }}>PDF, JPG, PNG — Max 10 MB</p>
+                </div>
+                <button onClick={() => { setShowUpload(false); toast.success('Document ajoute (simulation)') }} style={{
+                  width: '100%', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: T.accent, color: '#fff', border: 'none', cursor: 'pointer',
+                }}>Téléverser</button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   )
 }
 
-// ── Request Modal ───────────────────────────────────────────────────────
-
-function RequestModal({ onClose }) {
-  const [clientId, setClientId] = useState('')
-  const [selectedDocs, setSelectedDocs] = useState([])
-  const [message, setMessage] = useState('')
-  const [recipientEmail, setRecipientEmail] = useState('')
-  const [generatedLink, setGeneratedLink] = useState('')
-  const [loading, setLoading] = useState(false)
-  const createRequest = useDocumentInboxStore(s => s.createRequest)
-
-  const toggleDoc = (val) => {
-    setSelectedDocs(prev =>
-      prev.includes(val) ? prev.filter(d => d !== val) : [...prev, val]
-    )
+function btnStyle(color) {
+  return {
+    padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+    background: color ? color + '15' : T.cardBg,
+    color: color || T.text,
+    border: color ? '1px solid ' + color + '30' : '1px solid ' + T.cardBorder,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
   }
-
-  const handleGenerate = async () => {
-    if (!clientId || selectedDocs.length === 0) return toast.error('Client et pièces requis')
-    setLoading(true)
-    try {
-      const result = await createRequest(clientId, selectedDocs, message, recipientEmail)
-      setGeneratedLink(result.upload_url)
-      toast.success('Lien généré !')
-    } catch (_err) {
-      toast.error("Impossible de générer le lien de dépôt. Vérifiez le client et les pièces demandées.")
-    }
-    setLoading(false)
-  }
-
-  const copyLink = () => {
-    if (generatedLink) {
-      navigator.clipboard.writeText(generatedLink)
-      toast.success('Lien copié !')
-    }
-  }
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
-      onClick={onClose}>
-      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-        style={{ background: '#fff', borderRadius: 16, padding: 28, width: 480, maxWidth: '90vw', maxHeight: '85vh', overflowY: 'auto' }}
-        onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Link size={16} style={{ color: '#5B4DF5' }} /> Demander des pièces
-          </h2>
-          <button onClick={onClose} style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
-        </div>
-
-        {!generatedLink ? (
-          <>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Client ID</label>
-              <input value={clientId} onChange={e => setClientId(e.target.value)} placeholder="ID du client"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, outline: 'none' }} />
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 8 }}>Pièces requises</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {CATEGORIES.map(c => (
-                  <label key={c.value} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 6, border: selectedDocs.includes(c.value) ? '1px solid #5B4DF5' : '1px solid #E5E7EB', cursor: 'pointer', fontSize: 12, background: selectedDocs.includes(c.value) ? '#EEECFE' : '#fff' }}>
-                    <input type="checkbox" checked={selectedDocs.includes(c.value)} onChange={() => toggleDoc(c.value)} style={{ accentColor: '#5B4DF5' }} />
-                    {c.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Message (optionnel)</label>
-              <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3} placeholder="Message personnalisé pour le client..."
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, outline: 'none', resize: 'vertical' }} />
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Email du client</label>
-              <input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} placeholder="client@email.com"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, outline: 'none' }} />
-            </div>
-
-            <button onClick={handleGenerate} disabled={loading}
-              style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: loading ? '#9CA3AF' : '#5B4DF5', color: '#fff', fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}>
-              {loading ? 'Génération...' : 'Générer le lien'}
-            </button>
-          </>
-        ) : (
-          <div>
-            <div style={{ padding: 16, background: '#EEECFE', borderRadius: 10, marginBottom: 16 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#5B4DF5', margin: '0 0 8px' }}>Lien de téléchargement généré</p>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input readOnly value={generatedLink} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid #D1CCF7', fontSize: 12, background: '#fff', outline: 'none' }} />
-                <button onClick={copyLink} style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: '#5B4DF5', color: '#fff', cursor: 'pointer' }}><Copy size={14} /></button>
-              </div>
-            </div>
-            <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>Partagez ce lien avec votre client pour qu'il dépose ses pièces</p>
-            <button onClick={onClose} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 12 }}>
-              Fermer
-            </button>
-          </div>
-        )}
-      </motion.div>
-    </motion.div>
-  )
 }

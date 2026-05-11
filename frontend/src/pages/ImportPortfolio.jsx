@@ -30,7 +30,7 @@ const FIELD_OPTIONS = [
 
 const CSV_TEMPLATE = [
   ['prenom', 'nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'type_client', 'statut', 'notes', 'compagnie', 'type_contrat', 'prime_annuelle', 'date_echeance'],
-  ['Sophie', 'Martin', 'sophie.martin@example.com', '06 12 34 56 78', '12 rue Exemple', 'Paris', '75008', 'particulier', 'prospect', 'Client à appeler', 'AXA', 'Auto', '720', '2026-12-31'],
+  ['Sophie', 'Martin', 'sophie.martin@example.com', '06 12 34 56 78', '12 rue Exemple', 'Paris', '75008', 'particulier', 'prospect', 'Client à appeler', 'Aurora Assurances', 'Auto', '720', '2026-12-31'],
 ]
 
 export default function ImportPortfolio() {

@@ -22,7 +22,7 @@ export default function LegalDpa() {
           <p>ARK fournit une aide à la priorisation et à la rédaction. Il ne constitue pas une décision automatique produisant un effet juridique sans validation humaine du courtier.</p>
           <p>Les demandes d’accès, rectification, suppression, portabilité ou limitation sont traitées avec le cabinet selon le périmètre contractuel et les contraintes légales applicables.</p>
           <p>Sauvegardes, restauration, rotation de secrets, incidents et sous-traitants sont documentés dans les runbooks internes.</p>
-          <p>DPO/contact données: dpo@courtia.fr.</p>
+          <p>DPO/contact données: dpo@courtiark.fr.</p>
         </div>
       </section>
     </MarketingShell>

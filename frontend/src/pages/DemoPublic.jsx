@@ -8,7 +8,7 @@ import { trackMarketingEvent } from '../lib/marketingEvents'
 const DEMO_STEPS = [
   {
     icon: Users,
-    title: '1. Dashboard cockpit',
+    title: '1. Tableau de bord cockpit',
     text: 'Vue des clients actifs, prospects, tâches urgentes et signaux ARK du jour.',
   },
   {
@@ -67,7 +67,7 @@ export default function DemoPublic() {
             <h3 style={{ marginTop: 0 }}>Ce que vous obtenez après la démo</h3>
             <ul className="mk-plain-list">
               <li>Checklist d'implémentation cabinet (Semaine 1 à 3).</li>
-              <li>Recommandation de plan (Starter / Pro / Premium).</li>
+              <li>Recommandation de plan (Starter / Pro / Cabinet).</li>
               <li>Priorités ARK adaptées à votre portefeuille.</li>
               <li>Plan d'onboarding et de migration des données.</li>
             </ul>

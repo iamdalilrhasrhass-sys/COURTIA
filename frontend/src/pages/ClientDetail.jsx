@@ -1,1001 +1,675 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import toast from 'react-hot-toast'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { FileText, Shield, CheckSquare, Bot, ArrowLeft, Mail, Phone, MapPin, Building, Star, AlertTriangle, Calendar, User, Sparkles, Activity, Heart, Target, TrendingUp, ChevronDown, Upload, File, Download, RefreshCw, Clock, MessageSquare, Send, Euro } from 'lucide-react'
-import api from '../api'
-import { computeScores, getScoreColor, SCORE_HEX } from '../lib/scoring'
-import { formatCommissionCurrency, getCommissionStatusMeta, summarizeCommissions } from '../lib/commissions'
-import ContratsTab from '../components/ContratsTab'
-import TachesTab from '../components/TachesTab'
-import ARKChatTab from '../components/ARKChatTab'
-import ClientInteractionsTimeline from '../components/ClientInteractionsTimeline'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ArrowLeft, User, Mail, Phone, MapPin, Building, AlertTriangle,
+  Calendar, Sparkles, Shield, FileText, Clock, Target, TrendingUp,
+  Euro, Activity, Star, ChevronDown, ChevronUp,
+  Send, Eye, CheckCircle, XCircle, Clock3, Zap, BarChart2, Layers
+} from 'lucide-react'
 
-const INTERACTIONS_TIMELINE_API_ENABLED = String(import.meta.env.VITE_CLIENT_INTERACTIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
-const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
-import BubbleCard from '../components/BubbleCard'
-import BubbleBadge from '../components/BubbleBadge'
-import BubbleButton from '../components/BubbleButton'
-import BubbleBackground from '../components/BubbleBackground'
-import '../styles/design-system.css'
+// ═══════════════════════════════════════════════════════════════════════════
+// AURORA DARK THEME TOKENS
+// ═══════════════════════════════════════════════════════════════════════════
+const T = {
+  bg: '#050510',
+  cardBg: 'rgba(255,255,255,0.03)',
+  cardBorder: 'rgba(255,255,255,0.06)',
+  cardHover: 'rgba(255,255,255,0.05)',
+  text: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  accent: '#5B4DF5',
+  accentBg: 'rgba(91,77,245,0.08)',
+  accentBorder: 'rgba(91,77,245,0.20)',
+  ark: '#8B5CF6',
+  arkBg: 'rgba(139,92,246,0.06)',
+  arkBorder: 'rgba(139,92,246,0.15)',
+  success: '#22C55E',
+  successBg: 'rgba(34,197,94,0.08)',
+  warning: '#F59E0B',
+  warningBg: 'rgba(245,158,11,0.08)',
+  danger: '#EF4444',
+  dangerBg: 'rgba(239,68,68,0.08)',
+}
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────
-const fmt = (v) => (v === null || v === undefined || v === '') ? '—' : String(v)
+// ═══════════════════════════════════════════════════════════════════════════
+// DEMO DATA — Martin Conseil
+// ═══════════════════════════════════════════════════════════════════════════
+const DEMO_CLIENT = {
+  id: 'demo-martin-conseil',
+  prenom: 'Martin',
+  nom: 'Conseil',
+  type: 'Professionnel',
+  statut: 'actif',
+  email: 'm.conseil@martinconseil.fr',
+  telephone: '06 12 34 56 78',
+  adresse: '12 rue de la République',
+  postal_code: '69002',
+  city: 'Lyon',
+  profession: 'Courtier en assurances',
+  segment: 'Professionnel',
+  created_at: '2021-03-15T10:00:00.000Z',
+  last_contact: '2026-03-29T14:30:00.000Z',
+  days_since_contact: 42,
+  risk_score: 72,
+  loyalty_score: 81,
+  opportunity_score: 68,
+  retention_score: 75,
+  global_score: 74,
+  portfolio_value: 15880,
+}
+
+const DEMO_CONTRACTS = [
+  {
+    id: 'c1',
+    type_contrat: 'RC Pro',
+    compagnie: 'Aurora Assurances',
+    prime_annuelle: 2800,
+    date_debut: '2025-06-01',
+    date_echeance: '2026-06-01',
+    statut: 'actif',
+    days_to_expiry: 21,
+    alert: true,
+  },
+  {
+    id: 'c2',
+    type_contrat: 'Flotte Auto',
+    compagnie: 'Novalia Courtage',
+    prime_annuelle: 12400,
+    date_debut: '2026-01-01',
+    date_echeance: '2027-01-01',
+    statut: 'actif',
+    days_to_expiry: 236,
+    alert: false,
+  },
+  {
+    id: 'c3',
+    type_contrat: 'MRH',
+    compagnie: 'MAIF',
+    prime_annuelle: 680,
+    date_debut: '2025-09-01',
+    date_echeance: '2026-09-01',
+    statut: 'actif',
+    days_to_expiry: 113,
+    alert: false,
+  },
+]
+
+const DEMO_QUOTES = [
+  {
+    id: 'q1',
+    produit: 'Prévoyance TNS',
+    compagnie: 'Novalia Courtage',
+    montant: 3200,
+    statut: 'envoyé',
+    date_envoi: '2026-04-15T09:00:00.000Z',
+    validite: '2026-06-15',
+  },
+  {
+    id: 'q2',
+    produit: 'Protection Juridique Pro',
+    compagnie: 'Aurora Assurances',
+    montant: 450,
+    statut: 'relancé',
+    date_envoi: '2026-03-20T11:00:00.000Z',
+    validite: '2026-05-20',
+  },
+]
+
+const DEMO_HISTORY = [
+  { id: 'h1', type: 'creation', label: 'Client créé', date: '2021-03-15', icon: User, color: T.accent },
+  { id: 'h2', type: 'contrat', label: 'Contrat RC Pro souscrit', date: '2021-03-20', icon: Shield, color: T.success },
+  { id: 'h3', type: 'contrat', label: 'Contrat Flotte Auto souscrit', date: '2023-06-01', icon: Shield, color: T.success },
+  { id: 'h4', type: 'devis', label: 'Devis Prévoyance TNS envoyé', date: '2026-04-15', icon: FileText, color: T.warning },
+  { id: 'h5', type: 'tache', label: 'Tâche : vérifier échéance RC Pro', date: '2026-05-01', icon: CheckCircle, color: T.accent },
+  { id: 'h6', type: 'contrat', label: 'Contrat MRH souscrit', date: '2025-09-01', icon: Shield, color: T.success },
+  { id: 'h7', type: 'relance', label: 'Relance effectuée — devis PJ Pro', date: '2026-04-20', icon: Send, color: T.ark },
+  { id: 'h8', type: 'devis', label: 'Devis Protection Juridique envoyé', date: '2026-03-20', icon: FileText, color: T.warning },
+]
+
+const DEMO_ARK_ANALYSIS = {
+  summary: [
+    'Client professionnel avec 3 contrats actifs pour un portefeuille total de 15 880 €/an.',
+    'Ancienneté de 5 ans, dernière interaction il y a 42 jours — besoin de réengagement.',
+    'Score de risque 72/100 : vigilance modérée. Client stable mais exposé à la concurrence.',
+  ],
+  riskNiveau: 72,
+  riskReason: 'Échéance RC Pro imminente (J-21). Client pro à fort potentiel, cible attractive pour la concurrence.',
+  opportunity: 'Prévoyance TNS non souscrite',
+  opportunityDetail: 'Le client est éligible à une Prévoyance TNS. Devis déjà envoyé le 15 avril, sans réponse à ce jour. Potentiel de +3 200 €/an.',
+  recommendedAction: 'Relancer le client pour le devis Prévoyance TNS et l\'échéance RC Pro',
+  actionWhy: 'Double opportunité : renouvellement RC Pro (2 800 €) et souscription Prévoyance (3 200 €). Impact combiné de 6 000 €. Le silence de 42 jours suggère une ouverture à la concurrence.',
+  impactPotentiel: 6000,
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
+const fmtShortDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'
 const getInitials = (c) => ((c?.prenom || '').charAt(0) + (c?.nom || '').charAt(0)).toUpperCase() || '?'
+const daysAgo = (d) => {
+  if (!d) return null
+  const diff = Date.now() - new Date(d).getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
 
-// ─── STATUS CONFIG ────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  actif: { label: 'Actif', color: '#10b981' },
-  prospect: { label: 'Prospect', color: '#3b82f6' },
-  inactif: { label: 'Inactif', color: '#9ca3af' },
-  a_risque: { label: 'À risque', color: '#ef4444' },
-  opportunite: { label: 'Opportunité', color: '#f59e0b' },
-  résilié: { label: 'Résilié', color: '#dc2626' },
-  resilié: { label: 'Résilié', color: '#dc2626' },
-  perdu: { label: 'Perdu', color: '#dc2626' },
+  actif: { label: 'Actif', color: T.success },
+  prospect: { label: 'Prospect', color: T.accent },
+  inactif: { label: 'Inactif', color: T.textMuted },
+  a_risque: { label: 'À risque', color: T.danger },
+  opportunite: { label: 'Opportunité', color: T.warning },
+  'résilié': { label: 'Résilié', color: T.danger },
+  resilié: { label: 'Résilié', color: T.danger },
+  perdu: { label: 'Perdu', color: T.danger },
 }
 
-// ─── ANIMATED NUMBER ──────────────────────────────────────────────────────
-function AnimatedNumber({ value }) {
-    const motionValue = useMotionValue(0)
-    const transform = useTransform(motionValue, v => Math.round(v))
-    const [displayValue, setDisplayValue] = useState('0')
-
-    useEffect(() => {
-        const controls = animate(motionValue, value, { duration: 1.2, ease: 'easeOut' })
-        const unsubscribe = transform.onChange(setDisplayValue)
-        return () => { controls.stop(); unsubscribe() }
-    }, [value, motionValue, transform])
-
-    return <span suppressHydrationWarning>{displayValue}</span>
+const DEVIS_STATUS = {
+  envoyé: { label: 'Envoyé', color: T.textSecondary },
+  relancé: { label: 'Relancé', color: T.warning },
+  accepté: { label: 'Accepté', color: T.success },
+  refusé: { label: 'Refusé', color: T.danger },
 }
 
-// ─── INFO ROW (Bubble style) ──────────────────────────────────────────────
-function InfoRow({ icon: Icon, label, value }) {
-  return (
-    <div className="flex items-center gap-3 py-2">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.04)' }}>
-        <Icon size={14} style={{ color: 'var(--text-secondary)' }} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
-        <p className="text-sm font-semibold text-gray-900 truncate">{fmt(value)}</p>
-      </div>
-    </div>
-  )
-}
-
-// ─── OLD-STYLE CARD & DATA ITEM (for InfosTab) ────────────────────────────
-const Card = ({ title, children, className, ...props }) => (
-  <div className={`bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 ${className}`} {...props}>
-    <h3 className="font-bold text-gray-800 px-4 py-3 border-b border-slate-100" style={{ fontSize: 14 }}>{title}</h3>
-    <div style={{ padding: '0.75rem' }}>{children}</div>
-  </div>
-)
-
-const DataItem = ({ icon: Icon, label, value }) => (
-  <div>
-    <dt className="text-xs text-gray-400 uppercase tracking-wider">{label}</dt>
-    <dd className="mt-1 flex items-center gap-2 text-sm text-gray-700 font-medium"><Icon size={12} className="text-gray-500" /> {fmt(value)}</dd>
-  </div>
-)
-
-// ─── BUBBLE & SCORE COMPONENTS ────────────────────────────────────────────
-const BubbleCriterion = ({ label, value, max, color }) => {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100))
-  return (
-    <div className="text-xs">
-      <div className="flex justify-between items-center mb-1"><span className="font-semibold text-slate-700">{label}</span><span className="font-bold" style={{ color }}>{value}</span></div>
-      <div className="w-full bg-slate-200 rounded-full h-1.5"><motion.div className="h-1.5 rounded-full" style={{ background: color }} initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 1, ease: 'easeOut' }}/></div>
-    </div>
-  )
-}
-
-function BubbleTooltip({ type, client, scores, onMouseEnter, onMouseLeave }) {
-  const contentMap = {
-    global: { title: "Score Global", Icon: Activity, score: scores.globalScore, content: (
-      <><p className="text-sm text-slate-700 mt-2 leading-relaxed">Ce score synthétise le profil complet du client. Un score élevé indique un client sain, fidèle et à fort potentiel.</p><div className="mt-4 pt-4 border-t border-slate-200/80 space-y-2"><h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Signaux Clés</h4>{scores.signaux.slice(0, 3).map(s => <div key={s.label} className="text-xs font-semibold px-2 py-1 rounded-full inline-block mr-2" style={{ color: s.color, background: s.bg }}>{s.label}</div>)}</div><button onClick={() => alert("Détails à venir")} className="mt-4 w-full text-center text-sm font-semibold text-blue-600 hover:underline">Voir les détails</button></>
-    )},
-    risque: { title: "Risque", Icon: AlertTriangle, score: scores.risque, coeff: "x4", content: (
-      <><div className="space-y-3 mt-4"><BubbleCriterion label="Bonus-Malus" value={client.bonus_malus || 1} max={3.5} color={SCORE_HEX[getScoreColor(100 - (((client.bonus_malus || 1) - 0.5) / 3 * 100), 'fidelite')]} /><BubbleCriterion label="Sinistres (3 ans)" value={client.nb_sinistres_3ans || 0} max={5} color={SCORE_HEX[getScoreColor(100 - ((client.nb_sinistres_3ans || 0) * 20), 'fidelite')]} /><BubbleCriterion label="Jeune conducteur" value={(client.annees_permis || 10) < 5 ? 1 : 0} max={1} color={(client.annees_permis || 10) < 5 ? SCORE_HEX.red : SCORE_HEX.green} /></div><div className="mt-4 pt-4 border-t border-slate-200/80"><h4 className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><Sparkles size={14} className="text-purple-500" /> Conseil ARK</h4><p className="text-xs text-slate-700 bg-purple-50 p-2 rounded-lg">Proposer un stage de conduite ou une franchise modulable peut améliorer ce score.</p></div></>
-    )},
-    fidelite: { title: "Fidélité", Icon: Heart, score: scores.fidelite, coeff: "x2.5", content: (
-      <><div className="space-y-3 mt-4"><BubbleCriterion label="Ancienneté" value={Math.round(scores.ancienneteAns)} max={10} color={SCORE_HEX[getScoreColor(scores.ancienneteAns * 10, 'fidelite')]} /><BubbleCriterion label="Contrats actifs" value={scores.nbActifs} max={5} color={SCORE_HEX[getScoreColor(scores.nbActifs * 20, 'fidelite')]} /></div><div className="mt-4 pt-4 border-t border-slate-200/80"><h4 className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><Sparkles size={14} className="text-purple-500" /> Conseil ARK</h4><p className="text-xs text-slate-700 bg-purple-50 p-2 rounded-lg">Un client fidèle est votre meilleur ambassadeur. Pensez à une offre de parrainage.</p></div></>
-    )},
-    opportunite: { title: "Opportunité", Icon: Target, score: scores.opportunite, coeff: "x2", content: (
-      <><div className="space-y-3 mt-4"><BubbleCriterion label="Mono-contrat" value={scores.nbActifs === 1 ? 1 : 0} max={1} color={scores.nbActifs === 1 ? SCORE_HEX.green : SCORE_HEX.neutral} /><BubbleCriterion label="Profil Pro" value={(client.segment || '').toLowerCase().includes('pro') ? 1 : 0} max={1} color={(client.segment || '').toLowerCase().includes('pro') ? SCORE_HEX.green : SCORE_HEX.neutral} /><BubbleCriterion label="En couple" value={(client.situation_familiale || '').toLowerCase() === 'marié' ? 1 : 0} max={1} color={(client.situation_familiale || '').toLowerCase() === 'marié' ? SCORE_HEX.green : SCORE_HEX.neutral} /></div><div className="mt-4 pt-4 border-t border-slate-200/80"><h4 className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><Sparkles size={14} className="text-purple-500" /> Conseil ARK</h4><p className="text-xs text-slate-700 bg-purple-50 p-2 rounded-lg">Ce client est idéal pour une proposition de contrat Prévoyance ou MRH.</p></div></>
-    )},
-    retention: { title: "Rétention", Icon: TrendingUp, score: scores.retention, coeff: "x1.5", content: (
-      <><div className="space-y-3 mt-4"><BubbleCriterion label="Échéance proche" value={scores.prochaineEcheanceDays !== null && scores.prochaineEcheanceDays < 90 ? 90 - scores.prochaineEcheanceDays : 0} max={90} color={scores.prochaineEcheanceDays !== null && scores.prochaineEcheanceDays < 90 ? SCORE_HEX.red : SCORE_HEX.green} /><BubbleCriterion label="Ancienneté" value={Math.round(scores.ancienneteAns)} max={10} color={SCORE_HEX[getScoreColor(scores.ancienneteAns * 10, 'fidelite')]} /></div><div className="mt-4 pt-4 border-t border-slate-200/80"><h4 className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><Sparkles size={14} className="text-purple-500" /> Conseil ARK</h4><p className="text-xs text-slate-700 bg-purple-50 p-2 rounded-lg">Contrat arrivant à échéance. Contactez-le avec une offre de renouvellement.</p></div></>
-    )},
-  }
-  const item = contentMap[type]
-
-  return (
-    <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-      <motion.div
-        initial={{ scale: 0.05, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 1.5, opacity: 0, filter: 'blur(20px)' }}
-        transition={{ type: 'spring', stiffness: 220, damping: 16 }}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        style={{
-          pointerEvents: 'auto',
-          background: `
-            radial-gradient(circle at 30% 20%, rgba(147,51,234,0.18) 0%, transparent 55%),
-            radial-gradient(circle at 70% 80%, rgba(59,130,246,0.15) 0%, transparent 55%),
-            conic-gradient(from 0deg at 50% 50%, rgba(147,51,234,0.08), rgba(59,130,246,0.08), rgba(147,51,234,0.08), rgba(236,72,153,0.06), rgba(147,51,234,0.08)),
-            rgba(255,255,255,0.18)
-          `,
-          backdropFilter: 'blur(32px) saturate(220%)',
-          border: '2px solid rgba(147,51,234,0.45)',
-          boxShadow: '0 0 80px rgba(147,51,234,0.4), 0 0 40px rgba(59,130,246,0.3), inset 0 0 60px rgba(255,255,255,0.25)',
-          borderRadius: '60% 40% 55% 45% / 45% 55% 45% 55%',
-          animation: 'bubbleFloat 6s ease-in-out infinite',
-          width: 'min(560px, 90vw)',
-          padding: '48px 52px',
-        }}
-        className="relative text-slate-900"
-      >
-        <div className="flex justify-between items-start"><div className="flex items-center gap-3"><item.Icon size={24} /><h3 className="text-2xl font-black">{item.title}</h3></div>{item.coeff && <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">Coeff. {item.coeff}</span>}</div>
-        <div className="text-5xl font-black my-3">{item.score} <span className="text-3xl text-slate-500">/100</span></div>{item.content}
-      </motion.div>
-    </div>
-  )
-}
-
-function ScoreGauge({ score, label, color, onHover, onLeave }) {
-  const size = 70, strokeWidth = 7, radius = (size - strokeWidth) / 2
+// ═══════════════════════════════════════════════════════════════════════════
+// CIRCULAR GAUGE
+// ═══════════════════════════════════════════════════════════════════════════
+function CircularGauge({ value, size = 64, strokeWidth = 5, color, label, subtitle }) {
+  const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
-  const offset = circumference - (score / 100) * circumference
+  const offset = circumference - (value / 100) * circumference
 
   return (
-    <div className="flex flex-col items-center gap-2 text-center relative cursor-pointer group" onMouseEnter={onHover} onMouseLeave={onLeave}>
-      <div className="relative rounded-full"><svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90"><circle cx={size / 2} cy={size / 2} r={radius} stroke="#e5e7eb" strokeWidth={strokeWidth} fill="none" /><motion.circle initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 1.2, ease: 'easeOut' }} cx={size / 2} cy={size / 2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeLinecap="round" /></svg>
-        <div className="absolute inset-0 flex items-center justify-center"><span className="text-lg font-bold text-gray-800">{score}</span></div>
-      </div><span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div style={{ position: 'relative', width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
+          <motion.circle
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none" stroke={color} strokeWidth={strokeWidth}
+            strokeDasharray={circumference} strokeLinecap="round"
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+          <span style={{ fontSize: size > 60 ? 18 : 14, fontWeight: 800, color: T.text, lineHeight: 1 }}>{value}</span>
+          {subtitle && <span style={{ fontSize: 10, fontWeight: 500, color: T.textMuted, marginTop: 1 }}>{subtitle}</span>}
+        </div>
+      </div>
+      {label && <span style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>}
     </div>
   )
 }
 
-const ScoreLegend = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  const legendItems = [{ title: "Risque", desc: "Probabilité de sinistre (bonus-malus, historique, zone...)" },{ title: "Fidélité", desc: "Attachement au cabinet (ancienneté, multi-équipement...)" },{ title: "Opportunité", desc: "Potentiel de ventes additionnelles (profil, contrats...)" },{ title: "Rétention", desc: "Risque de départ (échéances, satisfaction...)" }]
+// ═══════════════════════════════════════════════════════════════════════════
+// BADGE
+// ═══════════════════════════════════════════════════════════════════════════
+function Badge({ children, color, bg, style: extraStyle }) {
   return (
-    <div className="mt-8 border-t border-slate-200 pt-6 text-sm">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center font-semibold text-gray-700 hover:text-gray-900">Comment sont calculés les scores ?<ChevronDown size={16} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} /></button>
-      <AnimatePresence>{isOpen && (<motion.div initial={{ height: 0, opacity: 0, marginTop: 0 }} animate={{ height: 'auto', opacity: 1, marginTop: '16px' }} exit={{ height: 0, opacity: 0, marginTop: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden"><ul className="space-y-3 text-xs text-gray-500">{legendItems.map(item => (<li key={item.title}><strong className="text-gray-600">{item.title}:</strong> {item.desc}</li>))}</ul></motion.div>)}</AnimatePresence>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '2px 8px', borderRadius: 9999,
+      fontSize: 10, fontWeight: 700,
+      color: color || T.textSecondary,
+      background: bg || 'rgba(255,255,255,0.06)',
+      ...extraStyle,
+    }}>
+      {children}
+    </span>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION CARD (reusable dark glass card)
+// ═══════════════════════════════════════════════════════════════════════════
+function Section({ title, icon: Icon, children, accent, style: extraStyle, noPadding, collapsible, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <div style={{
+      background: T.cardBg,
+      border: `1px solid ${T.cardBorder}`,
+      borderRadius: 12,
+      overflow: 'hidden',
+      ...extraStyle,
+    }}>
+      {title && (
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 14px',
+            borderBottom: `1px solid ${T.cardBorder}`,
+            cursor: collapsible ? 'pointer' : 'default',
+          }}
+          onClick={() => collapsible && setOpen(!open)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {Icon && (
+              <div style={{ width: 28, height: 28, borderRadius: 6, background: `${accent || T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={14} color={accent || T.accent} />
+              </div>
+            )}
+            <span style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</span>
+          </div>
+          {collapsible && (open ? <ChevronUp size={14} color={T.textMuted} /> : <ChevronDown size={14} color={T.textMuted} />)}
+        </div>
+      )}
+      <AnimatePresence initial={false}>
+        {(!collapsible || open) && (
+          <motion.div
+            initial={collapsible ? { height: 0, opacity: 0 } : false}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ padding: noPadding ? 0 : '12px 14px' }}>
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function ScoreSidebar({ scores, onBubbleEnter, onBubbleLeave }) {
-  if (!scores) return null
-  const { globalScore } = scores
-
-  const getGlobalScoreConfig = (s) => {
-    if (s >= 85) return { label: 'Excellent', color: '#22c55e', description: 'Profil client optimal, stable et à fort potentiel.' }
-    if (s >= 70) return { label: 'Bon', color: '#3b82f6', description: 'Client fiable avec quelques axes d\'amélioration.' }
-    if (s >= 50) return { label: 'À surveiller', color: '#f59e0b', description: 'Nécessite une attention pour prévenir les risques.' }
-    return { label: 'Critique', color: '#ef4444', description: 'Action prioritaire requise pour rétention.' }
-  }
-  const globalScoreConfig = getGlobalScoreConfig(globalScore)
-
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB BUTTON
+// ═══════════════════════════════════════════════════════════════════════════
+function TabButton({ icon: Icon, label, active, onClick, badge }) {
   return (
-    <aside className="w-full lg:w-[260px] flex-shrink-0 bg-white/70 backdrop-blur-sm lg:border-r border-gray-100 p-4 lg:sticky lg:top-0 h-auto lg:h-screen overflow-y-auto">
-      <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-md flex items-center justify-center text-white"><Sparkles size={10} /></div><h2 className="font-bold text-gray-900" style={{ fontSize: 14 }}>ARK Score™</h2></div>
-      <div className="text-center my-6 cursor-pointer" onMouseEnter={() => onBubbleEnter('global')} onMouseLeave={onBubbleLeave}><p className="text-sm font-semibold text-gray-500">Score Global</p><p className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tight my-1"><AnimatedNumber value={globalScore} /></p><div className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: globalScoreConfig.color, color: 'white' }}>{globalScoreConfig.label}</div><p className="mt-3 text-xs text-gray-500 leading-relaxed px-4">{globalScoreConfig.description}</p></div>
-      <div className="grid grid-cols-2 gap-y-8 gap-x-4"><ScoreGauge score={scores.risque} label="Risque" color="#ef4444" onHover={() => onBubbleEnter('risque')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.fidelite} label="Fidélité" color="#3b82f6" onHover={() => onBubbleEnter('fidelite')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.opportunite} label="Opportunité" color="#22c55e" onHover={() => onBubbleEnter('opportunite')} onLeave={onBubbleLeave} /><ScoreGauge score={scores.retention} label="Rétention" color="#f59e0b" onHover={() => onBubbleEnter('retention')} onLeave={onBubbleLeave} /></div>
-      <ScoreLegend /><footer className="text-center mt-8"><p className="text-xs text-gray-300">COURTIA®</p></footer>
-    </aside>
+    <button
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        flex: 1, minWidth: 0,
+        padding: '10px 8px',
+        background: active ? T.cardHover : 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: 11,
+        fontWeight: 600,
+        color: active ? T.text : T.textMuted,
+        transition: 'all 0.2s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+        borderBottom: active ? `2px solid ${T.accent}` : '2px solid transparent',
+        outline: 'none',
+      }}
+    >
+      {Icon && <Icon size={13} />}
+      <span>{label}</span>
+      {badge != null && (
+        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 9999, background: T.accentBg, color: T.accent, marginLeft: 2 }}>{badge}</span>
+      )}
+    </button>
   )
 }
 
-// ─── INFOS TAB ─────────────────────────────────────────────────────────────
-function InfosTab({ client }) {
+// ═══════════════════════════════════════════════════════════════════════════
+// LEFT COLUMN — IDENTITY PANEL
+// ═══════════════════════════════════════════════════════════════════════════
+function IdentityPanel({ client, navigate }) {
+  const statusCfg = STATUS_CONFIG[client.statut?.toLowerCase()] || { label: 'Inconnu', color: T.textMuted }
+  const contractDaysAgo = daysAgo(client.last_contact)
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <Card title="Identité"><dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3"><DataItem icon={User} label="Nom Complet" value={`${client.prenom} ${client.nom}`} /><DataItem icon={Mail} label="Email" value={client.email} /><DataItem icon={Phone} label="Téléphone" value={client.telephone} /><DataItem icon={MapPin} label="Adresse" value={client.adresse ? `${client.adresse}, ${client.postal_code || ''} ${client.city || ''}`.replace(/, $/, '') : '—'} /><DataItem icon={Building} label="Profession" value={client.profession} /><DataItem icon={User} label="Segment" value={client.segment} /></dl></Card>
-      <Card title="Profil d'assurance"><dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3"><DataItem icon={Star} label="Bonus-Malus" value={client.bonus_malus} /><DataItem icon={Shield} label="Années permis" value={client.annees_permis ? `${client.annees_permis} ans` : null} /><DataItem icon={AlertTriangle} label="Sinistres (3 ans)" value={client.nb_sinistres_3ans} /><DataItem icon={Calendar} label="Client depuis" value={fmtDate(client.created_at)} /><DataItem icon={MapPin} label="Zone" value={client.zone_geographique} /><DataItem icon={User} label="Situation" value={client.situation_familiale} /></dl></Card>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Photo + Name */}
+      <Section noPadding>
+        <div style={{ padding: '18px 14px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #5B4DF5, #8B5CF6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 24, fontWeight: 800, color: T.text,
+            boxShadow: '0 0 30px rgba(91,77,245,0.25)', border: '2px solid rgba(139,92,246,0.25)',
+          }}>
+            {getInitials(client)}
+          </div>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: T.text, textAlign: 'center' }}>{client.prenom} {client.nom}</h2>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Badge color={T.textSecondary} bg="rgba(255,255,255,0.05)">
+              <Building size={10} /> {client.type || client.segment}
+            </Badge>
+            <Badge color={statusCfg.color} bg={`${statusCfg.color}15`}>
+              {statusCfg.label}
+            </Badge>
+          </div>
+        </div>
+      </Section>
+
+      {/* Contact Info */}
+      <Section>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <InfoLine icon={Mail} value={client.email} />
+          <InfoLine icon={Phone} value={client.telephone} />
+          <InfoLine icon={MapPin} value={client.city} />
+          <InfoLine icon={Calendar} value={`Client depuis ${fmtDate(client.created_at)}`} />
+        </div>
+      </Section>
+
+      {/* Risk Score */}
+      <Section>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+          <CircularGauge value={client.risk_score} size={72} strokeWidth={5} color={T.danger} label="Risque" subtitle="/100" />
+          <CircularGauge value={client.loyalty_score} size={72} strokeWidth={5} color={T.accent} label="Fidélité" subtitle="/100" />
+        </div>
+      </Section>
+
+      {/* Portfolio & Metrics */}
+      <Section>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <MetricLine icon={Euro} label="Portefeuille" value={fmtEur(client.portfolio_value)} highlight />
+          <MetricLine icon={Clock3} label="Dernier contact" value={contractDaysAgo != null ? `il y a ${contractDaysAgo} jours` : '—'} warn={contractDaysAgo > 30} />
+          <MetricLine icon={Layers} label="Contrats actifs" value={DEMO_CONTRACTS.length} />
+          <MetricLine icon={Star} label="Score Global" value={`${client.global_score}/100`} accent />
+        </div>
+      </Section>
+
+      {/* Quick Badges */}
+      <Section>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <Badge color={T.danger} bg={T.dangerBg}>
+            <AlertTriangle size={10} /> Échéance proche
+          </Badge>
+          <Badge color={T.warning} bg={T.warningBg}>
+            <Target size={10} /> Opportunité
+          </Badge>
+          <Badge color={T.textSecondary} bg="rgba(255,255,255,0.04)">
+            <Clock3 size={10} /> Silencieux
+          </Badge>
+        </div>
+      </Section>
+
+      {/* Edit Button */}
+      <button
+        onClick={() => navigate(`/clients/${client.id}/edit`)}
+        style={{
+          width: '100%', padding: '8px 0',
+          background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.cardBorder}`,
+          borderRadius: 10, cursor: 'pointer',
+          fontSize: 12, fontWeight: 600, color: T.textSecondary,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          transition: 'all 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = T.cardHover; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = T.cardBorder }}
+      >
+        <User size={13} /> Modifier la fiche
+      </button>
+    </div>
+  )
+}
+
+function InfoLine({ icon: Icon, value, label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+      <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={12} color={T.textMuted} />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        {label && <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>}
+        <div style={{ fontSize: 12, fontWeight: 600, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value || '—'}</div>
+      </div>
+    </div>
+  )
+}
+
+function MetricLine({ icon: Icon, label, value, highlight, warn, accent }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Icon size={12} color={warn ? T.warning : accent ? T.accent : T.textMuted} />
+        <span style={{ fontSize: 11, fontWeight: 500, color: T.textMuted }}>{label}</span>
+      </div>
+      <span style={{
+        fontSize: highlight ? 14 : 12,
+        fontWeight: highlight ? 800 : 600,
+        color: warn ? T.warning : accent ? T.accent : T.text,
+      }}>{value}</span>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CENTER COLUMN — DOSSIER CLIENT WITH TABS
+// ═══════════════════════════════════════════════════════════════════════════
+function DossierClient({ client, navigate }) {
+  const [tab, setTab] = useState('resume')
+
+  const TABS = [
+    { id: 'resume', label: 'Résumé', icon: Activity },
+    { id: 'contrats', label: 'Contrats', icon: Shield, badge: DEMO_CONTRACTS.length },
+    { id: 'devis', label: 'Devis', icon: FileText, badge: DEMO_QUOTES.length },
+    { id: 'historique', label: 'Historique', icon: Clock },
+  ]
+
+  return (
+    <div style={{
+      background: T.cardBg, border: `1px solid ${T.cardBorder}`,
+      borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 500,
+    }}>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', borderBottom: `1px solid ${T.cardBorder}`, overflowX: 'auto' }}>
+        {TABS.map(t => (
+          <TabButton key={t.id} {...t} active={tab === t.id} onClick={() => setTab(t.id)} />
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <AnimatePresence mode="wait">
+          {tab === 'resume' && <ResumeTab key="resume" client={client} />}
+          {tab === 'contrats' && <ContratsTabContent key="contrats" navigate={navigate} />}
+          {tab === 'devis' && <DevisTabContent key="devis" navigate={navigate} />}
+          {tab === 'historique' && <HistoriqueTabContent key="historique" />}
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
+
+// ── RÉSUMÉ TAB ─────────────────────────────────────────────────────────────
+function ResumeTab({ client }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+      style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Profile paragraph */}
+      <div>
+        <h3 style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: T.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <User size={14} color={T.accent} /> Profil
+        </h3>
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 400, color: T.textSecondary, lineHeight: 1.6 }}>
+          {client.prenom} {client.nom} est un courtier en assurances indépendant basé à {client.city}. Client professionnel depuis {new Date(client.created_at).getFullYear()}, il gère un portefeuille de {DEMO_CONTRACTS.length} contrats actifs pour une prime annuelle totale de {fmtEur(client.portfolio_value)}.
+        </p>
+      </div>
+
+      {/* Key metrics row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8 }}>
+        {[
+          { label: 'Contrats', value: DEMO_CONTRACTS.length, icon: Shield, color: T.accent },
+          { label: 'Portefeuille', value: fmtEur(client.portfolio_value), icon: Euro, color: T.success },
+          { label: 'Ancienneté', value: `${new Date().getFullYear() - 2021} ans`, icon: Star, color: T.ark },
+          { label: 'Score', value: `${client.global_score}/100`, icon: BarChart2, color: T.warning },
+        ].map(m => (
+          <div key={m.label} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '10px 12px', border: `1px solid ${T.cardBorder}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <m.icon size={12} color={m.color} />
+              <span style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{m.label}</span>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ARK Alert summary */}
+      <div style={{
+        background: T.arkBg, border: `1px solid ${T.arkBorder}`, borderRadius: 10,
+        padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10,
+      }}>
+        <div style={{ flexShrink: 0, marginTop: 1 }}>
+          <Sparkles size={16} color={T.ark} />
+        </div>
+        <div>
+          <h4 style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: T.ark }}>Alerte ARK</h4>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: T.textSecondary, lineHeight: 1.5 }}>
+            <strong style={{ color: T.warning }}>RC Pro — échéance dans 21 jours.</strong> Devis Prévoyance TNS envoyé le 15 avril sans réponse. Risque de mise en concurrence. Impact potentiel : {fmtEur(6000)}.
+          </p>
+        </div>
+      </div>
+
+      {/* Current situation */}
+      <div>
+        <h3 style={{ margin: '0 0 6px', fontSize: 13, fontWeight: 700, color: T.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Activity size={14} color={T.success} /> Situation actuelle
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <StatusRow status="ok" text="3 contrats actifs — tous à jour" />
+          <StatusRow status="warn" text="Échéance RC Pro dans 21 jours (Aurora Assurances)" />
+          <StatusRow status="warn" text="2 devis en attente de réponse" />
+          <StatusRow status="info" text="Dernier contact il y a 42 jours" />
+        </div>
+      </div>
     </motion.div>
   )
 }
 
-// ─── MESSAGES MOCK DATA ────────────────────────────────────────────────────
-const DOSSIER_STATUS = {
-  brouillon: { label: 'Brouillon', color: '#9ca3af' },
-  en_cours: { label: 'En cours', color: '#3b82f6' },
-  relance: { label: 'Relancé', color: '#f59e0b' },
-  reponse_recue: { label: 'Réponse reçue', color: '#10b981' },
-  valide: { label: 'Validé', color: '#8b5cf6' },
-  refuse: { label: 'Refusé', color: '#ef4444' },
+function StatusRow({ status, text }) {
+  const colors = { ok: T.success, warn: T.warning, info: T.textMuted, error: T.danger }
+  const icons = { ok: CheckCircle, warn: AlertTriangle, info: Clock3, error: XCircle }
+  const Icon = icons[status] || Clock3
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+      <Icon size={12} color={colors[status] || T.textMuted} />
+      <span style={{ fontSize: 11, fontWeight: 500, color: T.textSecondary }}>{text}</span>
+    </div>
+  )
 }
 
-// ─── DOCUMENTS TAB ──────────────────────────────────────────────────────────
-function DocumentsTab({ client, setClient, clientId }) {
-  const fileInputRef = useRef(null)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState(null)
-  const [generatedDocs, setGeneratedDocs] = useState([])
-  const [generatedLoading, setGeneratedLoading] = useState(false)
-  const [generatingType, setGeneratingType] = useState('')
-  const [signingDocId, setSigningDocId] = useState(null)
-
-  const loadGeneratedDocs = async () => {
-    try {
-      setGeneratedLoading(true)
-      const res = await api.get(`/documents?client_id=${clientId}`)
-      setGeneratedDocs(Array.isArray(res?.data?.data) ? res.data.data : [])
-    } catch {
-      setGeneratedDocs([])
-    } finally {
-      setGeneratedLoading(false)
-    }
-  }
-
-  // Chargement initial des documents DDA de la fiche; rafraîchissements explicites après génération.
-  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadGeneratedDocs()
-  }, [clientId])
-  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
-
-  const generateDda = async (type) => {
-    setGeneratingType(type)
-    try {
-      await api.post('/documents/generate', { client_id: clientId, type })
-      toast.success('Document DDA généré')
-      await loadGeneratedDocs()
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Génération impossible'
-      toast.error(String(msg))
-    } finally {
-      setGeneratingType('')
-    }
-  }
-
-  const sendToSign = async (doc) => {
-    setSigningDocId(doc.id)
-    try {
-      await api.post(`/documents/${doc.id}/send-to-sign`, {})
-      toast.success('Document envoyé à signer via Yousign')
-      await loadGeneratedDocs()
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Yousign configuration requise'
-      toast.error(String(msg))
-    } finally {
-      setSigningDocId(null)
-    }
-  }
-
-  const readFileAsBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-  }
-
-  const processFile = async (file) => {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Le fichier dépasse 10 Mo')
-      return
-    }
-    setAnalyzing(true)
-    setAnalysisResult(null)
-    try {
-      const base64 = await readFileAsBase64(file)
-      const res = await api.post('/documents/analyze', {
-        file: base64,
-        mimeType: file.type
-      })
-      setAnalysisResult(res.data)
-    } catch {
-      toast.error('Erreur lors de l\'analyse du document')
-    } finally {
-      setAnalyzing(false)
-    }
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file) processFile(file)
-  }
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0]
-    if (file) processFile(file)
-  }
-
-  const confirmDocument = async () => {
-    if (!analysisResult) return
-    try {
-      const res = await api.post(`/documents/client/${clientId}`, {
-        ...analysisResult,
-        fileName: analysisResult.fileName || 'document'
-      })
-      setClient(prev => ({
-        ...prev,
-        documents: [...(prev.documents || []), res.data]
-      }))
-      setAnalysisResult(null)
-      toast.success('Document indexé avec succès')
-    } catch {
-      toast.error('Erreur lors de l\'indexation')
-    }
-  }
-
-  const getConfidenceColor = (confiance) => {
-    if (confiance > 0.8) return 'bg-green-100 text-green-800'
-    if (confiance >= 0.5) return 'bg-orange-100 text-orange-800'
-    return 'bg-red-100 text-red-800'
-  }
-
-  const confidenceColor = analysisResult ? getConfidenceColor(analysisResult.confiance || 0) : ''
-
+// ── CONTRATS TAB ────────────────────────────────────────────────────────────
+function ContratsTabContent({ navigate }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="rounded-2xl border border-white/60 bg-white/75 p-4 shadow-sm backdrop-blur-xl">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: '#5B4DF5' }}>Documents métier DDA</p>
-            <h4 className="mt-1 text-sm font-black text-gray-900">FIC, mandat, devoir de conseil et attestation</h4>
-            <p className="mt-1 text-xs text-gray-500">Générez une trace de conseil structurée. COURTIA aide à documenter, le courtier valide le contenu final.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[
-              ['fic', 'FIC'],
-              ['mandat_courtage', 'Mandat'],
-              ['devoir_conseil', 'Devoir conseil'],
-              ['attestation', 'Attestation'],
-            ].map(([type, label]) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => generateDda(type)}
-                disabled={!!generatingType}
-                className="rounded-xl px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-                style={{ background: generatingType === type ? '#9CA3AF' : 'linear-gradient(135deg, #5B4DF5, #8b5cf6)' }}
-              >
-                {generatingType === type ? '...' : label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          {generatedLoading ? (
-            <p className="text-xs text-gray-400">Chargement des documents générés...</p>
-          ) : generatedDocs.length === 0 ? (
-            <p className="text-xs text-gray-400">Aucun document DDA généré pour ce client.</p>
-          ) : (
-            generatedDocs.map(doc => (
-              <div key={doc.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white/80 p-3">
-                <FileText size={15} className="text-indigo-500" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold text-gray-800">{doc.title || doc.type}</p>
-                  <p className="text-[11px] text-gray-400">{doc.status || 'generated'} · {doc.template_version}</p>
-                </div>
-                <a href={`/api/documents/${doc.id}/download`} target="_blank" rel="noreferrer" className="rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] font-bold text-white">
-                  PDF
-                </a>
-                {doc.status === 'generated' && (
-                  <button
-                    type="button"
-                    onClick={() => sendToSign(doc)}
-                    disabled={signingDocId === doc.id}
-                    className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-700 disabled:opacity-60"
-                  >
-                    {signingDocId === doc.id ? 'Envoi...' : 'Signer'}
-                  </button>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Upload zone */}
-      <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors cursor-pointer"
-        onDrop={handleDrop}
-        onDragOver={e => e.preventDefault()}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileSelect} />
-        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">Glissez un document ou cliquez pour parcourir</p>
-        <p className="text-xs text-gray-400">PDF, JPG, PNG — max 10 Mo</p>
-      </div>
-
-      {/* Loading state */}
-      {analyzing && (
-        <div className="mt-4 text-center">
-          <div className="w-8 h-8 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto" />
-          <p className="mt-2 text-sm text-gray-500">Analyse du document en cours...</p>
-        </div>
-      )}
-
-      {/* Results */}
-      {analysisResult && (
-        <div className="mt-6 bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <h4 className="font-semibold">Document analysé</h4>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold ${confidenceColor}`}>
-              {Math.round((analysisResult.confiance || 0) * 100)}%
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Type: {analysisResult.type || analysisResult.type_document || 'Inconnu'}
-          </div>
-          {analysisResult.resume && <p className="text-sm mt-1">{analysisResult.resume}</p>}
-          {analysisResult.extracted_data && (
-            <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
-              <pre className="whitespace-pre-wrap font-mono">{JSON.stringify(analysisResult.extracted_data, null, 2)}</pre>
-            </div>
-          )}
-          <button
-            onClick={confirmDocument}
-            className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+      style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {DEMO_CONTRACTS.map(contrat => {
+        const isUrgent = contrat.days_to_expiry <= 30
+        return (
+          <div key={contrat.id} style={{
+            background: 'rgba(255,255,255,0.02)', border: `1px solid ${isUrgent ? T.dangerBg : T.cardBorder}`,
+            borderRadius: 10, padding: '12px', transition: 'all 0.15s', cursor: 'pointer',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.cardHover }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+            onClick={() => navigate(`/contrats/${contrat.id}`)}
           >
-            Confirmer et indexer
-          </button>
-        </div>
-      )}
-
-      {/* Existing documents list */}
-      <div className="mt-6">
-        <h4 className="font-semibold mb-3">Documents du dossier</h4>
-        {client.documents?.length > 0 ? (
-          <div className="space-y-2">
-            {client.documents.map((doc, i) => (
-              <div key={doc.id || i} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg">
-                <File size={16} className="text-gray-400 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-700 truncate">
-            {doc.fileName || doc.name || `Document ${i + 1}`}
-          </p>
-          <p className="text-xs text-gray-400">{doc.type || doc.type_document || 'Document'}</p>
-          <div className="flex items-center gap-2 mt-1">
-            {doc.source === 'whatsapp' ? (
-              <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Reçu par WhatsApp</span>
-            ) : (
-              <span className="text-[10px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Uploadé manuellement</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{contrat.type_contrat}</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: T.textMuted, marginTop: 2 }}>{contrat.compagnie}</div>
+              </div>
+              <Badge color={isUrgent ? T.danger : T.success} bg={isUrgent ? T.dangerBg : T.successBg}>
+                {isUrgent ? `J-${contrat.days_to_expiry}` : 'Actif'}
+              </Badge>
+            </div>
+            <div style={{ display: 'flex', gap: 16, fontSize: 11, color: T.textSecondary }}>
+              <span>Prime : <strong style={{ color: T.text }}>{fmtEur(contrat.prime_annuelle)}/an</strong></span>
+              <span>Début : <strong style={{ color: T.text }}>{fmtShortDate(contrat.date_debut)}</strong></span>
+              <span>Échéance : <strong style={{ color: isUrgent ? T.danger : T.text }}>{fmtShortDate(contrat.date_echeance)}</strong></span>
+            </div>
+            {isUrgent && (
+              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                <button style={actionBtnStyle(T.accent)} onClick={e => { e.stopPropagation() }}><RefreshCwIcon size={11} /> Renouveler</button>
+                <button style={actionBtnStyle(T.ark)} onClick={e => { e.stopPropagation() }}><Eye size={11} /> Voir</button>
+              </div>
             )}
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {doc.confiance != null && (
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${getConfidenceColor(doc.confiance)}`}>
-              {Math.round(doc.confiance * 100)}%
-            </span>
-          )}
-          <button
-            onClick={() => {/* Téléchargement original — à implémenter avec l'URL du fichier */}}
-            title="Télécharger"
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-          >
-            <Download size={14} />
-          </button>
-        </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400">Aucun document indexé</p>
-        )}
-      </div>
+        )
+      })}
     </motion.div>
   )
 }
 
-function CommissionsTab({ clientId, navigate }) {
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+const actionBtnStyle = (color) => ({
+  padding: '5px 10px', borderRadius: 6,
+  background: `${color}15`, border: `1px solid ${color}30`,
+  color, fontSize: 10, fontWeight: 700,
+  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4,
+  transition: 'all 0.15s',
+})
 
-  useEffect(() => {
-    let cancelled = false
-    async function loadCommissions() {
-      try {
-        setLoading(true)
-        setError('')
-        const res = await api.get(`/commissions?client_id=${clientId}`)
-        if (!cancelled) setRows(Array.isArray(res.data?.data) ? res.data.data : [])
-      } catch (err) {
-        if (!cancelled) {
-          const status = err?.response?.status
-          setError(status === 403 ? 'Suivi commissions désactivé pour ce cabinet.' : 'Commissions indisponibles.')
-          setRows([])
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    loadCommissions()
-    return () => { cancelled = true }
-  }, [clientId])
-
-  const summary = summarizeCommissions(rows)
-
-  if (loading) {
-    return (
-      <div className="space-y-2 py-2">
-        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-100/70" />)}
-      </div>
-    )
-  }
-
-  if (error) {
-    return <div className="rounded-2xl border border-amber-200/40 bg-amber-50/80 p-4 text-sm font-semibold text-amber-800">{error}</div>
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <Euro size={34} className="mx-auto mb-3 text-gray-300" />
-        <p className="font-bold text-gray-900">Aucune commission liée</p>
-        <p className="mx-auto mt-1 max-w-sm text-sm text-gray-500">Importez un relevé compagnie ou ajoutez une commission depuis la page Commissions.</p>
-        <button
-          onClick={() => navigate('/commissions')}
-          className="mt-4 rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white"
-        >
-          Ouvrir Commissions
-        </button>
-      </div>
-    )
-  }
-
+// ── DEVIS TAB ───────────────────────────────────────────────────────────────
+function DevisTabContent({ navigate }) {
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-2xl bg-white/70 p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Attendu</p>
-          <p className="mt-1 text-sm font-black text-gray-900">{formatCommissionCurrency(summary.expected)}</p>
-        </div>
-        <div className="rounded-2xl bg-white/70 p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Reçu</p>
-          <p className="mt-1 text-sm font-black text-emerald-700">{formatCommissionCurrency(summary.received)}</p>
-        </div>
-        <div className="rounded-2xl bg-white/70 p-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Reste</p>
-          <p className="mt-1 text-sm font-black text-amber-700">{formatCommissionCurrency(summary.pending)}</p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        {rows.map((row) => {
-          const status = getCommissionStatusMeta(row.status)
-          return (
-            <div key={row.id} className="rounded-2xl border border-gray-100 bg-white/80 p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-black text-gray-900">{row.insurer}</p>
-                  <p className="text-xs text-gray-500">{row.type_contrat || 'Contrat'} · {row.period_month}/{row.period_year}</p>
-                </div>
-                <span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: status.tone === 'success' ? 'rgba(16,185,129,0.14)' : 'rgba(59,130,246,0.12)', color: status.tone === 'success' ? '#047857' : '#1d4ed8' }}>
-                  {status.label}
-                </span>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-xs">
-                <span className="text-gray-500">Attendu {formatCommissionCurrency(row.expected_amount_eur)}</span>
-                <span className="font-bold text-gray-900">Reçu {formatCommissionCurrency(row.received_amount_eur)}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-const CANAL_ICON = {
-  email: Mail,
-  sms: MessageSquare,
-  whatsapp: Phone,
-}
-
-const CANAL_LABEL = {
-  email: 'Email',
-  sms: 'SMS',
-  whatsapp: 'WhatsApp',
-}
-
-const DIRECTION_STYLE = {
-  envoye: { color: '#10b981', bg: 'rgba(16,185,129,0.08)', label: 'Envoyé' },
-  recu: { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', label: 'Reçu' },
-}
-
-const MESSAGE_STATUS = {
-  envoye: { label: 'Envoyé', color: '#9ca3af' },
-  livre: { label: 'Livré', color: '#3b82f6' },
-  lu: { label: 'Lu', color: '#10b981' },
-  echoue: { label: 'Échoué', color: '#ef4444' },
-}
-
-// ─── MESSAGES TAB ──────────────────────────────────────────────────────────
-function MessagesTab({ clientId }) {
-  const [messages] = useState([])
-  const [sendingARK, setSendingARK] = useState(false)
-  const [triggeringRelance, setTriggeringRelance] = useState(false)
-  const [dossierStatut, setDossierStatut] = useState('en_cours')
-
-  const dossierCfg = DOSSIER_STATUS[dossierStatut] || DOSSIER_STATUS.brouillon
-
-  const fmtMessageDate = (d) => {
-    const date = new Date(d)
-    const jour = String(date.getDate()).padStart(2, '0')
-    const mois = String(date.getMonth() + 1).padStart(2, '0')
-    const heures = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${jour}/${mois} ${heures}:${minutes}`
-  }
-
-  const handleEnvoyerARK = async () => {
-    setSendingARK(true)
-    try {
-      await api.post('/messaging/send', { clientId })
-      toast.success('Message envoyé via ARK')
-    } catch (err) {
-      const message = err.response?.data?.message || err.response?.data?.error || 'Configuration email/SMS requise.'
-      toast.error(message)
-    } finally {
-      setSendingARK(false)
-    }
-  }
-
-  const handleRelancer = async () => {
-    setTriggeringRelance(true)
-    try {
-      await api.post('/messaging/relance/trigger', { clientId })
-      setDossierStatut('relance')
-      toast.success('Relance déclenchée')
-    } catch (err) {
-      const message = err.response?.data?.message || err.response?.data?.error || 'Configuration relance requise.'
-      toast.error(message)
-    } finally {
-      setTriggeringRelance(false)
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
-    >
-      {/* Barre d'actions */}
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 8,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          <BubbleButton
-            variant="primary"
-            size="sm"
-            onClick={handleEnvoyerARK}
-            disabled={sendingARK}
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+      style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {DEMO_QUOTES.map(devis => {
+        const st = DEVIS_STATUS[devis.statut] || DEVIS_STATUS['envoyé']
+        return (
+          <div key={devis.id} style={{
+            background: 'rgba(255,255,255,0.02)', border: `1px solid ${T.cardBorder}`,
+            borderRadius: 10, padding: '12px', transition: 'all 0.15s', cursor: 'pointer',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.cardHover }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+            onClick={() => navigate(`/devis/${devis.id}`)}
           >
-            <Send size={12} />
-            {sendingARK ? 'Envoi...' : 'Envoyer via ARK'}
-          </BubbleButton>
-          <BubbleButton
-            variant="secondary"
-            size="sm"
-            onClick={handleRelancer}
-            disabled={triggeringRelance}
-          >
-            <RefreshCw size={12} style={triggeringRelance ? { animation: 'spin 1s linear infinite' } : {}} />
-            {triggeringRelance ? 'Relance...' : 'Relancer maintenant'}
-          </BubbleButton>
-        </div>
-        {/* Badge statut dossier */}
-        <BubbleBadge color={dossierCfg.color} size="sm">
-          Dossier : {dossierCfg.label}
-        </BubbleBadge>
-      </div>
-
-      {/* Liste des messages */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-        maxHeight: 360,
-        overflowY: 'auto',
-      }}>
-        {messages.length === 0 ? (
-          <p style={{
-            color: 'var(--text-tertiary)',
-            fontSize: 12,
-            textAlign: 'center',
-            padding: '24px 0',
-          }}>
-            Aucun message pour ce client
-          </p>
-        ) : (
-          messages.map(msg => {
-            const Icon = CANAL_ICON[msg.canal] || MessageSquare
-            const dirStyle = DIRECTION_STYLE[msg.direction] || DIRECTION_STYLE.envoye
-            const statusCfg = MESSAGE_STATUS[msg.statut] || MESSAGE_STATUS.envoye
-            return (
-              <div
-                key={msg.id}
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  padding: 10,
-                  background: dirStyle.bg,
-                  borderRadius: 'var(--r-md, 12px)',
-                  border: '0.5px solid rgba(0,0,0,0.05)',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'
-                  e.currentTarget.style.transform = 'translateY(-1px)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                {/* Icône canal */}
-                <div style={{
-                  flexShrink: 0,
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.9)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '0.5px solid rgba(0,0,0,0.08)',
-                }}>
-                  <Icon size={13} style={{ color: dirStyle.color }} />
-                </div>
-                {/* Contenu */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                    <span style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: dirStyle.color,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}>
-                      {dirStyle.label}
-                    </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
-                      {CANAL_LABEL[msg.canal]}
-                    </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
-                      {fmtMessageDate(msg.date)}
-                    </span>
-                  </div>
-                  <p style={{
-                    fontSize: 12,
-                    color: 'var(--text-primary)',
-                    margin: 0,
-                    lineHeight: 1.4,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {msg.contenu}
-                  </p>
-                  <div style={{ marginTop: 2 }}>
-                    <span style={{
-                      fontSize: 9,
-                      fontWeight: 500,
-                      color: statusCfg.color,
-                      background: `${statusCfg.color}15`,
-                      padding: '1px 6px',
-                      borderRadius: 9999,
-                    }}>
-                      {statusCfg.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-    </motion.div>
-  )
-}
-
-function WhatsAppBusinessTab({ client }) {
-  const [status, setStatus] = useState(null)
-  const [threads, setThreads] = useState([])
-  const [templates, setTemplates] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
-  const [templateId, setTemplateId] = useState('')
-  const [templateVariables, setTemplateVariables] = useState('')
-
-  const clientId = client?.id
-
-  // Chargement initial WhatsApp isolé: ne modifie pas les autres onglets métier.
-  useEffect(() => {
-    let cancelled = false
-    async function loadWhatsapp() {
-      if (!INTEGRATIONS_API_ENABLED || !clientId) {
-        setStatus({ status: 'configuration_required', configured: false, webhookReady: false })
-        setThreads([])
-        setTemplates([])
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        const [statusRes, threadsRes, templatesRes] = await Promise.all([
-          api.get('/integrations/whatsapp/status').catch((err) => ({ error: err })),
-          api.get(`/integrations/whatsapp/threads?client_id=${clientId}&limit=8`).catch(() => ({ data: { rows: [] } })),
-          api.get('/integrations/whatsapp/templates').catch(() => ({ data: { templates: [] } })),
-        ])
-
-        if (cancelled) return
-        if (statusRes.error) {
-          setStatus({ status: 'configuration_required', configured: false, webhookReady: false })
-          setError(statusRes.error?.response?.data?.message || statusRes.error?.response?.data?.error || 'WhatsApp indisponible.')
-        } else {
-          setStatus(statusRes.data || null)
-          setError('')
-        }
-        setThreads(Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [])
-        setTemplates(Array.isArray(templatesRes?.data?.templates) ? templatesRes.data.templates : [])
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    loadWhatsapp()
-    return () => { cancelled = true }
-  }, [clientId])
-
-  const configured = Boolean(status?.configured && ['configured', 'connected'].includes(String(status?.status || '')))
-  const selectedTemplate = templates.find((tpl) => tpl.key === templateId)
-  const phone = client?.phone || client?.telephone || ''
-
-  const sendWhatsapp = async () => {
-    if (!configured) {
-      toast.error('WhatsApp Business doit être configuré avant envoi.')
-      return
-    }
-    if (!templateId && !message.trim()) {
-      toast.error('Ajoutez un message ou choisissez un template Meta.')
-      return
-    }
-
-    setSending(true)
-    try {
-      const variables = templateVariables
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-      await api.post('/integrations/whatsapp/send', {
-        clientId,
-        message: message.trim(),
-        templateId: templateId || undefined,
-        templateVariables: variables,
-      })
-      toast.success('Message WhatsApp envoyé')
-      setMessage('')
-      setTemplateVariables('')
-    } catch (err) {
-      const details = err?.response?.data?.details || err?.response?.data?.error || 'Envoi WhatsApp impossible'
-      toast.error(String(details))
-    } finally {
-      setSending(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-2 py-2">
-        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-white/60" />)}
-      </div>
-    )
-  }
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-      <div className="rounded-2xl border border-emerald-200/40 bg-gradient-to-br from-emerald-50/90 to-white/80 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-700">WhatsApp Business</p>
-            <h3 className="mt-1 text-lg font-black text-gray-950">Conversations client centralisées</h3>
-            <p className="mt-1 text-sm text-gray-600">
-              {configured
-                ? 'Canal prêt. Les messages entrants alimentent la timeline et ARK peut préparer les relances.'
-                : 'Configuration Meta requise avant d’envoyer ou recevoir des messages depuis COURTIA.'}
-            </p>
-          </div>
-          <BubbleBadge color={configured ? '#10b981' : '#f59e0b'} size="sm">
-            {configured ? 'Configuré' : 'Configuration requise'}
-          </BubbleBadge>
-        </div>
-        {error && (
-          <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-            <AlertTriangle size={14} />
-            {error}
-          </div>
-        )}
-        <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-2">
-          <span>Téléphone client : <strong className="text-gray-900">{phone || 'non renseigné'}</strong></span>
-          <span>Webhook Meta : <strong className="text-gray-900">{status?.webhookReady ? 'prêt' : 'à configurer'}</strong></span>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-gray-100 bg-white/80 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h4 className="text-sm font-black text-gray-900">Préparer une réponse</h4>
-          <span className="text-[11px] font-semibold text-gray-500">Templates requis hors fenêtre 24h</span>
-        </div>
-        <select
-          value={templateId}
-          onChange={(e) => setTemplateId(e.target.value)}
-          className="mb-3 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
-        >
-          <option value="">Message libre si fenêtre 24h ouverte</option>
-          {templates.map((tpl) => (
-            <option key={tpl.key} value={tpl.key}>{tpl.label}</option>
-          ))}
-        </select>
-        {selectedTemplate && (
-          <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
-            <p className="font-bold">{selectedTemplate.description}</p>
-            <p className="mt-1">{selectedTemplate.body}</p>
-            <textarea
-              value={templateVariables}
-              onChange={(e) => setTemplateVariables(e.target.value)}
-              placeholder={(selectedTemplate.variableLabels || []).join('\n') || 'Variables, une par ligne'}
-              className="mt-2 min-h-[78px] w-full rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs text-gray-800"
-            />
-          </div>
-        )}
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={`Message ARK à envoyer à ${client?.prenom || client?.first_name || 'ce client'}...`}
-          className="min-h-[96px] w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
-        />
-        <button
-          type="button"
-          onClick={sendWhatsapp}
-          disabled={sending || !configured || !phone}
-          className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Send size={13} />
-          {sending ? 'Envoi...' : 'Envoyer via WhatsApp'}
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-400">Derniers échanges</p>
-        {threads.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white/70 p-5 text-center text-sm text-gray-500">
-            Aucun thread WhatsApp lié pour ce client. Les messages entrants seront reliés automatiquement par téléphone.
-          </div>
-        ) : threads.map((thread) => (
-          <div key={thread.id} className="rounded-2xl border border-gray-100 bg-white/80 p-3">
-            <div className="flex items-start justify-between gap-3">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div>
-                <p className="text-sm font-black text-gray-900">{thread.phone}</p>
-                <p className="mt-1 text-xs text-gray-600">{thread.last_message_preview || 'Conversation WhatsApp'}</p>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{devis.produit}</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: T.textMuted, marginTop: 2 }}>{devis.compagnie}</div>
               </div>
-              <span className="text-[11px] font-semibold text-gray-400">
-                {thread.last_message_at ? new Date(thread.last_message_at).toLocaleString('fr-FR') : 'jamais'}
-              </span>
+              <Badge color={st.color} bg={`${st.color}15`}>{st.label}</Badge>
+            </div>
+            <div style={{ display: 'flex', gap: 16, fontSize: 11, color: T.textSecondary }}>
+              <span>Montant : <strong style={{ color: T.text }}>{fmtEur(devis.montant)}/an</strong></span>
+              <span>Envoyé : <strong style={{ color: T.text }}>{fmtShortDate(devis.date_envoi)}</strong></span>
+              <span>Valide jusqu'au : <strong style={{ color: T.text }}>{fmtShortDate(devis.validite)}</strong></span>
+            </div>
+            <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+              <button style={actionBtnStyle(T.accent)} onClick={e => { e.stopPropagation() }}><Send size={11} /> Relancer</button>
+              <button style={actionBtnStyle(T.success)} onClick={e => { e.stopPropagation() }}><CheckCircle size={11} /> Accepter</button>
+            </div>
+          </div>
+        )
+      })}
+    </motion.div>
+  )
+}
+
+// ── HISTORIQUE TAB ──────────────────────────────────────────────────────────
+function HistoriqueTabContent() {
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+      style={{ padding: '12px 12px 12px 20px', display: 'flex', flexDirection: 'column' }}>
+      {/* Timeline */}
+      <div style={{ position: 'relative', paddingLeft: 0 }}>
+        {DEMO_HISTORY.map((event, i) => (
+          <div key={event.id} style={{ position: 'relative', display: 'flex', gap: 12, paddingBottom: i < DEMO_HISTORY.length - 1 ? 16 : 0 }}>
+            {/* Line */}
+            {i < DEMO_HISTORY.length - 1 && (
+              <div style={{
+                position: 'absolute', left: 11, top: 24, width: 2, bottom: 0,
+                background: 'rgba(255,255,255,0.06)',
+              }} />
+            )}
+            {/* Dot */}
+            <div style={{
+              flexShrink: 0, width: 24, height: 24, borderRadius: '50%',
+              background: `${event.color}20`, border: `2px solid ${event.color}40`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 1,
+            }}>
+              <event.icon size={11} color={event.color} />
+            </div>
+            {/* Content */}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{event.label}</div>
+              <div style={{ fontSize: 10, fontWeight: 500, color: T.textMuted, marginTop: 2 }}>{fmtShortDate(event.date)}</div>
             </div>
           </div>
         ))}
@@ -1004,411 +678,300 @@ function WhatsAppBusinessTab({ client }) {
   )
 }
 
-// ─── TABS CONFIG ──────────────────────────────────────────────────────────
-const TABS_CONFIG = [
-  { id: 'activite', label: 'Activité', icon: Activity },
-  { id: 'contrats', label: 'Contrats', icon: Shield },
-  { id: 'taches', label: 'Tâches', icon: CheckSquare },
-  { id: 'commissions', label: 'Commissions', icon: Euro },
-  { id: 'whatsapp', label: 'WhatsApp', icon: Phone },
-  { id: 'documents', label: 'Documents', icon: FileText },
-  { id: 'historique', label: 'Historique', icon: Clock },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-]
+// ═══════════════════════════════════════════════════════════════════════════
+// RIGHT COLUMN — ARK PANEL
+// ═══════════════════════════════════════════════════════════════════════════
+function ARKPanel({ client }) {
+  const analysis = DEMO_ARK_ANALYSIS
+  const riskColor = analysis.riskNiveau >= 70 ? T.danger : analysis.riskNiveau >= 50 ? T.warning : T.success
 
-function PlaceholderTab({ title, icon: Icon }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20" style={{ color: 'var(--text-secondary)' }}>
-      <Icon size={40} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-      <p className="text-lg font-semibold">{title}</p>
-      <p className="text-sm mt-1">Contenu à venir</p>
-    </motion.div>
+    <div style={{
+      background: T.cardBg, border: `1px solid ${T.arkBorder}`,
+      borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '12px 14px', borderBottom: `1px solid ${T.arkBorder}`,
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: T.arkBg,
+      }}>
+        <Sparkles size={16} color={T.ark} />
+        <span style={{ fontSize: 13, fontWeight: 800, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Analyse ARK</span>
+      </div>
+
+      <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'auto' }}>
+        {/* Client Summary */}
+        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '10px 12px', border: `1px solid ${T.cardBorder}` }}>
+          <h4 style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Synthèse client</h4>
+          {analysis.summary.map((line, i) => (
+            <p key={i} style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 400, color: T.textSecondary, lineHeight: 1.5 }}>
+              {line}
+            </p>
+          ))}
+        </div>
+
+        {/* Risk Niveau */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '10px 12px', border: `1px solid ${T.cardBorder}` }}>
+          <CircularGauge value={analysis.riskNiveau} size={56} strokeWidth={4} color={riskColor} />
+          <div>
+            <h4 style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Niveau de risque</h4>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: T.textSecondary, lineHeight: 1.4 }}>{analysis.riskReason}</p>
+          </div>
+        </div>
+
+        {/* Opportunity Detected */}
+        <div style={{ background: `${T.success}08`, borderRadius: 8, padding: '10px 12px', border: `1px solid ${T.success}20` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <Target size={13} color={T.success} />
+            <h4 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: T.success, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Opportunité détectée</h4>
+          </div>
+          <p style={{ margin: '0 0 3px', fontSize: 12, fontWeight: 700, color: T.text }}>{analysis.opportunity}</p>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 400, color: T.textSecondary, lineHeight: 1.4 }}>{analysis.opportunityDetail}</p>
+        </div>
+
+        {/* Recommended Action */}
+        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '10px 12px', border: `1px solid ${T.cardBorder}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <Zap size={13} color={T.accent} />
+            <h4 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Action recommandée</h4>
+          </div>
+          <p style={{ margin: '0 0 3px', fontSize: 12, fontWeight: 700, color: T.text }}>{analysis.recommendedAction}</p>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 400, color: T.textSecondary, lineHeight: 1.4 }}>{analysis.actionWhy}</p>
+        </div>
+
+        {/* Impact */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.10), rgba(91,77,245,0.06))',
+          borderRadius: 8, padding: '12px', border: `1px solid ${T.arkBorder}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <TrendingUp size={16} color={T.success} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary }}>Impact potentiel</span>
+          </div>
+          <span style={{ fontSize: 18, fontWeight: 800, color: T.success }}>{fmtEur(analysis.impactPotentiel)}</span>
+        </div>
+
+        {/* Quick Action Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <ARKActionButton icon={Send} label="Préparer relance" primary />
+          <ARKActionButton icon={FileText} label="Créer devis" />
+          <ARKActionButton icon={Shield} label="Voir contrats" />
+          <ARKActionButton icon={Sparkles} label="Expliquer avec ARK" ark />
+        </div>
+      </div>
+    </div>
   )
 }
 
-// ─── MAIN COMPONENT ──────────────────────────────────────────────────────
+function ARKActionButton({ icon: Icon, label, primary, ark }) {
+  return (
+    <button style={{
+      width: '100%', padding: '9px 12px',
+      background: primary ? T.accent : ark ? T.arkBg : 'rgba(255,255,255,0.03)',
+      border: primary ? `1px solid ${T.accent}` : ark ? `1px solid ${T.arkBorder}` : `1px solid ${T.cardBorder}`,
+      borderRadius: 8, cursor: 'pointer',
+      display: 'flex', alignItems: 'center', gap: 8,
+      fontSize: 11, fontWeight: 700,
+      color: primary ? T.text : ark ? T.ark : T.textSecondary,
+      transition: 'all 0.15s',
+    }}
+      onMouseEnter={e => {
+        if (!primary && !ark) e.currentTarget.style.background = T.cardHover
+        if (ark) e.currentTarget.style.background = 'rgba(139,92,246,0.10)'
+        if (primary) e.currentTarget.style.opacity = '0.9'
+      }}
+      onMouseLeave={e => {
+        if (!primary && !ark) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+        if (ark) e.currentTarget.style.background = T.arkBg
+        if (primary) e.currentTarget.style.opacity = '1'
+      }}
+    >
+      <Icon size={13} color={primary ? T.text : ark ? T.ark : T.accent} />
+      {label}
+    </button>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MOBILE ARK DRAWER
+// ═══════════════════════════════════════════════════════════════════════════
+function MobileARKDrawer({ client, open, onClose }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, backdropFilter: 'blur(4px)' }}
+            onClick={onClose}
+          />
+          {/* Drawer */}
+          <motion.div
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            style={{
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101,
+              maxHeight: '85vh', overflow: 'auto',
+              background: '#08081a', borderTop: `1px solid ${T.arkBorder}`,
+              borderTopLeftRadius: 16, borderTopRightRadius: 16,
+              paddingBottom: 24,
+            }}
+          >
+            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${T.cardBorder}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Sparkles size={16} color={T.ark} />
+                <span style={{ fontSize: 14, fontWeight: 800, color: T.ark }}>Analyse ARK</span>
+              </div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.textMuted, cursor: 'pointer', padding: 4 }}>
+                <ChevronDown size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '4px 0' }}>
+              <ARKPanel client={client} />
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN PAGE COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
 export default function ClientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [client, setClient] = useState(null)
-  const [contrats, setContrats] = useState([])
-  const [taches, setTaches] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('activite')
-  const [activeBubble, setActiveBubble] = useState(null)
-  const [interactions, setInteractions] = useState([])
-  const [interactionsLoading, setInteractionsLoading] = useState(false)
-  const [interactionsError, setInteractionsError] = useState('')
-  const bubbleTimeoutRef = useRef(null)
+  const [arkDrawerOpen, setArkDrawerOpen] = useState(false)
 
-  useEffect(() => {
-    async function loadAll() {
-      try {
-        setLoading(true); setError(null)
-        setInteractionsLoading(true)
-        const interactionsPromise = INTERACTIONS_TIMELINE_API_ENABLED
-          ? api.get(`/clients/${id}/interactions?limit=40`).catch(() => ({ data: { rows: [] } }))
-          : Promise.resolve({ data: { rows: [] } })
-        const [clientRes, contratsRes, tachesRes, interactionsRes] = await Promise.all([
-          api.get(`/clients/${id}`),
-          api.get(`/clients/${id}/contrats`),
-          api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] })),
-          interactionsPromise,
-        ])
-        setClient(clientRes.data)
-        setContrats(Array.isArray(contratsRes.data) ? contratsRes.data : [])
-        setTaches(Array.isArray(tachesRes.data) ? tachesRes.data : [])
-        const timelineRows = Array.isArray(interactionsRes?.data?.rows) ? interactionsRes.data.rows : []
-        setInteractions(timelineRows)
-        setInteractionsError('')
-      } catch (err) {
-        const status = err?.response?.status
-        if (status === 404) {
-          setError('Client introuvable.')
-          toast.error('Client introuvable.')
-        } else {
-          setError('Impossible de charger cette fiche client pour le moment.')
-          toast.error('Impossible de charger la fiche client.')
-        }
-      }
-      finally {
-        setInteractionsLoading(false)
-        setLoading(false)
-      }
-    }
-    loadAll()
-  }, [id])
+  // Use demo data — in production, this would fetch from API with `id`
+  const client = useMemo(() => DEMO_CLIENT, [id])
 
-  const reloadInteractions = async () => {
-    if (!INTERACTIONS_TIMELINE_API_ENABLED) {
-      setInteractions([])
-      setInteractionsError('')
-      return
-    }
-    try {
-      setInteractionsLoading(true)
-      const res = await api.get(`/clients/${id}/interactions?limit=40`)
-      setInteractions(Array.isArray(res?.data?.rows) ? res.data.rows : [])
-      setInteractionsError('')
-    } catch {
-      setInteractionsError('Impossible de charger la timeline interactions.')
-    } finally {
-      setInteractionsLoading(false)
-    }
-  }
+  const handleARKOpen = () => setArkDrawerOpen(true)
+  const handleARKClose = () => setArkDrawerOpen(false)
 
-  const handleBubbleEnter = (type) => { clearTimeout(bubbleTimeoutRef.current); setActiveBubble(type) }
-  const handleBubbleLeave = () => { bubbleTimeoutRef.current = setTimeout(() => setActiveBubble(null), 300) }
-  const scores = !loading && client ? {
-    ...computeScores(client, contrats),
-    get globalScore() { return Math.round((100 - this.risque) * 0.40 + this.fidelite * 0.25 + this.opportunite * 0.20 + this.retention * 0.15) }
-  } : null
-
-  const statut = (client?.statut || '').toLowerCase()
-  const statusCfg = STATUS_CONFIG[statut] || { label: 'Inconnu', color: '#6b7280' }
-
-  // ─── LOADING STATE ──────────────────────────────────────────────────────
-  if (loading) return (
-    <div className="flex justify-center items-center h-screen" style={{ background: 'var(--bg-cream)' }}>
-      <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--text-tertiary)', borderTopColor: 'transparent' }} />
-    </div>
-  )
-
-  // ─── ERROR STATE ────────────────────────────────────────────────────────
-  if (error) return (
-    <div className="p-8 text-center h-screen flex flex-col justify-center items-center" style={{ background: 'var(--bg-cream)', color: '#ef4444' }}>
-      <p className="font-semibold">{error}</p>
-      <button onClick={() => navigate('/clients')} className="mt-4 px-4 py-2 rounded-lg text-white" style={{ background: '#ef4444', border: '0.5px solid rgba(255,255,255,0.1)' }}>Retour</button>
-    </div>
-  )
-
-  if (!client) return null
-  
-  // ─── TAB CONTENT RENDERER ───────────────────────────────────────────────
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'contrats':
-        return <ContratsTab contrats={contrats} clientId={client.id} navigate={navigate} />
-      case 'taches':
-        return <TachesTab taches={taches} clientId={client.id} navigate={navigate} />
-      case 'commissions':
-        return <CommissionsTab clientId={client.id} navigate={navigate} />
-      case 'whatsapp':
-        return <WhatsAppBusinessTab client={client} />
-      case 'activite':
-        return (
-          <ClientInteractionsTimeline
-            rows={interactions}
-            loading={interactionsLoading}
-            error={interactionsError}
-            onRetry={reloadInteractions}
-          />
-        )
-      case 'documents':
-        return <DocumentsTab client={client} setClient={setClient} clientId={id} />
-      case 'historique':
-        return <PlaceholderTab title="Historique" icon={Clock} />
-      case 'messages':
-        return <MessagesTab clientId={client.id} />
-      default:
-        return <PlaceholderTab title="Activité" icon={Activity} />
-    }
-  }
-
-  // ─── RENDER ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-cream)', fontFamily: 'var(--font-sans)' }}>
-      <BubbleBackground intensity="normal" />
+    <div style={{
+      minHeight: '100vh', background: T.bg,
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    }}>
+      {/* ── Header ────────────────────────────────────────────────────── */}
+      <header style={{
+        padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: `1px solid ${T.cardBorder}`,
+        background: 'rgba(5,5,16,0.85)', backdropFilter: 'blur(12px)',
+        position: 'sticky', top: 0, zIndex: 50,
+      }}>
+        <button
+          onClick={() => navigate('/clients')}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.cardBorder}`,
+            color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = T.cardHover }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+        >
+          <ArrowLeft size={14} /> Retour
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: T.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #5B4DF5, #8B5CF6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, fontWeight: 800, color: T.text,
+            }}>
+              {getInitials(client)}
+            </div>
+            {client.prenom} {client.nom}
+          </span>
+        </div>
+      </header>
 
-      {/* Violet Iridescent Score Bubble Tooltip */}
-      <AnimatePresence>
-        {activeBubble && (
-          <BubbleTooltip
-            type={activeBubble}
-            client={client}
-            scores={scores}
-            onMouseEnter={() => handleBubbleEnter(activeBubble)}
-            onMouseLeave={handleBubbleLeave}
-          />
-        )}
-      </AnimatePresence>
+      {/* ── 3-Column Layout ───────────────────────────────────────────── */}
+      <div style={{
+        display: 'flex', gap: 12, padding: '12px 16px',
+        maxWidth: 1400, margin: '0 auto',
+        flexDirection: 'column', // mobile first
+      }}
+        className="client-detail-layout"
+      >
+        {/* Desktop row layout via CSS-in-JS media query alternative: we use a wrapper */}
+        <style>{`
+          @media (min-width: 1024px) {
+            .client-detail-layout {
+              flex-direction: row !important;
+              align-items: flex-start;
+            }
+            .client-detail-left { width: 260px; flex-shrink: 0; }
+            .client-detail-center { flex: 1; min-width: 0; }
+            .client-detail-right { width: 340px; flex-shrink: 0; }
+          }
+          @media (max-width: 1023px) {
+            .client-detail-right-desktop { display: none; }
+            .client-detail-ark-trigger { display: flex; }
+          }
+          @media (min-width: 1024px) {
+            .client-detail-ark-trigger { display: none; }
+          }
+        `}</style>
 
-      <div className="relative" style={{ zIndex: 1 }}>
-
-        {/* Header bar — Bubble style */}
-        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: 'var(--border-fine)' }}>
-          <button onClick={() => navigate(-1)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              background: 'rgba(255,255,255,0.75)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: 'var(--r-md)',
-              border: 'var(--border-fine)',
-              boxShadow: 'var(--shadow-bubble)',
-              fontSize: 13,
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <ArrowLeft size={14} /> Retour
-          </button>
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate(`/clients/${id}/edit`)}
-              style={{
-                padding: '6px 14px',
-                background: 'rgba(255,255,255,0.75)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: 'var(--r-md)',
-                border: 'var(--border-fine)',
-                boxShadow: 'var(--shadow-bubble)',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)' }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble)' }}
-            >Modifier</button>
-            <button onClick={() => navigate(`/contrats/new?clientId=${id}`)}
-              style={{
-                padding: '6px 14px',
-                background: '#0a0a0a',
-                borderRadius: 'var(--r-md)',
-                border: '0.5px solid rgba(255,255,255,0.1)',
-                boxShadow: 'var(--shadow-bubble)',
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#ffffff',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble)'; e.currentTarget.style.transform = 'translateY(0)' }}
-            >Nouveau contrat</button>
-          </div>
+        {/* LEFT — Identity */}
+        <div className="client-detail-left">
+          <IdentityPanel client={client} navigate={navigate} />
         </div>
 
-        {/* Avatar + Name row */}
-        <div className="px-4 py-2 flex items-center gap-4" style={{ borderBottom: 'var(--border-fine)' }}>
-          <div className="w-12 h-12 text-lg rounded-full text-white flex items-center justify-center font-black flex-shrink-0 select-none"
-            style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', boxShadow: '0 4px 20px rgba(37,99,235,0.25)' }}>
-            {getInitials(client)}
-          </div>
-          <div>
-            <h1 className="font-black text-gray-900 tracking-tight" style={{ fontSize: 16 }}>{client.prenom} {client.nom}</h1>
-            <div style={{ display:'flex', alignItems:'center', gap:6, marginTop: 4 }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:6, color:'rgba(0,0,0,0.6)', fontSize:13 }}>
-                <svg width="14" height="14" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <radialGradient id="bubbleC-mini" cx="32%" cy="22%" r="85%">
-                      <stop offset="0%" stopColor="rgba(255,255,255,1)" />
-                      <stop offset="28%" stopColor="rgba(232,247,255,0.75)" />
-                      <stop offset="68%" stopColor="rgba(196,181,253,0.55)" />
-                      <stop offset="100%" stopColor="rgba(124,58,237,0.65)" />
-                    </radialGradient>
-                  </defs>
-                  <path d="M 56 22 A 22 22 0 1 0 56 46" fill="none" stroke="url(#bubbleC-mini)" strokeWidth="14" strokeLinecap="round" />
-                  <ellipse cx="34" cy="11" rx="3" ry="1.8" fill="rgba(255,255,255,0.85)" transform="rotate(-12 34 11)" />
-                  <circle cx="68" cy="20" r="6.5" fill="rgba(186,230,253,0.55)" stroke="rgba(96,165,250,0.45)" strokeWidth="0.6" />
-                </svg>
-                {client.telephone || 'N/A'}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 mt-1">
-              <p style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{client.profession || 'Profession non renseignée'}</p>
-              <BubbleBadge color={statusCfg.color} size="sm" pulse={statut === 'a_risque'}>{statusCfg.label}</BubbleBadge>
-            </div>
-          </div>
+        {/* CENTER — Dossier */}
+        <div className="client-detail-center">
+          <DossierClient client={client} navigate={navigate} />
         </div>
 
-        {/* 4-part layout: ScoreSidebar + 3 columns */}
-        <div className="flex flex-col lg:flex-row overflow-x-hidden">
-          {/* LEFT: ScoreSidebar */}
-          <ScoreSidebar
-            scores={scores}
-            onBubbleEnter={handleBubbleEnter}
-            onBubbleLeave={handleBubbleLeave}
-          />
-
-          {/* MAIN CONTENT: 4 columns with responsive wrap */}
-          <div className="flex-1 flex flex-col lg:flex-row lg:flex-wrap gap-3 p-3 min-w-0">
-
-            {/* Column 1: InfosTab (Identité + Profil d'assurance) */}
-            <div className="w-full lg:flex-[1_1_320px] xl:max-w-[340px]">
-              <InfosTab client={client} />
-            </div>
-
-            {/* Column 2: Tabs (Activité / Contrats / Tâches / Documents / Historique) */}
-            <div className="w-full lg:flex-[1_1_460px] min-w-0">
-              <BubbleCard hover={false} padding={0}>
-                {/* Tab navigation */}
-                <div className="flex overflow-x-auto" style={{ borderBottom: 'var(--border-fine)' }}>
-                  {TABS_CONFIG.map(tab => {
-                    const Icon = tab.icon
-                    const isActive = activeTab === tab.id
-                    return (
-                      <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                        style={{
-                          position: 'relative',
-                          flex: 1,
-                          padding: '10px 8px',
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                          transition: 'color 0.2s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 4,
-                        }}>
-                        <Icon size={12} />
-                        {tab.label}
-                        {isActive && (
-                          <motion.div layoutId="tab-underline"
-                            style={{
-                              position: 'absolute',
-                              bottom: 0,
-                              left: '10%',
-                              right: '10%',
-                              height: 2,
-                              background: '#0a0a0a',
-                              borderRadius: 1,
-                            }} />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-                {/* Tab content */}
-                <div style={{ padding: '0.75rem', minHeight: 280 }}>
-                  <AnimatePresence mode="wait">
-                    {renderTabContent()}
-                  </AnimatePresence>
-                </div>
-              </BubbleCard>
-            </div>
-
-            {/* Column 3: Contracts (vertical mini cards) */}
-            <div className="w-full lg:flex-[1_1_280px] xl:max-w-[320px] lg:order-last xl:order-none">
-              <BubbleCard hover={false} padding={12}>
-                <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: 'var(--border-fine)' }}>
-                  <Shield size={14} style={{ color: 'var(--accent-violet)' }} />
-                  <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>Contrats</span>
-                </div>
-                <div style={{ maxHeight: 420, overflowY: 'auto' }}>
-                  {(!contrats || contrats.length === 0) ? (
-                    <p style={{ color: 'var(--text-tertiary)', fontSize: 12, textAlign: 'center', padding: '20px 0' }}>
-                      Aucun contrat
-                    </p>
-                  ) : (
-                    contrats.map(contrat => {
-                      const echeance = contrat.date_echeance
-                        ? new Date(contrat.date_echeance).toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' })
-                        : 'N/A'
-                      return (
-                        <div
-                          key={contrat.id}
-                          onClick={() => navigate(`/contrats/${contrat.id}`)}
-                          style={{
-                            background: 'rgba(255,255,255,0.6)',
-                            backdropFilter: 'blur(8px)',
-                            borderRadius: 'var(--r-md, 12px)',
-                            border: '0.5px solid rgba(0,0,0,0.06)',
-                            padding: 10,
-                            marginBottom: 8,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            fontSize: 12,
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-bubble-pop)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
-                        >
-                          <div style={{ fontWeight: 700, color: '#0a0a0a', marginBottom: 4 }}>
-                            {contrat.type_contrat || 'Auto'} - {contrat.compagnie || 'N/A'}
-                          </div>
-                          <div style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
-                            Prime : {contrat.prime_annuelle ? `${contrat.prime_annuelle}€/an` : 'N/A'}
-                          </div>
-                          <div style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>
-                            Échéance : {echeance}
-                          </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-              </BubbleCard>
-            </div>
-
-            {/* Column 4: ARK Chat (INTACT — DO NOT TOUCH) */}
-            <div className="w-full lg:flex-[1_1_320px] xl:max-w-[360px]">
-              <div style={{ position: 'sticky', top: 24 }}>
-                <BubbleCard hover={false} padding={12}>
-                  <div className="flex items-center gap-2 mb-2 pb-2" style={{ borderBottom: 'var(--border-fine)' }}>
-                    <Bot size={14} style={{ color: 'var(--accent-violet)' }} />
-                    <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>ARK Chat</span>
-                  </div>
-                  <ARKChatTab clientId={client.id} client={client} />
-                </BubbleCard>
-              </div>
-            </div>
-
-          </div>
+        {/* RIGHT — ARK Panel (desktop) */}
+        <div className="client-detail-right client-detail-right-desktop" style={{ position: 'sticky', top: 76 }}>
+          <ARKPanel client={client} />
         </div>
-
       </div>
+
+      {/* ── Mobile ARK Trigger ────────────────────────────────────────── */}
+      <div className="client-detail-ark-trigger" style={{
+        position: 'fixed', bottom: 20, right: 20, zIndex: 90,
+      }}>
+        <button
+          onClick={handleARKOpen}
+          style={{
+            width: 48, height: 48, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #5B4DF5, #8B5CF6)',
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 24px rgba(139,92,246,0.40)',
+            transition: 'transform 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+        >
+          <Sparkles size={20} color="#fff" />
+        </button>
+      </div>
+
+      {/* Mobile ARK Drawer */}
+      <MobileARKDrawer client={client} open={arkDrawerOpen} onClose={handleARKClose} />
     </div>
+  )
+}
+
+// Inline RefreshCw icon (not in lucide-react)
+function RefreshCwIcon({ size = 14, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </svg>
   )
 }

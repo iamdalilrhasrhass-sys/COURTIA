@@ -126,7 +126,7 @@ export default function ClientNew() {
         : await api.post('/clients', form)
       setSubmitState('success')
       toast.success(`Client ${isEditMode ? 'mis à jour' : 'créé'} !`)
-      setTimeout(() => navigate(isEditMode ? `/client/${id}` : `/client/${data.id}`), 1200)
+      setTimeout(() => navigate(isEditMode ? `/clients/${id}` : `/clients/${data.id}`), 1200)
     } catch (err) {
       toast.error(err.response?.data?.error || `Erreur lors de la ${isEditMode ? 'mise à jour' : 'création'}`)
       setSubmitState('idle')
@@ -187,7 +187,7 @@ export default function ClientNew() {
                  <div className="mt-6"><label className={labelClass}>Segment</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <RadioButton id="segment-particulier" name="segment" value="particulier" label="Particulier" icon={Users} checked={form.segment === 'particulier'} onChange={e => set('segment', e.target.value)} color="blue" />
                   <RadioButton id="segment-pro" name="segment" value="professionnel" label="Professionnel" icon={Briefcase} checked={form.segment === 'professionnel'} onChange={e => set('segment', e.target.value)} color="purple" />
-                  <RadioButton id="segment-premium" name="segment" value="premium" label="Premium" icon={Gem} checked={form.segment === 'premium'} onChange={e => set('segment', e.target.value)} color="amber" />
+                  <RadioButton id="segment-vip" name="segment" value="vip" label="VIP" icon={Gem} checked={form.segment === 'vip'} onChange={e => set('segment', e.target.value)} color="amber" />
                 </div></div>
               </section>
 

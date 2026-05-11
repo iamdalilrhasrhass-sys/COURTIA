@@ -28,7 +28,7 @@ export default function ContactPublic() {
           <div className="mk-card">
             <h3 style={{ marginTop: 0 }}>Coordonnées</h3>
             <ul className="mk-plain-list">
-              <li><Mail size={14} style={{ marginRight: 6 }} /> contact@courtia.fr</li>
+              <li><Mail size={14} style={{ marginRight: 6 }} /> contact@courtiark.fr</li>
               <li><PhoneCall size={14} style={{ marginRight: 6 }} /> +33 6 00 00 00 00</li>
               <li><MapPin size={14} style={{ marginRight: 6 }} /> France métropolitaine</li>
             </ul>

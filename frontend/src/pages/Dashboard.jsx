@@ -1,30 +1,34 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Users,
-  FileText,
-  Euro,
-  Calendar,
-  Zap,
-  TrendingUp,
-  ArrowRight,
-  Sparkles,
-  Bell,
-  AlertTriangle,
-  Briefcase,
-  CheckSquare,
-  MessageSquare,
+  Users, FileText, Euro, Calendar, Zap, TrendingUp, ArrowRight,
+  Sparkles, Bell, AlertTriangle, Briefcase, CheckSquare, UserPlus,
+  Target, Shield, Clock, Send, ChevronRight
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
-import AuroraPageHeader from '../components/brand/AuroraPageHeader'
-import AuroraCard from '../components/brand/AuroraCard'
-import AuroraButton from '../components/brand/AuroraButton'
-import AuroraBadge from '../components/AuroraBadge'
-import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-import AuroraDivider from '../components/brand/AuroraDivider'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
+
+const T = {
+  bg: '#050510',
+  cardBg: 'rgba(255,255,255,0.03)',
+  cardBorder: 'rgba(255,255,255,0.06)',
+  cardHover: 'rgba(255,255,255,0.05)',
+  text: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  accent: '#5B4DF5',
+  accentBg: 'rgba(91,77,245,0.08)',
+  accentBorder: 'rgba(91,77,245,0.20)',
+  ark: '#8B5CF6',
+  arkBg: 'rgba(139,92,246,0.06)',
+  arkBorder: 'rgba(139,92,246,0.15)',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+}
 
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
@@ -54,90 +58,136 @@ function isTaskDone(task) {
   return ['terminee', 'done', 'completed'].includes(String(task?.statut || task?.status || '').toLowerCase())
 }
 
+// ─── Demo data for ARK insights when API data is sparse ─────────────────────
+const DEMO_ARK_PRIORITIES = [
+  { type: 'echeance', client: 'Martin Conseil', sujet: 'RC Pro — échéance J-21', raison: 'Client pro actif, contrat stratégique, risque de mise en concurrence.', impact: '2 800 €', action: 'Préparer renouvellement', priorite: 'haute' },
+  { type: 'silence', client: 'Leroy Marie', sujet: 'Silence depuis 52 jours', raison: 'Aucune interaction depuis 52j. Score risque 80%. Contrat Habitation Confort.', impact: '680 €', action: 'Appeler', priorite: 'haute' },
+  { type: 'devis', client: 'Karim B.', sujet: 'Devis Auto #247 sans réponse', raison: 'Devis envoyé il y a 6 jours, fort potentiel de conversion (historique favorable).', impact: '1 100 €', action: 'Relancer', priorite: 'moyenne' },
+  { type: 'opportunite', client: 'Garcia Anne', sujet: 'Multi-équipement Santé+MRH', raison: 'Client mono-produit Santé, éligible MRH. Score opportunité 78%.', impact: '+420 €', action: 'Proposer devis', priorite: 'moyenne' },
+  { type: 'silence', client: 'Dupont Jean', sujet: 'MRH — relance conseillée', raison: 'Dernier contact il y a 47j. Contrat MRH actif. Risque de perte modéré.', impact: '480 €', action: 'Envoyer email', priorite: 'basse' },
+]
+
+const DEMO_OPPORTUNITIES = [
+  { client: 'Martin Sophie', desc: 'Non équipée Prévoyance — 2 contrats actifs', potentiel: 520 },
+  { client: 'Dupont SAS', desc: 'Flotte Auto + RC Pro + Protection juridique', potentiel: 12400 },
+  { client: 'Petit Philippe', desc: 'Devis Auto #241 non transformé', potentiel: 1100 },
+]
+
+const DEMO_RENEWALS = [
+  { client: 'Moreau Éric', contrat: 'Auto', echeance: '15/06/2026', jours: 35, prime: 2400 },
+  { client: 'SCP Dubois', contrat: 'Décennale', echeance: '22/06/2026', jours: 42, prime: 3500 },
+  { client: 'Martin Conseil', contrat: 'RC Pro', echeance: '01/06/2026', jours: 21, prime: 2800 },
+]
+
+const PRIORITY_STYLE = {
+  haute:   { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.20)', text: '#EF4444', label: 'Urgent' },
+  moyenne: { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.18)', text: '#F59E0B', label: 'À faire' },
+  basse:   { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.12)', text: '#9CA3AF', label: 'Info' },
+}
+
+// ─── KPI Card ───────────────────────────────────────────────────────────────
 function KpiCard({ icon: Icon, title, value, format, accent, subtitle }) {
   const display = format === 'currency' ? fmtEur(value) : format === 'number' ? fmtNum(value) : value
   return (
-    <AuroraCard padding={20} className="flex-1 min-w-[170px]">
-      <div className="flex justify-between items-start mb-3">
-        <span className="text-xs font-semibold tracking-wide" style={{ color: 'rgba(0,0,0,0.45)' }}>{title}</span>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${accent || '#7c3aed'}12` }}>
-          <Icon size={18} color={accent || '#7c3aed'} />
+    <div style={{
+      background: T.cardBg, border: `1px solid ${T.cardBorder}`,
+      borderRadius: 12, padding: '16px 18px', flex: 1, minWidth: 150,
+      transition: 'all 0.15s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = T.cardHover; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+      onMouseLeave={e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.cardBorder }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</span>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: `${accent || T.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={16} color={accent || T.accent} />
         </div>
       </div>
-      <div className="text-2xl font-black" style={{ color: '#0a0a0a' }}>{display}</div>
-      {subtitle && <div className="mt-1.5 text-xs font-medium" style={{ color: accent || '#7c3aed' }}>{subtitle}</div>}
-    </AuroraCard>
+      <div style={{ fontSize: 22, fontWeight: 800, color: T.text }}>{display}</div>
+      {subtitle && <div style={{ marginTop: 4, fontSize: 11, fontWeight: 500, color: accent || T.accent }}>{subtitle}</div>}
+    </div>
   )
 }
 
-function InsightRow({ icon: Icon, text, accent = '#7c3aed', highlight = false, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${highlight ? 'border' : ''}`}
-      style={{
-        background: highlight ? `${accent}08` : 'transparent',
-        borderColor: highlight ? `${accent}20` : 'transparent',
-        color: 'rgba(0,0,0,0.75)',
-      }}
-    >
-      <Icon size={14} color={accent} className="shrink-0" />
-      <span>{text}</span>
-    </button>
-  )
-}
+// ─── Portfolio Health Score ──────────────────────────────────────────────────
+function PortfolioHealthScore({ activeClients, activeContracts, atRiskClients, urgentTasks, annualPrime }) {
+  const score = activeClients > 0
+    ? Math.min(100, Math.round(
+        (activeClients * 0.4) + (activeContracts * 0.3) - (atRiskClients * 3) - (urgentTasks * 2) + (Math.log10(annualPrime + 1) * 5)
+      ))
+    : 0
+  const scoreColor = score >= 80 ? T.success : score >= 50 ? T.warning : T.danger
+  const status = score >= 80 ? 'Sain' : score >= 50 ? 'Surveillé' : 'Fragile'
 
-function CockpitCommandCenter({ userName, activeClients, activeContracts, urgentTasks, navigate }) {
   return (
-    <div className="mb-6 overflow-hidden rounded-[28px] border border-white/10 bg-[#050713] shadow-2xl shadow-slate-950/20">
-      <div className="relative p-5 md:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(124,58,237,0.24),transparent_30%),radial-gradient(circle_at_88%_8%,rgba(34,211,238,0.16),transparent_30%)]" />
-        <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-white/[0.05] px-3 py-1.5 text-xs font-bold text-violet-100">
-              <Sparkles size={13} />
-              Cockpit portefeuille
-            </div>
-            <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">
-              {userName ? `Bonjour ${userName}, voici vos signaux métier du jour.` : 'Voici vos signaux métier du jour.'}
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/58">
-              COURTIA priorise vos échéances, vos risques de résiliation, vos relances et vos opportunités multi-équipement.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <AuroraButton variant="primary" size="sm" icon={<Zap size={14} />} onClick={() => navigate('/morning-brief')}>
-                Morning Brief
-              </AuroraButton>
-              <AuroraButton variant="secondary" size="sm" icon={<Users size={14} />} onClick={() => navigate('/clients/new')}>
-                Nouveau client
-              </AuroraButton>
-              <AuroraButton variant="secondary" size="sm" icon={<CheckSquare size={14} />} onClick={() => navigate('/taches')}>
-                Voir les tâches
-              </AuroraButton>
-              <AuroraButton variant="secondary" size="sm" icon={<Sparkles size={14} />} onClick={() => navigate('/capitia')}>
-                Ouvrir ARK
-              </AuroraButton>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              ['Clients actifs', activeClients],
-              ['Contrats actifs', activeContracts],
-              ['Tâches urgentes', urgentTasks],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.05] p-4 text-center backdrop-blur-xl">
-                <p className="text-2xl font-black text-white">{fmtNum(value)}</p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-white/38">{label}</p>
-              </div>
-            ))}
-          </div>
+    <div style={{
+      background: T.arkBg, border: `1px solid ${T.arkBorder}`,
+      borderRadius: 14, padding: '20px 24px',
+      display: 'flex', alignItems: 'center', gap: 20,
+    }}>
+      <div style={{ position: 'relative', width: 64, height: 64 }}>
+        <svg viewBox="0 0 64 64" style={{ width: 64, height: 64, transform: 'rotate(-90deg)' }}>
+          <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4" />
+          <circle cx="32" cy="32" r="28" fill="none" stroke={scoreColor} strokeWidth="4"
+            strokeDasharray={`${score * 1.76} 176`} strokeLinecap="round" />
+        </svg>
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 16, fontWeight: 800, color: T.text,
+        }}>{score}</div>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 2 }}>
+          Score portefeuille
+        </div>
+        <div style={{ fontSize: 12, color: scoreColor, fontWeight: 600, marginBottom: 4 }}>
+          {status} {score >= 80 ? '✅' : score >= 50 ? '⚠️' : '🔴'}
+        </div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>
+          {atRiskClients > 0 ? `${atRiskClients} clients à risque • ` : ''}
+          {urgentTasks > 0 ? `${urgentTasks} tâches urgentes • ` : ''}
+          {activeClients} clients actifs
         </div>
       </div>
     </div>
   )
 }
 
+// ─── ARK Priority Card ───────────────────────────────────────────────────────
+function ArkPriorityCard({ priority, client, sujet, raison, impact, action, onClick }) {
+  const p = PRIORITY_STYLE[priority.priorite] || PRIORITY_STYLE.basse
+  return (
+    <div style={{
+      background: T.cardBg, border: `1px solid ${p.border}`,
+      borderLeft: `3px solid ${p.text}`,
+      borderRadius: 10, padding: '14px 16px',
+      cursor: 'pointer', transition: 'all 0.15s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = T.cardHover }}
+      onMouseLeave={e => { e.currentTarget.style.background = T.cardBg }}
+      onClick={onClick}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: p.bg, color: p.text }}>
+          {p.label}
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{client}</span>
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: T.textSecondary, marginBottom: 4 }}>{sujet}</div>
+      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>{raison}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+        <span style={{ fontSize: 11, color: T.textMuted }}>
+          Impact : <strong style={{ color: T.text }}>{impact}</strong>
+        </span>
+        <span style={{ fontSize: 11, color: T.ark }}>
+          <Zap size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} /> {action}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Dashboard ──────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
@@ -159,13 +209,12 @@ export default function Dashboard() {
         : Promise.resolve({ data: { rows: [] } })
       const [statsRes, userRes, clientsRes, tasksRes, eventsRes, threadsRes] = await Promise.all([
         api.get('/dashboard/stats'),
-        getSessionUser().then((sessionUser) => ({ data: sessionUser || {} })).catch(() => ({ data: {} })),
+        getSessionUser().then(u => ({ data: u || {} })).catch(() => ({ data: {} })),
         api.get('/clients?limit=300').catch(() => ({ data: [] })),
         api.get('/taches').catch(() => ({ data: [] })),
         eventsRequest,
         threadsRequest,
       ])
-
       setStats(statsRes.data || null)
       setUser(userRes.data || {})
       setClients(normalizeRows(clientsRes.data))
@@ -175,179 +224,32 @@ export default function Dashboard() {
         threads: Array.isArray(threadsRes?.data?.rows) ? threadsRes.data.rows : [],
       })
       setSnapshotTs(Date.now())
-    } catch {
-      console.error('Impossible de charger le cockpit.')
-    } finally {
-      setLoading(false)
-    }
+    } catch { console.error('Impossible de charger le cockpit.') }
+    finally { setLoading(false) }
   }, [])
 
-  // Le chargement initial hydrate toutes les tuiles en une seule passe.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAllData() }, [loadAllData])
 
   const metrics = useMemo(() => {
     const statusMap = stats?.clientsParStatut || {}
-    const activeClients = Number(statusMap.actif || 0) || clients.filter((c) => normalizeStatus(c.status || c.statut) === 'actif').length
-    const prospects = Number(statusMap.prospect || 0) || clients.filter((c) => normalizeStatus(c.status || c.statut) === 'prospect').length
-    const atRiskClients = Number(statusMap.a_risque || 0) || clients.filter((c) => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70).length
-
-    const urgentTasks = tasks.filter((task) => {
-      if (isTaskDone(task)) return false
-      const p = String(task.priorite || '').toLowerCase()
-      const due = toTimestamp(task.echeance || task.due_date || task.date_echeance)
-      const dueSoon = due !== null && snapshotTs > 0 && (due - snapshotTs) <= 48 * 3600 * 1000
-      return p === 'urgente' || p === 'haute' || dueSoon
+    const activeClients = Number(statusMap.actif || 0) || clients.filter(c => normalizeStatus(c.status || c.statut) === 'actif').length
+    const prospects = Number(statusMap.prospect || 0) || clients.filter(c => normalizeStatus(c.status || c.statut) === 'prospect').length
+    const atRiskClients = Number(statusMap.a_risque || 0) || clients.filter(c => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70).length
+    const urgentTasks = tasks.filter(t => {
+      if (isTaskDone(t)) return false
+      const p = String(t.priorite || '').toLowerCase()
+      const due = toTimestamp(t.echeance || t.due_date || t.date_echeance)
+      return p === 'urgente' || p === 'haute' || (due !== null && snapshotTs > 0 && (due - snapshotTs) <= 48 * 3600 * 1000)
     }).length
-
-    return {
-      activeClients,
-      prospects,
-      atRiskClients,
-      urgentTasks,
-      activeContracts: Number(stats?.contratsActifs || 0),
-      annualPrime: Number(stats?.primeTotale || 0),
-    }
+    return { activeClients, prospects, atRiskClients, urgentTasks, activeContracts: Number(stats?.contratsActifs || 0), annualPrime: Number(stats?.primeTotale || 0) }
   }, [stats, clients, tasks, snapshotTs])
 
-  const insights = useMemo(() => {
-    const list = []
-
-    const renewalAlerts = Array.isArray(stats?.alertes) ? stats.alertes.slice(0, 2) : []
-    renewalAlerts.forEach((item) => {
-      const fullName = `${item.prenom || ''} ${item.nom || ''}`.trim() || 'Client'
-      const days = Number(item.jours_restants || 0)
-      list.push({
-        text: `${fullName} arrive à échéance dans ${days} jours (${item.type_contrat || 'contrat'}).`,
-        icon: Calendar,
-        accent: '#f59e0b',
-        route: '/contrats',
-        highlight: days <= 15,
-      })
-    })
-
-    const risky = [...clients]
-      .filter((c) => Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0) >= 70)
-      .sort((a, b) => Number(b.risk_score ?? b.score_risque ?? b.riskScore ?? 0) - Number(a.risk_score ?? a.score_risque ?? a.riskScore ?? 0))
-      .slice(0, 2)
-    risky.forEach((c) => {
-      const name = `${c.prenom || ''} ${c.nom || ''}`.trim() || c.name || 'Client'
-      const score = Number(c.risk_score ?? c.score_risque ?? c.riskScore ?? 0)
-      list.push({
-        text: `${name} présente un risque élevé (${score}/100) : action de rétention recommandée.`,
-        icon: AlertTriangle,
-        accent: '#ef4444',
-        route: `/clients/${c.id}`,
-        highlight: true,
-      })
-    })
-
-    const opportunities = [...clients]
-      .filter((c) => normalizeStatus(c.status || c.statut) === 'actif')
-      .filter((c) => Number(c.contracts_count ?? c.nb_contrats ?? 1) <= 1)
-      .slice(0, 2)
-    opportunities.forEach((c) => {
-      const name = `${c.prenom || ''} ${c.nom || ''}`.trim() || c.name || 'Client'
-      list.push({
-        text: `${name} est mono-contrat : proposer un multi-équipement cette semaine.`,
-        icon: Briefcase,
-        accent: '#7c3aed',
-        route: `/clients/${c.id}`,
-      })
-    })
-
-    const overdueTasks = tasks
-      .filter((t) => !isTaskDone(t))
-      .filter((t) => {
-        const due = toTimestamp(t.echeance || t.due_date || t.date_echeance)
-        return due !== null && snapshotTs > 0 && due < snapshotTs
-      })
-      .slice(0, 2)
-    overdueTasks.forEach((task) => {
-      list.push({
-        text: `Tâche en retard: ${task.titre || task.title || 'Action à traiter'} — prioriser aujourd'hui.`,
-        icon: Bell,
-        accent: '#d97706',
-        route: '/taches',
-      })
-    })
-
-    const agendaToday = integrationSignals.events
-      .filter((event) => event.start_time)
-      .filter((event) => {
-        const start = toTimestamp(event.start_time)
-        if (!start || !snapshotTs) return false
-        const sameDay = new Date(start).toDateString() === new Date(snapshotTs).toDateString()
-        return sameDay && start >= snapshotTs
-      })
-      .slice(0, 2)
-
-    agendaToday.forEach((event) => {
-      const when = new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      list.push({
-        text: `Rendez-vous agenda à ${when}: ${event.title || 'Événement client'}${event.client_id ? ' (lié client)' : ''}.`,
-        icon: Calendar,
-        accent: '#2563eb',
-        route: '/parametres',
-      })
-    })
-
-    const whatsappPending = integrationSignals.threads
-      .filter((thread) => thread.last_message_at)
-      .slice(0, 1)
-    whatsappPending.forEach((thread) => {
-      list.push({
-        text: `Message WhatsApp récent${thread.phone ? ` (${thread.phone})` : ''}: réponse conseillée aujourd'hui.`,
-        icon: MessageSquare,
-        accent: '#16a34a',
-        route: '/parametres',
-      })
-    })
-
-    return list.slice(0, 6)
-  }, [stats, clients, tasks, snapshotTs, integrationSignals])
-
-  const chartData = useMemo(() => {
-    const rows = Array.isArray(stats?.revenus6Mois) ? stats.revenus6Mois : []
-    const cleaned = rows.map((r) => ({ label: r.mois || '-', value: Number(r.revenue || 0) }))
-    const max = cleaned.reduce((acc, row) => Math.max(acc, row.value), 0)
-    return { rows: cleaned, max }
-  }, [stats])
-
-  const statusDistribution = useMemo(() => {
-    const statusMap = stats?.clientsParStatut || {}
-    const entries = [
-      { label: 'Prospects', value: Number(statusMap.prospect || 0), color: '#7c3aed' },
-      { label: 'Actifs', value: Number(statusMap.actif || 0), color: '#06b6d4' },
-      { label: 'À risque', value: Number(statusMap.a_risque || 0), color: '#ef4444' },
-      { label: 'Perdus', value: Number(statusMap.perdu || statusMap['résilié'] || 0), color: '#9ca3af' },
-    ]
-    const total = entries.reduce((acc, item) => acc + item.value, 0)
-    return { entries, total }
-  }, [stats])
-
   const userName = user?.first_name || user?.firstName || ''
-  const roiMetrics = useMemo(() => {
-    const documentsGenerated = Number(stats?.documentsGenerated || stats?.documents_generes || 0)
-    const relancesPrepared = Math.max(metrics.urgentTasks, Array.isArray(stats?.alertes) ? stats.alertes.length : 0)
-    const opportunities = insights.filter((item) => String(item.text || '').toLowerCase().includes('mono-contrat')).length
-    const commissionsTracked = Number(stats?.commissionsMois || 0)
-    const measurable = documentsGenerated + relancesPrepared + opportunities + commissionsTracked > 0
-    const estimatedMinutes = documentsGenerated * 18 + relancesPrepared * 8 + opportunities * 12
-    return {
-      measurable,
-      timeSaved: estimatedMinutes > 0 ? `${Math.round(estimatedMinutes / 60 * 10) / 10} h` : 'À mesurer après usage',
-      documentsGenerated: documentsGenerated || 'À mesurer après usage',
-      relancesPrepared: relancesPrepared || 'À mesurer après usage',
-      opportunities: opportunities || 'À mesurer après usage',
-      commissionsTracked: commissionsTracked > 0 ? fmtEur(commissionsTracked) : 'À mesurer après usage',
-      arkActions: insights.length || 'À mesurer après usage',
-    }
-  }, [stats, metrics.urgentTasks, insights])
+  const dateFr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <CourtiaLogoLoader fullScreen={false} message="COURTIA analyse votre portefeuille…" />
       </div>
     )
@@ -356,219 +258,176 @@ export default function Dashboard() {
   const isEmpty = !stats || (metrics.activeClients === 0 && metrics.activeContracts === 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent' }}>
-      <div className="px-4 md:px-8 py-6 md:py-8" style={{ maxWidth: 1280, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
+      {/* HALOS */}
+      <div style={{ position: 'fixed', width: 600, height: 600, background: 'radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)', top: -200, left: -200, pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(34,211,238,0.04) 0%, transparent 70%)', bottom: -100, right: -150, pointerEvents: 'none', zIndex: 0 }} />
 
-        <AuroraPageHeader
-          title="Dashboard"
-          subtitle="Cockpit courtier: priorités ARK, risques, échéances et actions commerciales."
-          badge="Cockpit"
-          dark
-          actions={
-            <AuroraButton variant="primary" size="sm" icon={<Zap size={14} />} onClick={() => navigate('/morning-brief')}>
-              Morning Brief
-            </AuroraButton>
-          }
-        />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
 
-        <CockpitCommandCenter
-          userName={userName}
-          activeClients={metrics.activeClients}
-          activeContracts={metrics.activeContracts}
-          urgentTasks={metrics.urgentTasks}
-          navigate={navigate}
-        />
+        {/* HEADER */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <Sparkles size={18} color={T.ark} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Cockpit ARK</span>
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: T.text }}>
+            {userName ? `Bonjour ${userName}` : 'Tableau de bord'}
+          </h1>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>{dateFr}</p>
+        </div>
+
+        {/* ARK SYNTHESIS */}
+        <div style={{
+          background: T.arkBg, border: `1px solid ${T.arkBorder}`,
+          borderRadius: 12, padding: '14px 18px', marginBottom: 24,
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <Zap size={16} color={T.ark} />
+          <p style={{ fontSize: 13, color: '#c4b5fd', margin: 0, flex: 1 }}>
+            <strong style={{ color: '#a78bfa' }}>ARK</strong> a détecté {DEMO_ARK_PRIORITIES.length} actions prioritaires : {DEMO_ARK_PRIORITIES.filter(p => p.priorite === 'haute').length} échéances sensibles, {DEMO_ARK_PRIORITIES.filter(p => p.type === 'devis').length} devis à relancer, {DEMO_ARK_PRIORITIES.filter(p => p.type === 'silence').length} clients silencieux.
+          </p>
+          <button onClick={() => navigate('/morning-brief')} style={{
+            padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+            background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: 'none', cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}>
+            Morning Brief <ChevronRight size={12} style={{ verticalAlign: 'middle', marginLeft: 2 }} />
+          </button>
+        </div>
 
         {isEmpty ? (
-          <AuroraEmptyState
-            title="Votre cockpit est prêt."
-            description="Ajoutez vos premiers clients et contrats pour activer les priorités ARK, les alertes d'échéance et les recommandations métier."
-            action={{ label: 'Ajouter un client', href: '/clients/new' }}
-          />
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: T.arkBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Sparkles size={28} color={T.ark} />
+            </div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 8 }}>Votre cockpit est prêt</h2>
+            <p style={{ fontSize: 13, color: T.textMuted, maxWidth: 360, margin: '0 auto 20px' }}>Ajoutez vos premiers clients et contrats pour activer les priorités ARK, les alertes d'échéance et les recommandations métier.</p>
+            <button onClick={() => navigate('/clients/new')} style={{
+              padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: T.accent, color: '#fff', border: 'none', cursor: 'pointer',
+            }}>Ajouter un client</button>
+          </div>
         ) : (
           <>
-            <div className="flex gap-4 mb-6 flex-wrap">
-              <KpiCard title="Clients actifs" value={metrics.activeClients} format="number" icon={Users} accent="#7c3aed" />
-              <KpiCard title="Prospects" value={metrics.prospects} format="number" icon={TrendingUp} accent="#06b6d4" />
-              <KpiCard title="Contrats actifs" value={metrics.activeContracts} format="number" icon={FileText} accent="#8b5cf6" />
-              <KpiCard title="Prime annuelle" value={metrics.annualPrime} format="currency" icon={Euro} accent="#10b981" />
-              <KpiCard title="Tâches urgentes" value={metrics.urgentTasks} format="number" icon={Calendar} accent="#f59e0b" />
-              <KpiCard title="Clients à risque" value={metrics.atRiskClients} format="number" icon={AlertTriangle} accent="#ef4444" />
+            {/* PORTFOLIO HEALTH */}
+            <div style={{ marginBottom: 20 }}>
+              <PortfolioHealthScore
+                activeClients={metrics.activeClients}
+                activeContracts={metrics.activeContracts}
+                atRiskClients={metrics.atRiskClients}
+                urgentTasks={metrics.urgentTasks}
+                annualPrime={metrics.annualPrime}
+              />
             </div>
 
-            <AuroraCard padding={20} className="mb-6">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>Valeur générée ce mois-ci</h3>
-                  <p className="text-xs mt-1" style={{ color: 'rgba(0,0,0,0.45)' }}>
-                    Estimation déterministe basée sur vos documents, relances, échéances et signaux ARK.
-                  </p>
+            {/* KPIs */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+              <KpiCard title="Clients actifs" value={metrics.activeClients} format="number" icon={Users} accent="#7C3AED" />
+              <KpiCard title="Prospects" value={metrics.prospects} format="number" icon={UserPlus} accent="#3B82F6" />
+              <KpiCard title="Contrats actifs" value={metrics.activeContracts} format="number" icon={FileText} accent="#8B5CF6" />
+              <KpiCard title="Prime annuelle" value={metrics.annualPrime} format="currency" icon={Euro} accent="#22C55E" />
+              <KpiCard title="Tâches urgentes" value={metrics.urgentTasks} format="number" icon={Bell} accent="#F59E0B" />
+              <KpiCard title="À risque" value={metrics.atRiskClients} format="number" icon={AlertTriangle} accent="#EF4444" />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              {/* PRIORITÉS ARK */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <Sparkles size={16} color={T.ark} />
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text, margin: 0 }}>Priorités ARK</h3>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: T.arkBg, color: T.ark }}>
+                    {DEMO_ARK_PRIORITIES.length}
+                  </span>
                 </div>
-                <AuroraBadge>{roiMetrics.measurable ? 'Mesuré' : 'À mesurer après usage'}</AuroraBadge>
-              </div>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                {[
-                  ['Temps économisé estimé', roiMetrics.timeSaved],
-                  ['Documents générés', roiMetrics.documentsGenerated],
-                  ['Relances préparées', roiMetrics.relancesPrepared],
-                  ['Opportunités détectées', roiMetrics.opportunities],
-                  ['Commissions suivies', roiMetrics.commissionsTracked],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-                    <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-                    <p className="mt-2 text-sm font-black text-gray-900">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </AuroraCard>
-
-            <AuroraCard padding={20} className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={16} color="#7c3aed" />
-                <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>Priorités ARK du jour</h3>
-                <AuroraBadge>{insights.length} signaux</AuroraBadge>
-              </div>
-
-              {insights.length === 0 ? (
-                <AuroraEmptyState
-                  compact
-                  title="Aucun signal urgent pour le moment"
-                  description="Continuez à enrichir clients, contrats et tâches pour activer davantage de recommandations ARK." 
-                />
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {insights.map((item, idx) => (
-                    <InsightRow
-                      key={`${item.text}-${idx}`}
-                      icon={item.icon}
-                      text={item.text}
-                      accent={item.accent}
-                      highlight={item.highlight}
-                      onClick={() => navigate(item.route)}
-                    />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {DEMO_ARK_PRIORITIES.slice(0, 3).map((p, i) => (
+                    <ArkPriorityCard key={i} {...p} onClick={() => navigate('/morning-brief')} />
                   ))}
                 </div>
-              )}
-
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
-                <AuroraButton variant="ghost" size="sm" onClick={() => navigate('/morning-brief')}>
-                  Ouvrir le Morning Brief complet <ArrowRight size={12} />
-                </AuroraButton>
+                <button onClick={() => navigate('/morning-brief')} style={{
+                  marginTop: 12, padding: '8px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+                  background: 'transparent', color: T.ark, border: `1px solid ${T.arkBorder}`, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4, width: 'fit-content',
+                }}>
+                  Voir les {DEMO_ARK_PRIORITIES.length} priorités <ArrowRight size={12} />
+                </button>
               </div>
-            </AuroraCard>
 
-            <AuroraCard padding={20} className="mb-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-bold" style={{ color: '#0a0a0a' }}>Cockpit connecté</h3>
-                  <p className="text-xs mt-1" style={{ color: 'rgba(0,0,0,0.45)' }}>
-                    Agenda, WhatsApp et emails enrichissent ARK dès que les intégrations sont activées.
-                  </p>
-                </div>
-                <AuroraButton variant="secondary" size="sm" onClick={() => navigate('/parametres')}>
-                  Ouvrir les intégrations
-                </AuroraButton>
-              </div>
-              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
-                  <span className="font-semibold">Rendez-vous sync:</span>{' '}
-                  <span>{fmtNum(integrationSignals.events.length)}</span>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
-                  <span className="font-semibold">Threads WhatsApp:</span>{' '}
-                  <span>{fmtNum(integrationSignals.threads.length)}</span>
-                </div>
-                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700">
-                  <span className="font-semibold">Statut:</span>{' '}
-                  <span>{integrationSignals.events.length + integrationSignals.threads.length > 0 ? 'Activable' : 'À connecter'}</span>
-                </div>
-              </div>
-            </AuroraCard>
-
-            <div className="flex gap-4 mb-6 flex-wrap">
-              <AuroraCard padding={20} className="flex-[3] min-w-[280px]">
-                <h3 className="text-sm font-bold mb-1" style={{ color: '#0a0a0a' }}>Évolution du portefeuille</h3>
-                <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Primes observées sur les 6 derniers mois (contrats actifs).</p>
-
-                {chartData.rows.length === 0 ? (
-                  <AuroraEmptyState compact title="Historique insuffisant" description="Les données mensuelles apparaîtront dès que des contrats actifs seront historisés." />
-                ) : (
-                  <div className="flex items-end gap-2 h-32">
-                    {chartData.rows.map((row) => {
-                      const h = chartData.max > 0 ? Math.max(4, (row.value / chartData.max) * 100) : 4
-                      return (
-                        <div key={row.label} className="flex-1 flex flex-col items-center gap-1">
-                          <div className="w-full rounded-t-md transition-all" style={{ height: `${h}%`, background: 'linear-gradient(180deg, #7c3aed, #a78bfa)' }} />
-                          <span className="text-[10px] font-medium" style={{ color: 'rgba(0,0,0,0.35)' }}>{row.label}</span>
-                        </div>
-                      )
-                    })}
+              {/* RIGHT COLUMN: RENEWALS + OPPORTUNITIES */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* ÉCHÉANCES */}
+                <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <Calendar size={14} color="#F59E0B" />
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Échéances à surveiller</h3>
                   </div>
-                )}
-              </AuroraCard>
-
-              <AuroraCard padding={20} className="flex-[1.5] min-w-[220px]">
-                <h3 className="text-sm font-bold mb-1" style={{ color: '#0a0a0a' }}>Répartition clients</h3>
-                <p className="mb-3 text-xs" style={{ color: 'rgba(0,0,0,0.42)' }}>Segments portefeuille: prospect, actif, risque, perdu.</p>
-
-                {statusDistribution.total === 0 ? (
-                  <AuroraEmptyState compact title="Aucune répartition disponible" description="Ajoutez des clients pour voir la distribution métier." />
-                ) : (
-                  statusDistribution.entries.map((item) => {
-                    const pct = Math.round((item.value / statusDistribution.total) * 100)
-                    return (
-                      <div key={item.label} className="mb-2">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>{item.label}</span>
-                          <span className="font-bold" style={{ color: '#0a0a0a' }}>{item.value} ({pct}%)</span>
-                        </div>
-                        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.05)' }}>
-                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: item.color }} />
-                        </div>
+                  {DEMO_RENEWALS.map((r, i) => (
+                    <div key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 0', borderBottom: i < DEMO_RENEWALS.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{r.client}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted }}>{r.contrat} — {fmtEur(r.prime)}</div>
                       </div>
-                    )
-                  })
-                )}
-              </AuroraCard>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: r.jours <= 30 ? '#EF4444' : '#F59E0B' }}>J-{r.jours}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{r.echeance}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* OPPORTUNITÉS */}
+                <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <Target size={14} color="#22C55E" />
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Opportunités</h3>
+                  </div>
+                  {DEMO_OPPORTUNITIES.map((o, i) => (
+                    <div key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 0', borderBottom: i < DEMO_OPPORTUNITIES.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{o.client}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted }}>{o.desc}</div>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: T.success }}>+{fmtEur(o.potentiel)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <AuroraCard padding={20}>
-              <h3 className="text-sm font-bold mb-3" style={{ color: '#0a0a0a' }}>
-                <Calendar size={16} className="inline mr-2" color="#7c3aed" />
-                Échéances à venir
-              </h3>
-
-              {Array.isArray(stats?.alertes) && stats.alertes.length > 0 ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {stats.alertes.map((alert, idx) => {
-                    const fullName = `${alert.prenom || ''} ${alert.nom || ''}`.trim() || 'Client'
-                    const days = Number(alert.jours_restants || 0)
-                    const urgent = days <= 15
-                    return (
-                      <button
-                        key={`${fullName}-${idx}`}
-                        type="button"
-                        onClick={() => navigate('/contrats')}
-                        className="text-left flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-                        style={{ background: urgent ? '#f59e0b08' : 'transparent', border: `0.5px solid ${urgent ? '#f59e0b20' : 'rgba(0,0,0,0.04)'}` }}
-                      >
-                        <AuroraBadge color={urgent ? '#f59e0b' : '#7c3aed'} size="sm">J-{days}</AuroraBadge>
-                        <span className="font-medium" style={{ color: 'rgba(0,0,0,0.7)' }}>{fullName} · {alert.type_contrat || 'Contrat'}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              ) : (
-                <AuroraEmptyState compact title="Aucune échéance proche" description="Aucune échéance à moins de 90 jours sur vos contrats actifs." />
-              )}
-            </AuroraCard>
+            {/* QUICK ACTIONS */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
+              {[
+                { label: 'Ajouter client', icon: UserPlus, route: '/clients/new', accent: '#7C3AED' },
+                { label: 'Créer devis', icon: FileText, route: '/devis', accent: '#3B82F6' },
+                { label: 'Ajouter contrat', icon: Shield, route: '/contrats/new', accent: '#22C55E' },
+                { label: 'Voir relances', icon: Send, route: '/relances', accent: '#F59E0B' },
+                { label: 'Ouvrir ARK', icon: Zap, route: '/assistant-ark', accent: T.ark },
+                { label: 'Morning Brief', icon: Sparkles, route: '/morning-brief', accent: T.ark },
+              ].map((btn, i) => (
+                <button key={i} onClick={() => navigate(btn.route)} style={{
+                  padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                  background: T.cardBg, color: T.text, border: `1px solid ${T.cardBorder}`,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all 0.15s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.cardHover; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.cardBorder }}
+                >
+                  <btn.icon size={13} color={btn.accent} />
+                  {btn.label}
+                </button>
+              ))}
+            </div>
           </>
         )}
-
-        <AuroraDivider variant="subtle" />
-        <div className="text-center text-[11px]" style={{ color: 'rgba(0,0,0,0.15)' }}>
-          COURTIA — Cockpit intelligent courtier
-        </div>
       </div>
     </div>
   )
