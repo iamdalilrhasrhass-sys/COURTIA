@@ -9,8 +9,8 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://courtia.vercel.app/*",
-    "https://api.courtia.fr/*",
+    "https://app.courtiark.fr/*",
+    "https://api.courtiark.fr/*",
     "http://localhost:3000/*",
     "http://127.0.0.1:9998/*"
   ],
