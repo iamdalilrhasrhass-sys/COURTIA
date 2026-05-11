@@ -290,6 +290,9 @@ const voiceRouter        = require('./src/routes/voice')
 // LOT 8 — ARK Compose (génération documents conformité)
 const composeRouter      = require('./src/routes/compose')
 
+// LOT 10 — Document Vision (extraction automatique RIB, carte grise, etc.)
+const docvisionRouter    = require('./src/routes/docvision')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -359,6 +362,9 @@ app.use('/api/voice',        verifyToken, voiceRouter)
 
 // LOT 8 — ARK Compose (génération documents conformité, protected)
 app.use('/api/compose',      verifyToken, composeRouter)
+
+// LOT 10 — Document Vision (extraction automatique RIB, carte grise, etc., protected)
+app.use('/api/docvision',    verifyToken, docvisionRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
