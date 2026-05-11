@@ -84,3 +84,6 @@ module.exports = {
   listFeedback,
   updateFeedbackStatus,
 };
+
+// LOT 18 — Claims Service (sinistres) — Moved to claimsService.js
+// This module is extended with claims functionality in a separate service file.

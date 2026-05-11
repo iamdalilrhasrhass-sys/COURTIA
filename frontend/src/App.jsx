@@ -46,6 +46,7 @@ const ArkWatchV2 = lazy(() => import('./pages/v2/ArkWatchV2'))
 const ComposeV2 = lazy(() => import('./pages/v2/ComposeV2'))
 const VoiceV2 = lazy(() => import('./pages/v2/VoiceV2'))
 const DocVisionV2 = lazy(() => import('./pages/v2/DocVisionV2'))
+const SinistresV2 = lazy(() => import('./pages/v2/SinistresV2'))
 const DesignSystem = lazy(() => import('./pages/DesignSystem'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Equipe = lazy(() => import('./pages/Equipe'))
@@ -84,6 +85,7 @@ const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
 const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
 const AdminFeedback = lazy(() => import('./pages/AdminFeedback'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const Beta = lazy(() => import('./pages/Beta'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
 // Components
@@ -231,6 +233,7 @@ export default function App() {
         <Route path="/legal/dpa" element={<LegalDpa />} />
         <Route path="/legal/sous-traitants" element={<LegalSubprocessors />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
+        <Route path="/beta" element={<Beta />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/dev/ui" element={<DevUi />} />
         <Route path="/video-showcase" element={import.meta.env.DEV ? <ShowcaseVideo /> : <Navigate to="/" replace />} />
@@ -272,6 +275,7 @@ export default function App() {
           <Route path="/v2/compose"    element={<ComposeV2 />} />
           <Route path="/v2/voice"      element={<VoiceV2 />} />
           <Route path="/v2/docvision"  element={<DocVisionV2 />} />
+          <Route path="/v2/sinistres" element={<SinistresV2 />} />
           <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
