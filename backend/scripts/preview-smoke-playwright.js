@@ -55,7 +55,7 @@ const PREVIEW_BASE_URL = PREVIEW_CONFIG.baseUrl
 
 const ACCOUNTS = {
   e2e: {
-    email: process.env.E2E_EMAIL || 'e2e@courtia.fr',
+    email: process.env.E2E_EMAIL || 'e2e@courtiark.fr',
     password: process.env.E2E_PASSWORD || 'courtia2026',
   },
   dalil: {

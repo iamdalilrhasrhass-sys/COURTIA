@@ -31,7 +31,7 @@ app.use('/api', apiLimiter)
 app.use('/health', healthLimiter)
 app.use('/api/health', healthLimiter)
 
-const defaultCorsOrigins = ['https://courtia.vercel.app', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173']
+const defaultCorsOrigins = ['https://app.courtiark.fr', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173']
 const envCorsOrigins = String(process.env.CORS_ORIGIN || '')
   .split(',')
   .map((v) => v.trim())
