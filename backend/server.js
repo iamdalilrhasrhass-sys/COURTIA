@@ -274,6 +274,10 @@ const feedbackRouter       = require('./src/routes/feedback')
 const adminFeedbackRouter  = require('./src/routes/adminFeedback')
 const clientDocumentsRouter = require('./src/routes/clientDocuments')
 
+// LOT 5 — Comparateur Multi-Compagnies
+const insuranceProvidersRouter = require('./src/routes/insuranceProviders')
+const quotesComparatorRouter   = require('./src/routes/quotesComparator')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -327,6 +331,10 @@ app.use('/api/admin/feedback', verifyToken, adminFeedbackRouter)
 
 // Client Documents (LOT 4) — auth gérée par route (routes publiques + protégées)
 app.use('/api', clientDocumentsRouter)
+
+// LOT 5 — Comparateur Multi-Compagnies (auth mixte: providers public, integrations protected)
+app.use('/api', insuranceProvidersRouter)
+app.use('/api/comparator', quotesComparatorRouter)
 
 app.use('/api/messaging',    messagingRoutes)
 
