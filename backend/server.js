@@ -300,6 +300,10 @@ const quoteIntelRouter   = require('./src/routes/quoteIntel')
 const portailRouter       = require('./src/routes/portail')       // routes courtier
 const portalClientRouter  = require('./src/routes/portalClient')  // routes client
 
+// LOT 18 — Module Sinistres + Marketing Beta
+const claimsRouter = require('./src/routes/claims')
+const betaRouter   = require('./src/routes/beta')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -379,6 +383,10 @@ app.use('/api/quote-intel',  verifyToken, quoteIntelRouter)
 // LOT 12 — Portail Client (espace self-service moderne)
 app.use('/api/portail',      verifyToken, portailRouter)      // routes courtier (protected)
 app.use('/api/portal',       portalClientRouter)               // routes client (auth dans le router)
+
+// LOT 18 — Module Sinistres + Marketing Beta
+app.use('/api/claims',       verifyToken, claimsRouter)
+app.use('/api/beta',         betaRouter)  // public (inscription beta)
 
 app.use('/api/messaging',    messagingRoutes)
 
