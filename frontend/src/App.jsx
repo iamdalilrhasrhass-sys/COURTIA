@@ -47,6 +47,9 @@ const ComposeV2 = lazy(() => import('./pages/v2/ComposeV2'))
 const VoiceV2 = lazy(() => import('./pages/v2/VoiceV2'))
 const DocVisionV2 = lazy(() => import('./pages/v2/DocVisionV2'))
 const SinistresV2 = lazy(() => import('./pages/v2/SinistresV2'))
+const SignaturesV2 = lazy(() => import('./pages/v2/SignaturesV2'))
+const ReportingV2 = lazy(() => import('./pages/v2/ReportingV2'))
+const OnboardingGamified = lazy(() => import('./pages/OnboardingGamified'))
 const DesignSystem = lazy(() => import('./pages/DesignSystem'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Equipe = lazy(() => import('./pages/Equipe'))
@@ -276,6 +279,9 @@ export default function App() {
           <Route path="/v2/voice"      element={<VoiceV2 />} />
           <Route path="/v2/docvision"  element={<DocVisionV2 />} />
           <Route path="/v2/sinistres" element={<SinistresV2 />} />
+          <Route path="/v2/signatures" element={<SignaturesV2 />} />
+          <Route path="/v2/reporting" element={<ReportingV2 />} />
+          <Route path="/onboarding/gamified" element={<OnboardingGamified />} />
           <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/academy/*"     element={<Academy />} />
           <Route path="/documents"     element={<Documents />} />
