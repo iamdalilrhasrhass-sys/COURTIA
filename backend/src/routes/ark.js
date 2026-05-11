@@ -573,4 +573,277 @@ Reponds UNIQUEMENT avec ce JSON:
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// LOT 2 STUBS — Routes d'actions ARK (réponses mockées)
+// TODO: Implémenter avec Anthropic Claude dans LOT 3
+// ═══════════════════════════════════════════════════════════════════════════
+
+function logArkStub(route, params = {}) {
+  console.log(`[ARK STUB] ${route}`, JSON.stringify(params))
+  logger.info({ route, params, stub: true }, 'ARK stub called')
+}
+
+// POST /api/ark/actions — Exécuter une action ARK
+router.post('/actions', async (req, res) => {
+  logArkStub('/actions', { action: req.body?.action })
+  const action = req.body?.action || 'unknown'
+
+  res.json({
+    success: true,
+    mock: true,
+    action,
+    data: {
+      summary: `Action "${action}" simulée avec succès`,
+      cards: [{
+        type: 'info',
+        title: 'Action ARK Mock',
+        content: `L'action ${action} a été traitée (mode stub)`,
+        priority: 'medium',
+        action: { kind: 'navigate', label: 'Voir détails', target: { type: 'page', id: '/dashboard' } }
+      }],
+      meta: { model: 'stub-mock', tokens: { input: 0, output: 0 }, latencyMs: 50, cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Implémenter avec Anthropic Claude API'
+  })
+})
+
+// GET /api/ark/client/:id/brief — Résumé client compact
+router.get('/client/:id/brief', async (req, res) => {
+  const clientId = req.params.id
+  logArkStub('/client/:id/brief', { clientId })
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'client_brief',
+    data: {
+      clientId: Number(clientId),
+      summary: 'Client actif avec 3 contrats. Dernière interaction il y a 15 jours. Score fidélité: 78/100.',
+      keyPoints: [
+        'Portfolio diversifié: Auto + MRH + Santé',
+        'Échéance Auto dans 45 jours - préparer renouvellement',
+        'Opportunité Prévoyance détectée'
+      ],
+      suggestedActions: [
+        { kind: 'call', label: 'Appeler pour bilan', priority: 'high' },
+        { kind: 'email', label: 'Envoyer offre Prévoyance', priority: 'medium' },
+        { kind: 'task', label: 'Préparer renouvellement Auto', priority: 'high' }
+      ],
+      scores: { fidelite: 78, risque: 22, opportunite: 65 },
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Générer brief avec Claude Haiku'
+  })
+})
+
+// GET /api/ark/client/:id/next-best-actions — Meilleures actions client
+router.get('/client/:id/next-best-actions', async (req, res) => {
+  const clientId = req.params.id
+  logArkStub('/client/:id/next-best-actions', { clientId })
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'next_best_actions',
+    data: {
+      clientId: Number(clientId),
+      actions: [
+        { rank: 1, kind: 'call', label: 'Appeler pour bilan annuel', rationale: 'Dernière interaction il y a 30+ jours', impact: 'high', estimatedTime: '15 min' },
+        { rank: 2, kind: 'email', label: 'Envoyer comparatif Auto', rationale: 'Échéance dans 45 jours', impact: 'high', estimatedTime: '10 min' },
+        { rank: 3, kind: 'task', label: 'Mettre à jour coordonnées', rationale: 'Email bounce détecté', impact: 'medium', estimatedTime: '5 min' }
+      ],
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Calculer NBA avec scoring ML'
+  })
+})
+
+// POST /api/ark/client/:id/documents-analysis — Analyse documents client
+router.post('/client/:id/documents-analysis', async (req, res) => {
+  const clientId = req.params.id
+  const documents = req.body?.documents || []
+  logArkStub('/client/:id/documents-analysis', { clientId, docCount: documents.length })
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'documents_analysis',
+    data: {
+      clientId: Number(clientId),
+      analyzedCount: documents.length,
+      results: [{
+        documentId: 'doc_mock_1',
+        type: 'contrat_assurance',
+        extractedData: { compagnie: 'AXA', typeContrat: 'Auto', primeAnnuelle: 620, dateEcheance: '2026-07-15' },
+        confidence: 0.92,
+        warnings: []
+      }],
+      summary: 'Documents analysés avec succès. 1 contrat détecté.',
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Implémenter OCR + analyse avec Claude Vision'
+  })
+})
+
+// POST /api/ark/client/:id/quote-assistant — Assistant devis
+router.post('/client/:id/quote-assistant', async (req, res) => {
+  const clientId = req.params.id
+  logArkStub('/client/:id/quote-assistant', { clientId })
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'quote_assistant',
+    data: {
+      clientId: Number(clientId),
+      suggestions: {
+        recommendedProduct: 'MRH Confort Plus',
+        recommendedPrime: 520,
+        rationale: 'Profil client compatible. Meilleur rapport garanties/prix.',
+        alternatives: [
+          { product: 'MRH Essentiel', prime: 380, note: 'Économique mais couverture limitée' },
+          { product: 'MRH Premium', prime: 720, note: 'Couverture complète avec assistance' }
+        ]
+      },
+      warnings: ['Vérifier la valeur du contenu déclarée', 'Proposer la garantie Vol si zone sensible'],
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Assistant intelligent avec Claude'
+  })
+})
+
+// POST /api/ark/compliance-check — Vérification conformité
+router.post('/compliance-check', async (req, res) => {
+  const { clientId } = req.body || {}
+  logArkStub('/compliance-check', { clientId })
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'compliance_check',
+    data: {
+      clientId,
+      overallStatus: 'warning',
+      checks: [
+        { rule: 'DDA - Devoir de conseil', status: 'warning', message: 'Fiche de recueil des besoins non complétée', action: 'Compléter la fiche IPID' },
+        { rule: 'ORIAS - Vérification inscription', status: 'ok', message: 'Courtier enregistré et actif' },
+        { rule: 'Loi Hamon - Information résiliation', status: 'ok', message: 'Mention obligatoire présente' },
+        { rule: 'RGPD - Consentement', status: 'pending', message: 'Vérifier le consentement marketing' }
+      ],
+      recommendations: ['Compléter la fiche IPID avant signature', 'Faire signer le mandat de courtage'],
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Analyse conformité avec Claude Sonnet'
+  })
+})
+
+// GET /api/ark/portfolio-health — Santé portefeuille
+router.get('/portfolio-health', async (req, res) => {
+  logArkStub('/portfolio-health', { userId: req.user?.id })
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'portfolio_health',
+    data: {
+      overallScore: 78,
+      scoreChange: -2,
+      period: 'month',
+      metrics: {
+        retention: { score: 85, label: 'Rétention', trend: 'stable' },
+        growth: { score: 72, label: 'Croissance', trend: 'up' },
+        diversification: { score: 68, label: 'Diversification', trend: 'down' },
+        profitability: { score: 82, label: 'Rentabilité', trend: 'stable' }
+      },
+      alerts: [
+        { severity: 'high', message: '5 contrats à échéance cette semaine' },
+        { severity: 'medium', message: '12 clients silencieux depuis 30+ jours' }
+      ],
+      recommendations: ['Prioriser les renouvellements', 'Lancer campagne réactivation'],
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Analyse portefeuille avec ML'
+  })
+})
+
+// POST /api/ark/generate — Générer contenu (email/sms/script)
+router.post('/generate', async (req, res) => {
+  const { type, context } = req.body || {}
+  logArkStub('/generate', { type, clientId: context?.clientId })
+
+  const templates = {
+    email: {
+      subject: 'Votre contrat arrive à échéance',
+      body: 'Bonjour [Prénom],\n\nJe me permets de vous contacter car votre contrat [Type] arrive à échéance le [Date].\n\nSeriez-vous disponible pour un échange téléphonique cette semaine ?\n\nBien cordialement,\n[Signature]'
+    },
+    sms: { content: 'Bonjour [Prénom], votre contrat [Type] arrive à échéance. Appelons-nous pour faire le point ? [Courtier]' },
+    call_script: {
+      intro: 'Bonjour M./Mme [Nom], c\'est [Courtier] de [Cabinet].',
+      context: 'Je vous appelle concernant votre contrat [Type] qui arrive à échéance.',
+      questions: ['Comment allez-vous ?', 'Des changements cette année ?', 'Satisfait des garanties ?'],
+      closing: 'Je vous envoie un comparatif par email. Quel est le meilleur moment pour vous rappeler ?'
+    }
+  }
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'generate',
+    data: {
+      type,
+      generated: templates[type] || templates.email,
+      variables: ['Prénom', 'Nom', 'Type', 'Date', 'Courtier', 'Cabinet', 'Signature'],
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Génération personnalisée avec Claude Haiku'
+  })
+})
+
+// GET /api/ark/context-suggestions — Suggestions selon contexte page
+router.get('/context-suggestions', async (req, res) => {
+  const { page, clientId } = req.query
+  logArkStub('/context-suggestions', { page, clientId })
+
+  const suggestionsByPage = {
+    dashboard: [
+      { id: 's1', type: 'action', label: 'Voir le Morning Brief', priority: 'high' },
+      { id: 's2', type: 'info', label: '5 contrats à renouveler cette semaine', priority: 'high' }
+    ],
+    clients: [
+      { id: 's1', type: 'action', label: 'Filtrer les clients silencieux', priority: 'medium' }
+    ],
+    client_detail: [
+      { id: 's1', type: 'action', label: 'Générer un brief client', priority: 'high' },
+      { id: 's2', type: 'action', label: 'Voir les recommandations', priority: 'high' }
+    ],
+    devis: [
+      { id: 's1', type: 'action', label: 'Demander assistance ARK', priority: 'high' },
+      { id: 's2', type: 'action', label: 'Vérifier conformité', priority: 'high' }
+    ]
+  }
+
+  res.json({
+    success: true,
+    mock: true,
+    action: 'context_suggestions',
+    data: {
+      page: page || 'unknown',
+      clientId: clientId || null,
+      suggestions: suggestionsByPage[page] || [{ id: 's0', type: 'info', label: 'ARK est prêt', priority: 'low' }],
+      availableActions: ['client_brief', 'recommendations', 'generate_email', 'generate_sms', 'call_script', 'compliance_check'],
+      meta: { model: 'stub-mock', cached: false }
+    },
+    timestamp: new Date().toISOString(),
+    todo: 'LOT 3: Suggestions contextuelles intelligentes'
+  })
+})
+
 module.exports = router
