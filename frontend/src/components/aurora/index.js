@@ -110,6 +110,12 @@ export {
   default as AuroraTableMobileDefault,
 } from './AuroraTableMobile';
 
+// Mobile Topbar (burger left + logo center + bell right)
+export {
+  AuroraMobileTopbar,
+  default as AuroraMobileTopbarDefault,
+} from './AuroraMobileTopbar';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONVENIENCE RE-EXPORTS
 // ─────────────────────────────────────────────────────────────────────────────

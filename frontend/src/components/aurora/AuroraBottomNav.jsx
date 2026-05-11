@@ -7,22 +7,23 @@ import React, { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Home,
+  LayoutDashboard,
   Users,
-  Shield,
-  PenTool,
+  Sparkles,
+  CheckSquare,
   MoreHorizontal,
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Default Navigation Items
+   Default Navigation Items — COURTIA Aurora-Bubble C
+   Cockpit / Clients / ARK / Actions / Plus
    ───────────────────────────────────────────────────────────────────────────── */
 
 const DEFAULT_ITEMS = [
-  { id: 'home', path: '/v2', icon: Home, label: 'Accueil' },
-  { id: 'clients', path: '/v2/clients', icon: Users, label: 'Clients' },
-  { id: 'ark', path: '/v2/ark-watch', icon: Shield, label: 'ARK' },
-  { id: 'compose', path: '/v2/compose', icon: PenTool, label: 'Compose' },
+  { id: 'cockpit', path: '/dashboard', icon: LayoutDashboard, label: 'Cockpit' },
+  { id: 'clients', path: '/clients', icon: Users, label: 'Clients' },
+  { id: 'ark', path: '/assistant-ark', icon: Sparkles, label: 'ARK' },
+  { id: 'actions', path: '/taches', icon: CheckSquare, label: 'Actions', badge: true },
   { id: 'more', path: null, icon: MoreHorizontal, label: 'Plus' },
 ];
 
@@ -33,6 +34,7 @@ const DEFAULT_ITEMS = [
 export function AuroraBottomNav({
   items = DEFAULT_ITEMS,
   onMoreClick,
+  notificationsCount = 0,
   className = '',
   ...props
 }) {
@@ -45,13 +47,19 @@ export function AuroraBottomNav({
     // Exact match first
     const exact = items.find((item) => item.path === path);
     if (exact) return exact.id;
-    // Then prefix match (for nested routes)
-    const prefix = items.find(
-      (item) => item.path && item.path !== '/v2' && path.startsWith(item.path)
-    );
-    if (prefix) return prefix.id;
-    // Default to home if on /v2
-    if (path.startsWith('/v2')) return 'home';
+    // Then prefix match (for nested routes), longest match wins
+    let bestMatch = null;
+    let bestLen = 0;
+    for (const item of items) {
+      if (!item.path) continue;
+      if (path === item.path || path.startsWith(item.path + '/')) {
+        if (item.path.length > bestLen) {
+          bestMatch = item;
+          bestLen = item.path.length;
+        }
+      }
+    }
+    if (bestMatch) return bestMatch.id;
     return null;
   }, [location.pathname, items]);
 
@@ -109,8 +117,34 @@ export function AuroraBottomNav({
                 scale: isActive ? 1.1 : 1,
               }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              style={{ position: 'relative' }}
             >
               <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              {item.badge && notificationsCount > 0 && (
+                <span
+                  aria-label={`${notificationsCount} notifications`}
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -6,
+                    minWidth: 16,
+                    height: 16,
+                    padding: '0 4px',
+                    borderRadius: 8,
+                    background: '#EF4444',
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1.5px solid #050510',
+                    boxShadow: '0 0 0 2px rgba(239,68,68,0.25)',
+                  }}
+                >
+                  {notificationsCount > 9 ? '9+' : notificationsCount}
+                </span>
+              )}
             </motion.div>
 
             <motion.span
