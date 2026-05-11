@@ -314,6 +314,11 @@ const whatsappMetaRouter = require('./src/routes/whatsappMeta')
 const arkChatRouter      = require('./src/routes/arkChat')
 const accountingRouter   = require('./src/routes/accounting')
 
+// LOT 23 — API Publique + Marketplace + Enterprise
+const publicApiRouter    = require('./src/routes/publicApi')
+const marketplaceRouter  = require('./src/routes/marketplace')
+const enterpriseRouter   = require('./src/routes/enterprise')
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -407,6 +412,12 @@ app.use('/api/calendar',     calendarRouter)    // auth mixte (callback public)
 app.use('/api/whatsapp',     whatsappMetaRouter) // auth mixte (webhook public)
 app.use('/api/ark-chat',     arkChatRouter)      // auth client portail
 app.use('/api/accounting',   verifyToken, accountingRouter)
+
+// LOT 23 — API Publique + Marketplace + Enterprise
+app.use('/api/v1',           publicApiRouter)     // auth via API key (dans le router)
+app.use('/api/marketplace',  verifyToken, marketplaceRouter)
+app.use('/api/enterprise',   verifyToken, enterpriseRouter)
+app.use('/api/developer',    verifyToken, require('./src/routes/developer'))  // gestion clés API
 
 app.use('/api/messaging',    messagingRoutes)
 

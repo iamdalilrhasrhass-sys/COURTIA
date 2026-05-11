@@ -54,6 +54,10 @@ const WhatsAppV2 = lazy(() => import('./pages/v2/WhatsAppV2'))
 const ArkChatV2 = lazy(() => import('./pages/v2/ArkChatV2'))
 const CommissionsV2 = lazy(() => import('./pages/v2/CommissionsV2'))
 const ComptabiliteV2 = lazy(() => import('./pages/v2/ComptabiliteV2'))
+// LOT 23 — API Publique + Marketplace + Multi-langue + Enterprise
+const DeveloperV2 = lazy(() => import('./pages/v2/DeveloperV2'))
+const MarketplaceV2 = lazy(() => import('./pages/v2/MarketplaceV2'))
+const EnterpriseV2 = lazy(() => import('./pages/v2/EnterpriseV2'))
 const OnboardingGamified = lazy(() => import('./pages/OnboardingGamified'))
 const DesignSystem = lazy(() => import('./pages/DesignSystem'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
@@ -291,6 +295,10 @@ export default function App() {
           <Route path="/v2/ark-chat" element={<ArkChatV2 />} />
           <Route path="/v2/commissions" element={<CommissionsV2 />} />
           <Route path="/v2/comptabilite" element={<ComptabiliteV2 />} />
+          {/* LOT 23 — API Publique + Marketplace + Enterprise */}
+          <Route path="/v2/developer" element={<DeveloperV2 />} />
+          <Route path="/v2/marketplace" element={<MarketplaceV2 />} />
+          <Route path="/v2/enterprise" element={<EnterpriseV2 />} />
           <Route path="/onboarding/gamified" element={<OnboardingGamified />} />
           <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/academy/*"     element={<Academy />} />
