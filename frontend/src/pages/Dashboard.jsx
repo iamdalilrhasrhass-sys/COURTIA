@@ -288,18 +288,17 @@ export default function Dashboard() {
         </header>
 
         {/* ROW 1 — 4 KPIs cockpit */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12, marginBottom: 18,
-        }}>
+        <VibeScrollSection delay={0.1} parallax={15}>
+        <VibeStagger style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 18}} itemStyle={{flex: '1 1 220px'}}>
           <KpiCard label="Clients actifs"   value={fmtNum(metrics.activeClients)}   icon={Users}    accent={T.accent}  delta="+8 ce mois" deltaPositive />
           <KpiCard label="Contrats actifs"  value={fmtNum(metrics.activeContracts)} icon={FileText} accent={T.blue}    delta="+12" deltaPositive sub="ce mois" />
           <KpiCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)}     icon={Euro}     accent={T.success} delta="+5,2%" deltaPositive sub="vs M-1" />
           <KpiCard label="Score santé"      value={`${metrics.healthScore}%`}       icon={Heart}    accent={T.ark}     delta="+2 pts" deltaPositive sub="bon état" />
-        </div>
+        </VibeStagger>
+        </VibeScrollSection>
 
         {/* ROW 2 — Priorités ARK + Échéances 30j */}
+        <VibeScrollSection delay={0.15} parallax={25}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)',
@@ -391,8 +390,10 @@ export default function Dashboard() {
             </div>
           </AuroraCard>
         </div>
+        </VibeScrollSection>
 
         {/* ROW 3 — Performance + Activité */}
+        <VibeScrollSection delay={0.2} parallax={30}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)',
@@ -456,8 +457,10 @@ export default function Dashboard() {
             </div>
           </AuroraCard>
         </div>
+        </VibeScrollSection>
 
         {/* ROW 4 — Suggestions ARK */}
+        <VibeScrollSection delay={0.25} parallax={20}>
         <div style={{ marginBottom: 12 }}>
           <SectionTitle
             icon={Sparkles}
@@ -500,6 +503,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        </VibeScrollSection>
 
       </div>
     </div>
