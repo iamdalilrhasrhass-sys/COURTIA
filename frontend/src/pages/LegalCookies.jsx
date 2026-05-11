@@ -24,7 +24,7 @@ export default function LegalCookies() {
             Aucun cookie de publicité comportementale tiers n\'est installé par défaut dans cette version.
           </p>
           <p>
-            Vous pouvez demander l\'arrêt des sollicitations commerciales via opt-out à contact@courtia.fr.
+            Vous pouvez demander l\'arrêt des sollicitations commerciales via opt-out à contact@courtiark.fr.
           </p>
         </div>
       </section>

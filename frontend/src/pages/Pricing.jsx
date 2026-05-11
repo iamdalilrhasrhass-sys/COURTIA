@@ -31,7 +31,7 @@ export default function Pricing() {
   }
 
   const handleContact = () => {
-    window.location.href = 'mailto:commercial@courtia.fr?subject=Demande%20devis%20Premium'
+    window.location.href = 'mailto:commercial@courtiark.fr?subject=Demande%20devis%20Premium'
   }
 
   return (

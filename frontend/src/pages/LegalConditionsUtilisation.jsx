@@ -42,7 +42,7 @@ export default function LegalConditionsUtilisation() {
             peut entraîner une suspension d&apos;accès.
           </p>
           <p>
-            Contact juridique et support: contact@courtia.fr
+            Contact juridique et support: contact@courtiark.fr
           </p>
         </div>
       </section>

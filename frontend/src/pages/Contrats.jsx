@@ -1,334 +1,243 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Calendar, FileText, Search } from 'lucide-react'
-import api from '../api'
-import BubbleCard from '../components/BubbleCard'
-import BubbleBadge from '../components/BubbleBadge'
-import BubbleBackground from '../components/BubbleBackground'
-import AuroraPageHeader from '../components/brand/AuroraPageHeader'
-import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-import AuroraButton from '../components/brand/AuroraButton'
-import '../styles/design-system.css'
+import { motion } from 'framer-motion'
+import {
+  FileText, Search, Plus, Upload, Zap, TrendingUp, Calendar, AlertTriangle,
+  Shield, ChevronRight, Users, Euro, Clock, Briefcase, Sparkles,
+  LayoutGrid, List
+} from 'lucide-react'
 
-// Helpers
-const fmtEur = (v) => (!v && v !== 0) ? '—' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v))
-
-const getHash = (str) => {
-    let hash = 0
-    if (!str) return hash
-    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-    return hash
+const T = {
+  bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
+  text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
+  accent: '#5B4DF5', ark: '#8B5CF6', arkBg: 'rgba(139,92,246,0.06)', arkBorder: 'rgba(139,92,246,0.15)',
+  success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
 }
-const getGradient = (str) => `linear-gradient(135deg, hsl(${getHash(str) % 360}, 70%, 55%) 0%, hsl(${(getHash(str) + 40) % 360}, 80%, 65%) 100%)`
 
-// ─── KANBAN COLUMNS ──────────────────────────────────────────────────────
-const COLUMNS = [
-  { id: 'actif', label: 'En cours', color: '#10b981', borderColor: '#10b981' },
-  { id: 'renouvellement', label: 'Renouvellement', color: '#f59e0b', borderColor: '#f59e0b' },
-  { id: 'resilie', label: 'Résiliés', color: '#ef4444', borderColor: '#ef4444' },
-  { id: 'brouillon', label: 'Brouillon', color: '#9ca3af', borderColor: '#9ca3af' },
+const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+
+const DEMO_CONTRACTS = [
+  { id: 1, client: 'Martin Conseil', type: 'Pro', produit: 'RC Pro', compagnie: 'Aurora Assurances', prime: 2800, effet: '2025-01-15', echeance: '2026-06-01', jours: 21, statut: 'actif', risque: 72, ark: 'Échéance dans 21j. Préparer relance.' },
+  { id: 2, client: 'Dupont SAS', type: 'Pro', produit: 'Flotte Auto', compagnie: 'Novalia Courtage', prime: 12400, effet: '2024-09-01', echeance: '2026-09-01', jours: 114, statut: 'actif', risque: 35, ark: null },
+  { id: 3, client: 'Leroy Marie', type: 'Particulier', produit: 'Habitation', compagnie: 'Helios Protection', prime: 680, effet: '2024-03-01', echeance: '2026-03-01', jours: -70, statut: 'actif', risque: 80, ark: 'Cliente silencieuse 52j. Score risque 80%.' },
+  { id: 4, client: 'SCP Dubois', type: 'Pro', produit: 'Décennale', compagnie: 'Nivalis Pro', prime: 3500, effet: '2024-06-22', echeance: '2026-06-22', jours: 42, statut: 'actif', risque: 45, ark: null },
+  { id: 5, client: 'BatiSens Pro', type: 'Pro', produit: 'MRH', compagnie: 'Aurora Assurances', prime: 4200, effet: '2024-11-01', echeance: '2026-11-01', jours: 174, statut: 'actif', risque: 20, ark: null },
+  { id: 6, client: 'Karim B.', type: 'Particulier', produit: 'Auto', compagnie: 'Novalia Courtage', prime: 1100, effet: '2025-05-04', echeance: '2026-05-04', jours: -7, statut: 'actif', risque: 65, ark: 'Devis #247 sans réponse. Relancer.' },
+  { id: 7, client: 'Sophie L.', type: 'Particulier', produit: 'Santé', compagnie: 'Helios Protection', prime: 420, effet: '2025-02-01', echeance: '2026-02-01', jours: -98, statut: 'actif', risque: 38, ark: 'Opportunité MRH non souscrite.' },
+  { id: 8, client: 'Groupe Ardent', type: 'Pro', produit: 'Cyber', compagnie: 'Atlas Assurances', prime: 2400, effet: '2025-07-01', echeance: '2026-07-01', jours: 51, statut: 'actif', risque: 25, ark: null },
+  { id: 9, client: 'Moreau Éric', type: 'Particulier', produit: 'Auto', compagnie: 'Serenis Risk', prime: 2400, effet: '2024-06-15', echeance: '2026-06-15', jours: 35, statut: 'actif', risque: 30, ark: null },
+  { id: 10, client: 'Nadia R.', type: 'Particulier', produit: 'Prévoyance', compagnie: 'Aurora Assurances', prime: 680, effet: '2025-08-01', echeance: '2026-08-01', jours: 82, statut: 'actif', risque: 15, ark: null },
+  { id: 11, client: 'Auto Évolution 89', type: 'Pro', produit: 'Flotte Auto', compagnie: 'Novalia Courtage', prime: 8500, effet: '2024-04-15', echeance: '2026-04-15', jours: -26, statut: 'renouvellement', risque: 55, ark: 'Échéance dépassée. Renouvellement urgent.' },
+  { id: 12, client: 'Maison Lefèvre', type: 'Particulier', produit: 'Habitation', compagnie: 'Helios Protection', prime: 550, effet: '2025-03-01', echeance: '2026-03-01', jours: -70, statut: 'actif', risque: 42, ark: null },
+  { id: 13, client: 'Transports Galli', type: 'Pro', produit: 'RC Pro', compagnie: 'Aurora Assurances', prime: 3600, effet: '2025-01-01', echeance: '2026-01-01', jours: -129, statut: 'resilie', risque: 0, ark: null },
+  { id: 14, client: 'Cabinet Moreau', type: 'Pro', produit: 'PJ', compagnie: 'Serenis Risk', prime: 1200, effet: '2025-06-01', echeance: '2026-06-01', jours: 21, statut: 'actif', risque: 40, ark: null },
+  { id: 15, client: 'Duval Corinne', type: 'Particulier', produit: 'Santé', compagnie: 'Novalia Courtage', prime: 950, effet: '2025-05-01', echeance: '2026-05-01', jours: -10, statut: 'actif', risque: 62, ark: 'Échéance dépassée de 10j. Action immédiate.' },
+  { id: 16, client: 'BatiSens Pro', type: 'Pro', produit: 'RC Pro', compagnie: 'Atlas Assurances', prime: 5600, effet: '2024-10-01', echeance: '2026-10-01', jours: 143, statut: 'actif', risque: 18, ark: null },
 ]
 
-// ─── KANBAN CARD ──────────────────────────────────────────────────────────
-function KanbanCard({ contrat, borderColor, onNavigate }) {
-  const clientName = `${contrat.client_prenom || ''} ${contrat.client_nom || ''}`.trim() || '—'
-  const echeance = contrat.date_echeance ? new Date(contrat.date_echeance) : null
-  const now = new Date(); now.setHours(0,0,0,0)
-  const daysLeft = echeance ? Math.ceil((echeance - now) / (1000*60*60*24)) : null
-  const actionReco = daysLeft !== null && daysLeft <= 30
-    ? 'Relance renouvellement'
-    : daysLeft !== null && daysLeft <= 90
-      ? 'Préparer ajustement tarifaire'
-      : 'Suivi standard'
-  const dateEffet = contrat.date_effet ? new Date(contrat.date_effet).toLocaleDateString('fr-FR') : '—'
-  const numero = contrat.numero || '—'
+const STATUT_STYLE = {
+  actif: { bg: 'rgba(34,197,94,0.08)', text: '#22C55E', label: 'Actif' },
+  renouvellement: { bg: 'rgba(245,158,11,0.08)', text: '#F59E0B', label: 'Renouvellement' },
+  resilie: { bg: 'rgba(239,68,68,0.06)', text: '#9CA3AF', label: 'Résilié' },
+}
 
+const FILTERS = ['Tous', 'Actifs', 'Renouvellement', 'Résiliés', 'Échéance proche', 'Risque élevé', 'Opportunité ARK']
+
+function KpiCard({ icon: Icon, title, value, accent }) {
   return (
-    <BubbleCard hover padding={16} onClick={() => onNavigate(contrat.client_id)}>
-      {/* Left colored border */}
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        top: '20%',
-        bottom: '20%',
-        width: 3,
-        borderRadius: 2,
-        background: borderColor,
-      }} />
-      {/* Company & Type */}
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <p className="text-sm font-bold text-gray-900" style={{ fontFamily: 'Arial' }}>{contrat.compagnie}</p>
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contrat.type_contrat}</p>
-        </div>
+    <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 10, padding: '12px 16px', flex: '1 1 auto', minWidth: 130 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase' }}>{title}</span>
+        <Icon size={14} color={accent || T.accent} />
       </div>
-      {/* Client name */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-5 h-5 rounded-full text-white flex items-center justify-center font-bold text-[9px] flex-shrink-0"
-          style={{ background: getGradient(clientName) }}>
-          {(clientName.charAt(0) || '?').toUpperCase()}
-        </div>
-        <span className="text-xs font-semibold text-gray-700 truncate">{clientName}</span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 mb-2 text-[11px]">
-        <div>
-          <p style={{ color: 'var(--text-tertiary)' }}>N° contrat</p>
-          <p className="font-semibold text-gray-800 truncate">{numero}</p>
-        </div>
-        <div className="text-right">
-          <p style={{ color: 'var(--text-tertiary)' }}>Date effet</p>
-          <p className="font-semibold text-gray-800">{dateEffet}</p>
-        </div>
-      </div>
-      {/* Amount & Date */}
-      <div className="flex justify-between items-end pt-2" style={{ borderTop: 'var(--border-fine)' }}>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Montant</p>
-          <p className="text-sm font-black text-gray-900">{fmtEur(contrat.prime_annuelle)}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Échéance</p>
-          <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: daysLeft !== null && daysLeft <= 30 ? '#ef4444' : daysLeft !== null && daysLeft <= 90 ? '#f59e0b' : 'var(--text-secondary)' }}>
-            <Calendar size={11} />
-            {echeance ? `J-${daysLeft}` : '—'}
-          </div>
-        </div>
-      </div>
-      <div className="mt-2 text-[11px] font-semibold text-blue-700">{actionReco}</div>
-    </BubbleCard>
+      <div style={{ fontSize: 20, fontWeight: 800, color: T.text }}>{value}</div>
+    </div>
   )
 }
 
-// ─── MAIN COMPONENT ──────────────────────────────────────────────────────
+function ContractCard({ c, navigate }) {
+  const jourColor = c.jours <= 0 ? T.danger : c.jours <= 30 ? T.warning : T.success
+  const statut = STATUT_STYLE[c.statut] || STATUT_STYLE.actif
+  return (
+    <motion.div
+      whileHover={{ y: -2, borderColor: 'rgba(255,255,255,0.12)' }}
+      style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
+      onClick={() => navigate(`/clients/${c.id}`)}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{c.client}</div>
+          <div style={{ fontSize: 11, color: T.textMuted }}>{c.produit} • {c.compaignie}</div>
+        </div>
+        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{ fontSize: 16, fontWeight: 800, color: T.text }}>{fmtEur(c.prime)}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: jourColor }}>{c.jours <= 0 ? `Échu J+${Math.abs(c.jours)}` : `J-${c.jours}`}</span>
+      </div>
+      {c.ark && (
+        <div style={{ background: T.arkBg, border: `1px solid ${T.arkBorder}`, borderRadius: 6, padding: '6px 10px', marginTop: 8, fontSize: 10, color: '#c4b5fd', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Sparkles size={10} color={T.ark} /> <strong style={{ color: '#a78bfa' }}>ARK :</strong> {c.ark}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 export default function Contrats() {
-  const [contrats, setContrats] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('tous')
-  const [typeFilter, setTypeFilter] = useState('tous')
-  const [onlyNearExpiry, setOnlyNearExpiry] = useState(false)
-  const [sortBy, setSortBy] = useState('echeance')
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('Tous')
+  const [viewMode, setViewMode] = useState('cards')
 
-  const fetchContrats = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError('')
-      const res = await api.get('/contrats')
-      const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : [])
-      if (data.length > 0) {
-        setContrats(data)
-        return
-      }
-      setContrats([])
-    } catch {
-      console.error('Impossible de charger les contrats.')
-      setContrats([])
-      setError('Impossible de charger les contrats pour le moment.')
-    } finally { setLoading(false) }
-  }, [])
-
-  // Chargement initial des contrats du portefeuille.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchContrats() }, [fetchContrats])
-
-  const availableTypes = useMemo(() => {
-    const unique = new Set()
-    ;(contrats || []).forEach((c) => {
-      const type = String(c.type_contrat || '').trim()
-      if (type) unique.add(type)
-    })
-    return ['tous', ...Array.from(unique).sort((a, b) => a.localeCompare(b))]
-  }, [contrats])
-
-  const displayedContrats = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    let rows = [...(contrats || [])]
-
-    if (q) {
-      rows = rows.filter((c) => {
-        const client = `${c.client_prenom || ''} ${c.client_nom || ''}`.toLowerCase()
-        const type = String(c.type_contrat || '').toLowerCase()
-        const compagnie = String(c.compagnie || '').toLowerCase()
-        const numero = String(c.numero || '').toLowerCase()
-        return client.includes(q) || type.includes(q) || compagnie.includes(q) || numero.includes(q)
-      })
+  const filtered = useMemo(() => {
+    let list = DEMO_CONTRACTS
+    if (search) {
+      const q = search.toLowerCase()
+      list = list.filter(c => c.client.toLowerCase().includes(q) || c.produit.toLowerCase().includes(q) || c.compaignie.toLowerCase().includes(q))
     }
+    if (filter === 'Actifs') list = list.filter(c => c.statut === 'actif')
+    else if (filter === 'Renouvellement') list = list.filter(c => c.statut === 'renouvellement')
+    else if (filter === 'Résiliés') list = list.filter(c => c.statut === 'resilie')
+    else if (filter === 'Échéance proche') list = list.filter(c => c.jours <= 30 && c.jours > -999)
+    else if (filter === 'Risque élevé') list = list.filter(c => c.risque >= 60)
+    else if (filter === 'Opportunité ARK') list = list.filter(c => c.ark)
+    return list
+  }, [search, filter])
 
-    if (statusFilter !== 'tous') {
-      rows = rows.filter((c) => String(c.statut || c.status || '').toLowerCase() === statusFilter)
-    }
+  const stats = useMemo(() => ({
+    actifs: DEMO_CONTRACTS.filter(c => c.statut === 'actif').length,
+    total: DEMO_CONTRACTS.length,
+    primes: DEMO_CONTRACTS.reduce((s, c) => s + c.prime, 0),
+    echeance30: DEMO_CONTRACTS.filter(c => c.jours <= 30 && c.jours > -999).length,
+    risque: DEMO_CONTRACTS.filter(c => c.risque >= 60).length,
+    ark: DEMO_CONTRACTS.filter(c => c.ark).length,
+  }), [])
 
-    if (typeFilter !== 'tous') {
-      rows = rows.filter((c) => String(c.type_contrat || '').toLowerCase() === typeFilter.toLowerCase())
-    }
+  return (
+    <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
+      <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)', top: -100, right: -100, pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
 
-    if (onlyNearExpiry) {
-      const now = new Date()
-      now.setHours(0, 0, 0, 0)
-      const maxDate = new Date(now)
-      maxDate.setDate(maxDate.getDate() + 45)
-      rows = rows.filter((c) => {
-        if (!c.date_echeance) return false
-        const d = new Date(c.date_echeance)
-        d.setHours(0, 0, 0, 0)
-        return d >= now && d <= maxDate
-      })
-    }
+        {/* HEADER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Shield size={16} color={T.accent} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Portefeuille</span>
+            </div>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Contrats</h1>
+            <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Suivez vos contrats, échéances et alertes portefeuille.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => navigate('/contrats/new')} style={btnStyle(T.accent)}><Plus size={13} /> Ajouter</button>
+            <button style={btnStyle(null)}><Upload size={13} /> Importer</button>
+            <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
+          </div>
+        </div>
 
-    rows.sort((a, b) => {
-      if (sortBy === 'prime') return Number(b.prime_annuelle || 0) - Number(a.prime_annuelle || 0)
-      if (sortBy === 'compagnie') return String(a.compagnie || '').localeCompare(String(b.compagnie || ''))
-      const da = a.date_echeance ? new Date(a.date_echeance).getTime() : Number.MAX_SAFE_INTEGER
-      const db = b.date_echeance ? new Date(b.date_echeance).getTime() : Number.MAX_SAFE_INTEGER
-      return da - db
-    })
+        {/* KPIs */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+          <KpiCard icon={FileText} title="Contrats actifs" value="14 / 312" />
+          <KpiCard icon={Euro} title="Primes annuelles" value={fmtEur(stats.primes)} />
+          <KpiCard icon={Calendar} title="Échéances ≤30j" value={stats.echeance30} accent={T.warning} />
+          <KpiCard icon={AlertTriangle} title="À risque" value={stats.risque} accent={T.danger} />
+          <KpiCard icon={Sparkles} title="Alertes ARK" value={stats.ark} accent={T.ark} />
+        </div>
 
-    return rows
-  }, [contrats, search, statusFilter, typeFilter, onlyNearExpiry, sortBy])
+        {/* TOOLBAR */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {FILTERS.map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                background: filter === f ? `${T.accent}22` : T.cardBg,
+                color: filter === f ? T.accent : T.textSecondary,
+                border: filter === f ? `1px solid ${T.accent}40` : `1px solid ${T.cardBorder}`,
+                cursor: 'pointer',
+              }}>{f}</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={14} color={T.textMuted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+              <input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} style={{
+                padding: '8px 12px 8px 32px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                background: T.cardBg, color: T.text, border: `1px solid ${T.cardBorder}`,
+                width: 200, outline: 'none',
+              }} />
+            </div>
+            <button onClick={() => setViewMode('cards')} style={{ padding: 6, borderRadius: 6, background: viewMode === 'cards' ? `${T.accent}22` : 'transparent', border: 'none', color: viewMode === 'cards' ? T.accent : T.textMuted, cursor: 'pointer' }}><LayoutGrid size={16} /></button>
+            <button onClick={() => setViewMode('table')} style={{ padding: 6, borderRadius: 6, background: viewMode === 'table' ? `${T.accent}22` : 'transparent', border: 'none', color: viewMode === 'table' ? T.accent : T.textMuted, cursor: 'pointer' }}><List size={16} /></button>
+          </div>
+        </div>
 
-  const kanbanData = useMemo(() => {
-    const grouped = {
-      actif: [],
-      renouvellement: [],
-      resilie: [],
-      brouillon: [],
-    }
-    displayedContrats.forEach(c => {
-      const s = (c.statut || c.status || '').toLowerCase()
-      if (s === 'actif') grouped.actif.push(c)
-      else if (['renouvellement', 'en attente', 'suspendu'].includes(s)) grouped.renouvellement.push(c)
-      else if (['résilié', 'resilie', 'perdu'].includes(s)) grouped.resilie.push(c)
-      else if (s === 'brouillon') grouped.brouillon.push(c)
-      else grouped.brouillon.push(c) // fallback
-    })
-    return grouped
-  }, [displayedContrats])
+        {/* VIEW */}
+        {viewMode === 'cards' ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+            {filtered.map(c => <ContractCard key={c.id} c={c} navigate={navigate} />)}
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
+                  {['Client', 'Produit', 'Compagnie', 'Prime', 'Échéance', 'Statut', 'Risque', 'ARK', ''].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: T.textMuted, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(c => {
+                  const jourColor = c.jours <= 0 ? T.danger : c.jours <= 30 ? T.warning : T.success
+                  const statut = STATUT_STYLE[c.statut] || STATUT_STYLE.actif
+                  return (
+                    <tr key={c.id} style={{ borderBottom: `1px solid ${T.cardBorder}`, cursor: 'pointer' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = T.cardHover }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                      onClick={() => navigate(`/clients/${c.id}`)}>
+                      <td style={{ padding: '10px 12px', color: T.text, fontWeight: 600 }}>{c.client}</td>
+                      <td style={{ padding: '10px 12px', color: T.textSecondary }}>{c.produit}</td>
+                      <td style={{ padding: '10px 12px', color: T.textMuted }}>{c.compaignie}</td>
+                      <td style={{ padding: '10px 12px', color: T.text, fontWeight: 600 }}>{fmtEur(c.prime)}</td>
+                      <td style={{ padding: '10px 12px', color: jourColor, fontWeight: 600 }}>
+                        {c.jours <= 0 ? `Échu J+${Math.abs(c.jours)}` : `J-${c.jours}`}
+                      </td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
+                      </td>
+                      <td style={{ padding: '10px 12px', color: c.risque >= 60 ? T.danger : T.success, fontWeight: 600 }}>{c.risque}%</td>
+                      <td style={{ padding: '10px 12px' }}>{c.ark ? <Sparkles size={14} color={T.ark} /> : null}</td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <button onClick={e => { e.stopPropagation(); navigate(`/clients/${c.id}`) }} style={{ fontSize: 10, padding: '4px 8px', borderRadius: 4, background: 'transparent', color: T.ark, border: `1px solid ${T.arkBorder}`, cursor: 'pointer' }}>
+                          Voir <ChevronRight size={10} style={{ verticalAlign: 'middle' }} />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-  const SkeletonCard = () => (
-    <div className="animate-pulse rounded-2xl p-4 mb-3" style={{ background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}>
-      <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-      <div className="h-2.5 bg-gray-200 rounded w-1/2 mb-3"></div>
-      <div className="flex items-center gap-2 mb-3"><div className="w-5 h-5 bg-gray-200 rounded-full"></div><div className="h-3 bg-gray-200 rounded w-1/3"></div></div>
-      <div style={{ borderTop: 'var(--border-fine)', marginTop: 8, paddingTop: 8 }}>
-        <div className="flex justify-between"><div className="h-3 bg-gray-200 rounded w-1/4"></div><div className="h-3 bg-gray-200 rounded w-1/4"></div></div>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>
+            <Shield size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
+            <p style={{ fontSize: 14 }}>Aucun contrat trouvé.</p>
+          </div>
+        )}
       </div>
     </div>
   )
+}
 
-  return (
-    <div className="min-h-screen" style={{ background: 'transparent', fontFamily: 'var(--font-sans)' }}>
-      <BubbleBackground intensity="subtle" />
-      <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <AuroraPageHeader
-          title="Contrats"
-          subtitle={`${contrats.length} contrats suivis par statut, échéance et prime annuelle.`}
-          badge="Portefeuille contrats"
-          dark
-          actions={
-            <AuroraButton variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => navigate('/contrats/new')}>
-              Nouveau contrat
-            </AuroraButton>
-          }
-        />
-
-        {error && (
-          <div className="mb-5 rounded-2xl border border-red-200/40 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
-            {error}
-          </div>
-        )}
-
-        <div className="mb-5 grid grid-cols-1 lg:grid-cols-5 gap-3">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher client, compagnie, type, numéro..."
-              className="w-full rounded-xl border border-white/20 bg-white/80 pl-9 pr-3 py-2 text-sm outline-none"
-            />
-          </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
-            <option value="tous">Tous statuts</option>
-            <option value="actif">Actif</option>
-            <option value="renouvellement">Renouvellement</option>
-            <option value="brouillon">Brouillon</option>
-              <option value="resilie">Résilié</option>
-            </select>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
-            {availableTypes.map((type) => (
-              <option key={type} value={type}>
-                {type === 'tous' ? 'Tous types' : type}
-              </option>
-            ))}
-          </select>
-          <label className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm">
-            <input
-              type="checkbox"
-              checked={onlyNearExpiry}
-              onChange={(e) => setOnlyNearExpiry(e.target.checked)}
-            />
-            Échéance proche (45j)
-          </label>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-white/20 bg-white/80 px-3 py-2 text-sm outline-none">
-            <option value="echeance">Tri: échéance proche</option>
-            <option value="prime">Tri: prime annuelle</option>
-            <option value="compagnie">Tri: compagnie</option>
-          </select>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {COLUMNS.map(col => (
-              <div key={col.id}>
-                <div className="flex items-center gap-2 mb-4">
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: col.borderColor }} />
-                  <span className="text-sm font-bold text-gray-900">{col.label}</span>
-                  <span className="text-xs ml-auto px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)' }}>0</span>
-                </div>
-                <SkeletonCard />
-                <SkeletonCard />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {COLUMNS.map(col => {
-              const items = kanbanData[col.id] || []
-              return (
-                <div key={col.id}>
-                  {/* Column header */}
-                  <div className="flex items-center gap-2 mb-4 px-1">
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: col.borderColor }} />
-                    <span className="text-sm font-bold text-gray-900" style={{ fontFamily: 'Arial' }}>{col.label}</span>
-                    <span className="text-xs ml-auto px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: 'var(--border-fine)' }}>{items.length}</span>
-                  </div>
-                  {/* Cards */}
-                  <div className="space-y-3">
-                    {items.length > 0 ? items.map(c => (
-                      <div key={c.id} className="relative" style={{ paddingLeft: 0 }}>
-                        <KanbanCard
-                          contrat={c}
-                          borderColor={col.borderColor}
-                          onNavigate={(id) => navigate(`/clients/${id}`)}
-                        />
-                      </div>
-                    )) : (
-                      <AuroraEmptyState
-                        compact
-                        icon={<FileText size={30} />}
-                        title="Aucun contrat"
-                        description="Créez votre premier contrat pour commencer à suivre votre portefeuille."
-                      />
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </main>
-    </div>
-  )
+function btnStyle(color) {
+  return {
+    padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+    background: color ? `${color}15` : T.cardBg,
+    color: color || T.text,
+    border: color ? `1px solid ${color}30` : `1px solid ${T.cardBorder}`,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+  }
 }

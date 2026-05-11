@@ -107,8 +107,8 @@ const PLAN_FEATURES = {
 
 function PlanCard({ plan, billingCycle, loadingPlan, onSelect }) {
   const isMonthly = billingCycle === 'monthly'
-  const monthlyPrice = { starter: 89, pro: 159, premium: 350 }[plan]
-  const yearlyPrice = Math.round(monthlyPrice * 12 * 0.8)
+  const monthlyPrice = { starter: 89, pro: 159, premium: null }[plan]
+  const yearlyPrice = monthlyPrice ? Math.round(monthlyPrice * 12 * 0.8) : null
   const displayPrice = isMonthly ? monthlyPrice : yearlyPrice
   const perLabel = isMonthly ? '/mois' : '/an'
   const isPro = plan === 'pro'
@@ -177,12 +177,20 @@ function PlanCard({ plan, billingCycle, loadingPlan, onSelect }) {
 
         {/* Price */}
         <div style={{ marginBottom: 20 }}>
-          <span style={{ fontSize: 36, fontWeight: 700, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
-            {displayPrice}€
-          </span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(0,0,0,0.4)' }}>
-            {perLabel}
-          </span>
+          {isPremium ? (
+            <span style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
+              Sur devis
+            </span>
+          ) : (
+            <>
+              <span style={{ fontSize: 36, fontWeight: 700, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
+                {displayPrice}€
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(0,0,0,0.4)' }}>
+                {perLabel}
+              </span>
+            </>
+          )}
           {!isMonthly && (
             <div style={{ marginTop: 4 }}>
               <span style={{

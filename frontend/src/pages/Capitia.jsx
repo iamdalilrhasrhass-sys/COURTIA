@@ -60,7 +60,7 @@ function CapitiaHeader({ stateBadge }) {
     >
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: 'white', letterSpacing: -1 }}>CAPITIA</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: 'white', letterSpacing: -1 }}>ARK IA</span>
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
             background: 'rgba(255,255,255,0.25)', color: 'white',
@@ -148,7 +148,7 @@ function StateA({ onSuccess }) {
         style={{ marginBottom: 28 }}
       >
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#080808', margin: '0 0 6px' }}>
-          Activez CAPITIA — Accédez au marché du financement immobilier
+          Activez ARK IA — Accédez au marché du financement immobilier
         </h1>
         <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>
           Première étape : soumettez votre dossier IOBSP pour validation.
@@ -418,7 +418,7 @@ function StateB({ data }) {
 
         {hoursSince > 72 && (
           <a
-            href="mailto:support@courtia.fr"
+            href="mailto:support@courtiark.fr"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               fontSize: 13, color: '#2563eb', textDecoration: 'none',
@@ -472,7 +472,7 @@ function StateE({ data, onRestart }) {
             Nouvelle candidature
           </button>
           <a
-            href="mailto:support@courtia.fr"
+            href="mailto:support@courtiark.fr"
             style={{
               padding: '10px 20px', background: 'white', color: '#374151',
               border: '1px solid #e5e7eb', borderRadius: 9,
@@ -535,7 +535,7 @@ function StateD() {
           Félicitations ! Votre profil IOBSP est validé
         </h2>
         <p style={{ fontSize: 14, color: '#374151', margin: '0 0 28px', lineHeight: 1.6 }}>
-          Activez maintenant CAPITIA pour accéder au module financement.
+          Activez maintenant ARK IA pour accéder au module financement.
         </p>
 
         {/* Card tarifaire */}
@@ -545,7 +545,7 @@ function StateD() {
           padding: '24px', marginBottom: 24
         }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 8px' }}>
-            CAPITIA Add-on
+            ARK IA
           </p>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 16 }}>
             <span style={{ fontSize: 36, fontWeight: 800, color: '#2563eb' }}>
@@ -577,7 +577,7 @@ function StateD() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
           }}
         >
-          {loading ? 'Redirection…' : 'Activer CAPITIA maintenant'}
+          {loading ? 'Redirection…' : 'Activer ARK IA'}
           {!loading && <Zap size={16} />}
         </motion.button>
       </motion.div>
@@ -785,7 +785,7 @@ function StateC({ _data, onRefresh }) {
     setCancelling(true)
     try {
       await api.post('/financing/iobsp/cancel')
-      toast.success('Add-on CAPITIA annulé. Accès actif jusqu\'à fin de période.')
+      toast.success('Add-on ARK IA annulé. Accès actif jusqu\'à fin de période.')
       setShowCancelConfirm(false)
       if (onRefresh) onRefresh()
     } catch (err) {
@@ -810,7 +810,7 @@ function StateC({ _data, onRefresh }) {
         }}
       >
         <CheckCircle2 size={16} color="#16a34a" />
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>CAPITIA ACTIF</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>ARK IA ACTIF</span>
         <span style={{ fontSize: 12, color: '#6b7280' }}>— Vous avez accès à tous les outils de financement IOBSP</span>
       </motion.div>
 
@@ -928,11 +928,11 @@ function StateC({ _data, onRefresh }) {
       <div className="ca-statec-buttons" style={{ display: 'flex', gap: 12 }}>
         <button onClick={() => navigate('/billing?addon=capitia')}
           style={{ padding: '9px 16px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Arial, sans-serif' }}>
-          Gérer mon abonnement CAPITIA
+          Gérer mon abonnement ARK IA
         </button>
         <button onClick={() => setShowCancelConfirm(true)}
           style={{ padding: '9px 16px', background: 'none', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Arial, sans-serif' }}>
-          Désactiver CAPITIA
+          Désactiver ARK IA
         </button>
       </div>
 
@@ -950,7 +950,7 @@ function StateC({ _data, onRefresh }) {
               style={{ background: 'white', borderRadius: 14, padding: 28, maxWidth: 380, textAlign: 'center' }}
             >
               <AlertCircle size={32} color="#ef4444" style={{ margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Désactiver CAPITIA ?</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Désactiver ARK IA ?</h3>
               <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px', lineHeight: 1.5 }}>
                 Votre accès restera actif jusqu'à la fin de la période en cours. Cette action est irréversible.
               </p>
@@ -997,7 +997,7 @@ export default function Capitia() {
     // Gestion retour Stripe
     const addonParam = searchParams.get('addon')
     if (addonParam === 'success') {
-      toast.success('CAPITIA activé ! Bienvenue dans le module financement.')
+      toast.success('ARK IA activé ! Bienvenue dans le module financement.')
     } else if (addonParam === 'cancelled') {
       toast('Paiement annulé.', { icon: 'ℹ️' })
     }

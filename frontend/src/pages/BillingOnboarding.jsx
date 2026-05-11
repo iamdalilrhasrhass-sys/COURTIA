@@ -15,8 +15,8 @@ const PLAN_COPY = {
     title: 'Pro',
     banner: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour (190,80 € TTC avec TVA 20 %).',
   },
-  premium: {
-    title: 'Premium',
+  cabinet: {
+    title: 'Cabinet',
     banner: 'Sur devis — demande de contact.',
   },
 }
@@ -24,7 +24,7 @@ const PLAN_COPY = {
 export default function BillingOnboarding() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const initialPlan = params.get('plan') === 'starter' ? 'starter' : params.get('plan') === 'premium' ? 'premium' : 'pro'
+  const initialPlan = params.get('plan') === 'starter' ? 'starter' : params.get('plan') === 'cabinet' ? 'cabinet' : 'pro'
   const [planCode, setPlanCode] = useState(initialPlan)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -89,8 +89,8 @@ export default function BillingOnboarding() {
         dpa_version: 'draft-2026-05',
       })
 
-      if (planCode === 'premium') {
-        setSuccess('Votre demande Premium est enregistrée. L’équipe COURTIA vous contacte pour devis et contractualisation.')
+      if (planCode === 'cabinet') {
+        setSuccess('Votre demande Cabinet est enregistrée. L’équipe COURTIA vous contacte pour devis et contractualisation.')
         return
       }
 
@@ -132,7 +132,7 @@ export default function BillingOnboarding() {
         </div>
 
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-          {['starter', 'pro', 'premium'].map((code) => (
+          {['starter', 'pro', 'cabinet'].map((code) => (
             <button
               key={code}
               type="button"
@@ -237,7 +237,7 @@ export default function BillingOnboarding() {
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={handleActivateTrial} disabled={loading} style={ctaStyle}>
-            {loading ? 'Préparation...' : (planCode === 'premium' ? 'Envoyer ma demande Premium' : `Activer mon essai ${plan.title}`)}
+            {loading ? 'Préparation...' : (planCode === 'cabinet' ? 'Envoyer ma demande Cabinet' : `Activer mon essai ${plan.title}`)}
           </button>
           <button type="button" onClick={() => navigate('/billing')} style={ghostBtnStyle}>
             Voir mon statut billing

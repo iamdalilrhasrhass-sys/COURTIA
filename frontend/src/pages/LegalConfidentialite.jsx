@@ -46,7 +46,7 @@ export default function LegalConfidentialite() {
             Vous pouvez demander export, rectification, limitation ou suppression de vos données selon les cas applicables.
           </p>
           <p>
-            Toute demande d\'accès, correction ou suppression peut être adressée à contact@courtia.fr.
+            Toute demande d\'accès, correction ou suppression peut être adressée à contact@courtiark.fr.
           </p>
         </div>
       </section>

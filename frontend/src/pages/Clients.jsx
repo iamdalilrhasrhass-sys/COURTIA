@@ -1,543 +1,1371 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, ChevronUp, ChevronDown, Eye, Pencil, Trash2, LayoutList, LayoutGrid, Circle } from 'lucide-react'
-import api from '../api'
-import BubbleCard from '../components/BubbleCard'
-import BubbleBadge from '../components/BubbleBadge'
-import BubbleBackground from '../components/BubbleBackground'
-import AuroraPageHeader from '../components/brand/AuroraPageHeader'
-import AuroraEmptyState from '../components/brand/AuroraEmptyState'
-import AuroraButton from '../components/brand/AuroraButton'
-import '../styles/design-system.css'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Plus,
+  Search,
+  Upload,
+  TrendingUp,
+  Phone,
+  Users,
+  UserCheck,
+  UserPlus,
+  AlertTriangle,
+  UserX,
+  LayoutGrid,
+  List,
+  Eye,
+  Send,
+  FileText,
+  MapPin,
+  Shield,
+  Clock,
+  Heart,
+  Zap,
+  ChevronRight,
+  SlidersHorizontal,
+  X,
+  Sparkles,
+} from 'lucide-react'
 
-// HSL gradient from string
-const getHash = (str) => {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  return hash
+// ═══════════════════════════════════════════
+// AURORA DARK THEME TOKENS
+// ═══════════════════════════════════════════
+const T = {
+  bg: '#050510',
+  cardBg: 'rgba(255,255,255,0.03)',
+  cardBorder: 'rgba(255,255,255,0.06)',
+  cardHover: 'rgba(255,255,255,0.05)',
+  text: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  accent: '#5B4DF5',
+  ark: '#8B5CF6',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  info: '#3B82F6',
 }
-const getHSL = (str) => `hsl(${getHash(str) % 360}, 70%, 55%)`
-const getGradient = (str) => `linear-gradient(135deg, ${getHSL(str)} 0%, hsl(${(getHash(str) + 40) % 360}, 80%, 65%) 100%)`
 
-const getInitials = (name) => {
-  const names = (name || '').trim().split(' ').filter(Boolean)
-  if (names.length === 0) return '?'
-  if (names.length === 1) return names[0].substring(0, 2).toUpperCase()
-  return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+// ═══════════════════════════════════════════
+// DEMO CLIENTS DATA (16+ fictional French insurance clients)
+// ═══════════════════════════════════════════
+const DEMO_CLIENTS = [
+  {
+    id: 1,
+    name: 'Sophie Moreau',
+    type: 'Particulier',
+    status: 'actif',
+    city: 'Lyon',
+    email: 'sophie.moreau@email.fr',
+    phone: '06 12 34 56 78',
+    contracts: ['Auto', 'Habitation', 'Santé'],
+    contractCount: 3,
+    prime: 2480,
+    riskScore: 18,
+    loyaltyScore: 87,
+    lastContact: '2026-05-08',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'Auto, Habitation, Santé',
+  },
+  {
+    id: 2,
+    name: 'Thomas Bernard',
+    type: 'Professionnel',
+    status: 'actif',
+    city: 'Paris',
+    email: 't.bernard@cabinetsophia.fr',
+    phone: '06 23 45 67 89',
+    contracts: ['RC Pro', 'Prévoyance', 'Auto'],
+    contractCount: 3,
+    prime: 6150,
+    riskScore: 42,
+    loyaltyScore: 72,
+    lastContact: '2026-04-22',
+    arkAlerts: [{ label: 'Opportunité Décennale', priority: 'high' }],
+    urgency: 'medium',
+    products: 'RC Pro, Prévoyance, Auto',
+  },
+  {
+    id: 3,
+    name: 'Amélie Dubois',
+    type: 'Particulier',
+    status: 'prospect',
+    city: 'Bordeaux',
+    email: 'amelie.dubois@email.fr',
+    phone: '06 34 56 78 90',
+    contracts: ['Auto'],
+    contractCount: 1,
+    prime: 890,
+    riskScore: 8,
+    loyaltyScore: 45,
+    lastContact: '2026-05-09',
+    arkAlerts: [{ label: 'Multi-équipement MRH', priority: 'medium' }],
+    urgency: 'low',
+    products: 'Auto',
+  },
+  {
+    id: 4,
+    name: 'Laurent Petit',
+    type: 'Particulier',
+    status: 'a_risque',
+    city: 'Marseille',
+    email: 'laurent.petit@email.fr',
+    phone: '06 45 67 89 01',
+    contracts: ['Auto'],
+    contractCount: 1,
+    prime: 1340,
+    riskScore: 86,
+    loyaltyScore: 28,
+    lastContact: '2025-11-15',
+    arkAlerts: [
+      { label: 'Risque résiliation', priority: 'critical' },
+      { label: 'Offre concurrente détectée', priority: 'high' },
+    ],
+    urgency: 'high',
+    products: 'Auto',
+  },
+  {
+    id: 5,
+    name: 'Claire Martin',
+    type: 'Professionnel',
+    status: 'actif',
+    city: 'Nantes',
+    email: 'c.martin@agencemartin.fr',
+    phone: '06 56 78 90 12',
+    contracts: ['RC Pro', 'Flotte Auto', 'Prévoyance', 'Décennale'],
+    contractCount: 4,
+    prime: 12800,
+    riskScore: 24,
+    loyaltyScore: 91,
+    lastContact: '2026-05-07',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'RC Pro, Flotte Auto, Prévoyance, Décennale',
+  },
+  {
+    id: 6,
+    name: 'Jean Dupont',
+    type: 'Particulier',
+    status: 'silencieux',
+    city: 'Toulouse',
+    email: 'jean.dupont@email.fr',
+    phone: '06 67 89 01 23',
+    contracts: ['Habitation', 'Auto'],
+    contractCount: 2,
+    prime: 1760,
+    riskScore: 55,
+    loyaltyScore: 60,
+    lastContact: '2025-09-03',
+    arkAlerts: [{ label: 'Relance recommandée', priority: 'high' }],
+    urgency: 'high',
+    products: 'Habitation, Auto',
+  },
+  {
+    id: 7,
+    name: 'Marie Lefebvre',
+    type: 'Particulier',
+    status: 'actif',
+    city: 'Lille',
+    email: 'marie.lefebvre@email.fr',
+    phone: '06 78 90 12 34',
+    contracts: ['Santé', 'Prévoyance', 'Habitation'],
+    contractCount: 3,
+    prime: 3200,
+    riskScore: 12,
+    loyaltyScore: 94,
+    lastContact: '2026-05-10',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'Santé, Prévoyance, Habitation',
+  },
+  {
+    id: 8,
+    name: 'Nicolas Roux',
+    type: 'Professionnel',
+    status: 'prospect',
+    city: 'Strasbourg',
+    email: 'n.roux@bureauroux.fr',
+    phone: '06 89 01 23 45',
+    contracts: [],
+    contractCount: 0,
+    prime: 0,
+    riskScore: 6,
+    loyaltyScore: 0,
+    lastContact: '2026-05-06',
+    arkAlerts: [{ label: 'Devis RC Pro en attente', priority: 'medium' }],
+    urgency: 'medium',
+    products: '—',
+  },
+  {
+    id: 9,
+    name: 'Isabelle Garnier',
+    type: 'Particulier',
+    status: 'actif',
+    city: 'Nice',
+    email: 'isabelle.garnier@email.fr',
+    phone: '06 90 12 34 56',
+    contracts: ['Auto', 'Habitation', 'Santé', 'PJ'],
+    contractCount: 4,
+    prime: 4100,
+    riskScore: 15,
+    loyaltyScore: 96,
+    lastContact: '2026-04-30',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'Auto, Habitation, Santé, PJ',
+  },
+  {
+    id: 10,
+    name: 'Philippe Chevalier',
+    type: 'Particulier',
+    status: 'perdu',
+    city: 'Rennes',
+    email: 'philippe.chevalier@email.fr',
+    phone: '06 01 23 45 67',
+    contracts: ['Auto'],
+    contractCount: 1,
+    prime: 960,
+    riskScore: 72,
+    loyaltyScore: 15,
+    lastContact: '2025-06-20',
+    arkAlerts: [{ label: 'Perdu - À reconquérir', priority: 'low' }],
+    urgency: 'low',
+    products: 'Auto',
+  },
+  {
+    id: 11,
+    name: 'Céline Fournier',
+    type: 'Professionnel',
+    status: 'actif',
+    city: 'Montpellier',
+    email: 'c.fournier@cliniquefournier.fr',
+    phone: '06 12 45 67 89',
+    contracts: ['RC Pro', 'Prévoyance', 'MRH'],
+    contractCount: 3,
+    prime: 7850,
+    riskScore: 31,
+    loyaltyScore: 78,
+    lastContact: '2026-05-03',
+    arkAlerts: [{ label: 'Échéance proche - Flotte', priority: 'medium' }],
+    urgency: 'medium',
+    products: 'RC Pro, Prévoyance, MRH',
+  },
+  {
+    id: 12,
+    name: 'David Lambert',
+    type: 'Particulier',
+    status: 'silencieux',
+    city: 'Grenoble',
+    email: 'david.lambert@email.fr',
+    phone: '06 23 56 78 90',
+    contracts: ['Habitation'],
+    contractCount: 1,
+    prime: 620,
+    riskScore: 48,
+    loyaltyScore: 52,
+    lastContact: '2025-10-11',
+    arkAlerts: [
+      { label: 'Silence radio 7+ mois', priority: 'high' },
+      { label: 'Auto non couverte', priority: 'medium' },
+    ],
+    urgency: 'high',
+    products: 'Habitation',
+  },
+  {
+    id: 13,
+    name: 'Anne Rousseau',
+    type: 'Particulier',
+    status: 'actif',
+    city: 'Dijon',
+    email: 'anne.rousseau@email.fr',
+    phone: '06 34 67 89 01',
+    contracts: ['Auto', 'Santé'],
+    contractCount: 2,
+    prime: 1950,
+    riskScore: 22,
+    loyaltyScore: 83,
+    lastContact: '2026-05-05',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'Auto, Santé',
+  },
+  {
+    id: 14,
+    name: 'Julien Mercier',
+    type: 'Professionnel',
+    status: 'a_risque',
+    city: 'Toulon',
+    email: 'j.mercier@btpmercier.fr',
+    phone: '06 45 78 90 12',
+    contracts: ['Décennale', 'RC Pro'],
+    contractCount: 2,
+    prime: 9400,
+    riskScore: 79,
+    loyaltyScore: 35,
+    lastContact: '2025-12-01',
+    arkAlerts: [
+      { label: 'Risque résiliation élevé', priority: 'critical' },
+      { label: 'Contrat concurrent en vue', priority: 'high' },
+    ],
+    urgency: 'critical',
+    products: 'Décennale, RC Pro',
+  },
+  {
+    id: 15,
+    name: 'Camille Blanc',
+    type: 'Particulier',
+    status: 'prospect',
+    city: 'Angers',
+    email: 'camille.blanc@email.fr',
+    phone: '06 56 89 01 23',
+    contracts: [],
+    contractCount: 0,
+    prime: 0,
+    riskScore: 4,
+    loyaltyScore: 0,
+    lastContact: '2026-05-09',
+    arkAlerts: [{ label: 'Devis MRH demandé', priority: 'medium' }],
+    urgency: 'medium',
+    products: '—',
+  },
+  {
+    id: 16,
+    name: 'Romain Gauthier',
+    type: 'Particulier',
+    status: 'actif',
+    city: 'Reims',
+    email: 'romain.gauthier@email.fr',
+    phone: '06 67 90 12 34',
+    contracts: ['Auto', 'Habitation', 'PJ'],
+    contractCount: 3,
+    prime: 2870,
+    riskScore: 19,
+    loyaltyScore: 89,
+    lastContact: '2026-05-08',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'Auto, Habitation, PJ',
+  },
+  {
+    id: 17,
+    name: 'Nathalie Durand',
+    type: 'Professionnel',
+    status: 'actif',
+    city: 'Le Havre',
+    email: 'n.durand@agencedurand.fr',
+    phone: '06 78 01 23 45',
+    contracts: ['RC Pro', 'Flotte Auto', 'MRH'],
+    contractCount: 3,
+    prime: 10500,
+    riskScore: 36,
+    loyaltyScore: 66,
+    lastContact: '2026-04-18',
+    arkAlerts: [{ label: 'Baisse fidélité détectée', priority: 'high' }],
+    urgency: 'medium',
+    products: 'RC Pro, Flotte Auto, MRH',
+  },
+  {
+    id: 18,
+    name: 'Pauline Girard',
+    type: 'Particulier',
+    status: 'actif',
+    city: 'Clermont-Ferrand',
+    email: 'pauline.girard@email.fr',
+    phone: '06 89 12 34 56',
+    contracts: ['Santé', 'Prévoyance'],
+    contractCount: 2,
+    prime: 1680,
+    riskScore: 11,
+    loyaltyScore: 90,
+    lastContact: '2026-05-04',
+    arkAlerts: [],
+    urgency: 'low',
+    products: 'Santé, Prévoyance',
+  },
+]
+
+// ═══════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════
+const FILTERS = [
+  { key: 'tous', label: 'Tous' },
+  { key: 'actif', label: 'Actifs' },
+  { key: 'prospect', label: 'Prospects' },
+  { key: 'perdu', label: 'Perdus' },
+  { key: 'silencieux', label: 'Silencieux' },
+  { key: 'particulier', label: 'Particuliers' },
+  { key: 'professionnel', label: 'Professionnels' },
+  { key: 'a_risque', label: 'Risque élevé' },
+  { key: 'echeance', label: 'Échéance proche' },
+  { key: 'ark', label: 'Opportunité ARK' },
+]
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const riskColor = (score) => {
+  if (score >= 70) return T.danger
+  if (score >= 40) return T.warning
+  return T.success
 }
 
-const Avatar = ({ name }) => {
+const riskLabel = (score) => {
+  if (score >= 70) return 'Élevé'
+  if (score >= 40) return 'Modéré'
+  return 'Faible'
+}
+
+const loyaltyColor = (score) => {
+  if (score >= 80) return T.success
+  if (score >= 50) return T.warning
+  return T.danger
+}
+
+const statusConfig = (status) => {
+  const map = {
+    actif: { label: 'Actif', color: T.success, icon: UserCheck },
+    prospect: { label: 'Prospect', color: T.info, icon: UserPlus },
+    a_risque: { label: 'À risque', color: T.danger, icon: AlertTriangle },
+    silencieux: { label: 'Silencieux', color: T.warning, icon: UserX },
+    perdu: { label: 'Perdu', color: T.textMuted, icon: UserX },
+  }
+  return map[status] || { label: status, color: T.textMuted, icon: Users }
+}
+
+const urgencyConfig = (urgency) => {
+  const map = {
+    critical: { color: T.danger, label: 'Critique', glow: 'rgba(239,68,68,0.3)' },
+    high: { color: T.warning, label: 'Urgent', glow: 'rgba(245,158,11,0.3)' },
+    medium: { color: T.info, label: 'Modéré', glow: 'rgba(59,130,246,0.2)' },
+    low: { color: T.success, label: 'Normal', glow: 'rgba(34,197,94,0.15)' },
+  }
+  return map[urgency] || map.low
+}
+
+const timeAgo = (dateString) => {
+  if (!dateString) return 'Jamais'
+  const seconds = Math.floor((new Date() - new Date(dateString)) / 1000)
+  if (seconds < 86400) return "Aujourd'hui"
+  const days = Math.floor(seconds / 86400)
+  if (days < 30) return `il y a ${days} j`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `il y a ${months} mois`
+  const years = Math.floor(months / 12)
+  return `il y a ${years} an${years > 1 ? 's' : ''}`
+}
+
+// ═══════════════════════════════════════════
+// STAT CARD
+// ═══════════════════════════════════════════
+function StatCard({ icon: Icon, label, value, color, subtitle }) {
   return (
-    <div className="w-11 h-11 rounded-full text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
-      style={{ background: getGradient(name || '') }}>
-      {getInitials(name)}
+    <div
+      style={{
+        background: T.cardBg,
+        border: `1px solid ${T.cardBorder}`,
+        borderRadius: 16,
+        padding: '16px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        transition: 'all 0.25s ease',
+        cursor: 'default',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = T.cardHover
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = T.cardBg
+        e.currentTarget.style.borderColor = T.cardBorder
+      }}
+    >
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 12,
+          background: `${color}15`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={20} style={{ color }} />
+      </div>
+      <div>
+        <p style={{ fontSize: 22, fontWeight: 800, color: T.text, lineHeight: 1, margin: 0 }}>{value}</p>
+        <p style={{ fontSize: 12, color: T.textSecondary, margin: '2px 0 0' }}>{label}</p>
+        {subtitle && <p style={{ fontSize: 11, color: T.textMuted, margin: '1px 0 0' }}>{subtitle}</p>}
+      </div>
     </div>
   )
 }
 
-const StatusBadge = ({ status }) => {
-  const s = (status || '').toLowerCase()
-  let config = { label: 'Inconnu', color: '#6b7280' }
-  if (s === 'actif') config = { label: 'Actif', color: '#10b981' }
-  else if (s === 'prospect') config = { label: 'Prospect', color: '#3b82f6' }
-  else if (s === 'opportunite') config = { label: 'Opportunité', color: '#f59e0b' }
-  else if (s === 'a_risque') config = { label: 'À risque', color: '#ef4444' }
-  else if (['inactif'].includes(s)) config = { label: 'Inactif', color: '#9ca3af' }
-  else if (['résilié', 'resilié', 'perdu'].includes(s)) config = { label: 'Résilié', color: '#dc2626' }
-  return <BubbleBadge color={config.color} size="sm">{config.label}</BubbleBadge>
-}
-
-const ScoreGauge = ({ score }) => {
-  const s = Math.min(100, Math.max(0, Number(score) || 0))
-  const color = s >= 70 ? '#10b981' : s >= 40 ? '#f59e0b' : '#ef4444'
-  const size = 48, strokeWidth = 4, radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference - (s / 100) * circumference
+// ═══════════════════════════════════════════
+// QUICK ACTION BUTTON
+// ═══════════════════════════════════════════
+function QuickAction({ icon: Icon, label, onClick, accent = false }) {
+  const [hovered, setHovered] = useState(false)
   return (
-    <div className="flex items-center gap-2">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90 flex-shrink-0">
-        <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={strokeWidth} fill="none" />
-        <circle cx={size/2} cy={size/2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none"
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
-      </svg>
-      <span className="text-sm font-black" style={{ color }}>{s}</span>
-    </div>
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '10px 18px',
+        borderRadius: 12,
+        border: accent ? `1px solid ${T.accent}40` : `1px solid ${T.cardBorder}`,
+        background: hovered
+          ? accent
+            ? `${T.accent}18`
+            : T.cardHover
+          : accent
+            ? `${T.accent}08`
+            : T.cardBg,
+        color: accent ? T.accent : T.textSecondary,
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <Icon size={16} />
+      {label}
+    </button>
   )
 }
 
-const SortIcon = ({ active, dir }) => {
-  if (!active) return <ChevronUp size={14} className="text-gray-300" />
-  return dir === 'asc' ? <ChevronUp size={14} style={{ color: 'var(--accent-blue)' }} /> : <ChevronDown size={14} style={{ color: 'var(--accent-blue)' }} />
-}
+// ═══════════════════════════════════════════
+// CLIENT BUBBLE CARD
+// ═══════════════════════════════════════════
+function ClientBubbleCard({ client, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  const st = statusConfig(client.status)
+  const urg = urgencyConfig(client.urgency)
 
-const SkeletonRow = () => (
-  <tr className="animate-pulse"><td className="p-4"><div className="flex items-center gap-4"><div className="w-11 h-11 rounded-full bg-gray-200"></div><div><div className="w-24 h-4 bg-gray-200 rounded"></div><div className="w-32 h-3 mt-1.5 bg-gray-200 rounded"></div></div></div></td><td className="p-4"><div className="w-20 h-5 bg-gray-200 rounded-full"></div></td><td className="p-4"><div className="w-24 h-4 bg-gray-200 rounded"></div></td><td className="p-4"><div className="w-24 h-4 bg-gray-200 rounded"></div></td><td className="p-4"><div className="flex gap-2 justify-end"><div className="w-6 h-6 bg-gray-200 rounded"></div><div className="w-6 h-6 bg-gray-200 rounded"></div></div></td></tr>
-)
-
-const STATUS_FILTERS = ['tous', 'prospect', 'actif', 'inactif', 'résilié']
-
-function ClientCard({ client, onNavigate }) {
-  const badgeColor = {
-    actif: '#10b981',
-    prospect: '#3b82f6',
-    opportunite: '#f59e0b',
-    a_risque: '#ef4444',
-    inactif: '#9ca3af',
-    résilié: '#dc2626',
-    resilié: '#dc2626',
-    perdu: '#dc2626',
-  }[(client.status || client.statut || '').toLowerCase()] || '#6b7280'
-
-  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-  const email = client.email || '—'
-  const riskScore = client.riskScore ?? client.score_risque ?? 0
-  const city = client.city || '—'
+  const hasArkAlerts = client.arkAlerts.length > 0
+  const criticalAlerts = client.arkAlerts.filter((a) => a.priority === 'critical').length
+  const highAlerts = client.arkAlerts.filter((a) => a.priority === 'high').length
 
   return (
-    <BubbleCard hover padding={20} onClick={() => onNavigate(client.id)}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <Avatar name={name} />
-          <div>
-            <p className="text-sm font-bold text-gray-900 tracking-tight" style={{ fontFamily: 'Arial' }}>{name}</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{email}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      onClick={() => onClick(client.id)}
+      style={{
+        background: T.cardBg,
+        border: hovered ? `1px solid ${urg.glow}` : `1px solid ${T.cardBorder}`,
+        borderRadius: 16,
+        padding: 20,
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: hovered ? `0 0 30px ${urg.glow}, 0 8px 32px rgba(0,0,0,0.3)` : '0 2px 8px rgba(0,0,0,0.2)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Ambient glow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -40,
+          width: 120,
+          height: 120,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${urg.glow}, transparent 70%)`,
+          opacity: hovered ? 0.5 : 0.15,
+          transition: 'opacity 0.4s ease',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 15, fontWeight: 700, color: T.text, margin: 0, lineHeight: 1.3 }}>{client.name}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '2px 8px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                background: `${st.color}15`,
+                color: st.color,
+                border: `1px solid ${st.color}25`,
+              }}
+            >
+              <st.icon size={11} />
+              {st.label}
+            </span>
+            <span style={{ fontSize: 11, color: T.textMuted }}>
+              {client.type}
+            </span>
+            <span style={{ fontSize: 11, color: T.textMuted, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <MapPin size={10} />
+              {client.city}
+            </span>
           </div>
         </div>
-        <BubbleBadge color={badgeColor} size="sm" pulse={(client.status || client.statut || '').toLowerCase() === 'a_risque'}>
-          {(client.status || client.statut || 'Inconnu').charAt(0).toUpperCase() + (client.status || client.statut || '').slice(1)}
-        </BubbleBadge>
-      </div>
-      <div className="flex items-center justify-between pt-3" style={{ borderTop: 'var(--border-fine)' }}>
-        <div>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)', fontFamily: 'Arial', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Risque</p>
-          <ScoreGauge score={riskScore} />
-        </div>
-        <div className="text-right">
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)', fontFamily: 'Arial', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ville</p>
-          <p className="text-sm font-semibold text-gray-700">{city}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)', fontFamily: 'Arial', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prime</p>
-          <p className="text-sm font-black text-gray-900">
-            {client.premium ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(client.premium) : '—'}
-          </p>
-        </div>
-      </div>
-    </BubbleCard>
-  )
-}
 
-export default function Clients() {
-  const [clients, setClients] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('tous')
-  const [sortField, setSortField] = useState('created_at')
-  const [sortDir, setSortDir] = useState('desc')
-  const [page, setPage] = useState(1)
-  const [viewMode, setViewMode] = useState('bulles') // 'list' | 'cards' | 'bulles'
-  const navigate = useNavigate()
-  const PER_PAGE = 15
-
-  const fetchClients = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError('')
-      const res = await api.get('/clients')
-      const remote = res.data?.data || []
-      if (Array.isArray(remote)) {
-        setClients(remote)
-      } else {
-        setClients([])
-      }
-    } catch (err) {
-      console.error('Impossible de charger les clients.', err)
-      setClients([])
-      setError('Impossible de charger les clients pour le moment.')
-    }
-    finally { setLoading(false) }
-  }, [])
-
-  // Chargement initial de la liste clients.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchClients() }, [fetchClients])
-  
-  const filteredClients = useMemo(() => {
-    return (clients || []).filter(c => {
-        if (!c) return false
-        const s = search.toLowerCase()
-        const name = c.name || `${c.prenom || ''} ${c.nom || ''}`.toLowerCase()
-        const email = c.email || ''
-        const matchSearch = !s || name.includes(s) || email.toLowerCase().includes(s)
-        const st = (c.status || c.statut || '').toLowerCase()
-        if (statusFilter === 'tous') return matchSearch
-        if (statusFilter === 'inactif') return matchSearch && ['inactif'].includes(st)
-        if (statusFilter === 'résilié') return matchSearch && ['résilié', 'resilié', 'perdu'].includes(st)
-        return matchSearch && st === statusFilter
-      })
-  }, [clients, search, statusFilter])
-
-  const sortedClients = useMemo(() => {
-    return [...filteredClients].sort((a, b) => {
-      let va = a[sortField] ?? '', vb = b[sortField] ?? ''
-      if (sortField === 'score_risque') { va = Number(va) || 0; vb = Number(vb) || 0 }
-      else if (sortField === 'created_at') { va = new Date(va).getTime() || 0; vb = new Date(vb).getTime() || 0 }
-      else if (sortField === 'nom') {
-        va = `${a.nom || ''} ${a.prenom || ''}`.trim().toLowerCase()
-        vb = `${b.nom || ''} ${b.prenom || ''}`.trim().toLowerCase()
-      } else if (sortField === 'riskScore') {
-        va = Number(a.riskScore) || 0; vb = Number(b.riskScore) || 0
-      } else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase() }
-      if (va < vb) return sortDir === 'asc' ? -1 : 1
-      if (va > vb) return sortDir === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [filteredClients, sortField, sortDir])
-
-  const paginatedClients = useMemo(() => sortedClients.slice((page - 1) * PER_PAGE, page * PER_PAGE), [sortedClients, page])
-  const totalPages = Math.max(1, Math.ceil(sortedClients.length / PER_PAGE))
-  const toggleSort = (field) => {
-    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortField(field); setSortDir('asc') }
-    setPage(1)
-  }
-  
-  function timeAgo(dateString) {
-      if (!dateString) return 'Jamais'
-      const seconds = Math.floor((new Date() - new Date(dateString)) / 1000)
-      let interval = seconds / 31536000
-      if (interval > 1) return `il y a ${Math.floor(interval)} an${Math.floor(interval) > 1 ? 's' : ''}`
-      interval = seconds / 2592000
-      if (interval > 1) return `il y a ${Math.floor(interval)} mois`
-      interval = seconds / 86400
-      if (interval > 1) return `il y a ${Math.floor(interval)} jour${Math.floor(interval) > 1 ? 's' : ''}`
-      return `aujourd'hui`
-  }
-
-  const thClass = "p-4 text-left text-[11px] font-semibold uppercase tracking-widest select-none cursor-pointer"
-  const headerMapping = { Client: 'nom', Statut: 'statut', 'Score Risque': 'score_risque', 'Dernière activité': 'created_at' }
-  const VIEW_OPTIONS = [
-    { key: 'list', label: 'Liste', icon: LayoutList },
-    { key: 'cards', label: 'Cartes', icon: LayoutGrid },
-    { key: 'bulles', label: 'Bulles', icon: Circle },
-  ]
-
-  return (
-    <div className="min-h-screen" style={{ background: 'transparent', fontFamily: 'var(--font-sans)' }}>
-      <BubbleBackground intensity="subtle" />
-      <main className="p-4 md:p-8 relative" style={{ zIndex: 1 }}>
-        <AuroraPageHeader
-          title="Clients"
-          subtitle={`${clients.length} contacts dans le cockpit. Recherche, statut, risque et prochaine action en un seul endroit.`}
-          badge="Portefeuille clients"
-          dark
-          actions={
-            <AuroraButton variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => navigate('/clients/new')}>
-              Nouveau client
-            </AuroraButton>
-          }
-        />
-
-        {error && (
-          <div className="mb-5 rounded-2xl border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
-            {error}
+        {/* ARK alert badge */}
+        {hasArkAlerts && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '4px 10px',
+              borderRadius: 8,
+              background: criticalAlerts > 0 ? `${T.danger}18` : `${T.ark}18`,
+              border: `1px solid ${criticalAlerts > 0 ? T.danger : T.ark}30`,
+              flexShrink: 0,
+            }}
+          >
+            <Sparkles size={12} style={{ color: criticalAlerts > 0 ? T.danger : T.ark }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: criticalAlerts > 0 ? T.danger : T.ark }}>
+              ARK {client.arkAlerts.length}
+            </span>
           </div>
         )}
-        
-        <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: 'var(--text-tertiary)' }} />
-            <input type="text" placeholder="Rechercher un client..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+      </div>
+
+      {/* Metrics grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '10px 14px',
+          marginBottom: hasArkAlerts ? 12 : 0,
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+        <MetricItem label="Contrats" value={client.contractCount} color={T.text} />
+        <MetricItem
+          label="Prime annuelle"
+          value={client.prime > 0 ? `${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(client.prime)}` : '—'}
+          color={T.text}
+        />
+        <MetricItem
+          label="Score risque"
+          value={client.riskScore + '/100'}
+          color={riskColor(client.riskScore)}
+          sub={riskLabel(client.riskScore)}
+        />
+        <MetricItem
+          label="Fidélité"
+          value={client.loyaltyScore + '/100'}
+          color={loyaltyColor(client.loyaltyScore)}
+        />
+        <MetricItem
+          label="Dernier contact"
+          value={timeAgo(client.lastContact)}
+          color={T.textSecondary}
+          icon={<Clock size={11} />}
+        />
+        <MetricItem label="Produits" value={client.products} color={T.textSecondary} small />
+      </div>
+
+      {/* ARK Alerts */}
+      {hasArkAlerts && (
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {client.arkAlerts.map((alert, i) => (
+            <div
+              key={i}
               style={{
-                background: 'rgba(255,255,255,0.75)',
-                backdropFilter: 'blur(20px)',
-                border: 'var(--border-fine)',
-                boxShadow: 'var(--shadow-bubble)',
-                color: 'var(--text-primary)',
-              }} />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex rounded-xl overflow-hidden" style={{ border: 'var(--border-fine)', background: 'rgba(255,255,255,0.5)' }}>
-              {VIEW_OPTIONS.map(opt => {
-                const Icon = opt.icon
-                return (
-                  <button key={opt.key} onClick={() => setViewMode(opt.key)}
-                    style={{
-                      padding: '8px 14px',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: viewMode === opt.key ? 'rgba(0,0,0,0.06)' : 'transparent',
-                      color: viewMode === opt.key ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}>
-                    <Icon size={14} />
-                    {opt.label}
-                  </button>
-                )
-              })}
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 10px',
+                marginTop: i === 0 ? 0 : 4,
+                borderRadius: 8,
+                background:
+                  alert.priority === 'critical'
+                    ? `${T.danger}12`
+                    : alert.priority === 'high'
+                      ? `${T.warning}12`
+                      : `${T.ark}10`,
+                border: `1px solid ${
+                  alert.priority === 'critical'
+                    ? `${T.danger}20`
+                    : alert.priority === 'high'
+                      ? `${T.warning}20`
+                      : `${T.ark}15`
+                }`,
+                fontSize: 11,
+                fontWeight: 600,
+                color:
+                  alert.priority === 'critical'
+                    ? T.danger
+                    : alert.priority === 'high'
+                      ? T.warning
+                      : T.ark,
+              }}
+            >
+              <Zap size={11} />
+              {alert.label}
             </div>
-            {STATUS_FILTERS.map(filter => (
-              <button key={filter} onClick={() => { setStatusFilter(filter); setPage(1) }}
+          ))}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+function MetricItem({ label, value, color, sub, icon, small }) {
+  return (
+    <div>
+      <p style={{ fontSize: 10, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0, fontWeight: 600 }}>
+        {label}
+      </p>
+      <p
+        style={{
+          fontSize: small ? 11 : 13,
+          fontWeight: 700,
+          color,
+          margin: '2px 0 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 3,
+          lineHeight: 1.3,
+        }}
+      >
+        {icon}
+        {value}
+      </p>
+      {sub && <p style={{ fontSize: 10, color: T.textMuted, margin: '1px 0 0' }}>{sub}</p>}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════
+// TABLE ROW
+// ═══════════════════════════════════════════
+function TableRow({ client, onClick }) {
+  const st = statusConfig(client.status)
+
+  return (
+    <tr
+      onClick={() => onClick(client.id)}
+      style={{
+        borderBottom: `1px solid ${T.cardBorder}`,
+        transition: 'background 0.2s ease',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = T.cardHover)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+    >
+      <td style={{ padding: '12px 16px' }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>{client.name}</p>
+        <p style={{ fontSize: 11, color: T.textMuted, margin: '1px 0 0' }}>{client.city}</p>
+      </td>
+      <td style={{ padding: '12px 16px' }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '2px 8px',
+            borderRadius: 6,
+            fontSize: 11,
+            fontWeight: 600,
+            background: `${st.color}15`,
+            color: st.color,
+            border: `1px solid ${st.color}25`,
+          }}
+        >
+          <st.icon size={10} />
+          {st.label}
+        </span>
+      </td>
+      <td style={{ padding: '12px 16px', fontSize: 12, color: T.textSecondary }}>{client.type}</td>
+      <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: T.text }}>{client.contractCount}</td>
+      <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 700, color: T.text }}>
+        {client.prime > 0
+          ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(client.prime)
+          : '—'}
+      </td>
+      <td style={{ padding: '12px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: riskColor(client.riskScore),
+              boxShadow: `0 0 6px ${riskColor(client.riskScore)}60`,
+            }}
+          />
+          <span style={{ fontSize: 13, fontWeight: 600, color: riskColor(client.riskScore) }}>
+            {client.riskScore}
+          </span>
+        </div>
+      </td>
+      <td style={{ padding: '12px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Heart size={12} style={{ color: loyaltyColor(client.loyaltyScore) }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: loyaltyColor(client.loyaltyScore) }}>
+            {client.loyaltyScore}
+          </span>
+        </div>
+      </td>
+      <td style={{ padding: '12px 16px', fontSize: 12, color: T.textSecondary }}>{timeAgo(client.lastContact)}</td>
+      <td style={{ padding: '12px 16px' }}>
+        {client.arkAlerts.length > 0 ? (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '2px 8px',
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 700,
+              background: `${T.ark}15`,
+              color: T.ark,
+              border: `1px solid ${T.ark}25`,
+            }}
+          >
+            <Sparkles size={10} />
+            {client.arkAlerts.length}
+          </span>
+        ) : (
+          <span style={{ fontSize: 11, color: T.textMuted }}>—</span>
+        )}
+      </td>
+      <td style={{ padding: '12px 16px' }}>
+        <div style={{ display: 'flex', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+          <button
+            title="Voir"
+            onClick={() => onClick(client.id)}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              border: `1px solid ${T.cardBorder}`,
+              background: 'transparent',
+              color: T.textSecondary,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `${T.accent}18`
+              e.currentTarget.style.color = T.accent
+              e.currentTarget.style.borderColor = `${T.accent}30`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = T.textSecondary
+              e.currentTarget.style.borderColor = T.cardBorder
+            }}
+          >
+            <Eye size={14} />
+          </button>
+          <button
+            title="Relancer"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              border: `1px solid ${T.cardBorder}`,
+              background: 'transparent',
+              color: T.textSecondary,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `${T.ark}18`
+              e.currentTarget.style.color = T.ark
+              e.currentTarget.style.borderColor = `${T.ark}30`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = T.textSecondary
+              e.currentTarget.style.borderColor = T.cardBorder
+            }}
+          >
+            <Send size={14} />
+          </button>
+          <button
+            title="Devis"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              border: `1px solid ${T.cardBorder}`,
+              background: 'transparent',
+              color: T.textSecondary,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `${T.success}18`
+              e.currentTarget.style.color = T.success
+              e.currentTarget.style.borderColor = `${T.success}30`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = T.textSecondary
+              e.currentTarget.style.borderColor = T.cardBorder
+            }}
+          >
+            <FileText size={14} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+// ═══════════════════════════════════════════
+// MAIN CLIENTS PAGE
+// ═══════════════════════════════════════════
+export default function Clients() {
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [activeFilter, setActiveFilter] = useState('tous')
+  const [viewMode, setViewMode] = useState('bubble') // 'bubble' | 'table'
+
+  // Computed stats
+  const stats = useMemo(() => {
+    const total = DEMO_CLIENTS.length
+    const actifs = DEMO_CLIENTS.filter((c) => c.status === 'actif').length
+    const prospects = DEMO_CLIENTS.filter((c) => c.status === 'prospect').length
+    const atRisk = DEMO_CLIENTS.filter((c) => c.status === 'a_risque').length
+    const silencieux = DEMO_CLIENTS.filter((c) => c.status === 'silencieux').length
+    return { total, actifs, prospects, atRisk, silencieux }
+  }, [])
+
+  // Filtered & searched clients
+  const filteredClients = useMemo(() => {
+    let list = [...DEMO_CLIENTS]
+
+    // Search
+    if (search.trim()) {
+      const s = search.toLowerCase()
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(s) ||
+          c.email.toLowerCase().includes(s) ||
+          c.phone.includes(s) ||
+          c.city.toLowerCase().includes(s)
+      )
+    }
+
+    // Status/type filter
+    switch (activeFilter) {
+      case 'tous':
+        break
+      case 'actif':
+        list = list.filter((c) => c.status === 'actif')
+        break
+      case 'prospect':
+        list = list.filter((c) => c.status === 'prospect')
+        break
+      case 'perdu':
+        list = list.filter((c) => c.status === 'perdu')
+        break
+      case 'silencieux':
+        list = list.filter((c) => c.status === 'silencieux')
+        break
+      case 'a_risque':
+        list = list.filter((c) => c.status === 'a_risque')
+        break
+      case 'particulier':
+        list = list.filter((c) => c.type === 'Particulier')
+        break
+      case 'professionnel':
+        list = list.filter((c) => c.type === 'Professionnel')
+        break
+      case 'echeance':
+        list = list.filter((c) => {
+          if (!c.lastContact) return false
+          const days = Math.floor((new Date() - new Date(c.lastContact)) / 86400000)
+          return days > 180
+        })
+        break
+      case 'ark':
+        list = list.filter((c) => c.arkAlerts.length > 0)
+        break
+      default:
+        break
+    }
+
+    // Sort: urgency first
+    const urgencyOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+    list.sort((a, b) => (urgencyOrder[a.urgency] || 99) - (urgencyOrder[b.urgency] || 99))
+
+    return list
+  }, [search, activeFilter])
+
+  const handleNavigate = (id) => {
+    navigate(`/clients/${id}`)
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: T.bg,
+        color: T.text,
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+      }}
+    >
+      {/* Ambient background glow */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background: `
+            radial-gradient(ellipse 80% 50% at 20% 0%, rgba(91,77,245,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 80% 20%, rgba(139,92,246,0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 70% 30% at 50% 100%, rgba(34,197,94,0.03) 0%, transparent 60%)
+          `,
+        }}
+      />
+
+      <main style={{ position: 'relative', zIndex: 1, padding: '24px 24px 48px', maxWidth: 1440, margin: '0 auto' }}>
+        {/* ── HEADER ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          style={{ marginBottom: 28 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em', background: `linear-gradient(135deg, ${T.text} 0%, ${T.ark} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Clients
+              </h1>
+              <p style={{ fontSize: 14, color: T.textSecondary, margin: '6px 0 0', maxWidth: 500 }}>
+                Pilotez votre portefeuille client avec les recommandations ARK.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <QuickAction icon={Plus} label="Ajouter" onClick={() => navigate('/clients/new')} accent />
+              <QuickAction icon={Upload} label="Importer" onClick={() => navigate('/clients/import')} />
+              <QuickAction icon={Sparkles} label="Analyse ARK" onClick={() => {}} />
+              <QuickAction icon={Phone} label="Relance" onClick={() => navigate('/relances')} />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── STATS BAR ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+            gap: 12,
+            marginBottom: 24,
+          }}
+        >
+          <StatCard icon={Users} label="Total clients" value={`${stats.total} / 124`} color={T.accent} />
+          <StatCard icon={UserCheck} label="Actifs" value={stats.actifs} color={T.success} />
+          <StatCard icon={UserPlus} label="Prospects" value={stats.prospects} color={T.info} />
+          <StatCard icon={AlertTriangle} label="À risque" value={stats.atRisk} color={T.danger} subtitle="Action requise" />
+          <StatCard icon={UserX} label="Silencieux" value={stats.silencieux} color={T.warning} subtitle="+180j sans contact" />
+        </motion.div>
+
+        {/* ── FILTER BAR ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            flexWrap: 'wrap',
+            marginBottom: 20,
+            padding: '14px 18px',
+            borderRadius: 16,
+            background: T.cardBg,
+            border: `1px solid ${T.cardBorder}`,
+          }}
+        >
+          {/* Search */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 220, maxWidth: 400 }}>
+            <Search size={16} style={{ color: T.textMuted, flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Rechercher nom, email, téléphone, ville..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: T.text,
+                fontSize: 13,
+                fontWeight: 500,
+              }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
                 style={{
-                  padding: '6px 14px',
-                  border: statusFilter === filter ? '0.5px solid rgba(0,0,0,0.2)' : 'var(--border-fine)',
-                  borderRadius: 9999,
+                  background: 'none',
+                  border: 'none',
+                  color: T.textMuted,
                   cursor: 'pointer',
+                  padding: 2,
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Filter pills */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+            {FILTERS.slice(0, 5).map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setActiveFilter(activeFilter === f.key ? 'tous' : f.key)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: activeFilter === f.key ? `1px solid ${T.accent}40` : `1px solid ${T.cardBorder}`,
+                  background: activeFilter === f.key ? `${T.accent}15` : 'transparent',
+                  color: activeFilter === f.key ? T.accent : T.textSecondary,
                   fontSize: 12,
                   fontWeight: 600,
+                  cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  background: statusFilter === filter ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.5)',
-                  color: statusFilter === filter ? 'var(--text-primary)' : 'var(--text-secondary)',
-                }}>
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {f.label}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* View: Liste (table) */}
-        {viewMode === 'list' && (
-          <BubbleCard hover={false} padding={0}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
-                <thead>
-                  <tr style={{ borderBottom: 'var(--border-fine)' }}>
-                    {Object.keys(headerMapping).map(h => (
-                      <th key={h} onClick={() => toggleSort(headerMapping[h])} className={thClass} style={{ padding: '14px 16px', color: 'var(--text-tertiary)' }}>
-                        <div className="flex items-center gap-1.5">{h}<SortIcon active={sortField === headerMapping[h]} dir={sortDir} /></div>
-                      </th>
-                    ))}
-                    <th className="p-4 text-right text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />) : paginatedClients.map((client) => {
-                    const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-                    return (
-                      <tr key={client.id} className="last:border-0 group cursor-pointer" style={{ borderBottom: 'var(--border-fine)', transition: 'background 0.2s' }}
-                        onClick={() => navigate(`/clients/${client.id}`)}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <td className="p-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar name={name} />
-                            <div>
-                              <p className="text-sm font-bold text-gray-900 tracking-tight">{name}</p>
-                              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{client.email || '—'}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4"><StatusBadge status={client.statut || client.status} /></td>
-                        <td className="p-4"><ScoreGauge score={client.score_risque ?? client.riskScore} /></td>
-                        <td className="p-4" style={{ color: 'var(--text-secondary)' }}>{timeAgo(client.created_at)}</td>
-                        <td className="p-4">
-                          <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => navigate(`/clients/${client.id}`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Voir"><Eye size={16} /></button>
-                            <button onClick={() => navigate(`/clients/${client.id}/edit`)} className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black" title="Modifier"><Pencil size={16} /></button>
-                            <button onClick={() => alert('Suppression non implémentée')} className="p-2 rounded-md hover:bg-red-100 text-gray-500 hover:text-red-600" title="Supprimer"><Trash2 size={16} /></button>
-                          </div>
+          {/* View toggle */}
+          <div
+            style={{
+              display: 'flex',
+              borderRadius: 10,
+              border: `1px solid ${T.cardBorder}`,
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={() => setViewMode('bubble')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '7px 14px',
+                border: 'none',
+                background: viewMode === 'bubble' ? `${T.accent}18` : 'transparent',
+                color: viewMode === 'bubble' ? T.accent : T.textMuted,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <LayoutGrid size={14} />
+              Bulles
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '7px 14px',
+                border: 'none',
+                background: viewMode === 'table' ? `${T.accent}18` : 'transparent',
+                color: viewMode === 'table' ? T.accent : T.textMuted,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <List size={14} />
+              Tableau
+            </button>
+          </div>
+        </motion.div>
+
+        {/* ── EXTENDED FILTERS ROW ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}
+        >
+          {FILTERS.slice(5).map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setActiveFilter(activeFilter === f.key ? 'tous' : f.key)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 8,
+                border: activeFilter === f.key ? `1px solid ${T.accent}40` : `1px solid ${T.cardBorder}`,
+                background: activeFilter === f.key ? `${T.accent}15` : T.cardBg,
+                color: activeFilter === f.key ? T.accent : T.textSecondary,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+          <span
+            style={{
+              fontSize: 12,
+              color: T.textMuted,
+              padding: '5px 8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              marginLeft: 'auto',
+            }}
+          >
+            <SlidersHorizontal size={12} />
+            {filteredClients.length} résultat{filteredClients.length !== 1 ? 's' : ''}
+          </span>
+        </motion.div>
+
+        {/* ── BUBBLE VIEW ── */}
+        {viewMode === 'bubble' && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="bubble-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: 16,
+              }}
+            >
+              {filteredClients.length === 0 ? (
+                <div
+                  style={{
+                    gridColumn: '1 / -1',
+                    textAlign: 'center',
+                    padding: '60px 20px',
+                    background: T.cardBg,
+                    borderRadius: 16,
+                    border: `1px solid ${T.cardBorder}`,
+                  }}
+                >
+                  <Search size={40} style={{ color: T.textMuted, marginBottom: 12 }} />
+                  <p style={{ fontSize: 16, fontWeight: 600, color: T.textSecondary, margin: 0 }}>Aucun client trouvé</p>
+                  <p style={{ fontSize: 13, color: T.textMuted, margin: '4px 0 0' }}>Essayez de modifier vos filtres ou votre recherche.</p>
+                </div>
+              ) : (
+                filteredClients.map((client) => (
+                  <ClientBubbleCard key={client.id} client={client} onClick={handleNavigate} />
+                ))
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
+
+        {/* ── TABLE VIEW ── */}
+        {viewMode === 'table' && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="table-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${T.cardBorder}`,
+                overflow: 'hidden',
+                background: T.cardBg,
+              }}
+            >
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
+                      {['Client', 'Statut', 'Type', 'Contrats', 'Prime', 'Risque', 'Fidélité', 'Dernier contact', 'ARK', 'Actions'].map(
+                        (h) => (
+                          <th
+                            key={h}
+                            style={{
+                              padding: '12px 16px',
+                              textAlign: 'left',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: T.textMuted,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                            }}
+                          >
+                            {h}
+                          </th>
+                        )
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClients.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} style={{ padding: '60px 20px', textAlign: 'center' }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, margin: 0 }}>Aucun client trouvé</p>
+                          <p style={{ fontSize: 12, color: T.textMuted, margin: '4px 0 0' }}>Essayez de modifier vos filtres.</p>
                         </td>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-              {!loading && paginatedClients.length === 0 && (<div className="text-center py-20" style={{ color: 'var(--text-secondary)' }}><p className="font-semibold">Aucun client trouvé</p><p className="mt-1 text-sm">Essayez de modifier vos filtres.</p></div>)}
-            </div>
-          </BubbleCard>
-        )}
-
-        {/* View: Cartes */}
-        {viewMode === 'cards' && (
-          loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.5)', border: 'var(--border-fine)' }}>
-                  <div className="flex items-center gap-3"><div className="w-11 h-11 rounded-full bg-gray-200"></div><div><div className="w-24 h-4 bg-gray-200 rounded"></div><div className="w-32 h-3 mt-1.5 bg-gray-200 rounded"></div></div></div>
-                  <div className="mt-4 pt-3 flex justify-between" style={{ borderTop: 'var(--border-fine)' }}>
-                    <div><div className="w-12 h-3 bg-gray-200 rounded mb-1"></div><div className="w-16 h-4 bg-gray-200 rounded"></div></div>
-                    <div><div className="w-12 h-3 bg-gray-200 rounded mb-1"></div><div className="w-16 h-4 bg-gray-200 rounded"></div></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : paginatedClients.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedClients.map(client => (
-                <ClientCard key={client.id} client={client} onNavigate={(id) => navigate(`/clients/${id}`)} />
-              ))}
-            </div>
-          ) : (
-            <BubbleCard hover={false} padding={40}>
-              <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
-                <p className="font-semibold">Aucun client trouvé</p>
-                <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
+                    ) : (
+                      filteredClients.map((client) => (
+                        <TableRow key={client.id} client={client} onClick={handleNavigate} />
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </BubbleCard>
-          )
-        )}
-
-        {/* View: Bulles */}
-        {viewMode === 'bulles' && (
-          <>
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="animate-pulse rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.6)', border: 'var(--border-fine)' }}>
-                    <div className="w-1/2 h-4 bg-gray-200 rounded mb-3" />
-                    <div className="w-full h-3 bg-gray-200 rounded mb-2" />
-                    <div className="w-3/4 h-3 bg-gray-200 rounded mb-4" />
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="h-3 bg-gray-200 rounded" />
-                      <div className="h-3 bg-gray-200 rounded" />
-                      <div className="h-3 bg-gray-200 rounded" />
-                      <div className="h-3 bg-gray-200 rounded" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : paginatedClients.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {paginatedClients.map((client) => {
-                  const name = client.name || `${client.nom || ''} ${client.prenom || ''}`.trim() || '—'
-                  const riskScore = client.riskScore ?? client.score_risque ?? 0
-                  const status = (client.status || client.statut || 'inconnu').toLowerCase()
-                  const type = client.segment || client.type || 'particulier'
-                  const contractsCount = client.contracts_count ?? client.nb_contrats ?? '—'
-                  const totalPrime = client.prime_totale ?? client.premium ?? client.lifetime_value
-                  const nextEcheance = client.next_echeance
-                    ? new Date(client.next_echeance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-                    : 'Non renseignée'
-                  const lastInteraction = client.last_contact || client.last_interaction || client.updated_at || null
-                  const lastInteractionLabel = lastInteraction
-                    ? new Date(lastInteraction).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-                    : 'Aucune interaction'
-                  const numericContracts = Number(contractsCount)
-                  const opportunityLabel = Number.isFinite(numericContracts) && numericContracts <= 1
-                    ? 'Multi-équipement à proposer'
-                    : 'Fidélisation / upsell'
-                  const actionLabel = riskScore >= 70
-                    ? 'Relance prioritaire'
-                    : riskScore >= 40
-                      ? 'Suivi à planifier'
-                      : 'Consolidation portefeuille'
-                  const alertLabel = (client.silent_alert || '').toString().trim() || (riskScore >= 70 ? 'Alerte risque' : '')
-
-                  return (
-                    <BubbleCard key={client.id} hover padding={18} onClick={() => navigate(`/clients/${client.id}`)}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-black text-gray-900 tracking-tight">{name}</p>
-                          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                            {type} · {(status || 'inconnu').replace('_', ' ')}
-                          </p>
-                        </div>
-                        <BubbleBadge color={riskScore >= 70 ? '#ef4444' : riskScore >= 40 ? '#f59e0b' : '#10b981'} size="sm">
-                          Risque {riskScore}/100
-                        </BubbleBadge>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                        <div>
-                          <p style={{ color: 'var(--text-tertiary)' }}>Prime annuelle</p>
-                          <p className="font-semibold text-gray-900">{totalPrime ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(totalPrime)) : '—'}</p>
-                        </div>
-                        <div>
-                          <p style={{ color: 'var(--text-tertiary)' }}>Prochaine échéance</p>
-                          <p className="font-semibold text-gray-900">{nextEcheance}</p>
-                        </div>
-                        <div>
-                          <p style={{ color: 'var(--text-tertiary)' }}>Contrats</p>
-                          <p className="font-semibold text-gray-900">{contractsCount}</p>
-                        </div>
-                        <div>
-                          <p style={{ color: 'var(--text-tertiary)' }}>Action ARK</p>
-                          <p className="font-semibold text-gray-900">{actionLabel}</p>
-                        </div>
-                        <div>
-                          <p style={{ color: 'var(--text-tertiary)' }}>Dernière interaction</p>
-                          <p className="font-semibold text-gray-900">{lastInteractionLabel}</p>
-                        </div>
-                        <div>
-                          <p style={{ color: 'var(--text-tertiary)' }}>Opportunité</p>
-                          <p className="font-semibold text-gray-900">{opportunityLabel}</p>
-                        </div>
-                      </div>
-
-                      {alertLabel && (
-                        <div className="mt-3 rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: 'rgba(245,158,11,0.12)', color: '#b45309', border: '1px solid rgba(245,158,11,0.25)' }}>
-                          Alerte: {alertLabel}
-                        </div>
-                      )}
-                    </BubbleCard>
-                  )
-                })}
-              </div>
-            ) : (
-              <BubbleCard hover={false} padding={40}>
-                <div className="text-center" style={{ color: 'var(--text-secondary)' }}>
-                  <p className="font-semibold">Aucun client trouvé</p>
-                  <p className="mt-1 text-sm">Essayez de modifier vos filtres.</p>
-                </div>
-              </BubbleCard>
-            )}
-          </>
-        )}
-
-        {!loading && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-4 md:mt-8">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              style={{
-                padding: '6px 14px',
-                border: 'var(--border-fine)',
-                borderRadius: 'var(--r-sm)',
-                background: 'rgba(255,255,255,0.5)',
-                fontSize: 13,
-                fontWeight: 600,
-                color: page === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                cursor: page === 1 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}>Précédent</button>
-            {Array.from({length: totalPages > 7 ? 7 : totalPages}, (_, i) => {
-              const p = page > 4 && totalPages > 7 ? page - 3 + i : i + 1
-              if(p > totalPages) return null
-              return (
-                <button key={p} onClick={() => setPage(p)}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 'var(--r-sm)',
-                    border: p === page ? 'none' : 'var(--border-fine)',
-                    background: p === page ? '#0a0a0a' : 'rgba(255,255,255,0.5)',
-                    color: p === page ? '#ffffff' : 'var(--text-secondary)',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}>{p}</button>
-              )
-            })}
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              style={{
-                padding: '6px 14px',
-                border: 'var(--border-fine)',
-                borderRadius: 'var(--r-sm)',
-                background: 'rgba(255,255,255,0.5)',
-                fontSize: 13,
-                fontWeight: 600,
-                color: page === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}>Suivant</button>
-          </div>
+            </motion.div>
+          </AnimatePresence>
         )}
       </main>
     </div>

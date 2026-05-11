@@ -55,7 +55,7 @@ const PRESETS = [
       { type: 'wait', timeout: 2000 },
       { type: 'type', selector: 'input[name="custname"]', value: 'Client Test' },
       { type: 'type', selector: 'input[name="custtel"]', value: '0612345678' },
-      { type: 'type', selector: 'input[name="custemail"]', value: 'test@courtia.fr' },
+      { type: 'type', selector: 'input[name="custemail"]', value: 'test@courtiark.fr' },
       { type: 'click', selector: 'input[value="medium"]' },
       { type: 'click', selector: 'button[type="submit"]' },
       { type: 'wait', timeout: 3000 },
@@ -335,7 +335,7 @@ export default function BrowserPilot() {
                 {/* URl allowlist notice */}
                 <div style={{ padding: 10, background: '#FFF7ED', borderRadius: 8, border: '1px solid #FED7AA', marginBottom: 12, fontSize: 11, color: '#9A3412', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
                   <Shield size={14} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span>URL limitées à la whitelist (exemple.com, google.com, courtia.vercel.app, ...)</span>
+                  <span>URL limitées à la whitelist (exemple.com, google.com, app.courtiark.fr, ...)</span>
                 </div>
 
                 {/* Dry-run toggle */}

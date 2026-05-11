@@ -176,7 +176,7 @@ export function RoadmapPublic() {
   const lanes = [
     { title: 'Now', text: 'Stabiliser la V1, smoke prod, retours bêta, activation progressive des cabinets pilotes.' },
     { title: 'Next', text: 'Approfondir ARK, automatiser imports, enrichir DDA, finaliser vérifications OAuth/Meta.' },
-    { title: 'Later', text: 'Premium multi-cabinet, webhooks Make/Zapier, reporting avancé, intégrations téléphonie.' },
+    { title: 'Later', text: 'Cabinet multi-utilisateurs, webhooks Make/Zapier, reporting avancé, intégrations téléphonie.' },
   ]
   return (
     <MarketingShell activePath="/roadmap">
