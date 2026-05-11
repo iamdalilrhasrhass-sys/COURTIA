@@ -22,6 +22,7 @@
     "dotenv": "^16.6.1",
     "express": "^4.18.0",
     "express-rate-limit": "^8.4.1",
+    "file-type": "^22.0.1",
     "google-auth-library": "^8.8.0",
     "helmet": "^8.1.0",
     "imap-simple": "^5.1.0",
@@ -40,6 +41,7 @@
     "stripe": "^22.0.2",
     "telegram": "^2.0.0",
     "tesseract.js": "^4.1.0",
+    "uuid": "^14.0.0",
     "whatsapp-web.js": "^1.16.0",
     "winston": "^3.19.0",
     "xlsx": "^0.18.5"
