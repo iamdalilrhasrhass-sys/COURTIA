@@ -24,6 +24,7 @@
     "express-rate-limit": "^8.4.1",
     "file-type": "^22.0.1",
     "google-auth-library": "^8.8.0",
+    "handlebars": "^4.7.9",
     "helmet": "^8.1.0",
     "imap-simple": "^5.1.0",
     "jsonwebtoken": "^9.0.0",
