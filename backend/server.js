@@ -296,6 +296,10 @@ const docvisionRouter    = require('./src/routes/docvision')
 // LOT 11 — Quote Intelligence (briefs personnalisés par compagnie)
 const quoteIntelRouter   = require('./src/routes/quoteIntel')
 
+// LOT 12 — Portail Client (espace self-service moderne)
+const portailRouter       = require('./src/routes/portail')       // routes courtier
+const portalClientRouter  = require('./src/routes/portalClient')  // routes client
+
 // Public
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
@@ -371,6 +375,10 @@ app.use('/api/docvision',    verifyToken, docvisionRouter)
 
 // LOT 11 — Quote Intelligence (briefs personnalisés par compagnie, protected)
 app.use('/api/quote-intel',  verifyToken, quoteIntelRouter)
+
+// LOT 12 — Portail Client (espace self-service moderne)
+app.use('/api/portail',      verifyToken, portailRouter)      // routes courtier (protected)
+app.use('/api/portal',       portalClientRouter)               // routes client (auth dans le router)
 
 app.use('/api/messaging',    messagingRoutes)
 
