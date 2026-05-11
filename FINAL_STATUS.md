@@ -30,7 +30,7 @@
 Étape 16: Email templates          ✅ 3 modèles auto-personnalisés
 Étape 17: Tableau stats            ✅ CA prévisionnel + répartition
 Étape 18: Gestion documents        ✅ Upload + catégories
-Étape 19: Mode démo                ✅ demo@courtia.fr + reset nuit
+Étape 19: Mode démo                ✅ demo@courtiark.fr + reset nuit
 Étape 20: Déploiement              ✅ Railway + Vercel config
 ```
 

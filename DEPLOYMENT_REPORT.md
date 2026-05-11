@@ -62,7 +62,7 @@ docker-compose -f docker-compose.prod.yml up -d
 Email: dalil@test.com
 Password: password123
 
-Email: demo@courtia.fr  
+Email: demo@courtiark.fr  
 Password: demo2026
 ```
 
