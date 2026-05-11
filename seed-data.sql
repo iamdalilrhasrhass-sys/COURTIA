@@ -17,7 +17,7 @@ DECLARE
     v_campaigns_count INTEGER;
     v_audiences_count INTEGER;
 BEGIN
-    SELECT EXISTS(SELECT 1 FROM users WHERE email = 'e2e@courtia.fr') INTO v_user_exists;
+    SELECT EXISTS(SELECT 1 FROM users WHERE email = 'e2e@courtiark.fr') INTO v_user_exists;
     SELECT COUNT(*) FROM clients INTO v_clients_count;
     SELECT COUNT(*) FROM reach_prospects INTO v_prospects_count;
     SELECT COUNT(*) FROM reach_campaigns INTO v_campaigns_count;
@@ -37,7 +37,7 @@ END $$;
 -- ============================================================================
 INSERT INTO users (email, password_hash, first_name, last_name, role, plan, subscription_status, created_at, updated_at)
 VALUES (
-    'e2e@courtia.fr',
+    'e2e@courtiark.fr',
     '$2b$10$saQ1R/dakS5ZrkHA79Efiuhct5UQYJLc2Gk8NoOl3g4EmyeWEg4HG',
     'Test',
     'E2E',
@@ -120,7 +120,7 @@ Seriez-vous disponible pour un échange de 15 minutes la semaine prochaine ?
 Bien cordialement,
 Test E2E
 Courtier en assurances — COURTIA
-e2e@courtia.fr'
+e2e@courtiark.fr'
     );
 
     -- Step 2 : Relance suivi J+3
@@ -185,7 +185,7 @@ DECLARE
     v_steps        INTEGER;
     v_audiences    INTEGER;
 BEGIN
-    SELECT id INTO v_user_id FROM users WHERE email = 'e2e@courtia.fr';
+    SELECT id INTO v_user_id FROM users WHERE email = 'e2e@courtiark.fr';
     SELECT COUNT(*) INTO v_clients FROM clients WHERE courtier_id = 1;
     SELECT COUNT(*) INTO v_prospects FROM reach_prospects WHERE user_id = v_user_id;
     SELECT COUNT(*) INTO v_campaigns FROM reach_campaigns WHERE user_id = v_user_id;
@@ -193,7 +193,7 @@ BEGIN
     SELECT COUNT(*) INTO v_audiences FROM reach_audiences WHERE user_id = v_user_id;
 
     RAISE NOTICE 'SUCCÈS — Données seed insérées :';
-    RAISE NOTICE '  User e2e@courtia.fr : id=%', v_user_id;
+    RAISE NOTICE '  User e2e@courtiark.fr : id=%', v_user_id;
     RAISE NOTICE '  Clients particuliers : %', v_clients;
     RAISE NOTICE '  Prospects REACH     : %', v_prospects;
     RAISE NOTICE '  Campagnes REACH     : %', v_campaigns;
