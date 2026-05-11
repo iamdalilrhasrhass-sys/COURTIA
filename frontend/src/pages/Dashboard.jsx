@@ -8,7 +8,8 @@ import {
 } from 'lucide-react'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
-import { VibeBackdrop, VibeHeader } from '../components/vibe'
+import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } from '../components/vibe'
+import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { BubbleCMini } from '../design/BubbleC'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
@@ -247,6 +248,10 @@ export default function Dashboard() {
         background: 'radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)',
         bottom: -100, right: -100, pointerEvents: 'none', zIndex: 0,
       }} />
+
+      {/* 500x VIBE — particules animées + glow scroll */}
+      <Particles count={40} />
+      <ScrollGlow />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto' }}>
 

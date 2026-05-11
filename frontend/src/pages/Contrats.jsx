@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { VibeBackdrop, VibeHeader, VibeScrollSection, Vibe3DCard } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import {
   FileText, Search, Plus, Upload, Zap, TrendingUp, Calendar, AlertTriangle,
   Shield, ChevronRight, Users, Euro, Clock, Briefcase, Sparkles,
@@ -123,6 +124,8 @@ export default function Contrats() {
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text, perspective: 1400 }}>
       <VibeBackdrop intensity={0.85} />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)', top: -100, right: -100, pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
 

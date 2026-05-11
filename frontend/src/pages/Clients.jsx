@@ -5,6 +5,7 @@ import {
   Upload, LayoutGrid, Rows, Sparkles, TrendingUp, Heart, ChevronRight,
 } from 'lucide-react'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
+import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 
 // ─── Aurora tokens ─────────────────────────────────────────────
 const T = {
@@ -330,6 +331,8 @@ export default function Clients() {
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '24px 24px 48px' }}>
       <VibeBackdrop intensity={0.75} />
+      <Particles count={35} />
+      <ScrollGlow />
       <div style={{
         position: 'fixed', width: 500, height: 500, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%)',
