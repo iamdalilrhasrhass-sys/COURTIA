@@ -516,19 +516,19 @@ export default function Dashboard() {
         {/* ════ KILLER FEATURES — COURTIA 108/120 ════ */}
         <VibeScrollSection delay={0.25} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
-          <ArkMorningBrief apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+          <ArkMorningBrief apiBase="/api/killer" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 
         <VibeScrollSection delay={0.30} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
-          <RevenueForecast apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+          <RevenueForecast apiBase="/api/killer" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 
         <VibeScrollSection delay={0.35} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
-          <PredictiveScoring apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+          <PredictiveScoring apiBase="/api/killer" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 

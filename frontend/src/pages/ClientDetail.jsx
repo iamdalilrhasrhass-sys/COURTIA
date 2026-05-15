@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
+import DocumentIntelligence from '../components/intel/DocumentIntelligence'
+import SmartRelances from '../components/relances/SmartRelances'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -543,6 +545,7 @@ export default function ClientDetail() {
           <TabButton label="Documents" active={tab === 'documents'} onClick={() => setTab('documents')} badge={DEMO_DOCS.length} />
           <TabButton label="Activité"  active={tab === 'activite'}  onClick={() => setTab('activite')} />
           <TabButton label="ARK"       active={tab === 'ark'}       onClick={() => setTab('ark')} />
+          <TabButton label="Relances" active={tab === 'relances'}  onClick={() => setTab('relances')} />
         </div>
 
         {/* TAB CONTENT */}
@@ -602,19 +605,11 @@ export default function ClientDetail() {
           )}
           {tab === 'documents' && (
             <motion.div key="dc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Card padding={14}>
-                {DEMO_DOCS.map((d, i) => (
-                  <div key={d.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 0',
-                    borderBottom: i < DEMO_DOCS.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
-                  }}>
-                    <FileText size={14} color={T.textMuted} />
-                    <span style={{ flex: 1, fontSize: 13, color: T.text }}>{d.name}</span>
-                    <span style={{ fontSize: 11, color: T.textMuted }}>{d.when}</span>
-                  </div>
-                ))}
-              </Card>
+              <DocumentIntelligence
+                clientId={id}
+                apiBase="/api/killer"
+                authToken={localStorage.getItem('courtia_token')}
+              />
             </motion.div>
           )}
           {tab === 'activite' && <ActiviteTab key="act" history={DEMO_HISTORY} />}
@@ -628,6 +623,15 @@ export default function ClientDetail() {
                   <p><strong style={{ color: T.text }}>💡 Multi-équipement</strong> — 3 contrats, mais pas de Santé ni Prévoyance. Suggérer un bilan complet.</p>
                 </div>
               </Card>
+            </motion.div>
+          )}
+          {tab === 'relances' && (
+            <motion.div key="rel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <SmartRelances
+                clientId={id}
+                apiBase="/api/killer"
+                authToken={localStorage.getItem('courtia_token')}
+              />
             </motion.div>
           )}
         </AnimatePresence>
