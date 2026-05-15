@@ -33,6 +33,12 @@ export default function LandingPublic() {
       {/* COSMOS BACKGROUND V2 — très discret */}
       <div className="cosmos" />
 
+      {/* STICKY HEADER — CTA toujours visible */}
+      <header className="sticky-header" aria-label="Navigation principale">
+        <Link to="/" className="sticky-logo" aria-label="Courtia accueil">courtia<em>.</em></Link>
+        <Link to="/register" className="sticky-cta" aria-label="Essai gratuit 14 jours">Essai gratuit 14 jours →</Link>
+      </header>
+
       {/* ÉTOILES V2 — 40 fines twinkle */}
       <div className="stars" aria-hidden>
         {stars.map((s, i) => (
@@ -81,8 +87,14 @@ export default function LandingPublic() {
       {/* SECTION 2 — Manifeste */}
       <ManifesteSection />
 
+      {/* SECTION 2.5 — Comment ça marche */}
+      <HowItWorksSection />
+
       {/* SECTION 3 — Les 5 super-pouvoirs */}
       <PowersSection />
+
+      {/* SECTION 3.5 — Sécurité & Conformité */}
+      <SecuritySection />
 
       {/* SECTION 4 — Chiffres */}
       <ProofSection />
@@ -119,6 +131,83 @@ function ManifesteSection() {
           COURTIA n'est pas un CRM. C'est <em>un compagnon</em>.
           Une présence calme qui veille, comprend, et agit.
         </p>
+        <div className="manifeste-stats">
+          <div className="manifeste-stat">
+            <span className="manifeste-stat-value">-80%</span>
+            <span className="manifeste-stat-label">de temps de saisie</span>
+          </div>
+          <div className="manifeste-stat">
+            <span className="manifeste-stat-value">+30%</span>
+            <span className="manifeste-stat-label">de taux de relance Hamon/Chatel</span>
+          </div>
+          <div className="manifeste-stat">
+            <span className="manifeste-stat-value">20 min</span>
+            <span className="manifeste-stat-label">→ 3 clics pour un DDA</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorksSection() {
+  const steps = [
+    { num: '1', title: 'Connectez votre CRM', desc: 'ARK se connecte à votre CRM existant (Sage, Silae, etc.). Pas de migration. Pas de changement d\'habitudes.' },
+    { num: '2', title: 'ARK surveille et vous notifie', desc: 'Détection automatique des opportunités Hamon, Chatel, silences anormaux. Vous êtes alerté au bon moment.' },
+    { num: '3', title: 'Vous approuvez en un clic', desc: 'Un DDA généré en 3 clics. Une relance envoyée automatiquement. Vous validez, ARK exécute.' },
+  ];
+  return (
+    <section className="how">
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Comment ça marche
+        </div>
+        <h2 className="band-title">
+          Trois étapes, <em>zéro</em> complexité.
+        </h2>
+      </div>
+      <div className="how-grid">
+        {steps.map((s, i) => (
+          <div className="how-card" key={i}>
+            <div className="how-num">{s.num}</div>
+            <h3 className="how-title">{s.title}</h3>
+            <p className="how-desc">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SecuritySection() {
+  const items = [
+    { title: 'Hébergement France', desc: 'Vos données sont stockées en France, sur des serveurs conformes aux standards les plus exigeants.' },
+    { title: 'Chiffrement AES-256', desc: 'Tous les documents (RIB, attestations, contrats) sont chiffrés au repos et en transit.' },
+    { title: 'Conformité RGPD', desc: 'Droit d\'accès, rectification, suppression. Vos clients gardent le contrôle total de leurs données.' },
+    { title: 'Pas d\'entraînement IA sur vos données', desc: 'Nous n\'utilisons jamais vos fichiers clients pour entraîner nos modèles. Vos données restent vos données.' },
+    { title: 'Pas de revente de données', desc: 'Nous ne vendons aucune donnée. Ni les vôtres, ni celles de vos clients. Point.' },
+  ];
+  return (
+    <section className="security">
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Sécurité & Conformité
+        </div>
+        <h2 className="band-title">
+          Vos données <em>restent</em> chez vous.
+        </h2>
+        <p className="band-text" style={{fontSize: '17px'}}>
+          Un courtier confie ses dossiers les plus sensibles. COURTIA a été conçu pour mériter cette confiance.
+        </p>
+      </div>
+      <div className="security-grid">
+        {items.map((item, i) => (
+          <div className="security-card" key={i}>
+            <div className="security-icon">●</div>
+            <h3 className="security-title">{item.title}</h3>
+            <p className="security-desc">{item.desc}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -219,13 +308,13 @@ function PricingSection() {
       name: 'Starter',
       price: '89',
       desc: 'L\'essentiel pour les courtiers indépendants',
-      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision', 'Support email'],
+      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision', 'Support email', 'Sans engagement'],
     },
     {
       name: 'Pro',
       price: '159',
       desc: 'La puissance complète d\'ARK',
-      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK', 'Voice Intake + Quote Intel', 'Support prioritaire'],
+      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK', 'Voice Intake + Quote Intel', 'Support prioritaire', 'Sans engagement'],
       featured: true,
     },
     {
@@ -267,11 +356,12 @@ function PricingSection() {
               {p.features.map((f, j) => <li key={j}>{f}</li>)}
             </ul>
             <Link to="/register" className={p.featured ? 'cta-primary' : 'cta-ghost'}>
-              {p.featured ? 'Commencer maintenant' : 'Choisir'}
+              {p.featured ? 'Essayer gratuitement' : p.name === 'Cabinet' ? 'Nous contacter' : 'Essayer 14 jours'}
             </Link>
           </div>
         ))}
       </div>
+      <p className="pricing-note">Tous les plans sont sans engagement. Résiliation possible à tout moment. Le plan Starter évolue automatiquement vers Pro au-delà de 200 clients.</p>
     </section>
   );
 }
@@ -287,9 +377,17 @@ function FooterSection() {
       <div className="footer-links">
         <Link to="/legal">Mentions légales</Link>
         <Link to="/cgu">CGU</Link>
+        <Link to="/confidentialite">Confidentialité</Link>
         <Link to="/contact">Contact</Link>
+        <a href="mailto:contact@courtiark.fr">contact@courtiark.fr</a>
       </div>
-      <div className="footer-copy">© 2026 COURTIA — Tous droits réservés.</div>
+      <div className="footer-social">
+        <a href="https://linkedin.com/company/courtia" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Courtia">LinkedIn</a>
+      </div>
+      <div className="footer-copy">
+        © 2026 COURTIA SASU — Tous droits réservés.<br />
+        <span style={{color: 'rgba(255,255,255,0.15)'}}>Hébergé en France. Conforme RGPD.</span>
+      </div>
     </footer>
   );
 }
@@ -725,6 +823,200 @@ html, body, #root {
   padding: 8px 0;
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
+
+/* ─── STICKY HEADER ─── */
+.sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  background: rgba(2, 1, 8, 0.75);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.sticky-logo {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 200;
+  font-size: 20px;
+  letter-spacing: -1px;
+  color: #fff;
+  text-decoration: none;
+}
+.sticky-logo em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  background: linear-gradient(90deg, #ff4d9d, #a142f4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sticky-cta {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff4d9d, #a142f4);
+  color: #fff;
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.sticky-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(161, 66, 244, 0.4); }
+
+/* ─── MANIFESTE STATS ─── */
+.manifeste-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+.manifeste-stat {
+  text-align: center;
+}
+.manifeste-stat-value {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(40px, 5vw, 64px);
+  background: linear-gradient(135deg, #ff80e0, #c080ff, #80a8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+.manifeste-stat-label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-top: 8px;
+}
+
+/* ─── HOW IT WORKS ─── */
+.how {
+  position: relative;
+  z-index: 2;
+  padding: 140px 40px;
+}
+.how-grid {
+  max-width: 900px;
+  margin: 80px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+.how-card {
+  background: rgba(8, 5, 26, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 36px 28px;
+  text-align: center;
+}
+.how-num {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 56px;
+  background: linear-gradient(135deg, #ff4d9d, #a142f4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.how-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.how-desc {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.55;
+}
+
+/* ─── SECURITY SECTION ─── */
+.security {
+  position: relative;
+  z-index: 2;
+  padding: 140px 40px;
+}
+.security-grid {
+  max-width: 1080px;
+  margin: 80px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.security-card {
+  background: rgba(8, 5, 26, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 28px 24px;
+}
+.security-icon {
+  font-size: 12px;
+  background: linear-gradient(90deg, #ff4d9d, #a142f4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+.security-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.security-desc {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.5;
+}
+
+/* ─── PRICING NOTE ─── */
+.pricing-note {
+  max-width: 800px;
+  margin: 40px auto 0;
+  text-align: center;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ─── FOOTER SOCIAL ─── */
+.footer-social {
+  margin-bottom: 24px;
+}
+.footer-social a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+}
+.footer-social a:hover { color: rgba(255,255,255,0.8); }
 
 /* ─── FOOTER ─── */
 .footer {
