@@ -11,6 +11,9 @@ import { getSessionUser } from '../api/sessionUser'
 import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } from '../components/vibe'
 import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { BubbleCMini } from '../design/BubbleC'
+import ArkMorningBrief from '../components/cockpit/ArkMorningBrief'
+import RevenueForecast from '../components/forecast/RevenueForecast'
+import PredictiveScoring from '../components/scoring/PredictiveScoring'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -507,6 +510,25 @@ export default function Dashboard() {
               </AuroraCard>
             ))}
           </div>
+        </div>
+        </VibeScrollSection>
+
+        {/* ════ KILLER FEATURES — COURTIA 108/120 ════ */}
+        <VibeScrollSection delay={0.25} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ArkMorningBrief apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.30} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <RevenueForecast apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.35} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <PredictiveScoring apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 
