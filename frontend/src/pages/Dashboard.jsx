@@ -14,6 +14,9 @@ import { BubbleCMini } from '../design/BubbleC'
 import ArkMorningBrief from '../components/cockpit/ArkMorningBrief'
 import RevenueForecast from '../components/forecast/RevenueForecast'
 import PredictiveScoring from '../components/scoring/PredictiveScoring'
+import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
+import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
+import DDACompliance from '../components/dda/DDACompliance'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -529,6 +532,24 @@ export default function Dashboard() {
         <VibeScrollSection delay={0.35} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
           <PredictiveScoring apiBase="/api/killer" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.40} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <EmailInboxUnified apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.45} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <DDACompliance apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.50} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ArkVoiceCockpit apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 
