@@ -140,16 +140,16 @@ function ManifesteSection() {
         </p>
         <div className="manifeste-stats">
           <div className="manifeste-stat">
-            <span className="manifeste-stat-value">-80%</span>
-            <span className="manifeste-stat-label">de temps de saisie</span>
+            <span className="manifeste-stat-value">PRÉPARATION DDA</span>
+            <span className="manifeste-stat-label">ASSISTÉE</span>
           </div>
           <div className="manifeste-stat">
-            <span className="manifeste-stat-value">+30%</span>
-            <span className="manifeste-stat-label">de taux de relance Hamon/Chatel</span>
+            <span className="manifeste-stat-value">0</span>
+            <span className="manifeste-stat-label">RELANCE HAMON/CHATEL OUBLIÉE</span>
           </div>
           <div className="manifeste-stat">
-            <span className="manifeste-stat-value">20 min</span>
-            <span className="manifeste-stat-label">→ 3 clics pour un DDA</span>
+            <span className="manifeste-stat-value">14 JOURS</span>
+            <span className="manifeste-stat-label">POUR TESTER SANS RISQUE</span>
           </div>
         </div>
       </div>
@@ -407,10 +407,10 @@ function FeatureCard({ tag, title, desc, index }) {
 
 function ProofSection() {
   const stats = [
-    { value: '8', label: 'features IA-natives' },
-    { value: '+3h', label: 'gagnées par semaine' },
-    { value: '98%', label: 'de satisfaction' },
-    { value: '124', label: 'clients pilotes' },
+    { value: '10', label: 'MODULES IA-NATIFS' },
+    { value: '0', label: 'RELANCE HAMON/CHATEL OUBLIÉE' },
+    { value: '< 15 min', label: 'DÉMO EN CONDITIONS RÉELLES' },
+    { value: '1 COCKPIT', label: 'CLIENTS, CONTRATS, ALERTES' },
   ];
   return (
     <section className="proof">
@@ -435,17 +435,17 @@ function PricingSection() {
       features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision + Morning Brief', 'Scoring prédictif', 'Support email', 'Sans engagement'],
     },
     {
-      name: 'Pro',
-      price: '199',
-      desc: 'Toute la puissance d\'ARK + Vague 1',
-      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK + Vague 1', 'Smart Relances + Revenue Forecast', 'Doc Intel + Voice Intake', 'Support prioritaire', 'Sans engagement'],
+      name: 'Pro ARK',
+      price: '159',
+      desc: 'Toute la puissance d\'ARK',
+      features: ['Portefeuille illimité', 'ARK Coach + Négociateur + Veille', 'Smart Relances + Revenue Forecast', 'Doc Intel + Voice Intake', 'Bordereau intelligent', 'Support prioritaire', 'Sans engagement'],
       featured: true,
     },
     {
-      name: 'Premium',
-      price: '299',
-      desc: 'Vague 2 — Le cockpit ultime',
-      features: ['Tout le plan Pro', 'ARK Voice illimité (appels IA)', 'Email Parser + boîte unifiée', 'DDA Auto-Audit illimité', 'Rapports PDF ACPR-ready', 'Support dédié', 'Sans engagement'],
+      name: 'Cabinet',
+      price: 'Sur devis',
+      desc: 'Multi-courtiers · Vague 2 · White-label',
+      features: ['Tout le plan Pro ARK', 'ARK Voice illimité (appels IA)', 'Email Parser + boîte unifiée', 'Multi-utilisateurs & rôles', 'Rapports PDF ACPR-ready', 'API + Widget ARK embeddable', 'Support dédié'],
     },
   ];
 
@@ -1204,5 +1204,36 @@ html, body, #root {
   .cta-row { flex-direction: column; width: 100%; }
   .cta-primary, .cta-ghost { justify-content: center; }
   .footer-links { flex-direction: column; gap: 16px; }
+}
+
+@media (max-width: 480px) {
+  .wordmark { font-size: 38px; letter-spacing: -1px; }
+  .tagline { font-size: 13px; max-width: 100%; }
+  .band-title { font-size: clamp(24px, 6vw, 36px); }
+  .band-text { font-size: 13px; }
+  .band, .powers, .proof, .pricing, .how { padding: 60px 20px; }
+  .manifeste-stats { gap: 20px; }
+  .manifeste-stat-value { font-size: clamp(24px, 8vw, 40px); line-height: 1.1; word-break: break-word; }
+  .manifeste-stat-label { font-size: 8px; letter-spacing: 2px; }
+  .proof-inner { gap: 32px; }
+  .proof-value { font-size: clamp(36px, 10vw, 56px); word-break: break-word; }
+  .proof-label { font-size: 8px; letter-spacing: 2px; }
+  .pricing-grid { gap: 16px; }
+  .pricing-card { padding: 28px 20px; }
+  .cta-primary, .cta-ghost { width: 100%; text-align: center; padding: 16px 20px; font-size: 14px; }
+  .sticky-header { padding: 12px 20px; }
+  .sticky-cta { font-size: 11px; padding: 8px 14px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; text-align: center; }
+  .hero { padding-top: 120px; min-height: auto; }
+  .bubble-frame { width: 100%; max-width: 340px; margin: 0 auto; }
+  .stage { overflow-x: hidden; }
+}
+
+@media (max-width: 375px) {
+  .wordmark { font-size: 32px; }
+  .manifeste-stat-value { font-size: clamp(20px, 7vw, 32px); }
+  .proof-value { font-size: clamp(28px, 8vw, 42px); }
+  .proof-inner { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .band, .powers, .proof, .pricing, .how { padding: 48px 16px; }
 }
 `;
