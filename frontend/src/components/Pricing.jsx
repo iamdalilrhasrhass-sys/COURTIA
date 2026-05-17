@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Check, ArrowRight } from 'lucide-react'
 
 export default function Pricing() {
-  const [_selectedPlan, setSelectedPlan] = useState(null)
   const [showDemoForm, setShowDemoForm] = useState(false)
   const [demoData, setDemoData] = useState({
     name: '',
@@ -16,26 +15,31 @@ export default function Pricing() {
     {
       id: 'starter',
       name: 'Starter',
-      price: 99,
-      period: '/mois',
+      price: 89,
+      period: '€ HT /mois',
       description: 'Pour débuter avec COURTIA',
+      trial: '7 jours d\'essai gratuit',
       features: [
         'Jusqu\'à 50 clients',
         'Gestion basique des contrats',
         'Tableau de bord simple',
         'Support email',
         'Calendrier RDV',
-        'Exporter CSV'
+        'Exporter CSV',
+        'ARK Coach (limité)',
       ],
       color: 'from-blue-500 to-blue-600',
-      button: 'bg-blue-600 hover:bg-blue-700'
+      button: 'bg-blue-600 hover:bg-blue-700',
+      buttonText: 'Commencer l\'essai gratuit',
+      hasCheckout: true,
     },
     {
       id: 'pro',
       name: 'Pro',
-      price: 299,
-      period: '/mois',
-      description: 'Pour les courtiers confirmés',
+      price: 159,
+      period: '€ HT /mois',
+      description: 'L\'offre principale — pour les courtiers confirmés',
+      trial: '0 € aujourd\'hui, puis 159 € HT/mois après le 7ᵉ jour',
       features: [
         'Jusqu\'à 500 clients',
         'Gestion avancée des contrats',
@@ -44,19 +48,24 @@ export default function Pricing() {
         'Briefs RDV automatiques',
         'Exporter Excel & PDF',
         'API intégrations',
-        'Historique ARK',
-        'Support prioritaire'
+        'ARK Coach illimité',
+        'Cross-sell Intelligence',
+        'Wallet Tokens inclus',
+        'Support prioritaire',
       ],
       color: 'from-cyan-500 to-blue-500',
       button: 'bg-cyan-600 hover:bg-cyan-700',
-      popular: true
+      buttonText: 'Commencer l\'essai gratuit',
+      popular: true,
+      hasCheckout: true,
     },
     {
-      id: 'premium',
-      name: 'Premium',
-      price: 599,
-      period: '/mois',
-      description: 'Solution complète + support dédié',
+      id: 'cabinet',
+      name: 'Cabinet',
+      price: null,
+      period: 'Sur devis',
+      description: 'Solution complète pour cabinets et réseaux',
+      trial: 'Démo personnalisée et devis sur mesure',
       features: [
         'Clients illimités',
         'Tous les outils Pro',
@@ -66,12 +75,15 @@ export default function Pricing() {
         'Rapports DDA/RGPD/ACPR',
         'Analyses avancées',
         'Webhooks & API complète',
-        'Support 24/7 dédié',
+        'Support dédié',
         'Formation complète',
-        'Intégrations email'
+        'White-label réseau',
+        'Portail Client',
       ],
       color: 'from-purple-500 to-pink-500',
-      button: 'bg-purple-600 hover:bg-purple-700'
+      button: 'bg-purple-600 hover:bg-purple-700',
+      buttonText: 'Demander un devis',
+      hasCheckout: false,
     }
   ]
 
@@ -141,21 +153,26 @@ export default function Pricing() {
 
               {/* Price */}
               <div className="mb-8">
-                <span className="text-3xl md:text-5xl font-black text-white">{plan.price}€</span>
+                <span className="text-3xl md:text-5xl font-black text-white">
+                  {plan.price !== null ? `${plan.price}€` : ''}
+                </span>
                 <span className="text-slate-400 ml-2">{plan.period}</span>
-                <p className="text-sm text-slate-500 mt-2">TVA comprise</p>
+                <p className="text-sm text-slate-500 mt-2">{plan.trial}</p>
               </div>
 
               {/* CTA Button */}
               <button
                 onClick={() => {
-                  setSelectedPlan(plan.id)
-                  setDemoData({ ...demoData, plan: plan.name })
-                  setShowDemoForm(true)
+                  if (!plan.hasCheckout) {
+                    setDemoData({ ...demoData, plan: plan.name })
+                    setShowDemoForm(true)
+                    return
+                  }
+                  window.location.href = `/register?plan=${plan.id}`
                 }}
                 className={`w-full py-3 rounded-lg font-bold mb-8 flex items-center justify-center gap-2 transition text-white ${plan.button}`}
               >
-                Demander une démo
+                {plan.buttonText}
                 <ArrowRight size={20} />
               </button>
 
@@ -182,13 +199,13 @@ export default function Pricing() {
           <div className="glass p-6 rounded-lg">
             <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Puis-je tester gratuitement?</h3>
             <p className="text-slate-400">
-              Oui! Demandez une démo et nous vous offrirons 14 jours d'accès complet à COURTIA.
+              Oui ! 7 jours d'essai gratuit sur les plans Starter et Pro. Aucun engagement, pas de carte bancaire requise pour l'essai.
             </p>
           </div>
           <div className="glass p-6 rounded-lg">
             <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Peut-on résilier à tout moment?</h3>
             <p className="text-slate-400">
-              Bien sûr. Sans engagement, vous pouvez résilier quand vous le souhaitez.
+              Absolument. Sans engagement. L'annulation se fait en un clic depuis votre espace Cabinet → Abonnement. Aucune démarche administrative.
             </p>
           </div>
           <div className="glass p-6 rounded-lg">
@@ -249,6 +266,20 @@ export default function Pricing() {
                   value={demoData.company}
                   onChange={(e) => setDemoData({ ...demoData, company: e.target.value })}
                 />
+              </div>
+
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="consent"
+                  className="mt-1"
+                  required
+                />
+                <label htmlFor="consent" className="text-xs text-slate-400">
+                  J'accepte d'être contacté par COURTIA concernant ma demande de démo. 
+                  Mes données ne seront pas utilisées à d'autres fins. 
+                  Je peux me désinscrire à tout moment.
+                </label>
               </div>
 
               <div className="flex gap-4 pt-4">

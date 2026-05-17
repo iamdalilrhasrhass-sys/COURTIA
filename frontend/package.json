@@ -8,7 +8,10 @@
     "postbuild": "if [ -d ../landing ]; then mkdir -p dist/landing && cp -r ../landing/* dist/landing/ && cp ../landing/index.html dist/landing/page.html; else echo 'landing assets not found, skipping'; fi",
     "preview": "vite preview",
     "lint": "eslint src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:all": "vitest run && playwright test"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",

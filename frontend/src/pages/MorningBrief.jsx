@@ -73,18 +73,20 @@ export default function MorningBrief() {
   const navigate = useNavigate()
   const [user, setUser] = useState({ first_name: '', last_name: '' })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [hasRealData, setHasRealData] = useState(false)
   const [priorities, setPriorities] = useState(DEMO_BRIEF)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
+      setError(false)
       const [userRes] = await Promise.all([
         getSessionUser().then(u => ({ data: u || {} })).catch(() => ({ data: {} })),
       ])
       setUser(userRes.data || {})
 
-      // Try to compute real priorities, fall back to demo
       try {
         const [clientsRes, tasksRes] = await Promise.all([
           api.get('/clients?limit=300').catch(() => ({ data: [] })),
@@ -93,9 +95,17 @@ export default function MorningBrief() {
         const realPriorities = computeDailyPriorities(clientsRes.data, tasksRes.data)
         if (realPriorities && realPriorities.totalActions > 0) {
           setPriorities(realPriorities)
+          setHasRealData(true)
+        } else {
+          setHasRealData(false)
         }
-      } catch { /* use demo */ }
-    } catch { /* use demo */ }
+      } catch {
+        setHasRealData(false)
+      }
+    } catch {
+      setError(true)
+      setHasRealData(false)
+    }
     finally { setLoading(false) }
   }, [])
 
@@ -125,7 +135,79 @@ export default function MorningBrief() {
           <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>{formatDate()}</p>
         </div>
 
-        {/* ARK EXECUTIVE SUMMARY */}
+        {/* ÉTAT : CHARGEMENT */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <RefreshCw size={28} color={T.ark} style={{ animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+            <p style={{ fontSize: 15, color: T.textSecondary, margin: 0 }}>ARK analyse votre portefeuille…</p>
+            <p style={{ fontSize: 12, color: T.textMuted, margin: '6px 0 0' }}>Récupération des données clients et contrats</p>
+          </div>
+        )}
+
+        {/* ÉTAT : ERREUR */}
+        {!loading && error && (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <AlertTriangle size={28} color="#EF4444" />
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>ARK n'a pas pu charger les données</h3>
+            <p style={{ fontSize: 14, color: T.textSecondary, margin: '0 0 16px', maxWidth: 400, margin: '0 auto 16px' }}>
+              Le backend est peut-être temporairement indisponible. ARK réessaiera automatiquement.
+            </p>
+            <button onClick={() => setRefreshKey(k => k + 1)} style={{
+              padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: T.arkBg, color: T.ark, border: `1px solid ${T.arkBorder}`,
+              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8,
+            }}>
+              <RefreshCw size={14} /> Réessayer
+            </button>
+          </div>
+        )}
+
+        {/* ÉTAT : VIDE (aucune donnée réelle) */}
+        {!loading && !error && !hasRealData && (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(139,92,246,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <Sparkles size={32} color={T.ark} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: T.text, margin: '0 0 10px' }}>ARK est prêt à analyser votre portefeuille</h2>
+            <p style={{ fontSize: 14, color: T.textSecondary, margin: '0 auto 8px', maxWidth: 420 }}>
+              Dès que vos premiers clients et contrats seront ajoutés, ARK générera automatiquement votre Morning Brief avec :
+            </p>
+            <ul style={{ padding: 0, listStyle: 'none', margin: '16px auto', maxWidth: 340, textAlign: 'left' }}>
+              {[
+                'Priorités critiques du jour',
+                'Clients à relancer en priorité',
+                'Contrats à échéance',
+                'Opportunités cross-sell détectées',
+                'Points de conformité à vérifier',
+              ].map((item, i) => (
+                <li key={i} style={{ padding: '5px 0', fontSize: 13, color: '#c4b5fd', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: T.ark }}>✦</span> {item}
+                </li>
+              ))}
+            </ul>
+            <p style={{ fontSize: 12, color: T.textMuted, margin: '0 0 20px' }}>
+              ⚡ Aucune intégration externe n'est nécessaire pour commencer — ajoutez vos premiers clients.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => navigate('/clients/new')} style={{
+                padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                background: T.ark, color: '#fff', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}><User size={14} /> Ajouter un client</button>
+              <button onClick={() => navigate('/dashboard')} style={{
+                padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                background: 'rgba(255,255,255,0.04)', color: T.text, border: `1px solid ${T.cardBorder}`,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              }}><Sparkles size={14} /> Retour au cockpit</button>
+            </div>
+          </div>
+        )}
+
+        {/* DONNÉES DISPONIBLES — AFFICHAGE NORMAL */}
+        {!loading && !error && (
+          <>
         <div style={{
           background: `linear-gradient(135deg, ${T.arkBg}, rgba(91,77,245,0.04))`,
           border: `1px solid ${T.arkBorder}`,
@@ -381,6 +463,8 @@ export default function MorningBrief() {
             </button>
           ))}
         </div>
+          </>
+        )}
       </div>
     </div>
   )
