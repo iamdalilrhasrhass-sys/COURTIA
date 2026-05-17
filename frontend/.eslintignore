@@ -1,0 +1,7 @@
+# Files using React.createElement pattern — parsed by esbuild/Vite, not eslint
+src/pages/business/CampagnesEmail.jsx
+src/pages/business/ModuleFiscal.jsx
+src/pages/business/Parrainage.jsx
+src/pages/cabinet/ApiCourtia.jsx
+src/pages/cabinet/PortailClient.jsx
+src/pages/cabinet/WhiteLabelReseau.jsx
