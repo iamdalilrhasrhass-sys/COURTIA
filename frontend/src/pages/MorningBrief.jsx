@@ -151,7 +151,7 @@ export default function MorningBrief() {
               <AlertTriangle size={28} color="#EF4444" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>ARK n'a pas pu charger les données</h3>
-            <p style={{ fontSize: 14, color: T.textSecondary, margin: '0 0 16px', maxWidth: 400, margin: '0 auto 16px' }}>
+            <p style={{ fontSize: 14, color: T.textSecondary, maxWidth: 400, margin: '0 auto 16px' }}>
               Le backend est peut-être temporairement indisponible. ARK réessaiera automatiquement.
             </p>
             <button onClick={() => setRefreshKey(k => k + 1)} style={{

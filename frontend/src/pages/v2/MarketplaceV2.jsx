@@ -107,7 +107,9 @@ export default function MarketplaceV2() {
     if (!confirm('Voulez-vous vraiment désinstaller ce connecteur ?')) return
     try {
       await api.delete(`/api/marketplace/${connectorId}`)
-    } catch {}
+    } catch {
+      // Connecteur déjà désinstallé ou introuvable
+    }
     setConnectors(conns => conns.map(c => 
       c.id === connectorId ? { ...c, installed: false, installationStatus: null } : c
     ))

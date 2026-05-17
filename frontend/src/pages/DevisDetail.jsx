@@ -52,7 +52,9 @@ export default function DevisDetail() {
           const res = await api.get(`/devis/${id}/pdf?inline=1`, { responseType: 'blob' })
           const blob = new Blob([res.data], { type: 'application/pdf' })
           setPdfBlob(URL.createObjectURL(blob))
-        } catch {}
+        } catch {
+          // Blob PDF non disponible
+        }
       }
     } catch (e) {
       toast.error('Erreur chargement devis')

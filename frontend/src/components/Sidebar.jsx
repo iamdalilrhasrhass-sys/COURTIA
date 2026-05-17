@@ -138,7 +138,9 @@ export default function Sidebar() {
       try {
         const stored = localStorage.getItem('courtia_user')
         if (stored) setUser(JSON.parse(stored))
-      } catch (_) {}
+      } catch (_) {
+        // localStorage indisponible (mode privé)
+      }
     }
     update()
     window.addEventListener('profileUpdated', update)
