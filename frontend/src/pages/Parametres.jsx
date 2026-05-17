@@ -261,7 +261,7 @@ export default function Parametres() {
   const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
 
   const planConfig = {
-    pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 159, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
+    pro: { label: 'Le Cabinet', classes: 'bg-blue-100 text-blue-700', price: 199, features: ["Jusqu'à 500 clients", 'Assistant IA - ARK', 'Rapports avancés'] },
     starter: { label: "L'Essentiel", classes: 'bg-emerald-100 text-emerald-700', price: 89, features: ["Jusqu'à 200 clients", 'Scores & Segments', 'Module Tâches'] },
     elite: { label: 'Le Réseau', classes: 'bg-violet-100 text-violet-700', price: 'Sur devis', features: ['Clients illimités', 'API & Intégrations', 'Support prioritaire'] },
     founder: { label: 'Founder', classes: 'bg-amber-100 text-amber-700', price: null, features: ['Accès anticipé', 'Toutes les fonctionnalités', 'Contact direct équipe'], noSubscriptionText: 'Offre en cours de configuration' }

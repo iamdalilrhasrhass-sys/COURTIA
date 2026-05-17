@@ -107,7 +107,7 @@ const PLAN_FEATURES = {
 
 function PlanCard({ plan, billingCycle, loadingPlan, onSelect }) {
   const isMonthly = billingCycle === 'monthly'
-  const monthlyPrice = { starter: 89, pro: 159, premium: null }[plan]
+  const monthlyPrice = { starter: 89, pro: 199, premium: null }[plan]
   const yearlyPrice = monthlyPrice ? Math.round(monthlyPrice * 12 * 0.8) : null
   const displayPrice = isMonthly ? monthlyPrice : yearlyPrice
   const perLabel = isMonthly ? '/mois' : '/an'

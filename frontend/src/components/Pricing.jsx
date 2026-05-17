@@ -36,10 +36,10 @@ export default function Pricing() {
     {
       id: 'pro',
       name: 'Pro',
-      price: 159,
+      price: 199,
       period: '€ HT /mois',
       description: 'L\'offre principale — pour les courtiers confirmés',
-      trial: '0 € aujourd\'hui, puis 159 € HT/mois après le 7ᵉ jour',
+      trial: '0 € aujourd\'hui, puis 199 € HT/mois après le 7ᵉ jour',
       features: [
         'Jusqu\'à 500 clients',
         'Gestion avancée des contrats',

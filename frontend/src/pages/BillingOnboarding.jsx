@@ -13,7 +13,7 @@ const PLAN_COPY = {
   },
   pro: {
     title: 'Pro',
-    banner: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour (190,80 € TTC avec TVA 20 %).',
+    banner: '0 € aujourd’hui, puis 199 € HT / mois après le 7e jour (238,80 € TTC avec TVA 20 %).',
   },
   cabinet: {
     title: 'Cabinet',

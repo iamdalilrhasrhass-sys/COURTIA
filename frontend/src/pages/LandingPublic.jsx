@@ -436,7 +436,7 @@ function PricingSection() {
     },
     {
       name: 'Pro ARK',
-      price: '159',
+      price: '199',
       desc: 'Toute la puissance d\'ARK',
       features: ['Portefeuille illimité', 'ARK Coach + Négociateur + Veille', 'Smart Relances + Revenue Forecast', 'Doc Intel + Voice Intake', 'Bordereau intelligent', 'Support prioritaire', 'Sans engagement'],
       featured: true,

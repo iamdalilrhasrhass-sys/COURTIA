@@ -457,7 +457,7 @@ export default function Login() {
   const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
   const planName = planKey === 'pro' ? 'Pro' : 'Starter'
   const planPrice = planKey === 'pro'
-    ? '159 € HT / mois (190,80 € TTC avec TVA 20 %)'
+    ? '199 € HT / mois (238,80 € TTC avec TVA 20 %)'
     : '89 € HT / mois (106,80 € TTC avec TVA 20 %)'
   const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
   const planSubtitle = planKey === 'pro'
