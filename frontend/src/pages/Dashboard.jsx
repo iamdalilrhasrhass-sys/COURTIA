@@ -21,6 +21,14 @@ import BordereauIntelligence from '../components/bordereau/BordereauIntelligence
 import RenewalMachine from '../components/renewal/RenewalMachine'
 import PoliceIntelligence from '../components/police/PoliceIntelligence'
 import LeadInstantInbox from '../components/leads/LeadInstantInbox'
+import SignatureWorkflow from '../components/signature/SignatureWorkflow'
+import FacturationHonoraires from '../components/facturation/FacturationHonoraires'
+import CampagnesSMS from '../components/campagnes/CampagnesSMS'
+import ParrainageTracker from '../components/parrainage/ParrainageTracker'
+import ArkCoachDashboard from '../components/coach/ArkCoachDashboard'
+import ArkNegociateur from '../components/negociateur/ArkNegociateur'
+import RGPDRegistre from '../components/rgpd/RGPDRegistre'
+import WhiteLabelAdmin from '../components/whitelabel/WhiteLabelAdmin'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -579,6 +587,55 @@ export default function Dashboard() {
         <VibeScrollSection delay={0.70} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
           <PoliceIntelligence apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        {/* Vague 4 — Outils Pro (suite) */}
+        <VibeScrollSection delay={0.75} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <SignatureWorkflow apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.78} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <FacturationHonoraires apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.81} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <CampagnesSMS apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.84} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ParrainageTracker apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.87} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ArkCoachDashboard apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.90} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ArkNegociateur apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.93} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <RGPDRegistre apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.96} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <WhiteLabelAdmin apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 
