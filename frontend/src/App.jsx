@@ -108,6 +108,11 @@ const Objectifs = lazy(() => import('./pages/Objectifs'))
 const Conformite = lazy(() => import('./pages/Conformite'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
+// Session 0 — Aurora OS layouts
+import AppShell from './layouts/AppShell'
+import DashboardLegacy from './pages/DashboardLegacy'
+import LegacyFeaturePage from './pages/LegacyFeaturePage'
+
 // Components
 import Sidebar from './components/Sidebar'
 import AdminRoute from './components/AdminRoute'
@@ -348,8 +353,14 @@ export default function App() {
         <Route path="/video-showcase" element={import.meta.env.DEV ? <ShowcaseVideo /> : <Navigate to="/" replace />} />
         <Route path="/" element={<LandingPublic />} />
 
-        {/* Routes privées — ProtectedRoute avec plan gating */}
+        {/* SESSION 0 — Aurora OS 5-section shell (/dashboard) */}
+        <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+
+        {/* Routes privées — AppLayout legacy (conservé intégralement) */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+          <Route path="/dashboard-legacy" element={<DashboardLegacy />} />
           <Route path="/onboarding"    element={<CabinetOnboarding />} />
           <Route path="/onboarding/cabinet" element={<CabinetOnboarding />} />
           <Route path="/onboarding/billing" element={<BillingOnboarding />} />
@@ -358,7 +369,6 @@ export default function App() {
           <Route path="/onboarding/ark" element={<MorningBrief />} />
           <Route path="/import"        element={<ImportPortfolio />} />
           <Route path="/equipe"        element={<Equipe />} />
-          <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
           <Route path="/client/:id"     element={<ClientDetail />} />
