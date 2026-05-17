@@ -29,6 +29,18 @@ import ArkCoachDashboard from '../components/coach/ArkCoachDashboard'
 import ArkNegociateur from '../components/negociateur/ArkNegociateur'
 import RGPDRegistre from '../components/rgpd/RGPDRegistre'
 import WhiteLabelAdmin from '../components/whitelabel/WhiteLabelAdmin'
+import ComparateurDevis from '../components/comparateur/ComparateurDevis'
+import SinistreTracker from '../components/sinistre/SinistreTracker'
+import AgendaRDV from '../components/agenda/AgendaRDV'
+import RentabiliteDashboard from '../components/rentabilite/RentabiliteDashboard'
+import VeilleMarche from '../components/veille/VeilleMarche'
+import TokenWallet from '../components/TokenWallet'
+import CrossSellDashboard from '../components/CrossSellDashboard'
+import ArkFormateur from '../components/ArkFormateur'
+import SimulateurRevenus from '../components/SimulateurRevenus'
+import EquipeCabinet from '../components/EquipeCabinet'
+import ArkWidgetManager from '../components/ArkWidgetManager'
+import DDAFormateur from '../components/DDAFormateur'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -636,6 +648,80 @@ export default function Dashboard() {
         <VibeScrollSection delay={0.96} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
           <WhiteLabelAdmin apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        {/* Vague 5 — Outils Pro (suite) */}
+        <VibeScrollSection delay={1.00} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ComparateurDevis apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.03} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <SinistreTracker apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.06} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <AgendaRDV apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.09} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <RentabiliteDashboard apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.12} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <VeilleMarche apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        {/* Vague 6 — Écosystème Complet */}
+        <VibeScrollSection delay={1.15} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <TokenWallet apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.18} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <CrossSellDashboard apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.21} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ArkFormateur apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.24} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <SimulateurRevenus apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.27} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <EquipeCabinet apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.30} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <ArkWidgetManager apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={1.33} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <DDAFormateur apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 

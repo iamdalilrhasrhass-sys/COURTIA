@@ -10,7 +10,8 @@ import '../design/tokens.css';
  * twinkle, kicker JetBrains Mono, bulle 480, wordmark, tagline,
  * animations fade-in séquentielles, pas de grid floor, pas de particules drift).
  *
- * Sections additionnelles (manifeste, powers, proof, pricing, footer) inchangées.
+ * Vague 1 (Intelligence augmentée) + Vague 2 (Action autonome) injectées
+ * après la section Sécurité. 8 features IA-natives uniques en France.
  */
 export default function LandingPublic() {
   // Étoiles V2 — 40 étoiles fines twinkle ease-in-out 3-8s, size 0.5-1.7px
@@ -96,13 +97,19 @@ export default function LandingPublic() {
       {/* SECTION 3.5 — Sécurité & Conformité */}
       <SecuritySection />
 
-      {/* SECTION 4 — Chiffres */}
+      {/* SECTION 4 — Vague 1 : Intelligence augmentée (5 features) */}
+      <Vague1Section />
+
+      {/* SECTION 5 — Vague 2 : Action autonome (3 features) */}
+      <Vague2Section />
+
+      {/* SECTION 6 — Chiffres (mis à jour 8 features) */}
       <ProofSection />
 
-      {/* SECTION 5 — Tarifs */}
+      {/* SECTION 7 — Tarifs (mis à jour 89/199/299) */}
       <PricingSection />
 
-      {/* SECTION 6 — Footer */}
+      {/* SECTION 8 — Footer */}
       <FooterSection />
     </>
   );
@@ -282,8 +289,125 @@ function PowerCard({ tag, title, desc, index }) {
   );
 }
 
+/* ─── VAGUE 1 : Intelligence augmentée (5 features IA-natives) ─── */
+function Vague1Section() {
+  const features = [
+    {
+      tag: 'V1·01',
+      title: 'Morning Brief',
+      desc: 'Chaque matin, ARK synthétise votre portefeuille en un briefing vocal et texte. Opportunités Hamon/Chatel, clients silencieux, échéances à risque. Vous commencez la journée avec une longueur d\'avance.',
+    },
+    {
+      tag: 'V1·02',
+      title: 'Doc Intel',
+      desc: 'ARK lit et analyse automatiquement vos documents (RIB, CG, attestations). Extraction intelligente des données, détection des anomalies, classification. Le dossier se remplit sans que vous touchiez le clavier.',
+    },
+    {
+      tag: 'V1·03',
+      title: 'Predictive Scoring',
+      desc: 'Chaque client reçoit un score de risque 0–100 basé sur son profil, son historique et les signaux faibles. ARK identifie les résiliations probables avant qu\'elles n\'arrivent. Vous agissez, pas ne subissez.',
+    },
+    {
+      tag: 'V1·04',
+      title: 'Smart Relances',
+      desc: 'Relances automatiques intelligentes par email et SMS. ARK détecte le bon moment, le bon canal, et adapte le ton selon le profil client. Taux de reconduction en hausse, portefeuille qui respire.',
+    },
+    {
+      tag: 'V1·05',
+      title: 'Revenue Forecast',
+      desc: 'Projection de revenus à 30/60/90 jours avec ventilation par produit et par client. ARK modélise les commissions entrantes, les risques de sortie, et vous donne une vision claire de votre pipeline.',
+    },
+  ];
+
+  return (
+    <section className="powers">
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Vague 1 — Intelligence augmentée
+        </div>
+        <h2 className="band-title">
+          L'IA qui <em>anticipe</em><br />avant que vous ne demandiez.
+        </h2>
+        <p className="band-text">
+          Cinq fonctionnalités IA-natives qui transforment votre quotidien de courtier.
+          <br />Pas de configuration. Pas de prompt. ARK travaille pendant que vous dormez.
+        </p>
+      </div>
+      <div className="powers-grid">
+        {features.map((f, i) => (
+          <FeatureCard key={i} {...f} index={i} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── VAGUE 2 : Action autonome (3 killer features) ─── */
+function Vague2Section() {
+  const features = [
+    {
+      tag: 'V2·01',
+      title: 'ARK Voice',
+      desc: 'ARK appelle vos clients directement. Brief matinal vocal au courtier. Qualification, relance, prise de RDV, demande de documents — tout par téléphone, piloté par IA. Vos clients entendent une voix naturelle, pas un robot.',
+    },
+    {
+      tag: 'V2·02',
+      title: 'Email Parser',
+      desc: 'ARK lit vos emails entrants. Classification automatique, suggestion de réponse, extraction des pièces jointes. La boucle commerciale est fermée : relance → réponse → action automatique. Vous ne tapez plus un email.',
+    },
+    {
+      tag: 'V2·03',
+      title: 'DDA Auto-Audit',
+      desc: 'Vérification conformité Directive Distribution Assurance pour chaque client. Score 0–100, rapport PDF horodaté exportable, checklist ACPR-ready. La conformité n\'est plus une corvée, c\'est un clic.',
+    },
+  ];
+
+  return (
+    <section className="powers" style={{paddingTop: '0px'}}>
+      <div className="band-inner">
+        <div className="band-kicker">
+          <span className="dot" /> Vague 2 — Action autonome
+        </div>
+        <h2 className="band-title">
+          Le CRM qui <em>parle</em>, qui <em>lit</em><br />et qui <em>prouve</em>.
+        </h2>
+        <p className="band-text">
+          <em>"Le seul CRM qui parle, qui lit tes mails à ta place, et qui prouve ta conformité ACPR en 1 clic."</em>
+        </p>
+      </div>
+      <div className="powers-grid">
+        {features.map((f, i) => (
+          <FeatureCard key={i} {...f} index={i} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeatureCard({ tag, title, desc, index }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  });
+  const y = useSpring(useTransform(scrollYProgress, [0, 1], [80, -80]), { stiffness: 80, damping: 20 });
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+
+  return (
+    <motion.div ref={ref} className="power-card" style={{ y, opacity }}>
+      <div className="power-bubble">
+        <BubbleC size={100} showHalo={false} />
+      </div>
+      <div className="power-tag">{tag}</div>
+      <h3 className="power-title">{title}</h3>
+      <p className="power-desc">{desc}</p>
+    </motion.div>
+  );
+}
+
 function ProofSection() {
   const stats = [
+    { value: '8', label: 'features IA-natives' },
     { value: '+3h', label: 'gagnées par semaine' },
     { value: '98%', label: 'de satisfaction' },
     { value: '124', label: 'clients pilotes' },
@@ -308,20 +432,20 @@ function PricingSection() {
       name: 'Starter',
       price: '89',
       desc: 'L\'essentiel pour les courtiers indépendants',
-      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision', 'Support email', 'Sans engagement'],
+      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision + Morning Brief', 'Scoring prédictif', 'Support email', 'Sans engagement'],
     },
     {
       name: 'Pro',
-      price: '159',
-      desc: 'La puissance complète d\'ARK',
-      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK', 'Voice Intake + Quote Intel', 'Support prioritaire', 'Sans engagement'],
+      price: '199',
+      desc: 'Toute la puissance d\'ARK + Vague 1',
+      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK + Vague 1', 'Smart Relances + Revenue Forecast', 'Doc Intel + Voice Intake', 'Support prioritaire', 'Sans engagement'],
       featured: true,
     },
     {
-      name: 'Cabinet',
-      price: 'Sur devis',
-      desc: 'Pour les cabinets multi-courtiers',
-      features: ['Multi-utilisateurs', 'API publique', 'Onboarding dédié', 'SLA garanti'],
+      name: 'Premium',
+      price: '299',
+      desc: 'Vague 2 — Le cockpit ultime',
+      features: ['Tout le plan Pro', 'ARK Voice illimité (appels IA)', 'Email Parser + boîte unifiée', 'DDA Auto-Audit illimité', 'Rapports PDF ACPR-ready', 'Support dédié', 'Sans engagement'],
     },
   ];
 
@@ -341,22 +465,16 @@ function PricingSection() {
             {p.featured && <div className="pricing-badge">Le choix de la sérénité</div>}
             <h3 className="pricing-name">{p.name}</h3>
             <div className="pricing-price">
-              {p.price === 'Sur devis' ? (
-                <span className="pricing-custom">Sur devis</span>
-              ) : (
-                <>
-                  <span className="pricing-currency">€</span>
-                  <span className="pricing-amount">{p.price}</span>
-                  <span className="pricing-period">HT/mois</span>
-                </>
-              )}
+              <span className="pricing-currency">€</span>
+              <span className="pricing-amount">{p.price}</span>
+              <span className="pricing-period">HT/mois</span>
             </div>
             <p className="pricing-desc">{p.desc}</p>
             <ul className="pricing-features">
               {p.features.map((f, j) => <li key={j}>{f}</li>)}
             </ul>
             <Link to="/register" className={p.featured ? 'cta-primary' : 'cta-ghost'}>
-              {p.featured ? 'Essayer gratuitement' : p.name === 'Cabinet' ? 'Nous contacter' : 'Essayer 14 jours'}
+              {p.featured ? 'Essayer gratuitement' : p.name === 'Premium' ? 'Essayer 14 jours' : 'Essayer 14 jours'}
             </Link>
           </div>
         ))}
