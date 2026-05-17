@@ -17,6 +17,10 @@ import PredictiveScoring from '../components/scoring/PredictiveScoring'
 import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
 import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
 import DDACompliance from '../components/dda/DDACompliance'
+import BordereauIntelligence from '../components/bordereau/BordereauIntelligence'
+import RenewalMachine from '../components/renewal/RenewalMachine'
+import PoliceIntelligence from '../components/police/PoliceIntelligence'
+import LeadInstantInbox from '../components/leads/LeadInstantInbox'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -550,6 +554,31 @@ export default function Dashboard() {
         <VibeScrollSection delay={0.50} parallax={20}>
         <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
           <ArkVoiceCockpit apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        {/* Vague 3 — Outils Pro */}
+        <VibeScrollSection delay={0.55} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <BordereauIntelligence apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.60} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <RenewalMachine apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.65} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <LeadInstantInbox apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
+        </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.70} parallax={20}>
+        <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+          <PoliceIntelligence apiBase="/api" authToken={localStorage.getItem('courtia_token')} />
         </div>
         </VibeScrollSection>
 
