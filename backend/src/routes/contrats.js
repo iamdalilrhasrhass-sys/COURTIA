@@ -168,4 +168,21 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/contrats/count — Compter les contrats (alias /api/quotes/count)
+ */
+router.get('/count', verifyToken, async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+    const result = await pool.query(
+      'SELECT COUNT(*)::int as count FROM quotes q JOIN clients c ON q.client_id = c.id AND c.courtier_id = $1',
+      [req.user.id]
+    );
+    res.json({ count: result.rows[0]?.count || 0 });
+  } catch (err) {
+    console.error('GET /api/contrats/count error:', err.message);
+    res.status(500).json({ error: 'count_unavailable' });
+  }
+});
+
 module.exports = router;

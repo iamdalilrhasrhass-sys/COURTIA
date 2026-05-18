@@ -268,7 +268,7 @@ function PowersSection() {
   );
 }
 
-function PowerCard({ tag, title, desc, index }) {
+function PowerCard({ tag, title, desc, index: _index }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -384,7 +384,7 @@ function Vague2Section() {
   );
 }
 
-function FeatureCard({ tag, title, desc, index }) {
+function FeatureCard({ tag, title, desc, index: _index }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
