@@ -19,7 +19,7 @@ export function applySeo({ title, description, canonicalPath, ogTitle, ogDescrip
   ensureMeta('meta[property="og:description"]', { property: 'og:description' }).setAttribute('content', ogDescription || descValue)
   ensureMeta('meta[property="og:type"]', { property: 'og:type' }).setAttribute('content', ogType)
   ensureMeta('meta[property="og:url"]', { property: 'og:url' }).setAttribute('content', `https://app.courtiark.fr${canonicalPath || '/'}`)
-  ensureMeta('meta[property="og:image"]', { property: 'og:image' }).setAttribute('content', 'https://app.courtiark.fr/og-courtia.png')
+  ensureMeta('meta[property="og:image"]', { property: 'og:image' }).setAttribute('content', 'https://app.courtiark.fr/og-courtia.png?v=7')
   ensureMeta('meta[name="twitter:card"]', { name: 'twitter:card' }).setAttribute('content', 'summary_large_image')
 
   let link = document.head.querySelector('link[rel="canonical"]')
