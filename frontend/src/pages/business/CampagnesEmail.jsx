@@ -31,11 +31,11 @@ export default function CampagnesEmail() {
     React.createElement("div", { style: { ...cs, marginBottom: 24 } },
       React.createElement("h3", { style: { fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 16 } }, "⚡ Workflow métier"),
       React.createElement("ol", { style: { paddingLeft: 0, listStyle: "none" } },
-                    React.createElement("li", { key: 0, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "1."), "Choisissez un type de campagne")
-            React.createElement("li", { key: 1, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "2."), "Sélectionnez le segment cible")
-            React.createElement("li", { key: 2, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "3."), "ARK génère le template")
-            React.createElement("li", { key: 3, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "4."), "Définissez la séquence")
-            React.createElement("li", { key: 4, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "5."), "Suivez les conversions")
+                    React.createElement("li", { key: 0, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "1."), "Choisissez un type de campagne"),
+            React.createElement("li", { key: 1, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "2."), "Sélectionnez le segment cible"),
+            React.createElement("li", { key: 2, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "3."), "ARK génère le template"),
+            React.createElement("li", { key: 3, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "4."), "Définissez la séquence"),
+            React.createElement("li", { key: 4, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "5."), "Suivez les conversions"),
       )
     ),
     React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 } },
@@ -43,8 +43,8 @@ export default function CampagnesEmail() {
         React.createElement("h3", { style: { fontSize: 14, fontWeight: 700, color: C.green, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 } },
           React.createElement(CheckCircle2, { size: 16 }), "Déjà disponible"
         ),
-        React.createElement("ul", { style: { paddingLeft: 0, listStyle: "none" } },             React.createElement("li", { key: 0, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Templates email Aurora")
-            React.createElement("li", { key: 1, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Segments dynamiques")
+        React.createElement("ul", { style: { paddingLeft: 0, listStyle: "none" } },             React.createElement("li", { key: 0, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Templates email Aurora"),
+            React.createElement("li", { key: 1, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Segments dynamiques"),
             React.createElement("li", { key: 2, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Séquenceur de campagne"))
       ),
       React.createElement("div", { style: { ...cs } },

@@ -190,12 +190,13 @@ export default function Sidebar() {
   const isAdmin = isAdminRole((user?.role || '').toLowerCase())
   const initials = ((userFirst[0] || '') + (userLast[0] || '')).toUpperCase() || '?'
 
-  // ─── Item ─────────────────────────────────────────────────
-  function Item({ item }) {
+  // ─── Render Item ─────────────────────────────────────────
+  function renderItem(item) {
     const active = isActive(item.path)
     const Icon = item.icon
     return (
       <button
+        key={item.path}
         onClick={() => { setMobileOpen(false); navigate(item.path) }}
         style={{
           width: '100%',
@@ -227,12 +228,12 @@ export default function Sidebar() {
     )
   }
 
-  // ─── Univers (accordéon) ──────────────────────────────────
-  function Universe({ u }) {
+  // ─── Render Univers ──────────────────────────────────
+  function renderUniverse(u) {
     const open = !!openMap[u.id]
     const hasActive = u.items.some(it => isActive(it.path))
     return (
-      <div style={{ marginBottom: 2 }}>
+      <div key={u.id} style={{ marginBottom: 2 }}>
         <button
           onClick={() => toggleUniverse(u.id)}
           style={{
@@ -271,7 +272,7 @@ export default function Sidebar() {
               style={{ overflow: 'hidden' }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 1, paddingBottom: 4 }}>
-                {u.items.map(item => <Item key={item.path} item={item} />)}
+                {u.items.map(item => renderItem(item))}
               </div>
             </motion.div>
           )}
@@ -314,11 +315,11 @@ export default function Sidebar() {
 
       {/* Nav : 7 univers */}
       <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
-        {UNIVERSES.map(u => <Universe key={u.id} u={u} />)}
+        {UNIVERSES.map(u => renderUniverse(u))}
 
         {isAdmin && (
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
-            <Item item={{ path: '/admin', label: 'Admin', icon: Shield }} />
+            {renderItem({ path: '/admin', label: 'Admin', icon: Shield })}
           </div>
         )}
       </nav>

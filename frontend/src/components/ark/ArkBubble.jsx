@@ -1,3 +1,4 @@
+import Magnetic3D from "../../components/vibe/Magnetic3D"
 /**
  * ArkBubble — LOT 2
  * Bouton flottant ARK avec panel latéral
@@ -7,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { X, Sparkles, ChevronRight, Zap, Phone, Mail, FileText, Shield } from 'lucide-react'
 import { useArk } from './ArkContextProvider'
+import VapiVoiceButton from './VapiVoiceButton'
 
 // Styles inline Aurora Dark
 const styles = {
@@ -363,6 +365,7 @@ export default function ArkBubble() {
           ...(bubbleHovered ? styles.bubbleHover : {}),
           ...(isPanelOpen ? styles.bubbleActive : {})
         }}
+        className="animate-float animate-pulse-glow"
         onMouseEnter={() => setBubbleHovered(true)}
         onMouseLeave={() => setBubbleHovered(false)}
         onClick={togglePanel}
@@ -380,8 +383,11 @@ export default function ArkBubble() {
       <div
         style={{
           ...styles.panel,
-          ...(isPanelOpen ? styles.panelOpen : {})
+          ...(isPanelOpen ? styles.panelOpen : {}),
+          transform: isPanelOpen ? 'perspective(1200px) rotateY(-2deg)' : 'translateX(100%)',
+          boxShadow: '-10px 0 50px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.1)'
         }}
+        className="glass-vibe"
       >
         {/* Header */}
         <div style={styles.header}>
@@ -426,6 +432,7 @@ export default function ArkBubble() {
                 onClick={() => handleQuickAction('compliance_check')}
               />
             </div>
+            <VapiVoiceButton />
           </div>
 
           {/* Suggestions */}

@@ -7,6 +7,48 @@ import AuroraHalo from '../components/brand/AuroraHalo'
 import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
 export default function LandingPublic() {
+  // ═══════════════════════════════════════
+  // 3D MOUSE TRACKING — parallaxe profonde
+  // ═══════════════════════════════════════
+  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 })
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    let raf = null
+    const onMove = (e) => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = null
+        setMouse({
+          x: e.clientX / window.innerWidth,
+          y: e.clientY / window.innerHeight,
+        })
+      })
+    }
+    const onScroll = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = null
+        setScrollY(window.scrollY)
+      })
+    }
+    window.addEventListener('mousemove', onMove, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  // Calculate 3D transforms from mouse position
+  const orbX = (mouse.x - 0.5) * 24  // -12 to +12 px
+  const orbY = (mouse.y - 0.5) * 24
+  const orbRotX = (mouse.y - 0.5) * 8  // -4 to +4 deg
+  const orbRotY = (mouse.x - 0.5) * 8
+  const depthX = (mouse.x - 0.5) * 40
+  const depthY = (mouse.y - 0.5) * 40
+
   useEffect(() => {
     applySeo({
       title: 'COURTIA — Le cockpit IA des courtiers',
@@ -77,6 +119,107 @@ export default function LandingPublic() {
     reveals.forEach(el => observer.observe(el))
     
     return () => observer.disconnect()
+  }, [])
+
+  // V7: 3D ENGINE — Parallax scroll + Mouse-tracking tilt + Depth staging
+  useEffect(() => {
+    let raf = null
+    let mouseX = 0.5, mouseY = 0.5
+    let targetX = 0.5, targetY = 0.5
+    let scrollY = window.scrollY
+
+    const onMouseMove = (e) => {
+      targetX = e.clientX / window.innerWidth
+      targetY = e.clientY / window.innerHeight
+    }
+
+    const onScroll = () => { scrollY = window.scrollY }
+
+    const tick = () => {
+      // Smooth mouse follow (aggressive — feels responsive)
+      mouseX += (targetX - mouseX) * 0.06
+      mouseY += (targetY - mouseY) * 0.06
+
+      const root = document.querySelector('.lp-root')
+      if (!root) { raf = requestAnimationFrame(tick); return }
+
+      // ── PARALLAX: background layers move at different speeds ──
+      const stars = root.querySelector('.lp-stars')
+      const orbs = root.querySelector('.lp-orbs')
+      const particles = root.querySelector('.lp-particles')
+      const cosmosGrad = root.querySelector('.lp-cosmos-gradient')
+      if (stars) stars.style.transform = `translateY(${scrollY * 0.08}px) translateZ(-100px)`
+      if (orbs) orbs.style.transform = `translateY(${scrollY * 0.15}px) rotate(${scrollY * 0.02}deg) translateZ(-50px)`
+      if (particles) particles.style.transform = `translateY(${scrollY * 0.25}px) translateZ(-30px)`
+      if (cosmosGrad) cosmosGrad.style.transform = `translateY(${scrollY * 0.04}px) translateZ(-150px)`
+
+      // ── ORB: 3D rotate + translate (follows mouse) ──
+      const orbContainer = root.querySelector('.aurora-orb-container')
+      if (orbContainer) {
+        const ox = (mouseX - 0.5) * 60
+        const oy = (mouseY - 0.5) * 40
+        const rx = (mouseY - 0.5) * 12
+        const ry = (mouseX - 0.5) * 12
+        orbContainer.style.transform = `translate3d(${ox}px, ${oy}px, 20px) rotateX(${rx}deg) rotateY(${ry}deg)`
+      }
+
+      // ── HERO CONTENT: opposite parallax ──
+      const heroContent = root.querySelector('.lp-hero-content')
+      if (heroContent) {
+        const hx = (mouseX - 0.5) * -20
+        heroContent.style.transform = `translateY(${scrollY * 0.05}px) translateX(${hx}px) translateZ(10px)`
+      }
+
+      // ── 3D TILT on ALL depth cards (global mouse tracking) ──
+      const cards = root.querySelectorAll('.courtia-depth-card')
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect()
+        const cardCenterX = rect.left + rect.width / 2
+        const cardCenterY = rect.top + rect.height / 2
+        const distX = (targetX * window.innerWidth - cardCenterX) / (window.innerWidth * 0.4)
+        const distY = (targetY * window.innerHeight - cardCenterY) / (window.innerHeight * 0.4)
+        const inView = rect.top < window.innerHeight && rect.bottom > 0
+        if (inView) {
+          const tiltX = Math.max(-22, Math.min(22, distY * -22))
+          const tiltY = Math.max(-22, Math.min(22, distX * 22))
+          card.style.setProperty('--tilt-x', tiltX.toFixed(2))
+          card.style.setProperty('--tilt-y', tiltY.toFixed(2))
+          card.style.setProperty('--glow-x', `${(targetX * 100).toFixed(1)}%`)
+          card.style.setProperty('--glow-y', `${(targetY * 100).toFixed(1)}%`)
+        }
+      })
+
+      // ── HEADER: subtle float + depth ──
+      const header = root.querySelector('.lp-header')
+      if (header) {
+        header.style.transform = `translateY(${Math.sin(scrollY * 0.003) * 3}px) translateZ(30px)`
+      }
+
+      // ── SECTIONS: staggered 3D depth parallax ──
+      const sections = root.querySelectorAll('.lp-section')
+      sections.forEach((sec, i) => {
+        const rect = sec.getBoundingClientRect()
+        const inView = rect.top < window.innerHeight * 1.3 && rect.bottom > -100
+        if (inView) {
+          const offset = (rect.top - window.innerHeight * 0.7) * 0.05 * (i % 3 + 1)
+          const zDepth = (i % 3) * 10 - 10
+          sec.style.transform = `translateY(${offset}px) translateZ(${zDepth}px)`
+          sec.style.opacity = Math.min(1, 1 - Math.abs(offset) * 0.008)
+        }
+      })
+
+      raf = requestAnimationFrame(tick)
+    }
+
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    raf = requestAnimationFrame(tick)
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
   }, [])
 
   // V6: FAQ accordion state
@@ -210,23 +353,23 @@ export default function LandingPublic() {
             <div className="aurora-panel" style={{ padding: 40 }}>
               <div className="lp-ark-steps">
                 <div className="lp-ark-step">
-                  <div className="lp-ark-step-icon">🌅</div>
+                  <div className="lp-ark-step-icon"><span className="lp-step-indicator">AM</span></div>
                   <div><strong>Matin</strong> — ARK prépare les priorités du jour.</div>
                 </div>
                 <div className="lp-ark-step">
-                  <div className="lp-ark-step-icon">📋</div>
+                  <div className="lp-ark-step-icon"><span className="lp-step-indicator lp-step-pre">PRE</span></div>
                   <div><strong>Avant RDV</strong> — ARK résume le dossier client.</div>
                 </div>
                 <div className="lp-ark-step">
-                  <div className="lp-ark-step-icon">✉️</div>
+                  <div className="lp-ark-step-icon"><span className="lp-step-indicator lp-step-post">POST</span></div>
                   <div><strong>Après échange</strong> — ARK suggère une relance propre.</div>
                 </div>
                 <div className="lp-ark-step">
-                  <div className="lp-ark-step-icon">💡</div>
+                  <div className="lp-ark-step-icon"><span className="lp-step-indicator lp-step-scan">SCAN</span></div>
                   <div><strong>Portefeuille</strong> — ARK détecte les opportunités utiles.</div>
                 </div>
                 <div className="lp-ark-step">
-                  <div className="lp-ark-step-icon">🌙</div>
+                  <div className="lp-ark-step-icon"><span className="lp-step-indicator lp-step-pm">PM</span></div>
                   <div><strong>Fin de journée</strong> — ARK récap les actions restantes.</div>
                 </div>
               </div>
@@ -280,14 +423,14 @@ export default function LandingPublic() {
             <div className="lp-cockpit-preview">
               <div className="lp-cockpit-mock">
                 <div className="lp-cockpit-sidebar">
-                  <div className="lp-cockpit-nav-item lp-cockpit-nav-active">📊 Cockpit</div>
-                  <div className="lp-cockpit-nav-item">👥 Clients</div>
-                  <div className="lp-cockpit-nav-item">📋 Devis</div>
-                  <div className="lp-cockpit-nav-item">📄 Contrats</div>
-                  <div className="lp-cockpit-nav-item">🔔 Relances</div>
-                  <div className="lp-cockpit-nav-item">💡 Opportunités</div>
-                  <div className="lp-cockpit-nav-item">📈 Rapports</div>
-                  <div className="lp-cockpit-nav-item">⚙️ Paramètres</div>
+                  <div className="lp-cockpit-nav-item lp-cockpit-nav-active">Cockpit</div>
+                  <div className="lp-cockpit-nav-item">Clients</div>
+                  <div className="lp-cockpit-nav-item">Devis</div>
+                  <div className="lp-cockpit-nav-item">Contrats</div>
+                  <div className="lp-cockpit-nav-item">Relances</div>
+                  <div className="lp-cockpit-nav-item">Opportunités</div>
+                  <div className="lp-cockpit-nav-item">Rapports</div>
+                  <div className="lp-cockpit-nav-item">Paramètres</div>
                 </div>
                 <div className="lp-cockpit-main">
                   <div className="lp-cockpit-kpi-row">
@@ -310,19 +453,19 @@ export default function LandingPublic() {
                   </div>
                   <div className="lp-cockpit-table">
                     <div className="lp-cockpit-row">
-                      <span>🔴 <strong>Karim B.</strong> — Devis Auto #247</span>
+                      <span><span className="lp-cockpit-dot lp-dot-red"></span> <strong>Karim B.</strong> — Devis Auto #247</span>
                       <span>Sans réponse · 7 j</span>
                     </div>
                     <div className="lp-cockpit-row">
-                      <span>🟡 <strong>Dupont Jean</strong> — Contrat MRH</span>
+                      <span><span className="lp-cockpit-dot lp-dot-amber"></span> <strong>Dupont Jean</strong> — Contrat MRH</span>
                       <span>Échéance · 15 j</span>
                     </div>
                     <div className="lp-cockpit-row">
-                      <span>🟢 <strong>Martin SARL</strong> — Flotte Pro</span>
+                      <span><span className="lp-cockpit-dot lp-dot-green"></span> <strong>Martin SARL</strong> — Flotte Pro</span>
                       <span>À signer · 2 j</span>
                     </div>
                     <div className="lp-cockpit-row">
-                      <span>🔵 <strong>Sophie L.</strong> — Habitation</span>
+                      <span><span className="lp-cockpit-dot lp-dot-blue"></span> <strong>Sophie L.</strong> — Habitation</span>
                       <span>Cross-sell · ARK</span>
                     </div>
                   </div>
@@ -545,6 +688,9 @@ const styles = `
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   position: relative;
   overflow-x: hidden;
+  perspective: 2000px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
 }
 
 /* ─── COSMOS BACKGROUND ─── */
@@ -560,6 +706,8 @@ const styles = `
   position: absolute;
   inset: 0;
   overflow: hidden;
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .lp-orb {
@@ -568,6 +716,7 @@ const styles = `
   filter: blur(80px);
   opacity: 0.15;
   animation: lp-orb-drift 12s ease-in-out infinite;
+  transform-style: preserve-3d;
 }
 
 .lp-orb-1 {
@@ -609,6 +758,8 @@ const styles = `
   position: absolute;
   inset: 0;
   overflow: hidden;
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .lp-particle {
@@ -671,6 +822,8 @@ const styles = `
     radial-gradient(1px 1px at 22% 92%, rgba(255,255,255,0.2), transparent),
     radial-gradient(1px 1px at 65% 38%, rgba(255,255,255,0.25), transparent);
   animation: lp-stars-twinkle 4s ease-in-out infinite alternate;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @keyframes lp-stars-twinkle {
@@ -690,6 +843,8 @@ const styles = `
   padding: 12px 24px;
   margin: 12px 24px;
   border-radius: 16px;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
 }
 
 .lp-header-brand {
@@ -732,6 +887,8 @@ const styles = `
 .lp-hero-content {
   margin-top: 20px;
   max-width: 720px;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
 }
 
 .lp-hero-title {
@@ -763,6 +920,8 @@ const styles = `
   padding: 40px 20px;
   position: relative;
   z-index: 1;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s ease;
+  will-change: transform, opacity;
 }
 
 .lp-section-inner {
@@ -814,11 +973,46 @@ const styles = `
 .lp-ark-step-icon {
   font-size: 22px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.12);
 }
+
+.lp-step-indicator {
+  font-family: var(--aurora-font-mono, 'SF Mono', 'JetBrains Mono', monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--aurora-violet-soft, #A78BFA);
+}
+
+.lp-step-pre { color: var(--aurora-cyan-soft, #22D3EE); }
+.lp-step-post { color: var(--aurora-emerald-soft, #34D399); }
+.lp-step-scan { color: var(--aurora-amber-soft, #FBBF24); }
+.lp-step-pm { color: var(--aurora-rose-soft, #FB7185); }
 
 .lp-ark-step strong {
   color: #fff;
 }
+
+/* ─── COCKPIT MOCK DOTS ─── */
+.lp-cockpit-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.lp-dot-red { background: #EF4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+.lp-dot-amber { background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+.lp-dot-green { background: #10B981; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+.lp-dot-blue { background: #3B82F6; box-shadow: 0 0 6px rgba(59,130,246,0.5); }
 
 /* ─── FEATURES GRID ─── */
 .lp-features-grid {
@@ -934,6 +1128,102 @@ const styles = `
 .lp-reveal-delay-3 { transition-delay: 0.3s; }
 .lp-reveal-delay-4 { transition-delay: 0.4s; }
 .lp-reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ─── V7: 3D TILT + GLOW (mouse-tracking depth system) ─── */
+/* Dynamic tilt via JS --tilt-x / --tilt-y CSS variables */
+.courtia-depth-card {
+  --tilt-x: 0;
+  --tilt-y: 0;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease !important;
+  will-change: transform;
+}
+
+.courtia-depth-card:hover {
+  transform: rotateX(calc(var(--tilt-x) * 1deg)) rotateY(calc(var(--tilt-y) * 1deg)) translateY(-6px) translateZ(20px) !important;
+  box-shadow:
+    0 32px 100px rgba(139, 92, 246, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.7),
+    0 4px 12px rgba(139, 92, 246, 0.2) !important;
+}
+
+.courtia-depth-card:hover .courtia-depth-card-inner {
+  transform: rotateX(calc(var(--tilt-x) * 0.5deg)) rotateY(calc(var(--tilt-y) * 0.5deg)) translateZ(40px);
+}
+
+/* Mouse-follow glow on depth cards */
+.courtia-depth-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: radial-gradient(
+    800px circle at var(--glow-x) var(--glow-y),
+    rgba(139, 92, 246, 0.25),
+    rgba(236, 72, 153, 0.12),
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.courtia-depth-card:hover::after {
+  opacity: 1;
+}
+
+/* 3D depth staging — translateZ layering */
+.lp-depth-stage-near {
+  transform: translateZ(20px);
+  transform-style: preserve-3d;
+}
+
+.lp-depth-stage-mid {
+  transform: translateZ(40px);
+  transform-style: preserve-3d;
+}
+
+.lp-depth-stage-far {
+  transform: translateZ(60px);
+  transform-style: preserve-3d;
+}
+
+/* Floating 3D badges — natural buoyancy */
+.lp-float-3d {
+  animation: lp-3d-buoy 7s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes lp-3d-buoy {
+  0%, 100% { transform: translateY(0) translateZ(0); }
+  33% { transform: translateY(-6px) translateZ(10px); }
+  66% { transform: translateY(2px) translateZ(-5px); }
+}
+
+/* Aurora orb container — smooth mouse follow */
+.aurora-orb-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+/* Hero section — depth layering */
+.lp-hero {
+  padding: 60px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  transform-style: preserve-3d;
+}
 
 /* ─── V6: 3D CARD TILT ─── */
 .lp-card-3d {

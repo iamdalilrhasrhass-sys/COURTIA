@@ -222,7 +222,7 @@ function PlanCard({ plan, selected, loading, onSelect }) {
         <div className="text-3xl font-black tracking-tight text-white">
           {contactOnly ? 'Sur devis' : `${Math.round(Number(plan.price || 0))} €`}
         </div>
-        {!contactOnly && <div className="text-sm text-white/50">HT / mois après essai {plan.trial_days || 7} jours</div>}
+        {!contactOnly && <div className="text-sm text-white/50">HT / mois{plan.trial_days > 0 ? ` après essai ${plan.trial_days} jours` : ''}</div>}
       </div>
 
       <ul className="mt-5 flex-1 space-y-2 text-sm text-white/65">

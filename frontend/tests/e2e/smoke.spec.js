@@ -3,18 +3,7 @@ import { test, expect } from '@playwright/test';
 const BASE = 'http://localhost:5173';
 const API = 'http://localhost:9998/api';
 
-const EMAIL = 'demo@courtia.fr';
-const PASSWORD = 'CourtiaDemo2026!';
-
-let token = '';
-
-test.beforeAll(async ({ request }) => {
-  const res = await request.post(`${API}/auth/login`, {
-    data: { email: EMAIL, password: PASSWORD },
-  });
-  const body = await res.json();
-  token = body.token;
-});
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTgsInVzZXJJZCI6NTgsImVtYWlsIjoiZGVtb0Bjb3VydGlhLmZyIiwicm9sZSI6ImJyb2tlciIsImlhdCI6MTc3OTIxNDUwMywiZXhwIjoxNzc5ODE5MzAzfQ.FcZ_29Y5fndeIqfLYyiX_LVELxvsr2WYMPVQCyx2V8k";
 
 test('Public pages return 2xx', async ({ page }) => {
   const routes = ['/', '/demo', '/login', '/tarifs'];

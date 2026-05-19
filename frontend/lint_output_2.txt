@@ -1,0 +1,1868 @@
+
+> courtia-frontend@1.0.2 lint
+> eslint src
+
+
+/root/courtia/frontend/src/components/ARKChatTab.jsx
+  107:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  105 |   }, [clientId]);
+  106 |
+> 107 |   useEffect(() => { fetchHistory(); }, [fetchHistory]);
+      |                     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  108 |
+  109 |   const adjustTextareaHeight = () => {
+  110 |     if (textareaRef.current) {  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/ARKDemo.jsx
+  67:2  warning  Error: This value cannot be modified
+
+This modifies a variable that React considers immutable.
+
+  65 |  const data = JSON.parse(line.slice(6));
+  66 |  if (data.type === 'content_block_delta' && data.delta?.type === 'text_delta') {
+> 67 |  fullResponse += data.delta.text;
+     |  ^^^^^^^^^^^^ `fullResponse` cannot be modified
+  68 |  setMessages(prev => {
+  69 |  const last = prev[prev.length - 1];
+  70 |  if (last?.role === 'assistant') {  react-hooks/immutability
+
+/root/courtia/frontend/src/components/ArkFormateur.jsx
+  19:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/ArkWidgetManager.jsx
+  17:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/BubblePortfolioMap.jsx
+  469:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/root/courtia/frontend/src/components/Calendar.jsx
+  38:5  warning  Error: Cannot access variable before it is declared
+
+`fetchAllAppointments` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  36 |
+  37 |   useEffect(() => {
+> 38 |     fetchAllAppointments()
+     |     ^^^^^^^^^^^^^^^^^^^^ `fetchAllAppointments` accessed before it is declared
+  39 |   }, [token])
+  40 |
+  41 |   const fetchAllAppointments = async () => {
+
+  39 |   }, [token])
+  40 |
+> 41 |   const fetchAllAppointments = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |     try {
+     | ^^^^^^^^^
+> 43 |       const response = await fetch(`${API_URL}/api/appointments`, {
+     …
+     | ^^^^^^^^^
+> 50 |     }
+     | ^^^^^^^^^
+> 51 |   }
+     | ^^^^ `fetchAllAppointments` is declared here
+  52 |
+  53 |   const handleCreateAppointment = async () => {
+  54 |     if (!selectedClient || !formData.title || !formData.start_time || !formData.end_time) {  react-hooks/immutability
+  39:6  warning  React Hook useEffect has a missing dependency: 'fetchAllAppointments'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/CalendarWidget.jsx
+  22:11  error    'showToast' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  43:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  41 |
+  42 |   useEffect(() => {
+> 43 |     fetchEvents();
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |     // Refresh toutes les 5 minutes
+  45 |     const interval = setInterval(fetchEvents, 5 * 60 * 1000);
+  46 |     return () => clearInterval(interval);  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/ClientBubbleGridPremium.jsx
+  375:36  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  373 |             {safeClients.map((client) => (
+  374 |               <BubbleAvatar
+> 375 |                 key={client?.id ?? Math.random()}
+      |                                    ^^^^^^^^^^^^^ Cannot call impure function
+  376 |                 client={client}
+  377 |                 selected={selectedId === client?.id}
+  378 |                 onClick={handleClick}  react-hooks/purity
+
+/root/courtia/frontend/src/components/ClientDetail.jsx
+  57:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  55 |     // Recharge uniquement si les contrats ne sont pas encore présents
+  56 |     if (!Array.isArray(selectedClient.contracts)) {
+> 57 |       setDetailLoading(true)
+     |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  58 |       fetchClientDetail(selectedClient.id)
+  59 |         .catch(console.error)
+  60 |         .finally(() => setDetailLoading(false))  react-hooks/set-state-in-effect
+  62:6  warning  React Hook useEffect has missing dependencies: 'fetchClientDetail' and 'selectedClient'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/ClientsList.jsx
+  29:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  27 |   useEffect(() => {
+  28 |     if (token) {
+> 29 |       setLoading(true)
+     |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |       fetchClients(token)
+  31 |       setTimeout(() => setLoading(false), 500)
+  32 |     }  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/Contrats.jsx
+  30:7  warning  Error: Cannot access variable before it is declared
+
+`fetchContrats` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  28 |   useEffect(() => {
+  29 |     if (token) {
+> 30 |       fetchContrats()
+     |       ^^^^^^^^^^^^^ `fetchContrats` accessed before it is declared
+  31 |       fetchClients()
+  32 |     }
+  33 |   }, [token])
+
+  33 |   }, [token])
+  34 |
+> 35 |   const fetchContrats = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |     try {
+     | ^^^^^^^^^
+> 37 |       const res = await fetch(`${API_URL}/api/contracts`, {
+     …
+     | ^^^^^^^^^
+> 48 |     }
+     | ^^^^^^^^^
+> 49 |   }
+     | ^^^^ `fetchContrats` is declared here
+  50 |
+  51 |   const fetchClients = async () => {
+  52 |     try {  react-hooks/immutability
+  31:7  warning  Error: Cannot access variable before it is declared
+
+`fetchClients` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  29 |     if (token) {
+  30 |       fetchContrats()
+> 31 |       fetchClients()
+     |       ^^^^^^^^^^^^ `fetchClients` accessed before it is declared
+  32 |     }
+  33 |   }, [token])
+  34 |
+
+  49 |   }
+  50 |
+> 51 |   const fetchClients = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 52 |     try {
+     | ^^^^^^^^^
+> 53 |       const res = await fetch(`${API_URL}/api/clients`, {
+     …
+     | ^^^^^^^^^
+> 60 |     }
+     | ^^^^^^^^^
+> 61 |   }
+     | ^^^^ `fetchClients` is declared here
+  62 |
+  63 |   const handleSubmit = async (e) => {
+  64 |     e.preventDefault()                          react-hooks/immutability
+  33:6  warning  React Hook useEffect has missing dependencies: 'fetchClients' and 'fetchContrats'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/CrossSellDashboard.jsx
+  20:38  warning  React Hook useEffect has missing dependencies: 'filter' and 'load'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/DDAFormateur.jsx
+  18:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/EquipeCabinet.jsx
+  20:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/NotificationBell.jsx
+  31:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  29 |
+  30 |   useEffect(() => {
+> 31 |     loadNotifications(true)
+     |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  32 |     pollRef.current = setInterval(() => loadNotifications(true), POLL_INTERVAL_MS)
+  33 |     return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  34 |   }, [loadNotifications])  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/Parametres.jsx
+  22:5  warning  Error: Cannot access variable before it is declared
+
+`fetchProfile` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  20 |
+  21 |   useEffect(() => {
+> 22 |     fetchProfile()
+     |     ^^^^^^^^^^^^ `fetchProfile` accessed before it is declared
+  23 |   }, [token])
+  24 |
+  25 |   const fetchProfile = async () => {
+
+  23 |   }, [token])
+  24 |
+> 25 |   const fetchProfile = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |     try {
+     | ^^^^^^^^^
+> 27 |       // Mock profile data - replace with real API endpoint
+     …
+     | ^^^^^^^^^
+> 44 |     }
+     | ^^^^^^^^^
+> 45 |   }
+     | ^^^^ `fetchProfile` is declared here
+  46 |
+  47 |   const handleSubmit = async (e) => {
+  48 |     e.preventDefault()  react-hooks/immutability
+
+/root/courtia/frontend/src/components/Settings.jsx
+  30:7  warning  Error: Cannot access variable before it is declared
+
+`fetchProfile` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  28 |   useEffect(() => {
+  29 |     if (token) {
+> 30 |       fetchProfile()
+     |       ^^^^^^^^^^^^ `fetchProfile` accessed before it is declared
+  31 |     }
+  32 |   }, [token])
+  33 |
+
+  32 |   }, [token])
+  33 |
+> 34 |   const fetchProfile = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     try {
+     | ^^^^^^^^^
+> 36 |       setLoading(true)
+     …
+     | ^^^^^^^^^
+> 66 |     }
+     | ^^^^^^^^^
+> 67 |   }
+     | ^^^^ `fetchProfile` is declared here
+  68 |
+  69 |   const handleChange = (e) => {
+  70 |     const { name, value } = e.target  react-hooks/immutability
+  32:6  warning  React Hook useEffect has a missing dependency: 'fetchProfile'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/Sidebar.jsx
+  164:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  162 |   // Close drawer on route change
+  163 |   useEffect(() => {
+> 164 |     setMobileOpen(false)
+      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  165 |   }, [location.pathname])
+  166 |
+  167 |   function logout() {  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/SimulateurRevenus.jsx
+  21:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/Taches.jsx
+  27:7  warning  Error: Cannot access variable before it is declared
+
+`fetchTasks` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  25 |   useEffect(() => {
+  26 |     if (token) {
+> 27 |       fetchTasks()
+     |       ^^^^^^^^^^ `fetchTasks` accessed before it is declared
+  28 |       fetchClients()
+  29 |     }
+  30 |   }, [token])
+
+  30 |   }, [token])
+  31 |
+> 32 |   const fetchTasks = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     try {
+     | ^^^^^^^^^
+> 34 |       // Simulating tasks API - will be replaced with real endpoint
+     …
+     | ^^^^^^^^^
+> 60 |     }
+     | ^^^^^^^^^
+> 61 |   }
+     | ^^^^ `fetchTasks` is declared here
+  62 |
+  63 |   const fetchClients = async () => {
+  64 |     try {  react-hooks/immutability
+  28:7  warning  Error: Cannot access variable before it is declared
+
+`fetchClients` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  26 |     if (token) {
+  27 |       fetchTasks()
+> 28 |       fetchClients()
+     |       ^^^^^^^^^^^^ `fetchClients` accessed before it is declared
+  29 |     }
+  30 |   }, [token])
+  31 |
+
+  61 |   }
+  62 |
+> 63 |   const fetchClients = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 64 |     try {
+     | ^^^^^^^^^
+> 65 |       const res = await fetch(`${API_URL}/api/clients`, {
+     …
+     | ^^^^^^^^^
+> 72 |     }
+     | ^^^^^^^^^
+> 73 |   }
+     | ^^^^ `fetchClients` is declared here
+  74 |
+  75 |   const handleSubmit = (e) => {
+  76 |     e.preventDefault()                      react-hooks/immutability
+  30:6  warning  React Hook useEffect has a missing dependency: 'fetchClients'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/TachesTab.jsx
+  65:33  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  63 |   const [form, setForm] = useState({ titre: '', description: '', priorite: 'normale', echeance: '' })
+  64 |   
+> 65 |   useEffect(() => { if (task) { setForm({ ...task, echeance: task.echeance ? task.echeance.split('T')[0] : '' }) } else { setForm({ titre: '', description: '', priorite: 'normale', echeance: '' }) } }, [task])
+     |                                 ^^^^^^^ Avoid calling setState() directly within an effect
+  66 |   
+  67 |   const handleSubmit = (e) => { e.preventDefault(); onSave({ ...form, id: task?.id, statut: task?.statut || 'a_faire' }); }
+  68 |   const inputClass = "w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-blue-300 focus:border-[#2563eb] outline-none"  react-hooks/set-state-in-effect
+  97:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   95 |   const [selectedTask, setSelectedTask] = useState(null)
+   96 |
+>  97 |   useEffect(() => { setTaches(initialTaches) }, [initialTaches])
+      |                     ^^^^^^^^^ Avoid calling setState() directly within an effect
+   98 |
+   99 |   const tasksByStatus = useMemo(() => KANBAN_COLUMNS.reduce((acc, col) => ({...acc, [col.id]: taches.filter(t => t.statut === col.id).sort((a,b) => new Date(a.echeance) - new Date(b.echeance))}), {}), [taches])
+  100 |   const openModal = (task = null) => { setSelectedTask(task); setShowModal(true) }                                                                                                                                                                                                               react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/TokenWallet.jsx
+  17:6   warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+  24:28  warning  Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+  22 |     const data = await res.json();
+  23 |     setBuying(null);
+> 24 |     if (data.checkout_url) window.location.href = data.checkout_url;
+     |                            ^^^^^^^^^^^^^^^ value cannot be modified
+  25 |   }
+  26 |
+  27 |   if (!data) return <div className="p-6 text-gray-400 animate-pulse">Chargement wallet...</div>;  react-hooks/immutability
+
+/root/courtia/frontend/src/components/agenda/AgendaRDV.jsx
+   9:10  error    'view' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                              no-unused-vars
+   9:16  error    'setView' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                           no-unused-vars
+  11:10  error    'showDispo' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                         no-unused-vars
+  11:21  error    'setShowDispo' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                      no-unused-vars
+  14:10  error    'dispos' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                            no-unused-vars
+  26:6   warning  React Hook useEffect has missing dependencies: 'debut', 'fin', and 'headers'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/ark/ArkBubble.jsx
+  337:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  343:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+/root/courtia/frontend/src/components/ark/ArkBubbleV2.jsx
+  50:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+
+/root/courtia/frontend/src/components/ark/ArkContextProvider.jsx
+  126:7   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  124 |   useEffect(() => {
+  125 |     if (currentContext.page) {
+> 126 |       fetchSuggestions()
+      |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  127 |     }
+  128 |   }, [currentContext.page, currentContext.clientId, fetchSuggestions])
+  129 |  react-hooks/set-state-in-effect
+  161:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-refresh/only-export-components
+  170:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-refresh/only-export-components
+
+/root/courtia/frontend/src/components/aurora/AuroraLayout.jsx
+  72:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  70 |   const [collapsed, setCollapsed] = useState(false)
+  71 |
+> 72 |   useEffect(() => { setMobileOpen(false) }, [location.pathname])
+     |                     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  73 |
+  74 |   return (
+  75 |     <div  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/aurora/AuroraMobileLayout.jsx
+  197:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/root/courtia/frontend/src/components/aurora/AuroraTableMobile.jsx
+  6:17  error  'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/root/courtia/frontend/src/components/aurora/AuroraToast.jsx
+  124:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/root/courtia/frontend/src/components/bordereau/BordereauIntelligence.jsx
+  21:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  19 |   };
+  20 |
+> 21 |   useEffect(() => { load(); }, []);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  22 |
+  23 |   const handleUpload = async (e) => {
+  24 |     const file = e.target.files?.[0];  react-hooks/set-state-in-effect
+  21:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/campagnes/CampagnesSMS.jsx
+  19:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/coach/ArkCoachDashboard.jsx
+  30:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/cockpit/ArkMorningBrief.jsx
+  50:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  48 |   };
+  49 |
+> 50 |   useEffect(() => { fetchBrief(); }, []);
+     |                     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  51 |
+  52 |   const markDone = async (index) => {
+  53 |     setCompleted(prev => new Set([...prev, index]));  react-hooks/set-state-in-effect
+  50:38  warning  React Hook useEffect has a missing dependency: 'fetchBrief'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/comparateur/AgendaRDV.jsx
+   9:10  error    'view' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                              no-unused-vars
+   9:16  error    'setView' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                           no-unused-vars
+  11:10  error    'showDispo' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                         no-unused-vars
+  11:21  error    'setShowDispo' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                      no-unused-vars
+  14:10  error    'dispos' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                            no-unused-vars
+  26:6   warning  React Hook useEffect has missing dependencies: 'debut', 'fin', and 'headers'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/comparateur/ComparateurDevis.jsx
+  17:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/comparateur/RentabiliteDashboard.jsx
+  20:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  18 |   };
+  19 |
+> 20 |   useEffect(() => { load(periode); }, []);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  21 |
+  22 |   const changePeriode = (p) => { setPeriode(p); load(p); };
+  23 |  react-hooks/set-state-in-effect
+  20:39  warning  React Hook useEffect has missing dependencies: 'load' and 'periode'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/comparateur/SinistreTracker.jsx
+  16:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/comparateur/VeilleMarche.jsx
+  15:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/dda/DDACompliance.jsx
+   37:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  35 |   };
+  36 |
+> 37 |   useEffect(() => { load(); }, []);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  38 |
+  39 |   if (loading || !dashboard) return <div className="rounded-3xl bg-slate-900/60 border border-slate-700/50 p-12 flex items-center justify-center"><Loader2 className="w-6 h-6 text-cyan-400 animate-spin" /></div>;
+  40 |  react-hooks/set-state-in-effect
+   37:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  185:6   warning  React Hook useEffect has missing dependencies: 'apiBase' and 'authToken'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/facturation/FacturationHonoraires.jsx
+  16:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/forecast/RevenueForecast.jsx
+  42:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  40 |   };
+  41 |
+> 42 |   useEffect(() => { load(period); }, [period]);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  43 |
+  44 |   if (loading || !data) {
+  45 |     return (  react-hooks/set-state-in-effect
+  42:38  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/inbox/EmailInboxUnified.jsx
+   37:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  35 |   };
+  36 |
+> 37 |   useEffect(() => { load(); }, [filter]);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  38 |
+  39 |   const scanNow = async () => {
+  40 |     setScanning(true);  react-hooks/set-state-in-effect
+   37:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  206:6   warning  React Hook useEffect has missing dependencies: 'apiBase', 'authToken', and 's'. Either include them or remove the dependency array. You can also do a functional update 'setS(s => ...)' if you only need 's' in the 'setS' call                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/intel/DocumentIntelligence.jsx
+  24:60  error  'clientId' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/root/courtia/frontend/src/components/leads/LeadInstantInbox.jsx
+  32:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  30 |   };
+  31 |
+> 32 |   useEffect(() => { load(); }, [filter]);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  33 |
+  34 |   const convert = async (id) => {
+  35 |     const r = await fetch(`${apiBase}/leads/${id}/convert`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });  react-hooks/set-state-in-effect
+  32:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/negociateur/ArkNegociateur.jsx
+  19:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/parrainage/ParrainageTracker.jsx
+  13:6  warning  React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/police/PoliceIntelligence.jsx
+  22:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  20 |   };
+  21 |
+> 22 |   useEffect(() => { load(); }, [clientId]);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  23 |
+  24 |   const upload = async (e) => {
+  25 |     const file = e.target.files?.[0];  react-hooks/set-state-in-effect
+  22:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/renewal/RenewalMachine.jsx
+   9:10  error    'selectedRenewal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+  10:10  error    'drafting' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+  59:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  57 |   };
+  58 |
+> 59 |   useEffect(() => { load(); }, []);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  60 |   if (loading || !data) return <div className="rounded-3xl bg-slate-900/60 border border-slate-700/50 p-12 flex items-center justify-center"><Loader2 className="w-6 h-6 text-cyan-400 animate-spin" /></div>;
+  61 |
+  62 |   return (  react-hooks/set-state-in-effect
+  59:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/rentabilite/RentabiliteDashboard.jsx
+  20:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  18 |   };
+  19 |
+> 20 |   useEffect(() => { load(periode); }, []);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  21 |
+  22 |   const changePeriode = (p) => { setPeriode(p); load(p); };
+  23 |  react-hooks/set-state-in-effect
+  20:39  warning  React Hook useEffect has missing dependencies: 'load' and 'periode'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/rgpd/RGPDRegistre.jsx
+  13:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  72:17  error    'mesures' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                  no-unused-vars
+
+/root/courtia/frontend/src/components/scoring/PredictiveScoring.jsx
+  105:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  103 |   };
+  104 |
+> 105 |   useEffect(() => { loadData(); }, []);
+      |                     ^^^^^^^^ Avoid calling setState() directly within an effect
+  106 |
+  107 |   if (loading) {
+  108 |     return (  react-hooks/set-state-in-effect
+  105:36  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/signature/SignatureWorkflow.jsx
+  18:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/sinistre/SinistreTracker.jsx
+  16:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/ui/AnimatedNumber.jsx
+  29:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  27 |   useEffect(() => {
+  28 |     if (isNaN(numVal)) {
+> 29 |       setDisplay(`${prefix}—${suffix}`)
+     |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |       return
+  31 |     }
+  32 |  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/ui/CommandPalette.jsx
+  56:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  54 |   useEffect(() => {
+  55 |     if (open) {
+> 56 |       setQuery('')
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  57 |       setSelectedIdx(0)
+  58 |       requestAnimationFrame(() => inputRef.current?.focus())
+  59 |     }  react-hooks/set-state-in-effect
+  64:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  62 |   // Keep selectedIdx in bounds when filter changes
+  63 |   useEffect(() => {
+> 64 |     setSelectedIdx(0)
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  65 |   }, [query])
+  66 |
+  67 |   useEffect(() => {                react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/components/veille/VeilleMarche.jsx
+  15:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/vibe/VibePage.jsx
+   16:18  error    'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   16:39  error    'useCallback' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+   38:26  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  36 |     <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: 'none', overflow: 'hidden' }}>
+  37 |       {Array.from({ length: count }).map((_, i) => {
+> 38 |         const size = 2 + Math.random() * 4
+     |                          ^^^^^^^^^^^^^ Cannot call impure function
+  39 |         const x = Math.random() * 100
+  40 |         const y = Math.random() * 100
+  41 |         const duration = 15 + Math.random() * 30                             react-hooks/purity
+   39:19  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  37 |       {Array.from({ length: count }).map((_, i) => {
+  38 |         const size = 2 + Math.random() * 4
+> 39 |         const x = Math.random() * 100
+     |                   ^^^^^^^^^^^^^ Cannot call impure function
+  40 |         const y = Math.random() * 100
+  41 |         const duration = 15 + Math.random() * 30
+  42 |         const delay = Math.random() * 10                                                                                                                react-hooks/purity
+   40:19  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  38 |         const size = 2 + Math.random() * 4
+  39 |         const x = Math.random() * 100
+> 40 |         const y = Math.random() * 100
+     |                   ^^^^^^^^^^^^^ Cannot call impure function
+  41 |         const duration = 15 + Math.random() * 30
+  42 |         const delay = Math.random() * 10
+  43 |         const colors = ['rgba(139,92,246,0.3)', 'rgba(34,211,238,0.25)', 'rgba(91,77,245,0.2)', 'rgba(255,255,255,0.15)']                                           react-hooks/purity
+   41:31  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  39 |         const x = Math.random() * 100
+  40 |         const y = Math.random() * 100
+> 41 |         const duration = 15 + Math.random() * 30
+     |                               ^^^^^^^^^^^^^ Cannot call impure function
+  42 |         const delay = Math.random() * 10
+  43 |         const colors = ['rgba(139,92,246,0.3)', 'rgba(34,211,238,0.25)', 'rgba(91,77,245,0.2)', 'rgba(255,255,255,0.15)']
+  44 |         const color = colors[Math.floor(Math.random() * colors.length)]  react-hooks/purity
+   42:23  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  40 |         const y = Math.random() * 100
+  41 |         const duration = 15 + Math.random() * 30
+> 42 |         const delay = Math.random() * 10
+     |                       ^^^^^^^^^^^^^ Cannot call impure function
+  43 |         const colors = ['rgba(139,92,246,0.3)', 'rgba(34,211,238,0.25)', 'rgba(91,77,245,0.2)', 'rgba(255,255,255,0.15)']
+  44 |         const color = colors[Math.floor(Math.random() * colors.length)]
+  45 |         return (                               react-hooks/purity
+   44:41  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  42 |         const delay = Math.random() * 10
+  43 |         const colors = ['rgba(139,92,246,0.3)', 'rgba(34,211,238,0.25)', 'rgba(91,77,245,0.2)', 'rgba(255,255,255,0.15)']
+> 44 |         const color = colors[Math.floor(Math.random() * colors.length)]
+     |                                         ^^^^^^^^^^^^^ Cannot call impure function
+  45 |         return (
+  46 |           <motion.div
+  47 |             key={i}                                                          react-hooks/purity
+   57:23  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  55 |             }}
+  56 |             animate={{
+> 57 |               x: [0, (Math.random() - 0.5) * 100, 0],
+     |                       ^^^^^^^^^^^^^ Cannot call impure function
+  58 |               y: [0, (Math.random() - 0.5) * 100, 0],
+  59 |               opacity: [0.3, 0.7, 0.3],
+  60 |             }}                                                                                                                                                                         react-hooks/purity
+   58:23  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  56 |             animate={{
+  57 |               x: [0, (Math.random() - 0.5) * 100, 0],
+> 58 |               y: [0, (Math.random() - 0.5) * 100, 0],
+     |                       ^^^^^^^^^^^^^ Cannot call impure function
+  59 |               opacity: [0.3, 0.7, 0.3],
+  60 |             }}
+  61 |             transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}                                                                                                      react-hooks/purity
+  128:3   error    'pageKey' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+
+/root/courtia/frontend/src/components/vibe/VibeScrollSection.jsx
+  14:3  error  'stagger' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/root/courtia/frontend/src/components/voice/ArkVoiceCockpit.jsx
+  28:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  26 |   };
+  27 |
+> 28 |   useEffect(() => { load(); }, []);
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  29 |
+  30 |   const save = async () => {
+  31 |     setSaving(true);  react-hooks/set-state-in-effect
+  28:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/components/whitelabel/WhiteLabelAdmin.jsx
+  22:6  warning  React Hook useEffect has a missing dependency: 'headers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/design/BubbleC.jsx
+  26:6  error  'rest' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/root/courtia/frontend/src/design/CosmosBackground.jsx
+   1:10  error    'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  31:13  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  29 |     return Array.from({ length: particleCount }, (_, i) => ({
+  30 |       id: i,
+> 31 |       left: Math.random() * 100,
+     |             ^^^^^^^^^^^^^ Cannot call impure function
+  32 |       top: Math.random() * 100,
+  33 |       size: 1 + Math.random() * 2.5,
+  34 |       delay: Math.random() * 8,                                         react-hooks/purity
+  32:12  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  30 |       id: i,
+  31 |       left: Math.random() * 100,
+> 32 |       top: Math.random() * 100,
+     |            ^^^^^^^^^^^^^ Cannot call impure function
+  33 |       size: 1 + Math.random() * 2.5,
+  34 |       delay: Math.random() * 8,
+  35 |       duration: 8 + Math.random() * 10,                                                                react-hooks/purity
+  33:17  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  31 |       left: Math.random() * 100,
+  32 |       top: Math.random() * 100,
+> 33 |       size: 1 + Math.random() * 2.5,
+     |                 ^^^^^^^^^^^^^ Cannot call impure function
+  34 |       delay: Math.random() * 8,
+  35 |       duration: 8 + Math.random() * 10,
+  36 |       hue: Math.floor(Math.random() * 3), // 0 pink, 1 violet, 2 cyan  react-hooks/purity
+  34:14  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  32 |       top: Math.random() * 100,
+  33 |       size: 1 + Math.random() * 2.5,
+> 34 |       delay: Math.random() * 8,
+     |              ^^^^^^^^^^^^^ Cannot call impure function
+  35 |       duration: 8 + Math.random() * 10,
+  36 |       hue: Math.floor(Math.random() * 3), // 0 pink, 1 violet, 2 cyan
+  37 |     }));                             react-hooks/purity
+  35:21  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  33 |       size: 1 + Math.random() * 2.5,
+  34 |       delay: Math.random() * 8,
+> 35 |       duration: 8 + Math.random() * 10,
+     |                     ^^^^^^^^^^^^^ Cannot call impure function
+  36 |       hue: Math.floor(Math.random() * 3), // 0 pink, 1 violet, 2 cyan
+  37 |     }));
+  38 |   }, [particleCount]);                               react-hooks/purity
+  36:23  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  34 |       delay: Math.random() * 8,
+  35 |       duration: 8 + Math.random() * 10,
+> 36 |       hue: Math.floor(Math.random() * 3), // 0 pink, 1 violet, 2 cyan
+     |                       ^^^^^^^^^^^^^ Cannot call impure function
+  37 |     }));
+  38 |   }, [particleCount]);
+  39 |                                                                  react-hooks/purity
+
+/root/courtia/frontend/src/hooks/useOnboarding.js
+  132:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  130 |   // Charger au montage
+  131 |   useEffect(() => {
+> 132 |     fetchProgress();
+      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  133 |     fetchBadges();
+  134 |   }, [fetchProgress, fetchBadges]);
+  135 |  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/layouts/Sidebar.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/root/courtia/frontend/src/layouts/Topbar.jsx
+  2:10  error  'useState' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/root/courtia/frontend/src/pages/Academy.jsx
+  30:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  28 |   useEffect(() => {
+  29 |     const t = localStorage.getItem('courtia_token') || localStorage.getItem('token') || ''
+> 30 |     setToken(t)
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |     if (!t) return
+  32 |     loadData(t)
+  33 |   }, [])  react-hooks/set-state-in-effect
+  32:5  warning  Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  30 |     setToken(t)
+  31 |     if (!t) return
+> 32 |     loadData(t)
+     |     ^^^^^^^^ `loadData` accessed before it is declared
+  33 |   }, [])
+  34 |
+  35 |   async function loadData(t) {
+
+  33 |   }, [])
+  34 |
+> 35 |   async function loadData(t) {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |     setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 37 |     try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 51 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 52 |   }
+     | ^^^^ `loadData` is declared here
+  53 |
+  54 |   async function _handleUnlock(card) {
+  55 |     toast.success(`Carte débloquée : ${card.title} !`)                                                                                                                                                                        react-hooks/immutability
+
+/root/courtia/frontend/src/pages/AdminFeedback.jsx
+  41:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  39 |   }
+  40 |
+> 41 |   useEffect(() => { loadFeedback() }, [])
+     |                     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  42 |
+  43 |   return (
+  44 |     <div>  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/AdminLogs.jsx
+  14:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  12 |
+  13 |   useEffect(() => {
+> 14 |     setLoading(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     adminFetch(`/impersonation/logs?page=${page}&limit=20`)
+  16 |       .then(r => r.json())
+  17 |       .then(d => { setLogs(d.logs || []); setTotal(d.total || 0); setLoading(false) })  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/AdminSystem.jsx
+  40:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  38 |   }
+  39 |
+> 40 |   useEffect(() => { runChecks() }, [])
+     |                     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  41 |
+  42 |   const checksList = [
+  43 |     { key: 'api', icon: Server, label: 'API Backend', detail: checks?.api },  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/AdminUsers.jsx
+  33:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  31 |   }
+  32 |
+> 33 |   useEffect(() => { fetchUsers(page) }, [page])
+     |                     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |   const doSearch = () => { setPage(1); fetchUsers(1) }
+  35 |
+  36 |   return (  react-hooks/set-state-in-effect
+  33:41  warning  React Hook useEffect has a missing dependency: 'fetchUsers'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/AnalyticsExecutive.jsx
+  333:37  warning  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  331 |               >
+  332 |                 {Array.from({ length: 35 }).map((_, i) => {
+> 333 |                   const intensity = Math.random()
+      |                                     ^^^^^^^^^^^^^ Cannot call impure function
+  334 |                   const opacity = 0.04 + intensity * 0.18
+  335 |                   return (
+  336 |                     <div  react-hooks/purity
+
+/root/courtia/frontend/src/pages/ArkIntelligence.jsx
+   51:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  49 |   }
+  50 |
+> 51 |   useEffect(() => { run() }, [])
+     |                     ^^^ Avoid calling setState() directly within an effect
+  52 |
+  53 |   const riskColor = (level) => ({
+  54 |     critical: T.danger, high: '#FB923C', medium: T.warning, low: T.success,  react-hooks/set-state-in-effect
+  271:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+  278:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  276 |   }
+  277 |
+> 278 |   useEffect(() => { load() }, [])
+      |                     ^^^^ Avoid calling setState() directly within an effect
+  279 |
+  280 |   const heatColor = (score, owned) => {
+  281 |     if (owned) return 'rgba(255,255,255,0.04)'                react-hooks/set-state-in-effect
+  411:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+  418:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  416 |   }
+  417 |
+> 418 |   useEffect(() => { load() }, [])
+      |                     ^^^^ Avoid calling setState() directly within an effect
+  419 |
+  420 |   return (
+  421 |     <SimpleCard padding={24}>                                                              react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/BrowserPilot.jsx
+  179:6  warning  React Hook useEffect has missing dependencies: 'fetchStatus' and 'fetchTasks'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  247:6  warning  React Hook useEffect has a missing dependency: 'fetchTask'. Either include it or remove the dependency array                       react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/CabinetOnboarding.jsx
+  100:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   98 |
+   99 |   useEffect(() => {
+> 100 |     loadOnboarding()
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  101 |   }, [loadOnboarding])
+  102 |
+  103 |   const steps = useMemo(() => {  react-hooks/set-state-in-effect
+  116:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  128:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  140:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+
+/root/courtia/frontend/src/pages/Capitia.jsx
+   345:19  warning  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  343 |   const submittedAt = data?.submitted_at
+  344 |   const hoursSince = submittedAt
+> 345 |     ? Math.floor((Date.now() - new Date(submittedAt).getTime()) / 3600000)
+      |                   ^^^^^^^^^^ Cannot call impure function
+  346 |     : 0
+  347 |
+  348 |   const steps = [                                                                                                                                                                                                                                                                                                                                               react-hooks/purity
+  1004:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  1002 |       toast('Paiement annulé.', { icon: 'ℹ️' })
+  1003 |     }
+> 1004 |     fetchStatus()
+       |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  1005 |   }, [searchParams])
+  1006 |
+  1007 |   const stateBadgeMap = {  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/ClientDetail.jsx
+  165:9   error    'st' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                        no-unused-vars
+  406:45  warning  React Hook useMemo has an unnecessary dependency: 'id'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/ClientNew.jsx
+   92:7   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  90 |   useEffect(() => {
+  91 |     if (id) {
+> 92 |       setPageLoading(true)
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  93 |       api.get(`/clients/${id}`)
+  94 |         .then(res => setForm(f => ({ ...f, ...res.data, prenom: res.data.prenom || '', nom: res.data.nom || '', bonus_malus: res.data.bonus_malus || 1.0, nb_sinistres_3ans: res.data.nb_sinistres_3ans || 0 })))
+  95 |         .catch(() => toast.error('Impossible de charger les données du client.'))  react-hooks/set-state-in-effect
+  101:36  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   99 |
+  100 |   useEffect(() => {
+> 101 |     if (form.adresse.length < 3) { setAddressSuggestions([]); return }
+      |                                    ^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  102 |     const handler = setTimeout(() => {
+  103 |       axios.get(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(form.adresse)}&limit=5`)
+  104 |         .then(res => setAddressSuggestions(res.data.features))                                             react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/Comparateur.jsx
+  69:13  error  'res' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  76:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u       no-unused-vars
+  90:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u       no-unused-vars
+
+/root/courtia/frontend/src/pages/Conformite.jsx
+  33:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  37:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  35 |     }
+  36 |   }
+> 37 |   useEffect(() => { load() }, [])
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  38 |
+  39 |   async function exportAcpr() {
+  40 |     try {  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/Dashboard.jsx
+  243:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  241 |   }, [])
+  242 |
+> 243 |   useEffect(() => { loadAllData() }, [loadAllData])
+      |                     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  244 |
+  245 |   const metrics = useMemo(() => {
+  246 |     const statusMap = stats?.clientsParStatut || {}  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/DashboardLegacy.jsx
+  243:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  241 |   }, [])
+  242 |
+> 243 |   useEffect(() => { loadAllData() }, [loadAllData])
+      |                     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  244 |
+  245 |   const metrics = useMemo(() => {
+  246 |     const statusMap = stats?.clientsParStatut || {}  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/DesignSystem.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/root/courtia/frontend/src/pages/DevisDetail.jsx
+   59:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+   66:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  64 |   }
+  65 |
+> 66 |   useEffect(() => { load() }, [id])
+     |                     ^^^^ Avoid calling setState() directly within an effect
+  67 |
+  68 |   async function run(action) {
+  69 |     setBusy(true)  react-hooks/set-state-in-effect
+   66:31  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  253:25  error    'c' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+
+/root/courtia/frontend/src/pages/DevisWizard.jsx
+    5:21  error  'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u         no-unused-vars
+  166:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u           no-unused-vars
+  190:15  error  'data' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u   no-unused-vars
+  195:13  error  'token' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/root/courtia/frontend/src/pages/Integrations.jsx
+  172:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  178:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  176 |     }
+  177 |   }
+> 178 |   useEffect(() => { load() }, [])
+      |                     ^^^^ Avoid calling setState() directly within an effect
+  179 |
+  180 |   async function onConnect(c) {
+  181 |     try {  react-hooks/set-state-in-effect
+  202:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  212:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  223:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  236:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+
+/root/courtia/frontend/src/pages/MorningBrief.jsx
+   43:10  error    'fmtEur' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+   44:10  error    'fmtNum' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+  112:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  110 |   }, [])
+  111 |
+> 112 |   useEffect(() => { loadData() }, [loadData, refreshKey])
+      |                     ^^^^^^^^ Avoid calling setState() directly within an effect
+  113 |
+  114 |   const userName = user?.first_name || user?.firstName || ''
+  115 |   const greeting = getGreeting()  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/MyUsage.jsx
+  23:5  warning  Error: Cannot access variable before it is declared
+
+`fetchUsage` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  21 |
+  22 |   useEffect(() => {
+> 23 |     fetchUsage();
+     |     ^^^^^^^^^^ `fetchUsage` accessed before it is declared
+  24 |     const interval = setInterval(fetchUsage, 30000); // Refresh every 30s
+  25 |     return () => clearInterval(interval);
+  26 |   }, []);
+
+  26 |   }, []);
+  27 |
+> 28 |   const fetchUsage = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |     try {
+     | ^^^^^^^^^
+> 30 |       const response = await fetch('/api/ark/my-usage', {
+     …
+     | ^^^^^^^^^
+> 39 |     }
+     | ^^^^^^^^^
+> 40 |   };
+     | ^^^^^ `fetchUsage` is declared here
+  41 |
+  42 |   if (loading) return <div className="text-center py-10">Chargement...</div>;
+  43 |   if (!usage) return <div className="text-center py-10">Erreur</div>;  react-hooks/immutability
+
+/root/courtia/frontend/src/pages/Objectifs.jsx
+  82:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  89:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  87 |   }
+  88 |
+> 89 |   useEffect(() => { loadAll() }, [])
+     |                     ^^^^^^^ Avoid calling setState() directly within an effect
+  90 |
+  91 |   async function saveTargets(targets) {
+  92 |     try {  react-hooks/set-state-in-effect
+  97:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+
+/root/courtia/frontend/src/pages/OnboardingGamified.jsx
+  164:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  162 |
+  163 |   useEffect(() => {
+> 164 |     fetchProgress();
+      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  165 |     autoCheck();
+  166 |   }, []);
+  167 |  react-hooks/set-state-in-effect
+  166:6   warning  React Hook useEffect has a missing dependency: 'autoCheck'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+  271:29  error    'idx' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+
+/root/courtia/frontend/src/pages/Partners.jsx
+  34:6  warning  React Hook useEffect has missing dependencies: 'fetchPartners' and 'fetchStats'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/Pricing.jsx
+  22:9  warning  Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+  20 |       const { data } = await api.post('/billing/create-checkout-session', { plan: planId })
+  21 |       if (data.url) {
+> 22 |         window.location.href = data.url
+     |         ^^^^^^^^^^^^^^^ value cannot be modified
+  23 |       } else {
+  24 |         navigate(`/billing?status=configuration-required&plan=${planId}`)
+  25 |       }  react-hooks/immutability
+
+/root/courtia/frontend/src/pages/PublicDocumentUpload.jsx
+  54:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  52 |   useEffect(() => {
+  53 |     if (!token) {
+> 54 |       setError('Lien invalide')
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  55 |       setLoading(false)
+  56 |       return
+  57 |     }  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/ReachCampaigns.jsx
+  24:42  warning  React Hook useEffect has a missing dependency: 'fetchCampaigns'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/ReachDashboard.jsx
+  12:21  warning  Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  10 |   const [loading, setLoading] = useState(true)
+  11 |
+> 12 |   useEffect(() => { loadData() }, [])
+     |                     ^^^^^^^^ `loadData` accessed before it is declared
+  13 |
+  14 |   const loadData = async () => {
+  15 |     setLoading(true)
+
+  12 |   useEffect(() => { loadData() }, [])
+  13 |
+> 14 |   const loadData = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 15 |     setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 16 |     try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 28 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 29 |   }
+     | ^^^^ `loadData` is declared here
+  30 |
+  31 |   const createAudience = async () => {
+  32 |     if (!newAudienceName.trim()) return  react-hooks/immutability
+
+/root/courtia/frontend/src/pages/ReachInbox.jsx
+  30:40  warning  React Hook useEffect has a missing dependency: 'fetchReplies'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/ReachMap.jsx
+  30:6  warning  React Hook useEffect has a missing dependency: 'fetchProspects'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/ReachProspectDetail.jsx
+  50:6  warning  React Hook useEffect has a missing dependency: 'fetchProspectDetail'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/ReachProspects.jsx
+  40:6  warning  React Hook useEffect has a missing dependency: 'fetchProspects'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/SantePortefeuille.jsx
+  116:11  warning  Error: Cannot reassign variable after render completes
+
+Reassigning `cumulative` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+  114 |           const dash = (d.value / 100) * c
+  115 |           const offset = c - cumulative * (c / 100)
+> 116 |           cumulative += d.value
+      |           ^^^^^^^^^^ Cannot reassign `cumulative` after render completes
+  117 |           return (
+  118 |             <circle key={i}
+  119 |               cx={size/2} cy={size/2} r={r} fill="none"  react-hooks/immutability
+
+/root/courtia/frontend/src/pages/business/CampagnesEmail.jsx
+  47:13  error  Parsing error: Unexpected token React
+
+/root/courtia/frontend/src/pages/business/ModuleFiscal.jsx
+  47:13  error  Parsing error: Unexpected token React
+
+/root/courtia/frontend/src/pages/business/Parrainage.jsx
+  47:13  error  Parsing error: Unexpected token React
+
+/root/courtia/frontend/src/pages/cabinet/ApiCourtia.jsx
+  47:13  error  Parsing error: Unexpected token React
+
+/root/courtia/frontend/src/pages/cabinet/PortailClient.jsx
+  47:13  error  Parsing error: Unexpected token React
+
+/root/courtia/frontend/src/pages/cabinet/WhiteLabelReseau.jsx
+  47:13  error  Parsing error: Unexpected token React
+
+/root/courtia/frontend/src/pages/v2/ArkChatV2.jsx
+  28:5   warning  Error: Cannot access variable before it is declared
+
+`loadSuggestions` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  26 |
+  27 |   useEffect(() => {
+> 28 |     loadSuggestions()
+     |     ^^^^^^^^^^^^^^^ `loadSuggestions` accessed before it is declared
+  29 |     loadContext()
+  30 |   }, [])
+  31 |
+
+  34 |   }, [messages, typingText])
+  35 |
+> 36 |   async function loadSuggestions() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |     try {
+     | ^^^^^^^^^
+> 38 |       const res = await api.get('/ark-chat/suggestions')
+     | ^^^^^^^^^
+> 39 |       setSuggestions(res.data?.suggestions || [])
+     | ^^^^^^^^^
+> 40 |     } catch (err) {
+     | ^^^^^^^^^
+> 41 |       setSuggestions(['Quels sont mes contrats ?', 'Comment déclarer un sinistre ?'])
+     | ^^^^^^^^^
+> 42 |     }
+     | ^^^^^^^^^
+> 43 |   }
+     | ^^^^ `loadSuggestions` is declared here
+  44 |
+  45 |   async function loadContext() {
+  46 |     try {  react-hooks/immutability
+  29:5   warning  Error: Cannot access variable before it is declared
+
+`loadContext` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  27 |   useEffect(() => {
+  28 |     loadSuggestions()
+> 29 |     loadContext()
+     |     ^^^^^^^^^^^ `loadContext` accessed before it is declared
+  30 |   }, [])
+  31 |
+  32 |   useEffect(() => {
+
+  43 |   }
+  44 |
+> 45 |   async function loadContext() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 46 |     try {
+     | ^^^^^^^^^
+> 47 |       const res = await api.get('/ark-chat/context')
+     | ^^^^^^^^^
+> 48 |       setContext(res.data)
+     | ^^^^^^^^^
+> 49 |     } catch (err) {
+     | ^^^^^^^^^
+> 50 |       console.log('Context not available')
+     | ^^^^^^^^^
+> 51 |     }
+     | ^^^^^^^^^
+> 52 |   }
+     | ^^^^ `loadContext` is declared here
+  53 |
+  54 |   async function sendMessage(text = input) {
+  55 |     if (!text.trim() || loading) return                                                           react-hooks/immutability
+  40:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  49:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  50:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-console
+
+/root/courtia/frontend/src/pages/v2/ArkWatchV2.jsx
+  68:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  66 |   useEffect(() => {
+  67 |     const controller = new AbortController();
+> 68 |     fetchSignals(controller);
+     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  69 |     return () => controller.abort();
+  70 |   }, [fetchSignals]);
+  71 |  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/v2/ClientsV2.jsx
+  114:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  112 |   useEffect(() => {
+  113 |     const controller = new AbortController();
+> 114 |     fetchClients(controller);
+      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  115 |     return () => controller.abort();
+  116 |   }, [fetchClients]);
+  117 |  react-hooks/set-state-in-effect
+
+/root/courtia/frontend/src/pages/v2/CommissionsV2.jsx
+  31:10  error    'showReconcileModal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u           no-unused-vars
+  31:30  error    'setShowReconcileModal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u        no-unused-vars
+  32:10  error    'reconcileResult' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u              no-unused-vars
+  37:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/v2/ComposeV2.jsx
+  33:16  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                              no-unused-vars
+  37:6   warning  React Hook useEffect has a missing dependency: 'toast'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  51:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                              no-unused-vars
+
+/root/courtia/frontend/src/pages/v2/ComptabiliteV2.jsx
+  22:6  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/v2/DeveloperV2.jsx
+   80:5   warning  Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  78 |
+  79 |   useEffect(() => {
+> 80 |     loadData()
+     |     ^^^^^^^^ `loadData` accessed before it is declared
+  81 |   }, [])
+  82 |
+  83 |   const loadData = async () => {
+
+   81 |   }, [])
+   82 |
+>  83 |   const loadData = async () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  84 |     setLoading(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+>  85 |     try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+>  97 |     setLoading(false)
+      | ^^^^^^^^^^^^^^^^^^^^
+>  98 |   }
+      | ^^^^ `loadData` is declared here
+   99 |
+  100 |   const copyToClipboard = (text, id) => {
+  101 |     navigator.clipboard.writeText(text)  react-hooks/immutability
+   92:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  213:64  error    'copyToClipboard' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  213:81  error    'copiedId' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+
+/root/courtia/frontend/src/pages/v2/DocVisionV2.jsx
+  22:6    warning  React Hook useEffect has a missing dependency: 'toast'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  51:122  warning  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  49 |                 <h4 style={{ margin: '0:0 var(--aurora-space-1)', fontWeight: 600 }}>{doc.filename || doc.name || 'Document'}</h4>
+  50 |                 <div style={{ fontSize: 'var(--aurora-font-xs)', color: 'var(--aurora-text-muted)', marginBottom: 'var(--aurora-space-3)' }}>
+> 51 |                   <span style={{ textTransform: 'uppercase' }}>{doc.type || 'autre'}</span> • {new Date(doc.createdAt || Date.now()).toLocaleDateString('fr-FR')}
+     |                                                                                                                          ^^^^^^^^^^ Cannot call impure function
+  52 |                 </div>
+  53 |                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+  54 |                   {Object.keys(doc.extracted || doc.data || {}).slice(0, 3).map(k => <AuroraBadge key={k} size="sm">{k}</AuroraBadge>)}  react-hooks/purity
+
+/root/courtia/frontend/src/pages/v2/EnterpriseV2.jsx
+   99:5   warning  Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+   97 |
+   98 |   useEffect(() => {
+>  99 |     loadData()
+      |     ^^^^^^^^ `loadData` accessed before it is declared
+  100 |   }, [activeTab])
+  101 |
+  102 |   const loadData = async () => {
+
+  100 |   }, [activeTab])
+  101 |
+> 102 |   const loadData = async () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |     setLoading(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 104 |     try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 116 |     setLoading(false)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 117 |   }
+      | ^^^^ `loadData` is declared here
+  118 |
+  119 |   return (
+  120 |     <div style={{ padding: 32, minHeight: '100vh' }}>  react-hooks/immutability
+  100:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  310:29  error    'newRole' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+
+/root/courtia/frontend/src/pages/v2/MarketplaceV2.jsx
+  75:5  warning  Error: Cannot access variable before it is declared
+
+`loadConnectors` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  73 |
+  74 |   useEffect(() => {
+> 75 |     loadConnectors()
+     |     ^^^^^^^^^^^^^^ `loadConnectors` accessed before it is declared
+  76 |   }, [])
+  77 |
+  78 |   const loadConnectors = async () => {
+
+  76 |   }, [])
+  77 |
+> 78 |   const loadConnectors = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 79 |     setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 80 |     try {
+     | ^^^^^^^^^^^^^^^^^^^^
+> 81 |       const res = await api.get('/api/marketplace')
+     | ^^^^^^^^^^^^^^^^^^^^
+> 82 |       setConnectors(res.data?.connectors || mockConnectors)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 83 |     } catch {
+     | ^^^^^^^^^^^^^^^^^^^^
+> 84 |       setConnectors(mockConnectors)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 85 |     }
+     | ^^^^^^^^^^^^^^^^^^^^
+> 86 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 87 |   }
+     | ^^^^ `loadConnectors` is declared here
+  88 |
+  89 |   const handleInstall = async (connector, config) => {
+  90 |     try {  react-hooks/immutability
+
+/root/courtia/frontend/src/pages/v2/ReportingV2.jsx
+  61:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  69:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  67 |
+  68 |   useEffect(() => {
+> 69 |     fetchData();
+     |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  70 |   }, [period]);
+  71 |
+  72 |   const handleExport = async (type) => {  react-hooks/set-state-in-effect
+  70:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/v2/SignaturesV2.jsx
+  54:14  error    'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  62:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  60 |
+  61 |   useEffect(() => {
+> 62 |     fetchData();
+     |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  63 |   }, [filter]);
+  64 |
+  65 |   const handleRemind = async (id) => {  react-hooks/set-state-in-effect
+  63:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/v2/SinistresV2.jsx
+  38:6  warning  React Hook useEffect has a missing dependency: 'loadClaims'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/courtia/frontend/src/pages/v2/VoiceV2.jsx
+  24:6   warning  React Hook useEffect has a missing dependency: 'toast'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  36:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                              no-unused-vars
+  47:14  error    'e' is defined but never used. Allowed unused caught errors must match /^_/u                              no-unused-vars
+
+/root/courtia/frontend/src/portal/PortalApp.jsx
+   43:7   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  41 |         .catch(() => setView('login'));
+  42 |     } else if (getToken()) {
+> 43 |       setView('dashboard');
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  44 |     } else {
+  45 |       setView('login');
+  46 |     }  react-hooks/set-state-in-effect
+  332:21  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  330 |   };
+  331 |
+> 332 |   useEffect(() => { load(); }, []);
+      |                     ^^^^ Avoid calling setState() directly within an effect
+  333 |
+  334 |   const send = async () => {
+  335 |     if (!input.trim()) return;                       react-hooks/set-state-in-effect
+
+✖ 233 problems (73 errors, 160 warnings)
+

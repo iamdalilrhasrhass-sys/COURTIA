@@ -10,7 +10,17 @@ function getEmailFrom() {
 }
 
 function getEmailStatus() {
-  if (process.env.RESEND_API_KEY) {
+  if (process.env.BREVO_API_KEY) {
+    return {
+      configured: true,
+      status: 'configured',
+      provider: 'brevo',
+      from: getEmailFrom(),
+      missing: [],
+    };
+  }
+
+  if (false && process.env.RESEND_API_KEY) {
     return {
       configured: true,
       status: 'configured',
@@ -93,6 +103,27 @@ async function sendEmail({ to, subject, html, text }) {
   }
 
   try {
+    if (status.provider === 'brevo') {
+      const response = await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: { email: getEmailFrom().match(/<(.+)>/)[1], name: getEmailFrom().match(/(.+)</)[1].trim() },
+          to: Array.isArray(to) ? to.map(e => ({ email: e })) : [{ email: to }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        },
+        {
+          headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          timeout: 15000,
+        }
+      );
+      return { success: true, provider: 'brevo', id: response.data?.messageId || null };
+    }
+
     if (status.provider === 'resend') {
       const response = await axios.post(
         RESEND_API_URL,

@@ -1,18 +1,18 @@
 function buildBillingTemplate(kind, vars = {}) {
   const firstName = vars.firstName || 'Bonjour';
   const planName = vars.planName || 'COURTIA';
-  const trialDays = vars.trialDays || 7;
+  const trialDays = vars.trialDays ?? 0;
   const trialEndDate = vars.trialEndDate || '';
 
   const map = {
     trial_activated_j0: {
-      subject: `COURTIA — Essai ${planName} activé`,
+      subject: trialDays > 0 ? `COURTIA — Essai ${planName} activé` : `COURTIA — Abonnement ${planName} activé`,
       html: `
         <p>${firstName},</p>
-        <p>Votre essai ${planName} est activé.</p>
-        <p>0 € aujourd’hui. Essai de ${trialDays} jours. Annulation en ligne possible avant la fin d’essai.</p>
+        <p>${trialDays > 0 ? `Votre essai ${planName} est activé.` : `Votre abonnement ${planName} est activé.`}</p>
+        <p>0 € aujourd'hui.${trialDays > 0 ? ` Essai de ${trialDays} jours. Annulation en ligne possible avant la fin d'essai.` : ' Sans engagement, annulation en ligne à tout moment.'}</p>
       `,
-      text: `${firstName}, votre essai ${planName} est activé. 0 € aujourd’hui. Essai ${trialDays} jours. Annulation en ligne.`,
+      text: `${firstName}, ${trialDays > 0 ? `votre essai ${planName} est activé` : `votre abonnement ${planName} est activé`}. 0 € aujourd'hui.${trialDays > 0 ? ` Essai ${trialDays} jours. Annulation en ligne.` : ' Sans engagement.'}`,
     },
     trial_reminder_j5: {
       subject: `COURTIA — Rappel fin d’essai`,

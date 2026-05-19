@@ -31,11 +31,11 @@ export default function PortailClient() {
     React.createElement("div", { style: { ...cs, marginBottom: 24 } },
       React.createElement("h3", { style: { fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 16 } }, "⚡ Workflow métier"),
       React.createElement("ol", { style: { paddingLeft: 0, listStyle: "none" } },
-                    React.createElement("li", { key: 0, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "1."), "Invitation par email")
-            React.createElement("li", { key: 1, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "2."), "Création du mot de passe")
-            React.createElement("li", { key: 2, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "3."), "Vue des contrats et documents")
-            React.createElement("li", { key: 3, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "4."), "Demande de RDV ou sinistre")
-            React.createElement("li", { key: 4, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "5."), "Notifications cockpit")
+                    React.createElement("li", { key: 0, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "1."), "Invitation par email"),
+            React.createElement("li", { key: 1, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "2."), "Création du mot de passe"),
+            React.createElement("li", { key: 2, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "3."), "Vue des contrats et documents"),
+            React.createElement("li", { key: 3, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "4."), "Demande de RDV ou sinistre"),
+            React.createElement("li", { key: 4, style: { marginBottom: 10, color: C.t2, fontSize: 14, lineHeight: 1.6 } }, React.createElement("span", { style: { color: C.text, fontWeight: 600, marginRight: 8 } }, "5."), "Notifications cockpit"),
       )
     ),
     React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 } },
@@ -43,8 +43,8 @@ export default function PortailClient() {
         React.createElement("h3", { style: { fontSize: 14, fontWeight: 700, color: C.green, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 } },
           React.createElement(CheckCircle2, { size: 16 }), "Déjà disponible"
         ),
-        React.createElement("ul", { style: { paddingLeft: 0, listStyle: "none" } },             React.createElement("li", { key: 0, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Architecture PWA")
-            React.createElement("li", { key: 1, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Token de session client")
+        React.createElement("ul", { style: { paddingLeft: 0, listStyle: "none" } },             React.createElement("li", { key: 0, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Architecture PWA"),
+            React.createElement("li", { key: 1, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Token de session client"),
             React.createElement("li", { key: 2, style: { marginBottom: 6, color: C.green, fontSize: 13 } }, "✓ Upload de documents"))
       ),
       React.createElement("div", { style: { ...cs } },

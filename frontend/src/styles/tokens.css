@@ -85,24 +85,29 @@
 .courtia-halo--violet {
   left: -10rem;
   top: -8rem;
-  background: rgba(185, 122, 255, 0.34);
+  background: rgba(185, 122, 255, 0.44);
+  animation: aurora-float-1 22s ease-in-out infinite;
 }
 
 .courtia-aurora-bg__halo--cyan,
 .courtia-halo--cyan {
   right: -12rem;
   top: 12rem;
-  background: rgba(108, 240, 255, 0.22);
+  background: rgba(108, 240, 255, 0.28);
+  animation: aurora-float-2 26s ease-in-out infinite;
 }
 
 .courtia-aurora-bg__grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.026) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
   background-size: 72px 72px;
-  mask-image: radial-gradient(circle at 50% 20%, black, transparent 76%);
+  mask-image: radial-gradient(ellipse at 50% 0%, black, transparent 76%);
+  animation: grid-fade 8s ease-in-out infinite;
+  transform: perspective(1000px) rotateX(60deg) translateY(-100px) scale(2);
+  transform-origin: top center;
 }
 
 .courtia-button {
@@ -551,4 +556,63 @@
   .courtia-bubble-orb--app-left { left: -80px; top: 12vh; }
   .courtia-bubble-orb--app-right { right: -110px; bottom: 8vh; }
   .mk-ambient-orb { display: none; }
+}
+@keyframes aurora-float-1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(5%, 8%) scale(1.1) rotate(5deg); }
+  66% { transform: translate(-4%, 4%) scale(0.95) rotate(-3deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+}
+
+@keyframes aurora-float-2 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(-6%, -10%) scale(1.05) rotate(-5deg); }
+  66% { transform: translate(8%, -4%) scale(0.9) rotate(3deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+}
+
+@keyframes grid-fade {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+/* COURTIA 3D VIBE INJECTIONS */
+body {
+  perspective: 2000px;
+  transform-style: preserve-3d;
+}
+
+.glass-vibe {
+  background: rgba(10, 10, 12, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.text-gradient-vibe {
+  background: linear-gradient(to right, #fff, #a8a8b0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes float-slow {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.5); }
+  100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }
+}
+
+.animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
 }

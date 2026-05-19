@@ -1,3 +1,4 @@
+import Magnetic3D from "../components/vibe/Magnetic3D"
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -76,7 +77,7 @@ function normalizeRows(payload) {
 }
 
 // ─── Aurora Card (glassmorphism) ─────────────────────────────────
-function AuroraCard({ children, padding = 20, hover = true, accent, onClick, style }) {
+function AuroraCardOld({ children, padding = 20, hover = true, accent, onClick, style }) {
   return (
     <div
       onClick={onClick}
@@ -119,7 +120,8 @@ function AuroraCard({ children, padding = 20, hover = true, accent, onClick, sty
 // ─── KPI Card cockpit dense ──────────────────────────────────────
 function KpiCard({ icon: Icon, label, value, accent = T.accent, delta, deltaPositive = true, sub }) {
   return (
-    <AuroraCard padding={18} hover={false} accent={accent}>
+<Magnetic3D>
+    <Vibe3DCard glowColor="var(--c-halo-violet)" padding={18} hover={false} accent={accent}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.10em' }}>
           {label}
@@ -149,7 +151,8 @@ function KpiCard({ icon: Icon, label, value, accent = T.accent, delta, deltaPosi
           {sub && <span style={{ color: T.textMuted }}>{sub}</span>}
         </div>
       )}
-    </AuroraCard>
+    </Vibe3DCard>
+</Magnetic3D>
   )
 }
 
@@ -340,7 +343,8 @@ export default function Dashboard() {
           gap: 12, marginBottom: 18,
         }}>
           {/* Priorités ARK */}
-          <AuroraCard padding={18} hover={false} style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.04), rgba(255,255,255,0.02))' }}>
+<Magnetic3D>
+          <Vibe3DCard glowColor="var(--c-halo-violet)" padding={18} hover={false} style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.04), rgba(255,255,255,0.02))' }}>
             <SectionTitle
               icon={Zap}
               iconColor={T.ark}
@@ -386,10 +390,12 @@ export default function Dashboard() {
                 )
               })}
             </div>
-          </AuroraCard>
+          </Vibe3DCard>
+</Magnetic3D>
 
           {/* Échéances 30j */}
-          <AuroraCard padding={18} hover={false}>
+<Magnetic3D>
+          <Vibe3DCard glowColor="var(--c-halo-violet)" padding={18} hover={false}>
             <SectionTitle
               icon={Calendar}
               iconColor={T.warning}
@@ -423,7 +429,8 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          </AuroraCard>
+          </Vibe3DCard>
+</Magnetic3D>
         </div>
         </VibeScrollSection>
 
@@ -435,7 +442,8 @@ export default function Dashboard() {
           gap: 12, marginBottom: 18,
         }}>
           {/* Performance 90j */}
-          <AuroraCard padding={18} hover={false}>
+<Magnetic3D>
+          <Vibe3DCard glowColor="var(--c-halo-violet)" padding={18} hover={false}>
             <SectionTitle icon={TrendingUp} iconColor={T.success} title="Performance 90 jours" />
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 }}>
               <div>
@@ -460,10 +468,12 @@ export default function Dashboard() {
               <MiniStat label="Taux transfo" value="48%" delta="+4 pts" />
               <MiniStat label="Rétention" value="94%" delta="stable" deltaPositive={null} />
             </div>
-          </AuroraCard>
+          </Vibe3DCard>
+</Magnetic3D>
 
           {/* Activité récente */}
-          <AuroraCard padding={18} hover={false}>
+<Magnetic3D>
+          <Vibe3DCard glowColor="var(--c-halo-violet)" padding={18} hover={false}>
             <SectionTitle icon={Activity} iconColor={T.cyan} title="Activité récente" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {ACTIVITY.map((a, i) => {
@@ -490,7 +500,8 @@ export default function Dashboard() {
                 )
               })}
             </div>
-          </AuroraCard>
+          </Vibe3DCard>
+</Magnetic3D>
         </div>
         </VibeScrollSection>
 
@@ -510,7 +521,8 @@ export default function Dashboard() {
             gap: 12, marginTop: 10,
           }}>
             {SUGGESTIONS.map(s => (
-              <AuroraCard key={s.id} padding={16} onClick={() => navigate(s.to)} style={{
+<Magnetic3D>
+              <Vibe3DCard glowColor="var(--c-halo-violet)" key={s.id} padding={16} onClick={() => navigate(s.to)} style={{
                 background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(91,77,245,0.03))',
                 borderColor: 'rgba(139,92,246,0.18)',
               }}>
@@ -534,7 +546,8 @@ export default function Dashboard() {
                 }}>
                   {s.cta} <ArrowRight size={12} />
                 </div>
-              </AuroraCard>
+              </Vibe3DCard>
+</Magnetic3D>
             ))}
           </div>
         </div>

@@ -497,7 +497,8 @@ export default function Login() {
       if (user) localStorage.setItem('user', JSON.stringify(user))
       if (user) primeSessionUserCache(user)
       if (isRegister) {
-        navigate(`/onboarding?plan=${planKey || 'starter'}`)
+        // Refonte métier courtier : redirige vers le nouveau flow
+        navigate(`/cabinet-onboarding?plan=${planKey || 'pro'}`)
       } else {
         navigate('/dashboard')
       }

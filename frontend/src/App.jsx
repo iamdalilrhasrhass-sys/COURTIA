@@ -101,6 +101,7 @@ const Beta = lazy(() => import('./pages/Beta'))
 // LOT VIBE — Features concurrentielles courtiers
 const CommissionsCalculator = lazy(() => import('./pages/CommissionsCalculator'))
 const Comparateur = lazy(() => import('./pages/Comparateur'))
+const IAQuotidien = lazy(() => import("./pages/IAQuotidien"))
 const SantePortefeuille = lazy(() => import('./pages/SantePortefeuille'))
 // LOT FEATURES KILLERS — F1 ARK Predictive Intelligence + F5 Objectifs + F6 Conformité
 const ArkIntelligence = lazy(() => import('./pages/ArkIntelligence'))
@@ -348,6 +349,7 @@ export default function App() {
         <Route path="/legal/sous-traitants" element={<LegalSubprocessors />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/beta" element={<Beta />} />
+            <Route path="/ia-quotidien" element={<IAQuotidien />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/dev/ui" element={<DevUi />} />
         <Route path="/video-showcase" element={import.meta.env.DEV ? <ShowcaseVideo /> : <Navigate to="/" replace />} />
