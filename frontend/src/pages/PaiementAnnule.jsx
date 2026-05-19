@@ -16,7 +16,7 @@ export default function PaiementAnnule() {
           Votre paiement n'a pas été finalisé. Aucun montant n'a été débité.
         </p>
         <p style={{fontSize:13,color:'rgba(0,0,0,0.56)',marginBottom:18,fontFamily:'Arial,sans-serif',lineHeight:1.5}}>
-          Vous pouvez reprendre l’activation de votre essai quand vous le souhaitez depuis le billing.
+          Vous pouvez reprendre l’activation de votre abonnement quand vous le souhaitez depuis le billing.
         </p>
         <button onClick={() => navigate('/billing')} style={{
           padding:'12px 32px',background:'#2563eb',color:'white',border:'none',borderRadius:10,

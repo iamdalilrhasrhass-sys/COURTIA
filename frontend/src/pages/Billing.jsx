@@ -163,7 +163,7 @@ export default function Billing() {
 
             <div className="space-y-1">
               <Info label="Plan" value={status?.plan_name || status?.plan_code || 'Starter'} />
-              <Info label="Fin essai" value={formatDate(status?.trial_end_at)} />
+              <Info label="Fin activation" value={formatDate(status?.trial_end_at)} />
               <Info label="Fin période" value={formatDate(status?.current_period_end)} />
               <Info label="Customer Stripe" value={status?.stripe_customer_id_masked || 'Non créé'} />
             </div>
@@ -222,7 +222,7 @@ function PlanCard({ plan, selected, loading, onSelect }) {
         <div className="text-3xl font-black tracking-tight text-white">
           {contactOnly ? 'Sur devis' : `${Math.round(Number(plan.price || 0))} €`}
         </div>
-        {!contactOnly && <div className="text-sm text-white/50">HT / mois après essai {plan.trial_days || 7} jours</div>}
+        {!contactOnly && <div className="text-sm text-white/50">HT / mois</div>}
       </div>
 
       <ul className="mt-5 flex-1 space-y-2 text-sm text-white/65">

@@ -5,7 +5,7 @@ import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
 
-const STATUS_LABELS = { active: 'Actif', trialing: 'Essai', suspended: 'Suspendu', cancelled: 'Résilié' }
+const STATUS_LABELS = { active: 'Actif', trialing: 'Activation', suspended: 'Suspendu', cancelled: 'Résilié' }
 
 export default function AdminUserDetail() {
   const { id } = useParams()
@@ -83,7 +83,7 @@ export default function AdminUserDetail() {
             {user.adresse && <div>Adresse : {user.adresse}</div>}
             {user.ville && <div>Ville : {user.ville}</div>}
             <div>Inscription : {user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '—'}</div>
-            {user.trial_ends_at && <div>Fin essai : {new Date(user.trial_ends_at).toLocaleDateString('fr-FR')}</div>}
+            {user.trial_ends_at && <div>Fin activation : {new Date(user.trial_ends_at).toLocaleDateString('fr-FR')}</div>}
             {user.stripe_customer_id && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 8 }}>Stripe : {user.stripe_customer_id}</div>}
           </div>
         </div>

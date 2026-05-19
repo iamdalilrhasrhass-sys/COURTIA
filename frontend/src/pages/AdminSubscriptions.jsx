@@ -85,7 +85,7 @@ export default function AdminSubscriptions() {
       <div style={{ marginTop: 28 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Suivi Billing (test mode)</h2>
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '0 0 14px' }}>
-          Plan, statut abonnement, fin d’essai et preuve de consentement.
+          Plan, statut abonnement, fin d’activation et preuve de consentement.
         </p>
 
         {billingRows.length === 0 ? (
@@ -103,7 +103,7 @@ export default function AdminSubscriptions() {
                   <th style={th}>Compte</th>
                   <th style={th}>Plan</th>
                   <th style={th}>Statut</th>
-                  <th style={th}>Fin essai</th>
+                  <th style={th}>Fin activation</th>
                   <th style={th}>Consentement</th>
                   <th style={th}>Customer Stripe</th>
                 </tr>

@@ -5,7 +5,7 @@ import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
 
-const STATUS_LABELS = { active: 'Actif', trialing: 'Essai', suspended: 'Suspendu', cancelled: 'Résilié' }
+const STATUS_LABELS = { active: 'Actif', trialing: 'Activation', suspended: 'Suspendu', cancelled: 'Résilié' }
 const STATUS_COLORS = { active: '#10b981', trialing: '#3b82f6', suspended: '#ef4444', cancelled: '#6b7280' }
 const PLAN_COLORS = { start: '#6b7280', pro: '#8b5cf6', elite: '#f59e0b' }
 
@@ -59,7 +59,7 @@ export default function AdminUsers() {
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#fff', fontSize: 12, padding: '9px 12px', outline: 'none', cursor: 'pointer' }}>
           <option value="">Tous les statuts</option>
           <option value="active">Actif</option>
-          <option value="trialing">Essai</option>
+          <option value="trialing">Activation</option>
           <option value="suspended">Suspendu</option>
           <option value="cancelled">Résilié</option>
         </select>

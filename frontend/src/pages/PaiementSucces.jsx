@@ -6,7 +6,7 @@ import api from '../api'
 
 export default function PaiementSucces() {
   const navigate = useNavigate()
-  const [message, setMessage] = useState("Votre essai est en cours d’activation.")
+  const [message, setMessage] = useState("Votre accès est en cours d’activation.")
   
   useEffect(() => {
     api.get('/billing/status')
