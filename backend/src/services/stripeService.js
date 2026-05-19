@@ -107,7 +107,7 @@ async function createSubscriptionCheckoutSession({
   successUrl,
   cancelUrl,
   metadata = {},
-  trialDays = 7,
+  trialDays = 0,
 }) {
   const stripe = getStripeClient();
   return stripe.checkout.sessions.create({
@@ -118,10 +118,16 @@ async function createSubscriptionCheckoutSession({
     cancel_url: cancelUrl,
     allow_promotion_codes: true,
     metadata,
-    subscription_data: {
-      trial_period_days: trialDays,
-      metadata,
-    },
+    ...(trialDays > 0 ? {
+      subscription_data: {
+        trial_period_days: trialDays,
+        metadata,
+      },
+    } : {
+      subscription_data: {
+        metadata,
+      },
+    }),
   });
 }
 

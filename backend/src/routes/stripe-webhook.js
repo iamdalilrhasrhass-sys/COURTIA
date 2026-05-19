@@ -52,7 +52,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
         const sub = event.data.object;
         const userId = sub.metadata?.user_id;
         if (userId) {
-          await pool.query(`UPDATE users SET subscription_status='canceled', plan='trial' WHERE id=$1`, [userId]);
+          await pool.query(`UPDATE users SET subscription_status='canceled', plan='none' WHERE id=$1`, [userId]);
         }
         break;
       }

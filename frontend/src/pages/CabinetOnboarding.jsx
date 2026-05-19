@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Building2, CalendarDays, CheckCircle2, FileSpreadsheet, Sparkles, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, Building2, Car, FileSpreadsheet, Home, ShieldCheck, Sparkles, Target, Users, Briefcase } from 'lucide-react'
 import api from '../api'
 import AuroraBackground from '../components/ui/AuroraBackground'
 import GlassCard from '../components/ui/GlassCard'
@@ -10,35 +10,52 @@ import StatusPill from '../components/ui/StatusPill'
 import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
 
+// ─── STEPS — Métier courtier ───
 const STEP_META = {
   profile: {
     icon: Building2,
-    title: 'Profil cabinet',
-    subtitle: 'Identité, ville, ORIAS et socle de conformité.',
+    title: 'Votre cabinet',
+    subtitle: 'Identité professionnelle, ORIAS, ancrage local.',
+  },
+  portefeuille: {
+    icon: Briefcase,
+    title: 'Votre portefeuille',
+    subtitle: 'Branches, volume, typologie clients.',
+  },
+  priorites: {
+    icon: Target,
+    title: 'Vos priorités',
+    subtitle: 'Ce qui compte le plus dans votre quotidien.',
   },
   import: {
     icon: FileSpreadsheet,
     title: 'Import clients',
-    subtitle: 'Préparez votre portefeuille pour que COURTIA devienne utile tout de suite.',
+    subtitle: 'Optionnel — importez votre portefeuille existant.',
   },
-  google: {
-    icon: CalendarDays,
-    title: 'Agenda / Gmail',
-    subtitle: 'Connecteurs prêts à activer, sans faux statut connecté.',
-  },
-  first_client: {
-    icon: Users,
-    title: 'Première fiche client',
-    subtitle: 'Ouvrez une fiche client et voyez le cockpit en contexte métier.',
-  },
-  first_brief: {
+  premiere_action: {
     icon: Sparkles,
-    title: 'Morning Brief ARK',
-    subtitle: 'Lancez votre plan d’action quotidien.',
+    title: 'Première action',
+    subtitle: 'Créez votre première fiche ou lancez votre Morning Brief.',
   },
 }
 
 const DEFAULT_STEPS = Object.keys(STEP_META).map((key) => ({ key, ...STEP_META[key], done: false }))
+
+const BRANCHES = [
+  { key: 'auto', label: 'Auto / MRH', icon: Car },
+  { key: 'habitation', label: 'Habitation', icon: Home },
+  { key: 'pro', label: 'Professionnelle', icon: Briefcase },
+  { key: 'emprunteur', label: 'Emprunteur', icon: ShieldCheck },
+  { key: 'sante', label: 'Santé / Prévoyance', icon: Users },
+]
+
+const PRIORITES = [
+  { key: 'relances', label: 'Relances clients', desc: 'Ne plus rien oublier, prioriser les urgences' },
+  { key: 'devis', label: 'Pipeline devis', desc: 'Suivre les propositions en cours, relancer au bon moment' },
+  { key: 'contrats', label: 'Gestion contrats', desc: 'Échéances, reconductions, avenants' },
+  { key: 'commissions', label: 'Suivi commissions', desc: 'Vision claire sur le chiffre d\'affaires' },
+  { key: 'reporting', label: 'Reporting', desc: 'Tableaux de bord pour piloter le cabinet' },
+]
 
 export default function CabinetOnboarding() {
   const navigate = useNavigate()
@@ -47,7 +64,15 @@ export default function CabinetOnboarding() {
   const [error, setError] = useState('')
   const [cabinet, setCabinet] = useState(null)
   const [progress, setProgress] = useState(null)
+  const [activeStep, setActiveStep] = useState(0)
+
+  // Profile
   const [profile, setProfile] = useState({ cabinet_name: '', orias_number: '', city: '' })
+  // Portfolio
+  const [branches, setBranches] = useState([])
+  const [volume, setVolume] = useState('')
+  // Priorities
+  const [priorites, setPriorites] = useState([])
 
   const loadOnboarding = useCallback(async () => {
     setLoading(true)
@@ -61,6 +86,9 @@ export default function CabinetOnboarding() {
         cabinet_name: data.cabinet?.name || prev.cabinet_name,
         orias_number: data.cabinet?.orias_number || prev.orias_number,
       }))
+      if (data.cabinet?.branches) setBranches(data.cabinet.branches)
+      if (data.cabinet?.portfolio_volume) setVolume(String(data.cabinet.portfolio_volume))
+      if (data.cabinet?.priorites) setPriorites(data.cabinet.priorites)
     } catch (err) {
       setError(err.response?.data?.message || 'Onboarding indisponible pour le moment.')
     } finally {
@@ -69,10 +97,7 @@ export default function CabinetOnboarding() {
   }, [])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      loadOnboarding()
-    }, 0)
-    return () => window.clearTimeout(timer)
+    loadOnboarding()
   }, [loadOnboarding])
 
   const steps = useMemo(() => {
@@ -80,164 +105,398 @@ export default function CabinetOnboarding() {
     return apiSteps.map((step) => ({ ...STEP_META[step.key], ...step }))
   }, [progress])
 
-  async function completeStep(step, payload = {}) {
-    setSavingStep(step)
-    setError('')
+  const doneCount = steps.filter((s) => s.done).length
+  const pct = Math.round((doneCount / steps.length) * 100)
+
+  const saveProfile = async () => {
+    setSavingStep('profile')
     try {
-      const { data } = await api.post('/onboarding/step', { step, payload })
-      setProgress(data.progress)
+      await api.put('/onboarding/profile', profile)
+      markDone('profile')
     } catch (err) {
-      setError(err.response?.data?.message || 'Impossible de valider cette étape.')
+      setError('Erreur lors de la sauvegarde du profil.')
     } finally {
       setSavingStep('')
     }
   }
 
-  const completionPercent = progress?.completion_percent || 0
+  const savePortefeuille = async () => {
+    setSavingStep('portefeuille')
+    try {
+      await api.put('/onboarding/portefeuille', { branches, portfolio_volume: parseInt(volume) || 0 })
+      markDone('portefeuille')
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde.')
+    } finally {
+      setSavingStep('')
+    }
+  }
+
+  const savePriorites = async () => {
+    setSavingStep('priorites')
+    try {
+      await api.put('/onboarding/priorites', { priorites })
+      markDone('priorites')
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde.')
+    } finally {
+      setSavingStep('')
+    }
+  }
+
+  const markDone = (key) => {
+    setProgress((prev) => {
+      if (!prev?.steps) return prev
+      return {
+        ...prev,
+        steps: prev.steps.map((s) => (s.key === key ? { ...s, done: true } : s)),
+      }
+    })
+  }
+
+  const toggleBranch = (key) => {
+    setBranches((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
+  const togglePriorite = (key) => {
+    setPriorites((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
+  const goToCockpit = () => navigate('/dashboard')
+  const goToImport = () => navigate('/onboarding/import')
+  const goToClientNew = () => navigate('/clients/new')
+  const goToBrief = () => navigate('/brief')
+
+  // ─── Loading ───
+  if (loading) return (
+    <AuroraBackground>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div className="aurora-spinner" />
+      </div>
+    </AuroraBackground>
+  )
+
+  // ─── Error ───
+  if (error && !cabinet) return (
+    <AuroraBackground>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <EmptyState icon={ShieldCheck} title="Onboarding" description={error} />
+      </div>
+    </AuroraBackground>
+  )
+
+  const currentStepKey = steps[activeStep]?.key
 
   return (
-    <div style={pageStyle}>
-      <AuroraBackground />
-      <section style={heroStyle}>
-        <div>
-          <Badge tone="success">V1 cabinet</Badge>
-          <p style={{ ...eyebrowStyle, marginTop: 14 }}>Onboarding cabinet</p>
-          <h1 style={titleStyle}>Votre cabinet prend vie dans COURTIA.</h1>
-          <p style={leadStyle}>
-            En moins de trois minutes, posez le profil cabinet, préparez l’import clients, connectez vos outils et lancez votre premier Morning Brief ARK.
+    <AuroraBackground>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 80px' }}>
+        {/* Header */}
+        <div style={{ marginBottom: 32 }}>
+          <Badge style={{ marginBottom: 12 }}>Onboarding cabinet</Badge>
+          <h1 style={{ fontSize: 28, fontWeight: 300, margin: '0 0 8px', color: '#fff', letterSpacing: '-0.02em' }}>
+            Bienvenue chez Courtia
+          </h1>
+          <p style={{ color: 'var(--aurora-text-secondary)', fontSize: 15, margin: 0 }}>
+            Quelques minutes pour configurer votre cockpit. Tout est modifiable ensuite.
           </p>
         </div>
-        <GlassCard style={progressCardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-            <div>
-              <p style={eyebrowStyle}>Progression</p>
-              <strong style={{ fontSize: 44 }}>{completionPercent}%</strong>
-            </div>
-            <StatusPill status={completionPercent === 100 ? 'success' : 'warning'}>
-              {completionPercent === 100 ? 'Prêt' : 'À finaliser'}
-            </StatusPill>
+
+        {/* Progress bar */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: 'var(--aurora-text-muted)' }}>
+              Étape {activeStep + 1} sur {steps.length}
+            </span>
+            <span style={{ fontSize: 13, color: 'var(--aurora-accent)', fontWeight: 600 }}>{pct}%</span>
           </div>
-          <div style={barTrackStyle}><span style={{ ...barFillStyle, width: `${completionPercent}%` }} /></div>
-          <p style={mutedStyle}>{cabinet?.name || 'Cabinet COURTIA'} · {cabinet?.role || 'owner'}</p>
-        </GlassCard>
-      </section>
-
-      {error && <div style={errorStyle}>{error}</div>}
-
-      {loading ? (
-        <EmptyState title="Chargement de l’onboarding" description="COURTIA prépare le parcours cabinet." />
-      ) : (
-        <div style={gridStyle}>
-          <GlassCard style={panelStyle}>
-            <div style={sectionHeaderStyle}>
-              <ShieldCheck size={20} color="var(--c-aurora-cyan)" />
-              <div>
-                <h2 style={h2Style}>1. Profil cabinet</h2>
-                <p style={mutedStyle}>Ces données alimenteront les futurs documents DDA et la conformité cabinet.</p>
-              </div>
-            </div>
-            <div style={formGridStyle}>
-              <Field label="Nom du cabinet">
-                <Input value={profile.cabinet_name} onChange={(e) => setProfile((v) => ({ ...v, cabinet_name: e.target.value }))} placeholder="Cabinet Dupont Assurances" />
-              </Field>
-              <Field label="ORIAS">
-                <Input value={profile.orias_number} onChange={(e) => setProfile((v) => ({ ...v, orias_number: e.target.value }))} placeholder="07000000" />
-              </Field>
-              <Field label="Ville">
-                <Input value={profile.city} onChange={(e) => setProfile((v) => ({ ...v, city: e.target.value }))} placeholder="Paris" />
-              </Field>
-            </div>
-            <Button onClick={() => completeStep('profile', profile)} disabled={savingStep === 'profile'}>
-              {savingStep === 'profile' ? 'Enregistrement...' : 'Valider le profil'} <ArrowRight size={16} />
-            </Button>
-          </GlassCard>
-
-          <div style={stepsColumnStyle}>
-            {steps.map((step, index) => {
-              const Icon = step.icon || STEP_META[step.key]?.icon || CheckCircle2
-              return (
-                <GlassCard key={step.key} style={stepCardStyle}>
-                  <div style={stepNumberStyle}>{index + 1}</div>
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    <div style={stepHeaderStyle}>
-                      <Icon size={19} color="var(--c-aurora-cyan)" />
-                      <h3 style={h3Style}>{step.title}</h3>
-                      <StatusPill status={step.done ? 'success' : 'warning'}>{step.done ? 'Validée' : 'À faire'}</StatusPill>
-                    </div>
-                    <p style={mutedStyle}>{step.subtitle || step.description}</p>
-                    {renderStepAction(step.key, step.done, savingStep, completeStep, navigate)}
-                  </div>
-                </GlassCard>
-              )
-            })}
+          <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, var(--aurora-accent), var(--aurora-rose-soft))', borderRadius: 2, transition: 'width 0.5s ease' }} />
+          </div>
+          {/* Step dots */}
+          <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'center' }}>
+            {steps.map((s, i) => (
+              <button
+                key={s.key}
+                onClick={() => setActiveStep(i)}
+                style={{
+                  width: i === activeStep ? 28 : 10,
+                  height: 10,
+                  borderRadius: 5,
+                  border: 'none',
+                  background: i === activeStep ? 'var(--aurora-accent)' : s.done ? 'var(--aurora-emerald-soft)' : 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                aria-label={`Étape ${i + 1}: ${s.title}`}
+              />
+            ))}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Step content */}
+        <GlassCard style={{ padding: 32 }}>
+          {/* STEP 0: Profile */}
+          {currentStepKey === 'profile' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+                <Building2 size={22} style={{ color: 'var(--aurora-accent)' }} />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#fff' }}>Votre cabinet</h2>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--aurora-text-muted)' }}>Identité professionnelle et conformité</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <Input
+                  label="Nom du cabinet"
+                  placeholder="Ex: Martin Assurances"
+                  value={profile.cabinet_name}
+                  onChange={(e) => setProfile({ ...profile, cabinet_name: e.target.value })}
+                />
+                <Input
+                  label="Numéro ORIAS"
+                  placeholder="Ex: 24001234"
+                  value={profile.orias_number}
+                  onChange={(e) => setProfile({ ...profile, orias_number: e.target.value })}
+                />
+                <Input
+                  label="Ville d'exercice"
+                  placeholder="Ex: Lyon"
+                  value={profile.city}
+                  onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                />
+              </div>
+              <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  onClick={saveProfile}
+                  loading={savingStep === 'profile'}
+                  disabled={!profile.cabinet_name}
+                >
+                  Continuer <ArrowRight size={15} style={{ marginLeft: 4 }} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 1: Portfolio */}
+          {currentStepKey === 'portefeuille' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+                <Briefcase size={22} style={{ color: 'var(--aurora-accent)' }} />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#fff' }}>Votre portefeuille</h2>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--aurora-text-muted)' }}>Pour que Courtia s'adapte à votre activité</p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 14, color: 'var(--aurora-text-secondary)', marginBottom: 14 }}>Branches principales</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+                {BRANCHES.map((b) => {
+                  const active = branches.includes(b.key)
+                  const Icon = b.icon
+                  return (
+                    <button
+                      key={b.key}
+                      onClick={() => toggleBranch(b.key)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '8px 14px', borderRadius: 20,
+                        background: active ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${active ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        color: active ? '#fff' : 'var(--aurora-text-secondary)',
+                        fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                    >
+                      <Icon size={14} />
+                      {b.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <Input
+                label="Volume approximatif du portefeuille (nombre de clients/contrats)"
+                placeholder="Ex: 250"
+                type="number"
+                value={volume}
+                onChange={(e) => setVolume(e.target.value)}
+              />
+
+              <div style={{ marginTop: 28, display: 'flex', justifyContent: 'space-between' }}>
+                <Button variant="ghost" onClick={() => setActiveStep(0)}>Retour</Button>
+                <Button onClick={savePortefeuille} loading={savingStep === 'portefeuille'}>
+                  Continuer <ArrowRight size={15} style={{ marginLeft: 4 }} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Priorities */}
+          {currentStepKey === 'priorites' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+                <Target size={22} style={{ color: 'var(--aurora-accent)' }} />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#fff' }}>Vos priorités</h2>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--aurora-text-muted)' }}>Ce qui compte le plus dans votre quotidien</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {PRIORITES.map((p) => {
+                  const active = priorites.includes(p.key)
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => togglePriorite(p.key)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '14px 16px', borderRadius: 12,
+                        background: active ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${active ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                        textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s',
+                        width: '100%',
+                      }}
+                    >
+                      <div style={{
+                        width: 20, height: 20, borderRadius: 4,
+                        border: `2px solid ${active ? 'var(--aurora-accent)' : 'rgba(255,255,255,0.2)'}`,
+                        background: active ? 'var(--aurora-accent)' : 'transparent',
+                        flexShrink: 0, transition: 'all 0.2s',
+                      }}>
+                        {active && <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff' }}>✓</span>}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{p.label}</div>
+                        <div style={{ fontSize: 12, color: 'var(--aurora-text-muted)', marginTop: 2 }}>{p.desc}</div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div style={{ marginTop: 28, display: 'flex', justifyContent: 'space-between' }}>
+                <Button variant="ghost" onClick={() => setActiveStep(1)}>Retour</Button>
+                <Button onClick={savePriorites} loading={savingStep === 'priorites'}>
+                  Continuer <ArrowRight size={15} style={{ marginLeft: 4 }} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Import */}
+          {currentStepKey === 'import' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+                <FileSpreadsheet size={22} style={{ color: 'var(--aurora-accent)' }} />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#fff' }}>Import clients</h2>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--aurora-text-muted)' }}>Optionnel — vous pouvez commencer sans import</p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 14, color: 'var(--aurora-text-secondary)', lineHeight: 1.6 }}>
+                Si vous avez un fichier Excel ou CSV de vos clients, importez-le maintenant.
+                Courtia détecte automatiquement les colonnes et vous aide à faire le mapping.
+                Formats acceptés : .xlsx, .xls, .csv
+              </p>
+
+              <div style={{ marginTop: 28, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <Button variant="ghost" onClick={() => {
+                  markDone('import')
+                  setActiveStep(4)
+                }}>
+                  Plus tard
+                </Button>
+                <Button onClick={goToImport}>
+                  Importer un fichier <ArrowRight size={15} style={{ marginLeft: 4 }} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: First Action */}
+          {currentStepKey === 'premiere_action' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+                <Sparkles size={22} style={{ color: 'var(--aurora-accent)' }} />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#fff' }}>Première action</h2>
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--aurora-text-muted)' }}>Votre cockpit est prêt. Choisissez par où commencer.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button
+                  onClick={goToClientNew}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '16px 20px', borderRadius: 12,
+                    background: 'rgba(139,92,246,0.12)',
+                    border: '1px solid rgba(139,92,246,0.3)',
+                    textAlign: 'left', cursor: 'pointer', width: '100%',
+                    color: '#fff', fontSize: 14,
+                  }}
+                >
+                  <Users size={18} />
+                  <div>
+                    <strong>Créer votre première fiche client</strong>
+                    <div style={{ fontSize: 12, color: 'var(--aurora-text-muted)', marginTop: 2 }}>Ouvrez une fiche et découvrez le cockpit en contexte réel.</div>
+                  </div>
+                  <ArrowRight size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                </button>
+
+                <button
+                  onClick={goToBrief}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '16px 20px', borderRadius: 12,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    textAlign: 'left', cursor: 'pointer', width: '100%',
+                    color: '#fff', fontSize: 14,
+                  }}
+                >
+                  <Sparkles size={18} />
+                  <div>
+                    <strong>Lancer votre Morning Brief</strong>
+                    <div style={{ fontSize: 12, color: 'var(--aurora-text-muted)', marginTop: 2 }}>ARK prépare vos priorités du jour.</div>
+                  </div>
+                  <ArrowRight size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                </button>
+              </div>
+
+              <div style={{ marginTop: 28, textAlign: 'center' }}>
+                <Button onClick={goToCockpit}>
+                  Accéder au cockpit <ArrowRight size={15} style={{ marginLeft: 4 }} />
+                </Button>
+                <p style={{ fontSize: 12, color: 'var(--aurora-text-muted)', marginTop: 8 }}>
+                  Tout est modifiable ensuite depuis Paramètres.
+                </p>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+
+        {/* Skip link */}
+        {currentStepKey !== 'premiere_action' && (
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            <button
+              onClick={goToCockpit}
+              style={{
+                background: 'none', border: 'none',
+                color: 'var(--aurora-text-muted)', fontSize: 13,
+                cursor: 'pointer', textDecoration: 'underline',
+              }}
+            >
+              Passer l'onboarding, accéder au cockpit
+            </button>
+          </div>
+        )}
+      </div>
+    </AuroraBackground>
   )
 }
-
-function renderStepAction(key, done, savingStep, completeStep, navigate) {
-  if (key === 'profile') return null
-  if (key === 'import') {
-    return (
-      <div style={actionRowStyle}>
-        <Button variant="secondary" onClick={() => navigate('/import')}>Ouvrir l’import</Button>
-        <Button variant="ghost" onClick={() => completeStep('import')} disabled={done || savingStep === key}>{done ? 'Import prêt' : 'Valider plus tard'}</Button>
-      </div>
-    )
-  }
-  if (key === 'google') {
-    return (
-      <div style={actionRowStyle}>
-        <Button variant="secondary" onClick={() => navigate('/parametres')}>Voir intégrations</Button>
-        <Button variant="ghost" onClick={() => completeStep('google')} disabled={done || savingStep === key}>{done ? 'Étape validée' : 'Ignorer pour l’instant'}</Button>
-      </div>
-    )
-  }
-  if (key === 'first_client') {
-    return (
-      <div style={actionRowStyle}>
-        <Button variant="secondary" onClick={() => navigate('/clients')}>Ouvrir Clients</Button>
-        <Button variant="ghost" onClick={() => completeStep('first_client')} disabled={done || savingStep === key}>{done ? 'Fiche vue' : 'Marquer comme fait'}</Button>
-      </div>
-    )
-  }
-  return (
-    <div style={actionRowStyle}>
-      <Button variant="secondary" onClick={() => navigate('/morning-brief')}>Lancer Morning Brief</Button>
-      <Button variant="ghost" onClick={() => completeStep('first_brief')} disabled={done || savingStep === key}>{done ? 'Brief prêt' : 'Valider le brief'}</Button>
-    </div>
-  )
-}
-
-function Field({ label, children }) {
-  return (
-    <label style={{ display: 'grid', gap: 7 }}>
-      <span style={{ color: 'var(--c-text-secondary)', fontSize: 13, fontWeight: 700 }}>{label}</span>
-      {children}
-    </label>
-  )
-}
-
-const pageStyle = { position: 'relative', minHeight: '100vh', padding: '40px clamp(16px, 4vw, 48px)', color: 'var(--c-text-primary)', overflow: 'hidden' }
-const heroStyle = { maxWidth: 1180, margin: '0 auto 22px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20, alignItems: 'end' }
-const titleStyle = { margin: '18px 0 12px', fontFamily: 'var(--c-font-display)', fontSize: 'clamp(40px, 7vw, 82px)', lineHeight: 0.92, letterSpacing: '-0.06em' }
-const leadStyle = { margin: 0, maxWidth: 760, color: 'var(--c-text-secondary)', fontSize: 'clamp(16px, 2vw, 20px)', lineHeight: 1.55 }
-const progressCardStyle = { padding: 22, transform: 'perspective(900px) rotateX(2deg)' }
-const eyebrowStyle = { margin: 0, color: 'var(--c-text-muted)', textTransform: 'uppercase', letterSpacing: '0.16em', fontSize: 11, fontWeight: 800 }
-const mutedStyle = { margin: 0, color: 'var(--c-text-secondary)', lineHeight: 1.55 }
-const barTrackStyle = { height: 8, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.08)', margin: '16px 0 10px' }
-const barFillStyle = { display: 'block', height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, var(--c-aurora-violet), var(--c-aurora-cyan))', transition: 'width 240ms ease' }
-const gridStyle = { maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 18 }
-const panelStyle = { padding: 22, alignSelf: 'start' }
-const sectionHeaderStyle = { display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 18 }
-const h2Style = { margin: 0, fontFamily: 'var(--c-font-display)', fontSize: 24, letterSpacing: '-0.03em' }
-const h3Style = { margin: 0, fontFamily: 'var(--c-font-display)', fontSize: 19, letterSpacing: '-0.02em' }
-const formGridStyle = { display: 'grid', gap: 14, marginBottom: 18 }
-const stepsColumnStyle = { display: 'grid', gap: 14 }
-const stepCardStyle = { display: 'grid', gridTemplateColumns: '44px 1fr', gap: 16, padding: 18, transformStyle: 'preserve-3d' }
-const stepNumberStyle = { width: 38, height: 38, borderRadius: 14, display: 'grid', placeItems: 'center', fontWeight: 900, color: '#07091a', background: 'linear-gradient(135deg, var(--c-aurora-pearl), var(--c-aurora-cyan))', boxShadow: 'var(--c-halo-cyan)' }
-const stepHeaderStyle = { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }
-const actionRowStyle = { display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }
-const errorStyle = { maxWidth: 1180, margin: '0 auto 16px', padding: 14, borderRadius: 16, border: '1px solid rgba(255,111,140,0.32)', color: 'var(--c-danger)', background: 'rgba(255,111,140,0.08)' }

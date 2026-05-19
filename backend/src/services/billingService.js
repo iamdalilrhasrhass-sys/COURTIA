@@ -1,7 +1,7 @@
 const pool = require('../db');
 const planService = require('./planService');
 
-const TRIAL_DAYS = Number(process.env.BILLING_TRIAL_DAYS || 7);
+const TRIAL_DAYS = Number(process.env.BILLING_TRIAL_DAYS || 0);
 const FISCAL_LABEL = process.env.BILLING_FISCAL_LABEL || 'Prix indiqués hors taxes. TVA applicable au taux en vigueur.';
 
 let foundationReady = false;
