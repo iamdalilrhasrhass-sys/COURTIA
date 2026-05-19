@@ -1444,10 +1444,12 @@ const styles = `
   .lp-header {
     margin: 8px 12px;
     padding: 14px 20px;
+    padding-top: max(14px, env(safe-area-inset-top, 0px));
     flex-wrap: wrap;
     gap: 12px;
     border-radius: 14px;
     min-height: 52px;
+    top: env(safe-area-inset-top, 0px);
   }
 
   .lp-header-brand {
@@ -1489,12 +1491,17 @@ const styles = `
   .lp-hero-cta {
     flex-direction: column;
     align-items: center;
+    gap: 12px;
   }
 
   .lp-hero-cta .aurora-button {
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     justify-content: center;
+  }
+
+  .lp-hero-content {
+    transform: none !important; /* kill 3D X-shift on mobile */
   }
 
   .lp-section {
@@ -1540,9 +1547,9 @@ const styles = `
 
   /* Scale down the orb on mobile */
   .aurora-orb-container > div {
-    transform: scale(0.55);
+    transform: scale(0.35) !important;
+    margin: -120px 0 -60px 0;
     transform-origin: center center;
-    margin: -80px 0;
   }
 
   /* Full-width cards */
@@ -1588,8 +1595,8 @@ const styles = `
   }
 
   .aurora-orb-container > div {
-    transform: scale(0.45);
-    margin: -100px 0;
+    transform: scale(0.28) !important;
+    margin: -140px 0 -80px 0;
   }
 
   .lp-price {
