@@ -323,7 +323,8 @@ export default function App() {
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
-        <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
+        <Route path="/landing" element={<LandingPublic />} />
+        <Route path="/landing/page.html" element={<Navigate to="/" replace />} />
         <Route path="/fonctionnalites" element={<Navigate to="/#cockpit" replace />} />
         <Route path="/tarifs" element={<TarifsPublic />} />
         <Route path="/demo" element={<DemoPublic />} />
