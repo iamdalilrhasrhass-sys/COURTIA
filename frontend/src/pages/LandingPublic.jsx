@@ -26,6 +26,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { applySeo } from '../lib/seo'
+import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import './LandingPublicV4.css'
 
 const proofNodes = [
@@ -151,6 +152,19 @@ const faqItems = [
   ],
 ]
 
+function LogoSigil({ size = 34, animated = false, className = '' }) {
+  return (
+    <CourtiaBubbleLogo
+      className={`lp4-logo-sigil ${className}`}
+      size={size}
+      animated={animated}
+      showHalo={false}
+      showFoam
+      showSpecular
+    />
+  )
+}
+
 function Nav() {
   const [open, setOpen] = useState(false)
 
@@ -165,7 +179,7 @@ function Nav() {
     <header className="lp4-nav-wrap">
       <nav className="lp4-nav" aria-label="Navigation COURTIA">
         <a className="lp4-brand" href="#top" aria-label="COURTIA accueil">
-          <span className="lp4-brand-mark">C</span>
+          <div className="lp4-brand-mark"><LogoSigil size={31} /></div>
           <span>
             <strong>COURTIA</strong>
             <em>ARK cockpit</em>
@@ -219,7 +233,9 @@ function HeroCockpit() {
   return (
     <div className="lp4-hero-visual">
       <div className="lp4-hero-beam" aria-hidden="true" />
-      <div className="lp4-hero-sigil" aria-hidden="true">C</div>
+      <div className="lp4-hero-sigil" aria-hidden="true">
+        <CourtiaBubbleLogo size="100%" animated showHalo showFoam showSpecular />
+      </div>
       <AuroraOrb />
       <div className="lp4-depth-panel lp4-depth-panel-one" aria-hidden="true">
         <span>Pipeline devis</span>
@@ -289,7 +305,7 @@ function HeroCockpit() {
 function SectionTitle({ eyebrow, title, children, align = 'left' }) {
   return (
     <div className={`lp4-section-head ${align === 'center' ? 'is-centered' : ''}`}>
-      <span className="lp4-section-sigil" aria-hidden="true">C</span>
+      <LogoSigil className="lp4-section-sigil" size={30} />
       {eyebrow ? <span className="lp4-kicker">{eyebrow}</span> : null}
       <h2>{title}</h2>
       {children ? <p>{children}</p> : null}
@@ -512,7 +528,9 @@ export default function LandingPublic() {
 
         <section className="lp4-final">
           <div className="lp4-final-orb" aria-hidden="true" />
-          <span className="lp4-final-mark" aria-hidden="true">C</span>
+          <div className="lp4-final-mark" aria-hidden="true">
+            <CourtiaBubbleLogo size={82} animated showHalo showFoam showSpecular />
+          </div>
           <h2>Structurez votre cabinet autour d’un cockpit IA clair.</h2>
           <p>
             COURTIA vous aide à structurer vos dossiers, prioriser vos actions et avancer avec plus de méthode,

@@ -9,6 +9,7 @@ import './styles/mobile-responsive.css'
 import './styles/aurora.css'
 import './styles/aurora-mobile.css'
 import './design/tokens.css' // LA BULLE — design system tokens
+import './styles/courtia-global-design.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { initSentry } from './lib/sentry'
 import { ArkContextProvider } from './components/ark/ArkContextProvider'

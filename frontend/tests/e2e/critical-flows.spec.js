@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LOT 17 — COURTIA E2E CRITICAL FLOWS
-// Tests contre production courtia.vercel.app
+// Tests contre production courtiark.fr
 // ═══════════════════════════════════════════════════════════════════════════
 
 test.describe("COURTIA Critical Flows", () => {
@@ -15,8 +15,8 @@ test.describe("COURTIA Critical Flows", () => {
     // Vérifier présence titre COURTIA (premier élément)
     await expect(page.locator("text=COURTIA").first()).toBeVisible();
 
-    // Vérifier CTA Essai gratuit
-    const ctaButton = page.locator('a:has-text("Essai gratuit"), button:has-text("Essai gratuit")');
+    // Vérifier CTA principal
+    const ctaButton = page.locator('a:has-text("Demander une démo"), button:has-text("Demander une démo")');
     await expect(ctaButton.first()).toBeVisible();
 
     // Screenshot landing
@@ -114,7 +114,7 @@ test.describe("COURTIA Critical Flows", () => {
 
   // Test 9 : API Health check depuis le navigateur
   test("API Health endpoint accessible", async ({ page }) => {
-    const response = await page.request.get("https://api.courtiark.fr/health");
+    const response = await page.request.get("https://api.courtiark.fr/api/health");
     expect(response.status()).toBe(200);
   });
 

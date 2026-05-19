@@ -156,6 +156,20 @@ const STYLES = `
     z-index: 1;
   }
 
+  .auth-logo-lockup {
+    width: 104px;
+    height: 104px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 28px;
+    border: 1px solid rgba(245,243,255,0.12);
+    border-radius: 34px;
+    background:
+      radial-gradient(circle at 30% 18%, rgba(34,211,238,0.16), transparent 44%),
+      rgba(255,255,255,0.045);
+    box-shadow: 0 0 72px rgba(139,92,246,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
   .auth-benefit {
     display: flex;
     align-items: flex-start;
@@ -580,8 +594,8 @@ export default function Login() {
             <div className="auth-left-halo" />
             <div className="auth-left-content">
               {/* Logo */}
-              <div style={{ marginBottom: 24 }}>
-                <CourtiaBubbleLogo size={44} />
+              <div className="auth-logo-lockup">
+                <CourtiaBubbleLogo size={82} animated showHalo showFoam showSpecular />
               </div>
 
               {/* Brand message */}

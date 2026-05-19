@@ -1,0 +1,309 @@
+:root {
+  --courtia-ink: #f5f3ff;
+  --courtia-muted: #b8b7cf;
+  --courtia-soft: rgba(245, 243, 255, 0.62);
+  --courtia-bg: #050510;
+  --courtia-bg-2: #0b1020;
+  --courtia-card: rgba(13, 16, 36, 0.68);
+  --courtia-card-strong: rgba(20, 23, 50, 0.78);
+  --courtia-border: rgba(245, 243, 255, 0.12);
+  --courtia-border-strong: rgba(139, 92, 246, 0.34);
+  --courtia-violet: #8b5cf6;
+  --courtia-violet-deep: #6d5dfb;
+  --courtia-cyan: #22d3ee;
+  --courtia-green: #5de3a1;
+  --courtia-amber: #fbbf24;
+  --courtia-red: #fb7185;
+  --courtia-radius: 22px;
+  --courtia-shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
+  --courtia-ring: 0 0 0 1px rgba(245, 243, 255, 0.08) inset, 0 0 70px rgba(139, 92, 246, 0.14);
+  --courtia-brand-gradient: linear-gradient(135deg, #ff80e0 0%, #8b5cf6 34%, #22d3ee 68%, #ffe7c2 100%);
+}
+
+body {
+  background: var(--courtia-bg);
+}
+
+.courtia-cockpit-shell {
+  color: var(--courtia-ink);
+  background:
+    radial-gradient(circle at 12% -6%, rgba(255, 128, 224, 0.2), transparent 31rem),
+    radial-gradient(circle at 84% 4%, rgba(34, 211, 238, 0.18), transparent 30rem),
+    radial-gradient(circle at 50% 62%, rgba(139, 92, 246, 0.15), transparent 46rem),
+    linear-gradient(180deg, #03030b 0%, var(--courtia-bg) 42%, #070a18 100%) !important;
+}
+
+.courtia-cockpit-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -4;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+  background-size: 82px 82px;
+  mask-image: radial-gradient(circle at 50% 16%, black 0%, transparent 72%);
+  opacity: 0.72;
+}
+
+.courtia-cockpit-shell::after {
+  content: "";
+  position: fixed;
+  inset: -25% -12% auto 8%;
+  height: 46vh;
+  z-index: -3;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 6%, rgba(255, 128, 224, 0.16), rgba(139, 92, 246, 0.18), rgba(34, 211, 238, 0.13), transparent 92%);
+  filter: blur(44px);
+  transform: skewY(-8deg);
+  animation: courtiaGlobalAurora 24s ease-in-out infinite;
+}
+
+.courtia-cockpit-main {
+  perspective: 1500px;
+}
+
+.courtia-cockpit-main > div:first-child {
+  width: 100%;
+}
+
+.courtia-cockpit-main :where(h1, h2, h3) {
+  color: var(--courtia-ink);
+  letter-spacing: -0.035em;
+}
+
+.courtia-cockpit-main :where(p, span, small, label, li) {
+  text-wrap: pretty;
+}
+
+.courtia-cockpit-main .courtia-depth-card,
+.courtia-cockpit-main .courtia-glass-card,
+.courtia-cockpit-main .aurora-card,
+.courtia-cockpit-main .aurora-panel,
+.courtia-cockpit-main .bg-white.courtia-depth-card,
+.courtia-cockpit-main .courtia-depth-card.bg-white {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--courtia-border) !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.078), rgba(255, 255, 255, 0.026)),
+    radial-gradient(circle at 12% 0%, rgba(34, 211, 238, 0.08), transparent 16rem),
+    var(--courtia-card) !important;
+  color: var(--courtia-ink) !important;
+  box-shadow: var(--courtia-shadow), var(--courtia-ring) !important;
+  backdrop-filter: blur(22px) saturate(1.12);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12);
+}
+
+.courtia-cockpit-main .courtia-depth-card::before,
+.courtia-cockpit-main .courtia-glass-card::before,
+.courtia-cockpit-main .aurora-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.11), transparent 24%, transparent 72%, rgba(34, 211, 238, 0.07));
+  opacity: 0.76;
+}
+
+.courtia-cockpit-main .courtia-depth-card > *,
+.courtia-cockpit-main .courtia-glass-card > *,
+.courtia-cockpit-main .aurora-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.courtia-cockpit-main .courtia-depth-card:hover,
+.courtia-cockpit-main .courtia-glass-card:hover,
+.courtia-cockpit-main .aurora-card:hover {
+  border-color: rgba(34, 211, 238, 0.24) !important;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.38), 0 0 84px rgba(139, 92, 246, 0.16) !important;
+  transform: translateY(-1px);
+}
+
+.courtia-cockpit-main :where(.bg-white, .bg-gray-50, .bg-gray-50\/70, .bg-gray-100) {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+}
+
+.courtia-cockpit-main :where(.border-gray-100, .border-gray-200, .divide-gray-100 > :not([hidden]) ~ :not([hidden])) {
+  border-color: rgba(245, 243, 255, 0.12) !important;
+}
+
+.courtia-cockpit-main :where(.text-black, .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600) {
+  color: var(--courtia-ink) !important;
+}
+
+.courtia-cockpit-main :where(.text-gray-500, .text-gray-400, .text-gray-300) {
+  color: var(--courtia-muted) !important;
+}
+
+.courtia-cockpit-main :where(input:not([type="checkbox"]), textarea, select) {
+  border-color: rgba(245, 243, 255, 0.13) !important;
+  background: rgba(5, 5, 16, 0.72) !important;
+  color: var(--courtia-ink) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.courtia-cockpit-main :where(input:not([type="checkbox"]), textarea, select):focus {
+  border-color: rgba(34, 211, 238, 0.42) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+.courtia-cockpit-main :where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.courtia-cockpit-main :where(button, a):focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.72);
+  outline-offset: 3px;
+}
+
+.courtia-app-hero,
+.aurora-app-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(245, 243, 255, 0.12);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 9% 12%, rgba(255, 128, 224, 0.16), transparent 18rem),
+    radial-gradient(circle at 88% 18%, rgba(34, 211, 238, 0.12), transparent 18rem),
+    rgba(255, 255, 255, 0.045);
+  box-shadow: var(--courtia-shadow), var(--courtia-ring);
+}
+
+.logo-sigil,
+.courtia-logo-sigil {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(245, 243, 255, 0.14);
+  border-radius: 18px;
+  background: radial-gradient(circle at 30% 18%, rgba(34, 211, 238, 0.2), transparent 38%), rgba(255, 255, 255, 0.055);
+  box-shadow: 0 0 44px rgba(139, 92, 246, 0.2);
+}
+
+.courtia-sidebar {
+  position: relative;
+  overflow: hidden;
+  color: var(--courtia-ink);
+  background:
+    radial-gradient(circle at 22% -4%, rgba(255, 128, 224, 0.14), transparent 12rem),
+    radial-gradient(circle at 86% 26%, rgba(34, 211, 238, 0.1), transparent 13rem),
+    rgba(5, 5, 16, 0.88) !important;
+  border-right: 1px solid rgba(245, 243, 255, 0.12) !important;
+  box-shadow: 18px 0 80px rgba(0, 0, 0, 0.28), inset -1px 0 0 rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(26px) saturate(1.18);
+}
+
+.courtia-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(180deg, black, transparent 82%);
+}
+
+.courtia-sidebar-brand,
+.courtia-sidebar nav,
+.courtia-sidebar-ark,
+.courtia-sidebar-profile {
+  position: relative;
+  z-index: 1;
+}
+
+.courtia-sidebar-brand {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012));
+}
+
+.courtia-sidebar-universe {
+  position: relative;
+}
+
+.courtia-sidebar-universe::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--courtia-brand-gradient);
+  opacity: 0.62;
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.45);
+}
+
+.courtia-sidebar-universe.is-active::before {
+  opacity: 1;
+}
+
+.courtia-sidebar-item {
+  position: relative;
+}
+
+.courtia-sidebar-item::after {
+  content: "";
+  position: absolute;
+  inset: 6px 8px 6px 18px;
+  z-index: -1;
+  border-radius: 12px;
+  opacity: 0;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(34, 211, 238, 0.08));
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.courtia-sidebar-item:hover::after,
+.courtia-sidebar-item.is-active::after {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.courtia-sidebar-item.is-active {
+  box-shadow: inset 2px 0 0 rgba(34, 211, 238, 0.7);
+}
+
+.courtia-sidebar-ark,
+.courtia-sidebar-profile {
+  backdrop-filter: blur(18px);
+}
+
+.courtia-sidebar-ark {
+  box-shadow: 0 0 44px rgba(139, 92, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.courtia-sidebar-profile {
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.courtia-status-pill,
+.status-pill,
+[class*="status"]:where(span) {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+@keyframes courtiaGlobalAurora {
+  0%, 100% { transform: translate3d(0, 0, 0) skewY(-8deg) scale(1); opacity: 0.58; }
+  50% { transform: translate3d(3%, 10%, 0) skewY(-5deg) scale(1.08); opacity: 0.92; }
+}
+
+@media (max-width: 768px) {
+  .courtia-sidebar {
+    width: min(86vw, 312px) !important;
+  }
+
+  .courtia-cockpit-shell::after,
+  .courtia-cockpit-aurora::before {
+    opacity: 0.46;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .courtia-cockpit-shell::after,
+  .courtia-cockpit-main .courtia-depth-card,
+  .courtia-cockpit-main .courtia-glass-card,
+  .courtia-cockpit-main .aurora-card {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

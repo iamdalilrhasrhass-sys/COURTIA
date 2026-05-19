@@ -97,7 +97,7 @@ const OPPORTUNITES_ARK = [
   { client: 'Dupont SAS', potentiel: 12400, description: 'Flotte Auto + RC Pro + Protection juridique. Client mono-produit avec fort potentiel multi-équipement.', probabilite: 72 },
   { client: 'Martin Sophie', potentiel: 5200, description: 'Non équipée Prévoyance — 2 contrats actifs. Profil cadre supérieur avec besoins identifiés.', probabilite: 68 },
   { client: 'Garcia Anne', potentiel: 3400, description: 'Multi-équipement Santé + MRH. Client mono-produit Santé, éligible MRH.', probabilite: 65 },
-  { client: 'Bernard Luc', potentiel: 2800, description: 'Devis Auto #312 sans réponse depuis 14 jours. Fort potentiel de conversion.', probabilite: 55 },
+  { client: 'Bernard Luc', potentiel: 2800, description: 'Devis Auto #312 sans réponse depuis deux semaines. Fort potentiel de conversion.', probabilite: 55 },
   { client: 'Roux Camille', potentiel: 1800, description: 'Extension garanties Habitation. Contrat de base depuis 3 ans, marge de progression.', probabilite: 48 },
 ]
 

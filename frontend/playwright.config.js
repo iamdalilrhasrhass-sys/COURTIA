@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: "list",
   timeout: 30000,
   use: {
-    baseURL: "https://courtia.vercel.app",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "https://courtiark.fr",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

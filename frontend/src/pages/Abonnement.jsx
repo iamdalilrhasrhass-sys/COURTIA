@@ -1,438 +1,386 @@
-import { useState } from 'react'
-import { Check, Star, ChevronDown } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { motion, AnimatePresence } from 'framer-motion'
-import api from '../api'
-import BubbleCard from '../components/BubbleCard'
-import BubbleBadge from '../components/BubbleBadge'
-import BubbleButton from '../components/BubbleButton'
-import BubbleBackground from '../components/BubbleBackground'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Building2, CheckCircle2, CreditCard, ShieldCheck, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
+import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 
-// ─── FAQ Item ─────────────────────────────────────────────────────────────────
-const FAQItem = ({ q, a }) => {
-  const [open, setOpen] = useState(false)
+const plans = [
+  {
+    code: 'starter',
+    name: 'Starter',
+    price: '89 €',
+    suffix: 'HT/mois',
+    icon: CreditCard,
+    text: 'Pour structurer le suivi cabinet et poser les fondamentaux CRM IA.',
+    cta: 'Voir le billing',
+    features: ['Fiches clients', 'Suivi devis', 'Relances essentielles', 'Documents structurés'],
+  },
+  {
+    code: 'pro',
+    name: 'Pro',
+    price: '199 €',
+    suffix: 'HT/mois',
+    icon: Sparkles,
+    featured: true,
+    text: 'L’offre principale pour exploiter ARK, piloter les priorités et exécuter les relances au quotidien.',
+    cta: 'Démarrer Pro',
+    features: ['ARK quotidien', 'Priorités & relances', 'Reporting portefeuille', 'Pilotage commercial du cabinet'],
+  },
+  {
+    code: 'cabinet',
+    name: 'Cabinet',
+    price: 'Sur devis',
+    suffix: '',
+    icon: Building2,
+    text: 'Pour équipe, besoins avancés, accompagnement et configuration personnalisée.',
+    cta: 'Demander une démo',
+    features: ['Multi-utilisateur', 'Configuration avancée', 'Accompagnement', 'Déploiement progressif'],
+  },
+]
+
+const faqs = [
+  [
+    'Pourquoi Pro est-il mis en avant ?',
+    'Parce que la valeur de COURTIA se révèle surtout quand ARK devient un vrai cockpit quotidien : priorités, relances, opportunités, reporting et actions à valider. Starter structure les bases, Pro porte le pilotage.',
+  ],
+  [
+    'Comment fonctionne l’offre Cabinet ?',
+    'Cabinet concerne les structures avec plusieurs utilisateurs, un besoin de configuration plus précis ou un accompagnement spécifique. Elle se traite sur devis pour éviter de vendre une formule standard à une organisation qui demande un déploiement sur mesure.',
+  ],
+  [
+    'ARK décide-t-il à la place du courtier ?',
+    'Non. ARK prépare, détecte, suggère et priorise. Le courtier garde la main sur les décisions métier, commerciales et contractuelles.',
+  ],
+]
+
+function PlanCard({ plan, index, onSelect }) {
+  const Icon = plan.icon
   return (
-    <div style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)', padding: '16px 0' }}>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          textAlign: 'left',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: 0,
-          fontFamily: 'Arial, sans-serif',
-        }}
-      >
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#0a0a0a' }}>{q}</span>
-        <ChevronDown
-          size={18}
-          style={{
-            color: open ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.3)',
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.3s',
-            flexShrink: 0,
-          }}
-        />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.55)', margin: '8px 0 0 0', lineHeight: 1.5 }}>
-              {a}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-// ─── Testimonial Card ─────────────────────────────────────────────────────────
-const getHash = (str) => { let hash = 0; for (let i = 0; i < (str || '').length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash); return hash }
-const getHSL = (str) => `hsl(${getHash(str) % 360}, 70%, 55%)`
-const getGradient = (str) => `linear-gradient(135deg, ${getHSL(str)} 0%, hsl(${(getHash(str) + 40) % 360}, 80%, 65%) 100%)`
-
-const TestimonialCard = ({ text, author, city }) => (
-  <BubbleCard hover padding={22}>
-    <div style={{ display: 'flex', gap: 2, marginBottom: 10 }}>
-      {Array(5).fill(0).map((_, i) => (
-        <Star key={i} size={14} fill="#f59e0b" color="#f59e0b" />
-      ))}
-    </div>
-    <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.65)', fontStyle: 'italic', lineHeight: 1.5, margin: 0 }}>
-      &ldquo;{text}&rdquo;
-    </p>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
-      <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 700,
-          fontSize: 13,
-          color: '#fff',
-          flexShrink: 0,
-          background: getGradient(author),
-        }}
-      >
-        {(author || '?').charAt(0)}
-      </div>
-      <div>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a', margin: 0 }}>{author}</p>
-        <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', margin: 0 }}>{city}</p>
-      </div>
-    </div>
-  </BubbleCard>
-)
-
-// ─── Plan Card ────────────────────────────────────────────────────────────────
-const PLAN_FEATURES = {
-  starter: ['Clients illimités', 'Tableau de bord Indicateurs', 'ARK Chat basique', 'Gestion contrats', 'Support email'],
-  pro: ['Clients illimités', 'ARK complet + analyses IA', 'Priorité support', 'ARK IA', 'Rapports avancés', '5 collaborateurs'],
-  premium: ['Tout inclus Pro', 'API publique', 'Audit RGPD', 'Onboarding dédié', 'Account Manager', 'Collaborateurs illimités'],
-}
-
-function PlanCard({ plan, billingCycle, loadingPlan, onSelect }) {
-  const isMonthly = billingCycle === 'monthly'
-  const monthlyPrice = { starter: 89, pro: 199, premium: null }[plan]
-  const yearlyPrice = monthlyPrice ? Math.round(monthlyPrice * 12 * 0.8) : null
-  const displayPrice = isMonthly ? monthlyPrice : yearlyPrice
-  const perLabel = isMonthly ? '/mois' : '/an'
-  const isPro = plan === 'pro'
-  const isPremium = plan === 'premium'
-  const features = PLAN_FEATURES[plan]
-
-  const planName = {
-    starter: "L'Essentiel",
-    pro: 'Le Cabinet',
-    premium: 'Le Réseau',
-  }[plan]
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: isPro ? 0.15 : isPremium ? 0.25 : 0.05 }}
-      style={{ position: 'relative' }}
+    <motion.article
+      className={`abo6-plan courtia-depth-card ${plan.featured ? 'is-featured' : ''}`}
+      initial={{ opacity: 0, y: 18, rotateX: 4 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.42, delay: index * 0.06 }}
     >
-      <BubbleCard
-        hover
-        padding={28}
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          border: isPro ? '0.5px solid rgba(37,99,235,0.25)' : undefined,
-          boxShadow: isPro ? '0 4px 8px rgba(37,99,235,0.06), 0 16px 40px rgba(37,99,235,0.1), 0 40px 80px rgba(37,99,235,0.05)' : undefined,
-          transform: isPro ? 'scale(1.03)' : undefined,
-          zIndex: isPro ? 2 : 1,
-        }}
-      >
-        {/* "Recommandé" ribbon for Pro */}
-        {isPro && (
-          <div style={{
-            position: 'absolute',
-            top: 14,
-            right: -36,
-            transform: 'rotate(45deg)',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            color: '#fff',
-            fontSize: 10,
-            fontWeight: 700,
-            padding: '4px 36px',
-            letterSpacing: '0.5px',
-          }}>
-            RECOMMANDÉ
-          </div>
-        )}
-
-        {/* Plan name + badge */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 18, color: '#0a0a0a', margin: 0 }}>
-            {planName}
-          </h3>
-          {isPro && (
-            <BubbleBadge color="#2563eb" size="sm" pulse>
-              Populaire
-            </BubbleBadge>
-          )}
-          {isPremium && (
-            <BubbleBadge color="#7c3aed" size="sm">
-              Premium
-            </BubbleBadge>
-          )}
-        </div>
-
-        {/* Price */}
-        <div style={{ marginBottom: 20 }}>
-          {isPremium ? (
-            <span style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
-              Sur devis
-            </span>
-          ) : (
-            <>
-              <span style={{ fontSize: 36, fontWeight: 700, color: '#0a0a0a', fontFamily: 'Arial, sans-serif' }}>
-                {displayPrice}€
-              </span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(0,0,0,0.4)' }}>
-                {perLabel}
-              </span>
-            </>
-          )}
-          {!isMonthly && !isPremium && (
-            <div style={{ marginTop: 4 }}>
-              <span style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: '#10b981',
-                background: 'rgba(16,185,129,0.1)',
-                padding: '2px 8px',
-                borderRadius: 9999,
-              }}>
-                Économisez 20%
-              </span>
-            </div>
-          )}
-          {isMonthly && plan !== 'starter' && !isPremium && (
-            <div style={{ marginTop: 4 }}>
-              <span style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'rgba(0,0,0,0.3)',
-              }}>
-                Soit {yearlyPrice}€/an
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Features */}
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {features.map((f) => (
-            <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <Check size={16} color="#10b981" style={{ marginTop: 1, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: 'rgba(0,0,0,0.7)', lineHeight: 1.4 }}>{f}</span>
-            </li>
-          ))}
-        </ul>
-
-        {/* CTA */}
-        <div style={{ marginTop: 24 }}>
-          <BubbleButton
-            variant={isPro ? 'primary' : 'secondary'}
-            size="md"
-            onClick={() => onSelect(plan)}
-            disabled={loadingPlan === plan}
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            {loadingPlan === plan ? 'Redirection...' : 'Choisir ce plan'}
-          </BubbleButton>
-        </div>
-      </BubbleCard>
-    </motion.div>
+      {plan.featured ? <span className="abo6-recommended">Recommandé</span> : null}
+      <div className="abo6-plan-head">
+        <span className="abo6-icon"><Icon size={21} /></span>
+        <h2>{plan.name}</h2>
+      </div>
+      <div className="abo6-price">
+        <strong>{plan.price}</strong>
+        {plan.suffix ? <span>{plan.suffix}</span> : null}
+      </div>
+      <p>{plan.text}</p>
+      <ul>
+        {plan.features.map((feature) => (
+          <li key={feature}><CheckCircle2 size={15} /> {feature}</li>
+        ))}
+      </ul>
+      <button className={`abo6-button ${plan.featured ? 'is-primary' : ''}`} onClick={() => onSelect(plan.code)}>
+        {plan.cta} <ArrowRight size={15} />
+      </button>
+    </motion.article>
   )
 }
 
-// ─── MAIN EXPORT ──────────────────────────────────────────────────────────────
 export default function Abonnement() {
-  const [billingCycle, setBillingCycle] = useState('monthly')
-  const [loadingPlan, setLoadingPlan] = useState(null)
+  const navigate = useNavigate()
 
-  const handleCheckout = async (plan) => {
-    setLoadingPlan(plan)
-    try {
-      const { data } = await api.post('/stripe/create-checkout-session', { plan, billingCycle })
-      if (data.url) window.location.href = data.url
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la redirection vers Stripe.')
-    } finally {
-      setLoadingPlan(null)
+  function handleSelect(planCode) {
+    if (planCode === 'cabinet') {
+      navigate('/demo')
+      return
     }
+    navigate(`/billing?plan=${planCode}`)
   }
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <BubbleBackground intensity="rich" />
-
+    <main className="abo6-page">
       <style>{`
-        @media (max-width: 767px) {
-          .abo-container { padding: 24px 16px !important; }
-          .abo-title { font-size: 26px !important; }
-          .abo-plan-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-          .abo-testimonial-grid { grid-template-columns: 1fr !important; }
+        .abo6-page {
+          min-height: 100vh;
+          color: #f5f3ff;
+          padding: clamp(24px, 4vw, 52px);
+          position: relative;
+          overflow: hidden;
+        }
+        .abo6-page::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(circle at 16% 4%, rgba(255, 128, 224, 0.16), transparent 24rem),
+            radial-gradient(circle at 86% 14%, rgba(34, 211, 238, 0.13), transparent 28rem),
+            radial-gradient(circle at 50% 76%, rgba(139, 92, 246, 0.16), transparent 34rem);
+        }
+        .abo6-shell {
+          width: min(1240px, 100%);
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+        .abo6-hero {
+          display: grid;
+          grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.45fr);
+          gap: clamp(22px, 4vw, 52px);
+          align-items: center;
+          margin-bottom: clamp(28px, 5vw, 58px);
+        }
+        .abo6-brand-orb {
+          display: grid;
+          place-items: center;
+          width: min(330px, 52vw);
+          aspect-ratio: 1;
+          justify-self: center;
+          border-radius: 42%;
+          background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(245,243,255,0.12);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 100px rgba(139,92,246,0.28);
+          transform: rotate(-8deg);
+        }
+        .abo6-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid rgba(139,92,246,0.34);
+          border-radius: 999px;
+          background: rgba(139,92,246,0.12);
+          color: #ddd6fe;
+          padding: 8px 12px;
+          font-size: 0.76rem;
+          font-weight: 850;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .abo6-hero h1 {
+          margin: 20px 0 14px;
+          max-width: 900px;
+          font-size: clamp(3rem, 8vw, 6.9rem);
+          line-height: 0.86;
+          letter-spacing: -0.085em;
+          color: #fff;
+        }
+        .abo6-hero p {
+          max-width: 760px;
+          color: rgba(245,243,255,0.72);
+          font-size: clamp(1rem, 1.8vw, 1.22rem);
+          line-height: 1.7;
+        }
+        .abo6-plan-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: clamp(16px, 2vw, 24px);
+          align-items: stretch;
+          perspective: 1400px;
+        }
+        .abo6-plan {
+          min-height: 100%;
+          padding: clamp(22px, 3vw, 30px);
+          border-radius: 30px !important;
+          transform-style: preserve-3d;
+        }
+        .abo6-plan.is-featured {
+          border-color: rgba(139,92,246,0.54) !important;
+          transform: translateY(-10px) scale(1.035);
+          box-shadow: 0 38px 120px rgba(139,92,246,0.22), 0 0 0 1px rgba(245,243,255,0.08) inset !important;
+        }
+        .abo6-recommended {
+          display: inline-flex;
+          border-radius: 999px;
+          background: linear-gradient(135deg, rgba(139,92,246,0.95), rgba(34,211,238,0.52));
+          color: #fff;
+          padding: 7px 12px;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          margin-bottom: 18px;
+          box-shadow: 0 0 40px rgba(139,92,246,0.32);
+        }
+        .abo6-plan-head {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .abo6-icon {
+          display: grid;
+          place-items: center;
+          width: 46px;
+          height: 46px;
+          border-radius: 17px;
+          border: 1px solid rgba(245,243,255,0.12);
+          background: radial-gradient(circle at 30% 20%, rgba(34,211,238,0.2), transparent 40%), rgba(255,255,255,0.065);
+          color: #c4b5fd;
+        }
+        .abo6-plan h2 {
+          margin: 0;
+          font-size: 1.35rem;
+        }
+        .abo6-price {
+          display: flex;
+          align-items: baseline;
+          gap: 9px;
+          margin: 24px 0 14px;
+        }
+        .abo6-price strong {
+          font-size: clamp(2.35rem, 4.6vw, 4rem);
+          letter-spacing: -0.07em;
+        }
+        .abo6-price span,
+        .abo6-plan p,
+        .abo6-plan li,
+        .abo6-faq p {
+          color: rgba(245,243,255,0.66);
+        }
+        .abo6-plan p {
+          line-height: 1.58;
+          min-height: 74px;
+        }
+        .abo6-plan ul {
+          display: grid;
+          gap: 10px;
+          list-style: none;
+          padding: 0;
+          margin: 22px 0;
+        }
+        .abo6-plan li {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          font-size: 0.92rem;
+        }
+        .abo6-plan li svg {
+          color: #5de3a1;
+          flex-shrink: 0;
+        }
+        .abo6-button {
+          width: 100%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 48px;
+          border-radius: 16px;
+          border: 1px solid rgba(245,243,255,0.14);
+          background: rgba(255,255,255,0.06);
+          color: #f5f3ff;
+          font-weight: 850;
+          cursor: pointer;
+          transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+        }
+        .abo6-button:hover {
+          transform: translateY(-2px);
+          border-color: rgba(34,211,238,0.38);
+          box-shadow: 0 0 42px rgba(34,211,238,0.12);
+        }
+        .abo6-button.is-primary {
+          border-color: rgba(139,92,246,0.62);
+          background: linear-gradient(135deg, #8b5cf6, #6d5dfb 54%, #22d3ee);
+          box-shadow: 0 0 54px rgba(139,92,246,0.34);
+        }
+        .abo6-control {
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+          gap: 22px;
+          margin-top: clamp(34px, 5vw, 64px);
+        }
+        .abo6-faq,
+        .abo6-note {
+          padding: clamp(22px, 3vw, 30px);
+          border-radius: 30px !important;
+        }
+        .abo6-note h2,
+        .abo6-faq h2 {
+          margin: 0 0 14px;
+          font-size: clamp(1.35rem, 3vw, 2rem);
+        }
+        .abo6-note p {
+          color: rgba(245,243,255,0.68);
+          line-height: 1.7;
+        }
+        .abo6-note ul {
+          display: grid;
+          gap: 10px;
+          padding: 0;
+          margin: 18px 0 0;
+          list-style: none;
+        }
+        .abo6-note li {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          color: rgba(245,243,255,0.72);
+        }
+        .abo6-faq details {
+          border: 1px solid rgba(245,243,255,0.1);
+          border-radius: 18px;
+          background: rgba(255,255,255,0.035);
+          padding: 16px 18px;
+        }
+        .abo6-faq details + details { margin-top: 10px; }
+        .abo6-faq summary {
+          cursor: pointer;
+          color: #fff;
+          font-weight: 850;
+        }
+        .abo6-faq p {
+          margin: 10px 0 0;
+          line-height: 1.65;
+        }
+        @media (max-width: 980px) {
+          .abo6-hero,
+          .abo6-plan-grid,
+          .abo6-control { grid-template-columns: 1fr; }
+          .abo6-plan.is-featured { transform: none; }
+          .abo6-brand-orb { width: min(270px, 70vw); }
         }
       `}</style>
 
-      <div className="abo-container" style={{ position: 'relative', zIndex: 1, padding: '32px 40px', maxWidth: 1000, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <BubbleBadge color="#2563eb" size="md" style={{ marginBottom: 12 }}>
-            Offre Fondateur &mdash; 50 places
-          </BubbleBadge>
-          <h1 className="abo-title" style={{
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 700,
-            fontSize: 36,
-            color: '#0a0a0a',
-            margin: '8px 0',
-            letterSpacing: '-0.02em',
-          }}>
-            Choisissez votre plan
-          </h1>
-          <p style={{ fontSize: 14, color: 'rgba(0,0,0,0.5)', maxWidth: 500, margin: '0 auto' }}>
-            Débloquez la puissance de l&rsquo;IA pour votre cabinet de courtage. Simple, transparent et sans engagement.
-          </p>
-
-          {/* Toggle */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            marginTop: 20,
-            padding: 4,
-            background: 'rgba(0,0,0,0.04)',
-            borderRadius: 9999,
-            border: '0.5px solid rgba(0,0,0,0.06)',
-          }}>
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              style={{
-                padding: '7px 18px',
-                fontSize: 13,
-                fontWeight: 700,
-                border: 'none',
-                borderRadius: 9999,
-                cursor: 'pointer',
-                background: billingCycle === 'monthly' ? '#fff' : 'transparent',
-                color: billingCycle === 'monthly' ? '#0a0a0a' : 'rgba(0,0,0,0.45)',
-                boxShadow: billingCycle === 'monthly' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-                transition: 'all 0.2s',
-                fontFamily: 'Arial, sans-serif',
-              }}
-            >
-              Mensuel
-            </button>
-            <button
-              onClick={() => setBillingCycle('annually')}
-              style={{
-                padding: '7px 18px',
-                fontSize: 13,
-                fontWeight: 700,
-                border: 'none',
-                borderRadius: 9999,
-                cursor: 'pointer',
-                background: billingCycle === 'annually' ? '#fff' : 'transparent',
-                color: billingCycle === 'annually' ? '#0a0a0a' : 'rgba(0,0,0,0.45)',
-                boxShadow: billingCycle === 'annually' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-                transition: 'all 0.2s',
-                fontFamily: 'Arial, sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              Annuel
-              <span style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: '#10b981',
-                background: 'rgba(16,185,129,0.12)',
-                padding: '2px 6px',
-                borderRadius: 9999,
-              }}>
-                -20%
-              </span>
-            </button>
+      <div className="abo6-shell">
+        <section className="abo6-hero">
+          <div>
+            <span className="abo6-kicker"><Sparkles size={14} /> Billing COURTIA</span>
+            <h1>Un cockpit IA premium, une grille claire.</h1>
+            <p>
+              Starter pose les fondamentaux. Pro est l’offre principale pour piloter le cabinet avec ARK. Cabinet se traite sur devis lorsque l’organisation demande un accompagnement plus précis.
+            </p>
           </div>
-        </div>
+          <div className="abo6-brand-orb" aria-hidden="true">
+            <CourtiaBubbleLogo size="86%" animated showHalo showFoam showSpecular />
+          </div>
+        </section>
 
-        {/* Plan Cards */}
-        <div className="abo-plan-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 20,
-          alignItems: 'start',
-        }}>
-          {['starter', 'pro', 'premium'].map((plan) => (
-            <PlanCard
-              key={plan}
-              plan={plan}
-              billingCycle={billingCycle}
-              loadingPlan={loadingPlan}
-              onSelect={handleCheckout}
-            />
+        <section className="abo6-plan-grid" aria-label="Plans COURTIA">
+          {plans.map((plan, index) => (
+            <PlanCard key={plan.code} plan={plan} index={index} onSelect={handleSelect} />
           ))}
-        </div>
+        </section>
 
-        {/* Testimonials */}
-        <div style={{ marginTop: 60 }}>
-          <h2 style={{
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 700,
-            fontSize: 22,
-            color: '#0a0a0a',
-            textAlign: 'center',
-            margin: '0 0 24px 0',
-          }}>
-            Ils font confiance à COURTIA
-          </h2>
-          <div className="abo-testimonial-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-          }}>
-            <TestimonialCard
-              text="COURTIA a transformé ma façon de gérer mon portefeuille. Les scores me font gagner un temps précieux."
-              author="Julie Martin"
-              city="Lyon"
-            />
-            <TestimonialCard
-              text="L'interface est intuitive et l'IA est bluffante. Je ne pourrais plus m'en passer pour prioriser mes actions."
-              author="Lucas Dubois"
-              city="Marseille"
-            />
-            <TestimonialCard
-              text="Enfin un CRM pensé pour les courtiers. Simple, efficace et orienté business. Je recommande à 100%."
-              author="Chloé Petit"
-              city="Paris"
-            />
+        <section className="abo6-control">
+          <div className="abo6-note courtia-depth-card">
+            <h2>Sécurité et contrôle</h2>
+            <p>
+              Le paiement est géré via le parcours billing sécurisé. COURTIA structure les informations du cabinet, mais le courtier garde la main sur les validations métier.
+            </p>
+            <ul>
+              {['Accès sécurisés', 'Actions sensibles suivies', 'ARK suggère, le courtier valide'].map((item) => (
+                <li key={item}><ShieldCheck size={16} /> {item}</li>
+              ))}
+            </ul>
           </div>
-        </div>
 
-        {/* FAQ */}
-        <div style={{ marginTop: 48, maxWidth: 600, marginLeft: 'auto', marginRight: 'auto' }}>
-          <h2 style={{
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 700,
-            fontSize: 22,
-            color: '#0a0a0a',
-            textAlign: 'center',
-            margin: '0 0 20px 0',
-          }}>
-            Questions fréquentes
-          </h2>
-          <BubbleCard hover={false} padding={24}>
-            <FAQItem q="Puis-je changer de plan plus tard ?" a="Absolument. Vous pouvez faire évoluer ou réduire votre plan à tout moment depuis vos paramètres de facturation." />
-            <FAQItem q="Y a-t-il un engagement ?" a="Non, tous nos plans sont sans engagement. Vous pouvez annuler votre abonnement à tout moment, sans frais." />
-            <FAQItem q="Comment fonctionne ARK ?" a="ARK est notre assistant IA intégré. Il analyse les données de vos clients pour générer des scores, identifier des opportunités et vous aider à prioriser vos actions. Dans le plan Pro, il peut aussi répondre à vos questions en langage naturel." />
-            <FAQItem q="Mes données sont-elles sécurisées ?" a="La sécurité est notre priorité absolue. Vos données sont chiffrées (AES-256) et hébergées en Europe sur des serveurs conformes aux normes les plus strictes." />
-            <FAQItem q="Puis-je annuler à tout moment ?" a="Oui. Vous pouvez annuler votre abonnement quand vous le souhaitez. Vous conserverez l'accès à votre plan jusqu'à la fin de la période de facturation en cours." />
-          </BubbleCard>
-        </div>
-
+          <div className="abo6-faq courtia-depth-card">
+            <h2>Questions utiles</h2>
+            {faqs.map(([question, answer]) => (
+              <details key={question}>
+                <summary>{question}</summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   )
 }
