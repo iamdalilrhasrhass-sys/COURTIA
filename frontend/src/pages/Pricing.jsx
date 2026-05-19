@@ -149,7 +149,7 @@ export default function Pricing() {
             {[
               { q: 'Puis-je changer de plan à tout moment ?', a: 'Oui, vous pouvez passer à un plan supérieur ou inférieur à tout moment. Le changement est effectif immédiatement.' },
               { q: 'Y a-t-il un engagement ?', a: 'Aucun engagement. Vous pouvez résilier à tout moment depuis votre espace abonnement.' },
-              { q: 'Comment fonctionne la période d\'essai ?', a: 'Les 30 premiers jours sont gratuits avec toutes les fonctionnalités du plan Pro. Aucune carte bancaire requise.' },
+              { q: 'Puis-je voir COURTIA avant de choisir ?', a: 'Oui. Une démonstration permet de vérifier les usages du cabinet, les priorités et l’intérêt de l’offre Pro avant décision.' },
               { q: 'Le paiement est-il sécurisé ?', a: 'Tous les paiements sont traités par Stripe, leader mondial des paiements en ligne. Vos données bancaires ne transitent jamais sur nos serveurs.' },
             ].map((faq, i) => (
               <details key={i} className="group bg-white rounded-xl border border-gray-200 overflow-hidden">

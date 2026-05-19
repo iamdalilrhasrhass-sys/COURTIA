@@ -1,6 +1,6 @@
 /**
  * planStore.js — Store unifié des plans COURTIA
- * Plans : starter (89€), pro (159€), premium (sur devis)
+ * Plans : starter (89€), pro (199€), premium (sur devis)
  */
 
 import { create } from 'zustand'
@@ -48,7 +48,7 @@ export const PLANS_DEFINITION = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 159,
+    price: 199,
     currency: '€',
     interval: '/mois',
     description: 'La solution complète pour les professionnels — OFFRE RECOMMANDÉE',

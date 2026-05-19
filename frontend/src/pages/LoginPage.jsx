@@ -457,13 +457,13 @@ export default function Login() {
   const planKey = isRegister ? (selectedPlan === 'pro' ? 'pro' : 'starter') : null
   const planName = planKey === 'pro' ? 'Pro' : 'Starter'
   const planPrice = planKey === 'pro'
-    ? '159 € HT / mois (190,80 € TTC avec TVA 20 %)'
+    ? '199 € HT / mois (238,80 € TTC avec TVA 20 %)'
     : '89 € HT / mois (106,80 € TTC avec TVA 20 %)'
   const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
   const planSubtitle = planKey === 'pro'
-    ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
-    : '7 jours pour structurer vos clients, contrats et relances dans un cockpit clair.'
-  const planCta = planKey === 'pro' ? 'Activer mon essai Pro' : 'Activer mon essai Starter'
+    ? 'Déployez ARK pour prioriser vos relances et piloter votre portefeuille au quotidien.'
+    : 'Structurez vos clients, contrats et relances dans un cockpit clair.'
+  const planCta = planKey === 'pro' ? 'Activer mon abonnement Pro' : 'Activer mon abonnement Starter'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -642,7 +642,7 @@ export default function Login() {
             {isRegister && (
               <div className="auth-plan-badge">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-                Offre {planName} sélectionnée — Essai gratuit 7 jours
+                Offre {planName} sélectionnée — activation sécurisée
               </div>
             )}
 
@@ -661,20 +661,20 @@ export default function Login() {
               <div className="auth-trial-panel">
                 <div className="auth-trial-grid">
                   <div className="auth-trial-cell">
-                    <div className="auth-trial-value">0 €</div>
-                    <div className="auth-trial-label">aujourd’hui</div>
+                    <div className="auth-trial-value">Stripe</div>
+                    <div className="auth-trial-label">paiement sécurisé</div>
                   </div>
                   <div className="auth-trial-cell">
-                    <div className="auth-trial-value">7 jours</div>
-                    <div className="auth-trial-label">pour tester {planName}</div>
+                    <div className="auth-trial-value">{planName}</div>
+                    <div className="auth-trial-label">offre choisie</div>
                   </div>
                   <div className="auth-trial-cell">
                     <div className="auth-trial-value">En ligne</div>
-                    <div className="auth-trial-label">annulation simple</div>
+                    <div className="auth-trial-label">portail sécurisé</div>
                   </div>
                 </div>
                 <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
-                  Carte demandée à l’étape sécurisée Stripe. 0 € aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement à {planPrice}. Annulation en ligne via le portail sécurisé.
+                  Carte demandée à l’étape sécurisée Stripe. Les conditions de l’offre {planName} sont affichées avant validation à {planPrice}. Gestion en ligne via le portail sécurisé.
                 </p>
               </div>
             )}
@@ -682,9 +682,9 @@ export default function Login() {
             <div className="auth-activation-strip" aria-hidden="true">
               {(isRegister
                 ? [
-                    ['0 €', 'aujourd’hui'],
-                    ['7 jours', 'pour juger la valeur'],
-                    ['En ligne', 'annulation simple'],
+                    ['Stripe', 'paiement sécurisé'],
+                    [planName, 'offre choisie'],
+                    ['En ligne', 'portail sécurisé'],
                   ]
                 : [
                     ['ARK', 'brief métier'],
@@ -838,7 +838,7 @@ export default function Login() {
                 </Link>
               ) : (
                 <Link to="/register" className="auth-link">
-                  Pas encore de compte ? <strong>Inscrivez-vous gratuitement</strong>
+                  Pas encore de compte ? <strong>Créer un compte</strong>
                 </Link>
               )}
             </div>

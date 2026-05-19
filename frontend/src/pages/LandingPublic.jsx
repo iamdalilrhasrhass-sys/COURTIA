@@ -1,798 +1,516 @@
-import { useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { BubbleC } from '../design/BubbleC';
-import '../design/tokens.css';
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  ArrowRight,
+  Bell,
+  Brain,
+  CalendarClock,
+  CheckCircle2,
+  ChevronDown,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  FolderKanban,
+  Gauge,
+  LineChart,
+  LockKeyhole,
+  LogIn,
+  Menu,
+  MousePointerClick,
+  SearchCheck,
+  ShieldCheck,
+  Target,
+  Users,
+  Workflow,
+  X,
+  Zap,
+} from 'lucide-react'
+import { applySeo } from '../lib/seo'
+import './LandingPublicV4.css'
 
-/**
- * LandingPublic — La Bulle V2 PHOTO-RÉALISTE.
- * Hero : réplique EXACTE de la référence HTML V2 (cosmos discret + 40 étoiles
- * twinkle, kicker JetBrains Mono, bulle 480, wordmark, tagline,
- * animations fade-in séquentielles, pas de grid floor, pas de particules drift).
- *
- * Sections additionnelles (manifeste, powers, proof, pricing, footer) inchangées.
- */
-export default function LandingPublic() {
-  // Étoiles V2 — 40 étoiles fines twinkle ease-in-out 3-8s, size 0.5-1.7px
-  const stars = useMemo(
-    () =>
-      Array.from({ length: 40 }, () => ({
-        size: 0.5 + Math.random() * 1.2,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        duration: 3 + Math.random() * 5,
-        delay: -Math.random() * 7,
-      })),
-    []
-  );
+const proofNodes = [
+  ['CRM clients', Users],
+  ['Devis & opportunités', Target],
+  ['Contrats & échéances', CalendarClock],
+  ['Relances', Bell],
+  ['Reporting', LineChart],
+  ['ARK', Brain],
+  ['Stripe live', CreditCard],
+  ['Google OAuth', ShieldCheck],
+  ['API opérationnelle', Workflow],
+]
+
+const painCards = [
+  ['Dossiers dispersés', 'Les informations utiles vivent entre emails, fichiers, notes et outils métier.', FolderKanban],
+  ['Relances oubliées', 'Le suivi dépend trop souvent de la mémoire et du dernier message reçu.', Bell],
+  ['Échéances mal suivies', 'Les renouvellements sensibles arrivent trop tard dans la journée du cabinet.', CalendarClock],
+  ['Opportunités non exploitées', 'Les signaux commerciaux existent, mais restent noyés dans le portefeuille.', Target],
+  ['Vision portefeuille floue', 'Difficile de voir ce qui avance, bloque ou demande une action immédiate.', Gauge],
+  ['Temps administratif lourd', 'La préparation, la recherche et la synthèse grignotent le temps commercial.', ClipboardList],
+]
+
+const timeline = [
+  ['08h30', 'Priorités du jour', 'ARK met en avant les dossiers critiques, échéances et relances à traiter.'],
+  ['Avant rendez-vous', 'Préparation dossier', 'ARK résume le contexte client pour arriver mieux préparé.'],
+  ['Après échange', 'Relance suggérée', 'ARK propose une relance exploitable que le courtier valide avant envoi.'],
+  ['Portefeuille', 'Opportunités détectées', 'ARK signale les pistes de multi-équipement, renouvellement ou suivi sensible.'],
+  ['Fin de journée', 'Actions restantes', 'ARK aide à garder une vision claire de ce qui reste à faire.'],
+]
+
+const features = [
+  ['Fiches clients enrichies', 'Retrouvez l’historique utile, les actions et les points sensibles au même endroit.', Users],
+  ['Pipeline devis & opportunités', 'Suivez les devis en cours et les prochaines actions commerciales.', Target],
+  ['Contrats & échéances', 'Gardez une vision claire des échéances et renouvellements.', CalendarClock],
+  ['Relances intelligentes', 'Priorisez les relances sans disperser votre journée.', Bell],
+  ['Documents & traçabilité', 'Structurez les pièces importantes autour du dossier client.', FileText],
+  ['Reporting portefeuille', 'Visualisez ce qui avance, bloque ou mérite attention.', LineChart],
+  ['Assistant ARK', 'Préparez briefs, priorités et suggestions sans déléguer la décision.', Brain],
+  ['Abonnement & billing', 'Pilotez le plan, les accès et le suivi de facturation depuis le cockpit.', CreditCard],
+  ['Intégrations à connecter', 'Email, agenda et documents sont prévus pour être branchés progressivement.', Zap],
+]
+
+const demoBlocks = ['Dashboard cabinet', 'Fiche client', 'Devis & opportunités', 'Relances & contrats', 'ARK & reporting']
+
+const plans = [
+  {
+    name: 'Starter',
+    price: '89 €',
+    suffix: 'HT/mois',
+    text: 'Pour structurer le suivi cabinet et poser les fondamentaux CRM IA.',
+    cta: 'Demander accès',
+    to: '/demo',
+    featured: false,
+    items: ['Fiches clients', 'Suivi devis', 'Relances essentielles', 'Documents structurés'],
+  },
+  {
+    name: 'Pro',
+    price: '199 €',
+    suffix: 'HT/mois',
+    text: 'Pour déployer ARK, le pilotage quotidien et l’exécution commerciale du cabinet.',
+    cta: 'Démarrer Pro',
+    to: '/demo',
+    featured: true,
+    items: ['ARK quotidien', 'Priorités & relances', 'Reporting portefeuille', 'Automatisations selon configuration'],
+  },
+  {
+    name: 'Cabinet',
+    price: 'Sur devis',
+    suffix: '',
+    text: 'Pour équipe, besoins avancés, accompagnement et configuration personnalisée.',
+    cta: 'Demander une démo',
+    to: '/demo',
+    featured: false,
+    items: ['Multi-utilisateur', 'Configuration avancée', 'Accompagnement', 'Déploiement progressif'],
+  },
+]
+
+const faqItems = [
+  [
+    'COURTIA remplace-t-il mon logiciel métier ?',
+    'COURTIA n’a pas vocation à remplacer brutalement tout votre existant. L’objectif est d’ajouter un cockpit clair au-dessus de votre organisation : clients, devis, relances, opportunités, contrats et priorités. Vous gardez vos habitudes métier, mais vous gagnez une vision plus lisible et plus actionnable de votre portefeuille.',
+  ],
+  [
+    'ARK peut-il décider à ma place ?',
+    'Non. ARK prépare, analyse, suggère et priorise. Le courtier reste décisionnaire. L’intérêt est de gagner du temps sur la préparation, la relance et le suivi, sans déléguer les décisions métier ou contractuelles à une IA.',
+  ],
+  [
+    'COURTIA est-il adapté à un petit cabinet ?',
+    'Oui, surtout si le cabinet veut mieux structurer son suivi sans recruter immédiatement. COURTIA aide à éviter les oublis, retrouver les informations importantes et prioriser les actions commerciales. L’offre Starter permet de poser les bases, tandis que Pro devient intéressante quand le cabinet veut exploiter ARK plus sérieusement.',
+  ],
+  [
+    'Pourquoi l’offre Pro est-elle l’offre principale ?',
+    'Parce que la valeur de COURTIA se révèle vraiment quand le cabinet utilise ARK pour piloter les priorités, les relances, les opportunités et le reporting. Starter structure le suivi. Pro transforme COURTIA en vrai cockpit quotidien.',
+  ],
+  [
+    'Peut-on importer ses clients ?',
+    'L’objectif est de permettre une reprise progressive des données utiles : clients, contacts, contrats, échéances et opportunités. Selon votre organisation actuelle, l’import peut être préparé proprement pour éviter de transférer du désordre dans un nouvel outil.',
+  ],
+  [
+    'Quelles intégrations sont disponibles ?',
+    'COURTIA est pensé pour se connecter progressivement aux outils clés du cabinet : email, agenda, documents, paiement, données entreprise et automatisations. Les intégrations réellement actives sont affichées comme telles ; les autres sont présentées comme à connecter ou prévues, sans fausse promesse.',
+  ],
+  [
+    'Les données sont-elles sécurisées ?',
+    'La sécurité doit être traitée sérieusement : accès contrôlés, séparation des environnements, suivi des actions sensibles et absence d’exposition des secrets. COURTIA doit rester un outil de pilotage, pas une zone de risque supplémentaire pour le cabinet.',
+  ],
+  [
+    'Comment fonctionne l’offre Cabinet ?',
+    'L’offre Cabinet est destinée aux structures avec plusieurs utilisateurs, des besoins de configuration plus avancés ou un accompagnement spécifique. Elle se traite sur devis pour éviter de vendre une formule standard à un cabinet qui a besoin d’un déploiement plus précis.',
+  ],
+  [
+    'Est-ce que COURTIA garantit plus de chiffre d’affaires ?',
+    'Non, aucun outil sérieux ne doit garantir un chiffre d’affaires. COURTIA aide à mieux suivre, mieux prioriser et mieux exploiter les opportunités existantes. La performance dépend ensuite de l’organisation du cabinet, de la qualité du portefeuille et de l’exécution commerciale.',
+  ],
+  [
+    'Peut-on demander une démonstration avant de choisir ?',
+    'Oui. La démo sert justement à vérifier si COURTIA correspond à votre manière de travailler, à vos volumes, à vos priorités et à votre organisation actuelle. L’objectif n’est pas de vendre une promesse abstraite, mais de montrer concrètement comment le cockpit peut aider votre cabinet.',
+  ],
+]
+
+function Nav() {
+  const [open, setOpen] = useState(false)
+
+  const links = [
+    ['#fonctionnalites', 'Fonctionnalités'],
+    ['#ark', 'ARK'],
+    ['#tarifs', 'Tarifs'],
+    ['/demo', 'Démo'],
+  ]
 
   return (
-    <>
-      <style>{styles}</style>
+    <header className="lp4-nav-wrap">
+      <nav className="lp4-nav" aria-label="Navigation COURTIA">
+        <a className="lp4-brand" href="#top" aria-label="COURTIA accueil">
+          <span className="lp4-brand-mark">C</span>
+          <span>
+            <strong>COURTIA</strong>
+            <em>ARK cockpit</em>
+          </span>
+        </a>
 
-      {/* COSMOS BACKGROUND V2 — très discret */}
-      <div className="cosmos" />
-
-      {/* ÉTOILES V2 — 40 fines twinkle */}
-      <div className="stars" aria-hidden>
-        {stars.map((s, i) => (
-          <span
-            key={i}
-            className="star"
-            style={{
-              width: `${s.size}px`,
-              height: `${s.size}px`,
-              left: `${s.left}vw`,
-              top: `${s.top}vh`,
-              animationDuration: `${s.duration}s`,
-              animationDelay: `${s.delay}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* STAGE V2 — flex column space-between, padding 42px, full-screen */}
-      <section className="stage">
-        <div className="kicker">
-          Courtia <span className="pulse-dot" /> L'IA Compagnon
+        <div className="lp4-nav-links">
+          {links.map(([href, label]) => (
+            href.startsWith('#') ? <a key={href} href={href}>{label}</a> : <Link key={href} to={href}>{label}</Link>
+          ))}
         </div>
 
-        <div className="bubble-frame">
-          <div className="bubble-hero">
-            <BubbleC size={480} />
-          </div>
+        <div className="lp4-nav-actions">
+          <Link className="lp4-login" to="/login"><LogIn size={15} /> Se connecter</Link>
+          <Link className="lp4-btn lp4-btn-primary" to="/demo">Demander une démo <ArrowRight size={15} /></Link>
         </div>
 
-        <div className="bottom-block">
-          <h1 className="wordmark">
-            courtia<em>.</em>
-          </h1>
-          <p className="tagline">Une bulle d'intelligence pour celui qui protège.</p>
-          <div className="cta-row">
-            <Link to="/register" className="cta-primary">
-              Essai gratuit 7 jours
-              <span className="arrow">→</span>
-            </Link>
-            <Link to="/login" className="cta-ghost">Voir le cockpit</Link>
-          </div>
+        <button className="lp4-menu" type="button" aria-label="Menu" onClick={() => setOpen((value) => !value)}>
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </nav>
+
+      {open ? (
+        <div className="lp4-mobile-menu">
+          {links.map(([href, label]) => (
+            href.startsWith('#') ? <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a> : <Link key={href} to={href} onClick={() => setOpen(false)}>{label}</Link>
+          ))}
+          <Link to="/login" onClick={() => setOpen(false)}>Se connecter</Link>
+          <Link className="lp4-btn lp4-btn-primary" to="/demo" onClick={() => setOpen(false)}>Demander une démo</Link>
         </div>
-      </section>
-
-      {/* SECTION 2 — Manifeste */}
-      <ManifesteSection />
-
-      {/* SECTION 3 — Les 5 super-pouvoirs */}
-      <PowersSection />
-
-      {/* SECTION 4 — Chiffres */}
-      <ProofSection />
-
-      {/* SECTION 5 — Tarifs */}
-      <PricingSection />
-
-      {/* SECTION 6 — Footer */}
-      <FooterSection />
-    </>
-  );
+      ) : null}
+    </header>
+  )
 }
 
-/* ─────────────────────────────────────────── */
-/* SECTIONS ADDITIONNELLES                     */
-/* ─────────────────────────────────────────── */
-
-function ManifesteSection() {
+function AuroraOrb() {
   return (
-    <section className="band">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Le manifeste
+    <div className="lp4-orb-stage" aria-hidden="true">
+      <div className="lp4-orb">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="lp4-orb-ring lp4-orb-ring-one" />
+      <div className="lp4-orb-ring lp4-orb-ring-two" />
+    </div>
+  )
+}
+
+function HeroCockpit() {
+  return (
+    <div className="lp4-hero-visual">
+      <AuroraOrb />
+      <div className="lp4-floating lp4-floating-one">
+        <strong>Priorités du jour</strong>
+        <span>3 dossiers à valider</span>
+      </div>
+      <div className="lp4-floating lp4-floating-two">
+        <strong>Relances critiques</strong>
+        <span>ARK suggère l’ordre</span>
+      </div>
+      <div className="lp4-floating lp4-floating-three">
+        <strong>Courtier valide</strong>
+        <span>La main reste humaine</span>
+      </div>
+
+      <div className="lp4-cockpit-card">
+        <div className="lp4-window-bar">
+          <span />
+          <span />
+          <span />
+          <b>COURTIA cockpit</b>
         </div>
-        <h2 className="band-title">
-          Le courtage <em>mérite</em><br />une bulle d'intelligence.
-        </h2>
-        <p className="band-text">
-          Pendant des années, le courtier d'assurance a porté son métier seul.
-          Mille tâches invisibles. Mille relances oubliées. Mille opportunités
-          perdues dans le silence.
-        </p>
-        <p className="band-text">
-          COURTIA n'est pas un CRM. C'est <em>un compagnon</em>.
-          Une présence calme qui veille, comprend, et agit.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function PowersSection() {
-  const powers = [
-    {
-      tag: '01',
-      title: 'ARK Watch',
-      desc: "Surveille votre portefeuille 24/7. Détecte les opportunités Hamon, Chatel, les silences anormaux. Vous appelez au bon moment.",
-    },
-    {
-      tag: '02',
-      title: 'Voice Intake',
-      desc: "Un appel. Une transcription. Une fiche client complétée. Le CRM se remplit pendant que vous parlez.",
-    },
-    {
-      tag: '03',
-      title: 'Doc Vision',
-      desc: "RIB, CG, attestations. Photographiez. ARK lit, classe, injecte. Vous ne saisissez plus rien.",
-    },
-    {
-      tag: '04',
-      title: 'ARK Compose',
-      desc: "IPID, DDA, devoir de conseil. Un clic. Le PDF conforme est généré. Quinze minutes deviennent une seconde.",
-    },
-    {
-      tag: '05',
-      title: 'Quote Intel',
-      desc: "Dispatch automatique de devis à dix compagnies. Mails personnalisés. Vous choisissez la meilleure offre.",
-    },
-  ];
-
-  return (
-    <section className="powers">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Les cinq pouvoirs
-        </div>
-        <h2 className="band-title">
-          ARK, votre <em>compagnon</em><br />d'intelligence.
-        </h2>
-      </div>
-      <div className="powers-grid">
-        {powers.map((p, i) => (
-          <PowerCard key={i} {...p} index={i} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PowerCard({ tag, title, desc, index }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
-  });
-  const y = useSpring(useTransform(scrollYProgress, [0, 1], [80, -80]), { stiffness: 80, damping: 20 });
-  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
-
-  return (
-    <motion.div ref={ref} className="power-card" style={{ y, opacity }}>
-      <div className="power-bubble">
-        <BubbleC size={100} showHalo={false} />
-      </div>
-      <div className="power-tag">{tag}</div>
-      <h3 className="power-title">{title}</h3>
-      <p className="power-desc">{desc}</p>
-    </motion.div>
-  );
-}
-
-function ProofSection() {
-  const stats = [
-    { value: '+3h', label: 'gagnées par semaine' },
-    { value: '98%', label: 'de satisfaction' },
-    { value: '124', label: 'clients pilotes' },
-  ];
-  return (
-    <section className="proof">
-      <div className="proof-inner">
-        {stats.map((s, i) => (
-          <div className="proof-stat" key={i}>
-            <div className="proof-value">{s.value}</div>
-            <div className="proof-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PricingSection() {
-  const plans = [
-    {
-      name: 'Starter',
-      price: '89',
-      desc: 'L\'essentiel pour les courtiers indépendants',
-      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision', 'Support email'],
-    },
-    {
-      name: 'Pro',
-      price: '159',
-      desc: 'La puissance complète d\'ARK',
-      features: ['Portefeuille illimité', 'Tous les pouvoirs ARK', 'Voice Intake + Quote Intel', 'Support prioritaire'],
-      featured: true,
-    },
-    {
-      name: 'Cabinet',
-      price: 'Sur devis',
-      desc: 'Pour les cabinets multi-courtiers',
-      features: ['Multi-utilisateurs', 'API publique', 'Onboarding dédié', 'SLA garanti'],
-    },
-  ];
-
-  return (
-    <section className="pricing">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Tarifs
-        </div>
-        <h2 className="band-title">
-          Une bulle, <em>trois</em> formules.
-        </h2>
-      </div>
-      <div className="pricing-grid">
-        {plans.map((p, i) => (
-          <div className={`pricing-card ${p.featured ? 'featured' : ''}`} key={i}>
-            {p.featured && <div className="pricing-badge">Le choix de la sérénité</div>}
-            <h3 className="pricing-name">{p.name}</h3>
-            <div className="pricing-price">
-              {p.price === 'Sur devis' ? (
-                <span className="pricing-custom">Sur devis</span>
-              ) : (
-                <>
-                  <span className="pricing-currency">€</span>
-                  <span className="pricing-amount">{p.price}</span>
-                  <span className="pricing-period">HT/mois</span>
-                </>
-              )}
+        <div className="lp4-cockpit-grid">
+          <aside>
+            <span className="is-active">ARK</span>
+            <span>Clients</span>
+            <span>Devis</span>
+            <span>Contrats</span>
+            <span>Relances</span>
+          </aside>
+          <main>
+            <div className="lp4-brief">
+              <small>Briefing ARK</small>
+              <strong>Portefeuille sous contrôle</strong>
+              <p>Relances sensibles, devis ouverts et échéances à valider.</p>
             </div>
-            <p className="pricing-desc">{p.desc}</p>
-            <ul className="pricing-features">
-              {p.features.map((f, j) => <li key={j}>{f}</li>)}
-            </ul>
-            <Link to="/register" className={p.featured ? 'cta-primary' : 'cta-ghost'}>
-              {p.featured ? 'Commencer maintenant' : 'Choisir'}
-            </Link>
-          </div>
-        ))}
+            <div className="lp4-metrics-row">
+              <div><span>Opportunités</span><strong>Détectées</strong></div>
+              <div><span>Brief</span><strong>Préparé</strong></div>
+              <div><span>Action</span><strong>À valider</strong></div>
+            </div>
+            <div className="lp4-action-line">
+              <span>ARK prépare le briefing</span>
+              <span>→</span>
+              <span>Courtier valide l’action</span>
+            </div>
+          </main>
+        </div>
       </div>
-    </section>
-  );
+    </div>
+  )
 }
 
-function FooterSection() {
+function SectionTitle({ eyebrow, title, children, align = 'left' }) {
   return (
-    <footer className="footer">
-      <div className="footer-bubble">
-        <BubbleC size={60} animated={false} showHalo={false} />
-      </div>
-      <div className="footer-wordmark">courtia<em>.</em></div>
-      <p className="footer-tagline">Une bulle d'intelligence pour celui qui protège.</p>
-      <div className="footer-links">
-        <Link to="/legal">Mentions légales</Link>
-        <Link to="/cgu">CGU</Link>
-        <Link to="/contact">Contact</Link>
-      </div>
-      <div className="footer-copy">© 2026 COURTIA — Tous droits réservés.</div>
-    </footer>
-  );
+    <div className={`lp4-section-head ${align === 'center' ? 'is-centered' : ''}`}>
+      {eyebrow ? <span className="lp4-kicker">{eyebrow}</span> : null}
+      <h2>{title}</h2>
+      {children ? <p>{children}</p> : null}
+    </div>
+  )
 }
 
-/* ─────────────────────────────────────────── */
-/* STYLES — Exacts de la référence + sections  */
-/* ─────────────────────────────────────────── */
-const styles = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400&display=swap');
+export default function LandingPublic() {
+  useEffect(() => {
+    applySeo({
+      title: 'COURTIA — Le cockpit IA des courtiers en assurance',
+      description:
+        'COURTIA centralise clients, devis, contrats, relances et priorités. ARK prépare, analyse et suggère sans retirer la main au courtier.',
+      canonicalPath: '/',
+    })
+  }, [])
 
-:root {
-  --bg-deep: #020108;
-  --bg-mid: #08051A;
-}
+  return (
+    <div className="lp4-page" id="top">
+      <div className="lp4-scroll-progress" aria-hidden="true" />
+      <div className="lp4-aurora" aria-hidden="true" />
+      <div className="lp4-grid-bg" aria-hidden="true" />
+      <Nav />
 
-html, body, #root {
-  background: var(--bg-deep);
-  color: #fff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
+      <main>
+        <section className="lp4-hero">
+          <div className="lp4-hero-copy">
+            <h1>Le cockpit IA des courtiers en assurance</h1>
+            <p>
+              COURTIA centralise vos clients, devis, contrats et relances. ARK analyse votre portefeuille,
+              prépare vos priorités et vous aide à piloter chaque journée sans perdre la main.
+            </p>
+            <div className="lp4-hero-actions">
+              <Link className="lp4-btn lp4-btn-primary" to="/demo">Demander une démo <ArrowRight size={16} /></Link>
+              <a className="lp4-btn lp4-btn-secondary" href="#tarifs">Voir les tarifs</a>
+              <Link className="lp4-btn lp4-btn-ghost" to="/login">Se connecter</Link>
+            </div>
+          </div>
+          <HeroCockpit />
+        </section>
 
-/* ─── COSMIC BACKGROUND V2 — très discret ─── */
-.cosmos {
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 45%, rgba(90,40,180,0.10) 0%, transparent 50%),
-    radial-gradient(ellipse at 30% 80%, rgba(220,60,160,0.05) 0%, transparent 55%),
-    linear-gradient(180deg, #020108 0%, #06031A 50%, #020108 100%);
-  z-index: 0;
-  pointer-events: none;
-}
+        <section className="lp4-proof lp4-section" id="preuve">
+          <SectionTitle eyebrow="Socle produit" title="Un socle produit déjà opérationnel" align="center">
+            Pas de fausses promesses. COURTIA met en avant ce qui peut être montré, testé et amélioré avec les courtiers.
+          </SectionTitle>
+          <div className="lp4-constellation">
+            {proofNodes.map(([label, Icon], index) => (
+              <div className="lp4-node" key={label} style={{ '--delay': `${index * 70}ms` }}>
+                <Icon size={18} />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-/* ─── STARS V2 — 40 étoiles fines twinkle ─── */
-.stars { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-.star {
-  position: absolute;
-  background: #fff;
-  border-radius: 50%;
-  animation: twinkle ease-in-out infinite;
-}
-@keyframes twinkle {
-  0%, 100% { opacity: 0.08; }
-  50% { opacity: 0.45; }
-}
+        <section className="lp4-section" id="probleme">
+          <SectionTitle eyebrow="Terrain courtier" title="Les frictions qui ralentissent un cabinet">
+            Une landing premium doit rester concrète : COURTIA part des vrais points de friction du quotidien.
+          </SectionTitle>
+          <div className="lp4-pain-grid">
+            {painCards.map(([title, text, Icon]) => (
+              <article className="lp4-impact-card" key={title}>
+                <div className="lp4-icon-chip"><Icon size={18} /></div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-/* ─── HERO STAGE V2 — space-between full-screen ─── */
-.stage {
-  position: relative;
-  z-index: 2;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 42px;
-  pointer-events: none;
-}
-.stage > * { pointer-events: auto; }
+        <section className="lp4-section lp4-solution" id="solution">
+          <div className="lp4-solution-copy">
+            <SectionTitle eyebrow="Cockpit cabinet" title="COURTIA transforme le flux en actions à valider">
+              COURTIA rassemble les informations importantes du cabinet dans un cockpit clair. ARK transforme ce flux en priorités, alertes et actions à valider.
+            </SectionTitle>
+            <div className="lp4-flow">
+              {['Données', 'Priorités', 'Actions', 'Suivi'].map((item) => <span key={item}>{item}</span>)}
+            </div>
+          </div>
+          <div className="lp4-control-room">
+            <div className="lp4-room-row">
+              <span>Clients</span>
+              <span>Devis</span>
+              <span>Contrats</span>
+            </div>
+            <div className="lp4-room-core">
+              <Brain size={26} />
+              <strong>ARK</strong>
+              <small>briefing, signaux, priorités</small>
+            </div>
+            <div className="lp4-room-row">
+              <span>Relances</span>
+              <span>Opportunités</span>
+              <span>Reporting</span>
+            </div>
+          </div>
+        </section>
 
-/* KICKER V2 — JetBrains 10px letter-spacing 7px, dot 5px gradient + pulse */
-.kicker {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 7px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.38);
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  opacity: 0;
-  animation: fadeIn 1.5s 0.6s forwards;
-}
-.kicker .pulse-dot {
-  display: inline-block;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff4d9d, #a142f4);
-  box-shadow: 0 0 6px rgba(255,77,157,0.6);
-  animation: pulse 2.4s ease-in-out infinite;
-}
-/* Dot legacy pour les autres band-kicker (sections) */
-.band-kicker .dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff4d9d, #a142f4);
-  margin: 0 10px;
-  vertical-align: middle;
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.4); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+        <section className="lp4-section" id="ark">
+          <SectionTitle eyebrow="Assistant intégré" title="ARK au quotidien">
+            ARK accompagne la journée du courtier sans prendre sa place.
+          </SectionTitle>
+          <div className="lp4-timeline">
+            {timeline.map(([time, title, text]) => (
+              <article className="lp4-time-card" key={`${time}-${title}`}>
+                <span>{time}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="lp4-hand-note">
+            <MousePointerClick size={17} />
+            <span>Le courtier garde la main sur les décisions métier, commerciales et contractuelles.</span>
+          </div>
+        </section>
 
-/* BUBBLE FRAME V2 — center 480 max */
-.bubble-frame {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-.bubble-hero {
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 1 / 1;
-  position: relative;
-  opacity: 0;
-  animation: bubbleIn 1.8s 0.3s cubic-bezier(.2,.7,.3,1) forwards;
-}
-.bubble-hero > .bubble-wrap,
-.bubble-hero > div {
-  width: 100% !important;
-  height: 100% !important;
-}
-@keyframes bubbleIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
-}
+        <section className="lp4-section" id="fonctionnalites">
+          <SectionTitle eyebrow="Fonctionnalités" title="Un cockpit IA pensé pour scanner, décider, avancer" align="center">
+            Des modules clairs, orientés usage cabinet, sans survente d’intégrations non branchées.
+          </SectionTitle>
+          <div className="lp4-feature-grid">
+            {features.map(([title, text, Icon]) => (
+              <article className="lp4-feature-card" key={title}>
+                <Icon size={19} />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-/* BOTTOM BLOCK V2 — wordmark + tagline + CTA, fade-in 1.3s */
-.bottom-block {
-  text-align: center;
-  margin-bottom: 24px;
-  opacity: 0;
-  animation: fadeIn 1.5s 1.3s forwards;
-}
+        <section className="lp4-section lp4-demo" id="demo-produit">
+          <SectionTitle eyebrow="Démo produit" title="Ce que vous pouvez montrer en démo">
+            Une mise en scène claire du cockpit, de la fiche client, des relances, des opportunités et du briefing ARK.
+          </SectionTitle>
+          <div className="lp4-product-preview">
+            <div className="lp4-preview-top">
+              <span />
+              <span />
+              <span />
+              <strong>COURTIA demo room</strong>
+            </div>
+            <div className="lp4-preview-body">
+              <aside>
+                {demoBlocks.map((block) => <span key={block}>{block}</span>)}
+              </aside>
+              <main>
+                <div className="lp4-client-card">
+                  <small>Fiche client</small>
+                  <strong>Contrat santé à renouveler</strong>
+                  <p>Historique, pièces, dernière relance et recommandation ARK.</p>
+                </div>
+                <div className="lp4-demo-stack">
+                  <div><SearchCheck size={17} /> Opportunité détectée</div>
+                  <div><Bell size={17} /> Relance prête à valider</div>
+                  <div><LineChart size={17} /> Reporting portefeuille</div>
+                </div>
+              </main>
+            </div>
+          </div>
+          <div className="lp4-centered-action">
+            <Link className="lp4-btn lp4-btn-primary" to="/demo">Demander une démo <ArrowRight size={15} /></Link>
+          </div>
+        </section>
 
-.wordmark {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: clamp(46px, 7vw, 72px);
-  letter-spacing: -3px;
-  line-height: 1;
-  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.65) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 14px;
-}
-.wordmark em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+        <section className="lp4-section" id="tarifs">
+          <SectionTitle eyebrow="Tarifs" title="Une grille simple, Pro au centre" align="center">
+            Pro est l’offre principale pour exploiter ARK comme cockpit quotidien.
+          </SectionTitle>
+          <div className="lp4-pricing-grid">
+            {plans.map((plan) => (
+              <article className={`lp4-plan ${plan.featured ? 'is-featured' : ''}`} key={plan.name}>
+                {plan.featured ? <div className="lp4-recommended">Recommandé</div> : null}
+                <h3>{plan.name}</h3>
+                <div className="lp4-price">
+                  <strong>{plan.price}</strong>
+                  {plan.suffix ? <span>{plan.suffix}</span> : null}
+                </div>
+                <p>{plan.text}</p>
+                <ul>
+                  {plan.items.map((item) => <li key={item}><CheckCircle2 size={15} /> {item}</li>)}
+                </ul>
+                <Link className={`lp4-btn ${plan.featured ? 'lp4-btn-primary' : 'lp4-btn-secondary'}`} to={plan.to}>
+                  {plan.cta}
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
 
-.tagline {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: clamp(14px, 1.5vw, 18px);
-  color: rgba(255,255,255,0.52);
-  letter-spacing: -0.1px;
-  max-width: 440px;
-  margin: 0 auto 28px;
-}
+        <section className="lp4-section lp4-security" id="securite">
+          <div>
+            <SectionTitle eyebrow="Contrôle" title="Sécurité et contrôle">
+              COURTIA structure les informations du cabinet, sécurise les accès et garde une trace des actions sensibles.
+            </SectionTitle>
+          </div>
+          <div className="lp4-shield-panel">
+            <ShieldCheck size={34} />
+            {['Données structurées', 'Accès sécurisés', 'Actions suivies', 'Courtier décisionnaire', 'ARK assiste mais ne décide pas seul'].map((item) => (
+              <span key={item}><LockKeyhole size={14} /> {item}</span>
+            ))}
+          </div>
+        </section>
 
-/* CTA Row */
-.cta-row {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.cta-primary, .cta-ghost {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  letter-spacing: 0.2px;
-  padding: 14px 28px;
-  border-radius: 999px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.cta-primary {
-  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
-  color: #fff;
-  box-shadow: 0 8px 32px rgba(161, 66, 244, 0.35);
-}
-.cta-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(161, 66, 244, 0.5); }
-.cta-primary .arrow { transition: transform 0.3s ease; }
-.cta-primary:hover .arrow { transform: translateX(4px); }
-.cta-ghost {
-  background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.85);
-  border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(20px);
-}
-.cta-ghost:hover { background: rgba(255,255,255,0.08); }
+        <section className="lp4-section" id="faq">
+          <SectionTitle eyebrow="FAQ commerciale" title="Les questions que se posent vraiment les cabinets" align="center">
+            Des réponses précises, rassurantes et honnêtes avant de demander une démonstration.
+          </SectionTitle>
+          <div className="lp4-faq">
+            {faqItems.map(([question, answer]) => (
+              <details key={question}>
+                <summary>{question}<ChevronDown size={18} /></summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
-/* ─── BAND (sections) ─── */
-.band, .powers, .proof, .pricing {
-  position: relative;
-  z-index: 2;
-  padding: 140px 40px;
-}
-.band-inner {
-  max-width: 720px;
-  margin: 0 auto;
-  text-align: center;
-}
-.band-kicker {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 40px;
-}
-.band-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: clamp(34px, 5vw, 64px);
-  letter-spacing: -2px;
-  line-height: 1.05;
-  margin-bottom: 40px;
-  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.band-title em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.band-text {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 22px;
-  line-height: 1.6;
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 28px;
-}
-.band-text em {
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+        <section className="lp4-final">
+          <div className="lp4-final-orb" aria-hidden="true" />
+          <h2>Pilotez votre cabinet avec un cockpit IA clair.</h2>
+          <p>
+            COURTIA vous aide à structurer vos dossiers, prioriser vos actions et avancer avec plus de méthode,
+            sans perdre la main sur vos décisions.
+          </p>
+          <div className="lp4-hero-actions">
+            <Link className="lp4-btn lp4-btn-primary" to="/demo">Demander une démo <ArrowRight size={16} /></Link>
+            <Link className="lp4-btn lp4-btn-secondary" to="/login">Se connecter</Link>
+          </div>
+        </section>
+      </main>
 
-/* ─── POWERS GRID ─── */
-.powers-grid {
-  max-width: 1280px;
-  margin: 80px auto 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
+      <footer className="lp4-footer">
+        <span>COURTIA · Cockpit CRM IA pour courtiers en assurance</span>
+        <nav aria-label="Liens légaux">
+          <Link to="/mentions-legales">Mentions légales</Link>
+          <Link to="/confidentialite">Confidentialité</Link>
+          <Link to="/cgv">CGV</Link>
+          <Link to="/demo">Démo</Link>
+        </nav>
+      </footer>
+    </div>
+  )
 }
-.power-card {
-  position: relative;
-  background: rgba(8, 5, 26, 0.4);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 20px;
-  padding: 32px 24px;
-  text-align: center;
-}
-.power-bubble {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-.power-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: rgba(255,255,255,0.3);
-  margin-bottom: 8px;
-}
-.power-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 300;
-  font-size: 22px;
-  letter-spacing: -0.5px;
-  margin-bottom: 12px;
-  color: #fff;
-}
-.power-desc {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  line-height: 1.55;
-  color: rgba(255,255,255,0.55);
-}
-
-/* ─── PROOF ─── */
-.proof-inner {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 60px;
-}
-.proof-stat { text-align: center; }
-.proof-value {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(56px, 8vw, 96px);
-  background: linear-gradient(135deg, #ff80e0, #c080ff, #80a8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1;
-  margin-bottom: 12px;
-}
-.proof-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
-}
-
-/* ─── PRICING ─── */
-.pricing-grid {
-  max-width: 1100px;
-  margin: 80px auto 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-.pricing-card {
-  position: relative;
-  background: rgba(8, 5, 26, 0.5);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 24px;
-  padding: 40px 32px;
-  display: flex;
-  flex-direction: column;
-}
-.pricing-card.featured {
-  border: 1px solid transparent;
-  background:
-    linear-gradient(rgba(8,5,26,0.7), rgba(8,5,26,0.7)) padding-box,
-    linear-gradient(135deg, #ff4d9d, #a142f4, #4285f4) border-box;
-}
-.pricing-badge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  padding: 6px 14px;
-  border-radius: 999px;
-  color: #fff;
-}
-.pricing-name {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: 28px;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.pricing-price {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-.pricing-currency {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 24px;
-  color: rgba(255,255,255,0.7);
-}
-.pricing-amount {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 64px;
-  letter-spacing: -2px;
-  color: #fff;
-}
-.pricing-period, .pricing-custom {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.5);
-}
-.pricing-custom {
-  font-size: 32px;
-  color: #fff;
-}
-.pricing-desc {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.55);
-  margin-bottom: 28px;
-}
-.pricing-features {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 32px 0;
-  flex: 1;
-}
-.pricing-features li {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 300;
-  font-size: 14px;
-  color: rgba(255,255,255,0.75);
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-/* ─── FOOTER ─── */
-.footer {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 100px 40px 60px;
-  border-top: 1px solid rgba(255,255,255,0.04);
-}
-.footer-bubble {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-.footer-wordmark {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 32px;
-  letter-spacing: -1px;
-  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 6px;
-}
-.footer-wordmark em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4, #4285f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.footer-tagline {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 40px;
-}
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-bottom: 32px;
-}
-.footer-links a {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  text-decoration: none;
-}
-.footer-links a:hover { color: rgba(255,255,255,0.8); }
-.footer-copy {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: rgba(255,255,255,0.25);
-}
-
-@media (max-width: 600px) {
-  .kicker { font-size: 9px; letter-spacing: 5px; gap: 10px; }
-  .band-kicker { font-size: 9px; letter-spacing: 4px; margin-bottom: 32px; }
-  .stage { padding: 24px; }
-  .bubble-frame { padding: 0; }
-  .band, .powers, .proof, .pricing { padding: 80px 24px; }
-  .cta-row { flex-direction: column; width: 100%; }
-  .cta-primary, .cta-ghost { justify-content: center; }
-  .footer-links { flex-direction: column; gap: 16px; }
-}
-`;

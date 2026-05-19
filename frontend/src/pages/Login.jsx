@@ -607,7 +607,7 @@ export default function Login() {
             <p style={{ textAlign:'center', fontSize:'12.5px', color:'rgba(0,0,0,0.4)', marginTop:20 }}>
               Pas encore de compte ?{' '}
               <Link to="/register" style={{ color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
-                Inscrivez-vous gratuitement
+                Créer un compte
               </Link>
             </p>
           </div>

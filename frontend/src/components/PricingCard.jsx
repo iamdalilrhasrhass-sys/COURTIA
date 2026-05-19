@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 
 export default function PricingCard({ plan, annual, loading, current, onChoose }) {
-  const annualPrice = plan.price ? Math.round(plan.price * 10) : null // 2 mois gratuits
+  const annualPrice = plan.price ? Math.round(plan.price * 10) : null
 
   return (
     <div

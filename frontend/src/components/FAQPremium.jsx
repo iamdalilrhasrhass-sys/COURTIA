@@ -14,7 +14,7 @@ const faqs = [
   { q: 'COURTIA est-il adapté aux petits cabinets ?', a: 'Oui. L\'offre Starter est parfaite pour les courtiers solo. L\'offre Pro convient aux cabinets de 2-5 personnes. Premium est pour les structures plus importantes.' },
   { q: 'Qu\'est-ce que COURTIA Academy ?', a: 'COURTIA Academy est l\'espace de progression intégré à COURTIA. Il propose des cours courts, des techniques commerciales, des bases métier et des cartes compétence à débloquer au fil de l\'utilisation. L\'objectif est d\'aider le courtier à structurer ses méthodes et à progresser professionnellement.' },
   { q: 'Les cartes compétence sont-elles des certifications officielles ?', a: 'Non. Les cartes compétence sont des badges de progression COURTIA. Elles valorisent l\'usage, l\'apprentissage et les bonnes pratiques dans l\'application, mais ne remplacent pas une certification professionnelle officielle.' },
-  { q: 'Comment fonctionne l\'essai gratuit 7 jours ?', a: 'L\'essai gratuit 7 jours vous donne accès à l\'intégralité de COURTIA, sans carte bancaire ni engagement. À l\'issue de la période d\'essai, vous choisissez l\'offre qui correspond à votre activité ou vous résiliez librement.' }
+  { q: 'Peut-on demander une démo avant de choisir ?', a: 'Oui. La démo permet de vérifier si COURTIA correspond à votre organisation, à vos volumes et à vos priorités avant de choisir Starter, Pro ou Cabinet sur devis.' }
 ]
 
 export default function FAQPremium({ dark = false }) {

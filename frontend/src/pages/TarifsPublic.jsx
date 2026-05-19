@@ -17,8 +17,8 @@ const FAQ = [
 export default function TarifsPublic() {
   useEffect(() => {
     applySeo({
-      title: 'Tarifs COURTIA — Starter 89€ / Pro 159€ / Cabinet sur devis',
-      description: 'Plans COURTIA pour courtiers assurance: Starter, Pro (offre principale), Cabinet et Premium sur devis.',
+      title: 'Tarifs COURTIA — Starter 89€ / Pro 199€ / Cabinet sur devis',
+      description: 'Plans COURTIA pour courtiers assurance: Starter, Pro (offre principale) et Cabinet sur devis.',
       canonicalPath: '/tarifs',
     })
   }, [])
@@ -38,7 +38,7 @@ export default function TarifsPublic() {
           <div className="mk-price-grid" style={{ perspective: 1400 }}>
             {[
               { key: 'starter', eyebrow: 'Starter', price: '89€', sub: 'HT/mois', items: ['Dashboard portefeuille', 'Clients, contrats, tâches', 'Rapports essentiels', 'Pour 1 à 5 collaborateurs'], featured: false },
-              { key: 'pro', eyebrow: 'Pro · recommandé', price: '159€', sub: 'HT/mois', items: ['Morning Brief complet', 'Clients à risque & relances intelligentes', 'Rapports avancés + admin costs', 'Pour cabinets en croissance'], featured: true },
+              { key: 'pro', eyebrow: 'Pro · recommandé', price: '199€', sub: 'HT/mois', items: ['Morning Brief complet', 'Clients à risque & relances intelligentes', 'Rapports avancés + admin costs', 'Pour cabinets en croissance'], featured: true },
               { key: 'cabinet', eyebrow: 'Cabinet', price: 'Sur devis', sub: '', items: ['Multi-utilisateurs avancé', 'Commissions et reporting cabinet', 'Intégrations étendues', 'Support renforcé'], featured: false },
             ].map((p, i) => (
               <motion.article
@@ -78,7 +78,7 @@ export default function TarifsPublic() {
         <div className="mk-card">
           <span className="mk-eyebrow"><Sparkles size={12} /> Positionnement commercial</span>
           <p className="mk-section-sub" style={{ marginTop: 10 }}>
-            COURTIA est prêt pour une bêta commerciale sérieuse à 89€ HT/mois et défendable à 159€ HT/mois avec ARK, intégrations et documents métier.
+            COURTIA présente une grille simple: Starter à 89€ HT/mois, Pro à 199€ HT/mois et Cabinet sur devis.
           </p>
         </div>
       </section>

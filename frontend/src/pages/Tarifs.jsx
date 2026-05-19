@@ -84,7 +84,7 @@ const plans = [
   },
   {
     name: 'Le Cabinet',
-    price: '159',
+    price: '199',
     desc: 'Pour cabinet en croissance',
     popular: true,
     features: {
@@ -131,9 +131,9 @@ const plans = [
 ]
 
 const frais = [
-  { type: 'Mise en service', montant: '0€', desc: "Gratuit — pas de frais d'activation" },
-  { type: 'Migration portefeuille', montant: '0€', desc: 'Import Excel/CSV gratuit, accompagné si nécessaire' },
-  { type: 'Résiliation', montant: '0€', desc: 'Sans frais, résiliable à tout moment' },
+  { type: 'Mise en service', montant: 'Inclus', desc: "Pas de frais d'activation" },
+  { type: 'Migration portefeuille', montant: 'Inclus', desc: 'Import Excel/CSV accompagné si nécessaire' },
+  { type: 'Résiliation', montant: 'Inclus', desc: 'Résiliation possible depuis l’espace abonnement' },
   { type: 'Frais SMS/WhatsApp', montant: '0€', desc: 'Inclus dans tous les plans' }
 ]
 
@@ -193,8 +193,8 @@ function PlanCard({ plan, index }) {
       </div>
 
       <div className="mb-6">
-        <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}€</span>
-        <span className="ml-1 text-sm font-semibold text-gray-400">/mois</span>
+        <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}{plan.price === 'Sur devis' ? '' : '€'}</span>
+        {plan.price === 'Sur devis' ? null : <span className="ml-1 text-sm font-semibold text-gray-400">/mois</span>}
       </div>
 
       <ul className="mb-8 flex flex-col gap-3">

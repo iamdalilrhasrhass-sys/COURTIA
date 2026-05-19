@@ -180,9 +180,9 @@ export default function Pricing() {
         </h2>
         <div className="space-y-6">
           <div className="glass p-6 rounded-lg">
-            <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Puis-je tester gratuitement?</h3>
+            <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Puis-je voir COURTIA avant de choisir?</h3>
             <p className="text-slate-400">
-              Oui! Demandez une démo et nous vous offrirons 14 jours d'accès complet à COURTIA.
+              Oui. La démonstration permet de vérifier vos cas d’usage, vos volumes et l’organisation de votre cabinet avant de choisir une offre.
             </p>
           </div>
           <div className="glass p-6 rounded-lg">

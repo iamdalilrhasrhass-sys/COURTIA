@@ -9,11 +9,11 @@ const BILLING_TEST_UI_ENABLED = import.meta.env.VITE_BILLING_TEST_MODE !== 'fals
 const PLAN_COPY = {
   starter: {
     title: 'Starter',
-    banner: '0 € aujourd’hui, puis 89 € HT / mois après le 7e jour (106,80 € TTC avec TVA 20 %).',
+    banner: 'Starter — 89 € HT / mois (106,80 € TTC avec TVA 20 %).',
   },
   pro: {
     title: 'Pro',
-    banner: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour (190,80 € TTC avec TVA 20 %).',
+    banner: 'Pro — 199 € HT / mois (238,80 € TTC avec TVA 20 %).',
   },
   cabinet: {
     title: 'Cabinet',
@@ -111,7 +111,7 @@ export default function BillingOnboarding() {
       if (err.response?.data?.error === 'billing_test_mode_not_configured') {
         setError('Billing test mode n’est pas encore configuré côté serveur.')
       } else {
-        setError(msg || 'Impossible d’activer l’essai pour le moment.')
+        setError(msg || 'Impossible d’activer l’abonnement pour le moment.')
       }
     } finally {
       setLoading(false)
@@ -124,9 +124,9 @@ export default function BillingOnboarding() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <CourtiaBubbleLogo size={38} />
           <div>
-            <h1 style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>Onboarding cabinet & activation essai</h1>
+            <h1 style={{ margin: 0, fontSize: 28 }}>Onboarding cabinet & activation abonnement</h1>
             <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.68)', fontSize: 13 }}>
-              Carte gérée par Stripe — 0 € aujourd’hui — annulation en ligne.
+              Carte gérée par Stripe Checkout — conditions affichées avant paiement.
             </p>
           </div>
         </div>
@@ -179,8 +179,8 @@ export default function BillingOnboarding() {
             <Consent checked={consents.accept_cgv} onChange={() => toggleConsent('accept_cgv')} text="J’accepte les CGV." />
             <Consent checked={consents.accept_privacy} onChange={() => toggleConsent('accept_privacy')} text="J’accepte la politique de confidentialité." />
             <Consent checked={consents.accept_dpa} onChange={() => toggleConsent('accept_dpa')} text="J’accepte le traitement des données selon le DPA." />
-            <Consent checked={consents.accept_trial} onChange={() => toggleConsent('accept_trial')} text="J’accepte l’essai gratuit de 7 jours." />
-            <Consent checked={consents.accept_renewal} onChange={() => toggleConsent('accept_renewal')} text="Je comprends le démarrage auto après l’essai sauf annulation." />
+            <Consent checked={consents.accept_trial} onChange={() => toggleConsent('accept_trial')} text="J’accepte les conditions commerciales de l’offre choisie." />
+            <Consent checked={consents.accept_renewal} onChange={() => toggleConsent('accept_renewal')} text="Je comprends les conditions de renouvellement et de résiliation." />
 
             <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
               <Mini icon={CreditCard} text="Carte gérée exclusivement par Stripe Checkout." />
@@ -237,7 +237,7 @@ export default function BillingOnboarding() {
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={handleActivateTrial} disabled={loading} style={ctaStyle}>
-            {loading ? 'Préparation...' : (planCode === 'cabinet' ? 'Envoyer ma demande Cabinet' : `Activer mon essai ${plan.title}`)}
+            {loading ? 'Préparation...' : (planCode === 'cabinet' ? 'Envoyer ma demande Cabinet' : `Activer mon abonnement ${plan.title}`)}
           </button>
           <button type="button" onClick={() => navigate('/billing')} style={ghostBtnStyle}>
             Voir mon statut billing
