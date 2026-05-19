@@ -122,6 +122,10 @@ const faqItems = [
     'Parce que la valeur de COURTIA se révèle vraiment quand le cabinet utilise ARK pour piloter les priorités, les relances, les opportunités et le reporting. Starter structure le suivi. Pro transforme COURTIA en vrai cockpit quotidien.',
   ],
   [
+    'Comment fonctionnent les abonnements ?',
+    'COURTIA fonctionne avec des abonnements mensuels hors taxes, gérés via Stripe lorsque le paiement est activé. Starter permet de structurer les fondamentaux. Pro concentre la valeur quotidienne autour d’ARK, du pilotage, des relances et du reporting. Cabinet se traite sur devis pour adapter le déploiement à une équipe, un volume ou une organisation plus spécifique.',
+  ],
+  [
     'Peut-on importer ses clients ?',
     'L’objectif est de permettre une reprise progressive des données utiles : clients, contacts, contrats, échéances et opportunités. Selon votre organisation actuelle, l’import peut être préparé proprement pour éviter de transférer du désordre dans un nouvel outil.',
   ],
@@ -214,7 +218,17 @@ function AuroraOrb() {
 function HeroCockpit() {
   return (
     <div className="lp4-hero-visual">
+      <div className="lp4-hero-beam" aria-hidden="true" />
+      <div className="lp4-hero-sigil" aria-hidden="true">C</div>
       <AuroraOrb />
+      <div className="lp4-depth-panel lp4-depth-panel-one" aria-hidden="true">
+        <span>Pipeline devis</span>
+        <strong>7 actions</strong>
+      </div>
+      <div className="lp4-depth-panel lp4-depth-panel-two" aria-hidden="true">
+        <span>Risque échéance</span>
+        <strong>Contrat santé</strong>
+      </div>
       <div className="lp4-floating lp4-floating-one">
         <strong>Priorités du jour</strong>
         <span>3 dossiers à valider</span>
@@ -249,6 +263,12 @@ function HeroCockpit() {
               <strong>Portefeuille sous contrôle</strong>
               <p>Relances sensibles, devis ouverts et échéances à valider.</p>
             </div>
+            <div className="lp4-cockpit-radar" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <b />
+            </div>
             <div className="lp4-metrics-row">
               <div><span>Opportunités</span><strong>Détectées</strong></div>
               <div><span>Brief</span><strong>Préparé</strong></div>
@@ -269,6 +289,7 @@ function HeroCockpit() {
 function SectionTitle({ eyebrow, title, children, align = 'left' }) {
   return (
     <div className={`lp4-section-head ${align === 'center' ? 'is-centered' : ''}`}>
+      <span className="lp4-section-sigil" aria-hidden="true">C</span>
       {eyebrow ? <span className="lp4-kicker">{eyebrow}</span> : null}
       <h2>{title}</h2>
       {children ? <p>{children}</p> : null}
@@ -295,8 +316,9 @@ export default function LandingPublic() {
 
       <main>
         <section className="lp4-hero">
+          <div className="lp4-brand-watermark" aria-hidden="true">COURTIA</div>
           <div className="lp4-hero-copy">
-            <h1>Le cockpit IA des courtiers en assurance</h1>
+            <h1>COURTIA, le cockpit IA des courtiers en assurance</h1>
             <p>
               COURTIA centralise vos clients, devis, contrats et relances. ARK analyse votre portefeuille,
               prépare vos priorités et vous aide à piloter chaque journée sans perdre la main.
@@ -490,7 +512,8 @@ export default function LandingPublic() {
 
         <section className="lp4-final">
           <div className="lp4-final-orb" aria-hidden="true" />
-          <h2>Pilotez votre cabinet avec un cockpit IA clair.</h2>
+          <span className="lp4-final-mark" aria-hidden="true">C</span>
+          <h2>Structurez votre cabinet autour d’un cockpit IA clair.</h2>
           <p>
             COURTIA vous aide à structurer vos dossiers, prioriser vos actions et avancer avec plus de méthode,
             sans perdre la main sur vos décisions.
