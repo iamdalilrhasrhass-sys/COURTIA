@@ -1,7 +1,7 @@
 /**
  * planGating.js — Middleware de feature gating
  * Utilise planService comme source unique de vérité
- * Plans : starter (89€), pro (159€), premium (sur devis)
+ * Plans : starter (89€), pro (199€), cabinet/premium (sur devis)
  */
 
 const pool = require('../db');

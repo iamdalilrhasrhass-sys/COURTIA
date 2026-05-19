@@ -8,6 +8,7 @@ import './styles/design-system.css'
 import './styles/mobile-responsive.css'
 import './styles/aurora.css'
 import './styles/aurora-mobile.css'
+import './styles/courtia-global-design.css'
 import './design/tokens.css' // LA BULLE — design system tokens
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { initSentry } from './lib/sentry'

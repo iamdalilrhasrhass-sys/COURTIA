@@ -47,7 +47,7 @@ BEGIN
     VALUES
       ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
       ('pro', 'Pro', 19900, 'EUR', 'month', TRUE),
-      ('cabinet', 'Cabinet', 39900, 'EUR', 'month', TRUE),
+      ('cabinet', 'Cabinet', NULL, 'EUR', 'month', TRUE),
       ('premium', 'Premium', NULL, 'EUR', 'month', TRUE)
     ON CONFLICT (code) DO UPDATE SET
       display_name = EXCLUDED.display_name,

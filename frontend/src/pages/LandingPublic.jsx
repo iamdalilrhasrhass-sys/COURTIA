@@ -1,1239 +1,1312 @@
-import { useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { BubbleC } from '../design/BubbleC';
-import '../design/tokens.css';
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { applySeo } from '../lib/seo'
+import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
+import CourtiaWordmark from '../components/brand/CourtiaWordmark'
+import AuroraHalo from '../components/brand/AuroraHalo'
+import RhasrhassSignature from '../components/brand/RhasrhassSignature'
 
-/**
- * LandingPublic — La Bulle V2 PHOTO-RÉALISTE.
- * Hero : réplique EXACTE de la référence HTML V2 (cosmos discret + 40 étoiles
- * twinkle, kicker JetBrains Mono, bulle 480, wordmark, tagline,
- * animations fade-in séquentielles, pas de grid floor, pas de particules drift).
- *
- * Vague 1 (Intelligence augmentée) + Vague 2 (Action autonome) injectées
- * après la section Sécurité. 8 features IA-natives uniques en France.
- */
 export default function LandingPublic() {
-  // Étoiles V2 — 40 étoiles fines twinkle ease-in-out 3-8s, size 0.5-1.7px
-  const stars = useMemo(
-    () =>
-      Array.from({ length: 40 }, () => ({
-        size: 0.5 + Math.random() * 1.2,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        duration: 3 + Math.random() * 5,
-        delay: -Math.random() * 7,
-      })),
-    []
-  );
+  useEffect(() => {
+    applySeo({
+      title: 'COURTIA — Le cockpit IA des courtiers',
+      description:
+        'Centralisez vos clients, contrats, relances et priorités avec COURTIA, le CRM IA conçu pour les courtiers français. ARK vous assiste, vous gardez la main.',
+      canonicalPath: '/',
+    })
+  }, [])
+
+  const features = [
+    { title: 'Fiches clients enrichies', desc: 'Historique complet, documents, contrats liés, scoring automatique.' },
+    { title: 'Pipeline devis & opportunités', desc: 'Suivez chaque affaire de la découverte à la signature.' },
+    { title: 'Contrats & échéances', desc: 'Plus jamais une échéance oubliée. Relances automatiques.' },
+    { title: 'Relances intelligentes', desc: 'ARK priorise vos relances selon le potentiel et l\'urgence.' },
+    { title: 'Reporting cabinet', desc: 'Tableaux de bord, KPIs, commissions, rentabilité par client.' },
+    { title: 'Espace documents', desc: 'Centralisez vos documents, contrats scannés, relevés d\'information.' },
+    { title: 'Abonnement & facturation', desc: 'Gérez votre plan directement depuis le cockpit.' },
+    { title: 'Assistant ARK intégré', desc: 'Brief matinal, préparation RDV, suggestions cross-sell.' },
+    { title: 'Intégrations métier', desc: 'Connectez vos outils existants via API ou imports.' },
+  ]
+
+  const faq = [
+    {
+      q: 'COURTIA remplace-t-il mon logiciel métier ?',
+      a: 'COURTIA peut compléter ou structurer votre opérationnel. Selon votre organisation, il peut coexister avec des outils déjà en place.',
+    },
+    {
+      q: 'ARK peut-il décider à ma place ?',
+      a: 'Non. ARK assiste, prépare et suggère. Le courtier garde la main sur chaque décision commerciale et contractuelle.',
+    },
+    {
+      q: 'COURTIA est-il adapté à un petit cabinet ?',
+      a: 'Oui. Le plan Starter est conçu pour les courtiers indépendants et les petites structures.',
+    },
+    {
+      q: 'Peut-on demander une démo ?',
+      a: 'Oui. Une démonstration guidée permet de voir les modules clients, devis, contrats, relances, ARK et reporting.',
+    },
+    {
+      q: 'Comment fonctionnent les abonnements ?',
+      a: 'Starter et Pro sont en abonnement mensuel HT. L\'offre Cabinet/Premium est étudiée sur devis.',
+    },
+    {
+      q: 'Peut-on importer des clients ?',
+      a: 'Oui. Un import portefeuille est disponible pour accélérer la mise en place.',
+    },
+    {
+      q: 'Les données sont-elles sécurisées ?',
+      a: 'Les accès et flux sont sécurisés. COURTIA est pensé pour des dossiers sensibles de courtage avec un contrôle humain permanent.',
+    },
+    {
+      q: 'L\'offre Cabinet/Premium fonctionne comment ?',
+      a: 'Elle est construite sur devis, avec cadrage des besoins équipe, accompagnement et paramétrage avancé.',
+    },
+  ]
+
+  // V6: ScrollReveal via IntersectionObserver
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('lp-revealed')
+        }
+      })
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' })
+    
+    const reveals = document.querySelectorAll('.lp-reveal')
+    reveals.forEach(el => observer.observe(el))
+    
+    return () => observer.disconnect()
+  }, [])
+
+  // V6: FAQ accordion state
+  const [openFaq, setOpenFaq] = useState(null)
 
   return (
-    <>
+    <div className="lp-root">
       <style>{styles}</style>
 
-      {/* COSMOS BACKGROUND V2 — très discret */}
-      <div className="cosmos" />
+      {/* Fixed background */}
+      <div className="lp-cosmos-bg" aria-hidden="true">
+        <AuroraHalo />
+        <div className="lp-stars" />
+        <div className="lp-orbs" aria-hidden="true">
+          <div className="lp-orb lp-orb-1" />
+          <div className="lp-orb lp-orb-2" />
+          <div className="lp-orb lp-orb-3" />
+        </div>
+        <div className="lp-particles" aria-hidden="true">
+          {Array.from({ length: 12 }, (_, i) => (
+            <div key={i} className="lp-particle" />
+          ))}
+        </div>
+        <div className="lp-cosmos-gradient" />
+      </div>
 
-      {/* STICKY HEADER — CTA toujours visible */}
-      <header className="sticky-header" aria-label="Navigation principale">
-        <Link to="/" className="sticky-logo" aria-label="Courtia accueil">courtia<em>.</em></Link>
-        <Link to="/register" className="sticky-cta" aria-label="Essai gratuit 14 jours">Essai gratuit 14 jours →</Link>
+      {/* ═══════════════ HEADER ═══════════════ */}
+      <header className="lp-header aurora-panel">
+        <Link to="/" className="lp-header-brand" aria-label="COURTIA — Accueil">
+          <CourtiaBubbleLogo size={32} animated={false} showHalo={false} showFoam={false} />
+          <CourtiaWordmark size="18px" />
+        </Link>
+        <nav className="lp-nav">
+          <a href="#fonctionnalites">Fonctionnalités</a>
+          <a href="#ark">ARK</a>
+          <a href="#tarifs">Tarifs</a>
+          <Link to="/demo">Démo</Link>
+          <Link to="/login">Connexion</Link>
+        </nav>
+        <Link className="aurora-button aurora-button-primary" to="/demo">
+          Demander une démo
+        </Link>
       </header>
 
-      {/* ÉTOILES V2 — 40 fines twinkle */}
-      <div className="stars" aria-hidden>
-        {stars.map((s, i) => (
-          <span
-            key={i}
-            className="star"
-            style={{
-              width: `${s.size}px`,
-              height: `${s.size}px`,
-              left: `${s.left}vw`,
-              top: `${s.top}vh`,
-              animationDuration: `${s.duration}s`,
-              animationDelay: `${s.delay}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* STAGE V2 — flex column space-between, padding 42px, full-screen */}
-      <section className="stage">
-        <div className="kicker">
-          Courtia <span className="pulse-dot" /> L'IA Compagnon
-        </div>
-
-        <div className="bubble-frame">
-          <div className="bubble-hero">
-            <BubbleC size={480} />
+      <main>
+        {/* ═══════════════ HERO ═══════════════ */}
+        <section className="lp-hero aurora-section">
+          <div className="aurora-orb-container">
+            <CourtiaBubbleLogo
+              size={480}
+              animated={true}
+              showHalo={true}
+              showFoam={true}
+              showSpecular={true}
+            />
           </div>
-        </div>
-
-        <div className="bottom-block">
-          <h1 className="wordmark">
-            courtia<em>.</em>
-          </h1>
-          <p className="tagline">Une bulle d'intelligence pour celui qui protège.</p>
-          <div className="cta-row">
-            <Link to="/register" className="cta-primary">
-              Essai gratuit 7 jours
-              <span className="arrow">→</span>
-            </Link>
-            <Link to="/login" className="cta-ghost">Voir le cockpit</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 2 — Manifeste */}
-      <ManifesteSection />
-
-      {/* SECTION 2.5 — Comment ça marche */}
-      <HowItWorksSection />
-
-      {/* SECTION 3 — Les 5 super-pouvoirs */}
-      <PowersSection />
-
-      {/* SECTION 3.5 — Sécurité & Conformité */}
-      <SecuritySection />
-
-      {/* SECTION 4 — Vague 1 : Intelligence augmentée (5 features) */}
-      <Vague1Section />
-
-      {/* SECTION 5 — Vague 2 : Action autonome (3 features) */}
-      <Vague2Section />
-
-      {/* SECTION 6 — Chiffres (mis à jour 8 features) */}
-      <ProofSection />
-
-      {/* SECTION 7 — Tarifs (mis à jour 89/199/299) */}
-      <PricingSection />
-
-      {/* SECTION 8 — Footer */}
-      <FooterSection />
-    </>
-  );
-}
-
-/* ─────────────────────────────────────────── */
-/* SECTIONS ADDITIONNELLES                     */
-/* ─────────────────────────────────────────── */
-
-function ManifesteSection() {
-  return (
-    <section className="band">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Le manifeste
-        </div>
-        <h2 className="band-title">
-          Le courtage <em>mérite</em><br />une bulle d'intelligence.
-        </h2>
-        <p className="band-text">
-          Pendant des années, le courtier d'assurance a porté son métier seul.
-          Mille tâches invisibles. Mille relances oubliées. Mille opportunités
-          perdues dans le silence.
-        </p>
-        <p className="band-text">
-          COURTIA n'est pas un CRM. C'est <em>un compagnon</em>.
-          Une présence calme qui veille, comprend, et agit.
-        </p>
-        <div className="manifeste-stats">
-          <div className="manifeste-stat">
-            <span className="manifeste-stat-value">PRÉPARATION DDA</span>
-            <span className="manifeste-stat-label">ASSISTÉE</span>
-          </div>
-          <div className="manifeste-stat">
-            <span className="manifeste-stat-value">0</span>
-            <span className="manifeste-stat-label">RELANCE HAMON/CHATEL OUBLIÉE</span>
-          </div>
-          <div className="manifeste-stat">
-            <span className="manifeste-stat-value">14 JOURS</span>
-            <span className="manifeste-stat-label">POUR TESTER SANS RISQUE</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HowItWorksSection() {
-  const steps = [
-    { num: '1', title: 'Connectez votre CRM', desc: 'ARK se connecte à votre CRM existant (Sage, Silae, etc.). Pas de migration. Pas de changement d\'habitudes.' },
-    { num: '2', title: 'ARK surveille et vous notifie', desc: 'Détection automatique des opportunités Hamon, Chatel, silences anormaux. Vous êtes alerté au bon moment.' },
-    { num: '3', title: 'Vous approuvez en un clic', desc: 'Un DDA généré en 3 clics. Une relance envoyée automatiquement. Vous validez, ARK exécute.' },
-  ];
-  return (
-    <section className="how">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Comment ça marche
-        </div>
-        <h2 className="band-title">
-          Trois étapes, <em>zéro</em> complexité.
-        </h2>
-      </div>
-      <div className="how-grid">
-        {steps.map((s, i) => (
-          <div className="how-card" key={i}>
-            <div className="how-num">{s.num}</div>
-            <h3 className="how-title">{s.title}</h3>
-            <p className="how-desc">{s.desc}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function SecuritySection() {
-  const items = [
-    { title: 'Hébergement France', desc: 'Vos données sont stockées en France, sur des serveurs conformes aux standards les plus exigeants.' },
-    { title: 'Chiffrement AES-256', desc: 'Tous les documents (RIB, attestations, contrats) sont chiffrés au repos et en transit.' },
-    { title: 'Conformité RGPD', desc: 'Droit d\'accès, rectification, suppression. Vos clients gardent le contrôle total de leurs données.' },
-    { title: 'Pas d\'entraînement IA sur vos données', desc: 'Nous n\'utilisons jamais vos fichiers clients pour entraîner nos modèles. Vos données restent vos données.' },
-    { title: 'Pas de revente de données', desc: 'Nous ne vendons aucune donnée. Ni les vôtres, ni celles de vos clients. Point.' },
-  ];
-  return (
-    <section className="security">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Sécurité & Conformité
-        </div>
-        <h2 className="band-title">
-          Vos données <em>restent</em> chez vous.
-        </h2>
-        <p className="band-text" style={{fontSize: '17px'}}>
-          Un courtier confie ses dossiers les plus sensibles. COURTIA a été conçu pour mériter cette confiance.
-        </p>
-      </div>
-      <div className="security-grid">
-        {items.map((item, i) => (
-          <div className="security-card" key={i}>
-            <div className="security-icon">●</div>
-            <h3 className="security-title">{item.title}</h3>
-            <p className="security-desc">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PowersSection() {
-  const powers = [
-    {
-      tag: '01',
-      title: 'ARK Watch',
-      desc: "Surveille votre portefeuille 24/7. Détecte les opportunités Hamon, Chatel, les silences anormaux. Vous appelez au bon moment.",
-    },
-    {
-      tag: '02',
-      title: 'Voice Intake',
-      desc: "Un appel. Une transcription. Une fiche client complétée. Le CRM se remplit pendant que vous parlez.",
-    },
-    {
-      tag: '03',
-      title: 'Doc Vision',
-      desc: "RIB, CG, attestations. Photographiez. ARK lit, classe, injecte. Vous ne saisissez plus rien.",
-    },
-    {
-      tag: '04',
-      title: 'ARK Compose',
-      desc: "IPID, DDA, devoir de conseil. Un clic. Le PDF conforme est généré. Quinze minutes deviennent une seconde.",
-    },
-    {
-      tag: '05',
-      title: 'Quote Intel',
-      desc: "Dispatch automatique de devis à dix compagnies. Mails personnalisés. Vous choisissez la meilleure offre.",
-    },
-  ];
-
-  return (
-    <section className="powers">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Les cinq pouvoirs
-        </div>
-        <h2 className="band-title">
-          ARK, votre <em>compagnon</em><br />d'intelligence.
-        </h2>
-      </div>
-      <div className="powers-grid">
-        {powers.map((p, i) => (
-          <PowerCard key={i} {...p} index={i} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PowerCard({ tag, title, desc, index: _index }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
-  });
-  const y = useSpring(useTransform(scrollYProgress, [0, 1], [80, -80]), { stiffness: 80, damping: 20 });
-  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
-
-  return (
-    <motion.div ref={ref} className="power-card" style={{ y, opacity }}>
-      <div className="power-bubble">
-        <BubbleC size={100} showHalo={false} />
-      </div>
-      <div className="power-tag">{tag}</div>
-      <h3 className="power-title">{title}</h3>
-      <p className="power-desc">{desc}</p>
-    </motion.div>
-  );
-}
-
-/* ─── VAGUE 1 : Intelligence augmentée (5 features IA-natives) ─── */
-function Vague1Section() {
-  const features = [
-    {
-      tag: 'V1·01',
-      title: 'Morning Brief',
-      desc: 'Chaque matin, ARK synthétise votre portefeuille en un briefing vocal et texte. Opportunités Hamon/Chatel, clients silencieux, échéances à risque. Vous commencez la journée avec une longueur d\'avance.',
-    },
-    {
-      tag: 'V1·02',
-      title: 'Doc Intel',
-      desc: 'ARK lit et analyse automatiquement vos documents (RIB, CG, attestations). Extraction intelligente des données, détection des anomalies, classification. Le dossier se remplit sans que vous touchiez le clavier.',
-    },
-    {
-      tag: 'V1·03',
-      title: 'Predictive Scoring',
-      desc: 'Chaque client reçoit un score de risque 0–100 basé sur son profil, son historique et les signaux faibles. ARK identifie les résiliations probables avant qu\'elles n\'arrivent. Vous agissez, pas ne subissez.',
-    },
-    {
-      tag: 'V1·04',
-      title: 'Smart Relances',
-      desc: 'Relances automatiques intelligentes par email et SMS. ARK détecte le bon moment, le bon canal, et adapte le ton selon le profil client. Taux de reconduction en hausse, portefeuille qui respire.',
-    },
-    {
-      tag: 'V1·05',
-      title: 'Revenue Forecast',
-      desc: 'Projection de revenus à 30/60/90 jours avec ventilation par produit et par client. ARK modélise les commissions entrantes, les risques de sortie, et vous donne une vision claire de votre pipeline.',
-    },
-  ];
-
-  return (
-    <section className="powers">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Vague 1 — Intelligence augmentée
-        </div>
-        <h2 className="band-title">
-          L'IA qui <em>anticipe</em><br />avant que vous ne demandiez.
-        </h2>
-        <p className="band-text">
-          Cinq fonctionnalités IA-natives qui transforment votre quotidien de courtier.
-          <br />Pas de configuration. Pas de prompt. ARK travaille pendant que vous dormez.
-        </p>
-      </div>
-      <div className="powers-grid">
-        {features.map((f, i) => (
-          <FeatureCard key={i} {...f} index={i} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ─── VAGUE 2 : Action autonome (3 killer features) ─── */
-function Vague2Section() {
-  const features = [
-    {
-      tag: 'V2·01',
-      title: 'ARK Voice',
-      desc: 'ARK appelle vos clients directement. Brief matinal vocal au courtier. Qualification, relance, prise de RDV, demande de documents — tout par téléphone, piloté par IA. Vos clients entendent une voix naturelle, pas un robot.',
-    },
-    {
-      tag: 'V2·02',
-      title: 'Email Parser',
-      desc: 'ARK lit vos emails entrants. Classification automatique, suggestion de réponse, extraction des pièces jointes. La boucle commerciale est fermée : relance → réponse → action automatique. Vous ne tapez plus un email.',
-    },
-    {
-      tag: 'V2·03',
-      title: 'DDA Auto-Audit',
-      desc: 'Vérification conformité Directive Distribution Assurance pour chaque client. Score 0–100, rapport PDF horodaté exportable, checklist ACPR-ready. La conformité n\'est plus une corvée, c\'est un clic.',
-    },
-  ];
-
-  return (
-    <section className="powers" style={{paddingTop: '0px'}}>
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Vague 2 — Action autonome
-        </div>
-        <h2 className="band-title">
-          Le CRM qui <em>parle</em>, qui <em>lit</em><br />et qui <em>prouve</em>.
-        </h2>
-        <p className="band-text">
-          <em>"Le seul CRM qui parle, qui lit tes mails à ta place, et qui prouve ta conformité ACPR en 1 clic."</em>
-        </p>
-      </div>
-      <div className="powers-grid">
-        {features.map((f, i) => (
-          <FeatureCard key={i} {...f} index={i} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function FeatureCard({ tag, title, desc, index: _index }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
-  });
-  const y = useSpring(useTransform(scrollYProgress, [0, 1], [80, -80]), { stiffness: 80, damping: 20 });
-  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
-
-  return (
-    <motion.div ref={ref} className="power-card" style={{ y, opacity }}>
-      <div className="power-bubble">
-        <BubbleC size={100} showHalo={false} />
-      </div>
-      <div className="power-tag">{tag}</div>
-      <h3 className="power-title">{title}</h3>
-      <p className="power-desc">{desc}</p>
-    </motion.div>
-  );
-}
-
-function ProofSection() {
-  const stats = [
-    { value: '10', label: 'MODULES IA-NATIFS' },
-    { value: '0', label: 'RELANCE HAMON/CHATEL OUBLIÉE' },
-    { value: '< 15 min', label: 'DÉMO EN CONDITIONS RÉELLES' },
-    { value: '1 COCKPIT', label: 'CLIENTS, CONTRATS, ALERTES' },
-  ];
-  return (
-    <section className="proof">
-      <div className="proof-inner">
-        {stats.map((s, i) => (
-          <div className="proof-stat" key={i}>
-            <div className="proof-value">{s.value}</div>
-            <div className="proof-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PricingSection() {
-  const plans = [
-    {
-      name: 'Starter',
-      price: '89',
-      desc: 'L\'essentiel pour les courtiers indépendants',
-      features: ['Portefeuille jusqu\'à 200 clients', 'ARK Watch + Doc Vision + Morning Brief', 'Scoring prédictif', 'Support email', 'Sans engagement'],
-    },
-    {
-      name: 'Pro ARK',
-      price: '199',
-      desc: 'Toute la puissance d\'ARK',
-      features: ['Portefeuille illimité', 'ARK Coach + Négociateur + Veille', 'Smart Relances + Revenue Forecast', 'Doc Intel + Voice Intake', 'Bordereau intelligent', 'Support prioritaire', 'Sans engagement'],
-      featured: true,
-    },
-    {
-      name: 'Cabinet',
-      price: 'Sur devis',
-      desc: 'Multi-courtiers · Vague 2 · White-label',
-      features: ['Tout le plan Pro ARK', 'ARK Voice illimité (appels IA)', 'Email Parser + boîte unifiée', 'Multi-utilisateurs & rôles', 'Rapports PDF ACPR-ready', 'API + Widget ARK embeddable', 'Support dédié'],
-    },
-  ];
-
-  return (
-    <section className="pricing">
-      <div className="band-inner">
-        <div className="band-kicker">
-          <span className="dot" /> Tarifs
-        </div>
-        <h2 className="band-title">
-          Une bulle, <em>trois</em> formules.
-        </h2>
-      </div>
-      <div className="pricing-grid">
-        {plans.map((p, i) => (
-          <div className={`pricing-card ${p.featured ? 'featured' : ''}`} key={i}>
-            {p.featured && <div className="pricing-badge">Le choix de la sérénité</div>}
-            <h3 className="pricing-name">{p.name}</h3>
-            <div className="pricing-price">
-              <span className="pricing-currency">€</span>
-              <span className="pricing-amount">{p.price}</span>
-              <span className="pricing-period">HT/mois</span>
+          <div className="lp-hero-content">
+            <div className="aurora-badge">CRM IA pour courtiers</div>
+            <h1 className="lp-hero-title">
+              <span className="aurora-gradient-text">
+                Le cockpit IA
+              </span>
+              <br />
+              pensé pour les courtiers
+            </h1>
+            <p className="lp-hero-desc">
+              COURTIA centralise vos clients, devis, contrats et relances.
+              ARK vous aide à prioriser vos actions, préparer vos dossiers et
+              détecter les opportunités — sans perdre la main.
+            </p>
+            <div className="lp-hero-cta">
+              <Link className="aurora-button aurora-button-primary" to="/demo">
+                Demander une démo
+              </Link>
+              <Link className="aurora-button aurora-button-ghost" to="#tarifs">
+                Voir les tarifs
+              </Link>
+              <Link className="aurora-button aurora-button-ghost" to="/login">
+                Se connecter
+              </Link>
             </div>
-            <p className="pricing-desc">{p.desc}</p>
-            <ul className="pricing-features">
-              {p.features.map((f, j) => <li key={j}>{f}</li>)}
-            </ul>
-            <Link to="/register" className={p.featured ? 'cta-primary' : 'cta-ghost'}>
-              {p.featured ? 'Essayer gratuitement' : p.name === 'Premium' ? 'Essayer 14 jours' : 'Essayer 14 jours'}
-            </Link>
           </div>
-        ))}
-      </div>
-      <p className="pricing-note">Tous les plans sont sans engagement. Résiliation possible à tout moment. Le plan Starter évolue automatiquement vers Pro au-delà de 200 clients.</p>
-    </section>
-  );
+        </section>
+
+        {/* ═══════════════ PROBLEM/SOLUTION ═══════════════ */}
+        <section className="lp-section aurora-section lp-reveal">
+          <div className="lp-section-inner">
+            <div className="aurora-grid-2">
+              <article className="aurora-card courtia-depth-card">
+                <div className="courtia-depth-card-inner" style={{ padding: 32 }}>
+                  <h2 className="lp-card-title">
+                    <span style={{ color: 'var(--aurora-rose-soft)' }}>▸</span> Le problème terrain
+                  </h2>
+                  <ul className="lp-card-list">
+                    <li>Dossiers dispersés entre outils et emails</li>
+                    <li>Relances oubliées et opportunités manquées</li>
+                    <li>Contrats mal suivis dans le temps</li>
+                    <li>Peu de vision globale sur le portefeuille</li>
+                    <li>Trop de charge administrative quotidienne</li>
+                  </ul>
+                </div>
+              </article>
+              <article className="aurora-card courtia-depth-card">
+                <div className="courtia-depth-card-inner" style={{ padding: 32 }}>
+                  <h2 className="lp-card-title">
+                    <span style={{ color: 'var(--aurora-emerald-soft)' }}>▸</span> La solution COURTIA
+                  </h2>
+                  <ul className="lp-card-list">
+                    <li>Cockpit cabinet unifié</li>
+                    <li>Pipeline devis et opportunités clair</li>
+                    <li>Suivi contrats et échéances</li>
+                    <li>Relances structurées et priorisées</li>
+                    <li>Reporting activable au quotidien</li>
+                  </ul>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ ARK ═══════════════ */}
+        <section id="ark" className="lp-section aurora-section lp-reveal">
+          <div className="lp-section-inner">
+            <div className="aurora-section-header">
+              <p className="aurora-section-kicker">Intelligence Artificielle</p>
+              <h2 className="aurora-section-title">ARK au quotidien</h2>
+              <p className="aurora-section-subtitle">
+                Votre assistant IA qui prépare, suggère et priorise. Vous gardez le contrôle.
+              </p>
+            </div>
+            <div className="aurora-panel" style={{ padding: 40 }}>
+              <div className="lp-ark-steps">
+                <div className="lp-ark-step">
+                  <div className="lp-ark-step-icon">🌅</div>
+                  <div><strong>Matin</strong> — ARK prépare les priorités du jour.</div>
+                </div>
+                <div className="lp-ark-step">
+                  <div className="lp-ark-step-icon">📋</div>
+                  <div><strong>Avant RDV</strong> — ARK résume le dossier client.</div>
+                </div>
+                <div className="lp-ark-step">
+                  <div className="lp-ark-step-icon">✉️</div>
+                  <div><strong>Après échange</strong> — ARK suggère une relance propre.</div>
+                </div>
+                <div className="lp-ark-step">
+                  <div className="lp-ark-step-icon">💡</div>
+                  <div><strong>Portefeuille</strong> — ARK détecte les opportunités utiles.</div>
+                </div>
+                <div className="lp-ark-step">
+                  <div className="lp-ark-step-icon">🌙</div>
+                  <div><strong>Fin de journée</strong> — ARK récap les actions restantes.</div>
+                </div>
+              </div>
+              <p style={{
+                marginTop: 24,
+                fontSize: 14,
+                color: 'var(--aurora-text-muted)',
+                fontStyle: 'italic',
+                textAlign: 'center'
+              }}>
+                ARK assiste, prépare et suggère. Le courtier garde la main sur les décisions.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ FEATURES ═══════════════ */}
+        <section id="fonctionnalites" className="lp-section aurora-section lp-reveal">
+          <div className="lp-section-inner">
+            <div className="aurora-section-header">
+              <p className="aurora-section-kicker">Fonctionnalités</p>
+              <h2 className="aurora-section-title">Tout votre cabinet dans un cockpit</h2>
+            </div>
+            <div className="lp-features-grid">
+              {features.map((f, i) => (
+                <article key={f.title} className={`aurora-card courtia-depth-card lp-card-3d lp-reveal lp-reveal-delay-${Math.min(i, 5)}`}>
+                  <div className="courtia-depth-card-inner lp-card-3d-inner" style={{ padding: 28 }}>
+                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: '#fff' }}>
+                      {f.title}
+                    </h3>
+                    <p style={{ margin: '10px 0 0', fontSize: 14, color: 'var(--aurora-text-muted)', lineHeight: 1.6 }}>
+                      {f.desc}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ V6: MOCK COCKPIT PREVIEW ═══════════════ */}
+        <section className="lp-section aurora-section lp-reveal">
+          <div className="lp-section-inner">
+            <div className="aurora-section-header">
+              <p className="aurora-section-kicker">Interface</p>
+              <h2 className="aurora-section-title">Un cockpit conçu pour le courtage</h2>
+              <p className="aurora-section-subtitle" style={{ marginTop: 8 }}>
+                Voici à quoi ressemble votre cockpit COURTIA au quotidien.
+              </p>
+            </div>
+            <div className="lp-cockpit-preview">
+              <div className="lp-cockpit-mock">
+                <div className="lp-cockpit-sidebar">
+                  <div className="lp-cockpit-nav-item lp-cockpit-nav-active">📊 Cockpit</div>
+                  <div className="lp-cockpit-nav-item">👥 Clients</div>
+                  <div className="lp-cockpit-nav-item">📋 Devis</div>
+                  <div className="lp-cockpit-nav-item">📄 Contrats</div>
+                  <div className="lp-cockpit-nav-item">🔔 Relances</div>
+                  <div className="lp-cockpit-nav-item">💡 Opportunités</div>
+                  <div className="lp-cockpit-nav-item">📈 Rapports</div>
+                  <div className="lp-cockpit-nav-item">⚙️ Paramètres</div>
+                </div>
+                <div className="lp-cockpit-main">
+                  <div className="lp-cockpit-kpi-row">
+                    <div className="lp-cockpit-kpi">
+                      <div className="lp-cockpit-kpi-value">128</div>
+                      <div className="lp-cockpit-kpi-label">Clients actifs</div>
+                    </div>
+                    <div className="lp-cockpit-kpi">
+                      <div className="lp-cockpit-kpi-value">47</div>
+                      <div className="lp-cockpit-kpi-label">Contrats en cours</div>
+                    </div>
+                    <div className="lp-cockpit-kpi">
+                      <div className="lp-cockpit-kpi-value">12</div>
+                      <div className="lp-cockpit-kpi-label">Relances aujourd'hui</div>
+                    </div>
+                    <div className="lp-cockpit-kpi">
+                      <div className="lp-cockpit-kpi-value">8 420 €</div>
+                      <div className="lp-cockpit-kpi-label">Commissions mois</div>
+                    </div>
+                  </div>
+                  <div className="lp-cockpit-table">
+                    <div className="lp-cockpit-row">
+                      <span>🔴 <strong>Karim B.</strong> — Devis Auto #247</span>
+                      <span>Sans réponse · 7 j</span>
+                    </div>
+                    <div className="lp-cockpit-row">
+                      <span>🟡 <strong>Dupont Jean</strong> — Contrat MRH</span>
+                      <span>Échéance · 15 j</span>
+                    </div>
+                    <div className="lp-cockpit-row">
+                      <span>🟢 <strong>Martin SARL</strong> — Flotte Pro</span>
+                      <span>À signer · 2 j</span>
+                    </div>
+                    <div className="lp-cockpit-row">
+                      <span>🔵 <strong>Sophie L.</strong> — Habitation</span>
+                      <span>Cross-sell · ARK</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ DEMO PREVIEW ═══════════════ */}
+        <section className="lp-section aurora-section">
+          <div className="lp-section-inner">
+            <div className="aurora-panel" style={{ padding: 40, textAlign: 'center' }}>
+              <h2 className="aurora-section-title" style={{ marginBottom: 16 }}>
+                Ce que vous voyez en démo
+              </h2>
+              <div className="lp-chips">
+                <span className="status-pill status-pill-active">Dashboard cabinet</span>
+                <span className="status-pill status-pill-active">Fiche client</span>
+                <span className="status-pill status-pill-active">Devis</span>
+                <span className="status-pill status-pill-active">Relances</span>
+                <span className="status-pill status-pill-active">Contrats</span>
+                <span className="status-pill status-pill-active">ARK</span>
+                <span className="status-pill status-pill-active">Reporting</span>
+              </div>
+              <div style={{ marginTop: 32 }}>
+                <Link className="aurora-button aurora-button-primary" to="/demo">
+                  Demander une démo
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ PRICING ═══════════════ */}
+        <section id="tarifs" className="lp-section aurora-section">
+          <div className="lp-section-inner">
+            <div className="aurora-section-header">
+              <p className="aurora-section-kicker">Tarifs</p>
+              <h2 className="aurora-section-title">Un plan pour chaque cabinet</h2>
+            </div>
+            <div className="aurora-grid-3">
+              {/* Starter */}
+              <article className="aurora-card courtia-depth-card">
+                <div className="courtia-depth-card-inner" style={{ padding: 32 }}>
+                  <p className="lp-price-plan">Starter</p>
+                  <p className="lp-price">89 € <small>HT/mois</small></p>
+                  <hr className="aurora-divider" style={{ margin: '16px 0' }} />
+                  <ul className="lp-card-list">
+                    <li>Socle CRM courtage</li>
+                    <li>Clients, devis, contrats, relances</li>
+                    <li>Pilotage quotidien structuré</li>
+                  </ul>
+                  <div style={{ marginTop: 24 }}>
+                    <Link className="aurora-button aurora-button-ghost" to="/register?plan=starter" style={{ width: '100%', justifyContent: 'center' }}>
+                      Démarrer COURTIA
+                    </Link>
+                  </div>
+                </div>
+              </article>
+
+              {/* Pro */}
+              <article className="aurora-card courtia-depth-card" style={{
+                borderColor: 'rgba(139, 92, 246, 0.6)',
+                boxShadow: '0 0 0 1px rgba(139, 92, 246, 0.3), 0 18px 56px rgba(70, 47, 148, 0.35)'
+              }}>
+                <div className="courtia-depth-card-inner" style={{ padding: 32 }}>
+                  <span className="aurora-badge" style={{ marginBottom: 12 }}>Offre principale</span>
+                  <p className="lp-price-plan">Pro</p>
+                  <p className="lp-price">199 € <small>HT/mois</small></p>
+                  <hr className="aurora-divider" style={{ margin: '16px 0' }} />
+                  <ul className="lp-card-list">
+                    <li>Tout Starter</li>
+                    <li>ARK plus avancé pour la priorisation</li>
+                    <li>Relances et reporting renforcés</li>
+                  </ul>
+                  <div style={{ marginTop: 24 }}>
+                    <Link className="aurora-button aurora-button-primary" to="/register?plan=pro" style={{ width: '100%', justifyContent: 'center' }}>
+                      Démarrer COURTIA Pro
+                    </Link>
+                  </div>
+                </div>
+              </article>
+
+              {/* Cabinet */}
+              <article className="aurora-card courtia-depth-card">
+                <div className="courtia-depth-card-inner" style={{ padding: 32 }}>
+                  <p className="lp-price-plan">Cabinet</p>
+                  <p className="lp-price">Sur devis</p>
+                  <hr className="aurora-divider" style={{ margin: '16px 0' }} />
+                  <ul className="lp-card-list">
+                    <li>Besoin équipe et gouvernance</li>
+                    <li>Paramétrage avancé</li>
+                    <li>Accompagnement dédié</li>
+                  </ul>
+                  <div style={{ marginTop: 24 }}>
+                    <Link className="aurora-button aurora-button-ghost" to="/demo" style={{ width: '100%', justifyContent: 'center' }}>
+                      Demander une démo
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ SECURITY ═══════════════ */}
+        <section className="lp-section aurora-section">
+          <div className="lp-section-inner">
+            <div className="aurora-panel" style={{ padding: 40, textAlign: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 300, color: '#fff' }}>
+                Sécurité et contrôle
+              </h2>
+              <p style={{
+                marginTop: 16,
+                fontSize: 16,
+                color: 'var(--aurora-text-secondary)',
+                lineHeight: 1.7,
+                maxWidth: 640,
+                marginLeft: 'auto',
+                marginRight: 'auto'
+              }}>
+                COURTIA structure l'opérationnel du cabinet. ARK assiste la préparation,
+                la détection et la priorisation. Il ne remplace pas le courtier et ne prend
+                pas de décision légale ou contractuelle seul.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ FAQ ═══════════════ */}
+        <section className="lp-section aurora-section lp-reveal">
+          <div className="lp-section-inner">
+            <div className="aurora-section-header">
+              <p className="aurora-section-kicker">Questions</p>
+              <h2 className="aurora-section-title">FAQ</h2>
+            </div>
+            <div className="lp-faq">
+              {faq.map((item, i) => {
+                const isOpen = openFaq === i
+                return (
+                  <div key={item.q} className={`lp-faq-item-v6 ${isOpen ? 'lp-faq-open' : ''} lp-reveal lp-reveal-delay-${Math.min(i, 5)}`}>
+                    <button
+                      className="lp-faq-trigger"
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      aria-expanded={isOpen}
+                    >
+                      <span>{item.q}</span>
+                      <span className="lp-faq-chevron">▼</span>
+                    </button>
+                    <div className="lp-faq-answer-wrap">
+                      <div className="lp-faq-answer">{item.a}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════ FINAL CTA ═══════════════ */}
+        <section className="lp-section aurora-section">
+          <div className="lp-section-inner">
+            <div className="aurora-panel" style={{
+              padding: 56,
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.05), rgba(6, 182, 212, 0.04))',
+              border: '1px solid rgba(139, 92, 246, 0.15)'
+            }}>
+              <CourtiaBubbleLogo size={64} animated={true} showHalo={true} showFoam={false} showSpecular={false} />
+              <h2 style={{
+                margin: '20px 0 12px',
+                fontSize: 'clamp(22px, 3vw, 36px)',
+                fontWeight: 200,
+                color: '#fff',
+                letterSpacing: '-0.02em'
+              }}>
+                Structurez votre cabinet autour d'un cockpit IA clair,
+                <br />
+                sans perdre la main sur vos décisions.
+              </h2>
+              <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link className="aurora-button aurora-button-primary" to="/demo">
+                  Demander une démo
+                </Link>
+                <Link className="aurora-button aurora-button-ghost" to="/login">
+                  Se connecter
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ═══════════════ FOOTER ═══════════════ */}
+      <footer className="lp-footer">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, justifyContent: 'center' }}>
+          <CourtiaBubbleLogo size={22} animated={false} showHalo={false} showFoam={false} showSpecular={false} />
+          <span style={{ fontWeight: 600, color: '#fff' }}>COURTIA</span>
+        </div>
+        <p style={{ margin: 0, color: 'var(--aurora-text-muted)', fontSize: 13 }}>
+          CRM IA pour courtiers en assurance
+        </p>
+        <p style={{ margin: '6px 0 16px', color: 'var(--aurora-text-muted)', fontSize: 12 }}>
+          Produit : COURTIA &nbsp;|&nbsp; Assistant IA : ARK &nbsp;|&nbsp; courtiark.fr
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <RhasrhassSignature compact />
+        </div>
+      </footer>
+    </div>
+  )
 }
 
-function FooterSection() {
-  return (
-    <footer className="footer">
-      <div className="footer-bubble">
-        <BubbleC size={60} animated={false} showHalo={false} />
-      </div>
-      <div className="footer-wordmark">courtia<em>.</em></div>
-      <p className="footer-tagline">Une bulle d'intelligence pour celui qui protège.</p>
-      <div className="footer-links">
-        <Link to="/legal">Mentions légales</Link>
-        <Link to="/cgu">CGU</Link>
-        <Link to="/confidentialite">Confidentialité</Link>
-        <Link to="/contact">Contact</Link>
-        <a href="mailto:contact@courtiark.fr">contact@courtiark.fr</a>
-      </div>
-      <div className="footer-social">
-        <a href="https://linkedin.com/company/courtia" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Courtia">LinkedIn</a>
-      </div>
-      <div className="footer-copy">
-        © 2026 COURTIA SASU — Tous droits réservés.<br />
-        <span style={{color: 'rgba(255,255,255,0.15)'}}>Hébergé en France. Conforme RGPD.</span>
-      </div>
-    </footer>
-  );
-}
-
-/* ─────────────────────────────────────────── */
-/* STYLES — Exacts de la référence + sections  */
-/* ─────────────────────────────────────────── */
 const styles = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400&display=swap');
-
-:root {
-  --bg-deep: #020108;
-  --bg-mid: #08051A;
-}
-
-html, body, #root {
-  background: var(--bg-deep);
-  color: #fff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  margin: 0;
-  padding: 0;
+.lp-root {
+  min-height: 100vh;
+  color: var(--aurora-text-primary, #F8FAFC);
+  background: var(--aurora-bg-deep, #050510);
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  position: relative;
   overflow-x: hidden;
 }
 
-/* ─── COSMIC BACKGROUND V2 — très discret ─── */
-.cosmos {
+/* ─── COSMOS BACKGROUND ─── */
+.lp-cosmos-bg {
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 45%, rgba(90,40,180,0.10) 0%, transparent 50%),
-    radial-gradient(ellipse at 30% 80%, rgba(220,60,160,0.05) 0%, transparent 55%),
-    linear-gradient(180deg, #020108 0%, #06031A 50%, #020108 100%);
   z-index: 0;
   pointer-events: none;
 }
 
-/* ─── STARS V2 — 40 étoiles fines twinkle ─── */
-.stars { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-.star {
+/* ─── V6: FLOATING ORBS (AuroraBubbles) ─── */
+.lp-orbs {
   position: absolute;
-  background: #fff;
-  border-radius: 50%;
-  animation: twinkle ease-in-out infinite;
-}
-@keyframes twinkle {
-  0%, 100% { opacity: 0.08; }
-  50% { opacity: 0.45; }
+  inset: 0;
+  overflow: hidden;
 }
 
-/* ─── HERO STAGE V2 — space-between full-screen ─── */
-.stage {
-  position: relative;
-  z-index: 2;
-  min-height: 100vh;
+.lp-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: lp-orb-drift 12s ease-in-out infinite;
+}
+
+.lp-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(139,92,246,0.6), transparent 70%);
+  top: -10%;
+  left: -5%;
+  animation-delay: 0s;
+}
+
+.lp-orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(6,182,212,0.5), transparent 70%);
+  top: 40%;
+  right: -8%;
+  animation-delay: -4s;
+}
+
+.lp-orb-3 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(236,72,153,0.4), transparent 70%);
+  bottom: -5%;
+  left: 30%;
+  animation-delay: -8s;
+}
+
+@keyframes lp-orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-15px, 25px) scale(0.95); }
+  75% { transform: translate(-25px, -15px) scale(1.02); }
+}
+
+/* ─── V6: CSS PARTICLES ─── */
+.lp-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.lp-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  animation: lp-particle-float 8s ease-in-out infinite;
+}
+
+.lp-particle:nth-child(1)  { top: 12%; left: 8%;  animation-delay: 0s; width: 2px; height: 2px; }
+.lp-particle:nth-child(2)  { top: 22%; left: 25%; animation-delay: -1s; width: 3px; height: 3px; background: rgba(139,92,246, 0.7); }
+.lp-particle:nth-child(3)  { top: 8%;  left: 45%; animation-delay: -2s; width: 1.5px; height: 1.5px; }
+.lp-particle:nth-child(4)  { top: 35%; left: 65%; animation-delay: -3s; width: 2.5px; height: 2.5px; background: rgba(6,182,212, 0.6); }
+.lp-particle:nth-child(5)  { top: 15%; left: 80%; animation-delay: -4s; width: 1.5px; height: 1.5px; }
+.lp-particle:nth-child(6)  { top: 55%; left: 12%; animation-delay: -5s; width: 2px; height: 2px; }
+.lp-particle:nth-child(7)  { top: 45%; left: 38%; animation-delay: -0.5s; width: 3px; height: 3px; background: rgba(236,72,153, 0.5); }
+.lp-particle:nth-child(8)  { top: 68%; left: 55%; animation-delay: -2.5s; width: 2px; height: 2px; }
+.lp-particle:nth-child(9)  { top: 72%; left: 78%; animation-delay: -6s; width: 1.5px; height: 1.5px; }
+.lp-particle:nth-child(10) { top: 85%; left: 20%; animation-delay: -3.5s; width: 2.5px; height: 2.5px; background: rgba(139,92,246, 0.55); }
+.lp-particle:nth-child(11) { top: 90%; left: 60%; animation-delay: -7s; width: 2px; height: 2px; }
+.lp-particle:nth-child(12) { top: 28%; left: 92%; animation-delay: -1.5s; width: 1.5px; height: 1.5px; }
+
+@keyframes lp-particle-float {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  25% { transform: translate(8px, -15px) scale(1.5); opacity: 0.8; }
+  50% { transform: translate(-5px, -25px) scale(1); opacity: 0.4; }
+  75% { transform: translate(-10px, -8px) scale(1.3); opacity: 0.6; }
+}
+
+.lp-cosmos-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 560px at 18% -10%, rgba(139, 92, 246, 0.22), transparent 62%),
+    radial-gradient(760px 460px at 88% 8%, rgba(59, 130, 246, 0.12), transparent 58%),
+    radial-gradient(680px 460px at 50% 100%, rgba(236, 72, 153, 0.08), transparent 66%),
+    linear-gradient(180deg, #050510 0%, #08061a 100%);
+}
+
+/* ─── STARS ─── */
+.lp-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 40% 10%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1.5px 1.5px at 85% 55%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 15% 65%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 92% 85%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,0.45), transparent),
+    radial-gradient(1px 1px at 48% 58%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 8% 42%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 22% 92%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 65% 38%, rgba(255,255,255,0.25), transparent);
+  animation: lp-stars-twinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes lp-stars-twinkle {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ─── HEADER ─── */
+.lp-header {
+  position: sticky;
+  top: 12px;
+  z-index: 50;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 42px;
-  pointer-events: none;
+  gap: 18px;
+  padding: 12px 24px;
+  margin: 12px 24px;
+  border-radius: 16px;
 }
-.stage > * { pointer-events: auto; }
 
-/* KICKER V2 — JetBrains 10px letter-spacing 7px, dot 5px gradient + pulse */
-.kicker {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 7px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.38);
-  margin-top: 10px;
+.lp-header-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
-  opacity: 0;
-  animation: fadeIn 1.5s 0.6s forwards;
-}
-.kicker .pulse-dot {
-  display: inline-block;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff4d9d, #a142f4);
-  box-shadow: 0 0 6px rgba(255,77,157,0.6);
-  animation: pulse 2.4s ease-in-out infinite;
-}
-/* Dot legacy pour les autres band-kicker (sections) */
-.band-kicker .dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff4d9d, #a142f4);
-  margin: 0 10px;
-  vertical-align: middle;
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.4); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  gap: 10px;
+  text-decoration: none;
 }
 
-/* BUBBLE FRAME V2 — center 480 max */
-.bubble-frame {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-.bubble-hero {
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 1 / 1;
-  position: relative;
-  opacity: 0;
-  animation: bubbleIn 1.8s 0.3s cubic-bezier(.2,.7,.3,1) forwards;
-}
-.bubble-hero > .bubble-wrap,
-.bubble-hero > div {
-  width: 100% !important;
-  height: 100% !important;
-}
-@keyframes bubbleIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* BOTTOM BLOCK V2 — wordmark + tagline + CTA, fade-in 1.3s */
-.bottom-block {
-  text-align: center;
-  margin-bottom: 24px;
-  opacity: 0;
-  animation: fadeIn 1.5s 1.3s forwards;
-}
-
-.wordmark {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: clamp(46px, 7vw, 72px);
-  letter-spacing: -3px;
-  line-height: 1;
-  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.65) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 14px;
-}
-.wordmark em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.tagline {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: clamp(14px, 1.5vw, 18px);
-  color: rgba(255,255,255,0.52);
-  letter-spacing: -0.1px;
-  max-width: 440px;
-  margin: 0 auto 28px;
-}
-
-/* CTA Row */
-.cta-row {
+.lp-nav {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
-  justify-content: center;
-}
-.cta-primary, .cta-ghost {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  letter-spacing: 0.2px;
-  padding: 14px 28px;
-  border-radius: 999px;
-  text-decoration: none;
-  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.cta-primary {
-  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
-  color: #fff;
-  box-shadow: 0 8px 32px rgba(161, 66, 244, 0.35);
-}
-.cta-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(161, 66, 244, 0.5); }
-.cta-primary .arrow { transition: transform 0.3s ease; }
-.cta-primary:hover .arrow { transform: translateX(4px); }
-.cta-ghost {
-  background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.85);
-  border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(20px);
-}
-.cta-ghost:hover { background: rgba(255,255,255,0.08); }
-
-/* ─── BAND (sections) ─── */
-.band, .powers, .proof, .pricing {
-  position: relative;
-  z-index: 2;
-  padding: 140px 40px;
-}
-.band-inner {
-  max-width: 720px;
-  margin: 0 auto;
-  text-align: center;
-}
-.band-kicker {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 40px;
-}
-.band-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: clamp(34px, 5vw, 64px);
-  letter-spacing: -2px;
-  line-height: 1.05;
-  margin-bottom: 40px;
-  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.band-title em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  background: linear-gradient(90deg, #ff4d9d 0%, #a142f4 50%, #4285f4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.band-text {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 22px;
-  line-height: 1.6;
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 28px;
-}
-.band-text em {
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
-/* ─── POWERS GRID ─── */
-.powers-grid {
-  max-width: 1280px;
-  margin: 80px auto 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
-}
-.power-card {
-  position: relative;
-  background: rgba(8, 5, 26, 0.4);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 20px;
-  padding: 32px 24px;
-  text-align: center;
-}
-.power-bubble {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-.power-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: rgba(255,255,255,0.3);
-  margin-bottom: 8px;
-}
-.power-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 300;
-  font-size: 22px;
-  letter-spacing: -0.5px;
-  margin-bottom: 12px;
-  color: #fff;
-}
-.power-desc {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  line-height: 1.55;
-  color: rgba(255,255,255,0.55);
+.lp-nav a {
+  color: var(--aurora-text-secondary, #CBD5E1);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
 }
 
-/* ─── PROOF ─── */
-.proof-inner {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 60px;
-}
-.proof-stat { text-align: center; }
-.proof-value {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(56px, 8vw, 96px);
-  background: linear-gradient(135deg, #ff80e0, #c080ff, #80a8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1;
-  margin-bottom: 12px;
-}
-.proof-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
+.lp-nav a:hover {
+  color: #ffffff;
 }
 
-/* ─── PRICING ─── */
-.pricing-grid {
-  max-width: 1100px;
-  margin: 80px auto 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-.pricing-card {
-  position: relative;
-  background: rgba(8, 5, 26, 0.5);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 24px;
-  padding: 40px 32px;
+/* ─── HERO ─── */
+.lp-hero {
+  padding: 60px 20px 40px;
   display: flex;
   flex-direction: column;
-}
-.pricing-card.featured {
-  border: 1px solid transparent;
-  background:
-    linear-gradient(rgba(8,5,26,0.7), rgba(8,5,26,0.7)) padding-box,
-    linear-gradient(135deg, #ff4d9d, #a142f4, #4285f4) border-box;
-}
-.pricing-badge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  padding: 6px 14px;
-  border-radius: 999px;
-  color: #fff;
-}
-.pricing-name {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: 28px;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.pricing-price {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-.pricing-currency {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 24px;
-  color: rgba(255,255,255,0.7);
-}
-.pricing-amount {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 64px;
-  letter-spacing: -2px;
-  color: #fff;
-}
-.pricing-period, .pricing-custom {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.5);
-}
-.pricing-custom {
-  font-size: 32px;
-  color: #fff;
-}
-.pricing-desc {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.55);
-  margin-bottom: 28px;
-}
-.pricing-features {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 32px 0;
-  flex: 1;
-}
-.pricing-features li {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 300;
-  font-size: 14px;
-  color: rgba(255,255,255,0.75);
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-/* ─── STICKY HEADER ─── */
-.sticky-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 28px;
-  background: rgba(2, 1, 8, 0.75);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  text-align: center;
+  position: relative;
+  z-index: 1;
 }
-.sticky-logo {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 20px;
-  letter-spacing: -1px;
-  color: #fff;
-  text-decoration: none;
-}
-.sticky-logo em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.sticky-cta {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 0.2px;
-  padding: 8px 20px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  color: #fff;
-  text-decoration: none;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.sticky-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(161, 66, 244, 0.4); }
 
-/* ─── MANIFESTE STATS ─── */
-.manifeste-stats {
+.lp-hero-content {
+  margin-top: 20px;
+  max-width: 720px;
+}
+
+.lp-hero-title {
+  font-size: clamp(32px, 5vw, 58px);
+  font-weight: 200;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin: 16px 0 18px;
+  color: #fff;
+}
+
+.lp-hero-desc {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--aurora-text-secondary, #CBD5E1);
+  max-width: 600px;
+  margin: 0 auto 28px;
+}
+
+.lp-hero-cta {
   display: flex;
+  gap: 10px;
   justify-content: center;
-  gap: 48px;
-  margin-top: 48px;
   flex-wrap: wrap;
 }
-.manifeste-stat {
-  text-align: center;
-}
-.manifeste-stat-value {
-  display: block;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(40px, 5vw, 64px);
-  background: linear-gradient(135deg, #ff80e0, #c080ff, #80a8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1;
-}
-.manifeste-stat-label {
-  display: block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-top: 8px;
+
+/* ─── SECTIONS ─── */
+.lp-section {
+  padding: 40px 20px;
+  position: relative;
+  z-index: 1;
 }
 
-/* ─── HOW IT WORKS ─── */
-.how {
-  position: relative;
-  z-index: 2;
-  padding: 140px 40px;
+.lp-section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
 }
-.how-grid {
-  max-width: 900px;
-  margin: 80px auto 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
-}
-.how-card {
-  background: rgba(8, 5, 26, 0.4);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 20px;
-  padding: 36px 28px;
-  text-align: center;
-}
-.how-num {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: 56px;
-  background: linear-gradient(135deg, #ff4d9d, #a142f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1;
-  margin-bottom: 16px;
-}
-.how-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 300;
+
+.lp-card-title {
   font-size: 20px;
-  letter-spacing: -0.5px;
+  font-weight: 600;
   color: #fff;
-  margin-bottom: 12px;
-}
-.how-desc {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.55);
-  line-height: 1.55;
+  margin: 0 0 16px;
 }
 
-/* ─── SECURITY SECTION ─── */
-.security {
-  position: relative;
-  z-index: 2;
-  padding: 140px 40px;
-}
-.security-grid {
-  max-width: 1080px;
-  margin: 80px auto 0;
+.lp-card-list {
+  margin: 0;
+  padding-left: 18px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-.security-card {
-  background: rgba(8, 5, 26, 0.4);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-  padding: 28px 24px;
-}
-.security-icon {
-  font-size: 12px;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 12px;
-}
-.security-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 300;
-  font-size: 17px;
-  letter-spacing: -0.3px;
-  color: #fff;
-  margin-bottom: 8px;
-}
-.security-desc {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
+  gap: 8px;
+  color: var(--aurora-text-secondary, #CBD5E1);
   font-size: 14px;
-  color: rgba(255,255,255,0.5);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-/* ─── PRICING NOTE ─── */
-.pricing-note {
-  max-width: 800px;
-  margin: 40px auto 0;
-  text-align: center;
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: rgba(255,255,255,0.4);
+/* ─── ARK STEPS ─── */
+.lp-ark-steps {
+  display: grid;
+  gap: 16px;
 }
 
-/* ─── FOOTER SOCIAL ─── */
-.footer-social {
-  margin-bottom: 24px;
-}
-.footer-social a {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
-  text-decoration: none;
-}
-.footer-social a:hover { color: rgba(255,255,255,0.8); }
-
-/* ─── FOOTER ─── */
-.footer {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 100px 40px 60px;
-  border-top: 1px solid rgba(255,255,255,0.04);
-}
-.footer-bubble {
+.lp-ark-step {
   display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-.footer-wordmark {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 200;
-  font-size: 32px;
-  letter-spacing: -1px;
-  background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 6px;
-}
-.footer-wordmark em {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  background: linear-gradient(90deg, #ff4d9d, #a142f4, #4285f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.footer-tagline {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
+  align-items: center;
+  gap: 14px;
   font-size: 15px;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 40px;
+  color: var(--aurora-text-secondary, #CBD5E1);
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.3s;
 }
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-bottom: 32px;
+
+.lp-ark-step:hover {
+  background: rgba(139, 92, 246, 0.06);
+  border-color: rgba(139, 92, 246, 0.15);
 }
-.footer-links a {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  text-decoration: none;
+
+.lp-ark-step-icon {
+  font-size: 22px;
+  flex-shrink: 0;
 }
-.footer-links a:hover { color: rgba(255,255,255,0.8); }
-.footer-copy {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: rgba(255,255,255,0.25);
+
+.lp-ark-step strong {
+  color: #fff;
+}
+
+/* ─── FEATURES GRID ─── */
+.lp-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .lp-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 600px) {
-  .kicker { font-size: 9px; letter-spacing: 5px; gap: 10px; }
-  .band-kicker { font-size: 9px; letter-spacing: 4px; margin-bottom: 32px; }
-  .stage { padding: 24px; }
-  .bubble-frame { padding: 0; }
-  .band, .powers, .proof, .pricing { padding: 80px 24px; }
-  .cta-row { flex-direction: column; width: 100%; }
-  .cta-primary, .cta-ghost { justify-content: center; }
-  .footer-links { flex-direction: column; gap: 16px; }
+  .lp-features-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-@media (max-width: 480px) {
-  .wordmark { font-size: 38px; letter-spacing: -1px; }
-  .tagline { font-size: 13px; max-width: 100%; }
-  .band-title { font-size: clamp(24px, 6vw, 36px); }
-  .band-text { font-size: 13px; }
-  .band, .powers, .proof, .pricing, .how { padding: 60px 20px; }
-  .manifeste-stats { gap: 20px; }
-  .manifeste-stat-value { font-size: clamp(24px, 8vw, 40px); line-height: 1.1; word-break: break-word; }
-  .manifeste-stat-label { font-size: 8px; letter-spacing: 2px; }
-  .proof-inner { gap: 32px; }
-  .proof-value { font-size: clamp(36px, 10vw, 56px); word-break: break-word; }
-  .proof-label { font-size: 8px; letter-spacing: 2px; }
-  .pricing-grid { gap: 16px; }
-  .pricing-card { padding: 28px 20px; }
-  .cta-primary, .cta-ghost { width: 100%; text-align: center; padding: 16px 20px; font-size: 14px; }
-  .sticky-header { padding: 12px 20px; }
-  .sticky-cta { font-size: 11px; padding: 8px 14px; }
-  .footer-grid { grid-template-columns: 1fr; gap: 24px; text-align: center; }
-  .hero { padding-top: 120px; min-height: auto; }
-  .bubble-frame { width: 100%; max-width: 340px; margin: 0 auto; }
-  .stage { overflow-x: hidden; }
+/* ─── CHIPS ─── */
+.lp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
 }
 
-@media (max-width: 375px) {
-  .wordmark { font-size: 32px; }
-  .manifeste-stat-value { font-size: clamp(20px, 7vw, 32px); }
-  .proof-value { font-size: clamp(28px, 8vw, 42px); }
-  .proof-inner { grid-template-columns: 1fr 1fr; gap: 24px; }
-  .band, .powers, .proof, .pricing, .how { padding: 48px 16px; }
+/* ─── PRICING ─── */
+.lp-price-plan {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
 }
-`;
+
+.lp-price {
+  font-size: 38px;
+  font-weight: 800;
+  color: #fff;
+  margin: 8px 0 0;
+}
+
+.lp-price small {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--aurora-text-muted);
+}
+
+/* ─── FAQ ─── */
+.lp-faq {
+  max-width: 800px;
+  margin: 0 auto;
+  display: grid;
+  gap: 10px;
+}
+
+.lp-faq-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition: all 0.3s;
+}
+
+.lp-faq-item:hover {
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.lp-faq-item summary {
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  list-style: none;
+}
+
+.lp-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq-item p {
+  margin-top: 10px;
+  color: var(--aurora-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── FOOTER ─── */
+.lp-footer {
+  position: relative;
+  z-index: 1;
+  padding: 40px 20px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── V6: SCROLL REVEAL ─── */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-reveal.lp-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lp-reveal-delay-1 { transition-delay: 0.1s; }
+.lp-reveal-delay-2 { transition-delay: 0.2s; }
+.lp-reveal-delay-3 { transition-delay: 0.3s; }
+.lp-reveal-delay-4 { transition-delay: 0.4s; }
+.lp-reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ─── V6: 3D CARD TILT ─── */
+.lp-card-3d {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.lp-card-3d-inner {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.lp-card-3d:hover .lp-card-3d-inner {
+  transform: rotateX(2deg) rotateY(-3deg) translateZ(10px);
+}
+
+/* ─── V6: GLOW PULSE ON HERO ORB ─── */
+@keyframes lp-orb-pulse {
+  0%, 100% { filter: drop-shadow(0 0 30px rgba(139,92,246,0.3)); }
+  50% { filter: drop-shadow(0 0 60px rgba(139,92,246,0.5)); }
+}
+
+.aurora-orb-container {
+  animation: lp-orb-pulse 4s ease-in-out infinite;
+}
+
+/* ─── V6: HOVER DEPTH ON CARDS ─── */
+.courtia-depth-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.courtia-depth-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 48px rgba(70, 47, 148, 0.2), 0 0 0 1px rgba(139, 92, 246, 0.12);
+}
+
+/* ─── V6: ANIMATED ACCORDION ─── */
+.lp-faq-item-v6 {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-faq-item-v6:hover {
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.lp-faq-item-v6.lp-faq-open {
+  border-color: rgba(139, 92, 246, 0.25);
+  background: rgba(139, 92, 246, 0.04);
+}
+
+.lp-faq-trigger {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  text-align: left;
+  font-family: inherit;
+}
+
+.lp-faq-chevron {
+  flex-shrink: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 12px;
+  color: var(--aurora-text-muted);
+}
+
+.lp-faq-open .lp-faq-chevron {
+  transform: rotate(180deg);
+}
+
+.lp-faq-answer-wrap {
+  overflow: hidden;
+  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+  max-height: 0;
+  opacity: 0;
+}
+
+.lp-faq-open .lp-faq-answer-wrap {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.lp-faq-answer {
+  padding: 0 22px 18px;
+  color: var(--aurora-text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ─── V6: MOCK COCKPIT PREVIEW ─── */
+.lp-cockpit-preview {
+  background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(6,182,212,0.04), rgba(236,72,153,0.03));
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.lp-cockpit-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px 300px at 20% 30%, rgba(139,92,246,0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.lp-cockpit-mock {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.lp-cockpit-sidebar {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-cockpit-nav-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--aurora-text-muted);
+  transition: all 0.2s;
+}
+
+.lp-cockpit-nav-item.lp-cockpit-nav-active {
+  background: rgba(139,92,246,0.15);
+  color: #fff;
+}
+
+.lp-cockpit-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lp-cockpit-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.lp-cockpit-kpi {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.lp-cockpit-kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.lp-cockpit-kpi-label {
+  font-size: 11px;
+  color: var(--aurora-text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lp-cockpit-table {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.lp-cockpit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+  color: var(--aurora-text-muted);
+}
+
+.lp-cockpit-row:last-child {
+  border-bottom: none;
+}
+
+.lp-cockpit-row strong {
+  color: #fff;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .lp-header {
+    margin: 6px 10px;
+    padding: 8px 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .lp-header-brand {
+    gap: 6px;
+  }
+
+  .lp-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .lp-nav a {
+    font-size: 12px;
+  }
+
+  .lp-header .aurora-button {
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+
+  .lp-hero {
+    padding: 30px 14px 24px;
+  }
+
+  .lp-hero-title {
+    font-size: 28px;
+  }
+
+  .lp-hero-desc {
+    font-size: 14px;
+    padding: 0 8px;
+  }
+
+  .lp-hero-cta {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lp-hero-cta .aurora-button {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  .lp-section {
+    padding: 24px 14px;
+  }
+
+  .lp-card-title {
+    font-size: 18px;
+  }
+
+  .lp-card-list li {
+    font-size: 13px;
+  }
+
+  .lp-ark-step {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .lp-ark-step-icon {
+    font-size: 18px;
+  }
+
+  .lp-price {
+    font-size: 30px;
+  }
+
+  .lp-price-plan {
+    font-size: 16px;
+  }
+
+  .lp-faq-item {
+    padding: 12px 14px;
+  }
+
+  .lp-faq-item summary {
+    font-size: 13px;
+  }
+
+  .lp-footer {
+    padding: 30px 14px;
+  }
+
+  /* Scale down the orb on mobile */
+  .aurora-orb-container > div {
+    transform: scale(0.55);
+    transform-origin: center center;
+    margin: -80px 0;
+  }
+
+  /* Full-width cards */
+  .aurora-panel {
+    padding: 24px !important;
+  }
+
+  /* Pricing full width */
+  .aurora-grid-3 {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .lp-header {
+    margin: 4px 6px;
+    padding: 6px 10px;
+  }
+
+  .lp-nav {
+    gap: 6px;
+  }
+
+  .lp-nav a {
+    font-size: 11px;
+  }
+
+  .lp-hero {
+    padding: 20px 10px 20px;
+  }
+
+  .lp-hero-title {
+    font-size: 24px;
+  }
+
+  .lp-hero-desc {
+    font-size: 13px;
+  }
+
+  .lp-section {
+    padding: 20px 10px;
+  }
+
+  .aurora-orb-container > div {
+    transform: scale(0.45);
+    margin: -100px 0;
+  }
+
+  .lp-price {
+    font-size: 26px;
+  }
+
+  .lp-cockpit-mock {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-cockpit-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lp-cockpit-sidebar {
+    display: none;
+  }
+}
+`

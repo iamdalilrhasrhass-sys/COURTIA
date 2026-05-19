@@ -455,7 +455,7 @@ async function handleStripeEvent(event) {
     return;
   }
 
-  if (type === 'invoice.paid' || type === 'invoice.payment_failed') {
+  if (type === 'invoice.paid' || type === 'invoice.payment_succeeded' || type === 'invoice.payment_failed') {
     const invoice = data;
     const customerId = invoice.customer || null;
     const organizationId = customerId ? await findOrganizationByStripeCustomer(customerId) : null;
@@ -480,11 +480,11 @@ async function handleStripeEvent(event) {
       [
         organizationId,
         invoice.id,
-        invoice.status || (type === 'invoice.paid' ? 'paid' : 'payment_failed'),
+        invoice.status || ((type === 'invoice.paid' || type === 'invoice.payment_succeeded') ? 'paid' : 'payment_failed'),
         invoice.amount_paid || invoice.amount_due || 0,
         invoice.currency || 'eur',
         invoice.hosted_invoice_url || null,
-        type === 'invoice.paid' ? new Date().toISOString() : null,
+        (type === 'invoice.paid' || type === 'invoice.payment_succeeded') ? new Date().toISOString() : null,
         invoice.due_date ? new Date(invoice.due_date * 1000).toISOString() : null,
       ]
     );
@@ -492,11 +492,11 @@ async function handleStripeEvent(event) {
     await upsertBillingInvoiceRecord({
       organizationId,
       invoice,
-      status: invoice.status || (type === 'invoice.paid' ? 'paid' : 'payment_failed'),
+      status: invoice.status || ((type === 'invoice.paid' || type === 'invoice.payment_succeeded') ? 'paid' : 'payment_failed'),
     });
 
     if (subRowId) {
-      const nextStatus = type === 'invoice.paid' ? 'active' : 'past_due';
+      const nextStatus = (type === 'invoice.paid' || type === 'invoice.payment_succeeded') ? 'active' : 'past_due';
       await pool.query(
         'UPDATE subscriptions SET status=$1, updated_at=NOW() WHERE id=$2',
         [nextStatus, subRowId]
@@ -572,12 +572,12 @@ async function createCheckoutSessionHandler(req, res) {
     if (!planCode) {
       return res.status(400).json({ success: false, error: 'invalid_plan' });
     }
-    if (planCode === 'premium') {
+    if (planCode === 'premium' || planCode === 'cabinet') {
       return res.status(409).json({
         success: false,
-        error: 'premium_contact_required',
+        error: 'plan_contact_required',
         contact_required: true,
-        message: 'L’offre Premium est sur devis. Merci de demander un contact commercial.',
+        message: `L’offre ${cleanPlanLabel(planCode)} est sur devis. Merci de demander un contact commercial.`,
       });
     }
 
@@ -617,7 +617,10 @@ async function createCheckoutSessionHandler(req, res) {
     }
 
     const { customerId } = await getOrCreateStripeCustomerForUser({ userId, organizationId: org.id });
-    const frontendUrl = process.env.FRONTEND_URL || 'https://app.courtiark.fr';
+    const configuredFrontendUrl = (process.env.FRONTEND_URL || '').trim();
+    const frontendUrl = !configuredFrontendUrl || configuredFrontendUrl.includes('courtia.vercel.app')
+      ? 'https://app.courtiark.fr'
+      : configuredFrontendUrl;
     const successUrl = `${frontendUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${frontendUrl}/billing/cancel`;
 
@@ -715,7 +718,10 @@ async function createPortalSessionHandler(req, res) {
     const org = await billingService.getOrCreateOrganization(userId);
     const { customerId } = await getOrCreateStripeCustomerForUser({ userId, organizationId: org.id });
 
-    const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/billing`;
+    const configuredReturnUrl = (process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || '').trim();
+    const returnUrl = !configuredReturnUrl || configuredReturnUrl.includes('courtia.vercel.app')
+      ? 'https://app.courtiark.fr/billing'
+      : configuredReturnUrl;
     const portal = await stripeService.createPortalSession({ customerId, returnUrl });
     return res.json({ success: true, url: portal.url });
   } catch (_err) {
@@ -755,7 +761,10 @@ router.post('/cancel-trial', verifyToken, async (req, res) => {
       });
     }
 
-    const returnUrl = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/billing`;
+    const configuredReturnUrl = (process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL || '').trim();
+    const returnUrl = !configuredReturnUrl || configuredReturnUrl.includes('courtia.vercel.app')
+      ? 'https://app.courtiark.fr/billing'
+      : configuredReturnUrl;
     const portal = await stripeService.createPortalSession({ customerId, returnUrl });
     return res.json({
       success: true,

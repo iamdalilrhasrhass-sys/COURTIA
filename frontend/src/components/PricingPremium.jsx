@@ -28,20 +28,20 @@ const testimonials = [
 const plans = [
   {
     name: 'Starter',
-    price: 99,
+    price: 89,
     clients: 'Jusqu\'à 100',
     features: ['Tableau de bord', 'CRUD clients', 'Prospects basique', 'Exporter PDF', 'Email support']
   },
   {
     name: 'Pro',
-    price: 299,
+    price: 199,
     clients: 'Jusqu\'à 500',
     features: ['Tout Starter', 'ARK IA', 'Notifications Telegram', 'Statistiques avancées', 'Calendrier RDV', 'API access'],
     popular: true
   },
   {
-    name: 'Enterprise',
-    price: 599,
+    name: 'Cabinet/Premium',
+    price: null,
     clients: 'Illimité',
     features: ['Tout Pro', 'Intégrations customs', 'Support prioritaire 24/7', 'Formations incluses', 'Backup quotidiens', 'SLA 99.9%']
   }
@@ -136,7 +136,10 @@ export default function PricingPremium() {
             <p className="text-slate-400 text-sm mb-4">{plan.clients}</p>
 
             <div className="mb-6">
-              <p className="text-3xl md:text-4xl font-black text-white">{plan.price}€<span className="text-lg text-slate-400">/mois</span></p>
+              <p className="text-3xl md:text-4xl font-black text-white">
+                {plan.price === null ? 'Sur devis' : `${plan.price}€`}
+                {plan.price !== null && <span className="text-lg text-slate-400">/mois</span>}
+              </p>
               <p className="text-xs text-green-400 mt-2">-50% premier mois</p>
             </div>
 
@@ -154,7 +157,7 @@ export default function PricingPremium() {
                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white'
                 : 'bg-slate-700 hover:bg-slate-600 text-white'
             }`}>
-              Choisir {plan.name}
+              {plan.price === null ? 'Demander un devis' : `Choisir ${plan.name}`}
             </button>
           </div>
         ))}

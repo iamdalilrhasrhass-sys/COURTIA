@@ -57,7 +57,7 @@ async function ensureBillingFoundation() {
     VALUES
       ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
       ('pro', 'Pro', 19900, 'EUR', 'month', TRUE),
-      ('cabinet', 'Cabinet', 39900, 'EUR', 'month', TRUE),
+      ('cabinet', 'Cabinet', NULL, 'EUR', 'month', TRUE),
       ('premium', 'Premium', NULL, 'EUR', 'month', TRUE)
     ON CONFLICT (code) DO UPDATE SET
       display_name = EXCLUDED.display_name,
@@ -232,8 +232,8 @@ function getPlans() {
     currency: p.currency,
     interval: p.interval,
     highlighted: p.highlighted,
-    trial_days: p.id === 'premium' ? 0 : TRIAL_DAYS,
-    has_checkout: p.id !== 'premium',
+    trial_days: ['cabinet', 'premium'].includes(p.id) ? 0 : TRIAL_DAYS,
+    has_checkout: !['cabinet', 'premium'].includes(p.id),
     fiscal_label: FISCAL_LABEL,
     features: p.features,
   }));

@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS billing_plans (
 INSERT INTO billing_plans (code, display_name, price_amount_cents, currency, interval, is_active)
 VALUES
   ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
-  ('pro', 'Pro', 15900, 'EUR', 'month', TRUE),
+  ('pro', 'Pro', 19900, 'EUR', 'month', TRUE),
   ('premium', 'Premium', NULL, 'EUR', 'month', TRUE)
 ON CONFLICT (code) DO NOTHING;
 

@@ -193,8 +193,8 @@ function PlanCard({ plan, index }) {
       </div>
 
       <div className="mb-6">
-        <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}€</span>
-        <span className="ml-1 text-sm font-semibold text-gray-400">/mois</span>
+        <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price === 'Sur devis' ? plan.price : `${plan.price}€`}</span>
+        {plan.price !== 'Sur devis' && <span className="ml-1 text-sm font-semibold text-gray-400">/mois</span>}
       </div>
 
       <ul className="mb-8 flex flex-col gap-3">

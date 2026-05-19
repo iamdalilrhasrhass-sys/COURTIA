@@ -30,7 +30,7 @@ export default function PaiementSucces() {
           {message}
         </p>
         <p style={{fontSize:13,color:'rgba(0,0,0,0.56)',marginBottom:20,fontFamily:'Arial,sans-serif',lineHeight:1.5}}>
-          0 € aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement. Annulation en ligne via le portail sécurisé.
+          L'abonnement démarre immédiatement. Annulation en ligne via le portail sécurisé.
         </p>
         <button onClick={() => navigate('/dashboard')} style={{
           padding:'12px 32px',background:'#2563eb',color:'white',border:'none',borderRadius:10,

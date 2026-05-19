@@ -24,18 +24,16 @@ function getWebhookSecret() {
 function getPriceId(planCode) {
   const mode = getBillingMode();
   const plan = String(planCode || '').toLowerCase();
-  if (plan === 'premium') return null;
+  if (plan === 'premium' || plan === 'cabinet') return null;
 
   if (mode === 'test') {
     if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
     if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
-    if (plan === 'cabinet') return process.env.STRIPE_CABINET_PRICE_ID_TEST || process.env.STRIPE_PRICE_CABINET || null;
     return null;
   }
 
   if (plan === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
   if (plan === 'pro') return process.env.STRIPE_PRICE_PRO || null;
-  if (plan === 'cabinet') return process.env.STRIPE_PRICE_CABINET || null;
   return null;
 }
 
@@ -49,7 +47,7 @@ function getConfigurationStatus() {
   const mode = getBillingMode();
   const secretKey = getStripeSecretKey();
   const webhookSecret = getWebhookSecret();
-  const requiredPricePlans = ['starter', 'pro', 'cabinet'];
+  const requiredPricePlans = ['starter', 'pro'];
 
   if (!secretKey) missing.push('STRIPE_SECRET_KEY');
   for (const plan of requiredPricePlans) {

@@ -18,7 +18,7 @@ export default function Pricing() {
       price: 89,
       period: '€ HT /mois',
       description: 'Pour débuter avec COURTIA',
-      trial: '7 jours d\'essai gratuit',
+      trial: null,
       features: [
         'Jusqu\'à 50 clients',
         'Gestion basique des contrats',
@@ -199,7 +199,7 @@ export default function Pricing() {
           <div className="glass p-6 rounded-lg">
             <h3 className="text-lg md:text-xl font-bold text-cyan mb-3">Puis-je tester gratuitement?</h3>
             <p className="text-slate-400">
-              Oui ! 7 jours d'essai gratuit sur les plans Starter et Pro. Aucun engagement, pas de carte bancaire requise pour l'essai.
+              {'Les plans Starter et Pro démarrent immédiatement. Aucun engagement, annulation simple en ligne.'}
             </p>
           </div>
           <div className="glass p-6 rounded-lg">

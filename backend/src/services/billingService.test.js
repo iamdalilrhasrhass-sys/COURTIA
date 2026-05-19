@@ -7,7 +7,7 @@ describe('billingService V1 plan helpers', () => {
     jest.resetModules()
   })
 
-  it('accepts the Cabinet tier for self-serve billing and keeps Premium contact-only', () => {
+  it('keeps Cabinet and Premium as contact-only while Starter/Pro stay self-serve', () => {
     const billingService = require('./billingService')
 
     expect(billingService.normalizePlanCode('starter')).toBe('starter')
@@ -22,8 +22,8 @@ describe('billingService V1 plan helpers', () => {
       has_checkout: true,
     })
     expect(plans.find((plan) => plan.code === 'cabinet')).toMatchObject({
-      display_price_ht: '399 € HT / mois',
-      has_checkout: true,
+      display_price_ht: 'Sur devis',
+      has_checkout: false,
     })
     expect(plans.find((plan) => plan.code === 'premium')).toMatchObject({
       display_price_ht: 'Sur devis',

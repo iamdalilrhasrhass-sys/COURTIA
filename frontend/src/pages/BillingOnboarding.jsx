@@ -179,7 +179,7 @@ export default function BillingOnboarding() {
             <Consent checked={consents.accept_cgv} onChange={() => toggleConsent('accept_cgv')} text="J’accepte les CGV." />
             <Consent checked={consents.accept_privacy} onChange={() => toggleConsent('accept_privacy')} text="J’accepte la politique de confidentialité." />
             <Consent checked={consents.accept_dpa} onChange={() => toggleConsent('accept_dpa')} text="J’accepte le traitement des données selon le DPA." />
-            <Consent checked={consents.accept_trial} onChange={() => toggleConsent('accept_trial')} text="J’accepte l’essai gratuit de 7 jours." />
+            <Consent checked={consents.accept_trial} onChange={() => toggleConsent('accept_trial')} text="J'accepte les conditions d'abonnement." />
             <Consent checked={consents.accept_renewal} onChange={() => toggleConsent('accept_renewal')} text="Je comprends le démarrage auto après l’essai sauf annulation." />
 
             <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>

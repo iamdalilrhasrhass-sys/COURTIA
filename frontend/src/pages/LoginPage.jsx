@@ -461,9 +461,9 @@ export default function Login() {
     : '89 € HT / mois (106,80 € TTC avec TVA 20 %)'
   const planTitle = planKey === 'pro' ? 'Activez votre cockpit Pro' : 'Activez votre cockpit Starter'
   const planSubtitle = planKey === 'pro'
-    ? '7 jours pour voir vos priorités, vos relances et votre portefeuille sous contrôle.'
-    : '7 jours pour structurer vos clients, contrats et relances dans un cockpit clair.'
-  const planCta = planKey === 'pro' ? 'Activer mon essai Pro' : 'Activer mon essai Starter'
+    ? 'Vos priorités, vos relances et votre portefeuille sous contrôle.'
+    : 'Structurez vos clients, contrats et relances dans un cockpit clair.'
+  const planCta = planKey === 'pro' ? 'Ouvrir mon cockpit Pro' : 'Ouvrir mon cockpit Starter'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -642,7 +642,7 @@ export default function Login() {
             {isRegister && (
               <div className="auth-plan-badge">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-                Offre {planName} sélectionnée — Essai gratuit 7 jours
+                Offre {planName} sélectionnée — {planPrice}
               </div>
             )}
 
@@ -661,12 +661,12 @@ export default function Login() {
               <div className="auth-trial-panel">
                 <div className="auth-trial-grid">
                   <div className="auth-trial-cell">
-                    <div className="auth-trial-value">0 €</div>
-                    <div className="auth-trial-label">aujourd’hui</div>
+                    <div className="auth-trial-value">{planKey === 'pro' ? 'Pro' : 'Starter'}</div>
+                    <div className="auth-trial-label">offre sélectionnée</div>
                   </div>
                   <div className="auth-trial-cell">
-                    <div className="auth-trial-value">7 jours</div>
-                    <div className="auth-trial-label">pour tester {planName}</div>
+                    <div className="auth-trial-value">{planPrice.split(' ')[0]} €</div>
+                    <div className="auth-trial-label">HT/mois</div>
                   </div>
                   <div className="auth-trial-cell">
                     <div className="auth-trial-value">En ligne</div>
@@ -674,7 +674,7 @@ export default function Login() {
                   </div>
                 </div>
                 <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.46)', fontSize: 11.5, lineHeight: 1.45 }}>
-                  Carte demandée à l’étape sécurisée Stripe. 0 € aujourd’hui. Sans annulation avant la fin de l’essai de 7 jours, l’abonnement démarre automatiquement à {planPrice}. Annulation en ligne via le portail sécurisé.
+                  Carte demandée à l'étape sécurisée Stripe. L'abonnement démarre immédiatement à {planPrice}. Annulation en ligne via le portail sécurisé.
                 </p>
               </div>
             )}
@@ -682,8 +682,8 @@ export default function Login() {
             <div className="auth-activation-strip" aria-hidden="true">
               {(isRegister
                 ? [
-                    ['0 €', 'aujourd’hui'],
-                    ['7 jours', 'pour juger la valeur'],
+                    [planKey === 'pro' ? 'Pro' : 'Starter', 'offre sélectionnée'],
+                    ['Direct', 'accès immédiat'],
                     ['En ligne', 'annulation simple'],
                   ]
                 : [
