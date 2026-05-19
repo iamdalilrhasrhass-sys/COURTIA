@@ -294,9 +294,9 @@ export default function LandingPublic() {
               <Link className="aurora-button aurora-button-primary" to="/demo">
                 Demander une démo
               </Link>
-              <Link className="aurora-button aurora-button-ghost" to="#tarifs">
+              <a className="aurora-button aurora-button-ghost" href="#tarifs" onClick={(e) => { e.preventDefault(); document.getElementById('tarifs')?.scrollIntoView({ behavior: 'smooth' }); }}>
                 Voir les tarifs
-              </Link>
+              </a>
               <Link className="aurora-button aurora-button-ghost" to="/login">
                 Se connecter
               </Link>
@@ -834,17 +834,22 @@ const styles = `
 /* ─── HEADER ─── */
 .lp-header {
   position: sticky;
-  top: 12px;
-  z-index: 50;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 12px 24px;
-  margin: 12px 24px;
+  gap: 24px;
+  padding: 16px 32px;
+  margin: 16px 32px;
   border-radius: 16px;
   transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   will-change: transform;
+  min-height: 56px;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(10, 8, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .lp-header-brand {
@@ -864,9 +869,10 @@ const styles = `
 .lp-nav a {
   color: var(--aurora-text-secondary, #CBD5E1);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.2s;
+  padding: 2px 0;
 }
 
 .lp-nav a:hover {
@@ -1436,11 +1442,12 @@ const styles = `
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .lp-header {
-    margin: 6px 10px;
-    padding: 8px 14px;
+    margin: 8px 12px;
+    padding: 14px 20px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     border-radius: 14px;
+    min-height: 52px;
   }
 
   .lp-header-brand {
@@ -1457,12 +1464,13 @@ const styles = `
   }
 
   .lp-nav a {
-    font-size: 12px;
+    font-size: 14px;
+    padding: 4px 0;
   }
 
   .lp-header .aurora-button {
-    font-size: 12px;
-    padding: 8px 16px;
+    font-size: 13px;
+    padding: 10px 20px;
   }
 
   .lp-hero {
@@ -1550,16 +1558,17 @@ const styles = `
 
 @media (max-width: 400px) {
   .lp-header {
-    margin: 4px 6px;
-    padding: 6px 10px;
+    margin: 4px 8px;
+    padding: 10px 16px;
+    min-height: 48px;
   }
 
   .lp-nav {
-    gap: 6px;
+    gap: 8px;
   }
 
   .lp-nav a {
-    font-size: 11px;
+    font-size: 13px;
   }
 
   .lp-hero {
