@@ -87,7 +87,7 @@ router.get('/', async (req, res) => {
         r.*,
         c.first_name AS client_first_name, c.last_name AS client_last_name,
         c.company_name AS client_company, c.email AS client_email, c.phone AS client_phone,
-        q.reference AS quote_reference, q.product_type AS quote_product
+        q.quote_data->>'reference' AS quote_reference, q.quote_data->>'product_type' AS quote_product
       FROM relances r
       LEFT JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
@@ -238,7 +238,7 @@ router.get('/:id', async (req, res) => {
         r.*,
         c.first_name AS client_first_name, c.last_name AS client_last_name,
         c.company_name AS client_company, c.email AS client_email, c.phone AS client_phone,
-        q.reference AS quote_reference, q.product_type AS quote_product
+        q.quote_data->>'reference' AS quote_reference, q.quote_data->>'product_type' AS quote_product
       FROM relances r
       LEFT JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
@@ -497,7 +497,7 @@ router.post('/auto-generate', async (req, res) => {
 
     // 3. Échéances contrats dans 30 jours
     const echeancesRes = await pool.query(`
-      SELECT q.id AS quote_id, q.product_type, q.end_date, q.client_id, q.premium,
+      SELECT q.id AS quote_id, q.quote_data->>'product_type' AS product_type, q.quote_data->>'end_date' AS end_date, q.client_id, q.quote_data->>'premium' AS premium,
              c.first_name, c.last_name, c.company_name
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
@@ -618,7 +618,7 @@ router.post('/:id/ai-content', async (req, res) => {
     // Récupérer la relance avec infos client
     const relanceRes = await pool.query(`
       SELECT r.*, c.first_name, c.last_name, c.company_name, c.type AS client_type,
-             c.preferred_canal, q.product_type AS quote_product, q.premium
+             c.preferred_canal, q.quote_data->>'product_type' AS quote_product, q.quote_data->>'premium' AS premium
       FROM relances r
       LEFT JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
