@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const CAT_ICONS = { devoir_conseil:"📋", conformite:"⚖️", iard:"🚗", sante:"🏥", prevoyance:"🛡️" };
@@ -14,7 +15,7 @@ export default function DDAFormateur() {
 
   useEffect(() => {
     fetch(`${API}/api/dda/dashboard`, { headers }).then(r => r.json()).then(setDashboard);
-    fetch(`${API}/api/dda/tips`, { headers }).then(r => r.json()).then(setTips);
+    fetch(`${API}/api/dda/tips`, { headers }).then(r => r.json()).then(d => setTips(asArray(d)));
   }, []);
 
   async function startQuiz(categorie = null) {

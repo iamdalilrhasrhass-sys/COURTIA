@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingDown, TrendingUp, Loader2, RefreshCw, Phone, Mail } from 'lucide-react';
+import asArray from '../../utils/asArray';
 
 function ScoreCard({ score, type }) {
   const isRisk = type === 'risk';
@@ -85,8 +86,8 @@ export default function PredictiveScoring({ apiBase = '/api', authToken }) {
         fetch(`${apiBase}/scoring/top-risks?limit=6`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()),
         fetch(`${apiBase}/scoring/top-upsells?limit=6`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json())
       ]);
-      if (r1.success) setRisks(r1.risks);
-      if (r2.success) setUpsells(r2.upsells);
+      if (r1.success) setRisks(asArray(r1.risks));
+      if (r2.success) setUpsells(asArray(r2.upsells));
     } finally {
       setLoading(false);
     }

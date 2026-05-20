@@ -1,6 +1,7 @@
 // /root/courtia/frontend/src/components/renewal/RenewalMachine.jsx
 import { useState, useEffect } from 'react';
 import { Calendar, AlertTriangle, Check, X, Loader2, RefreshCw, Mail, TrendingUp } from 'lucide-react';
+import asArray from '../../utils/asArray';
 
 export default function RenewalMachine({ apiBase = '/api', authToken }) {
   const [data, setData] = useState(null);
@@ -15,7 +16,7 @@ export default function RenewalMachine({ apiBase = '/api', authToken }) {
     try {
       const r = await fetch(`${apiBase}/renewal/dashboard`, { headers: { 'Authorization': `Bearer ${authToken}` } });
       const d = await r.json();
-      if (d.success) setData(d);
+      if (d.success) setData({ ...d, renewals: asArray(d.renewals) });
     } finally { setLoading(false); }
   };
 

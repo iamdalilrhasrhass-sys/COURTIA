@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 
@@ -15,7 +16,7 @@ export default function ArkNegociateur() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   useEffect(() => {
-    fetch(`${API}/api/negociation/list`, { headers }).then(r => r.json()).then(setNegociations);
+    fetch(`${API}/api/negociation/list`, { headers }).then(r => r.json()).then(d => setNegociations(asArray(d)));
   }, []);
 
   async function buildDossier() {

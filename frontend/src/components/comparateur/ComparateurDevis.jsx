@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const PRODUITS = ["auto","habitation","sante","prevoyance","emprunteur","pme","rc_pro","cyber"];

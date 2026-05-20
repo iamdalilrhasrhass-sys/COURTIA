@@ -1,6 +1,7 @@
 // /root/courtia/frontend/src/components/police/PoliceIntelligence.jsx
 import { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, Upload, FileText, Download, Loader2, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
+import asArray from '../../utils/asArray';
 
 export default function PoliceIntelligence({ apiBase = '/api', authToken, clientId = null }) {
   const [policies, setPolicies] = useState([]);
@@ -15,7 +16,7 @@ export default function PoliceIntelligence({ apiBase = '/api', authToken, client
       const url = `${apiBase}/police/list${clientId ? `?client_id=${clientId}` : ''}`;
       const r = await fetch(url, { headers: { 'Authorization': `Bearer ${authToken}` } });
       const d = await r.json();
-      if (d.success) setPolicies(d.policies);
+      if (d.success) setPolicies(asArray(d.policies));
     } finally { setLoading(false); }
   };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const ROLES = { admin: "Admin", agent: "Agent", stagiaire: "Stagiaire" };
@@ -14,7 +15,7 @@ export default function EquipeCabinet() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   const load = () => {
-    fetch(`${API}/api/equipe`, { headers }).then(r => r.json()).then(setMembres);
+    fetch(`${API}/api/equipe`, { headers }).then(r => r.json()).then(d => setMembres(asArray(d)));
     fetch(`${API}/api/equipe/stats`, { headers }).then(r => r.json()).then(setStats);
   };
   useEffect(() => { load(); }, []);

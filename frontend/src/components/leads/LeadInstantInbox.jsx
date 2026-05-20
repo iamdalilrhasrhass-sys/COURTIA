@@ -1,6 +1,7 @@
 // /root/courtia/frontend/src/components/leads/LeadInstantInbox.jsx
 import { useState, useEffect } from 'react';
 import { Zap, PhoneCall, MessageSquare, UserPlus, Loader2, ExternalLink } from 'lucide-react';
+import asArray from '../../utils/asArray';
 
 const STATUS_LABELS = {
   new: { label: 'Nouveau', color: 'cyan' },
@@ -24,8 +25,8 @@ export default function LeadInstantInbox({ apiBase = '/api', authToken }) {
         fetch(`${apiBase}/leads${filter !== 'all' ? `?status=${filter}` : ''}`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()),
         fetch(`${apiBase}/leads/widgets`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json())
       ]);
-      if (l.success) setLeads(l.leads);
-      if (w.success) setWidgets(w.widgets);
+      if (l.success) setLeads(asArray(l.leads));
+      if (w.success) setWidgets(asArray(w.widgets));
     } finally { setLoading(false); }
   };
 

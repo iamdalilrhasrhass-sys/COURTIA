@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const STATUT_COLORS = { nouvelle:'bg-blue-900/50 text-blue-300', contacte:'bg-amber-900/50 text-amber-300', convertie:'bg-green-900/50 text-green-300', ignoree:'bg-gray-700 text-gray-400' };
@@ -13,7 +14,7 @@ export default function CrossSellDashboard() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   const load = async (statut) => {
-    fetch(`${API}/api/cross-sell/opportunites?statut=${statut}`, { headers }).then(r => r.json()).then(setOpportunites);
+    fetch(`${API}/api/cross-sell/opportunites?statut=${statut}`, { headers }).then(r => r.json()).then(d => setOpportunites(asArray(d)));
     fetch(`${API}/api/cross-sell/stats`, { headers }).then(r => r.json()).then(setStats);
   };
 

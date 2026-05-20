@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const PACKS = {
@@ -15,7 +16,7 @@ export default function CampagnesSMS() {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
-  const load = () => fetch(`${API}/api/sms/dashboard`, { headers }).then(r => r.json()).then(setData);
+  const load = () => fetch(`${API}/api/sms/dashboard`, { headers }).then(r => r.json()).then(d => setData({ ...d, campagnes: asArray(d?.campagnes) }));
   useEffect(() => { load(); }, []);
 
   const chars = form.message.length;

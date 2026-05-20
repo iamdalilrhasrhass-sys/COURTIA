@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 
@@ -9,7 +10,7 @@ export default function ParrainageTracker() {
 
   useEffect(() => {
     fetch(`${API}/api/parrainage/dashboard`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setData);
+      .then(r => r.json()).then(d => setData({ ...d, referrals: asArray(d?.referrals) }));
   }, []);
 
   function copyLink() {

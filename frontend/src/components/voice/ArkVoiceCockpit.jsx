@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Phone, PhoneCall, Settings, Clock, Volume2, Loader2, Check, AlertCircle } from 'lucide-react';
+import asArray from '../../utils/asArray';
 
 export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
   const [settings, setSettings] = useState(null);
@@ -21,7 +22,7 @@ export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
         fetch(`${apiBase}/voice/history?limit=8`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json())
       ]);
       if (s.success) setSettings(s.settings);
-      if (h.success) setHistory(h.history);
+      if (h.success) setHistory(asArray(h.history));
     } finally { setLoading(false); }
   };
 

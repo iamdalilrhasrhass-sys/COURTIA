@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 
@@ -13,7 +14,7 @@ export default function TokenWallet() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   useEffect(() => {
-    fetch(`${API}/api/tokens/dashboard`, { headers }).then(r => r.json()).then(setData);
+    fetch(`${API}/api/tokens/dashboard`, { headers }).then(r => r.json()).then(d => setData({ ...d, wallet: d.wallet || {}, transactions: asArray(d.transactions), features: asArray(d.features), feature_stats: asArray(d.feature_stats) }));
   }, []);
 
   async function buyPack(packKey) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const NIVEAUX_COLORS = { debutant:'text-green-400', intermediaire:'text-amber-400', avance:'text-red-400' };
@@ -14,7 +15,7 @@ export default function ArkFormateur() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   useEffect(() => {
-    fetch(`${API}/api/formation/modules`, { headers }).then(r => r.json()).then(setModules);
+    fetch(`${API}/api/formation/modules`, { headers }).then(r => r.json()).then(d => setModules(asArray(d)));
     fetch(`${API}/api/formation/progression`, { headers }).then(r => r.json()).then(setProgression);
   }, []);
 

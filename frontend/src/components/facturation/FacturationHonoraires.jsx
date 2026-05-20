@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 
@@ -12,7 +13,7 @@ export default function FacturationHonoraires() {
 
   useEffect(() => {
     fetch(`${API}/api/facturation/stats`, { headers }).then(r => r.json()).then(setStats);
-    fetch(`${API}/api/facturation/list`, { headers }).then(r => r.json()).then(setFactures);
+    fetch(`${API}/api/facturation/list`, { headers }).then(r => r.json()).then(d => setFactures(asArray(d)));
   }, []);
 
   function addLigne() {

@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Mail, RefreshCw, Loader2, MessageSquare, ThumbsUp, AlertTriangle, X, Sparkles, Settings, CheckCheck } from 'lucide-react';
+import asArray from '../../utils/asArray';
 
 const CLASSIFICATION_STYLES = {
   positive_response: { color: 'emerald', icon: ThumbsUp, label: 'Réponse positive' },
@@ -30,7 +31,7 @@ export default function EmailInboxUnified({ apiBase = '/api', authToken }) {
     try {
       const r = await fetch(`${apiBase}/email/inbox?status=${filter}&limit=50`, { headers: { 'Authorization': `Bearer ${authToken}` } });
       const d = await r.json();
-      if (d.success) setInbox(d.inbox);
+      if (d.success) setInbox(asArray(d.inbox));
     } finally { setLoading(false); }
   };
 

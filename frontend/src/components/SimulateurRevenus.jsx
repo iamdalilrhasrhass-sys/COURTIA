@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const PRODUITS = ["auto","habitation","sante","prevoyance","emprunteur","rc_pro","cyber","pme"];
@@ -16,7 +17,7 @@ export default function SimulateurRevenus() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   useEffect(() => {
-    fetch(`${API}/api/simulateur/saved`, { headers }).then(r => r.json()).then(setSaved);
+    fetch(`${API}/api/simulateur/saved`, { headers }).then(r => r.json()).then(d => setSaved(asArray(d)));
     fetch(`${API}/api/simulateur/commissions-marche`, { headers }).then(r => r.json()).then(setCommissions);
   }, []);
 
@@ -39,7 +40,7 @@ export default function SimulateurRevenus() {
     const data = await res.json();
     setResultats(data);
     setRunning(false);
-    fetch(`${API}/api/simulateur/saved`, { headers }).then(r => r.json()).then(setSaved);
+    fetch(`${API}/api/simulateur/saved`, { headers }).then(r => r.json()).then(d => setSaved(asArray(d)));
   }
 
   const commRef = (type) => commissions[type];

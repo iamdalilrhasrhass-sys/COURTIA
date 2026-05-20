@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const TYPE_ICONS = { tarif: "📊", produit: "🆕", reglementation: "⚖️", tendance: "📈", opportunite: "💎" };
@@ -11,7 +12,7 @@ export default function VeilleMarche() {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
-  const load = () => fetch(`${API}/api/veille/alertes`, { headers }).then(r => r.json()).then(setAlertes);
+  const load = () => fetch(`${API}/api/veille/alertes`, { headers }).then(r => r.json()).then(d => setAlertes(asArray(d)));
   useEffect(() => { load(); }, []);
 
   async function generer() {

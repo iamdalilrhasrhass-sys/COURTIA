@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 
@@ -13,7 +14,7 @@ export default function ArkWidgetManager() {
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
   useEffect(() => {
-    fetch(`${API}/api/ark-widgets`, { headers }).then(r => r.json()).then(setWidgets);
+    fetch(`${API}/api/ark-widgets`, { headers }).then(r => r.json()).then(d => setWidgets(asArray(d)));
   }, []);
 
   async function createWidget() {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 
@@ -25,8 +26,8 @@ export default function ArkCoachDashboard() {
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    fetch(`${API}/api/ark-coach/progression`, { headers }).then(r => r.json()).then(setData);
-    fetch(`${API}/api/ark-coach/tips`, { headers }).then(r => r.json()).then(setTips);
+    fetch(`${API}/api/ark-coach/progression`, { headers }).then(r => r.json()).then(d => setData({ ...d, tips: asArray(d?.tips) }));
+    fetch(`${API}/api/ark-coach/tips`, { headers }).then(r => r.json()).then(d => setTips(asArray(d)));
   }, []);
 
   if (!data) return <div className="p-6 text-gray-400">Chargement...</div>;

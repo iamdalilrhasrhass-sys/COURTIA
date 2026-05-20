@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import asArray from "../../utils/asArray";
 
 const API = import.meta.env.VITE_API_URL || "https://api.courtiark.fr";
 const JOURS = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
@@ -21,8 +22,8 @@ export default function AgendaRDV() {
 
   useEffect(() => {
     fetch(`${API}/api/agenda?debut=${debut.toISOString()}&fin=${fin.toISOString()}`, { headers })
-      .then(r => r.json()).then(setRdvs);
-    fetch(`${API}/api/agenda/disponibilites`, { headers }).then(r => r.json()).then(setDispos);
+      .then(r => r.json()).then(d => setRdvs(asArray(d)));
+    fetch(`${API}/api/agenda/disponibilites`, { headers }).then(r => r.json()).then(d => setDispos(asArray(d)));
   }, []);
 
   async function createRDV() {
