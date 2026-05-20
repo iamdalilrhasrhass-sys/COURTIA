@@ -23,15 +23,28 @@ export default function Conformite() {
   async function load() {
     try {
       const [d, m, l] = await Promise.all([
-        api.get('/conformite/dashboard'),
+        api.get('/conformite/dashboard').catch(() => ({ data: null })),
         api.get('/conformite/mandats').catch(() => ({ data: { mandats: [] } })),
         api.get('/conformite/audit-logs').catch(() => ({ data: { logs: [] } })),
       ])
-      setDashboard(d.data)
+      setDashboard(d.data || {
+        total_clients: 0,
+        dda: { coverage_pct: 0, conforme: 0, pending: 0, incomplete: 0 },
+        kyc: { coverage_pct: 0, verified: 0 },
+        mandats: { active: 0, expired: 0 }
+      })
       setMandats(m.data.mandats || [])
       setLogs(l.data.logs || [])
     } catch (err) {
-      toast.error('Erreur conformité')
+      // Backend not ready — show empty state gracefully
+      setDashboard({
+        total_clients: 0,
+        dda: { coverage_pct: 0, conforme: 0, pending: 0, incomplete: 0 },
+        kyc: { coverage_pct: 0, verified: 0 },
+        mandats: { active: 0, expired: 0 }
+      })
+      setMandats([])
+      setLogs([])
     }
   }
   useEffect(() => { load() }, [])

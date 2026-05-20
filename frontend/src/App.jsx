@@ -108,6 +108,8 @@ const SantePortefeuille = lazy(() => import('./pages/SantePortefeuille'))
 const ArkIntelligence = lazy(() => import('./pages/ArkIntelligence'))
 const Objectifs = lazy(() => import('./pages/Objectifs'))
 const Conformite = lazy(() => import('./pages/Conformite'))
+const Bordereau = lazy(() => import('./pages/Bordereau'))
+const Tokens = lazy(() => import('./pages/Tokens'))
 const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
 
 // Session 0 — Aurora OS layouts
@@ -422,6 +424,9 @@ export default function App() {
           <Route path="/ark-intelligence" element={<ArkIntelligence />} />
           <Route path="/objectifs" element={<Objectifs />} />
           <Route path="/conformite" element={<Conformite />} />
+          <Route path="/health" element={<SantePortefeuille />} />
+          <Route path="/bordereau" element={<Bordereau />} />
+          <Route path="/tokens" element={<Tokens />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
