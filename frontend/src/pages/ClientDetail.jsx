@@ -397,6 +397,134 @@ function ActiviteTab({ history }) {
   )
 }
 
+// ─── Express Tab — One-click Dossier ────────────────────────
+function ExpressTab({ client, contracts, navigate }) {
+  const [running, setRunning] = useState(false)
+  const [done, setDone] = useState(false)
+  const [steps, setSteps] = useState([])
+
+  const MOCK_STEPS = [
+    { label: 'Analyse docs manquants', icon: '📄', ms: 600 },
+    { label: 'Sélection 3 partenaires optimaux', icon: '🏢', ms: 800 },
+    { label: 'Génération comparatif', icon: '⚖️', ms: 700 },
+    { label: 'Rédaction email client', icon: '✉️', ms: 500 },
+    { label: 'Création tâche relance J+7', icon: '🔔', ms: 400 },
+  ]
+
+  function run() {
+    if (running) return
+    setRunning(true)
+    setDone(false)
+    setSteps([])
+    let t = 0
+    MOCK_STEPS.forEach((s, i) => {
+      t += s.ms
+      setTimeout(() => {
+        setSteps(prev => [...prev, s.label])
+        if (i === MOCK_STEPS.length - 1) {
+          setTimeout(() => { setRunning(false); setDone(true) }, 300)
+        }
+      }, t)
+    })
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      <Card padding={24} accent="#8B5CF6" style={{
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,197,94,0.04))',
+        border: '1px solid rgba(139,92,246,0.2)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <span style={{ fontSize: 28 }}>⚡</span>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: T.text }}>Dossier Express</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: T.textSecondary }}>
+              Un clic = dossier complet prêt à signer
+            </p>
+          </div>
+        </div>
+
+        <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.6, margin: '0 0 16px' }}>
+          ARK va analyser les docs manquants, sélectionner les 3 meilleurs partenaires,
+          générer le comparatif, rédiger l'email client et créer la tâche de relance.
+          <br/><strong style={{ color: T.success }}>Tout en moins de 3 secondes.</strong>
+        </p>
+
+        {(steps.length > 0 || done) && (
+          <div style={{
+            background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '12px 16px',
+            marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6,
+          }}>
+            {steps.map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: T.success }}>
+                <span>✓</span>
+                <span>{s}</span>
+              </div>
+            ))}
+            {running && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: T.ark }}>
+                <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  style={{ display: 'inline-block' }}>⟳</motion.span>
+                <span>Traitement en cours...</span>
+              </div>
+            )}
+            {done && (
+              <div style={{
+                marginTop: 8, padding: '10px 14px', borderRadius: 8,
+                background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                fontSize: 13, fontWeight: 700, color: T.success,
+              }}>
+                ✅ Dossier prêt — {contracts.length} contrats, comparatif Aurora/Novalia/Helios généré
+              </div>
+            )}
+          </div>
+        )}
+
+        {!done ? (
+          <button onClick={run} disabled={running} style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: running ? 'rgba(139,92,246,0.15)' : 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+            border: 'none', color: '#fff', fontSize: 15, fontWeight: 800,
+            cursor: running ? 'wait' : 'pointer', letterSpacing: '0.02em',
+            transition: 'all 0.15s',
+          }}>
+            {running ? '⚡ ARK génère le dossier...' : '⚡ Tout préparer'}
+          </button>
+        ) : (
+          <button onClick={() => navigate('/contrats')} style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+            border: 'none', color: '#fff', fontSize: 15, fontWeight: 800,
+            cursor: 'pointer', letterSpacing: '0.02em',
+          }}>
+            📋 Voir les contrats prêts
+          </button>
+        )}
+      </Card>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+        <Card padding={14}>
+          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>📊 Partenaires recommandés</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Aurora, Novalia, Helios</div>
+          <div style={{ fontSize: 10, color: T.success }}>Triés par prime + commission</div>
+        </Card>
+        <Card padding={14}>
+          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>📧 Email prêt</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Objet: Votre renouvellement RC Pro</div>
+          <div style={{ fontSize: 10, color: T.textSecondary }}>Template personnalisé prêt</div>
+        </Card>
+        <Card padding={14}>
+          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>🔔 Relance programmée</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>J+7 — Rappel devis</div>
+          <div style={{ fontSize: 10, color: T.textSecondary }}>Tâche créée dans le cockpit</div>
+        </Card>
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── MAIN ───────────────────────────────────────────────────
 export default function ClientDetail() {
   const { id } = useParams()
@@ -546,6 +674,8 @@ export default function ClientDetail() {
           <TabButton label="Activité"  active={tab === 'activite'}  onClick={() => setTab('activite')} />
           <TabButton label="ARK"       active={tab === 'ark'}       onClick={() => setTab('ark')} />
           <TabButton label="Relances" active={tab === 'relances'}  onClick={() => setTab('relances')} />
+          <TabButton label="⚡ Express" active={tab === 'express'}  onClick={() => setTab('express')}
+            style={{ background: tab === 'express' ? 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,197,94,0.2))' : 'transparent', fontWeight: 800 }} />
         </div>
 
         {/* TAB CONTENT */}
@@ -634,6 +764,7 @@ export default function ClientDetail() {
               />
             </motion.div>
           )}
+          {tab === 'express' && <ExpressTab key="express" client={client} contracts={DEMO_CONTRACTS} navigate={navigate} />}
         </AnimatePresence>
       </main>
     </div>
