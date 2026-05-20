@@ -622,4 +622,60 @@ router.get('/:id/cross-sell', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/:id/dossier — Dossier prêt à tarifer
+// Score complétude, docs manquants, risques, partenaires recommandés
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/:id/dossier', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+    const userId = req.user.id;
+    const clientId = parseInt(req.params.id);
+    if (!Number.isFinite(clientId)) return res.status(400).json({ error: 'ID invalide' });
+
+    const { rows: clients } = await pool.query(
+      'SELECT * FROM clients WHERE id = $1 AND courtier_id = $2',
+      [clientId, userId]
+    );
+    if (!clients[0]) return res.status(404).json({ error: 'client_not_found' });
+    const c = clients[0];
+
+    const { rows: docs } = await pool.query(
+      "SELECT id, document_type, original_filename, status FROM client_documents WHERE client_id = $1 AND status != 'deleted'",
+      [clientId]
+    );
+
+    const LABELS = { piece_identite:'Pièce d\'identité', justif_domicile:'Justificatif de domicile', releve_information:'Relevé d\'information', permis_conduire:'Permis de conduire', carte_grise:'Carte grise', rib:'RIB' };
+    const REQUIRED = ['piece_identite','justif_domicile','releve_information','permis_conduire','carte_grise','rib'];
+    const docTypes = new Set(docs.map(d => d.document_type));
+    const present = [], missing = [];
+    for (const t of REQUIRED) {
+      const has = [...docTypes].some(dt => dt === t || dt === t.replace(/_/g,'-'));
+      if (has) present.push({ type:t, label:LABELS[t]||t });
+      else missing.push({ type:t, label:LABELS[t]||t });
+    }
+    const rate = Math.round((present.length / REQUIRED.length) * 100);
+
+    const riskTags = [];
+    const sinistres = parseInt(c.nb_sinistres_3ans || 0);
+    if (sinistres >= 2) riskTags.push({ tag:'resiliation', severity:'high', label:'Résiliation non-paiement' });
+    if (sinistres >= 1) riskTags.push({ tag:'sinistres', severity:'medium', label:'Sinistres récents' });
+    if (c.bonus_malus && parseFloat(c.bonus_malus) > 1) riskTags.push({ tag:'bonus_malus', severity:'high', label:'Bonus/malus dégradé' });
+    if ((c.age||35) < 26) riskTags.push({ tag:'jeune_conducteur', severity:'medium', label:'Jeune conducteur' });
+
+    const { rows: partners } = await pool.query(
+      'SELECT id, nom, type_partenaire, statut, access_type FROM partners WHERE user_id = $1 ORDER BY priorite ASC LIMIT 20',
+      [userId]
+    );
+    const recommended = partners.filter(p => p.statut === 'Actif' || p.statut === 'En_cours' || p.type_partenaire === 'Spécialisé');
+
+    const ark = { score:rate, niveau:rate>=80?'Prêt':rate>=50?'En_cours':'Incomplet', next_action:rate>=80?'Créer un dossier de tarification':'Récupérer '+missing.length+' document(s)', risque_principal:riskTags.filter(r=>r.severity==='high').map(r=>r.label).join(', ')||'Aucun' };
+
+    res.json({ success:true, client:{id:c.id,first_name:c.first_name,last_name:c.last_name,email:c.email,phone:c.phone}, dossier:{completion_rate:rate,documents_presents:present,documents_manquants:missing}, risques:riskTags, partenaires_recommandes:recommended.map(p=>({id:p.id,nom:p.nom,type:p.type_partenaire,statut:p.statut,access:p.access_type})), ark_summary:ark });
+  } catch(err) {
+    console.error('GET /api/clients/:id/dossier error:', err.message);
+    res.status(500).json({ error:'dossier_failed', message:err.message });
+  }
+});
+
 module.exports = router;

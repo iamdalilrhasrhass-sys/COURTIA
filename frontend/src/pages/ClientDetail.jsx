@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Mail, Phone, MapPin, Calendar, Send, Plus,
   Shield, FileText, Clock, Euro, CheckCircle, User, Sparkles,
   AlertTriangle, TrendingUp, FileSignature, FolderOpen, Activity,
-  ChevronRight, Target, Bell, Zap, Heart,
+  ChevronRight, Target, Bell, Zap, Heart, PackageCheck, Scale, FolderSearch, Briefcase,
 } from 'lucide-react'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
@@ -361,6 +361,227 @@ function InfoRow({ icon: Icon, label, value, last }) {
   )
 }
 
+// ─── Onglet Dossier Prêt à Tarifer ───────────────────────────
+function DossierTab({ clientId, apiUrl, token, onCreerDossier, navigate }) {
+  const [dossier, setDossier] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [creating, setCreating] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`${apiUrl}/clients/${clientId}/dossier`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (!cancelled) {
+          if (data.success) setDossier(data.dossier)
+          else setError(data.error || 'Erreur inconnue')
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message)
+      }
+      if (!cancelled) setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [clientId, apiUrl, token])
+
+  // ── Loading ──
+  if (loading) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        style={{ padding: 40, textAlign: 'center', color: T.textMuted, fontSize: 13 }}>
+        <Sparkles size={24} color={T.ark} style={{ marginBottom: 12 }} />
+        <div>Analyse du dossier en cours...</div>
+      </motion.div>
+    )
+  }
+
+  // ── Error ──
+  if (error) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        style={{ padding: 30, textAlign: 'center', color: T.danger }}>
+        <AlertTriangle size={20} style={{ marginBottom: 8 }} />
+        <div style={{ fontSize: 13 }}>Impossible de charger le dossier</div>
+        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{error}</div>
+        <button onClick={() => window.location.reload()} style={{
+          marginTop: 12, padding: '6px 14px', borderRadius: 6,
+          background: T.cardBgHover, color: T.text, border: `1px solid ${T.cardBorder}`,
+          cursor: 'pointer', fontSize: 11,
+        }}>Réessayer</button>
+      </motion.div>
+    )
+  }
+
+  const score = dossier?.completion_rate || 0
+  const scoreColor = score >= 80 ? T.success : score >= 50 ? T.warning : T.danger
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}
+    >
+      {/* Score complétude */}
+      <Card padding={20} accent={score >= 80 ? T.success : T.ark} style={{
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(91,77,245,0.03))'
+      }}>
+        <SectionTitle icon={PackageCheck} title="Score Complétude" iconColor={T.ark} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 8 }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: `conic-gradient(${scoreColor} ${score * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative',
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              background: 'rgba(5,5,16,0.95)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: scoreColor }}>{score}%</span>
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 4 }}>
+              {score >= 80 ? 'Dossier prêt' : score >= 50 ? 'En bonne voie' : 'À compléter'}
+            </div>
+            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
+              {dossier?.pieces_manquantes?.length || 0} document{dossier?.pieces_manquantes?.length !== 1 ? 's' : ''} manquant{dossier?.pieces_manquantes?.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+        </div>
+
+        {/* Pièces manquantes */}
+        {dossier?.pieces_manquantes?.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+              Documents à fournir
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {[...dossier.pieces_manquantes].slice(0, 4).map((p, idx) => (
+                <div key={idx} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '6px 10px', borderRadius: 6,
+                  background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)',
+                }}>
+                  <FileText size={11} color={T.warning} />
+                  <span style={{ fontSize: 11, color: T.text }}>{typeof p === 'string' ? p : p.label || p}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Risques & Alertes */}
+      <Card padding={16} accent={T.danger}>
+        <SectionTitle icon={Scale} title="Risques & Alertes" iconColor={T.danger} />
+        {dossier?.risques?.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {dossier.risques.map((r, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 10px', borderRadius: 6,
+                background: r.severity === 'high' ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.06)',
+                border: `1px solid ${r.severity === 'high' ? 'rgba(239,68,68,0.20)' : 'rgba(245,158,11,0.15)'}`,
+              }}>
+                <AlertTriangle size={11} color={r.severity === 'high' ? T.danger : T.warning} />
+                <span style={{ fontSize: 11, color: T.text, lineHeight: 1.4 }}>{typeof r === 'string' ? r : r.label || r}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: T.textMuted, padding: '12px 0' }}>
+            <CheckCircle size={14} color={T.success} style={{ display: 'inline', marginRight: 6 }} />
+            Aucun risque détecté
+          </div>
+        )}
+      </Card>
+
+      {/* Partenaires recommandés */}
+      <Card padding={16} accent={T.blue}>
+        <SectionTitle icon={Briefcase} title="Partenaires Recommandés" iconColor={T.blue} />
+        {dossier?.partenaires?.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {dossier.partenaires.map((p, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 10px', borderRadius: 6,
+                background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)',
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 6,
+                  background: 'rgba(59,130,246,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <FolderSearch size={13} color={T.blue} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>
+                    {typeof p === 'string' ? p : p.nom || p.label || ''}
+                  </div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>
+                    {typeof p === 'object' ? p.type || p.access_type || '' : ''}
+                  </div>
+                </div>
+                <button onClick={() => navigate('/partenaires')} style={{
+                  padding: '4px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+                  background: 'rgba(59,130,246,0.12)', color: T.blue, border: 'none', cursor: 'pointer',
+                }}>Détails</button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: T.textMuted, padding: '12px 0' }}>
+            Aucun partenaire recommandé
+          </div>
+        )}
+      </Card>
+
+      {/* Actions */}
+      <Card padding={16} accent={T.success} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <SectionTitle icon={Target} title="Actions" iconColor={T.success} />
+        <button onClick={async () => {
+          setCreating(true)
+          await onCreerDossier()
+          setCreating(false)
+        }} disabled={creating} style={{
+          padding: '12px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+          background: creating ? 'rgba(34,197,94,0.15)' : T.success,
+          color: creating ? T.success : '#fff',
+          border: 'none', cursor: creating ? 'default' : 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          transition: 'all 0.2s',
+        }}>
+          <PackageCheck size={15} />
+          {creating ? 'Création...' : 'Créer un dossier de tarification'}
+        </button>
+        <button onClick={() => navigate('/comparateur')} style={{
+          padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+          background: T.cardBgHover, color: T.text, border: `1px solid ${T.cardBorderLight}`,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+          <Scale size={13} /> Comparateur ARK
+        </button>
+        <button onClick={() => navigate('/partenaires')} style={{
+          padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+          background: T.arkBg, color: T.ark, border: `1px solid ${T.arkBorder}`,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+          <FolderSearch size={13} /> Gérer les accès partenaires
+        </button>
+      </Card>
+    </motion.div>
+  )
+}
+
 // ─── Onglet Activité (timeline complète) ────────────────────
 function ActiviteTab({ history }) {
   return (
@@ -406,6 +627,30 @@ export default function ClientDetail() {
   const client = useMemo(() => DEMO_CLIENT, [id])
   const status = STATUS[client.statut] || STATUS.actif
   const totalPrime = DEMO_CONTRACTS.reduce((s, c) => s + c.prime, 0)
+  const API_BASE = import.meta.env.VITE_API_URL || '/api'
+  const token = localStorage.getItem('courtia_token') || ''
+
+  const handleCreerDossier = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/comparator/quote-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          client_id: parseInt(id),
+          product_type: 'Auto',
+          normalized_data: { source: 'dossier_completion' }
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        navigate('/comparateur')
+      } else {
+        alert('Erreur : ' + (data.error || 'Inconnue'))
+      }
+    } catch (e) {
+      alert('Erreur réseau : ' + e.message)
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '20px 24px 48px' }}>
@@ -542,6 +787,7 @@ export default function ClientDetail() {
           <TabButton label="Vue 360°"  active={tab === 'vue360'}    onClick={() => setTab('vue360')} />
           <TabButton label="Contrats"  active={tab === 'contrats'}  onClick={() => setTab('contrats')}  badge={DEMO_CONTRACTS.length} />
           <TabButton label="Devis"     active={tab === 'devis'}     onClick={() => setTab('devis')}     badge={DEMO_DEVIS.length} />
+          <TabButton label="Dossier"   active={tab === 'dossier'}   onClick={() => setTab('dossier')} />
           <TabButton label="Documents" active={tab === 'documents'} onClick={() => setTab('documents')} badge={DEMO_DOCS.length} />
           <TabButton label="Activité"  active={tab === 'activite'}  onClick={() => setTab('activite')} />
           <TabButton label="ARK"       active={tab === 'ark'}       onClick={() => setTab('ark')} />
@@ -602,6 +848,16 @@ export default function ClientDetail() {
                 ))}
               </div>
             </motion.div>
+          )}
+          {tab === 'dossier' && (
+            <DossierTab
+              key="dossier"
+              clientId={id}
+              apiUrl={API_BASE}
+              token={token}
+              navigate={navigate}
+              onCreerDossier={handleCreerDossier}
+            />
           )}
           {tab === 'documents' && (
             <motion.div key="dc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

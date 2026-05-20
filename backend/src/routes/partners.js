@@ -172,4 +172,37 @@ router.patch('/:id/statut', verifyToken, async (req, res) => {
   }
 });
 
+// POST /api/partners/:id/test — Tester la connexion au partenaire
+router.post('/:id/test', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const userId = req.user.userId || req.user.id;
+
+    // Vérifier si le partenaire existe
+    const pRes = await pool.query('SELECT * FROM partners WHERE id = $1 AND user_id = $2', [id, userId]);
+    if (pRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Partenaire non trouvé' });
+    }
+    const partner = pRes.rows[0];
+
+    // Vérifier si des credentials sont stockés
+    const aRes = await pool.query(
+      'SELECT * FROM partner_accesses WHERE partner_id = $1 AND user_id = $2 ORDER BY created_at DESC LIMIT 1',
+      [id, userId]
+    );
+
+    // V1 : Test simulé — vérifie juste que les credentials sont présents
+    if (aRes.rows.length > 0 && aRes.rows[0].extranet_login) {
+      return res.json({ success: true, message: 'Identifiants configurés — prêt à connecter' });
+    }
+    if (partner.extranet_login && partner.extranet_url) {
+      return res.json({ success: true, message: 'URL + login configurés — prêt à connecter' });
+    }
+    res.json({ success: false, error: 'Identifiants incomplets — configurez les accès' });
+  } catch (err) {
+    console.error('[partners] POST /:id/test', err.message);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
