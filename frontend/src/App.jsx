@@ -96,6 +96,7 @@ const AdminSupport = lazy(() => import('./pages/AdminSupport'))
 const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
 const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
 const AdminFeedback = lazy(() => import('./pages/AdminFeedback'))
+const WidgetARK = lazy(() => import('./pages/ark/WidgetARK'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const Beta = lazy(() => import('./pages/Beta'))
 // LOT VIBE — Features concurrentielles courtiers
@@ -386,6 +387,7 @@ export default function App() {
           <Route path="/partenaires"  element={<Partenaires />} />
           <Route path="/prospection"  element={<Prospection />} />
           <Route path="/assistant-ark" element={<Capitia />} />
+          <Route path="/widget" element={<WidgetARK />} />
           <Route path="/rapports"      element={<Rapports />} />
           <Route path="/parametres"    element={<Parametres />} />
           <Route path="/parametres/integrations" element={<Parametres />} />
