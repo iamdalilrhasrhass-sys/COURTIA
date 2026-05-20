@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Sparkles, FileText, Send, Loader2, Trophy, TrendingDown,
   Shield, Zap, Crown, Star, ArrowRight,
@@ -34,6 +35,10 @@ const inputStyle = {
 const labelStyle = { color: T.textSecondary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }
 
 export default function Comparateur() {
+  const [searchParams] = useSearchParams()
+  const clientId = searchParams.get('client_id')
+  const quoteRequestId = searchParams.get('quote_request_id')
+
   const [profile, setProfile] = useState({
     age: 38, ville: 'Lyon', zone: 'urbain',
     situation: 'marie', annee_naissance: 1987,
@@ -45,6 +50,25 @@ export default function Comparateur() {
   const [result, setResult] = useState(null)
   const [selected, setSelected] = useState(null)
   const [exporting, setExporting] = useState(false)
+
+  // Auto-remplir depuis un client (flux Dossier prêt à tarifer)
+  useEffect(() => {
+    if (!clientId) return
+    const token = localStorage.getItem('courtia_token')
+    fetch(`${import.meta.env.VITE_API_URL || '/api'}/clients/${clientId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json()).then(data => {
+      if (data.client) {
+        const c = data.client
+        setProfile(p => ({
+          ...p,
+          ville: c.city || c.ville || p.ville,
+          profession: c.profession || '',
+          client_name: `${c.first_name || c.prenom || ''} ${c.last_name || c.nom || ''}`.trim(),
+        }))
+      }
+    }).catch(() => {})
+  }, [clientId])
 
   async function compute() {
     setLoading(true)
