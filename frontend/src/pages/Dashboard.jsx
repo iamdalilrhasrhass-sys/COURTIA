@@ -247,10 +247,11 @@ export default function Dashboard() {
 
   const metrics = useMemo(() => {
     const statusMap = stats?.clientsParStatut || {}
-    const activeClients = Number(statusMap.actif || 0) || clients.length || 124
-    const activeContracts = Number(stats?.contratsActifs || 0) || 312
-    const annualPrime = Number(stats?.primeTotale || 0) || 248000
-    const healthScore = 82
+    // Utiliser les vraies données: 0 est une valeur valide (ne pas fallback à 124/312/248000)
+    const activeClients = stats?.totalClients ?? clients.length
+    const activeContracts = stats?.contratsActifs ?? 0
+    const annualPrime = stats?.primeTotale ?? 0
+    const healthScore = stats?.scoreRisqueMoyen ? Math.round(100 - stats.scoreRisqueMoyen) : 82
     return { activeClients, activeContracts, annualPrime, healthScore }
   }, [stats, clients])
 

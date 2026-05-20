@@ -245,7 +245,7 @@ export default function Dashboard() {
   const metrics = useMemo(() => {
     const statusMap = stats?.clientsParStatut || {}
     const activeClients = Number(statusMap.actif || 0) || clients.length || 124
-    const activeContracts = Number(stats?.contratsActifs || 0) || 312
+    const activeContracts = Number(stats?.contratsActifs ?? 0)
     const annualPrime = Number(stats?.primeTotale || 0) || 248000
     const healthScore = 82
     return { activeClients, activeContracts, annualPrime, healthScore }

@@ -332,7 +332,7 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
 
     // Appel API DeepSeek via OpenAI SDK
     const response = await openai.chat.completions.create({
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-pro',
       max_tokens: 600,
       messages: messages
     })
@@ -503,7 +503,7 @@ Regles de securite ABSOLUES :
 - Si le formulaire est inconnu ou sans rapport avec l'assurance, reponds {"analysis": "Aucune suggestion pertinente pour cette page.", "suggestions": []}`;
 
     const completion = await openai.chat.completions.create({
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-pro',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: pageContext }
@@ -557,7 +557,7 @@ Reponds UNIQUEMENT avec ce JSON:
 {"suggestion": "valeur ou null", "confiance": 0.0-1.0, "raison": "explication courte"}`;
 
     const completion = await openai.chat.completions.create({
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-pro',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 300,
       temperature: 0.3,

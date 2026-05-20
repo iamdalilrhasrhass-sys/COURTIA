@@ -31,6 +31,7 @@ const ReachProspectDetail = lazy(() => import('./pages/ReachProspectDetail'))
 const ReachMap = lazy(() => import('./pages/ReachMap'))
 const ReachSettings = lazy(() => import('./pages/ReachSettings'))
 const Capitia = lazy(() => import('./pages/Capitia'))
+const ComparateurPage = lazy(() => import('./pages/ComparateurPage'))
 const AnalyticsExecutive = lazy(() => import('./pages/AnalyticsExecutive'))
 const Abonnement = lazy(() => import('./pages/Abonnement'))
 const Billing = lazy(() => import('./pages/Billing'))
@@ -386,7 +387,13 @@ export default function App() {
           <Route path="/relances"     element={<Relances />} />
           <Route path="/opportunites" element={<Opportunites />} />
           <Route path="/rendez-vous"  element={<Taches />} />
-          <Route path="/partenaires"  element={<Partenaires />} />
+          <Route path="/ark/intelligence" element={<ArkIntelligence />} />
+          <Route path="/ark/negotiator" element={<NegoARK />} />
+          <Route path="/ark/health" element={<SantePortefeuille />} />
+          <Route path="/ark/comparator" element={<Comparateur />} />
+          <Route path="/ark/bordereau" element={<Bordereau />} />
+          <Route path="/ark/widget" element={<WidgetARK />} />
+          <Route path="/calendar" element={<Taches />} />
           <Route path="/prospection"  element={<Prospection />} />
           <Route path="/assistant-ark" element={<Capitia />} />
           <Route path="/widget" element={<WidgetARK />} />
@@ -424,6 +431,7 @@ export default function App() {
           <Route path="/ark-intelligence" element={<ArkIntelligence />} />
           <Route path="/objectifs" element={<Objectifs />} />
           <Route path="/conformite" element={<Conformite />} />
+          <Route path="/comparateur" element={<ComparateurPage />} />
           <Route path="/health" element={<SantePortefeuille />} />
           <Route path="/bordereau" element={<Bordereau />} />
           <Route path="/tokens" element={<Tokens />} />

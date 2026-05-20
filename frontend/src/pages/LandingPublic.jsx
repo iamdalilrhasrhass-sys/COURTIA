@@ -841,15 +841,40 @@ const styles = `
   justify-content: space-between;
   gap: 24px;
   padding: 16px 32px;
-  margin: 16px 32px;
-  border-radius: 16px;
-  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  margin: 0;
+  border-radius: 0 0 20px 20px;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease;
   will-change: transform;
   min-height: 56px;
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  background: rgba(10, 8, 20, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  background: rgba(5, 3, 15, 0.94);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-top: none;
+  box-shadow:
+    0 1px 0 rgba(139, 92, 246, 0.12),
+    0 4px 32px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(139, 92, 246, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Accent glow line at bottom of header */
+.lp-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139, 92, 246, 0.3),
+    rgba(6, 182, 212, 0.4),
+    rgba(139, 92, 246, 0.3),
+    transparent
+  );
+  pointer-events: none;
 }
 
 .lp-header-brand {
@@ -1442,12 +1467,12 @@ const styles = `
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .lp-header {
-    margin: 8px 12px;
+    margin: 0;
     padding: 14px 20px;
     padding-top: max(14px, env(safe-area-inset-top, 0px));
     flex-wrap: wrap;
     gap: 12px;
-    border-radius: 14px;
+    border-radius: 0 0 16px 16px;
     min-height: 52px;
     top: env(safe-area-inset-top, 0px);
   }
@@ -1565,9 +1590,10 @@ const styles = `
 
 @media (max-width: 400px) {
   .lp-header {
-    margin: 4px 8px;
+    margin: 0;
     padding: 10px 16px;
     min-height: 48px;
+    border-radius: 0 0 14px 14px;
   }
 
   .lp-nav {

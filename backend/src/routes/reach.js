@@ -13,7 +13,7 @@ const router = express.Router();
 // DeepSeek client for AI features
 const openai = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'dummy_key',
-  baseURL: 'https://api.deepseek.com/v1'
+  baseURL: 'https://api.deepseek.com/v1',
 });
 
 // ───────────────────────── HELPERS ─────────────────────────
@@ -250,7 +250,7 @@ Note actuelle: ${p.opportunity_score || 'N/A'}/100`;
     let analysisResult;
     try {
       const response = await openai.chat.completions.create({
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-pro',
         max_tokens: 1000,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -578,7 +578,7 @@ Génère un message de prospession ${c} personnalisé pour ce courtier.`;
     let message;
     try {
       const response = await openai.chat.completions.create({
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-pro',
         max_tokens: 500,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -1418,7 +1418,7 @@ Format de sortie : JSON strict { subject, body }. Body en français, sans HTML.$
     if (!draft) {
       try {
         const resp = await openai.chat.completions.create({
-          model: 'deepseek-chat',
+          model: 'deepseek-v4-pro',
           messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }],
           response_format: { type: 'json_object' },
           max_tokens: 600,
