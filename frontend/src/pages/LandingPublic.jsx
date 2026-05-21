@@ -401,6 +401,11 @@ export default function LandingPublic() {
             <a href="#pricing">Tarifs</a>
           </div>
           <button className="nav-demo" onClick={() => go('/demo')}>Demander une démo <ArrowRight size={16} /></button>
+          
+          {/* Mobile minimal actions */}
+          <div className="mobile-nav-actions">
+            <button onClick={() => go('/login')} className="mobile-login-btn">Connexion</button>
+          </div>
         </nav>
       </header>
 
@@ -601,6 +606,13 @@ export default function LandingPublic() {
         <span>COURTIA · Cockpit IA premium pour courtiers en assurance</span>
         <div><a href="#cockpit">Cockpit</a><a href="#ark">ARK</a><a href="/tarifs">Tarifs</a><a href="/contact">Contact</a></div>
       </footer>
+
+      {/* Sticky Mobile Bar - visible solely on small screens */}
+      <div className="mobile-sticky-cta">
+        <button className="primary-action" style={{ width: '100%', margin: 0, minHeight: '52px', fontSize: '1rem', justifyContent: 'center' }} onClick={() => go('/demo')}>
+          Demander une démo <ArrowRight size={18} />
+        </button>
+      </div>
     </div>
   )
 }
@@ -615,6 +627,25 @@ const landingStyles = `
 @keyframes spinClockwise{0%{transform:rotateX(66deg) rotateZ(0deg)}100%{transform:rotateX(66deg) rotateZ(360deg)}}
 @keyframes spinCounterClockwise{0%{transform:rotateX(66deg) rotateZ(360deg)}100%{transform:rotateX(66deg) rotateZ(0deg)}}
 
+
+/* Premium Mobile Sticky CTA */
+.mobile-sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px 28px;background:linear-gradient(to top, rgba(2,3,11,0.98) 30%, rgba(2,3,11,0.7) 80%, transparent);backdrop-filter:blur(14px);z-index:999;border-top:1px solid rgba(255,255,255,0.08);}
+.mobile-nav-actions{display:none;}
+.mobile-login-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:99px;padding:6px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;}
+
+@media(max-width:820px){
+  .mobile-sticky-cta{display:flex; animation: slideUpMobile 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;}
+  .courtia-footer{padding-bottom:110px!important;}
+  .mobile-nav-actions{display:block;}
+  .courtia-nav{padding:8px 14px;}
+  .hero-shell{padding:30px 0;}
+  /* Remove massive borders on mobile cards to make them flush and sleeker */
+  .product-card, .price-card, .credibility-card { padding: 20px; border-radius: 24px; }
+  .card-visual { height: 140px; border-radius: 18px; }
+  .courtia-section { padding: 45px 0; }
+}
+
+@keyframes slideUpMobile { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes pulseGlow{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}@media(max-width:1080px){.hero-shell{grid-template-columns:1fr;min-height:auto}.courtia-scene{min-height:550px}.product-grid{grid-template-columns:repeat(2,1fr)}.ark-section,.credibility-card{grid-template-columns:1fr}.outcome-grid{grid-template-columns:repeat(2,1fr)}.audience-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:820px){.nav-links,.nav-demo{display:none}.courtia-nav-wrap{position:relative;top:auto}.hero-shell{width:min(720px,calc(100% - 28px));padding:46px 0}.hero-copy h1{font-size:clamp(2.32rem,9.8vw,4.05rem);line-height:1;letter-spacing:-.05em}.hero-badge,.courtia-eyebrow{white-space:normal;border-radius:18px;font-size:.66rem}.hero-proof,.before-after,.pricing-grid,.compare-grid{grid-template-columns:1fr}.brief-grid{grid-template-columns:repeat(2,1fr)}.product-grid,.outcome-grid,.audience-grid{grid-template-columns:1fr}.price-card.featured{transform:none}.courtia-scene{min-height:450px;transform:scale(0.62);transform-origin:top center;margin-top:-20px}.scene-depth{width:100%;max-width:560px}.courtia-section{width:min(720px,calc(100% - 28px));padding:60px 0}.courtia-section-head h2,.ark-copy h2,.credibility-card h2,.final-cta h2{font-size:clamp(2.3rem,10vw,3.4rem)}}@media(max-width:520px){.hero-actions .primary-action,.hero-actions .secondary-action{width:100%}.hero-proof div{min-height:auto}.brief-grid{grid-template-columns:1fr}.courtia-footer a{margin-left:0;margin-right:14px}.courtia-section-head h2,.ark-copy h2,.credibility-card h2,.final-cta h2{letter-spacing:-.045em}.hero-copy h1{font-size:clamp(2.05rem,8.75vw,2.55rem);letter-spacing:-.04em}.hero-badge{font-size:.58rem;line-height:1.35}.hero-actions{gap:10px}.hero-actions .primary-action,.hero-actions .secondary-action{width:100%;padding-left:16px;padding-right:16px}.hero-proof div{padding:16px}.scene-module{padding:13px}.module-head b{font-size:.9rem}}@media(max-width:820px){.hero-badge{width:100%;justify-content:center;text-align:center;white-space:normal;word-break:normal;overflow-wrap:anywhere}.hero-badge svg{flex:0 0 auto}.hero-shell,.courtia-section,.courtia-nav-wrap,.final-cta{max-width:calc(100vw - 28px)}.hero-copy,.hero-lead,.hero-copy h1{max-width:100%;min-width:0}.hero-lead{font-size:1rem}.hero-proof{display:grid;grid-template-columns:1fr;gap:12px}.courtia-premium-landing{overflow-x:hidden}.scene-module{box-sizing:border-box}.nav-links,.nav-demo{display:none!important}}@supports not (color:color-mix(in srgb,white,black)){.module-head span{background:rgba(143,231,255,.12)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 /* Outcomes Custom 3D Premium Styles */
