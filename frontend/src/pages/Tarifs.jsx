@@ -4,7 +4,7 @@ import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } fro
 
 // ─── Feature Configuration ────────────────────────────────────────────────────
 
-const _featureLabels = {
+const featureLabels = {
   morning_brief: 'Morning Brief',
   client_score: 'Score Client ARK',
   tags_kanban: 'Tags & Kanban',
@@ -60,9 +60,9 @@ const featureRows = [
 
 const plans = [
   {
-    name: "L'Essentiel",
+    name: "Starter",
     price: '89',
-    desc: 'Pour courtier indépendant',
+    desc: 'Pour structurer les premiers suivis',
     popular: false,
     features: {
       morning_brief: true,
@@ -83,9 +83,9 @@ const plans = [
     }
   },
   {
-    name: 'Le Cabinet',
+    name: 'Pro',
     price: '199',
-    desc: 'Pour cabinet en croissance',
+    desc: 'Pour piloter réellement le cabinet avec ARK',
     popular: true,
     features: {
       morning_brief: true,
@@ -106,9 +106,9 @@ const plans = [
     }
   },
   {
-    name: 'Le Réseau',
+    name: 'Premium',
     price: 'Sur devis',
-    desc: 'Pour cabinet performant',
+    desc: 'Pour cabinets structurés et multi-utilisateurs',
     popular: false,
     features: {
       morning_brief: true,
@@ -131,18 +131,18 @@ const plans = [
 ]
 
 const frais = [
-  { type: 'Mise en service', montant: 'Inclus', desc: "Pas de frais d'activation" },
-  { type: 'Migration portefeuille', montant: 'Inclus', desc: 'Import Excel/CSV accompagné si nécessaire' },
-  { type: 'Résiliation', montant: 'Inclus', desc: 'Résiliation possible depuis l’espace abonnement' },
+  { type: 'Mise en service', montant: '0€', desc: "Gratuit — pas de frais d'activation" },
+  { type: 'Migration portefeuille', montant: '0€', desc: 'Import Excel/CSV gratuit, accompagné si nécessaire' },
+  { type: 'Résiliation', montant: '0€', desc: 'Sans frais, résiliable à tout moment' },
   { type: 'Frais SMS/WhatsApp', montant: '0€', desc: 'Inclus dans tous les plans' }
 ]
 
 const faq = [
   { q: 'Puis-je résilier à tout moment ?', a: "Oui, sans frais. Votre abonnement reste actif jusqu'à la fin de la période en cours." },
   { q: 'Mes données sont-elles sécurisées ?', a: 'Oui. Hébergement sécurisé, chiffrement SSL, sauvegardes quotidiennes. Conforme RGPD.' },
-  { q: 'Puis-je importer mes clients depuis un autre CRM ?', a: 'Oui. Format Excel/CSV supporté. ARK nettoie et dédoublonne automatiquement.' },
+  { q: 'Puis-je importer mes clients depuis un autre CRM ?', a: 'Oui. Format Excel/CSV supporté. ARK nettoie et dédoublonne avec suivi.' },
   { q: 'Combien de temps prend la mise en place ?', a: "5 minutes pour créer votre compte. L'import de votre portefeuille prend 2 minutes." },
-  { q: "Est-ce que ARK remplace mon assistant ?", a: 'ARK automatise les tâches répétitives (envoi docs, relances, indexation). Vous gardez le contrôle.' }
+  { q: "Est-ce que ARK remplace mon assistant ?", a: 'ARK structure les tâches répétitives (envoi docs, relances, indexation). Vous gardez le contrôle.' }
 ]
 
 // ─── Plan Card ────────────────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ function PlanCard({ plan, index }) {
     features.morning_brief && 'Morning Brief quotidien',
     features.client_score && 'Score Client ARK',
     features.tags_kanban && 'Tags & Kanban',
-    features.generated_docs && 'Documents générés automatiquement',
+    features.generated_docs && 'Documents générés avec suivi',
     features.dda_quiz && 'DDA Quiz intégré',
     features.automations && 'Automations & workflows',
     features.newsletters && 'Newsletters & campagnes',
@@ -193,8 +193,14 @@ function PlanCard({ plan, index }) {
       </div>
 
       <div className="mb-6">
-        <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}{plan.price === 'Sur devis' ? '' : '€'}</span>
-        {plan.price === 'Sur devis' ? null : <span className="ml-1 text-sm font-semibold text-gray-400">/mois</span>}
+        {plan.price === 'Sur devis' ? (
+          <span className="text-4xl font-extrabold text-[#0a0a0a]">Sur devis</span>
+        ) : (
+          <>
+            <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}€</span>
+            <span className="ml-1 text-sm font-semibold text-gray-400"> HT/mois</span>
+          </>
+        )}
       </div>
 
       <ul className="mb-8 flex flex-col gap-3">
@@ -213,7 +219,7 @@ function PlanCard({ plan, index }) {
 
       <div className="mt-auto">
         <a
-          href="mailto:contact@courtiark.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Essentiel"
+          href="mailto:contact@courtia.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Essentiel"
           className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-200 ${
             plan.popular
               ? 'bg-[#534AB7] text-white hover:bg-[#4639a6] shadow-lg shadow-[#534AB7]/20'
@@ -221,7 +227,7 @@ function PlanCard({ plan, index }) {
           }`}
         >
           <Mail size={16} />
-          Démarrer avec Dalil
+          Demander une démo
           <ArrowRight size={16} />
         </a>
       </div>
@@ -481,11 +487,11 @@ export default function Tarifs() {
               cabinet.
             </p>
             <a
-              href="mailto:contact@courtiark.fr"
+              href="mailto:contact@courtia.fr"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#534AB7] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#534AB7]/20 transition-all hover:bg-[#4639a6] hover:shadow-xl hover:shadow-[#534AB7]/30"
             >
               <Mail size={18} />
-              Démarrer avec Dalil
+              Demander une démo
               <ArrowRight size={18} />
             </a>
           </div>
