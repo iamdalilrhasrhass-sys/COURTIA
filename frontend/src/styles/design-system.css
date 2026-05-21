@@ -1,39 +1,39 @@
 :root {
-  /* ─── Backgrounds ─── */
-  --bg-cream: #f7f6f2;
-  --bg-cream-warm: #faf9f5;
-  --bg-card: rgba(255, 255, 255, 0.78);
-  --bg-card-solid: #ffffff;
-  --bg-elevated: rgba(255, 255, 255, 0.92);
+  /* ─── Backgrounds (DARK PREMIUM OVERRIDE) ─── */
+  --bg-cream: #050510;
+  --bg-cream-warm: #07071a;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card-solid: #080818;
+  --bg-elevated: rgba(255, 255, 255, 0.06);
 
   /* ─── Sidebar ─── */
-  --sidebar-dark: #08090d;
-  --sidebar-dark-2: #111827;
+  --sidebar-dark: #050510;
+  --sidebar-dark-2: #080818;
 
   /* ─── Accents ─── */
-  --accent-blue: #2563eb;
-  --accent-violet: #7c3aed;
+  --accent-blue: #22D3EE;
+  --accent-violet: #8B5CF6;
   --accent-pink: #ec4899;
   --accent-green: #10b981;
   --accent-amber: #f59e0b;
   --accent-red: #ef4444;
   --accent-gold: #c9a96a;
 
-  /* ─── Text ─── */
-  --text-primary: #0a0a0a;
-  --text-secondary: rgba(0,0,0,0.55);
-  --text-tertiary: rgba(0,0,0,0.40);
-  --text-quaternary: rgba(0,0,0,0.25);
+  /* ─── Text (HIGH CONTRAST COCKPIT) ─── */
+  --text-primary: #f8fafc;
+  --text-secondary: rgba(248, 250, 252, 0.65);
+  --text-tertiary: rgba(248, 250, 252, 0.45);
+  --text-quaternary: rgba(248, 250, 252, 0.25);
   --text-on-dark: rgba(255,255,255,0.95);
   --text-on-dark-2: rgba(255,255,255,0.60);
   --text-on-dark-3: rgba(255,255,255,0.35);
 
-  /* ─── Borders ─── */
-  --border-fine: 0.5px solid rgba(15, 23, 42, 0.08);
-  --border-mid: 0.5px solid rgba(15, 23, 42, 0.12);
-  --border-strong: 1px solid rgba(15, 23, 42, 0.10);
+  /* ─── Borders (AURORA COCKPIT) ─── */
+  --border-fine: 0.5px solid rgba(255, 255, 255, 0.06);
+  --border-mid: 0.5px solid rgba(255, 255, 255, 0.10);
+  --border-strong: 1px solid rgba(255, 255, 255, 0.12);
   --border-on-dark: 0.5px solid rgba(255,255,255,0.08);
-  --border-accent: 0.5px solid rgba(37, 99, 235, 0.20);
+  --border-accent: 0.5px solid rgba(34, 211, 238, 0.20);
 
   /* ─── Radius ─── */
   --r-sm: 8px;
@@ -111,10 +111,10 @@ body {
 
 /* ── Glass Panel ── */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(5, 5, 16, 0.65);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 0.5px solid rgba(255, 255, 255, 0.50);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-card);
 }
@@ -158,8 +158,8 @@ body {
   gap: 6px;
   padding: 10px 22px;
   border-radius: var(--r-full);
-  border: var(--border-fine);
-  background: rgba(255,255,255,0.80);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 600;
@@ -180,9 +180,9 @@ body {
 .premium-input {
   width: 100%;
   padding: 10px 14px;
-  border: var(--border-fine);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--r-md);
-  background: rgba(255,255,255,0.80);
+  background: rgba(255,255,255,0.04);
   font-size: 14px;
   font-family: var(--font-sans);
   color: var(--text-primary);

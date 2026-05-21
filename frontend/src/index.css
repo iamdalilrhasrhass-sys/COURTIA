@@ -114,3 +114,71 @@
 50% { border-radius: 50% 30% 60% 40% / 40% 50% 60% 50%; transform: translate(-50%, -50%) rotate(-1deg) scale(1.01); }
 75% { border-radius: 30% 50% 40% 60% / 50% 30% 50% 40%; transform: translate(-50%, -50%) rotate(1deg) scale(1.03); }
 }
+
+
+/* ════════════════════════════════════════
+   GLOBAL DARK COCKPIT THEME OVERRIDES
+   ════════════════════════════════════════ */
+
+/* Force dark premium background on the private layout main viewport */
+div[style*="background: #f7f6f2"],
+div[style*="background:#f7f6f2"],
+main[style*="background: #f7f6f2"],
+main[style*="background:#f7f6f2"] {
+  background-color: #050510 !important;
+  background: #050510 !important;
+}
+
+/* Force dark glassmorphic cards on all bg-white panels in the private app */
+.flex-1.ml-0.md\:ml-\[240px\] .bg-white,
+.flex-1.ml-0.md\:ml-\[240px\] .courtia-depth-card,
+.flex-1.ml-0.md\:ml-\[240px\] .premium-card,
+.flex-1.ml-0.md\:ml-\[240px\] .glass-panel,
+.flex-1.ml-0.md\:ml-\[240px\] div[style*="background: white"],
+.flex-1.ml-0.md\:ml-\[240px\] div[style*="background:white"] {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.2) !important;
+}
+
+/* Fix text and label contrasts globally in the private app */
+.flex-1.ml-0.md\:ml-\[240px\] .text-gray-900,
+.flex-1.ml-0.md\:ml-\[240px\] .text-gray-800,
+.flex-1.ml-0.md\:ml-\[240px\] .text-gray-700,
+.flex-1.ml-0.md\:ml-\[240px\] .text-black,
+.flex-1.ml-0.md\:ml-\[240px\] h1,
+.flex-1.ml-0.md\:ml-\[240px\] h2,
+.flex-1.ml-0.md\:ml-\[240px\] h3,
+.flex-1.ml-0.md\:ml-\[240px\] h4 {
+  color: #f8fafc !important;
+}
+
+.flex-1.ml-0.md\:ml-\[240px\] .text-gray-600,
+.flex-1.ml-0.md\:ml-\[240px\] .text-gray-500,
+.flex-1.ml-0.md\:ml-\[240px\] .text-gray-400 {
+  color: rgba(248, 250, 252, 0.65) !important;
+}
+
+/* Border overrides */
+.flex-1.ml-0.md\:ml-\[240px\] .border-gray-100,
+.flex-1.ml-0.md\:ml-\[240px\] .border-gray-200,
+.flex-1.ml-0.md\:ml-\[240px\] .border {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Focus and input overrides inside parameters / forms */
+.flex-1.ml-0.md\:ml-\[240px\] input,
+.flex-1.ml-0.md\:ml-\[240px\] select,
+.flex-1.ml-0.md\:ml-\[240px\] textarea {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.flex-1.ml-0.md\:ml-\[240px\] input::placeholder,
+.flex-1.ml-0.md\:ml-\[240px\] textarea::placeholder {
+  color: rgba(248, 250, 252, 0.3) !important;
+}

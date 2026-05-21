@@ -29,9 +29,9 @@ export default function AppPrivateLayout() {
   }, [handleKeyDown])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#050510', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <Sidebar />
-      <main className="flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ background: '#f7f6f2', minHeight: '100vh' }}>
+      <main className="flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ background: '#050510', minHeight: '100vh' }}>
         <ImpersonationBanner />
         <Outlet />
       </main>

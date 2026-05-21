@@ -7,7 +7,7 @@ import api from '../api'
 
 const inputStyle = {
   width: '100%', padding: '10px 12px',
-  border: '1px solid #e5e7eb', borderRadius: 8,
+  border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
   fontSize: 14, fontFamily: 'Arial, sans-serif',
   outline: 'none', boxSizing: 'border-box',
   transition: 'border-color 0.15s, box-shadow 0.15s',
@@ -76,7 +76,7 @@ export default function ContratNew() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f6f2', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#050510', fontFamily: 'Arial, sans-serif' }}>
       <style>{`
         @media (max-width: 767px) {
           .ct-header { padding: 12px 16px !important; }
@@ -90,7 +90,7 @@ export default function ContratNew() {
       `}</style>
       {/* Header */}
       <div className="ct-header" style={{
-        background: 'white', borderBottom: '0.5px solid #e8e6e0',
+        background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)',
         padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 14,
       }}>
         <button
@@ -105,7 +105,7 @@ export default function ContratNew() {
             <FileText size={16} color="#16a34a" />
           </div>
           <div>
-            <h1 style={{ fontSize: 15, fontWeight: 700, color: '#080808', margin: 0 }}>Nouveau contrat</h1>
+            <h1 style={{ fontSize: 15, fontWeight: 700, color: '#ffffff', margin: 0 }}>Nouveau contrat</h1>
             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Créer une nouvelle fiche contrat</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function ContratNew() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
           className="ct-form-card"
-          style={{ background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 16, padding: '32px 32px' }}
+          style={{ background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(12px)', border: '0.5px solid #e8e6e0', borderRadius: 16, padding: '32px 32px' }}
         >
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
@@ -194,8 +194,8 @@ export default function ContratNew() {
                 whileTap={canSubmit ? { scale: 0.98 } : {}}
                 style={{
                   flex: 1, padding: '13px',
-                  background: canSubmit ? '#080808' : '#e5e7eb',
-                  color: canSubmit ? 'white' : '#9ca3af',
+                  background: canSubmit ? '#8B5CF6' : 'rgba(255,255,255,0.04)',
+                  color: canSubmit ? 'white' : 'rgba(255,255,255,0.2)',
                   border: 'none', borderRadius: 9, cursor: canSubmit ? 'pointer' : 'not-allowed',
                   fontSize: 14, fontWeight: 700, fontFamily: 'Arial, sans-serif',
                 }}
@@ -206,8 +206,8 @@ export default function ContratNew() {
                 type="button"
                 onClick={() => navigate('/contrats')}
                 style={{
-                  padding: '13px 20px', background: 'white', color: '#374151',
-                  border: '1px solid #e5e7eb', borderRadius: 9, cursor: 'pointer',
+                  padding: '13px 20px', background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(12px)', color: '#374151',
+                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, cursor: 'pointer',
                   fontSize: 14, fontWeight: 600, fontFamily: 'Arial, sans-serif',
                 }}
               >
