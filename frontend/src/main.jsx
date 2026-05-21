@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 import './styles/design-system.css'
+import './styles/aurora-mobile.css'
 
 function renderBootFallback(message, details) {
   const target = document.getElementById('root') || document.body

@@ -285,6 +285,18 @@ export default function Sidebar() {
 
   // ─── Contenu ──────────────────────────────────────────────
   const sidebarContent = (
+    <div className={`md:block ${mobileOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-[1050] md:relative md:z-0`} style={{
+      height: '100%',
+      display: mobileOpen ? 'flex' : undefined,
+    }}>
+      {/* Backdrop sur mobile */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1] md:hidden" 
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      
     <aside className="courtia-sidebar" style={{
       width: 240,
       height: '100%',
@@ -308,7 +320,7 @@ export default function Sidebar() {
         </div>
         <button
           onClick={() => setMobileOpen(false)}
-          style={{ display: 'none', padding: 6, color: T.textMuted, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ padding: 6, color: T.textMuted, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer' }}
           className="md:hidden"
         >
           <X size={20} />
@@ -385,58 +397,16 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </div>
   )
 
   return (
     <>
-      {/* Mobile hamburger — masqué : remplacé par AuroraMobileTopbar (courtia:open-sidebar event) */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        style={{
-          position: 'fixed', top: 10, left: 10, zIndex: 60,
-          padding: 8, background: T.bg, border: `1px solid ${T.borderLight}`,
-          borderRadius: 8, color: T.text, cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          display: 'none',
-        }}
-        aria-hidden="true"
-        tabIndex={-1}
-      >
-        <Menu size={20} />
-      </button>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            onClick={() => setMobileOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 55 }}
-            className="md:hidden"
-          />
-        )}
-      </AnimatePresence>
-
+      {/* Container wrapper handles desktop/mobile states via Tailwind classes */}
+      {/* On desktop: normal document flow. On mobile: hidden because AppPrivateLayout manages it */}
       <div className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
         {sidebarContent}
       </div>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ x: -280 }}
-            animate={{ x: 0 }}
-            exit={{ x: -280 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            style={{ position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 60, boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}
-            className="md:hidden"
-          >
-            {sidebarContent}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   )
 }
