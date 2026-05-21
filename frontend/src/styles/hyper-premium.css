@@ -1,0 +1,117 @@
+/* =========================================================================
+   HYPER-PREMIUM GLOBAL 3D OVERRIDES
+   Injects "5000x" deeper 3D, glows, glassmorphisms, and hover states
+   across BOTH landing and dashboard (cockpit) everywhere.
+========================================================================= */
+
+body {
+  background: #02030b !important;
+  color: #f8f8ff !important;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: -999;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(34, 211, 238, 0.15) 0%, transparent 20%),
+    radial-gradient(circle at 50% 50%, rgba(255, 101, 187, 0.08) 0%, transparent 35%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.product-card, .price-card, .credibility-card, .chaos-panel, .clarity-panel,
+.aurora-card, [style*="var(--aurora-bg-surface)"],
+.dashboard-card, .MuiPaper-root, .bg-gray-800 {
+  background: linear-gradient(145deg, rgba(14, 16, 28, 0.65) 0%, rgba(5, 6, 12, 0.8) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
+  border-left-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.6), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  border-radius: 24px !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  transform-style: preserve-3d;
+}
+
+.product-card::before, .price-card::before, .credibility-card::before,
+[style*="var(--aurora-bg-surface)"]::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.product-card:hover, .price-card:hover, .credibility-card:hover,
+[style*="var(--aurora-bg-surface)"]:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 
+    0 40px 80px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(139, 92, 246, 0.15), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(143, 231, 255, 0.3) !important;
+}
+
+button.primary-action, .nav-demo, .aurora-button-primary {
+  background: linear-gradient(135deg, #a9f1ff 0%, #b9a4ff 48%, #ff71bd 100%) !important;
+  color: #02030b !important;
+  font-weight: 800 !important;
+  border: none !important;
+  position: relative;
+  z-index: 1;
+  box-shadow: 
+    0 15px 35px rgba(255, 101, 187, 0.3),
+    inset 0 2px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+  overflow: hidden;
+}
+
+button.secondary-action {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+h1, h2, .courtia-section-head h2, .dashboard-title {
+  background: linear-gradient(135deg, #ffffff 10%, #a5a8bc 80%, #6e729b 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: 0 10px 30px rgba(255,255,255,0.1) !important;
+  letter-spacing: -0.05em !important;
+}
+
+.courtia-nav, .sidebar, .mobile-sticky-cta {
+  background: rgba(5, 6, 12, 0.6) !important;
+  backdrop-filter: blur(32px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+}
+
+.scene-orbit {
+  border-width: 2px !important;
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)) !important;
+}
+
+.orbit-a { border-color: rgba(143, 231, 255, 0.4) !important; box-shadow: 0 0 40px rgba(143,231,255,0.2), inset 0 0 20px rgba(143,231,255,0.2) !important; }
+.orbit-b { border-color: rgba(169, 134, 255, 0.3) !important; box-shadow: 0 0 50px rgba(169,134,255,0.2), inset 0 0 30px rgba(169,134,255,0.2) !important; }
+.orbit-c { border-color: rgba(255, 101, 187, 0.5) !important; box-shadow: 0 0 60px rgba(255,101,187,0.3), inset 0 0 40px rgba(255,101,187,0.2) !important; }
+
+.scene-particle {
+  background: #fff !important;
+  box-shadow: 0 0 15px 3px #fff, 0 0 30px 6px rgba(143, 231, 255, 0.8) !important;
+}
