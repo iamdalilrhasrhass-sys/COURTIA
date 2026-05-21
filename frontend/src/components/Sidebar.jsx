@@ -138,7 +138,7 @@ export default function Sidebar() {
       try {
         const stored = localStorage.getItem('courtia_user')
         if (stored) setUser(JSON.parse(stored))
-      } catch (_) {}
+      } catch (_) { console.warn('Erreur lecture profile:', _) }
     }
     update()
     window.addEventListener('profileUpdated', update)
@@ -189,11 +189,12 @@ export default function Sidebar() {
   const initials = ((userFirst[0] || '') + (userLast[0] || '')).toUpperCase() || '?'
 
   // ─── Item ─────────────────────────────────────────────────
-  function Item({ item }) {
+  const renderItem = (item) => {
     const active = isActive(item.path)
     const Icon = item.icon
     return (
       <button
+        key={item.path}
         className={`courtia-sidebar-item ${active ? 'is-active' : ''}`}
         onClick={() => { setMobileOpen(false); navigate(item.path) }}
         style={{
@@ -230,11 +231,11 @@ export default function Sidebar() {
   }
 
   // ─── Univers (accordéon) ──────────────────────────────────
-  function Universe({ u }) {
+  const renderUniverse = (u) => {
     const open = !!openMap[u.id]
     const hasActive = u.items.some(it => isActive(it.path))
     return (
-      <div style={{ marginBottom: 2 }}>
+      <div key={u.id} style={{ marginBottom: 2 }}>
         <button
           className={`courtia-sidebar-universe ${hasActive ? 'is-active' : ''}`}
           onClick={() => toggleUniverse(u.id)}
@@ -274,7 +275,7 @@ export default function Sidebar() {
               style={{ overflow: 'hidden' }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 1, paddingBottom: 4 }}>
-                {u.items.map(item => <Item key={item.path} item={item} />)}
+                {u.items.map(item => renderItem(item))}
               </div>
             </motion.div>
           )}
@@ -329,11 +330,11 @@ export default function Sidebar() {
 
       {/* Nav : 7 univers */}
       <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
-        {UNIVERSES.map(u => <Universe key={u.id} u={u} />)}
+        {UNIVERSES.map(u => renderUniverse(u))}
 
         {isAdmin && (
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
-            <Item item={{ path: '/admin', label: 'Admin', icon: Shield }} />
+            {renderItem({ path: '/admin', label: 'Admin', icon: Shield })}
           </div>
         )}
       </nav>

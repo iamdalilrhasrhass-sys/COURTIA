@@ -6,6 +6,8 @@ import { lazy, Suspense, useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
 import LandingPublic from './pages/LandingPublic'
 import Tarifs from './pages/Tarifs'
+import DesignSystem from './pages/DesignSystem'
+import VibePage from './components/vibe/VibePage'
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
@@ -96,6 +98,8 @@ export default function App() {
         <Route path="/register" element={<LoginPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/design-system" element={<DesignSystem />} />
+        <Route path="/vibe" element={<VibePage />} />
         <Route path="/fonctionnalites" element={<LandingPublic />} />
         <Route path="/demo" element={<LandingPublic />} />
         <Route path="/contact" element={<LandingPublic />} />
