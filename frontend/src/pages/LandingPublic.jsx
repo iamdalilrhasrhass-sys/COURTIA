@@ -424,7 +424,7 @@ export default function LandingPublic() {
             <div className="hero-proof">
               <div><b>95%</b><span>Jusqu’à 95% du temps gagné sur certaines tâches répétitives, workflow par workflow.</span></div>
               <div><b>DDA</b><span>Traçabilité et compte rendu structurés, prêts à exploiter.</span></div>
-              <div><b>199 €</b><span>Offre Pro pensée pour piloter réellement le cabinet.</span></div>
+              <div><b>159 €</b><span>Offre Pro pensée pour piloter réellement le cabinet.</span></div>
             </div>
           </div>
           <CockpitScene />
@@ -681,8 +681,7 @@ const landingStyles = `
   /* Elevate 3D Scene */
   .courtia-scene {
     margin-top: 0px !important;
-    transform: scale(0.68) !important; 
-    transform-origin: top center !important;
+    transform: scale(0.62) !important; transform-origin: top center !important; margin-top: -20px !important;
     mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   }
