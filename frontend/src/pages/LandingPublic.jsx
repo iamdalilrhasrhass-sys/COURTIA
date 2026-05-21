@@ -219,33 +219,52 @@ function CockpitScene() {
     setTilt({ x: py * -10, y: px * 14 })
   }
 
-  // 14 3D micro-particles orbiting at different Z-depths for immersive depth
+  // 30 3D micro-particles — deep orbital particle field
   const particles = [
-    { left: '12%', top: '22%', z: 140, size: 4, color: 'var(--cyan)' },
-    { left: '84%', top: '18%', z: 100, size: 3, color: 'var(--violet)' },
-    { left: '18%', top: '78%', z: 170, size: 5, color: 'var(--pink)' },
-    { left: '76%', top: '82%', z: 120, size: 4, color: 'var(--green)' },
-    { left: '46%', top: '8%', z: 80, size: 3, color: 'var(--cyan)' },
-    { left: '5%', top: '50%', z: 130, size: 5, color: 'var(--violet)' },
-    { left: '92%', top: '55%', z: 110, size: 3, color: 'var(--pink)' },
-    { left: '50%', top: '92%', z: 180, size: 4, color: 'var(--green)' },
-    { left: '25%', top: '40%', z: 90, size: 3, color: 'var(--cyan)' },
-    { left: '72%', top: '35%', z: 150, size: 4, color: 'var(--violet)' },
-    { left: '38%', top: '58%', z: 160, size: 5, color: 'var(--orange)' },
-    { left: '60%', top: '65%', z: 135, size: 3, color: 'var(--violet)' },
-    { left: '8%', top: '14%', z: 95, size: 4, color: 'var(--pink)' },
-    { left: '88%', top: '72%', z: 145, size: 3, color: 'var(--cyan)' },
+    { left: '12%', top: '22%', z: 155, size: 4, color: 'var(--cyan)', delay: '0s' },
+    { left: '84%', top: '18%', z: 110, size: 3, color: 'var(--violet)', delay: '0.3s' },
+    { left: '18%', top: '78%', z: 185, size: 5, color: 'var(--pink)', delay: '0.7s' },
+    { left: '76%', top: '82%', z: 130, size: 4, color: 'var(--green)', delay: '1.1s' },
+    { left: '46%', top: '8%', z: 90, size: 3, color: 'var(--cyan)', delay: '0.5s' },
+    { left: '5%', top: '50%', z: 140, size: 5, color: 'var(--violet)', delay: '1.4s' },
+    { left: '92%', top: '55%', z: 120, size: 3, color: 'var(--pink)', delay: '0.2s' },
+    { left: '50%', top: '92%', z: 195, size: 4, color: 'var(--green)', delay: '0.9s' },
+    { left: '25%', top: '40%', z: 100, size: 3, color: 'var(--cyan)', delay: '1.6s' },
+    { left: '72%', top: '35%', z: 165, size: 4, color: 'var(--violet)', delay: '0.4s' },
+    { left: '38%', top: '58%', z: 175, size: 5, color: 'var(--orange)', delay: '1.2s' },
+    { left: '60%', top: '65%', z: 145, size: 3, color: 'var(--violet)', delay: '0.8s' },
+    { left: '8%', top: '14%', z: 105, size: 4, color: 'var(--pink)', delay: '1.8s' },
+    { left: '88%', top: '72%', z: 155, size: 3, color: 'var(--cyan)', delay: '0.6s' },
+    { left: '32%', top: '15%', z: 85, size: 4, color: 'var(--green)', delay: '1.3s' },
+    { left: '55%', top: '22%', z: 135, size: 3, color: 'var(--orange)', delay: '0.1s' },
+    { left: '15%', top: '65%', z: 160, size: 5, color: 'var(--cyan)', delay: '2.0s' },
+    { left: '68%', top: '12%', z: 95, size: 4, color: 'var(--violet)', delay: '1.5s' },
+    { left: '42%', top: '48%', z: 190, size: 3, color: 'var(--pink)', delay: '0.35s' },
+    { left: '80%', top: '48%', z: 125, size: 4, color: 'var(--green)', delay: '1.7s' },
+    { left: '10%', top: '32%', z: 115, size: 3, color: 'var(--orange)', delay: '0.55s' },
+    { left: '52%', top: '75%', z: 170, size: 5, color: 'var(--cyan)', delay: '1.9s' },
+    { left: '30%', top: '85%', z: 150, size: 3, color: 'var(--violet)', delay: '0.75s' },
+    { left: '70%', top: '55%', z: 105, size: 4, color: 'var(--pink)', delay: '1.35s' },
+    { left: '22%', top: '28%', z: 180, size: 3, color: 'var(--green)', delay: '0.25s' },
+    { left: '78%', top: '28%', z: 140, size: 5, color: 'var(--orange)', delay: '1.55s' },
+    { left: '48%', top: '42%', z: 200, size: 4, color: 'var(--cyan)', delay: '0.85s' },
+    { left: '95%', top: '12%', z: 85, size: 3, color: 'var(--violet)', delay: '2.2s' },
+    { left: '3%', top: '88%', z: 130, size: 4, color: 'var(--pink)', delay: '1.05s' },
+    { left: '58%', top: '38%', z: 160, size: 3, color: 'var(--green)', delay: '0.45s' },
   ]
 
   return (
     <div className="courtia-scene" onPointerMove={handlePointerMove} onPointerLeave={() => setTilt({ x: 0, y: 0 })}>
       <div className="scene-depth" style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}>
-        {/* concentric spinning 3D holographic plates */}
+        {/* concentric spinning 3D holographic plates — 5-orbit Aurora system */}
         <div className="scene-orbit orbit-a" />
         <div className="scene-orbit orbit-b" />
         <div className="scene-orbit orbit-c" />
+        <div className="scene-orbit orbit-d" />
+        <div className="scene-orbit orbit-e" />
+        <div className="aurora-sweep" />
         
-        {/* Floating 3D Micro-particles */}
+        {/* Floating 3D Micro-particles with twinkle animation */}
         {particles.map((p, idx) => (
           <span
             key={idx}
@@ -258,9 +277,10 @@ function CockpitScene() {
               height: p.size,
               borderRadius: '50%',
               backgroundColor: p.color,
-              boxShadow: `0 0 10px ${p.color}`,
+              boxShadow: `0 0 ${p.size * 3}px ${p.color}, 0 0 ${p.size * 6}px ${p.color}`,
               transform: `translateZ(${p.z}px)`,
               opacity: 0.65,
+              animationDelay: p.delay,
             }}
           />
         ))}
@@ -607,10 +627,36 @@ const landingStyles = `
 .outcome-svg{width:38px;height:38px;color:rgba(248,248,255,.85);transition:color .3s ease}
 .outcome-card:hover .outcome-svg{color:#fff}
 
-/* Concentric Holo Orbit radar lines */
+/* Concentric Holo Orbit radar lines — 5-orbit Aurora system */
 .scene-orbit.orbit-a{inset:-18%;border:1px solid rgba(143,231,255,.12);box-shadow:0 0 30px rgba(143,231,255,.02);animation:spinClockwise 24s linear infinite}
 .scene-orbit.orbit-b{inset:8%;border:1px dashed rgba(169,134,255,.09);box-shadow:0 0 40px rgba(169,134,255,.02)}
 .scene-orbit.orbit-c{inset:28%;border:1.5px solid rgba(255,101,187,.20);box-shadow:0 0 50px rgba(255,101,187,.10),inset 0 0 60px rgba(143,231,255,.06);animation:spinClockwise 40s linear infinite}
+.scene-orbit.orbit-d{inset:42%;border:1px solid rgba(143,231,255,.08);opacity:.55;animation:spinCounterClockwise 18s linear infinite;box-shadow:0 0 20px rgba(143,231,255,.03)}
+.scene-orbit.orbit-e{inset:54%;border:0.5px dashed rgba(255,101,187,.07);opacity:.45;animation:spinClockwise 28s linear infinite}
+
+/* Aurora sweep — morphing nebula field behind everything */
+.aurora-sweep{position:absolute;inset:-25%;border-radius:50%;background:radial-gradient(ellipse at 30% 50%,rgba(143,231,255,.06) 0%,transparent 40%),radial-gradient(ellipse at 70% 30%,rgba(255,101,187,.05) 0%,transparent 45%),radial-gradient(ellipse at 50% 70%,rgba(169,134,255,.06) 0%,transparent 50%);animation:spinCounterClockwise 45s linear infinite;pointer-events:none;transform:translateZ(-100px);filter:blur(18px)}
+
+/* Particle animation — twinkle + micro-orbit */
+.scene-particle{animation:particleTwinkle 3.5s ease-in-out infinite,particleMicroOrbit 14s ease-in-out infinite}
+@keyframes particleTwinkle{0%,100%{opacity:.25}30%{opacity:.75}60%{opacity:.35}85%{opacity:.9}}
+@keyframes particleMicroOrbit{0%{translate:0 0}25%{translate:6px -8px}50%{translate:0 -14px}75%{translate:-6px -8px}100%{translate:0 0}}
+
+/* Module glow pulse */
+.scene-module{animation:floatCard 8s ease-in-out infinite,moduleGlow 4s ease-in-out infinite}
+@keyframes moduleGlow{0%,100%{box-shadow:0 24px 62px rgba(0,0,0,.28),0 0 15px var(--module-color)}50%{box-shadow:0 24px 62px rgba(0,0,0,.28),0 0 40px var(--module-color),0 0 80px var(--module-color)}}
+
+/* Core — multi-layer pulsing rotation */
+.core-glow{animation:pulseGlow 4s ease-in-out infinite,coreRotate 25s linear infinite}
+@keyframes coreRotate{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+
+/* Dossier Martin — scanning line effect */
+.scene-console{overflow:hidden}
+.scene-console:after{content:'';position:absolute;top:0;left:-10%;width:120%;height:1px;background:linear-gradient(90deg,transparent,rgba(143,231,255,.5) 30%,rgba(143,231,255,.8) 50%,rgba(143,231,255,.5) 70%,transparent);animation:consoleScan 3s ease-in-out infinite;pointer-events:none}
+@keyframes consoleScan{0%{top:0;opacity:0}20%{opacity:1}100%{top:100%;opacity:0}}
+
+/* Energy beams — radial light shafts */
+.scene-depth:after{content:'';position:absolute;inset:5%;border-radius:50%;background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,rgba(143,231,255,.025) 8deg,transparent 16deg,transparent 110deg,rgba(255,101,187,.02) 118deg,transparent 126deg,transparent 220deg,rgba(169,134,255,.025) 228deg,transparent 236deg,transparent 330deg,rgba(143,231,255,.015) 338deg,transparent 346deg);animation:spinClockwise 55s linear infinite;pointer-events:none;transform:translateZ(-50px)}
 
 /* Depth Parallax & Tilt Glow Hover on Sections & Cards */
 .product-card{transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease;transform-style:preserve-3d;perspective:1000px}
