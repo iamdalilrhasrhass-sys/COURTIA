@@ -67,6 +67,23 @@ function PrivateRoute({ children }) {
   return children
 }
 
+
+function PublicNotFound() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#02030b', color: '#f8f8ff', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <main style={{ maxWidth: 620, textAlign: 'center' }}>
+        <p style={{ margin: 0, color: '#8fe7ff', letterSpacing: '.14em', textTransform: 'uppercase', fontSize: 12, fontWeight: 800 }}>404</p>
+        <h1 style={{ margin: '16px 0 12px', fontSize: 'clamp(2.4rem, 8vw, 5rem)', lineHeight: .95, letterSpacing: '-.06em' }}>Page introuvable</h1>
+        <p style={{ margin: '0 auto 28px', color: '#c7c9da', lineHeight: 1.65 }}>Cette route n’existe pas. Vous pouvez revenir au cockpit public COURTIA ou consulter les tarifs.</p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/" style={{ minHeight: 46, display: 'inline-flex', alignItems: 'center', padding: '0 22px', borderRadius: 999, background: 'linear-gradient(135deg,#a9f1ff,#ff71bd)', color: '#060717', fontWeight: 800, textDecoration: 'none' }}>Retour accueil</a>
+          <a href="/tarifs" style={{ minHeight: 46, display: 'inline-flex', alignItems: 'center', padding: '0 22px', borderRadius: 999, border: '1px solid rgba(255,255,255,.18)', color: '#f8f8ff', fontWeight: 800, textDecoration: 'none' }}>Voir les tarifs</a>
+        </div>
+      </main>
+    </div>
+  )
+}
+
 // Layout avec sidebar — monte UNE SEULE FOIS pour toute la session authentifiée
 // Les pages enfants sont injectées via <Outlet /> (React Router nested routes)
 function AppLayout() {
@@ -142,6 +159,9 @@ export default function App() {
         <Route path="/register" element={<LoginPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/fonctionnalites" element={<LandingPublic />} />
+        <Route path="/demo" element={<LandingPublic />} />
+        <Route path="/contact" element={<LandingPublic />} />
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
@@ -177,12 +197,11 @@ export default function App() {
         </Route>
 
         {/* 404 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<PublicNotFound />} />
       </Routes>
     </BrowserRouter>
   )
 }
 // Trigger Vercel rebuild
 /* Build trigger 2 */
-
 
