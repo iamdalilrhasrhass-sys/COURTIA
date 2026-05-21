@@ -1,45 +1,46 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useState, useEffect, useCallback } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 
-// Pages
+// Public pages loaded in the main bundle
 import LoginPage from './pages/LoginPage'
-import Dashboard from './pages/Dashboard'
-import MorningBrief from './pages/MorningBrief'
-import Clients from './pages/Clients'
-import ClientDetail from './pages/ClientDetail'
-import Contrats from './pages/Contrats'
-import ClientNew from './pages/ClientNew'
-import ContratNew from './pages/ContratNew'
-import Taches from './pages/Taches'
-import Rapports from './pages/Rapports'
-import ReachDashboard from './pages/ReachDashboard'
-import ReachSearch from './pages/ReachSearch'
-import ReachProspects from './pages/ReachProspects'
-import ReachCampaigns from './pages/ReachCampaigns'
-import ReachInbox from './pages/ReachInbox'
-import ReachProspectDetail from './pages/ReachProspectDetail'
-import ReachMap from './pages/ReachMap'
-import ReachSettings from './pages/ReachSettings'
-import Parametres from './pages/Parametres'
-import Capitia from './pages/Capitia'
-import AnalyticsExecutive from './pages/AnalyticsExecutive'
-import Abonnement from './pages/Abonnement'
-import PaiementSucces from './pages/PaiementSucces'
-import PaiementAnnule from './pages/PaiementAnnule'
-import Onboarding from './pages/Onboarding'
 import LandingPublic from './pages/LandingPublic'
 import Tarifs from './pages/Tarifs'
 
-// Components
-import Sidebar from './components/Sidebar'
-import PaywallModal from './components/PaywallModal'
-import ImpersonationBanner from './components/ImpersonationBanner'
-import CommandPalette from './components/ui/CommandPalette'
+// Private app is code-split so the public landing does not pull the whole cockpit.
+const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const MorningBrief = lazy(() => import('./pages/MorningBrief'))
+const Clients = lazy(() => import('./pages/Clients'))
+const ClientDetail = lazy(() => import('./pages/ClientDetail'))
+const Contrats = lazy(() => import('./pages/Contrats'))
+const ClientNew = lazy(() => import('./pages/ClientNew'))
+const ContratNew = lazy(() => import('./pages/ContratNew'))
+const Taches = lazy(() => import('./pages/Taches'))
+const Rapports = lazy(() => import('./pages/Rapports'))
+const ReachDashboard = lazy(() => import('./pages/ReachDashboard'))
+const ReachSearch = lazy(() => import('./pages/ReachSearch'))
+const ReachProspects = lazy(() => import('./pages/ReachProspects'))
+const ReachCampaigns = lazy(() => import('./pages/ReachCampaigns'))
+const ReachInbox = lazy(() => import('./pages/ReachInbox'))
+const ReachProspectDetail = lazy(() => import('./pages/ReachProspectDetail'))
+const ReachMap = lazy(() => import('./pages/ReachMap'))
+const ReachSettings = lazy(() => import('./pages/ReachSettings'))
+const Parametres = lazy(() => import('./pages/Parametres'))
+const Capitia = lazy(() => import('./pages/Capitia'))
+const AnalyticsExecutive = lazy(() => import('./pages/AnalyticsExecutive'))
+const Abonnement = lazy(() => import('./pages/Abonnement'))
+const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
+const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
 
-// Stores / API
-import { usePlanStore } from './stores/planStore'
-import { onPaywallTriggered } from './api'
+function RouteFallback() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#02030b', color: '#f8f8ff', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      Chargement COURTIA...
+    </div>
+  )
+}
 
 // ScrollToTop — useLocation est inclus dans l'import react-router-dom du haut
 function ScrollToTop() {
@@ -84,76 +85,12 @@ function PublicNotFound() {
   )
 }
 
-// Layout avec sidebar — monte UNE SEULE FOIS pour toute la session authentifiée
-// Les pages enfants sont injectées via <Outlet /> (React Router nested routes)
-function AppLayout() {
-  const navigate = useNavigate()
-  const fetchPlanInfo = usePlanStore(s => s.fetchPlanInfo)
-  const [paywallError, setPaywallError] = useState(null)
-  const [cmdOpen, setCmdOpen] = useState(false)
-
-  useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
-  useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
-
-  // Global Cmd+K / Ctrl+K listener
-  const handleKeyDown = useCallback((e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
-      e.preventDefault()
-      setCmdOpen(prev => !prev)
-    }
-  }, [])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
-
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f6f2', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <Sidebar />
-      <main className="flex-1 ml-0 md:ml-[240px] pt-14 md:pt-0" style={{ background: '#f7f6f2', minHeight: '100vh' }}>
-        <ImpersonationBanner />
-        <Outlet />
-      </main>
-      <PaywallModal
-        open={!!paywallError}
-        error={paywallError}
-        onClose={() => setPaywallError(null)}
-        onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
-      />
-      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
-
-      {/* Bouton de secours Cmd+K */}
-      <button
-        onClick={() => setCmdOpen(true)}
-        title="Ouvrir la palette (⌘K)"
-        style={{
-          position: 'fixed', bottom: 20, right: 20, zIndex: 200,
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 14px',
-          background: '#080808', color: 'white',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 10, cursor: 'pointer',
-          fontSize: 12, fontWeight: 600,          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
-        onMouseLeave={e => e.currentTarget.style.background = '#080808'}
-      >
-        <span style={{ fontSize: 13 }}>⌘K</span>
-        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Recherche</span>
-      </button>
-    </div>
-  )
-}
-
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
-      <Routes>
+      <Suspense fallback={<RouteFallback />}><Routes>
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
@@ -166,7 +103,7 @@ export default function App() {
         <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Routes privées — AppLayout monte une seule fois, pages via Outlet */}
-        <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+        <Route element={<PrivateRoute><AppPrivateLayout /></PrivateRoute>}>
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/clients"       element={<Clients />} />
           <Route path="/clients/new"   element={<ClientNew />} />
@@ -198,7 +135,7 @@ export default function App() {
 
         {/* 404 */}
         <Route path="*" element={<PublicNotFound />} />
-      </Routes>
+      </Routes></Suspense>
     </BrowserRouter>
   )
 }
