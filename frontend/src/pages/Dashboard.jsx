@@ -12,6 +12,9 @@ import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } 
 import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyStateAurora, MobileCockpitCard, SectionGlow } from '../components/aurora/Aurora3D'
 import { BubbleCMini } from '../design/BubbleC'
+import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
+import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
+import DDACompliance from '../components/dda/DDACompliance'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -554,6 +557,25 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        </VibeScrollSection>
+
+        {/* VAGUE 2 — ARK Voice + Email Inbox + DDA Compliance */}
+        <VibeScrollSection delay={0.40} parallax={20}>
+          <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+            <EmailInboxUnified apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
+          </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.45} parallax={20}>
+          <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+            <DDACompliance apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
+          </div>
+        </VibeScrollSection>
+
+        <VibeScrollSection delay={0.50} parallax={20}>
+          <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+            <ArkVoiceCockpit apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
+          </div>
         </VibeScrollSection>
 
       </div>

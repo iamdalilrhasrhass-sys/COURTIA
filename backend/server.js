@@ -432,6 +432,7 @@ app.use('/api/ark-intelligence',  arkIntelligenceRouter)
 app.use('/api/comparator-engine', comparatorEngineRouter)
 app.use('/api',                   objectifsAdvancedRouter)   // /objectifs/* + /commissions/dashboard
 app.use('/api/conformite',        conformiteRouter)
+app.use('/api',                 require('./src/routes/killerFeatures2'))  // Vague 2: Voice + Email + DDA
 
 // ==================== PORTFOLIO CRON (03h00 Europe/Paris) ====================
 
