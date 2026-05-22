@@ -133,7 +133,7 @@ const pricing = [
   },
   {
     name: 'Pro',
-    price: '199 €',
+    price: '159 €',
     suffix: 'HT/mois',
     intro: 'Pour piloter réellement le cabinet avec ARK.',
     intent: 'L’offre logique pour un cabinet qui veut reprendre le contrôle.',
@@ -566,7 +566,7 @@ export default function LandingPublic() {
         <section id="pricing" className="courtia-section pricing-section">
           <SectionTitle
             eyebrow="Tarifs"
-            title="Une offre Pro à 199 € HT/mois pour piloter réellement le cabinet."
+            title="Une offre Pro à 159 € HT/mois pour piloter réellement le cabinet."
             text="Starter reste utile pour démarrer. Pro est l’offre centrale. Premium accompagne les cabinets structurés."
           />
           <div className="pricing-grid">
@@ -680,8 +680,9 @@ const landingStyles = `
   
   /* Elevate 3D Scene */
   .courtia-scene {
-    margin-top: 0px !important;
-    transform: scale(0.62) !important; transform-origin: top center !important; margin-top: -20px !important;
+    transform: scale(0.62) !important; 
+    transform-origin: top center !important; 
+    margin-top: -20px !important;
     mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   }

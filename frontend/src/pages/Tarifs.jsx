@@ -84,7 +84,7 @@ const plans = [
   },
   {
     name: 'Pro',
-    price: '199',
+    price: '159',
     desc: 'Pour piloter réellement le cabinet avec ARK',
     popular: true,
     features: {

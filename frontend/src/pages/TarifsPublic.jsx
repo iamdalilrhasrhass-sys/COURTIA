@@ -38,7 +38,7 @@ export default function TarifsPublic() {
           <div className="mk-price-grid" style={{ perspective: 1400 }}>
             {[
               { key: 'starter', eyebrow: 'Starter', price: '89€', sub: 'HT/mois', items: ['Dashboard portefeuille', 'Clients, contrats, tâches', 'Rapports essentiels', 'Pour 1 à 5 collaborateurs'], featured: false },
-              { key: 'pro', eyebrow: 'Pro · recommandé', price: '199€', sub: 'HT/mois', items: ['Morning Brief complet', 'Clients à risque & relances intelligentes', 'Rapports avancés + admin costs', 'Pour cabinets en croissance'], featured: true },
+              { key: 'pro', eyebrow: 'Pro · recommandé', price: '159€', sub: 'HT/mois', items: ['Morning Brief complet', 'Clients à risque & relances intelligentes', 'Rapports avancés + admin costs', 'Pour cabinets en croissance'], featured: true },
               { key: 'cabinet', eyebrow: 'Cabinet', price: 'Sur devis', sub: '', items: ['Multi-utilisateurs avancé', 'Commissions et reporting cabinet', 'Intégrations étendues', 'Support renforcé'], featured: false },
             ].map((p, i) => (
               <motion.article
