@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
+import { AuroraBackground } from './components/aurora/Aurora3D'
 import AuroraMobileTopbar from './components/aurora/AuroraMobileTopbar'
 import AuroraBottomNav from './components/aurora/AuroraBottomNav'
 import { usePlanStore } from './stores/planStore'
@@ -32,7 +33,8 @@ export default function AppPrivateLayout() {
   }, [handleKeyDown])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#050510', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <AuroraBackground>
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       
       {/* Aurora Mobile Components */}
       <AuroraMobileTopbar onMenuClick={() => setMobileMenuOpen(true)} />
@@ -74,5 +76,6 @@ export default function AppPrivateLayout() {
         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Recherche</span>
       </button>
     </div>
+    </AuroraBackground>
   )
 }

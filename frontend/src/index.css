@@ -182,3 +182,17 @@ main[style*="background:#f7f6f2"] {
 .flex-1.ml-0.md\:ml-\[240px\] textarea::placeholder {
   color: rgba(248, 250, 252, 0.3) !important;
 }
+
+/* Aurora3D Mobile Cockpit Card (shared by landing + dashboard) */
+.mobile-cockpit-card{display:none;position:relative;width:100%;padding:24px 18px;border:1px solid rgba(255,255,255,0.08);border-radius:22px;background:linear-gradient(145deg,rgba(14,16,28,0.55),rgba(5,6,12,0.7));backdrop-filter:blur(20px);box-shadow:0 24px 48px rgba(0,0,0,0.5),inset 0 1px 1px rgba(255,255,255,0.08)}
+.mcc-orb{display:flex;justify-content:center;margin-bottom:14px}
+.mcc-orb-label{text-align:center;margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(143,231,255,0.55)}
+.mcc-title{text-align:center;font-size:1.05rem;font-weight:700;color:#f8f8ff;margin-bottom:16px;letter-spacing:-0.02em}
+.mcc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:14px}
+.mcc-chip{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#c8cadc;font-size:0.76rem;font-weight:500}
+.mcc-chip small{display:block;margin-left:auto;color:var(--mc,#8fe7ff);font-size:0.62rem;font-weight:600}
+.mcc-footer{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(2,3,11,0.4);border:1px solid rgba(255,255,255,0.05)}
+.mcc-dot{width:7px;height:7px;border-radius:50%;background:#8dffcf;box-shadow:0 0 12px #8dffcf;flex-shrink:0}
+.mcc-footer b{color:#fff;font-size:0.82rem}
+.mcc-footer small{color:#8f93ad;font-size:0.68rem;margin-left:auto}
+@media(max-width:820px){.mobile-cockpit-card{display:block;margin:6px 0}}

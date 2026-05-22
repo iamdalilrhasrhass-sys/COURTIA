@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 function Icon({ name, size = 18, ...props }) {
   const common = {

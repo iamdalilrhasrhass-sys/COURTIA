@@ -17,7 +17,7 @@ const plans = [
   {
     code: 'pro',
     name: 'Pro',
-    price: '159 €',
+    price: '199 €',
     suffix: 'HT/mois',
     icon: Sparkles,
     featured: true,
