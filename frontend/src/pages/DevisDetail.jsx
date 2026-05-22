@@ -16,6 +16,7 @@ import { AuroraButton } from '../components/aurora/AuroraButton'
 import { AuroraBadge } from '../components/aurora/AuroraBadge'
 import { AuroraSpinner } from '../components/aurora/AuroraSpinner'
 import { AuroraDialog } from '../components/aurora/AuroraDialog'
+import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
@@ -86,11 +87,14 @@ export default function DevisDetail() {
   }
 
   if (chargement) return (
-    <div style={{ padding: 60, textAlign: 'center' }}>
-      <AuroraSpinner /> <span style={{ color: T.textSecondary, marginLeft: 12 }}>Chargement...</span>
-    </div>
+    <LoadingAurora label="Chargement du devis..." />
   )
-  if (!data) return null
+  if (!data) return (
+    <EmptyStateAurora
+      title="Devis introuvable"
+      description="Ce devis n'existe pas ou a été supprimé."
+    />
+  )
 
   const d = data.devis
   const stepIdx = STATUS_TIMELINE.indexOf(d.status)

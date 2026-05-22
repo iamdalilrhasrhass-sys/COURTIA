@@ -10,6 +10,7 @@ import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
 import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } from '../components/vibe'
 import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
+import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyStateAurora, MobileCockpitCard, SectionGlow } from '../components/aurora/Aurora3D'
 import { BubbleCMini } from '../design/BubbleC'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
@@ -225,10 +226,27 @@ export default function Dashboard() {
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
   const urgentCount = ARK_PRIORITIES.filter(p => p.level === 'urgent').length
 
+  const isEmpty = !stats && clients.length === 0
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <BubbleCMini size={80} animated />
+      </div>
+    )
+  }
+
+  if (isEmpty) {
+    return (
+      <div style={{ minHeight: '100vh', padding: '24px 24px 48px', color: T.text }}>
+        <VibeBackdrop intensity={0.85} />
+        <EmptyStateAurora
+          icon={Sparkles}
+          title="Aucune donnée pour le moment"
+          description="Votre cockpit s'enrichira dès que vous ajouterez vos premiers clients et contrats. L'IA ARK analysera automatiquement vos priorités."
+          actionLabel="Ajouter un client"
+          onAction={() => navigate('/clients/new')}
+        />
       </div>
     )
   }
@@ -254,6 +272,9 @@ export default function Dashboard() {
       <ScrollGlow />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto' }}>
+
+        {/* SectionGlow — halo lumineux en haut du dashboard */}
+        <SectionGlow color="#8fe7ff" style={{ top: -10 }} />
 
         {/* HEADER cockpit */}
         <header style={{ marginBottom: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -292,15 +313,34 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* ROW 1 — 4 KPIs cockpit */}
+        {/* ROW 1 — 4 KPIs cockpit avec CockpitMetricCard */}
         <VibeScrollSection delay={0.1} parallax={15}>
         <VibeStagger style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 18}} itemStyle={{flex: '1 1 220px'}}>
-          <KpiCard label="Clients actifs"   value={fmtNum(metrics.activeClients)}   icon={Users}    accent={T.accent}  delta="+8 ce mois" deltaPositive />
-          <KpiCard label="Contrats actifs"  value={fmtNum(metrics.activeContracts)} icon={FileText} accent={T.blue}    delta="+12" deltaPositive sub="ce mois" />
-          <KpiCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)}     icon={Euro}     accent={T.success} delta="+5,2%" deltaPositive sub="vs M-1" />
-          <KpiCard label="Score santé"      value={`${metrics.healthScore}%`}       icon={Heart}    accent={T.ark}     delta="+2 pts" deltaPositive sub="bon état" />
+          <PriorityHalo color="#5B4DF5" intensity={0.7}>
+            <CockpitMetricCard label="Clients actifs" value={fmtNum(metrics.activeClients)} icon={Users} color="#5B4DF5" trend="+8 ce mois" />
+          </PriorityHalo>
+          <PriorityHalo color="#3B82F6" intensity={0.7}>
+            <CockpitMetricCard label="Contrats actifs" value={fmtNum(metrics.activeContracts)} icon={FileText} color="#3B82F6" trend="+12 ce mois" />
+          </PriorityHalo>
+          <PriorityHalo color="#22C55E" intensity={0.7}>
+            <CockpitMetricCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)} icon={Euro} color="#22C55E" trend="+5,2% vs M-1" />
+          </PriorityHalo>
+          <PriorityHalo color="#8B5CF6" intensity={0.7}>
+            <CockpitMetricCard label="Score santé" value={`${metrics.healthScore}%`} icon={Heart} color="#8B5CF6" trend="+2 pts · bon état" />
+          </PriorityHalo>
         </VibeStagger>
         </VibeScrollSection>
+
+        {/* MobileCockpitCard — cockpit visuel mobile uniquement */}
+        <MobileCockpitCard
+          modules={[
+            { name: 'Clients', status: `${metrics.activeClients} actifs`, color: '#8fe7ff' },
+            { name: 'Contrats', status: `${metrics.activeContracts} actifs`, color: '#a986ff' },
+            { name: 'Relances', status: `${urgentCount} urgentes`, color: '#ff9a55' },
+            { name: 'Primes', status: fmtEur(metrics.annualPrime), color: '#ff65bb' },
+          ]}
+          title="Votre cockpit, en un coup d'œil"
+        />
 
         {/* ROW 2 — Priorités ARK + Échéances 30j */}
         <VibeScrollSection delay={0.15} parallax={25}>
@@ -322,7 +362,8 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {ARK_PRIORITIES.map(p => {
                 const badge = LEVEL_BADGE[p.level] || LEVEL_BADGE.moyen
-                return (
+                const isUrgent = p.level === 'urgent'
+                const item = (
                   <div key={p.id} style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     padding: '11px 12px', borderRadius: 10,
@@ -354,6 +395,7 @@ export default function Dashboard() {
                     </button>
                   </div>
                 )
+                return isUrgent ? <PriorityHalo key={p.id} color={p.accent} intensity={0.9}>{item}</PriorityHalo> : item
               })}
             </div>
           </AuroraCard>
@@ -369,29 +411,33 @@ export default function Dashboard() {
               onCta={() => navigate('/contrats')}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {ECHEANCES.map((e, i) => (
-                <div key={e.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '11px 0',
-                  borderBottom: i < ECHEANCES.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
-                }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 9,
-                    background: e.jours <= 30 ? 'rgba(245,158,11,0.10)' : 'rgba(91,77,245,0.10)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
+              {ECHEANCES.map((e, i) => {
+                const isUrgent = e.jours <= 30
+                const row = (
+                  <div key={e.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '11px 0',
+                    borderBottom: i < ECHEANCES.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
                   }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, lineHeight: 1 }}>J-</div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: e.jours <= 30 ? T.warning : T.accent, lineHeight: 1 }}>{e.jours}</div>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 9,
+                      background: e.jours <= 30 ? 'rgba(245,158,11,0.10)' : 'rgba(91,77,245,0.10)',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, lineHeight: 1 }}>J-</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: e.jours <= 30 ? T.warning : T.accent, lineHeight: 1 }}>{e.jours}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{e.type} — {e.client}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{e.compagnie} • {e.date}</div>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.text, flexShrink: 0 }}>{fmtEur(e.prime)}</div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{e.type} — {e.client}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{e.compagnie} • {e.date}</div>
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, flexShrink: 0 }}>{fmtEur(e.prime)}</div>
-                </div>
-              ))}
+                )
+                return isUrgent ? <PriorityHalo key={e.id} color={T.warning} intensity={0.7}>{row}</PriorityHalo> : row
+              })}
             </div>
           </AuroraCard>
         </div>

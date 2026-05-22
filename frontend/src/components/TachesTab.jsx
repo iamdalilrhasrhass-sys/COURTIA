@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { Plus, Clock, X, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
+import { EmptyStateAurora } from '../components/aurora/Aurora3D'
 
 const KANBAN_COLUMNS = [
   { id: 'a_faire', title: 'À faire', headerColor: 'text-slate-700', bgColor: 'bg-slate-50/30', borderColor: 'border-slate-300/60' },
@@ -136,10 +137,12 @@ export default function TachesTab({ taches: initialTaches = [], clientId, _navig
       </div>
       
       {taches.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 bg-white/50 backdrop-blur-lg border border-slate-200/50 rounded-2xl shadow-sm">
-          <p className="font-semibold text-gray-600">Aucune tâche pour ce client</p>
-          <p className="mt-1 text-sm text-gray-400">Organisez votre travail en créant votre première tâche.</p>
-        </motion.div>
+        <EmptyStateAurora
+          title="Aucune tâche pour ce client"
+          description="Organisez votre travail en créant votre première tâche."
+          actionLabel="Nouvelle tâche"
+          onAction={() => openModal()}
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {KANBAN_COLUMNS.map(col => (

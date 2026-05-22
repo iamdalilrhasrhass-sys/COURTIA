@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
+import { GlassPanel, ArkStatusBadge, EmptyStateAurora } from '../components/aurora/Aurora3D'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -95,6 +96,11 @@ const STATUS = {
 
 const getInitials = (c) => ((c?.prenom || '').charAt(0) + (c?.nom || '').charAt(0)).toUpperCase() || '?'
 
+const statusToVariant = (s) => {
+  const map = { actif: 'success', prospect: 'info', a_risque: 'danger', silencieux: 'warning', perdu: 'neutral' }
+  return map[s] || 'neutral'
+}
+
 const daysAgo = (d) => {
   if (!d) return null
   const diff = Date.now() - new Date(d).getTime()
@@ -168,7 +174,7 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
       style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}
     >
       {/* Identité */}
-      <Card padding={16} accent={T.accent}>
+      <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle icon={User} title="Informations" iconColor={T.accent} />
         <InfoRow icon={Mail}     label="Email"           value={client.email} />
         <InfoRow icon={Phone}    label="Téléphone"       value={client.telephone} />
@@ -176,10 +182,10 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
         <InfoRow icon={FileText} label="SIRET"           value={client.siret} />
         <InfoRow icon={Calendar} label="Client depuis"   value={new Date(client.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} />
         <InfoRow icon={Clock}    label="Dernier contact" value={`il y a ${daysAgo(client.last_contact)} jours`} last />
-      </Card>
+      </GlassPanel>
 
       {/* Contrats actifs */}
-      <Card padding={16} accent={T.blue}>
+      <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle
           icon={Shield} title={`Contrats actifs (${contracts.length})`}
           iconColor={T.blue}
@@ -205,13 +211,13 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+              </div>
+            ))}
         </div>
-      </Card>
+      </GlassPanel>
 
       {/* Devis en cours */}
-      <Card padding={16} accent={T.warning}>
+      <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle icon={FileSignature} title={`Devis (${devis.length})`} iconColor={T.warning} />
         {devis.length === 0 ? (
           <div style={{ fontSize: 12, color: T.textMuted, padding: '10px 0' }}>Aucun devis en cours.</div>
@@ -241,10 +247,10 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
             ))}
           </div>
         )}
-      </Card>
+      </GlassPanel>
 
       {/* Tâches + Relances */}
-      <Card padding={16} accent={T.danger}>
+      <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle icon={Bell} title="Actions à venir" iconColor={T.danger} />
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
@@ -279,10 +285,10 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
             </div>
           ))}
         </div>
-      </Card>
+      </GlassPanel>
 
       {/* Documents */}
-      <Card padding={16} accent={T.cyan}>
+      <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle icon={FolderOpen} title={`Documents (${docs.length})`} iconColor={T.cyan} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {docs.map((d, i) => (
@@ -297,10 +303,10 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
             </div>
           ))}
         </div>
-      </Card>
+      </GlassPanel>
 
       {/* Activité récente */}
-      <Card padding={16} accent={T.ark}>
+      <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle icon={Activity} title="Activité récente" iconColor={T.ark} />
         <div>
           {history.slice(0, 5).map((e, i) => (
@@ -324,7 +330,7 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
             </div>
           ))}
         </div>
-      </Card>
+      </GlassPanel>
     </motion.div>
   )
 }
@@ -459,10 +465,7 @@ export default function ClientDetail() {
               color: T.text, margin: 0, lineHeight: 1.2,
             }}>{client.prenom} {client.nom}</h1>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-              <span style={{
-                padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                background: `${status.color}15`, color: status.color,
-              }}>{status.label}</span>
+              <ArkStatusBadge label={status.label} variant={statusToVariant(client.statut)} />
               <span style={{
                 padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
                 background: T.arkBg, color: T.ark, border: `1px solid ${T.arkBorder}`,
@@ -558,7 +561,7 @@ export default function ClientDetail() {
             <motion.div key="ct" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {DEMO_CONTRACTS.map(c => (
-                  <Card key={c.id} padding={14} onClick={() => navigate('/contrats')}>
+                  <GlassPanel key={c.id} hover style={{ padding: 14 }} onClick={() => navigate('/contrats')}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{c.type}</div>
@@ -571,7 +574,7 @@ export default function ClientDetail() {
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </GlassPanel>
                 ))}
               </div>
             </motion.div>
@@ -580,7 +583,7 @@ export default function ClientDetail() {
             <motion.div key="dv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {DEMO_DEVIS.map(d => (
-                  <Card key={d.id} padding={14}>
+                  <GlassPanel key={d.id} hover style={{ padding: 14 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Devis {d.ref} — {d.produit}</div>
@@ -595,14 +598,14 @@ export default function ClientDetail() {
                         }}>{d.statut === 'signe' ? 'Signé' : 'En attente'}</span>
                       </div>
                     </div>
-                  </Card>
+                  </GlassPanel>
                 ))}
               </div>
             </motion.div>
           )}
           {tab === 'documents' && (
             <motion.div key="dc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Card padding={14}>
+              <GlassPanel style={{ padding: 14 }}>
                 {DEMO_DOCS.map((d, i) => (
                   <div key={d.id} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -614,20 +617,20 @@ export default function ClientDetail() {
                     <span style={{ fontSize: 11, color: T.textMuted }}>{d.when}</span>
                   </div>
                 ))}
-              </Card>
+              </GlassPanel>
             </motion.div>
           )}
           {tab === 'activite' && <ActiviteTab key="act" history={DEMO_HISTORY} />}
           {tab === 'ark' && (
             <motion.div key="ark" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Card padding={20} accent={T.ark} style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(91,77,245,0.03))' }}>
+              <GlassPanel style={{ padding: 20, background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(91,77,245,0.03))' }}>
                 <SectionTitle icon={Sparkles} title="Recommandations ARK" iconColor={T.ark} />
                 <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>
                   <p><strong style={{ color: T.text }}>🎯 Cross-sell PJ</strong> — Profil idéal pour Protection Juridique. Potentiel <strong style={{ color: T.success }}>1 200€/an</strong>.</p>
                   <p><strong style={{ color: T.text }}>⚠️ Renouvellement RC Pro J-21</strong> — Préparer comparatif Aurora / Novalia. La prime actuelle (2 800€) est <strong style={{ color: T.warning }}>au-dessus du marché</strong>.</p>
                   <p><strong style={{ color: T.text }}>💡 Multi-équipement</strong> — 3 contrats, mais pas de Santé ni Prévoyance. Suggérer un bilan complet.</p>
                 </div>
-              </Card>
+              </GlassPanel>
             </motion.div>
           )}
         </AnimatePresence>

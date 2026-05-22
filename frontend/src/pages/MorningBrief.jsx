@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
 import { computeDailyPriorities } from '../lib/priorities'
+import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const T = {
@@ -103,6 +104,25 @@ export default function MorningBrief() {
 
   const userName = user?.first_name || user?.firstName || ''
   const greeting = getGreeting()
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.bg }}>
+      <LoadingAurora label="ARK analyse votre portefeuille..." />
+    </div>
+  )
+
+  const hasPriorities = priorities.urgentes?.length > 0 || priorities.aFaire?.length > 0
+
+  if (!hasPriorities) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.bg }}>
+      <EmptyStateAurora
+        title="Aucune priorité détectée"
+        description="Aucune priorité détectée pour aujourd'hui. Ajoutez des clients et contrats pour qu'ARK puisse vous aider."
+        actionLabel="Ajouter un client"
+        onAction={() => navigate('/clients/new')}
+      />
+    </div>
+  )
 
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
