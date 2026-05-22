@@ -11,6 +11,8 @@ import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { GlassPanel, ArkStatusBadge, EmptyStateAurora } from '../components/aurora/Aurora3D'
 import DossierOrbitalRings from '../components/widgets/DossierOrbitalRings'
+import DealTimelineScrubber from '../components/widgets/DealTimelineScrubber'
+import RiskDnaHelix from '../components/widgets/RiskDnaHelix'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -317,6 +319,31 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
             </div>
           ))}
         </div>
+      </GlassPanel>
+
+      {/* Timeline dossier */}
+      <GlassPanel glow={false} style={{ padding: 16 }}>
+        <SectionTitle icon={Clock} title="Historique du dossier" iconColor={T.ark} />
+        <DealTimelineScrubber
+          events={history.slice(0, 8).map((e, i) => ({
+            id: String(e.id), label: e.action, date: e.when,
+            type: i === 0 ? 'current' : 'past', icon: e.icon?.name || 'file'
+          }))}
+        />
+      </GlassPanel>
+
+      {/* Risque dossier — DNA Helix */}
+      <GlassPanel glow={false} style={{ padding: 16 }}>
+        <SectionTitle icon={AlertTriangle} title="Profil de risque" iconColor={T.warning} />
+        <RiskDnaHelix
+          factors={[
+            { id: 'sinistres', label: 'Sinistralité', value: 45, weight: 0.3 },
+            { id: 'impayes', label: 'Impayés', value: 20, weight: 0.25 },
+            { id: 'anciennete', label: 'Ancienneté', value: 85, weight: 0.2 },
+            { id: 'diversification', label: 'Diversification', value: 60, weight: 0.15 },
+            { id: 'engagement', label: 'Engagement', value: 70, weight: 0.1 },
+          ]}
+        />
       </GlassPanel>
 
       {/* Activité récente */}

@@ -64,9 +64,9 @@ export default function DossierOrbitalRings({
   const innerFillDeg = (fieldsScore / 100) * 340
 
   const scoreColor = globalScore >= 80
-    ? '#1D9E75'
+    ? '#22C55E'
     : globalScore >= 55
-    ? '#EF9F27'
+    ? '#F59E0B'
     : '#E24B4A'
 
   return (

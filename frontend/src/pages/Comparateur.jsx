@@ -8,6 +8,8 @@ import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
+import ArkRadarCombat from '../components/widgets/ArkRadarCombat'
+import OfferPodium from '../components/widgets/OfferPodium'
 import toast from 'react-hot-toast'
 
 const T = {
@@ -239,6 +241,40 @@ export default function Comparateur() {
               <QuoteCard key={q.provider} quote={q} rank={idx + 1} onClick={() => setSelected(q)} />
             ))}
           </div>
+        )}
+
+        {/* Vue Radar — Comparaison visuelle des offres */}
+        {result?.quotes && result.quotes.length >= 2 && (
+          <VibeScrollSection delay={0.3} parallax={12}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
+              <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Radar ARK — 6 axes</h3>
+                <ArkRadarCombat
+                  offers={result.quotes.slice(0, 3).map(q => ({
+                    id: q.provider, partnerName: q.provider,
+                    recommended: q.provider === result.summary?.ark_recommendation,
+                    scores: { price: q.ark_score || 70, coverage: q.coverage_score || 70, acceptance: q.acceptance_score || 70, margin: q.margin_score || 70, stability: q.stability_score || 70, speed: q.speed_score || 70 }
+                  }))}
+                  onOfferClick={(o) => console.log('Radar:', o)}
+                  size={220}
+                />
+              </div>
+              <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Podium ARK</h3>
+                <OfferPodium
+                  offers={result.quotes.slice(0, 4).map((q, i) => ({
+                    id: q.provider, partnerName: q.provider,
+                    totalScore: q.ark_score || (85 - i * 10),
+                    monthlyPrice: q.monthly_price || 35,
+                    commissionRate: q.commission || 15,
+                    recommended: q.provider === result.summary?.ark_recommendation
+                  }))}
+                  onSelect={(o) => console.log('Podium:', o)}
+                  profile="client"
+                />
+              </div>
+            </div>
+          </VibeScrollSection>
         )}
 
         {/* Empty state */}

@@ -124,7 +124,7 @@ export default function CommissionForecastBar({
                 <rect
                   x={x} y={y} width={barWidth} height={barH}
                   rx={3}
-                  fill={isReal ? '#534AB7' : '#9F97E8'}
+                  fill={isReal ? '#8B5CF6' : '#9F97E8'}
                   opacity={isReal ? (isHovered ? 1 : 0.85) : (isHovered ? 0.7 : 0.45)}
                 />
 

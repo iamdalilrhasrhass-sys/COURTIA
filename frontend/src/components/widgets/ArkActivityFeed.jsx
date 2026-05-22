@@ -8,19 +8,19 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ACTION_LABELS = {
-  analyze_dossier:     { label: 'Analyse dossier',         icon: '🔍', color: '#534AB7' },
-  recommend:           { label: 'Recommandation',          icon: '⭐', color: '#1D9E75' },
-  draft_message:       { label: 'Rédaction message',       icon: '✍️',  color: '#378ADD' },
-  compare_offers:      { label: 'Comparaison offres',      icon: '⚖️',  color: '#EF9F27' },
-  extract_document:    { label: 'Extraction document',     icon: '📄', color: '#7F77DD' },
-  readiness_check:     { label: 'Check complétude',        icon: '✅', color: '#1D9E75' },
-  risk_qualification:  { label: 'Qualification risque',    icon: '⚠️',  color: '#D85A30' },
+  analyze_dossier:     { label: 'Analyse dossier',         icon: '🔍', color: '#8B5CF6' },
+  recommend:           { label: 'Recommandation',          icon: '⭐', color: '#22C55E' },
+  draft_message:       { label: 'Rédaction message',       icon: '✍️',  color: '#22D3EE' },
+  compare_offers:      { label: 'Comparaison offres',      icon: '⚖️',  color: '#F59E0B' },
+  extract_document:    { label: 'Extraction document',     icon: '📄', color: '#8B5CF6' },
+  readiness_check:     { label: 'Check complétude',        icon: '✅', color: '#22C55E' },
+  risk_qualification:  { label: 'Qualification risque',    icon: '⚠️',  color: '#EF4444' },
 }
 
 const MODEL_BADGES = {
-  'claude-haiku-4-5-20251001':   { label: 'Haiku',  color: '#1D9E75' },
-  'claude-sonnet-4-20250514':    { label: 'Sonnet', color: '#534AB7' },
-  'deepseek-v3':                 { label: 'DeepSeek', color: '#378ADD' },
+  'claude-haiku-4-5-20251001':   { label: 'Haiku',  color: '#22C55E' },
+  'claude-sonnet-4-20250514':    { label: 'Sonnet', color: '#8B5CF6' },
+  'deepseek-v3':                 { label: 'DeepSeek', color: '#22D3EE' },
 }
 
 function generateMockActivities(n = 15) {
@@ -153,9 +153,9 @@ export default function ArkActivityFeed({
           <p className="text-xs text-slate-400 text-center py-6">Aucune activité</p>
         )}
         {filtered.map(activity => {
-          const def = ACTION_LABELS[activity.action] ?? { label: activity.action, icon: '⚡', color: '#888780' }
-          const modelDef = MODEL_BADGES[activity.model] ?? { label: activity.model, color: '#888780' }
-          const confColor = activity.confidence >= 85 ? '#1D9E75' : activity.confidence >= 70 ? '#EF9F27' : '#E24B4A'
+          const def = ACTION_LABELS[activity.action] ?? { label: activity.action, icon: '⚡', color: '#6B7280' }
+          const modelDef = MODEL_BADGES[activity.model] ?? { label: activity.model, color: '#6B7280' }
+          const confColor = activity.confidence >= 85 ? '#22C55E' : activity.confidence >= 70 ? '#F59E0B' : '#E24B4A'
 
           return (
             <div key={activity.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">

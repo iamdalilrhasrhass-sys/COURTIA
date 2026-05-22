@@ -15,6 +15,9 @@ import { BubbleCMini } from '../design/BubbleC'
 import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
 import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
 import DDACompliance from '../components/dda/DDACompliance'
+import DealFlowRiver from '../components/widgets/DealFlowRiver'
+import ConversionGravityFunnel from '../components/widgets/ConversionGravityFunnel'
+import ArkActivityFeed from '../components/widgets/ArkActivityFeed'
 
 // ─── Tokens Aurora Bubble C ───────────────────────────────────────
 const T = {
@@ -577,6 +580,48 @@ export default function Dashboard() {
         <VibeScrollSection delay={0.45} parallax={18}>
           <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
             <EmailInboxUnified apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
+          </div>
+        </VibeScrollSection>
+
+        {/* DEAL FLOW — Pipeline visuel des dossiers */}
+        <VibeScrollSection delay={0.55} parallax={14}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>
+            <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Pipeline dossiers</h3>
+              <DealFlowRiver
+                stages={[
+                  { id: 'prospect', label: 'Prospect', count: 14, color: T.accent },
+                  { id: 'analyse', label: 'Analyse', count: 9, color: T.cyan },
+                  { id: 'devis', label: 'Devis', count: 7, color: T.warning },
+                  { id: 'nego', label: 'Négo', count: 4, color: T.danger },
+                  { id: 'signe', label: 'Signé', count: 6, color: T.success },
+                ]}
+              />
+            </div>
+            <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Tunnel de conversion</h3>
+              <ConversionGravityFunnel
+                stages={[
+                  { id: 'prospect', label: 'Prospects', count: 42, color: T.accent },
+                  { id: 'analyse', label: 'En analyse', count: 28, color: T.ark },
+                  { id: 'devis', label: 'Devis envoyés', count: 18, color: T.cyan, arkNote: '4 sans réponse' },
+                  { id: 'nego', label: 'Négociation', count: 9, color: T.warning, arkNote: 'Goulet: 50% drop' },
+                  { id: 'signe', label: 'Signés', count: 6, color: T.success },
+                ]}
+              />
+            </div>
+          </div>
+        </VibeScrollSection>
+
+        {/* ARK ACTIVITY FEED */}
+        <VibeScrollSection delay={0.60} parallax={14}>
+          <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
+            <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={14} color={T.ark} /> Activité ARK
+              </h3>
+              <ArkActivityFeed onRefresh={() => Promise.resolve([])} autoRefresh={false} />
+            </div>
           </div>
         </VibeScrollSection>
 

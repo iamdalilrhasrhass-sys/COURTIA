@@ -9,9 +9,9 @@
 import { useState, useCallback } from 'react'
 
 const CHANNELS = [
-  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', color: '#1D9E75' },
-  { id: 'email',    label: 'Email',    icon: '✉️',  color: '#378ADD' },
-  { id: 'sms',      label: 'SMS',      icon: '📱',  color: '#7F77DD' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', color: '#22C55E' },
+  { id: 'email',    label: 'Email',    icon: '✉️',  color: '#22D3EE' },
+  { id: 'sms',      label: 'SMS',      icon: '📱',  color: '#8B5CF6' },
 ]
 
 const TEMPLATES = [
@@ -225,7 +225,7 @@ Améliore-le pour le rendre naturel, humain et adapté au canal ${channel}. Maxi
             </label>
             <button
               className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-all disabled:opacity-40"
-              style={{ backgroundColor: confirmed ? activeChannel.color : '#D1D5DB' }}
+              style={{ backgroundColor: confirmed ? activeChannel.color : '#6B7280' }}
               disabled={!confirmed}
               onClick={handleSend}
             >

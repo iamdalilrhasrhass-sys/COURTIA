@@ -8,6 +8,7 @@ import { AuroraBackground } from './components/aurora/Aurora3D'
 import AuroraMobileTopbar from './components/aurora/AuroraMobileTopbar'
 import AuroraBottomNav from './components/aurora/AuroraBottomNav'
 import { Particles, ScrollGlow } from './components/vibe/VibePage'
+import ArkNeuralPulse from './components/widgets/ArkNeuralPulse'
 import { usePlanStore } from './stores/planStore'
 import { onPaywallTriggered } from './api'
 
@@ -56,6 +57,11 @@ export default function AppPrivateLayout() {
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+
+      {/* ARK Neural Pulse — indicateur signature */}
+      <div style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 200, opacity: 0.55, pointerEvents: 'none' }}>
+        <ArkNeuralPulse isThinking={false} confidence={78} label="ARK actif" width={200} height={80} />
+      </div>
 
       <button
         onClick={() => setCmdOpen(true)}

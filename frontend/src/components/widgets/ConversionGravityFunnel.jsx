@@ -8,11 +8,11 @@
 import { useEffect, useRef, useState } from 'react'
 
 const DEFAULT_STAGES = [
-  { id: 'prospect',    label: 'Prospects',     count: 42, color: '#7F77DD', arkNote: null },
-  { id: 'analyse',     label: 'En analyse',    count: 28, color: '#534AB7', arkNote: null },
-  { id: 'devis',       label: 'Devis envoyés', count: 18, color: '#1D9E75', arkNote: '4 sans réponse depuis 5j' },
-  { id: 'negociation', label: 'Négociation',   count: 9,  color: '#EF9F27', arkNote: 'Goulet : 50% de drop ici' },
-  { id: 'signature',   label: 'Signés',        count: 6,  color: '#1D9E75', arkNote: null },
+  { id: 'prospect',    label: 'Prospects',     count: 42, color: '#8B5CF6', arkNote: null },
+  { id: 'analyse',     label: 'En analyse',    count: 28, color: '#8B5CF6', arkNote: null },
+  { id: 'devis',       label: 'Devis envoyés', count: 18, color: '#22C55E', arkNote: '4 sans réponse depuis 5j' },
+  { id: 'negociation', label: 'Négociation',   count: 9,  color: '#F59E0B', arkNote: 'Goulet : 50% de drop ici' },
+  { id: 'signature',   label: 'Signés',        count: 6,  color: '#22C55E', arkNote: null },
 ]
 
 export default function ConversionGravityFunnel({
@@ -106,7 +106,7 @@ export default function ConversionGravityFunnel({
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
-                  backgroundColor: '#EF9F27',
+                  backgroundColor: '#F59E0B',
                   boxShadow: '0 0 0 3px rgba(239,159,39,0.2)',
                 }} />
               )}

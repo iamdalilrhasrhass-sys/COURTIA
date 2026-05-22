@@ -6,6 +6,7 @@ import {
   ChevronRight, PieChart, Activity, ArrowUp, ArrowDown, Clock,
   CheckCircle2, XCircle, Lightbulb, Layers
 } from 'lucide-react'
+import CommissionForecastBar from '../components/widgets/CommissionForecastBar'
 
 // ─── Aurora Dark Theme Tokens ──────────────────────────────────────────────
 const T = {
@@ -851,6 +852,13 @@ export default function Rapports() {
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Commission Forecast */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.6 }}
+          style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: '18px 20px', marginBottom: 24 }}>
+          <SectionHeader icon={Euro} title="Prévisions commissions" badge="12 mois" />
+          <CommissionForecastBar onBarClick={({ month, amount }) => console.log('Month:', month, amount)} />
         </motion.div>
 
         {/* ── Footer note ── */}

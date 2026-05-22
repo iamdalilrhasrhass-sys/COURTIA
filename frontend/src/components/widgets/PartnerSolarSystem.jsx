@@ -11,11 +11,11 @@
 import { useEffect, useRef, useState } from 'react'
 
 const STATUS_COLORS = {
-  connected: { fill: '#1D9E75', label: 'Connecté' },
-  to_verify: { fill: '#EF9F27', label: 'À vérifier' },
+  connected: { fill: '#22C55E', label: 'Connecté' },
+  to_verify: { fill: '#F59E0B', label: 'À vérifier' },
   invalid:   { fill: '#E24B4A', label: 'Invalide' },
-  manual:    { fill: '#7F77DD', label: 'Manuel' },
-  inactive:  { fill: '#888780', label: 'Inactif' },
+  manual:    { fill: '#8B5CF6', label: 'Manuel' },
+  inactive:  { fill: '#6B7280', label: 'Inactif' },
 }
 
 const DEFAULT_PARTNERS = [
@@ -47,7 +47,7 @@ export default function PartnerSolarSystem({
       planetRadius: 6 + (p.volume / 100) * 12,
       speed: 0.003 + (i % 3) * 0.002 + (p.compatibility / 100) * 0.004,
       angleOffset: (i / partners.length) * Math.PI * 2,
-      color: STATUS_COLORS[p.status]?.fill ?? '#888780',
+      color: STATUS_COLORS[p.status]?.fill ?? '#6B7280',
     }))
   }, [partners])
 
@@ -64,7 +64,7 @@ export default function PartnerSolarSystem({
       const dark = window.matchMedia('(prefers-color-scheme:dark)').matches
 
       const orbitStroke = dark ? 'rgba(200,200,255,0.07)' : 'rgba(100,100,180,0.08)'
-      const sunFill = '#EF9F27'
+      const sunFill = '#F59E0B'
       const sunGlow = 'rgba(239,159,39,0.15)'
 
       // Sun glow
@@ -83,7 +83,7 @@ export default function PartnerSolarSystem({
       ctx.globalAlpha = 0.95
       ctx.fill()
       ctx.globalAlpha = 1
-      ctx.fillStyle = '#412402'
+      ctx.fillStyle = '#F59E0B'
       ctx.font = '500 8px sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText('Cabinet', cx, cy + 3)

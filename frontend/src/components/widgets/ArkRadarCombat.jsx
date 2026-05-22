@@ -17,8 +17,8 @@ const AXES = [
   { key: 'speed',       label: 'Rapidité' },
 ]
 
-const OFFER_COLORS = ['#534AB7', '#1D9E75', '#D85A30', '#888780']
-const OFFER_BG     = ['#EEEDFE', '#E1F5EE', '#FAECE7', '#F1EFE8']
+const OFFER_COLORS = ['#8B5CF6', '#22C55E', '#EF4444', '#6B7280']
+const OFFER_BG     = ['rgba(139,92,246,0.12)', 'rgba(34,197,94,0.12)', 'rgba(239,68,68,0.12)', 'rgba(255,255,255,0.06)']
 
 const DEFAULT_OFFERS = [
   { id: '1', partnerName: 'April',    recommended: true,  scores: { price:88, coverage:75, acceptance:90, margin:70, stability:80, speed:95 } },
@@ -106,7 +106,7 @@ export default function ArkRadarCombat({
               <line
                 key={axis.key}
                 x1={cx} y1={cy} x2={end.x} y2={end.y}
-                stroke={isActive ? '#534AB7' : 'currentColor'}
+                stroke={isActive ? '#8B5CF6' : 'currentColor'}
                 strokeWidth={isActive ? 1.5 : 0.5}
                 className={isActive ? '' : 'text-slate-200 dark:text-slate-700'}
               />
@@ -151,7 +151,7 @@ export default function ArkRadarCombat({
                 textAnchor="middle"
                 fontSize={10}
                 fontWeight={isActive ? '600' : '400'}
-                fill={isActive ? '#534AB7' : 'currentColor'}
+                fill={isActive ? '#8B5CF6' : 'currentColor'}
                 className={isActive ? '' : 'text-slate-500 dark:text-slate-400'}
                 style={{ cursor: 'pointer' }}
                 onClick={() => setActiveAxis(prev => prev === axis.key ? null : axis.key)}

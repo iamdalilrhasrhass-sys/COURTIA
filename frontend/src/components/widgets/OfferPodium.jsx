@@ -10,9 +10,9 @@
 import { useEffect, useState } from 'react'
 
 const PODIUM_COLORS = {
-  0: { bar: '#EF9F27', text: '#412402', bg: '#FAEEDA', badge: '🥇' },
-  1: { bar: '#888780', text: '#2C2C2A', bg: '#F1EFE8', badge: '🥈' },
-  2: { bar: '#D85A30', text: '#4A1B0C', bg: '#FAECE7', badge: '🥉' },
+  0: { bar: '#F59E0B', text: '#F59E0B', bg: 'rgba(245,158,11,0.12)', badge: '🥇' },
+  1: { bar: '#6B7280', text: '#9CA3AF', bg: 'rgba(255,255,255,0.06)', badge: '🥈' },
+  2: { bar: '#EF4444', text: '#EF4444', bg: 'rgba(239,68,68,0.12)', badge: '🥉' },
 }
 
 const DEFAULT_OFFERS = [
@@ -25,7 +25,7 @@ const DEFAULT_OFFERS = [
 function PodiumBar({ offer, rank, maxScore, animate, isSelected, onClick }) {
   const [height, setHeight] = useState(0)
   const targetH = Math.round((offer.totalScore / 100) * 120)
-  const col = PODIUM_COLORS[rank] ?? { bar: '#7F77DD', text: '#26215C', bg: '#EEEDFE', badge: '' }
+  const col = PODIUM_COLORS[rank] ?? { bar: '#8B5CF6', text: '#A78BFA', bg: 'rgba(139,92,246,0.12)', badge: '' }
 
   useEffect(() => {
     if (!animate) { setHeight(targetH); return }

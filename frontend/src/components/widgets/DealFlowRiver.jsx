@@ -8,11 +8,11 @@
 import { useEffect, useRef, useState } from 'react'
 
 const DEFAULT_STAGES = [
-  { id: 'prospect',    label: 'Prospect',       count: 14, color: '#7F77DD' },
-  { id: 'analyse',     label: 'Analyse ARK',    count: 9,  color: '#1D9E75' },
-  { id: 'devis',       label: 'Devis envoyé',   count: 7,  color: '#EF9F27' },
-  { id: 'negociation', label: 'Négociation',    count: 4,  color: '#D85A30' },
-  { id: 'signature',   label: 'Signé',          count: 6,  color: '#1D9E75' },
+  { id: 'prospect',    label: 'Prospect',       count: 14, color: '#8B5CF6' },
+  { id: 'analyse',     label: 'Analyse ARK',    count: 9,  color: '#22C55E' },
+  { id: 'devis',       label: 'Devis envoyé',   count: 7,  color: '#F59E0B' },
+  { id: 'negociation', label: 'Négociation',    count: 4,  color: '#EF4444' },
+  { id: 'signature',   label: 'Signé',          count: 6,  color: '#22C55E' },
 ]
 
 function createParticles(stages, W, H) {

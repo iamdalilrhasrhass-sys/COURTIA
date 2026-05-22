@@ -1,4 +1,5 @@
 import { HeartHandshake, Building, Euro, TrendingUp, Zap, ArrowUpRight, Globe } from 'lucide-react'
+import PartnerSolarSystem from '../components/widgets/PartnerSolarSystem'
 
 const DEMO_PARTENAIRES = [
   { id: 1, nom: 'Gan Assurances', type: 'Compagnie', contrats: 34, commission: 28600, tendance: '+12%', logo: 'G' },
@@ -42,6 +43,19 @@ export default function Partenaires() {
             <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{kpi.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* Partner Solar System — Vue écosystème */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>Écosystème partenaires</h2>
+        <PartnerSolarSystem
+          partners={DEMO_PARTENAIRES.map(p => ({
+            id: String(p.id), name: p.nom,
+            status: 'connected', compatibility: Math.floor(50 + Math.random() * 45), volume: Math.floor(20 + (p.contrats / 34) * 60),
+            branch: p.type
+          }))}
+          onPartnerClick={(p) => console.log('Partner:', p)}
+        />
       </div>
 
       {/* Compagnies */}

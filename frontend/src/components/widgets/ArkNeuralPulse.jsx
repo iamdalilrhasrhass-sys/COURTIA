@@ -78,7 +78,7 @@ export default function ArkNeuralPulse({
       const dark = window.matchMedia('(prefers-color-scheme:dark)').matches
       const bg = dark ? 'rgba(30,30,35,0)' : 'rgba(255,255,255,0)'
       const nodeIdle = dark ? '#4a4a6a' : '#c5c3e8'
-      const nodeActive = dark ? '#9F97E8' : '#534AB7'
+      const nodeActive = dark ? '#9F97E8' : '#8B5CF6'
       const nodeHot = dark ? '#f0b429' : '#BA7517'
       const edgeIdle = dark ? 'rgba(100,100,150,0.12)' : 'rgba(83,74,183,0.08)'
       const edgeActive = dark ? 'rgba(159,151,232,0.5)' : 'rgba(83,74,183,0.4)'

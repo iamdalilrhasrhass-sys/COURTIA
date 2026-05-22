@@ -18,9 +18,9 @@
 import { useEffect, useRef, useState } from 'react'
 
 const LEVEL_COLORS = {
-  clean:    { fill: '#1D9E75', glow: '#5DCAA5', label: 'Propre' },
-  caution:  { fill: '#EF9F27', glow: '#FAC775', label: 'Attention' },
-  risk:     { fill: '#D85A30', glow: '#F0997B', label: 'Risque' },
+  clean:    { fill: '#22C55E', glow: '#5DCAA5', label: 'Propre' },
+  caution:  { fill: '#F59E0B', glow: '#FAC775', label: 'Attention' },
+  risk:     { fill: '#EF4444', glow: '#F0997B', label: 'Risque' },
   critical: { fill: '#E24B4A', glow: '#F09595', label: 'Critique' },
 }
 

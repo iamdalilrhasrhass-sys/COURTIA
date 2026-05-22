@@ -7,10 +7,10 @@
 import { useRef, useState, useEffect } from 'react'
 
 const EVENT_TYPES = {
-  past:    { dot: '#534AB7', line: '#EEEDFE', textColor: '#534AB7' },
-  current: { dot: '#EF9F27', line: '#FAEEDA', textColor: '#854F0B' },
-  future:  { dot: '#D1D5DB', line: '#F1EFE8', textColor: '#888780' },
-  success: { dot: '#1D9E75', line: '#E1F5EE', textColor: '#0F6E56' },
+  past:    { dot: '#8B5CF6', line: 'rgba(139,92,246,0.12)', textColor: '#8B5CF6' },
+  current: { dot: '#F59E0B', line: 'rgba(245,158,11,0.12)', textColor: '#F59E0B' },
+  future:  { dot: '#6B7280', line: 'rgba(255,255,255,0.06)', textColor: '#6B7280' },
+  success: { dot: '#22C55E', line: 'rgba(34,197,94,0.12)', textColor: '#22C55E' },
 }
 
 const DEFAULT_EVENTS = [
