@@ -133,7 +133,7 @@ const pricing = [
   },
   {
     name: 'Pro',
-    price: '159 €',
+    price: '199 €',
     suffix: 'HT/mois',
     intro: 'Pour piloter réellement le cabinet avec ARK.',
     intent: 'L’offre logique pour un cabinet qui veut reprendre le contrôle.',
@@ -253,8 +253,44 @@ function CockpitScene() {
     { left: '58%', top: '38%', z: 160, size: 3, color: 'var(--green)', delay: '0.45s' },
   ]
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 820)
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 820)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  if (isMobile) {
+    return (
+      <div className="mobile-cockpit-card">
+        <div className="mcc-orb">
+          <BubbleMark />
+          <div className="mcc-orb-label">ARK</div>
+        </div>
+        <div className="mcc-title">Vos priorités, sans effort</div>
+        <div className="mcc-grid">
+          {modules.map((mod) => {
+            const Icon = mod.icon
+            return (
+              <div key={mod.name} className="mcc-chip" style={{ '--mc': mod.color }}>
+                <Icon size={13} />
+                <span>{mod.name}</span>
+                <small>{mod.status}</small>
+              </div>
+            )
+          })}
+        </div>
+        <div className="mcc-footer">
+          <span className="mcc-dot" />
+          <b>Dossier actif</b>
+          <small>Pièce manquante · relance prête</small>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="courtia-scene" onPointerMove={handlePointerMove} onPointerLeave={() => setTilt({ x: 0, y: 0 })}>
+    <div className="courtia-scene desktop-scene" onPointerMove={handlePointerMove} onPointerLeave={() => setTilt({ x: 0, y: 0 })}>
       <div className="scene-depth" style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}>
         {/* concentric spinning 3D holographic plates — 5-orbit Aurora system */}
         <div className="scene-orbit orbit-a" />
@@ -566,7 +602,7 @@ export default function LandingPublic() {
         <section id="pricing" className="courtia-section pricing-section">
           <SectionTitle
             eyebrow="Tarifs"
-            title="Une offre Pro à 159 € HT/mois pour piloter réellement le cabinet."
+            title="Une offre Pro à 199 € HT/mois pour piloter réellement le cabinet."
             text="Starter reste utile pour démarrer. Pro est l’offre centrale. Premium accompagne les cabinets structurés."
           />
           <div className="pricing-grid">
@@ -638,87 +674,50 @@ const landingStyles = `
   .courtia-footer{padding-bottom:110px!important;}
   .mobile-nav-actions{display:block;}
   .courtia-nav{padding:8px 14px;}
-  .hero-shell{padding:30px 0;}
-  /* Remove massive borders on mobile cards to make them flush and sleeker */
-  .product-card, .price-card, .credibility-card { padding: 20px; border-radius: 24px; }
-  .card-visual { height: 140px; border-radius: 18px; }
-  .courtia-section { padding: 45px 0; }
+  .desktop-scene{display:none!important;}
+  .hero-shell{padding:16px 0 24px!important;}
+  .courtia-section { padding: 30px 0 !important; }
+  .hero-copy h1{font-size:clamp(2.0rem,9vw,2.6rem)!important;line-height:1.08!important;letter-spacing:-0.05em!important;}
+  .hero-lead{font-size:0.95rem!important;line-height:1.5!important;margin-top:10px!important;}
+  .hero-badge{font-size:0.64rem!important;padding:6px 14px!important;white-space:normal!important;border-radius:18px!important;}
+  .hero-actions{gap:10px!important;margin-top:18px!important;}
+  .hero-shell .primary-action,.hero-shell .secondary-action{width:100%!important;}
+  .hero-proof{grid-template-columns:1fr!important;gap:8px!important;margin-top:16px!important;max-width:100%!important;}
+  .hero-proof div{min-height:auto!important;padding:10px 14px!important;}
+  .hero-proof b{font-size:1.2rem!important;}
+  .hero-proof span{font-size:0.68rem!important;}
+  .product-grid,.outcome-grid,.audience-grid,.pricing-grid,.compare-grid{grid-template-columns:1fr!important;gap:10px!important;}
+  .product-card,.price-card,.credibility-card,.chaos-panel,.clarity-panel{padding:16px!important;border-radius:20px!important;}
+  .card-visual{height:110px!important;border-radius:16px!important;}
+  .brief-grid{grid-template-columns:repeat(2,1fr)!important;}
+  .brief-item{padding:12px!important;}
+  .courtia-section-head h2{font-size:clamp(1.8rem,8vw,2.4rem)!important;}
+  .courtia-section-text{font-size:0.95rem!important;max-width:100%!important;line-height:1.5!important;}
+  .price-card.featured{transform:none!important;}
+  .nav-links,.nav-demo{display:none!important;}
+  .scene-module{box-sizing:border-box!important;}
 }
 
 
-/* Ultra Premium Mobile Overrides */
-@media(max-width:820px) {
-  /* Elevate Typography */
-  .hero-copy h1 {
-    font-size: clamp(2.4rem, 11.5vw, 3.2rem) !important;
-    letter-spacing: -0.06em !important;
-    line-height: 1.02 !important;
-    background: linear-gradient(135deg, #ffffff 30%, #c7c9da 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 4px 32px rgba(255,255,255,0.05);
-  }
-  .hero-lead {
-    font-size: 1.05rem !important;
-    line-height: 1.6 !important;
-    color: #a5a8bc !important;
-    margin-top: 14px !important;
-  }
-  .hero-badge {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1) !important;
-    padding: 8px 16px !important;
-    border-radius: 99px !important;
-    font-weight: 600 !important;
-  }
-  
-  /* Surgical Spacing */
-  .hero-shell {
-    padding: 20px 0 40px !important;
-  }
-  
-  /* Elevate 3D Scene */
-  .courtia-scene {
-    transform: scale(0.62) !important; 
-    transform-origin: top center !important; 
-    margin-top: -20px !important;
-    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-  }
-  
-  /* Premium Glass Cards */
-  .product-card, .price-card, .credibility-card, .chaos-panel, .clarity-panel {
-    background: linear-gradient(180deg, rgba(20,22,36,0.6) 0%, rgba(10,12,20,0.4) 100%) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.06) !important;
-    padding: 24px !important;
-    border-radius: 28px !important;
-  }
-  
-  /* Button Glows */
-  .mobile-sticky-cta .primary-action {
-    background: linear-gradient(135deg, #a9f1ff 0%, #b9a4ff 48%, #ff71bd 100%) !important;
-    box-shadow: 0 16px 32px rgba(255, 101, 187, 0.25), inset 0 1px 1px rgba(255,255,255,0.6) !important;
-    color: #04050a !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.02em !important;
-    border: none !important;
-  }
-  
-  /* Headings in Sections */
-  .courtia-section-head h2 {
-    font-size: clamp(2.2rem, 9vw, 2.8rem) !important;
-    letter-spacing: -0.05em !important;
-  }
-  
-  .metric-orb {
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.3) !important;
-  }
-}
 
 @keyframes slideUpMobile { from { transform: translateY(100%); } to { transform: translateY(0); } }
-@keyframes pulseGlow{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}@media(max-width:1080px){.hero-shell{grid-template-columns:1fr;min-height:auto}.courtia-scene{min-height:550px}.product-grid{grid-template-columns:repeat(2,1fr)}.ark-section,.credibility-card{grid-template-columns:1fr}.outcome-grid{grid-template-columns:repeat(2,1fr)}.audience-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:820px){.nav-links,.nav-demo{display:none}.courtia-nav-wrap{position:relative;top:auto}.hero-shell{width:min(720px,calc(100% - 28px));padding:46px 0}.hero-copy h1{font-size:clamp(2.32rem,9.8vw,4.05rem);line-height:1;letter-spacing:-.05em}.hero-badge,.courtia-eyebrow{white-space:normal;border-radius:18px;font-size:.66rem}.hero-proof,.before-after,.pricing-grid,.compare-grid{grid-template-columns:1fr}.brief-grid{grid-template-columns:repeat(2,1fr)}.product-grid,.outcome-grid,.audience-grid{grid-template-columns:1fr}.price-card.featured{transform:none}.courtia-scene{min-height:450px;transform:scale(0.62);transform-origin:top center;margin-top:-20px}.scene-depth{width:100%;max-width:560px}.courtia-section{width:min(720px,calc(100% - 28px));padding:60px 0}.courtia-section-head h2,.ark-copy h2,.credibility-card h2,.final-cta h2{font-size:clamp(2.3rem,10vw,3.4rem)}}@media(max-width:520px){.hero-actions .primary-action,.hero-actions .secondary-action{width:100%}.hero-proof div{min-height:auto}.brief-grid{grid-template-columns:1fr}.courtia-footer a{margin-left:0;margin-right:14px}.courtia-section-head h2,.ark-copy h2,.credibility-card h2,.final-cta h2{letter-spacing:-.045em}.hero-copy h1{font-size:clamp(2.05rem,8.75vw,2.55rem);letter-spacing:-.04em}.hero-badge{font-size:.58rem;line-height:1.35}.hero-actions{gap:10px}.hero-actions .primary-action,.hero-actions .secondary-action{width:100%;padding-left:16px;padding-right:16px}.hero-proof div{padding:16px}.scene-module{padding:13px}.module-head b{font-size:.9rem}}@media(max-width:820px){.hero-badge{width:100%;justify-content:center;text-align:center;white-space:normal;word-break:normal;overflow-wrap:anywhere}.hero-badge svg{flex:0 0 auto}.hero-shell,.courtia-section,.courtia-nav-wrap,.final-cta{max-width:calc(100vw - 28px)}.hero-copy,.hero-lead,.hero-copy h1{max-width:100%;min-width:0}.hero-lead{font-size:1rem}.hero-proof{display:grid;grid-template-columns:1fr;gap:12px}.courtia-premium-landing{overflow-x:hidden}.scene-module{box-sizing:border-box}.nav-links,.nav-demo{display:none!important}}@supports not (color:color-mix(in srgb,white,black)){.module-head span{background:rgba(143,231,255,.12)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@keyframes pulseGlow{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}@media(max-width:1080px){.hero-shell{grid-template-columns:1fr;min-height:auto}.courtia-scene{min-height:550px}.product-grid{grid-template-columns:repeat(2,1fr)}.ark-section,.credibility-card{grid-template-columns:1fr}.outcome-grid{grid-template-columns:repeat(2,1fr)}.audience-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:820px){.nav-links,.nav-demo{display:none}.courtia-nav-wrap{position:relative;top:auto}.hero-shell{width:min(720px,calc(100% - 28px));padding:46px 0}.hero-copy h1{font-size:clamp(2.32rem,9.8vw,4.05rem);line-height:1;letter-spacing:-.05em}.hero-badge,.courtia-eyebrow{white-space:normal;border-radius:18px;font-size:.66rem}.hero-proof,.before-after,.pricing-grid,.compare-grid{grid-template-columns:1fr}.brief-grid{grid-template-columns:repeat(2,1fr)}.product-grid,.outcome-grid,.audience-grid{grid-template-columns:1fr}.price-card.featured{transform:none}.courtia-scene{min-height:450px;transform:scale(0.62);transform-origin:top center;margin-top:-20px}.scene-depth{width:100%;max-width:560px}.courtia-section{width:min(720px,calc(100% - 28px));padding:60px 0}.courtia-section-head h2,.ark-copy h2,.credibility-card h2,.final-cta h2{font-size:clamp(2.3rem,10vw,3.4rem)}}@media(max-width:520px){.hero-actions .primary-action,.hero-actions .secondary-action{width:100%}.hero-proof div{min-height:auto}.brief-grid{grid-template-columns:1fr}.courtia-footer a{margin-left:0;margin-right:14px}.courtia-section-head h2,.ark-copy h2,.credibility-card h2,.final-cta h2{letter-spacing:-.045em}.hero-copy h1{font-size:clamp(2.05rem,8.75vw,2.55rem);letter-spacing:-.04em}.hero-badge{font-size:.58rem;line-height:1.35}.hero-actions{gap:10px}.hero-actions .primary-action,.hero-actions .secondary-action{width:100%;padding-left:16px;padding-right:16px}.hero-proof div{padding:16px}.scene-module{padding:13px}.module-head b{font-size:.9rem}}
+/* Mobile Cockpit Card */
+.mobile-cockpit-card{display:none;position:relative;width:100%;padding:28px 20px;margin:0 auto;border:1px solid rgba(255,255,255,0.08);border-radius:24px;background:linear-gradient(145deg,rgba(14,16,28,0.55),rgba(5,6,12,0.7));backdrop-filter:blur(20px);box-shadow:0 24px 48px rgba(0,0,0,0.5),inset 0 1px 1px rgba(255,255,255,0.08)}
+.mcc-orb{display:flex;justify-content:center;margin-bottom:16px}
+.mcc-orb svg{width:64px;height:64px;filter:drop-shadow(0 0 30px rgba(143,231,255,0.4))}
+.mcc-orb-label{text-align:center;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(143,231,255,0.6)}
+.mcc-title{text-align:center;font-size:1.1rem;font-weight:700;color:#f8f8ff;margin-bottom:18px;letter-spacing:-0.02em}
+.mcc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+.mcc-chip{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#c8cadc;font-size:0.78rem;font-weight:500}
+.mcc-chip svg{color:var(--mc,#8fe7ff);flex-shrink:0}
+.mcc-chip small{display:block;margin-left:auto;color:var(--mc,#8fe7ff);font-size:0.64rem;font-weight:600}
+.mcc-footer{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(2,3,11,0.4);border:1px solid rgba(255,255,255,0.05)}
+.mcc-dot{width:8px;height:8px;border-radius:50%;background:#8dffcf;box-shadow:0 0 14px #8dffcf;flex-shrink:0}
+.mcc-footer b{color:#fff;font-size:0.88rem}
+.mcc-footer small{color:#8f93ad;font-size:0.7rem;margin-left:auto}
+@media(max-width:820px){.mobile-cockpit-card{display:block;margin-top:4px}}
+@media(max-width:820px){.hero-badge{width:100%;justify-content:center;text-align:center;white-space:normal;word-break:normal;overflow-wrap:anywhere}.hero-badge svg{flex:0 0 auto}.hero-shell,.courtia-section,.courtia-nav-wrap,.final-cta{max-width:calc(100vw - 28px)}.hero-copy,.hero-lead,.hero-copy h1{max-width:100%;min-width:0}.hero-lead{font-size:1rem}.hero-proof{display:grid;grid-template-columns:1fr;gap:12px}.courtia-premium-landing{overflow-x:hidden}.scene-module{box-sizing:border-box}.nav-links,.nav-demo{display:none!important}}@supports not (color:color-mix(in srgb,white,black)){.module-head span{background:rgba(143,231,255,.12)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 /* Outcomes Custom 3D Premium Styles */
 .outcomes-section{position:relative;overflow:hidden}
