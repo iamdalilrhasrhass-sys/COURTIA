@@ -58,7 +58,7 @@ const modules = [
   { name: 'Contrats', detail: 'Échéance J-30', status: 'alerte', icon: ShieldCheck, color: '#a986ff', x: '72%', y: '2%', z: 50 },
   { name: 'DDA', detail: 'Compte rendu prêt', status: 'export', icon: ClipboardCheck, color: '#d8f4ff', x: '-2%', y: '44%', z: 60 },
   { name: 'Relances', detail: 'Client non relancé', status: 'priorité', icon: Target, color: '#ff65bb', x: '74%', y: '44%', z: 70 },
-  { name: 'ARK', detail: 'Priorités du jour', status: 'live', icon: Sparkles, color: '#f8a8d8', x: '36%', y: '72%', z: 85 },
+  { name: 'ARK', detail: 'Priorités du jour', status: 'live', icon: Sparkles, color: '#f8a8d8', x: '36%', y: '65%', z: 85 },
 ]
 
 const productCards = [
@@ -219,7 +219,7 @@ function CockpitScene() {
     setTilt({ x: py * -10, y: px * 14 })
   }
 
-  // 30 3D micro-particles — deep orbital particle field
+  // 15 3D micro-particles — orbital depth field
   const particles = [
     { left: '12%', top: '22%', z: 155, size: 4, color: 'var(--cyan)', delay: '0s' },
     { left: '84%', top: '18%', z: 110, size: 3, color: 'var(--violet)', delay: '0.3s' },
@@ -228,29 +228,14 @@ function CockpitScene() {
     { left: '46%', top: '8%', z: 90, size: 3, color: 'var(--cyan)', delay: '0.5s' },
     { left: '5%', top: '50%', z: 140, size: 5, color: 'var(--violet)', delay: '1.4s' },
     { left: '92%', top: '55%', z: 120, size: 3, color: 'var(--pink)', delay: '0.2s' },
-    { left: '50%', top: '92%', z: 195, size: 4, color: 'var(--green)', delay: '0.9s' },
     { left: '25%', top: '40%', z: 100, size: 3, color: 'var(--cyan)', delay: '1.6s' },
     { left: '72%', top: '35%', z: 165, size: 4, color: 'var(--violet)', delay: '0.4s' },
     { left: '38%', top: '58%', z: 175, size: 5, color: 'var(--orange)', delay: '1.2s' },
     { left: '60%', top: '65%', z: 145, size: 3, color: 'var(--violet)', delay: '0.8s' },
     { left: '8%', top: '14%', z: 105, size: 4, color: 'var(--pink)', delay: '1.8s' },
     { left: '88%', top: '72%', z: 155, size: 3, color: 'var(--cyan)', delay: '0.6s' },
-    { left: '32%', top: '15%', z: 85, size: 4, color: 'var(--green)', delay: '1.3s' },
     { left: '55%', top: '22%', z: 135, size: 3, color: 'var(--orange)', delay: '0.1s' },
     { left: '15%', top: '65%', z: 160, size: 5, color: 'var(--cyan)', delay: '2.0s' },
-    { left: '68%', top: '12%', z: 95, size: 4, color: 'var(--violet)', delay: '1.5s' },
-    { left: '42%', top: '48%', z: 190, size: 3, color: 'var(--pink)', delay: '0.35s' },
-    { left: '80%', top: '48%', z: 125, size: 4, color: 'var(--green)', delay: '1.7s' },
-    { left: '10%', top: '32%', z: 115, size: 3, color: 'var(--orange)', delay: '0.55s' },
-    { left: '52%', top: '75%', z: 170, size: 5, color: 'var(--cyan)', delay: '1.9s' },
-    { left: '30%', top: '85%', z: 150, size: 3, color: 'var(--violet)', delay: '0.75s' },
-    { left: '70%', top: '55%', z: 105, size: 4, color: 'var(--pink)', delay: '1.35s' },
-    { left: '22%', top: '28%', z: 180, size: 3, color: 'var(--green)', delay: '0.25s' },
-    { left: '78%', top: '28%', z: 140, size: 5, color: 'var(--orange)', delay: '1.55s' },
-    { left: '48%', top: '42%', z: 200, size: 4, color: 'var(--cyan)', delay: '0.85s' },
-    { left: '95%', top: '12%', z: 85, size: 3, color: 'var(--violet)', delay: '2.2s' },
-    { left: '3%', top: '88%', z: 130, size: 4, color: 'var(--pink)', delay: '1.05s' },
-    { left: '58%', top: '38%', z: 160, size: 3, color: 'var(--green)', delay: '0.45s' },
   ]
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 820)
@@ -296,8 +281,6 @@ function CockpitScene() {
         <div className="scene-orbit orbit-a" />
         <div className="scene-orbit orbit-b" />
         <div className="scene-orbit orbit-c" />
-        <div className="scene-orbit orbit-d" />
-        <div className="scene-orbit orbit-e" />
         <div className="aurora-sweep" />
         
         {/* Floating 3D Micro-particles with twinkle animation */}
@@ -437,6 +420,7 @@ export default function LandingPublic() {
             <a href="#pricing">Tarifs</a>
           </div>
           <button className="nav-demo" onClick={() => go('/demo')}>Demander une démo <ArrowRight size={16} /></button>
+          <button className="nav-login" onClick={() => go('/login')}>Connexion</button>
           
           {/* Mobile minimal actions */}
           <div className="mobile-nav-actions">
@@ -460,7 +444,7 @@ export default function LandingPublic() {
             <div className="hero-proof">
               <div><b>95%</b><span>Jusqu’à 95% du temps gagné sur certaines tâches répétitives, workflow par workflow.</span></div>
               <div><b>DDA</b><span>Traçabilité et compte rendu structurés, prêts à exploiter.</span></div>
-              <div><b>159 €</b><span>Offre Pro pensée pour piloter réellement le cabinet.</span></div>
+              <div><b>199 €</b><span>Offre Pro pensée pour piloter réellement le cabinet.</span></div>
             </div>
           </div>
           <CockpitScene />
@@ -558,6 +542,9 @@ export default function LandingPublic() {
           <div className="outcome-grid">
             {outcomes.map(([title, text, visual]) => (
               <article key={title} className="outcome-card">
+                <div className="outcome-bubbles" aria-hidden="true">
+                  <span className="ob-1" /><span className="ob-2" /><span className="ob-3" />
+                </div>
                 <div className="outcome-visual-wrapper">
                   {visual}
                 </div>
@@ -666,7 +653,7 @@ const landingStyles = `
 
 /* Premium Mobile Sticky CTA */
 .mobile-sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px 28px;background:linear-gradient(to top, rgba(2,3,11,0.98) 30%, rgba(2,3,11,0.7) 80%, transparent);backdrop-filter:blur(14px);z-index:999;border-top:1px solid rgba(255,255,255,0.08);}
-.mobile-nav-actions{display:none;}
+.nav-login{display:inline-flex;align-items:center;justify-content:center;padding:0 18px;min-height:46px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.055);color:#f7f7ff;font-weight:700;font-size:.88rem;cursor:pointer;text-decoration:none;transition:all .2s ease}.nav-login:hover{background:rgba(255,255,255,.1);border-color:rgba(143,231,255,.3)}.mobile-nav-actions{display:none;}
 .mobile-login-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:99px;padding:6px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;}
 
 @media(max-width:820px){
@@ -717,7 +704,7 @@ const landingStyles = `
 .mcc-footer b{color:#fff;font-size:0.88rem}
 .mcc-footer small{color:#8f93ad;font-size:0.7rem;margin-left:auto}
 @media(max-width:820px){.mobile-cockpit-card{display:block;margin-top:4px}}
-@media(max-width:820px){.hero-badge{width:100%;justify-content:center;text-align:center;white-space:normal;word-break:normal;overflow-wrap:anywhere}.hero-badge svg{flex:0 0 auto}.hero-shell,.courtia-section,.courtia-nav-wrap,.final-cta{max-width:calc(100vw - 28px)}.hero-copy,.hero-lead,.hero-copy h1{max-width:100%;min-width:0}.hero-lead{font-size:1rem}.hero-proof{display:grid;grid-template-columns:1fr;gap:12px}.courtia-premium-landing{overflow-x:hidden}.scene-module{box-sizing:border-box}.nav-links,.nav-demo{display:none!important}}@supports not (color:color-mix(in srgb,white,black)){.module-head span{background:rgba(143,231,255,.12)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(max-width:820px){.hero-badge{width:100%;justify-content:center;text-align:center;white-space:normal;word-break:normal;overflow-wrap:anywhere}.hero-badge svg{flex:0 0 auto}.hero-shell,.courtia-section,.courtia-nav-wrap,.final-cta{max-width:calc(100vw - 28px)}.hero-copy,.hero-lead,.hero-copy h1{max-width:100%;min-width:0}.hero-lead{font-size:1rem}.hero-proof{display:grid;grid-template-columns:1fr;gap:12px}.courtia-premium-landing{overflow-x:hidden}.scene-module{box-sizing:border-box}.nav-links,.nav-demo,.nav-login{display:none!important}}@supports not (color:color-mix(in srgb,white,black)){.module-head span{background:rgba(143,231,255,.12)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 /* Outcomes Custom 3D Premium Styles */
 .outcomes-section{position:relative;overflow:hidden}
@@ -728,6 +715,12 @@ const landingStyles = `
 .outcome-card:hover .outcome-visual-wrapper{background:rgba(255,255,255,.07);border-color:rgba(143,231,255,.3);transform:translateZ(20px)}
 .outcome-svg{width:38px;height:38px;color:rgba(248,248,255,.85);transition:color .3s ease}
 .outcome-card:hover .outcome-svg{color:#fff}
+.outcome-bubbles{position:absolute;inset:0;pointer-events:none;z-index:0}
+.outcome-bubbles span{position:absolute;border-radius:50%;filter:blur(8px);opacity:.12;animation:obFloat 6s ease-in-out infinite}
+.ob-1{width:60px;height:60px;top:15%;right:10%;background:var(--violet);animation-delay:0s}
+.ob-2{width:40px;height:40px;bottom:20%;left:15%;background:var(--cyan);animation-delay:2s}
+.ob-3{width:30px;height:30px;top:40%;left:60%;background:var(--pink);animation-delay:4s}
+@keyframes obFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8px,-12px) scale(1.3)}}
 
 /* Concentric Holo Orbit radar lines — 5-orbit Aurora system */
 .scene-orbit.orbit-a{inset:-18%;border:1px solid rgba(143,231,255,.12);box-shadow:0 0 30px rgba(143,231,255,.02);animation:spinClockwise 24s linear infinite}
