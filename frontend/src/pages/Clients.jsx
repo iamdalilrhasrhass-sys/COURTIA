@@ -215,7 +215,7 @@ function ClientTable({ clients, onClick }) {
       background: T.cardBg, border: `1px solid ${T.cardBorder}`,
       borderRadius: 12, overflow: 'hidden', backdropFilter: 'blur(12px)',
     }}>
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 880 }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
