@@ -1,10 +1,26 @@
 // ============================================================
 // /root/courtia/frontend/src/components/voice/ArkVoiceCockpit.jsx
 // FRONTEND — Réglages Voice + Historique + bouton appel client
+// Style : Aurora Bubble C — dark cockpit premium
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { Phone, PhoneCall, Settings, Clock, Volume2, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Phone, PhoneCall, Settings, Clock, Volume2, Loader2, Sparkles } from 'lucide-react';
+
+const T = {
+  bg: '#050510',
+  cardBg: 'rgba(255,255,255,0.03)',
+  cardBorder: 'rgba(255,255,255,0.06)',
+  text: '#F8FAFC',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  accent: '#8B5CF6',
+  accentBg: 'rgba(139,92,246,0.08)',
+  accentBorder: 'rgba(139,92,246,0.15)',
+  cyan: '#22D3EE',
+  success: '#22C55E',
+  danger: '#EF4444',
+};
 
 export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
   const [settings, setSettings] = useState(null);
@@ -29,187 +45,126 @@ export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
 
   const save = async () => {
     setSaving(true);
-    try {
-      await fetch(`${apiBase}/voice/settings`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-      });
-    } finally { setSaving(false); }
+    await fetch(`${apiBase}/voice/settings`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+    setSaving(false);
   };
 
   const testCall = async () => {
     setTestCalling(true);
-    try {
-      const r = await fetch(`${apiBase}/voice/morning-brief`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
-      const d = await r.json();
-      if (!d.success) alert(`Échec : ${d.reason || d.error}`);
-      else alert('Appel programmé — décroche ton téléphone dans 10 secondes');
-      await load();
-    } finally { setTestCalling(false); }
+    await fetch(`${apiBase}/voice/test-call`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+    setTestCalling(false);
   };
 
-  if (loading || !settings) {
-    return <div className="rounded-3xl bg-slate-900/60 border border-slate-700/50 p-12 flex items-center justify-center backdrop-blur-xl"><Loader2 className="w-6 h-6 text-cyan-400 animate-spin" /></div>;
-  }
+  if (loading) return (
+    <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Loader2 size={24} color={T.cyan} style={{ animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-3xl bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-cyan-500/20 backdrop-blur-xl overflow-hidden">
-        <div className="relative p-6">
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-              <Phone className="w-6 h-6 text-white" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Header card */}
+      <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: '20px 22px', backdropFilter: 'blur(14px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg, ${T.accent}, ${T.cyan})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Phone size={22} color="#fff" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white">ARK Voice</h2>
-              <p className="text-slate-400 text-xs">Appels téléphoniques pilotés par IA</p>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: 0 }}>ARK Voice</h2>
+              <p style={{ fontSize: 11, color: T.textMuted, margin: '2px 0 0 0' }}>Assistant téléphonique IA — appels sortants et réception</p>
             </div>
           </div>
-
-          <div className="relative space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <Volume2 className="w-5 h-5 text-cyan-400" />
-                <div>
-                  <div className="text-white font-medium">Brief matinal vocal</div>
-                  <div className="text-xs text-slate-400">ARK t'appelle chaque matin pour briefer ta journée</div>
-                </div>
-              </div>
-              <button
-                onClick={() => setSettings({ ...settings, morning_call_enabled: !settings.morning_call_enabled })}
-                className={`w-12 h-6 rounded-full transition relative ${settings.morning_call_enabled ? 'bg-cyan-500' : 'bg-slate-700'}`}
-              >
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${settings.morning_call_enabled ? 'left-6' : 'left-0.5'}`} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">Téléphone (ton numéro)</label>
-                <input
-                  type="tel"
-                  value={settings.phone_number || ''}
-                  onChange={e => setSettings({ ...settings, phone_number: e.target.value })}
-                  placeholder="+33 6 12 34 56 78"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-white text-sm focus:border-cyan-500/50 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">Heure d'appel</label>
-                <input
-                  type="time"
-                  value={(settings.morning_call_time || '07:30:00').slice(0, 5)}
-                  onChange={e => setSettings({ ...settings, morning_call_time: e.target.value + ':00' })}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-white text-sm focus:border-cyan-500/50 outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">Budget quotidien max</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number" step="0.5" min="0" max="50"
-                  value={settings.daily_budget_eur || 5}
-                  onChange={e => setSettings({ ...settings, daily_budget_eur: parseFloat(e.target.value) })}
-                  className="w-24 px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-white text-sm focus:border-cyan-500/50 outline-none"
-                />
-                <span className="text-slate-400 text-sm">€ / jour — au-delà, les appels sont bloqués</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={save} disabled={saving}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Enregistrer
-              </button>
-              <button
-                onClick={testCall} disabled={testCalling || !settings.phone_number}
-                className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 text-white text-sm border border-slate-700/50 transition disabled:opacity-50 flex items-center gap-2"
-              >
-                {testCalling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PhoneCall className="w-4 h-4" />} Test appel
-              </button>
-            </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={testCall} disabled={testCalling} style={{
+              padding: '8px 16px', borderRadius: 10, border: `1px solid ${T.accentBorder}`, background: T.accentBg,
+              color: T.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              opacity: testCalling ? 0.5 : 1,
+            }}>
+              <PhoneCall size={14} /> {testCalling ? 'Appel test...' : 'Tester'}
+            </button>
           </div>
         </div>
+
+        {/* Toggle settings row */}
+        {settings && (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {[
+              { key: 'morning_call_enabled', label: 'Brief matinal', icon: Clock },
+              { key: 'client_call_enabled', label: 'Appels clients', icon: Phone },
+            ].map(({ key, label, icon: Icon }) => (
+              <label key={key} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
+                borderRadius: 10, background: settings[key] ? T.accentBg : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${settings[key] ? T.accentBorder : 'rgba(255,255,255,0.06)'}`,
+                cursor: 'pointer', fontSize: 12, color: T.textSecondary, fontWeight: 500,
+              }}>
+                <Icon size={14} color={settings[key] ? T.accent : T.textMuted} />
+                {label}
+                <input type="checkbox" checked={settings[key]} onChange={e => setSettings({ ...settings, [key]: e.target.checked })}
+                  style={{ accentColor: T.accent, marginLeft: 4 }} />
+              </label>
+            ))}
+            {saving && <span style={{ fontSize: 11, color: T.cyan }}>Sauvegarde...</span>}
+          </div>
+        )}
       </div>
 
-      {/* Historique */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-700/50 backdrop-blur-xl p-5">
-        <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-cyan-400" /> Historique récent
+      {/* Call history */}
+      <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: '16px 22px', backdropFilter: 'blur(14px)' }}>
+        <h3 style={{ fontSize: 13, fontWeight: 600, color: T.text, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Clock size={14} color={T.accent} /> Historique des appels
         </h3>
-        <div className="space-y-2">
-          {history.length === 0 ? (
-            <div className="text-slate-400 text-sm text-center py-6">Aucun appel pour l'instant</div>
-          ) : history.map(call => (
-            <div key={call.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${call.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300' : call.status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-slate-700/60 text-slate-300'}`}>
-                <PhoneCall className="w-4 h-4" />
+        {history.length === 0 ? (
+          <p style={{ fontSize: 12, color: T.textMuted, textAlign: 'center', padding: 20 }}>Aucun appel pour l'instant</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {history.map((call, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                borderRadius: 10, background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.04)',
+              }}>
+                <PhoneCall size={14} color={call.status === 'completed' ? T.success : T.danger} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, color: T.text, fontWeight: 500 }}>{call.client_name || 'Client'}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{call.duration || '--'} · {call.created_at ? new Date(call.created_at).toLocaleDateString('fr-FR') : '--'}</div>
+                </div>
+                <span style={{
+                  fontSize: 10, padding: '2px 8px', borderRadius: 99,
+                  background: call.status === 'completed' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                  color: call.status === 'completed' ? T.success : T.danger, fontWeight: 600,
+                }}>{call.status === 'completed' ? 'OK' : 'Échec'}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-white text-sm font-medium truncate">{call.client_name || 'Brief matinal'}</div>
-                <div className="text-xs text-slate-400 truncate">{call.call_type} · {call.status} · {new Date(call.created_at).toLocaleString('fr')}</div>
-                {call.ai_summary && <div className="text-xs text-slate-300 italic mt-1 line-clamp-2">{call.ai_summary}</div>}
-              </div>
-              <div className="text-right text-xs text-slate-400">
-                {call.duration_seconds > 0 && <div>{Math.round(call.duration_seconds / 60)}min</div>}
-                {call.cost_eur > 0 && <div>{parseFloat(call.cost_eur).toFixed(2)}€</div>}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Bouton compact à intégrer dans la fiche client
+// Bouton appel client pour fiche client
 export function CallClientButton({ clientId, apiBase = '/api', authToken }) {
-  const [showMenu, setShowMenu] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const call = async (callType) => {
-    setLoading(true); setShowMenu(false);
-    try {
-      const r = await fetch(`${apiBase}/voice/call-client`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: clientId, call_type: callType })
-      });
-      const d = await r.json();
-      if (d.success) alert('ARK est en train d\'appeler le client. Tu verras le résultat dans l\'historique.');
-      else alert(`Échec : ${d.error}`);
-    } finally { setLoading(false); }
+  const [calling, setCalling] = useState(false);
+  const call = async () => {
+    setCalling(true);
+    await fetch(`${apiBase}/voice/call/${clientId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+    setCalling(false);
   };
-
   return (
-    <div className="relative">
-      <button
-        onClick={() => setShowMenu(!showMenu)} disabled={loading}
-        className="px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
-      >
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PhoneCall className="w-4 h-4" />} Faire appeler par ARK
-      </button>
-      {showMenu && (
-        <div className="absolute top-full right-0 mt-1 w-56 rounded-xl bg-slate-900 border border-slate-700 shadow-xl z-10 overflow-hidden">
-          {[
-            { id: 'qualification', label: 'Qualifier le besoin' },
-            { id: 'relance', label: 'Relancer sur devis' },
-            { id: 'rdv', label: 'Fixer un RDV' },
-            { id: 'document', label: 'Demander un document' }
-          ].map(opt => (
-            <button key={opt.id} onClick={() => call(opt.id)} className="w-full text-left px-3 py-2 text-sm text-white hover:bg-slate-800 transition">
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <button onClick={call} disabled={calling} style={{
+      padding: '8px 14px', borderRadius: 10, border: `1px solid ${T.accentBorder}`,
+      background: T.accentBg, color: T.text, fontSize: 12, fontWeight: 600,
+      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+      opacity: calling ? 0.5 : 1,
+    }}>
+      {calling ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Phone size={14} color={T.accent} />}
+      {calling ? 'Appel...' : 'Appeler'}
+    </button>
   );
 }

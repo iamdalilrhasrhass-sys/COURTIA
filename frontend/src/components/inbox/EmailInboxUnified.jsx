@@ -1,20 +1,38 @@
 // ============================================================
 // /root/courtia/frontend/src/components/inbox/EmailInboxUnified.jsx
 // FRONTEND — Inbox emails classifiés IA avec réponses suggérées
+// Style : Aurora Bubble C — dark cockpit premium
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { Mail, RefreshCw, Loader2, MessageSquare, ThumbsUp, AlertTriangle, X, Sparkles, Settings, CheckCheck } from 'lucide-react';
+import { Mail, RefreshCw, Loader2, MessageSquare, ThumbsUp, AlertTriangle, X, Sparkles, Settings, CheckCheck, ChevronRight } from 'lucide-react';
 
-const CLASSIFICATION_STYLES = {
-  positive_response: { color: 'emerald', icon: ThumbsUp, label: 'Réponse positive' },
-  signed: { color: 'emerald', icon: CheckCheck, label: 'Signé' },
-  question: { color: 'cyan', icon: MessageSquare, label: 'Question' },
-  objection: { color: 'amber', icon: AlertTriangle, label: 'Objection' },
-  refusal: { color: 'red', icon: X, label: 'Refus' },
-  complaint: { color: 'red', icon: AlertTriangle, label: 'Réclamation' },
-  new_lead: { color: 'purple', icon: Sparkles, label: 'Nouveau lead' },
-  unrelated: { color: 'slate', icon: Mail, label: 'Hors sujet' }
+const T = {
+  bg: '#050510',
+  cardBg: 'rgba(255,255,255,0.03)',
+  cardBorder: 'rgba(255,255,255,0.06)',
+  text: '#F8FAFC',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  accent: '#8B5CF6',
+  accentBg: 'rgba(139,92,246,0.08)',
+  accentBorder: 'rgba(139,92,246,0.15)',
+  cyan: '#22D3EE',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  pink: '#FF65BB',
+};
+
+const CLASSIFICATIONS = {
+  positive_response: { color: T.success, icon: ThumbsUp, label: 'Réponse positive' },
+  signed: { color: T.success, icon: CheckCheck, label: 'Signé' },
+  question: { color: T.cyan, icon: MessageSquare, label: 'Question' },
+  objection: { color: T.warning, icon: AlertTriangle, label: 'Objection' },
+  refusal: { color: T.danger, icon: X, label: 'Refus' },
+  complaint: { color: T.danger, icon: AlertTriangle, label: 'Réclamation' },
+  new_lead: { color: T.accent, icon: Sparkles, label: 'Nouveau lead' },
+  unrelated: { color: T.textMuted, icon: Mail, label: 'Hors sujet' }
 };
 
 export default function EmailInboxUnified({ apiBase = '/api', authToken }) {
@@ -23,228 +41,121 @@ export default function EmailInboxUnified({ apiBase = '/api', authToken }) {
   const [scanning, setScanning] = useState(false);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('pending');
-  const [showSettings, setShowSettings] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${apiBase}/email/inbox?status=${filter}&limit=50`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+      const r = await fetch(`${apiBase}/email/inbox?filter=${filter}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
       const d = await r.json();
-      if (d.success) setInbox(d.inbox);
+      if (d.success) setInbox(d.inbox || []);
     } finally { setLoading(false); }
+  };
+
+  const scan = async () => {
+    setScanning(true);
+    try {
+      await fetch(`${apiBase}/email/scan`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+      await load();
+    } finally { setScanning(false); }
   };
 
   useEffect(() => { load(); }, [filter]);
 
-  const scanNow = async () => {
-    setScanning(true);
-    try {
-      const r = await fetch(`${apiBase}/email/scan`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
-      const d = await r.json();
-      if (d.success) {
-        alert(`Scan terminé : ${d.scanned} mails scannés, ${d.processed} traités par ARK`);
-        await load();
-      } else if (d.error === 'not_configured') {
-        setShowSettings(true);
-      }
-    } finally { setScanning(false); }
+  const counts = {
+    all: inbox.length,
+    pending: inbox.filter(e => !e.classification || e.classification === 'pending').length,
+    important: inbox.filter(e => ['positive_response', 'signed', 'new_lead', 'question'].includes(e.classification)).length,
   };
-
-  const markAction = async (id, action) => {
-    await fetch(`${apiBase}/email/${id}/${action}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
-    setSelected(null);
-    await load();
-  };
-
-  const openMailto = (em) => {
-    const body = encodeURIComponent(em.suggested_reply || '');
-    const subject = encodeURIComponent(em.suggested_subject || `Re: ${em.subject}`);
-    window.location.href = `mailto:${em.from_email}?subject=${subject}&body=${body}`;
-    markAction(em.id, 'replied');
-  };
-
-  if (showSettings) return <EmailSettings apiBase={apiBase} authToken={authToken} onClose={() => { setShowSettings(false); load(); }} />;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
-            <Mail className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-white font-semibold">Inbox unifié</h2>
-            <p className="text-xs text-slate-400">ARK lit, classe et propose les réponses</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowSettings(true)} className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 border border-slate-700/50">
-            <Settings className="w-4 h-4" />
-          </button>
-          <button onClick={scanNow} disabled={scanning} className="px-3 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 text-sm flex items-center gap-2 disabled:opacity-50">
-            <RefreshCw className={`w-4 h-4 ${scanning ? 'animate-spin' : ''}`} /> Scanner
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {['pending', 'reviewed', 'replied', 'all'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap ${filter === f ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40' : 'bg-slate-800/40 text-slate-400 border border-slate-700/50'}`}>
-            {f === 'pending' ? 'À traiter' : f === 'reviewed' ? 'Lus' : f === 'replied' ? 'Répondus' : 'Tous'}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-700/50 p-12 flex items-center justify-center"><Loader2 className="w-6 h-6 text-cyan-400 animate-spin" /></div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto pr-1">
-            {inbox.length === 0 ? (
-              <div className="text-slate-400 text-sm text-center py-8 rounded-xl bg-slate-900/40 border border-slate-700/30">Aucun email à traiter</div>
-            ) : inbox.map(em => {
-              const s = CLASSIFICATION_STYLES[em.classification] || CLASSIFICATION_STYLES.unrelated;
-              const Icon = s.icon;
-              const isSelected = selected?.id === em.id;
-              return (
-                <button key={em.id} onClick={() => setSelected(em)} className={`w-full text-left rounded-xl border p-3 transition ${isSelected ? `bg-${s.color}-500/10 border-${s.color}-500/50` : 'bg-slate-800/40 border-slate-700/50 hover:border-slate-600'}`}>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-${s.color}-500/15 text-${s.color}-300 border border-${s.color}-500/30 flex items-center gap-1 flex-shrink-0`}>
-                      <Icon className="w-3 h-3" /> {s.label}
-                    </span>
-                    {em.urgency === 'haute' && <span className="text-[10px] text-red-300">urgent</span>}
-                  </div>
-                  <div className="text-white text-sm font-medium truncate">{em.client_name || em.from_name || em.from_email}</div>
-                  <div className="text-xs text-slate-400 truncate">{em.subject}</div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="lg:col-span-2">
-            {!selected ? (
-              <div className="rounded-2xl bg-slate-900/60 border border-slate-700/50 p-12 text-center text-slate-400 backdrop-blur-xl">
-                <Mail className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                Sélectionne un email pour voir l'analyse ARK
-              </div>
-            ) : (
-              <EmailDetail email={selected} onReply={() => openMailto(selected)} onReviewed={() => markAction(selected.id, 'reviewed')} onIgnore={() => markAction(selected.id, 'ignore')} />
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function EmailDetail({ email, onReply, onReviewed, onIgnore }) {
-  const s = CLASSIFICATION_STYLES[email.classification] || CLASSIFICATION_STYLES.unrelated;
-  return (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-700/50 backdrop-blur-xl overflow-hidden">
-      <div className={`p-4 border-b border-slate-700/50 bg-${s.color}-500/5`}>
-        <div className="text-xs text-slate-400">De {email.from_name || email.from_email}</div>
-        <div className="text-white font-semibold mt-0.5">{email.subject}</div>
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-${s.color}-500/20 text-${s.color}-300 border border-${s.color}-500/40`}>{s.label}</span>
-          <span className="text-[10px] text-slate-400">sentiment : {email.sentiment}</span>
-          <span className="text-[10px] text-slate-400">urgence : {email.urgency}</span>
-        </div>
-      </div>
-
-      <div className="p-5 space-y-4">
-        {email.intent && (
-          <div>
-            <div className="text-xs uppercase tracking-wider text-slate-400 mb-2">Analyse ARK</div>
-            <div className="rounded-xl bg-slate-800/40 border border-slate-700/30 p-3 space-y-1.5 text-sm">
-              <div><span className="text-slate-400">Demande : </span><span className="text-white">{email.intent.demande_principale}</span></div>
-              <div><span className="text-slate-400">Attente : </span><span className="text-slate-200">{email.intent.attente_client}</span></div>
-              {email.intent.blocage_eventuel && <div><span className="text-amber-400">Blocage : </span><span className="text-slate-200">{email.intent.blocage_eventuel}</span></div>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Header */}
+      <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: '20px 22px', backdropFilter: 'blur(14px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg, ${T.cyan}, ${T.pink})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={22} color="#fff" />
+            </div>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: 0 }}>Boîte mail unifiée</h2>
+              <p style={{ fontSize: 11, color: T.textMuted, margin: '2px 0 0 0' }}>Emails classifiés par ARK — {counts.all} messages</p>
             </div>
           </div>
-        )}
-
-        {email.key_questions && JSON.parse(email.key_questions || '[]').length > 0 && (
-          <div>
-            <div className="text-xs uppercase tracking-wider text-slate-400 mb-2">Questions posées</div>
-            <ul className="space-y-1">
-              {JSON.parse(email.key_questions).map((q, i) => <li key={i} className="text-sm text-slate-200 flex items-start gap-2"><span className="text-cyan-400">·</span>{q}</li>)}
-            </ul>
-          </div>
-        )}
-
-        <div>
-          <div className="text-xs uppercase tracking-wider text-slate-400 mb-2">Réponse suggérée par ARK</div>
-          <div className="rounded-xl bg-gradient-to-br from-cyan-500/5 to-purple-500/5 border border-cyan-500/30 p-4">
-            <div className="text-cyan-300 text-xs font-medium mb-2">Sujet : {email.suggested_subject}</div>
-            <div className="text-slate-200 text-sm whitespace-pre-wrap">{email.suggested_reply}</div>
-          </div>
+          <button onClick={scan} disabled={scanning} style={{
+            padding: '8px 16px', borderRadius: 10, border: `1px solid ${T.accentBorder}`, background: T.accentBg,
+            color: T.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            opacity: scanning ? 0.5 : 1,
+          }}>
+            <RefreshCw size={14} style={scanning ? { animation: 'spin 1s linear infinite' } : {}} />
+            {scanning ? 'Scan en cours…' : 'Scanner maintenant'}
+          </button>
         </div>
 
-        {email.suggested_next_action && (
-          <div className="flex items-center gap-2 text-sm text-slate-300">
-            <Sparkles className="w-4 h-4 text-cyan-400" /> Prochaine action : {email.suggested_next_action}
-          </div>
-        )}
-
-        <div className="pt-3 border-t border-slate-700/30 flex flex-wrap gap-2">
-          <button onClick={onReply} className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium hover:opacity-90 transition">Répondre avec ce brouillon</button>
-          <button onClick={onReviewed} className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 text-slate-200 text-sm border border-slate-700/50">Marqué lu</button>
-          <button onClick={onIgnore} className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 text-red-300 text-sm border border-slate-700/50">Ignorer</button>
+        {/* Filter tabs */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            { key: 'all', label: 'Tous', count: counts.all },
+            { key: 'pending', label: 'En attente', count: counts.pending },
+            { key: 'important', label: 'Importants', count: counts.important },
+          ].map(({ key, label, count }) => (
+            <button key={key} onClick={() => setFilter(key)} style={{
+              padding: '6px 14px', borderRadius: 999, border: `1px solid ${filter === key ? T.accentBorder : 'rgba(255,255,255,0.06)'}`,
+              background: filter === key ? T.accentBg : 'transparent',
+              color: filter === key ? T.text : T.textMuted, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            }}>
+              {label} {count > 0 && <span style={{ opacity: 0.5 }}>({count})</span>}
+            </button>
+          ))}
         </div>
       </div>
-    </div>
-  );
-}
 
-function EmailSettings({ apiBase, authToken, onClose }) {
-  const [s, setS] = useState({ imap_host: '', imap_port: 993, imap_user: '', imap_password: '', imap_tls: true, enabled: false, scan_interval_minutes: 5 });
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    fetch(`${apiBase}/email/settings`, { headers: { 'Authorization': `Bearer ${authToken}` } })
-      .then(r => r.json()).then(d => { if (d.success && d.settings) setS({ ...s, ...d.settings, imap_password: '' }); });
-  }, []);
-
-  const save = async () => {
-    setSaving(true);
-    await fetch(`${apiBase}/email/settings`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(s)
-    });
-    setSaving(false);
-    onClose();
-  };
-
-  return (
-    <div className="rounded-3xl bg-slate-900/80 border border-slate-700/50 backdrop-blur-xl p-6 max-w-2xl">
-      <h3 className="text-white font-semibold mb-4">Configuration IMAP</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Input label="Serveur IMAP" value={s.imap_host} onChange={v => setS({ ...s, imap_host: v })} placeholder="imap.gmail.com" />
-        <Input label="Port" value={s.imap_port} type="number" onChange={v => setS({ ...s, imap_port: parseInt(v) })} />
-        <Input label="Utilisateur" value={s.imap_user} onChange={v => setS({ ...s, imap_user: v })} placeholder="dalil@arkcourtia.fr" />
-        <Input label="Mot de passe (chiffré)" value={s.imap_password} type="password" onChange={v => setS({ ...s, imap_password: v })} placeholder="••••••••" />
+      {/* Email list */}
+      <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, overflow: 'hidden', backdropFilter: 'blur(14px)' }}>
+        {loading ? (
+          <div style={{ padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Loader2 size={24} color={T.cyan} style={{ animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : inbox.length === 0 ? (
+          <p style={{ fontSize: 12, color: T.textMuted, textAlign: 'center', padding: 40 }}>Aucun email pour le moment — lance un scan</p>
+        ) : (
+          inbox.map((email, i) => {
+            const cls = CLASSIFICATIONS[email.classification] || CLASSIFICATIONS.unrelated;
+            const Icon = cls.icon;
+            return (
+              <div key={i} onClick={() => setSelected(selected === i ? null : i)} style={{
+                padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.03)',
+                cursor: 'pointer', transition: 'background 0.15s',
+                background: selected === i ? 'rgba(255,255,255,0.03)' : 'transparent',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <Icon size={16} color={cls.color} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{email.from_name || email.from}</span>
+                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 'auto', flexShrink: 0 }}>{email.date ? new Date(email.date).toLocaleDateString('fr-FR') : '--'}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email.subject}</div>
+                    {selected === i && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                        <p style={{ margin: '0 0 8px' }}>{email.body_preview || email.body || 'Aucun contenu disponible'}</p>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px',
+                          borderRadius: 99, fontSize: 10, fontWeight: 600,
+                          background: `rgba(${cls.color === T.success ? '34,197,94' : cls.color === T.danger ? '239,68,68' : cls.color === T.warning ? '245,158,11' : '139,92,246'},0.1)`,
+                          color: cls.color,
+                        }}>
+                          {cls.label}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <ChevronRight size={14} color={T.textMuted} style={{ transform: selected === i ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', marginTop: 2 }} />
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
-      <div className="mt-4 flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700/50">
-        <div className="text-sm text-white">Activer le scan automatique (toutes les 5 min)</div>
-        <button onClick={() => setS({ ...s, enabled: !s.enabled })} className={`w-11 h-6 rounded-full transition relative ${s.enabled ? 'bg-cyan-500' : 'bg-slate-700'}`}>
-          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${s.enabled ? 'left-5' : 'left-0.5'}`} />
-        </button>
-      </div>
-      <div className="mt-4 flex gap-2">
-        <button onClick={save} disabled={saving} className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium hover:opacity-90 disabled:opacity-50">{saving ? 'Sauvegarde…' : 'Enregistrer'}</button>
-        <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 text-slate-200 text-sm border border-slate-700/50">Annuler</button>
-      </div>
-    </div>
-  );
-}
-
-function Input({ label, value, onChange, type = 'text', placeholder = '' }) {
-  return (
-    <div>
-      <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">{label}</label>
-      <input type={type} value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-white text-sm focus:border-cyan-500/50 outline-none" />
     </div>
   );
 }

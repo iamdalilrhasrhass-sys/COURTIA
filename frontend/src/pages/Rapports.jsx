@@ -208,32 +208,47 @@ function BarChartSimple(_a) {
     if (d.devis > maxVal) maxVal = d.devis
     if (d.contrats > maxVal) maxVal = d.contrats
   })
-  var chartHeight = height || 160
+  var chartHeight = height || 180
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: chartHeight, paddingTop: 8 }}>
-      {data.map(function(d, i) {
-        var devisH = (d.devis / maxVal) * (chartHeight - 20)
-        var contratsH = (d.contrats / maxVal) * (chartHeight - 20)
-        return (
-          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: chartHeight - 20 }}>
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: devisH }}
-                transition={{ duration: 0.6, delay: i * 0.05 }}
-                style={{ width: 8, borderRadius: '3px 3px 0 0', background: 'rgba(139,92,246,0.5)' }}
-              />
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: contratsH }}
-                transition={{ duration: 0.6, delay: i * 0.05 + 0.1 }}
-                style={{ width: 8, borderRadius: '3px 3px 0 0', background: T.success }}
-              />
-            </div>
-            <span style={{ fontSize: 10, color: T.textMuted }}>{d.mois}</span>
-          </div>
-        )
+    <div style={{
+      width: '100%', height: chartHeight,
+      background: 'rgba(255,255,255,0.015)', borderRadius: 12,
+      border: '1px solid rgba(255,255,255,0.03)',
+      padding: '12px 8px 4px', position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Grid lines subtiles */}
+      {[0.25, 0.5, 0.75, 1].map(function(pct) {
+        return <div key={pct} style={{
+          position: 'absolute', left: 0, right: 0,
+          bottom: 20 + (chartHeight - 28) * pct,
+          height: 1, background: 'rgba(255,255,255,0.03)',
+        }} />
       })}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: chartHeight - 24, paddingBottom: 20 }}>
+        {data.map(function(d, i) {
+          var devisH = (d.devis / maxVal) * (chartHeight - 36)
+          var contratsH = (d.contrats / maxVal) * (chartHeight - 36)
+          return (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: chartHeight - 36 }}>
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: devisH }}
+                  transition={{ duration: 0.6, delay: i * 0.06 }}
+                  style={{ width: 14, borderRadius: '4px 4px 0 0', background: 'linear-gradient(180deg, rgba(139,92,246,0.7) 0%, rgba(139,92,246,0.35) 100%)', boxShadow: '0 0 8px rgba(139,92,246,0.15)' }}
+                />
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: contratsH }}
+                  transition={{ duration: 0.6, delay: i * 0.06 + 0.1 }}
+                  style={{ width: 14, borderRadius: '4px 4px 0 0', background: 'linear-gradient(180deg, rgba(34,197,94,0.7) 0%, rgba(34,197,94,0.35) 100%)', boxShadow: '0 0 8px rgba(34,197,94,0.12)' }}
+                />
+              </div>
+              <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 600 }}>{d.mois}</span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -246,27 +261,42 @@ function BarChartVertical(_a) {
   data.forEach(function(d) {
     if (d.valeur > maxVal) maxVal = d.valeur
   })
-  var chartHeight = height || 180
+  var chartHeight = height || 200
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: chartHeight, paddingTop: 8 }}>
-      {data.map(function(d, i) {
-        var barH = (d.valeur / maxVal) * (chartHeight - 24)
-        return (
-          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: T.textSecondary }}>{fmtEur(d.valeur)}</span>
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: barH }}
-              transition={{ duration: 0.6, delay: i * 0.06 }}
-              style={{
-                width: '100%', maxWidth: 40, borderRadius: '4px 4px 0 0',
-                background: 'linear-gradient(180deg, ' + T.ark + ' 0%, ' + T.accent + ' 100%)',
-              }}
-            />
-            <span style={{ fontSize: 10, color: T.textMuted, textAlign: 'center', lineHeight: 1.2 }}>{d.label}</span>
-          </div>
-        )
+    <div style={{
+      width: '100%', height: chartHeight,
+      background: 'rgba(255,255,255,0.015)', borderRadius: 12,
+      border: '1px solid rgba(255,255,255,0.03)',
+      padding: '12px 8px 4px', position: 'relative', overflow: 'hidden',
+    }}>
+      {[0.25, 0.5, 0.75, 1].map(function(pct) {
+        return <div key={pct} style={{
+          position: 'absolute', left: 0, right: 0,
+          bottom: 24 + (chartHeight - 32) * pct,
+          height: 1, background: 'rgba(255,255,255,0.03)',
+        }} />
       })}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: chartHeight - 24, paddingBottom: 24 }}>
+        {data.map(function(d, i) {
+          var barH = (d.valeur / maxVal) * (chartHeight - 40)
+          return (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: T.textSecondary }}>{fmtEur(d.valeur)}</span>
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: barH }}
+                transition={{ duration: 0.6, delay: i * 0.06 }}
+                style={{
+                  width: '100%', maxWidth: 48, borderRadius: '6px 6px 0 0', minHeight: 4,
+                  background: 'linear-gradient(180deg, rgba(139,92,246,0.8) 0%, rgba(91,77,245,0.4) 100%)',
+                  boxShadow: '0 0 12px rgba(139,92,246,0.15)',
+                }}
+              />
+              <span style={{ fontSize: 10, color: T.textMuted, textAlign: 'center', lineHeight: 1.2, fontWeight: 600 }}>{d.label}</span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -415,7 +445,7 @@ export default function Rapports() {
             transition={{ duration: 0.4 }}
             style={{
               background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '22px 24px',
+              borderRadius: 16, padding: '18px 20px',
             }}
           >
             <SectionHeader icon={Shield} title="Santé du portefeuille" badge={'Score ' + PORTFOLIO_HEALTH.scoreGlobal + '/100'} />
@@ -447,7 +477,7 @@ export default function Rapports() {
             transition={{ duration: 0.4, delay: 0.1 }}
             style={{
               background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '22px 24px',
+              borderRadius: 16, padding: '18px 20px',
             }}
           >
             <SectionHeader icon={TrendingUp} title="Performance commerciale" badge="Mensuelle" />
@@ -508,7 +538,7 @@ export default function Rapports() {
             transition={{ duration: 0.4, delay: 0.2 }}
             style={{
               background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '22px 24px',
+              borderRadius: 16, padding: '18px 20px',
             }}
           >
             <SectionHeader icon={PieChart} title="Répartition contrats par produit" badge={REPARTITION_PRODUITS.length + ' produits'} />
@@ -551,7 +581,7 @@ export default function Rapports() {
             transition={{ duration: 0.4, delay: 0.3 }}
             style={{
               background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '22px 24px',
+              borderRadius: 16, padding: '18px 20px',
             }}
           >
             <SectionHeader icon={Activity} title="Évolution devis / contrats" badge="6 mois" />
@@ -589,7 +619,7 @@ export default function Rapports() {
             transition={{ duration: 0.4, delay: 0.4 }}
             style={{
               background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '22px 24px',
+              borderRadius: 16, padding: '18px 20px',
             }}
           >
             <SectionHeader icon={AlertTriangle} title="Clients à risque" badge={'Top ' + CLIENTS_A_RISQUE.length} />
@@ -640,7 +670,7 @@ export default function Rapports() {
             transition={{ duration: 0.4, delay: 0.5 }}
             style={{
               background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '22px 24px',
+              borderRadius: 16, padding: '18px 20px',
             }}
           >
             <SectionHeader icon={Lightbulb} title="Opportunités ARK détectées" badge={OPPORTUNITES_ARK.length + ' pistes'} />

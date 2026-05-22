@@ -559,22 +559,24 @@ export default function Dashboard() {
         </div>
         </VibeScrollSection>
 
-        {/* VAGUE 2 — ARK Voice + Email Inbox + DDA Compliance */}
-        <VibeScrollSection delay={0.40} parallax={20}>
+        {/* ARK VOICE — P0 : Assistant téléphonique IA */}
+        <VibeScrollSection delay={0.25} parallax={18}>
           <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
-            <EmailInboxUnified apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
+            <ArkVoiceCockpit apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
           </div>
         </VibeScrollSection>
 
-        <VibeScrollSection delay={0.45} parallax={20}>
+        {/* DDA COMPLIANCE — Conformité réglementaire */}
+        <VibeScrollSection delay={0.35} parallax={18}>
           <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
             <DDACompliance apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
           </div>
         </VibeScrollSection>
 
-        <VibeScrollSection delay={0.50} parallax={20}>
+        {/* EMAIL INBOX — Boîte mail unifiée classifiée IA */}
+        <VibeScrollSection delay={0.45} parallax={18}>
           <div style={{ display: 'grid', gap: 16, marginBottom: 18 }}>
-            <ArkVoiceCockpit apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
+            <EmailInboxUnified apiBase="/api" authToken={localStorage.getItem('courtia_token') || localStorage.getItem('token')} />
           </div>
         </VibeScrollSection>
 
