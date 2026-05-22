@@ -7,6 +7,7 @@ import { formatNomClient } from '../utils/format'
 import Spinner from './Spinner'
 import ConfirmModal from './ConfirmModal'
 import ClientModal from './ClientModal'
+import { GlassPanel, ArkStatusBadge, EmptyStateAurora } from '../components/aurora/Aurora3D'
 
 export default function ClientsList() {
   const clients = useClientStore((state) => state.clients)
@@ -23,6 +24,11 @@ export default function ClientsList() {
   const [filterStatus, setFilterStatus] = useState('tous')
   const [page, setPage] = useState(1)
   const ITEMS_PER_PAGE = 20
+
+  const statusToVariant = (s) => {
+    const map = { Active: 'success', Prospect: 'info', actif: 'success', prospect: 'info', perdu: 'neutral', a_risque: 'danger', silencieux: 'warning' }
+    return map[s] || 'neutral'
+  }
 
   useEffect(() => {
     if (token) {
@@ -119,9 +125,7 @@ export default function ClientsList() {
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.email}</td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>{client.phone || 'N/A'}</td>
                 <td style={{padding:'12px 16px',fontSize:'12px',fontWeight:600}}>
-                  <span style={{padding:'4px 10px',borderRadius:'6px',background:client.status==='Active'?'#d1fae5':client.status==='Prospect'?'#dbeafe':'#f3f4f6',color:client.status==='Active'?'#065f46':client.status==='Prospect'?'#1d4ed8':'#6b7280'}}>
-                    {client.status || 'Prospect'}
-                  </span>
+                  <ArkStatusBadge label={client.status || 'Prospect'} variant={statusToVariant(client.status)} />
                 </td>
                 <td style={{padding:'12px 16px',fontSize:'13px',color:'#0a0a0a',fontWeight:600}}>{client.risk_score || '—'}</td>
                 <td style={{padding:'12px 16px',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}>
