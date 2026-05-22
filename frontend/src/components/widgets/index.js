@@ -1,0 +1,15 @@
+// index.js — exports centralisés COURTIA Widgets
+// Import dans ton app : import { ArkNeuralPulse, DossierOrbitalRings } from './widgets'
+
+export { default as ArkNeuralPulse }        from './ArkNeuralPulse.jsx'
+export { default as RiskDnaHelix }          from './RiskDnaHelix.jsx'
+export { default as PartnerSolarSystem }    from './PartnerSolarSystem.jsx'
+export { default as DealFlowRiver }         from './DealFlowRiver.jsx'
+export { default as DossierOrbitalRings }   from './DossierOrbitalRings.jsx'
+export { default as ArkRadarCombat }        from './ArkRadarCombat.jsx'
+export { default as OfferPodium }           from './OfferPodium.jsx'
+export { default as SmartMessageComposer }  from './SmartMessageComposer.jsx'
+export { default as CommissionForecastBar } from './CommissionForecastBar.jsx'
+export { default as ArkActivityFeed }       from './ArkActivityFeed.jsx'
+export { default as DealTimelineScrubber }  from './DealTimelineScrubber.jsx'
+export { default as ConversionGravityFunnel } from './ConversionGravityFunnel.jsx'

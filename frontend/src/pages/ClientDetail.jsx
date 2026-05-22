@@ -10,6 +10,7 @@ import {
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { GlassPanel, ArkStatusBadge, EmptyStateAurora } from '../components/aurora/Aurora3D'
+import DossierOrbitalRings from '../components/widgets/DossierOrbitalRings'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -285,6 +286,19 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
             </div>
           ))}
         </div>
+      </GlassPanel>
+
+      {/* Complétude dossier — Orbital Rings */}
+      <GlassPanel glow={false} style={{ padding: 16 }}>
+        <DossierOrbitalRings
+          docsScore={docs.length >= 3 ? 85 : 40}
+          fieldsScore={75}
+          missingDocs={docs.length < 3 ? [{ id: 'ri', label: "Relevé d'information", action: 'whatsapp' }] : []}
+          missingFields={[{ id: 'bonus_malus', label: 'Bonus/malus' }]}
+          clientName={client?.first_name ? `${client.first_name} ${client.last_name}` : 'Client'}
+          onAction={({ type, item }) => console.log('Orbital action:', type, item)}
+          size={200}
+        />
       </GlassPanel>
 
       {/* Documents */}

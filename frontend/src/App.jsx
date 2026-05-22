@@ -35,6 +35,8 @@ const Abonnement = lazy(() => import('./pages/Abonnement'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
+const Partenaires = lazy(() => import('./pages/Partenaires'))
+const Comparateur = lazy(() => import('./pages/Comparateur'))
 
 function RouteFallback() {
   return (
@@ -124,6 +126,8 @@ export default function App() {
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
           <Route path="/analyses"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
+          <Route path="/partenaires"   element={<Partenaires />} />
+          <Route path="/comparateur"   element={<Comparateur />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
           <Route path="/reach"             element={<ReachDashboard />} />
