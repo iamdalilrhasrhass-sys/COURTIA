@@ -37,6 +37,10 @@ const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Academy = lazy(() => import('./pages/Academy'))
 const Documents = lazy(() => import('./pages/Documents'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
+const FlywheelPanel = lazy(() => import('./pages/FlywheelPanel'))
+const AdviceNotePanel = lazy(() => import('./pages/AdviceNotePanel'))
+const ArkAgentsPanel = lazy(() => import('./pages/ArkAgentsPanel'))
+const ProspectionPanel = lazy(() => import('./pages/ProspectionPanel'))
 const Tarifs = lazy(() => import('./pages/Tarifs'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
@@ -195,6 +199,8 @@ export default function App() {
           <Route path="/clients/new"   element={<ClientNew />} />
           <Route path="/client/:id"     element={<ClientDetail />} />
           <Route path="/clients/:id"   element={<ClientDetail />} />
+          <Route path="/clients/:id/flywheel" element={<FlywheelPanel />} />
+          <Route path="/ark/dossiers/:id/advice-note" element={<AdviceNotePanel />} />
           <Route path="/clients/:id/edit" element={<ClientNew />} />
           <Route path="/contrats"      element={<Contrats />} />
           <Route path="/contrats/new"  element={<ContratNew />} />
@@ -206,6 +212,8 @@ export default function App() {
           <Route path="/documents"     element={<Documents />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
+          <Route path="/ark-agents" element={<ArkAgentsPanel />} />
+          <Route path="/prospection" element={<ProspectionPanel />} />
           <Route path="/capitia"       element={<Capitia />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
           <Route path="/analyses"     element={<AnalyticsExecutive />} />

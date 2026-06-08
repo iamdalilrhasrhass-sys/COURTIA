@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "mkdir -p dist/landing && cp -r ../landing/* dist/landing/ && cp ../landing/index.html dist/landing/page.html",
+    "postbuild": "mkdir -p dist/landing && if [ -d landing ]; then cp -r landing/* dist/landing/ && cp landing/index.html dist/landing/page.html; else cp -r ../landing/* dist/landing/ && cp ../landing/index.html dist/landing/page.html; fi",
     "preview": "vite preview",
     "lint": "eslint src",
     "test": "vitest run"

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, BarChart2,
   Settings, CreditCard, LogOut, Shield, Menu, X, Zap, Target,
-  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe
+  Search, Inbox, Send, MapPin, GraduationCap, FolderOpen, Globe, Bot
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -30,11 +30,14 @@ const getInitials = (firstName, lastName) => {
 
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+  { path: '/morning-brief', label: 'Morning Brief', icon: Zap },
   { path: '/clients', label: 'Clients', icon: Users },
   { path: '/contrats', label: 'Contrats', icon: FileText },
   { path: '/taches', label: 'Tâches', icon: CheckSquare },
   { separator: true, label: 'ACQUISITION' },
   { path: '/reach', label: 'REACH', icon: Target, badge: 'Nouveau', hasSub: true },
+  { path: '/prospection', label: 'Prospection ARK', icon: Send, badge: 'Go' },
+  { path: '/ark-agents', label: 'Agents ARK', icon: Bot, badge: '7' },
   { separator: true, label: 'MODULES' },
   { path: '/academy', label: 'Academy', icon: GraduationCap, badge: 'Nouveau' },
   { path: '/documents', label: 'Documents', icon: FolderOpen },
