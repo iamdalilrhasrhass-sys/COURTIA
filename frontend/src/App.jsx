@@ -12,6 +12,7 @@ import Rapports from './pages/Rapports'
 import Parametres from './pages/Parametres'
 import LandingPublic from './pages/LandingPublic'
 import MorningBrief from './pages/MorningBrief'
+import { getSeoPages } from './seo/marketSeo'
 
 // Admin pages
 const ClientDetail = lazy(() => import('./pages/ClientDetail'))
@@ -46,6 +47,7 @@ const PricingPage = lazy(() => import('./pages/PricingPage'))
 const CloserSignupPage = lazy(() => import('./pages/CloserSignupPage'))
 const CloserDashboard = lazy(() => import('./pages/CloserDashboard'))
 const GlobalOnboardingPage = lazy(() => import('./pages/GlobalOnboardingPage'))
+const SeoMarketPage = lazy(() => import('./pages/SeoMarketPage'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
@@ -188,6 +190,8 @@ function GlobalOnboardingRoute() {
   return <GlobalOnboardingPage countryCode={country.toUpperCase()} clientType={type} />
 }
 
+const seoPagePaths = getSeoPages().map((page) => page.path)
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -204,6 +208,9 @@ export default function App() {
         <Route path="/closers/rejoindre" element={<CloserSignupPage />} />
         <Route path="/closers/:id/dashboard" element={<CloserDashboardRoute />} />
         <Route path="/onboarding/:country/:type" element={<GlobalOnboardingRoute />} />
+        {seoPagePaths.map((path) => (
+          <Route key={path} path={path} element={<SeoMarketPage />} />
+        ))}
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
 

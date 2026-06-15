@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-seo-files.mjs",
     "build": "vite build",
     "postbuild": "mkdir -p dist/landing && if [ -d landing ]; then cp -r landing/* dist/landing/ && cp landing/index.html dist/landing/page.html; else cp -r ../landing/* dist/landing/ && cp ../landing/index.html dist/landing/page.html; fi",
     "preview": "vite preview",
