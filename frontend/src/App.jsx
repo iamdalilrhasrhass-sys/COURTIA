@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 
@@ -42,6 +42,10 @@ const AdviceNotePanel = lazy(() => import('./pages/AdviceNotePanel'))
 const ArkAgentsPanel = lazy(() => import('./pages/ArkAgentsPanel'))
 const ProspectionPanel = lazy(() => import('./pages/ProspectionPanel'))
 const Tarifs = lazy(() => import('./pages/Tarifs'))
+const PricingPage = lazy(() => import('./pages/PricingPage'))
+const CloserSignupPage = lazy(() => import('./pages/CloserSignupPage'))
+const CloserDashboard = lazy(() => import('./pages/CloserDashboard'))
+const GlobalOnboardingPage = lazy(() => import('./pages/GlobalOnboardingPage'))
 const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 const AdminOverview = lazy(() => import('./pages/AdminOverview'))
 const AdminUsers = lazy(() => import('./pages/AdminUsers'))
@@ -174,6 +178,16 @@ function RouteLoader() {
   )
 }
 
+function CloserDashboardRoute() {
+  const { id } = useParams()
+  return <CloserDashboard closerId={id} />
+}
+
+function GlobalOnboardingRoute() {
+  const { country = 'fr', type = 'broker' } = useParams()
+  return <GlobalOnboardingPage countryCode={country.toUpperCase()} clientType={type} />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -185,7 +199,11 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/closers/rejoindre" element={<CloserSignupPage />} />
+        <Route path="/closers/:id/dashboard" element={<CloserDashboardRoute />} />
+        <Route path="/onboarding/:country/:type" element={<GlobalOnboardingRoute />} />
         <Route path="/upload/:token" element={<PublicDocumentUpload />} />
         <Route path="/" element={<LandingPublic />} />
 

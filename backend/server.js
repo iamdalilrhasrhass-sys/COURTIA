@@ -90,6 +90,7 @@ app.get('/', (req, res) => res.json({ status: 'ok', service: 'courtia-backend' }
 
 const path = require('path')
 app.use('/landing', express.static(path.join(__dirname, 'public/landing')))
+app.use('/contracts', express.static(path.join(__dirname, 'contracts')))
 
 // Fallback : /landing (sans slash) et /landing/ servent index.html
 app.get('/landing', (req, res) => res.sendFile(path.join(__dirname, 'public/landing/index.html')))
@@ -157,6 +158,7 @@ const academyRouter        = require('./src/routes/academy')
 const documentInboxRouter  = require('./src/routes/documentInbox')
 const browserPilotRouter   = require('./src/routes/browserPilot')
 const extensionRouter      = require('./src/routes/extension')
+const globalRouter         = require('./src/routes/global')
 
 // Public
 app.use('/api/auth',   authLimiter, authRouter)
@@ -165,6 +167,7 @@ app.use('/api/stripe', stripeRouter) // Handles public webhook and protected che
 app.use('/api/billing', billingRouter)
 app.use('/api/ark/whatsapp', arkWhatsappRouter)
 app.use('/api/public/prospects', publicProspectsRouter)
+app.use('/api/global', globalRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
