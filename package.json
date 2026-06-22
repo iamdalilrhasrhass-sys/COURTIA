@@ -3,7 +3,7 @@
   "name": "courtia-root",
   "version": "1.0.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=20 <25"
   },
   "scripts": {
     "postinstall": "npm --prefix backend install --omit=dev",
