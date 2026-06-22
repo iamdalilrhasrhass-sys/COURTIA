@@ -1,5 +1,6 @@
 const pool = require('../db');
 const planService = require('./planService');
+const marketService = require('./marketService');
 
 const TRIAL_DAYS = Number(process.env.BILLING_TRIAL_DAYS || 7);
 const FISCAL_LABEL = process.env.BILLING_FISCAL_LABEL || 'Prix indiqués hors taxes. TVA applicable au taux en vigueur.';
@@ -33,6 +34,27 @@ async function ensureBillingFoundation() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_org_profiles_owner_user ON organization_profiles(owner_user_id);
+  `);
+
+  await pool.query(`
+    ALTER TABLE organization_profiles
+      ADD COLUMN IF NOT EXISTS market VARCHAR(2) NOT NULL DEFAULT 'FR',
+      ADD COLUMN IF NOT EXISTS market_override VARCHAR(2),
+      ADD COLUMN IF NOT EXISTS preferred_locale VARCHAR(16) NOT NULL DEFAULT 'fr-FR',
+      ADD COLUMN IF NOT EXISTS finma_register_number VARCHAR(64),
+      ADD COLUMN IF NOT EXISTS intermediary_type VARCHAR(32),
+      ADD COLUMN IF NOT EXISTS lsa_compliant_since TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS setup_waived BOOLEAN NOT NULL DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS setup_paid_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS setup_checkout_session_id VARCHAR(128);
+
+    ALTER TABLE IF EXISTS users
+      ADD COLUMN IF NOT EXISTS market VARCHAR(2) NOT NULL DEFAULT 'FR',
+      ADD COLUMN IF NOT EXISTS market_override VARCHAR(2),
+      ADD COLUMN IF NOT EXISTS preferred_locale VARCHAR(16) NOT NULL DEFAULT 'fr-FR',
+      ADD COLUMN IF NOT EXISTS setup_waived BOOLEAN NOT NULL DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS setup_paid_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS setup_checkout_session_id VARCHAR(128);
   `);
 
   await pool.query(`
@@ -110,6 +132,13 @@ async function ensureBillingFoundation() {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_checkout_sessions_provider_id ON checkout_sessions(provider_session_id);
     CREATE INDEX IF NOT EXISTS idx_checkout_sessions_org ON checkout_sessions(organization_id);
+  `);
+
+  await pool.query(`
+    ALTER TABLE checkout_sessions
+      ADD COLUMN IF NOT EXISTS market VARCHAR(2) NOT NULL DEFAULT 'FR',
+      ADD COLUMN IF NOT EXISTS setup_amount_cents INTEGER NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS setup_waived BOOLEAN NOT NULL DEFAULT FALSE;
   `);
 
   await pool.query(`
@@ -211,7 +240,33 @@ function normalizePlanCode(code) {
   return ['starter', 'pro', 'premium'].includes(v) ? v : null;
 }
 
-function getPlans() {
+function getPlans(market = 'FR') {
+  const normalizedMarket = marketService.normalizeMarket(market);
+  if (normalizedMarket === 'CH') {
+    const config = marketService.getMarketConfig('CH');
+    return Object.values(config.pricing).map((plan) => ({
+      display_price_ht: plan.monthlyAmountCents
+        ? `${marketService.centsToMajor(plan.monthlyAmountCents).toFixed(0)} CHF HT / mois`
+        : 'Sur devis',
+      display_setup_ht: plan.setupAmountCents
+        ? `${marketService.centsToMajor(plan.setupAmountCents).toFixed(0)} CHF setup`
+        : null,
+      display_price_ttc: null,
+      code: plan.code,
+      name: plan.displayName,
+      price: marketService.centsToMajor(plan.monthlyAmountCents),
+      setup_price: marketService.centsToMajor(plan.setupAmountCents),
+      currency: plan.currency,
+      interval: 'month',
+      highlighted: plan.highlighted,
+      trial_days: 0,
+      has_checkout: plan.code !== 'premium',
+      market: normalizedMarket,
+      fiscal_label: config.taxLabel,
+      features: {},
+    }));
+  }
+
   const all = planService.getAllPlans();
   return all.map((p) => ({
     display_price_ht: p.price ? `${Number(p.price).toFixed(0)} € HT / mois` : 'Sur devis',
@@ -227,6 +282,9 @@ function getPlans() {
     highlighted: p.highlighted,
     trial_days: p.id === 'premium' ? 0 : TRIAL_DAYS,
     has_checkout: p.id !== 'premium',
+    market: 'FR',
+    setup_price: 0,
+    display_setup_ht: null,
     fiscal_label: FISCAL_LABEL,
     features: p.features,
   }));
@@ -276,6 +334,11 @@ async function upsertOrganizationProfile(userId, payload = {}) {
     postal_code: payload.postal_code ?? org.postal_code,
     city: payload.city ?? org.city,
     country: payload.country ?? org.country,
+    market: marketService.normalizeMarket(payload.market ?? org.market),
+    market_override: payload.market_override ?? org.market_override,
+    preferred_locale: payload.preferred_locale ?? org.preferred_locale,
+    finma_register_number: payload.finma_register_number ?? org.finma_register_number,
+    intermediary_type: payload.intermediary_type ?? org.intermediary_type,
     legal_signatory_name: payload.legal_signatory_name ?? org.legal_signatory_name,
     legal_signatory_role: payload.legal_signatory_role ?? org.legal_signatory_role,
   };
@@ -285,8 +348,10 @@ async function upsertOrganizationProfile(userId, payload = {}) {
       SET cabinet_name=$1, legal_form=$2, siret=$3, orias=$4,
           billing_email=$5, phone=$6, address_line1=$7, postal_code=$8,
           city=$9, country=$10, legal_signatory_name=$11, legal_signatory_role=$12,
+          market=$13, market_override=$14, preferred_locale=$15,
+          finma_register_number=$16, intermediary_type=$17,
           updated_at=NOW()
-      WHERE id=$13
+      WHERE id=$18
       RETURNING *`,
     [
       next.cabinet_name,
@@ -301,6 +366,11 @@ async function upsertOrganizationProfile(userId, payload = {}) {
       next.country,
       next.legal_signatory_name,
       next.legal_signatory_role,
+      next.market,
+      next.market_override,
+      next.preferred_locale,
+      next.finma_register_number,
+      next.intermediary_type,
       org.id,
     ]
   );
@@ -320,10 +390,17 @@ async function getBillingStatus(userId) {
     `SELECT s.status, s.trial_start_at, s.trial_end_at, s.current_period_start,
             s.current_period_end, s.cancel_at_period_end,
             bp.code AS plan_code, bp.display_name AS plan_name,
-            cbp.stripe_customer_id
+            cbp.stripe_customer_id,
+            op.market,
+            op.market_override,
+            op.preferred_locale,
+            op.setup_waived,
+            op.setup_paid_at,
+            op.setup_checkout_session_id
       FROM subscriptions s
       LEFT JOIN billing_plans bp ON bp.id = s.plan_id
       LEFT JOIN customer_billing_profiles cbp ON cbp.organization_id = s.organization_id
+      LEFT JOIN organization_profiles op ON op.id = s.organization_id
       WHERE s.organization_id=$1
       ORDER BY s.updated_at DESC, s.id DESC
       LIMIT 1`,
@@ -341,6 +418,12 @@ async function getBillingStatus(userId) {
       current_period_end: null,
       cancel_at_period_end: false,
       portal_available: false,
+      market: org.market || 'FR',
+      market_override: org.market_override || null,
+      preferred_locale: org.preferred_locale || 'fr-FR',
+      setup_waived: !!org.setup_waived,
+      setup_paid_at: org.setup_paid_at || null,
+      setup_checkout_session_id: org.setup_checkout_session_id || null,
     };
   }
 
@@ -356,6 +439,12 @@ async function getBillingStatus(userId) {
     current_period_end: sub.current_period_end,
     cancel_at_period_end: !!sub.cancel_at_period_end,
     portal_available: !!sub.stripe_customer_id,
+    market: sub.market || org.market || 'FR',
+    market_override: sub.market_override || org.market_override || null,
+    preferred_locale: sub.preferred_locale || org.preferred_locale || 'fr-FR',
+    setup_waived: !!sub.setup_waived,
+    setup_paid_at: sub.setup_paid_at || null,
+    setup_checkout_session_id: sub.setup_checkout_session_id || null,
     stripe_customer_id_masked: sub.stripe_customer_id
       ? `${sub.stripe_customer_id.slice(0, 6)}***${sub.stripe_customer_id.slice(-4)}`
       : null,

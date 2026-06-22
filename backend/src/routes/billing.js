@@ -4,6 +4,7 @@ const { verifyToken } = require('../middleware/auth');
 const planService = require('../services/planService');
 const billingService = require('../services/billingService');
 const stripeService = require('../services/stripeService');
+const marketService = require('../services/marketService');
 const legalAcceptanceService = require('../services/legalAcceptanceService');
 const emailService = require('../services/emailService');
 
@@ -156,7 +157,18 @@ async function upsertSubscriptionFromCheckout({
   return existing.rows[0].id;
 }
 
-async function markUserSubscription({ userId, planCode, status, stripeCustomerId, stripeSubscriptionId, trialEndAt, currentPeriodEnd }) {
+async function markUserSubscription({
+  userId,
+  planCode,
+  status,
+  stripeCustomerId,
+  stripeSubscriptionId,
+  trialEndAt,
+  currentPeriodEnd,
+  market,
+  setupPaidAt,
+  setupCheckoutSessionId,
+}) {
   await pool.query(
     `UPDATE users
        SET plan=$1,
@@ -165,9 +177,23 @@ async function markUserSubscription({ userId, planCode, status, stripeCustomerId
            stripe_subscription_id=COALESCE($4, stripe_subscription_id),
            trial_ends_at=COALESCE($5, trial_ends_at),
            current_period_end=COALESCE($6, current_period_end),
+           market=COALESCE($7, market),
+           setup_paid_at=COALESCE($8, setup_paid_at),
+           setup_checkout_session_id=COALESCE($9, setup_checkout_session_id),
            updated_at=NOW()
-     WHERE id=$7`,
-    [planCode, status, stripeCustomerId || null, stripeSubscriptionId || null, trialEndAt || null, currentPeriodEnd || null, userId]
+     WHERE id=$10`,
+    [
+      planCode,
+      status,
+      stripeCustomerId || null,
+      stripeSubscriptionId || null,
+      trialEndAt || null,
+      currentPeriodEnd || null,
+      market || null,
+      setupPaidAt || null,
+      setupCheckoutSessionId || null,
+      userId,
+    ]
   );
 }
 
@@ -202,6 +228,7 @@ async function updateCheckoutSessionStatus(sessionId, status, payload = {}) {
 }
 
 async function handleStripeEvent(event) {
+  await billingService.ensureBillingFoundation();
   const type = event.type;
   const data = event.data?.object || {};
 
@@ -211,6 +238,8 @@ async function handleStripeEvent(event) {
     const userId = Number(metadata.user_id || 0) || null;
     let organizationId = Number(metadata.organization_id || 0) || null;
     const planCode = billingService.normalizePlanCode(metadata.plan_code || metadata.plan) || 'starter';
+    const market = marketService.normalizeMarket(metadata.market);
+    const setupAmountCents = Number(metadata.setup_amount_cents || 0);
     const subscriptionId = session.subscription || null;
     const customerId = session.customer || null;
 
@@ -271,11 +300,25 @@ async function handleStripeEvent(event) {
           customerId,
           process.env.BILLING_TAX_MODE || 'configurable',
           null,
-          process.env.BILLING_VAT_LABEL || billingService.FISCAL_LABEL,
+          process.env.BILLING_VAT_LABEL || marketService.getMarketConfig(market).taxLabel || billingService.FISCAL_LABEL,
           process.env.BILLING_SELLER_STATUS || 'micro-entreprise_to_confirm',
         ]
       );
     }
+
+    const setupPaidAt = market === 'CH' && setupAmountCents > 0 && session.payment_status === 'paid'
+      ? new Date().toISOString()
+      : null;
+
+    await pool.query(
+      `UPDATE organization_profiles
+         SET market=$1,
+             setup_paid_at=COALESCE($2, setup_paid_at),
+             setup_checkout_session_id=COALESCE($3, setup_checkout_session_id),
+             updated_at=NOW()
+       WHERE id=$4`,
+      [market, setupPaidAt, setupPaidAt ? session.id : null, organizationId]
+    );
 
     if (userId) {
       await markUserSubscription({
@@ -286,6 +329,9 @@ async function handleStripeEvent(event) {
         stripeSubscriptionId: subscriptionId,
         trialEndAt,
         currentPeriodEnd,
+        market,
+        setupPaidAt,
+        setupCheckoutSessionId: setupPaidAt ? session.id : null,
       });
     }
 
@@ -298,6 +344,7 @@ async function handleStripeEvent(event) {
     const userId = Number(metadata.user_id || 0) || null;
     let organizationId = Number(metadata.organization_id || 0) || null;
     const planCode = billingService.normalizePlanCode(metadata.plan_code || metadata.plan) || 'starter';
+    const market = marketService.normalizeMarket(metadata.market);
     const providerSubscriptionId = sub.id;
     const customerId = sub.customer || null;
 
@@ -337,6 +384,7 @@ async function handleStripeEvent(event) {
         stripeSubscriptionId: providerSubscriptionId,
         trialEndAt,
         currentPeriodEnd,
+        market,
       });
     }
 
@@ -388,15 +436,20 @@ async function handleStripeEvent(event) {
   }
 }
 
-router.get('/plans', async (_req, res) => {
+router.get('/plans', async (req, res) => {
   try {
     await billingService.ensureBillingFoundation();
+    const marketContext = marketService.resolveMarketContext({
+      headers: req.headers,
+      queryMarket: req.query?.market || req.query?.country || null,
+    });
     return res.json({
       success: true,
       billing_mode: stripeService.getBillingMode(),
-      trial_days: billingService.TRIAL_DAYS,
-      fiscal_label: billingService.FISCAL_LABEL,
-      plans: billingService.getPlans(),
+      trial_days: marketContext.market === 'CH' ? 0 : billingService.TRIAL_DAYS,
+      fiscal_label: marketService.getMarketConfig(marketContext.market).taxLabel || billingService.FISCAL_LABEL,
+      market_context: marketContext,
+      plans: billingService.getPlans(marketContext.market),
     });
   } catch (_err) {
     return res.status(500).json({ success: false, error: 'plans_unavailable' });
@@ -408,7 +461,15 @@ router.post('/onboarding', verifyToken, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
     await billingService.ensureBillingFoundation();
-    const org = await billingService.upsertOrganizationProfile(userId, req.body || {});
+    const marketContext = marketService.resolveMarketContext({
+      headers: req.headers,
+      marketOverride: req.body?.market_override || req.body?.market || null,
+    });
+    const org = await billingService.upsertOrganizationProfile(userId, {
+      ...(req.body || {}),
+      market: marketContext.market,
+      preferred_locale: req.body?.preferred_locale || marketContext.locale,
+    });
     return res.json({ success: true, organization: org });
   } catch (_err) {
     return res.status(500).json({ success: false, error: 'onboarding_save_failed' });
@@ -463,6 +524,12 @@ async function createCheckoutSessionHandler(req, res) {
     }
 
     const org = await billingService.getOrCreateOrganization(userId);
+    const marketContext = marketService.resolveMarketContext({
+      headers: req.headers,
+      accountMarket: org.market,
+      marketOverride: req.body?.market_override || req.body?.market || req.query?.market || null,
+    });
+    const marketConfig = marketService.getMarketConfig(marketContext.market);
     const acceptanceId = await findAcceptanceId({
       organizationId: org.id,
       userId,
@@ -485,12 +552,12 @@ async function createCheckoutSessionHandler(req, res) {
       });
     }
 
-    const priceId = stripeService.getPriceId(planCode);
+    const priceId = stripeService.getPriceId(planCode, marketContext.market);
     if (!priceId) {
       return res.status(503).json({
         success: false,
         error: 'missing_test_price_id',
-        message: 'Price ID test manquant pour ce plan.',
+        message: `Price ID ${marketContext.market} manquant pour ce plan.`,
       });
     }
 
@@ -498,17 +565,29 @@ async function createCheckoutSessionHandler(req, res) {
     const frontendUrl = process.env.FRONTEND_URL || 'https://courtia.vercel.app';
     const successUrl = `${frontendUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${frontendUrl}/billing/cancel`;
+    const planPricing = marketConfig.pricing[planCode] || marketConfig.pricing.starter;
+    const setupWaived = !!org.setup_waived;
+    const setupAmountCents = setupWaived ? 0 : Number(planPricing.setupAmountCents || 0);
+    const trialDays = marketContext.market === 'CH' ? 0 : billingService.TRIAL_DAYS;
 
     const session = await stripeService.createSubscriptionCheckoutSession({
       customerId,
       priceId,
       successUrl,
       cancelUrl,
-      trialDays: billingService.TRIAL_DAYS,
+      trialDays,
+      market: marketContext.market,
+      setupAmountCents,
+      setupLabel: planPricing.setupLabel,
+      currency: marketConfig.currency,
       metadata: {
         user_id: String(userId),
         organization_id: String(org.id),
         plan_code: planCode,
+        market: marketContext.market,
+        locale: marketContext.locale,
+        setup_amount_cents: String(setupAmountCents),
+        setup_waived: setupWaived ? 'true' : 'false',
         legal_acceptance_id: String(acceptanceId),
         billing_mode: stripeService.getBillingMode(),
       },
@@ -517,10 +596,23 @@ async function createCheckoutSessionHandler(req, res) {
     const planId = await billingService.getPlanId(planCode);
     await pool.query(
       `INSERT INTO checkout_sessions (
-        organization_id, plan_id, provider_session_id, status, created_at, raw_payload_json
-      ) VALUES ($1,$2,$3,'created',NOW(),$4::jsonb)
-      ON CONFLICT (provider_session_id) DO UPDATE SET raw_payload_json=EXCLUDED.raw_payload_json`,
-      [org.id, planId, session.id, JSON.stringify({ id: session.id, url: session.url })]
+        organization_id, plan_id, provider_session_id, status, created_at, raw_payload_json,
+        market, setup_amount_cents, setup_waived
+      ) VALUES ($1,$2,$3,'created',NOW(),$4::jsonb,$5,$6,$7)
+      ON CONFLICT (provider_session_id) DO UPDATE SET
+        raw_payload_json=EXCLUDED.raw_payload_json,
+        market=EXCLUDED.market,
+        setup_amount_cents=EXCLUDED.setup_amount_cents,
+        setup_waived=EXCLUDED.setup_waived`,
+      [
+        org.id,
+        planId,
+        session.id,
+        JSON.stringify({ id: session.id, url: session.url, market: marketContext.market, setup_amount_cents: setupAmountCents }),
+        marketContext.market,
+        setupAmountCents,
+        setupWaived,
+      ]
     );
 
     return res.json({
@@ -528,7 +620,10 @@ async function createCheckoutSessionHandler(req, res) {
       checkout_url: session.url,
       url: session.url,
       session_id: session.id,
-      trial_days: billingService.TRIAL_DAYS,
+      trial_days: trialDays,
+      market_context: marketContext,
+      setup_amount_cents: setupAmountCents,
+      setup_waived: setupWaived,
       billing_mode: stripeService.getBillingMode(),
     });
   } catch (_err) {
@@ -547,7 +642,7 @@ router.get('/status', verifyToken, async (req, res) => {
     return res.json({
       success: true,
       billing_mode: stripeService.getBillingMode(),
-      fiscal_label: billingService.FISCAL_LABEL,
+      fiscal_label: marketService.getMarketConfig(status.market).taxLabel || billingService.FISCAL_LABEL,
       status,
     });
   } catch (_err) {

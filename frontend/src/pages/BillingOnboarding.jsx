@@ -3,6 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, CreditCard, Sparkles } from 'lucide-react'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
+import {
+  MARKET_OPTIONS,
+  getDetectedGeoCountry,
+  parseMarketFromSearch,
+  persistMarketOverride,
+  readStoredMarketOverride,
+  resolveMarketContext,
+} from '../market/marketContext'
 
 const BILLING_TEST_UI_ENABLED = import.meta.env.VITE_BILLING_TEST_MODE !== 'false'
 
@@ -21,15 +29,40 @@ const PLAN_COPY = {
   },
 }
 
+const PLAN_COPY_CH = {
+  starter: {
+    title: 'Indépendant',
+    banner: '490 CHF setup, puis 199 CHF HT / mois. TVA suisse 8,1 % en sus.',
+  },
+  pro: {
+    title: 'Cabinet',
+    banner: '990 CHF setup, puis 349 CHF HT / mois pour 3 accès. TVA suisse 8,1 % en sus.',
+  },
+  premium: {
+    title: 'Sur-Mesure / Fiduciaire',
+    banner: "Dès 1'500 CHF setup — abonnement sur devis.",
+  },
+}
+
+function initialMarket() {
+  if (typeof window === 'undefined') return 'FR'
+  return resolveMarketContext({
+    geoCountry: getDetectedGeoCountry(),
+    storedOverride: readStoredMarketOverride(),
+    queryMarket: parseMarketFromSearch(window.location.search),
+  }).market
+}
+
 export default function BillingOnboarding() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const initialPlan = params.get('plan') === 'starter' ? 'starter' : params.get('plan') === 'premium' ? 'premium' : 'pro'
+  const [market, setMarket] = useState(initialMarket)
   const [planCode, setPlanCode] = useState(initialPlan)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     cabinet_name: '',
     legal_form: '',
     siret: '',
@@ -39,10 +72,10 @@ export default function BillingOnboarding() {
     address_line1: '',
     postal_code: '',
     city: '',
-    country: 'France',
+    country: initialMarket() === 'CH' ? 'Suisse' : 'France',
     legal_signatory_name: '',
     legal_signatory_role: '',
-  })
+  }))
   const [consents, setConsents] = useState({
     accept_cgv: false,
     accept_privacy: false,
@@ -51,7 +84,19 @@ export default function BillingOnboarding() {
     accept_renewal: false,
   })
 
-  const plan = useMemo(() => PLAN_COPY[planCode] || PLAN_COPY.pro, [planCode])
+  const plan = useMemo(() => {
+    const catalog = market === 'CH' ? PLAN_COPY_CH : PLAN_COPY
+    return catalog[planCode] || catalog.pro
+  }, [market, planCode])
+
+  function changeMarket(nextMarket) {
+    const stored = persistMarketOverride(nextMarket)
+    setMarket(stored)
+    setForm((prev) => ({
+      ...prev,
+      country: stored === 'CH' ? 'Suisse' : 'France',
+    }))
+  }
 
   const toggleConsent = (key) => {
     setConsents((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -79,10 +124,15 @@ export default function BillingOnboarding() {
 
     setLoading(true)
     try {
-      await api.post('/billing/onboarding', form)
+      await api.post('/billing/onboarding', {
+        ...form,
+        market,
+        preferred_locale: market === 'CH' ? 'fr-CH' : 'fr-FR',
+      })
 
       const acceptanceRes = await api.post('/billing/legal-acceptance', {
         plan_code: planCode,
+        market,
         ...consents,
         cgv_version: 'draft-2026-05',
         privacy_version: 'draft-2026-05',
@@ -96,6 +146,7 @@ export default function BillingOnboarding() {
 
       const checkoutRes = await api.post('/billing/create-checkout-session', {
         plan_code: planCode,
+        market,
         legal_acceptance_id: acceptanceRes.data?.acceptance_id,
       })
 
@@ -124,14 +175,34 @@ export default function BillingOnboarding() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <CourtiaBubbleLogo size={38} />
           <div>
-            <h1 style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>Onboarding cabinet & activation essai</h1>
+            <h1 style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>Onboarding cabinet & activation</h1>
             <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.68)', fontSize: 13 }}>
-              Carte gérée par Stripe — 0 € aujourd’hui — annulation en ligne.
+              {market === 'CH'
+                ? 'Stripe Checkout — setup one-shot + abonnement CHF, TVA suisse en sus.'
+                : 'Carte gérée par Stripe — 0 € aujourd’hui — annulation en ligne.'}
             </p>
           </div>
         </div>
 
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {MARKET_OPTIONS.map((option) => (
+            <button
+              key={option.code}
+              type="button"
+              onClick={() => changeMarket(option.code)}
+              style={{
+                border: option.code === market ? '1px solid rgba(244,194,255,0.8)' : '1px solid rgba(255,255,255,0.14)',
+                background: option.code === market ? 'rgba(217,70,239,0.22)' : 'rgba(255,255,255,0.03)',
+                color: '#fff',
+                borderRadius: 999,
+                padding: '8px 14px',
+                cursor: 'pointer',
+                fontWeight: 700,
+              }}
+            >
+              {option.flag} {option.label}
+            </button>
+          ))}
           {['starter', 'pro', 'premium'].map((code) => (
             <button
               key={code}
@@ -147,7 +218,7 @@ export default function BillingOnboarding() {
                 fontWeight: 600,
               }}
             >
-              {PLAN_COPY[code].title}
+              {(market === 'CH' ? PLAN_COPY_CH : PLAN_COPY)[code].title}
             </button>
           ))}
           <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.84)', fontWeight: 600, fontSize: 13 }}>
@@ -161,8 +232,8 @@ export default function BillingOnboarding() {
             <div style={grid2}>
               <Input label="Nom du cabinet*" value={form.cabinet_name} onChange={(v) => onChange('cabinet_name', v)} />
               <Input label="Forme juridique" value={form.legal_form} onChange={(v) => onChange('legal_form', v)} />
-              <Input label="SIRET" value={form.siret} onChange={(v) => onChange('siret', v)} />
-              <Input label="ORIAS" value={form.orias} onChange={(v) => onChange('orias', v)} />
+              <Input label={market === 'CH' ? 'IDE / UID' : 'SIRET'} value={form.siret} onChange={(v) => onChange('siret', v)} />
+              <Input label={market === 'CH' ? 'FINMA / ARIF' : 'ORIAS'} value={form.orias} onChange={(v) => onChange('orias', v)} />
               <Input label="Email facturation*" value={form.billing_email} onChange={(v) => onChange('billing_email', v)} />
               <Input label="Téléphone" value={form.phone} onChange={(v) => onChange('phone', v)} />
               <Input label="Adresse" value={form.address_line1} onChange={(v) => onChange('address_line1', v)} />
@@ -179,8 +250,8 @@ export default function BillingOnboarding() {
             <Consent checked={consents.accept_cgv} onChange={() => toggleConsent('accept_cgv')} text="J’accepte les CGV." />
             <Consent checked={consents.accept_privacy} onChange={() => toggleConsent('accept_privacy')} text="J’accepte la politique de confidentialité." />
             <Consent checked={consents.accept_dpa} onChange={() => toggleConsent('accept_dpa')} text="J’accepte le traitement des données selon le DPA." />
-            <Consent checked={consents.accept_trial} onChange={() => toggleConsent('accept_trial')} text="J’accepte l’essai gratuit de 7 jours." />
-            <Consent checked={consents.accept_renewal} onChange={() => toggleConsent('accept_renewal')} text="Je comprends le démarrage auto après l’essai sauf annulation." />
+            <Consent checked={consents.accept_trial} onChange={() => toggleConsent('accept_trial')} text={market === 'CH' ? 'J’accepte les frais d’inscription one-shot applicables.' : 'J’accepte l’essai gratuit de 7 jours.'} />
+            <Consent checked={consents.accept_renewal} onChange={() => toggleConsent('accept_renewal')} text={market === 'CH' ? 'Je comprends que l’activation dépend du paiement setup ou d’une validation manuelle.' : 'Je comprends le démarrage auto après l’essai sauf annulation.'} />
 
             <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
               <Mini icon={CreditCard} text="Carte gérée exclusivement par Stripe Checkout." />
@@ -206,7 +277,7 @@ export default function BillingOnboarding() {
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: 12, marginTop: 2 }}>
-          Prix indiqués hors taxes. TVA applicable au taux en vigueur.
+          {market === 'CH' ? 'Prix HT. TVA suisse 8,1 % en sus.' : 'Prix indiqués hors taxes. TVA applicable au taux en vigueur.'}
         </p>
       </div>
     </div>

@@ -1,5 +1,7 @@
 let stripeClient = null;
 
+const { normalizeMarket } = require('./marketService');
+
 function getBillingMode() {
   return (process.env.BILLING_MODE || 'test').toLowerCase();
 }
@@ -20,14 +22,26 @@ function getWebhookSecret() {
   return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
 
-function getPriceId(planCode) {
+function getPriceId(planCode, market = 'FR') {
   const mode = getBillingMode();
   const plan = String(planCode || '').toLowerCase();
+  const normalizedMarket = normalizeMarket(market);
   if (plan === 'premium') return null;
 
   if (mode === 'test') {
+    if (normalizedMarket === 'CH') {
+      if (plan === 'starter') return process.env.STRIPE_CH_STARTER_PRICE_ID_TEST || null;
+      if (plan === 'pro') return process.env.STRIPE_CH_PRO_PRICE_ID_TEST || null;
+      return null;
+    }
     if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || null;
     if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || null;
+    return null;
+  }
+
+  if (normalizedMarket === 'CH') {
+    if (plan === 'starter') return process.env.STRIPE_CH_PRICE_STARTER || process.env.STRIPE_CH_STARTER_PRICE_ID || null;
+    if (plan === 'pro') return process.env.STRIPE_CH_PRICE_PRO || process.env.STRIPE_CH_PRO_PRICE_ID || null;
     return null;
   }
 
@@ -75,28 +89,70 @@ async function createOrReuseCustomer({ existingCustomerId, email, name, metadata
   return customer.id;
 }
 
-async function createSubscriptionCheckoutSession({
+function buildSubscriptionCheckoutParams({
   customerId,
   priceId,
   successUrl,
   cancelUrl,
   metadata = {},
   trialDays = 7,
+  market = 'FR',
+  setupAmountCents = 0,
+  setupLabel = 'Frais d’inscription',
+  currency = 'EUR',
 }) {
-  const stripe = getStripeClient();
-  return stripe.checkout.sessions.create({
+  const normalizedMarket = normalizeMarket(market);
+  const normalizedCurrency = String(currency || (normalizedMarket === 'CH' ? 'CHF' : 'EUR')).toLowerCase();
+  const lineItems = [{ price: priceId, quantity: 1 }];
+
+  if (normalizedMarket === 'CH' && Number(setupAmountCents) > 0) {
+    lineItems.push({
+      price_data: {
+        currency: normalizedCurrency,
+        unit_amount: Number(setupAmountCents),
+        tax_behavior: 'exclusive',
+        product_data: {
+          name: setupLabel,
+        },
+      },
+      quantity: 1,
+    });
+  }
+
+  const subscriptionData = {
+    metadata: {
+      ...metadata,
+      market: normalizedMarket,
+    },
+  };
+  if (Number(trialDays) > 0) {
+    subscriptionData.trial_period_days = Number(trialDays);
+  }
+
+  return {
     mode: 'subscription',
     customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: lineItems,
     success_url: successUrl,
     cancel_url: cancelUrl,
     allow_promotion_codes: true,
-    metadata,
-    subscription_data: {
-      trial_period_days: trialDays,
-      metadata,
+    automatic_tax: {
+      enabled: normalizedMarket === 'CH',
     },
-  });
+    tax_id_collection: {
+      enabled: normalizedMarket === 'CH',
+    },
+    metadata: {
+      ...metadata,
+      market: normalizedMarket,
+    },
+    subscription_data: subscriptionData,
+  };
+}
+
+async function createSubscriptionCheckoutSession(options) {
+  const stripe = getStripeClient();
+  return stripe.checkout.sessions.create(buildSubscriptionCheckoutParams(options));
 }
 
 async function createPortalSession({ customerId, returnUrl }) {
@@ -128,6 +184,7 @@ module.exports = {
   getPriceId,
   isConfigured,
   getStripeClient,
+  buildSubscriptionCheckoutParams,
   createOrReuseCustomer,
   createSubscriptionCheckoutSession,
   createPortalSession,

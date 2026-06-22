@@ -34,6 +34,14 @@ import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import AuroraButton from '../components/brand/AuroraButton'
 import RhasrhassSignature from '../components/brand/RhasrhassSignature'
+import {
+  MARKET_OPTIONS,
+  getDetectedGeoCountry,
+  parseMarketFromSearch,
+  persistMarketOverride,
+  readStoredMarketOverride,
+  resolveMarketContext,
+} from '../market/marketContext'
 
 const styles = `
 html { scroll-behavior: smooth; }
@@ -715,6 +723,15 @@ function detectLandingLocale() {
   return 'fr'
 }
 
+function detectLandingMarket() {
+  if (typeof window === 'undefined') return resolveMarketContext()
+  return resolveMarketContext({
+    geoCountry: getDetectedGeoCountry(),
+    storedOverride: readStoredMarketOverride(),
+    queryMarket: parseMarketFromSearch(window.location.search),
+  })
+}
+
 function LanguageSwitcher({ locale, onChange, label, mobile = false }) {
   return (
     <div className={mobile ? 'grid grid-cols-4 gap-2 px-3 py-2' : 'flex items-center gap-1 rounded-xl border border-white/[0.08] bg-white/[0.045] p-1'}>
@@ -738,6 +755,114 @@ function LanguageSwitcher({ locale, onChange, label, mobile = false }) {
           {option.label}
         </button>
       ))}
+    </div>
+  )
+}
+
+function MarketSwitcher({ market, onChange, mobile = false }) {
+  return (
+    <div className={mobile ? 'grid grid-cols-2 gap-2 px-3 py-2' : 'flex items-center gap-1 rounded-xl border border-white/[0.08] bg-white/[0.045] p-1'}>
+      {MARKET_OPTIONS.map((option) => (
+        <button
+          key={option.code}
+          type="button"
+          onClick={() => onChange(option.code)}
+          className={`${mobile ? 'h-10 rounded-xl border text-sm' : 'h-8 rounded-lg px-2.5 text-xs'} font-black transition ${
+            market === option.code
+              ? 'border-fuchsia-200/40 bg-fuchsia-200/15 text-fuchsia-50'
+              : 'border-white/[0.08] text-white/52 hover:bg-white/[0.06] hover:text-white'
+          }`}
+          aria-label={`Marché: ${option.label}`}
+          aria-pressed={market === option.code}
+        >
+          {option.flag} {mobile ? option.label : option.shortLabel}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const swissPricing = [
+  {
+    name: 'Indépendant',
+    price: '199 CHF',
+    period: '/ mois',
+    label: 'Courtier suisse solo',
+    headline: 'CHF, LSA, nLPD et vocabulaire suisse romand dès le premier écran.',
+    note: '490 CHF de frais d’inscription one-shot : onboarding, migration, paramétrage LSA et formation. TVA 8,1 % en sus.',
+    href: '/onboarding?plan=starter&market=CH',
+    cta: 'Réserver une démo',
+    featured: false,
+    items: ['Conformité LSA de base', 'Langues FR-CH / DE-CH / IT-CH', 'Caisse-maladie, LAA, LCA/LAMal', 'Document précontractuel préparé', 'Setup 490 CHF'],
+  },
+  {
+    name: 'Cabinet',
+    price: '349 CHF',
+    period: '/ mois',
+    label: '3 accès inclus',
+    headline: 'Le cockpit complet pour cabinet suisse avec traçabilité du conseil.',
+    note: '990 CHF de setup one-shot. Utilisateur supplémentaire : +49 CHF / mois. TVA 8,1 % en sus.',
+    href: '/onboarding?plan=pro&market=CH',
+    cta: 'Réserver une démo',
+    featured: true,
+    items: ['3 accès inclus', 'Journal de conseil LSA', 'Informations rémunération et données', 'Export preuve de conseil', 'ARK portefeuille CH'],
+  },
+  {
+    name: 'Sur-Mesure / Fiduciaire',
+    price: 'Sur devis',
+    period: '',
+    label: 'Verticale suisse',
+    headline: 'Assurance, fiduciaire, TVA suisse, échéances cantonales et GED hashée.',
+    note: "Dès 1'500 CHF de setup. Déploiement, flux de données et sécurité nLPD cadrés au cas par cas.",
+    externalHref: 'mailto:contact@courtia.fr?subject=Courtiark%20Suisse%20Fiduciaire',
+    cta: 'Parler du déploiement',
+    featured: false,
+    items: ['Module Fiduciaire', 'Mandats et échéanciers cantonaux', 'TVA suisse 8,1 / 2,6 / 3,8 %', 'GED versionnée + hash', 'Plan hébergement CH'],
+  },
+]
+
+function applyMarketCopy(baseCopy, market, locale) {
+  if (market !== 'CH') return baseCopy
+  const languageLabel = locale === 'de' ? 'Sprache' : locale === 'it' ? 'Lingua' : 'Langue'
+  return {
+    ...baseCopy,
+    navItems: [['story', 'Suisse'], ['ark', 'ARK'], ['cockpit', 'Cockpit'], ['pricing', 'Tarifs CHF']],
+    heroKicker: 'Courtiark Suisse · CHF · LSA · nLPD',
+    heroTitle: 'Le cockpit Aurora pour courtiers et fiduciaires suisses.',
+    heroBody: 'Courtiark bascule en produit suisse complet : tarifs CHF, devoir d’information LSA, vocabulaire suisse romand, langues FR-CH/DE-CH/IT-CH, frais d’inscription et trajectoire Fiduciaire.',
+    heroPrimary: 'Réserver une démo Suisse',
+    heroPrimaryHref: '/demo?market=CH',
+    heroSecondary: 'Voir les tarifs CHF',
+    trial: 'Démo Suisse',
+    trialHref: '/demo?market=CH',
+    languageLabel,
+    conversion: ['CHF dès l’arrivée', 'LSA / FINMA cadré', 'nLPD traitée honnêtement'],
+    chips: ['Caisse-maladie', 'Prévoyance / 2e pilier', 'LAA / LCA / LAMal', 'Fiduciaire'],
+    pricing: swissPricing,
+    pricingKicker: 'Marché Suisse · activation',
+    pricingTitle: 'Tarifs CHF avec frais d’inscription assumés.',
+    pricingBody: 'Le setup finance l’onboarding, la migration des données, le paramétrage conformité LSA et la formation. Le produit France reste disponible en EUR via le sélecteur de marché.',
+    taxNote: 'Prix HT. TVA suisse 8,1 % en sus. Données en Suisse et flux LLM : à promettre uniquement selon l’architecture réellement déployée.',
+    features: [
+      ['LSA', 'Devoir d’information et documentation du conseil, pas de faux “formulaire d’État”.', ShieldCheck],
+      ['FINMA', 'N° registre pour intermédiaires non liés, statut lié/non lié et traçabilité.', FileCheck2],
+      ['nLPD', 'Registre de traitement, conservation, droits d’accès et flux sous-traitants documentés.', Lock],
+      ['Fiduciaire', 'Mandats, TVA, salaires/AVS, fiscalité cantonale et GED hashée.', Building2],
+      ['Langues CH', 'FR-CH, DE-CH et IT-CH prêts pour l’expérience suisse.', Globe],
+    ],
+    footerPricing: 'Tarifs CHF',
+    footerContact: 'Contact Suisse',
+  }
+}
+
+function GeoMarketBanner({ context, onSwitch }) {
+  if (context.geoCountry !== 'CH' || context.market === 'CH') return null
+  return (
+    <div className="fixed inset-x-0 top-16 z-40 mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-b-2xl border-x border-b border-cyan-200/16 bg-[#02040c]/92 px-4 py-3 text-xs font-bold text-cyan-50/78 shadow-xl shadow-black/20 backdrop-blur-2xl">
+      <span>Vous semblez être en Suisse — voir le produit suisse en CHF.</span>
+      <button type="button" onClick={() => onSwitch('CH')} className="rounded-xl bg-white px-3 py-2 text-slate-950">
+        Passer CH
+      </button>
     </div>
   )
 }
@@ -918,12 +1043,13 @@ export default function LandingPublic() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [locale, setLocale] = useState(detectLandingLocale)
+  const [marketContext, setMarketContext] = useState(detectLandingMarket)
   const { scrollYProgress } = useScroll()
   const railY = useTransform(scrollYProgress, [0, 1], ['-6%', '18%'])
   const heroLift = useTransform(scrollYProgress, [0, 0.35], [0, -36])
   const heroTiltX = useTransform(scrollYProgress, [0, 0.35], [0, -4])
   const heroTiltY = useTransform(scrollYProgress, [0, 0.35], [0, 3])
-  const copy = landingCopy[locale] || landingCopy.fr
+  const copy = applyMarketCopy(landingCopy[locale] || landingCopy.fr, marketContext.market, locale)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -935,11 +1061,25 @@ export default function LandingPublic() {
     document.documentElement.lang = locale
     window.localStorage.setItem('courtia_locale', locale)
     document.cookie = `courtia_locale=${locale};max-age=${365 * 24 * 3600};path=/;samesite=lax`
+    document.cookie = `cta_locale=${locale};max-age=${365 * 24 * 3600};path=/;samesite=lax`
   }, [locale])
+
+  useEffect(() => {
+    document.documentElement.dataset.market = marketContext.market
+  }, [marketContext.market])
 
   const changeLocale = (nextLocale) => {
     if (!landingCopy[nextLocale]) return
     setLocale(nextLocale)
+  }
+
+  const changeMarket = (nextMarket) => {
+    const stored = persistMarketOverride(nextMarket)
+    setMarketContext(resolveMarketContext({
+      geoCountry: getDetectedGeoCountry(),
+      storedOverride: stored,
+    }))
+    setMenuOpen(false)
   }
 
   const scrollTo = (id) => {
@@ -969,9 +1109,10 @@ export default function LandingPublic() {
                 {label}
               </button>
             ))}
+            <MarketSwitcher market={marketContext.market} onChange={changeMarket} />
             <LanguageSwitcher locale={locale} onChange={changeLocale} label={copy.languageLabel} />
             <Link to="/login" className="text-sm font-bold text-white/60 transition hover:text-white">{copy.login}</Link>
-            <AuroraButton href="/register?plan=pro" size="sm">{copy.trial}</AuroraButton>
+            <AuroraButton href={copy.trialHref || '/register?plan=pro'} size="sm">{copy.trial}</AuroraButton>
           </div>
           <button type="button" onClick={() => setMenuOpen((value) => !value)} className="rounded-xl border border-white/[0.08] bg-white/[0.045] p-2 text-white/74 backdrop-blur-xl md:hidden" aria-label="Ouvrir le menu">
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -988,15 +1129,17 @@ export default function LandingPublic() {
                   {label}
                 </button>
               ))}
+              <MarketSwitcher market={marketContext.market} onChange={changeMarket} mobile />
               <LanguageSwitcher locale={locale} onChange={changeLocale} label={copy.languageLabel} mobile />
               <Link to="/login" onClick={() => setMenuOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-semibold text-white/70 hover:bg-white/[0.06]">
                 {copy.login}
               </Link>
-              <AuroraButton href="/register?plan=pro" className="mt-3 w-full">{copy.trial}</AuroraButton>
+              <AuroraButton href={copy.trialHref || '/register?plan=pro'} className="mt-3 w-full">{copy.trial}</AuroraButton>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      <GeoMarketBanner context={marketContext} onSwitch={changeMarket} />
 
       <main className="stream-shell">
         <motion.div className="soft-rail pointer-events-none absolute left-[67%] top-[98vh] z-0 hidden h-[165vh] w-[2px] -translate-x-1/2 xl:block" style={{ y: railY }} />
@@ -1014,7 +1157,7 @@ export default function LandingPublic() {
                 {copy.heroBody}
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <AuroraButton href="/register?plan=pro" size="lg" icon={<ArrowRight size={17} />} className="w-full sm:w-auto">
+                <AuroraButton href={copy.heroPrimaryHref || '/register?plan=pro'} size="lg" icon={<ArrowRight size={17} />} className="w-full sm:w-auto">
                   {copy.heroPrimary}
                 </AuroraButton>
                 <AuroraButton onClick={() => scrollTo('cockpit')} variant="secondary" size="lg" className="w-full sm:w-auto">
@@ -1275,6 +1418,7 @@ export default function LandingPublic() {
             <Link to="/login" className="hover:text-white">{copy.footerLogin}</Link>
             <a href="mailto:contact@courtia.fr" className="hover:text-white">{copy.footerContact}</a>
           </div>
+          <MarketSwitcher market={marketContext.market} onChange={changeMarket} />
           <RhasrhassSignature compact />
         </div>
       </footer>

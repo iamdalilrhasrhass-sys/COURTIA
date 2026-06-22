@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-market="FR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Primary Meta -->
-    <title>COURTIA — Le cockpit IA des courtiers</title>
-    <meta name="description" content="Centralisez vos clients, contrats, relances et priorités avec COURTIA, le CRM IA conçu pour les courtiers français.">
+    <title>COURTIARK — Cockpit IA courtiers France & Suisse</title>
+    <meta name="description" content="Courtiark centralise clients, contrats, relances et priorités pour courtiers en France et en Suisse : EUR/DDA côté France, CHF/LSA/nLPD côté Suisse.">
     <meta name="author" content="COURTIA">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#070711">
-    <link rel="canonical" href="https://courtia.vercel.app/">
+    <link rel="canonical" href="https://courtiark.fr/">
+    <link rel="alternate" hreflang="fr" href="https://courtiark.fr/">
+    <link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/?market=CH">
+    <link rel="alternate" hreflang="de-CH" href="https://courtiark.fr/ch/de/versicherungsmakler-software">
+    <link rel="alternate" hreflang="it-CH" href="https://courtiark.fr/ch/it/software-broker-assicurativo">
+    <link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -18,28 +23,53 @@
     <link rel="manifest" href="/manifest.json">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="COURTIA — Le cockpit IA des courtiers">
-    <meta property="og:description" content="Centralisez vos clients, contrats, relances et priorités avec COURTIA, le CRM IA conçu pour les courtiers français.">
-    <meta property="og:image" content="https://courtia.vercel.app/og-courtia.png">
+    <meta property="og:title" content="COURTIARK — Cockpit IA courtiers France & Suisse">
+    <meta property="og:description" content="Deux produits complets dans une même plateforme : France en EUR/DDA, Suisse en CHF/LSA/nLPD avec module Fiduciaire.">
+    <meta property="og:image" content="https://courtiark.fr/og-courtia.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="COURTIA — Le cockpit IA des courtiers">
+    <meta property="og:image:alt" content="COURTIARK — Le cockpit IA des courtiers">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://courtia.vercel.app/">
+    <meta property="og:url" content="https://courtiark.fr/">
     <meta property="og:locale" content="fr_FR">
-    <meta property="og:site_name" content="COURTIA">
+    <meta property="og:locale:alternate" content="fr_CH">
+    <meta property="og:locale:alternate" content="de_CH">
+    <meta property="og:locale:alternate" content="it_CH">
+    <meta property="og:site_name" content="COURTIARK">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="COURTIA — Le cockpit IA des courtiers">
-    <meta name="twitter:description" content="Centralisez vos clients, contrats, relances et priorités avec COURTIA, le CRM IA conçu pour les courtiers français.">
-    <meta name="twitter:image" content="https://courtia.vercel.app/og-courtia.png">
-    <meta name="twitter:image:alt" content="COURTIA — Le cockpit IA des courtiers">
+    <meta name="twitter:title" content="COURTIARK — Cockpit IA courtiers France & Suisse">
+    <meta name="twitter:description" content="Courtiark sert les courtiers français et suisses avec un contexte marché FR/CH, devise, conformité et vocabulaire adaptés.">
+    <meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+    <meta name="twitter:image:alt" content="COURTIARK — Le cockpit IA des courtiers">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,600;1,9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Courtiark",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "https://courtiark.fr/",
+        "description": "Cockpit IA pour courtiers en assurance en France et en Suisse, avec contexte marché FR/CH.",
+        "offers": [
+          { "@type": "Offer", "price": "89", "priceCurrency": "EUR", "name": "Starter France" },
+          { "@type": "Offer", "price": "159", "priceCurrency": "EUR", "name": "Pro France" },
+          { "@type": "Offer", "price": "199", "priceCurrency": "CHF", "name": "Indépendant Suisse" },
+          { "@type": "Offer", "price": "349", "priceCurrency": "CHF", "name": "Cabinet Suisse" }
+        ],
+        "publisher": {
+          "@type": "Organization",
+          "name": "Courtiark",
+          "url": "https://courtiark.fr/"
+        }
+      }
+    </script>
 </head>
 <body>
     <div id="root"></div>

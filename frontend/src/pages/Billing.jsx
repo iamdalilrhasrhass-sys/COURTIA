@@ -4,6 +4,14 @@ import { CreditCard, ShieldCheck, RefreshCw, XCircle } from 'lucide-react'
 import api from '../api'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import { getDetectedGeoCountry, readStoredMarketOverride, resolveMarketContext } from '../market/marketContext'
+
+function currentMarket() {
+  return resolveMarketContext({
+    geoCountry: getDetectedGeoCountry(),
+    storedOverride: readStoredMarketOverride(),
+  }).market
+}
 
 export default function Billing() {
   const navigate = useNavigate()
@@ -17,7 +25,7 @@ export default function Billing() {
     setError('')
     try {
       const [plansRes, statusRes] = await Promise.all([
-        api.get('/billing/plans'),
+        api.get(`/billing/plans?market=${currentMarket()}`),
         api.get('/billing/status'),
       ])
       setPlans(plansRes.data?.plans || [])
@@ -67,7 +75,9 @@ export default function Billing() {
     <div style={{ padding: '28px 22px 42px' }}>
       <AuroraPageHeader
         title="Billing test mode"
-        subtitle="0 € aujourd’hui — essai 7 jours — annulation en ligne via portail sécurisé Stripe."
+        subtitle={status?.market === 'CH'
+          ? 'Marché Suisse — setup one-shot + abonnement CHF via Stripe Checkout.'
+          : '0 € aujourd’hui — essai 7 jours — annulation en ligne via portail sécurisé Stripe.'}
       />
 
       {error && (
@@ -80,6 +90,7 @@ export default function Billing() {
         <section style={panel}>
           <h3 style={title}>Statut abonnement</h3>
           <Info label="Plan" value={status?.plan_name || status?.plan_code || 'Starter'} />
+          <Info label="Marché" value={status?.market || currentMarket()} />
           <Info label="Statut" value={status?.status || 'not_started'} />
           <Info label="Fin essai" value={status?.trial_end_at ? new Date(status.trial_end_at).toLocaleString('fr-FR') : '—'} />
           <Info label="Fin période" value={status?.current_period_end ? new Date(status.current_period_end).toLocaleString('fr-FR') : '—'} />
@@ -107,17 +118,19 @@ export default function Billing() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
                   {p.code === 'premium'
                     ? 'Sur devis — pas de checkout direct'
-                    : p.code === 'starter'
-                      ? `0 € aujourd’hui, puis 89 € HT / mois après le ${p.trial_days}e jour (106,80 € TTC avec TVA 20 %).`
-                      : `0 € aujourd’hui, puis 159 € HT / mois après le ${p.trial_days}e jour (190,80 € TTC avec TVA 20 %).`}
+                    : p.market === 'CH'
+                      ? `${p.display_setup_ht}, puis ${p.display_price_ht}.`
+                      : p.code === 'starter'
+                        ? `0 € aujourd’hui, puis 89 € HT / mois après le ${p.trial_days}e jour (106,80 € TTC avec TVA 20 %).`
+                        : `0 € aujourd’hui, puis 159 € HT / mois après le ${p.trial_days}e jour (190,80 € TTC avec TVA 20 %).`}
                 </div>
               </div>
               {p.code !== 'premium' ? (
-                <button type="button" onClick={() => navigate(`/onboarding?plan=${p.code}`)} style={btnMini}>
+                <button type="button" onClick={() => navigate(`/onboarding?plan=${p.code}&market=${p.market || currentMarket()}`)} style={btnMini}>
                   Choisir
                 </button>
               ) : (
-                <button type="button" onClick={() => navigate('/onboarding?plan=premium')} style={btnMini}>
+                <button type="button" onClick={() => navigate(`/onboarding?plan=premium&market=${p.market || currentMarket()}`)} style={btnMini}>
                   Demander
                 </button>
               )}

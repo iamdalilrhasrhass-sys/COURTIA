@@ -1,4 +1,4 @@
-const BASE_URL = 'https://courtia.fr'
+const BASE_URL = 'https://courtiark.fr'
 
 const clusters = {
   crm: {
