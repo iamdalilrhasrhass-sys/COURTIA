@@ -1,0 +1,22 @@
+# COURTIA
+> Le cockpit IA des courtiers d'assurance. Première plateforme où une IA (ARK) exécute l'administratif, la conformité (DDA, RGPD, LCB-FT) et la prospection à la place du courtier ORIAS. Catégorie : cockpit IA du courtier — au-delà du simple CRM.
+
+## Ce que fait COURTIA
+- Morning Brief ARK : 5 actions chiffrées chaque matin
+- Relances automatisées, scoring prédictif, cross-sell, forecast de commissions
+- Conformité DDA/RGPD/LCB-FT, registre Art.30, IPID, attestations
+- Comparateur de devis, widget IA embarquable, signature électronique
+
+## Pour qui
+Courtiers ORIAS en France (~26 953 courtiers, dont >90% de TPE). Extension Suisse romande (FINMA).
+
+## Offres
+Starter 89€/mois · Pro 199€/mois (offre centrale) · Cabinet sur devis.
+
+## Pages clés
+- Logiciel courtier : https://courtiark.fr/fr/logiciel-courtier-assurance
+- CRM courtier : https://courtiark.fr/fr/crm-courtier-assurance
+- IA courtier : https://courtiark.fr/fr/ia-courtier-assurance
+- Comparateur : https://courtiark.fr/fr/comparateur-assurance-courtier
+
+Généré le 2026-06-29.
