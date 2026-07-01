@@ -39,6 +39,38 @@ class User {
       role: user.role
     };
   }
+
+  // --- Password reset ---
+
+  static async setResetToken(email, token, expiresAt) {
+    const result = await pool.query(
+      `UPDATE users SET password_reset_token = $1, password_reset_expires = $2
+       WHERE email = $3
+       RETURNING id, email`,
+      [token, expiresAt, email]
+    );
+    return result.rows[0] || null;
+  }
+
+  static async findByResetToken(token) {
+    const result = await pool.query(
+      `SELECT id, email, password_reset_expires FROM users
+       WHERE password_reset_token = $1`,
+      [token]
+    );
+    return result.rows[0] || null;
+  }
+
+  static async resetPassword(token, newPassword) {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const result = await pool.query(
+      `UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL, updated_at = NOW()
+       WHERE password_reset_token = $2
+       RETURNING id, email`,
+      [hashedPassword, token]
+    );
+    return result.rows[0] || null;
+  }
 }
 
 module.exports = User;

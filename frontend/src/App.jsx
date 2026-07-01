@@ -4,6 +4,8 @@ import { lazy, Suspense, useEffect } from 'react'
 
 // Public pages loaded in the main bundle
 import LoginPage from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import LandingPublic from './pages/LandingPublic'
 import Tarifs from './pages/Tarifs'
 import DesignSystem from './pages/DesignSystem'
@@ -98,6 +100,8 @@ export default function App() {
         {/* Routes publiques */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
         <Route path="/design-system" element={<DesignSystem />} />

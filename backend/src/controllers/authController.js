@@ -4,9 +4,11 @@
  */
 
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { trackEvent } = require('../services/analyticsService');
+const { sendEmail } = require('../services/emailService');
 
 // Générer un JWT token
 function generateToken(user) {
@@ -136,6 +138,78 @@ exports.verify = async (req, res) => {
       valid: false,
       error: 'Token invalide ou expiré'
     });
+  }
+};
+
+// Mot de passe oublié — génère un token et envoie l'email de reset
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email requis' });
+    }
+
+    const user = await User.findByEmail(email);
+
+    // Réponse identique que le compte existe ou non (anti-énumération)
+    const genericResponse = {
+      message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.'
+    };
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1h
+
+    await User.setResetToken(email, token, expiresAt);
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://courtiark.fr';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+    await sendEmail({
+      to: email,
+      subject: 'COURTIA — Réinitialisation de votre mot de passe',
+      html: `<p>Bonjour,</p>
+        <p>Vous avez demandé la réinitialisation de votre mot de passe COURTIA.</p>
+        <p><a href="${resetLink}">Cliquez ici pour choisir un nouveau mot de passe</a> (lien valable 1 heure).</p>
+        <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`,
+      text: `Réinitialisez votre mot de passe COURTIA : ${resetLink} (valable 1 heure). Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.`
+    });
+
+    res.json(genericResponse);
+  } catch (err) {
+    console.error('Forgot password error:', err.message);
+    res.status(500).json({ error: 'Impossible de traiter la demande pour le moment' });
+  }
+};
+
+// Réinitialisation — vérifie le token et applique le nouveau mot de passe
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token et nouveau mot de passe requis' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
+    }
+
+    const record = await User.findByResetToken(token);
+    if (!record) {
+      return res.status(400).json({ error: 'Lien de réinitialisation invalide ou déjà utilisé' });
+    }
+    if (new Date(record.password_reset_expires) < new Date()) {
+      return res.status(400).json({ error: 'Lien de réinitialisation expiré. Refaites une demande.' });
+    }
+
+    await User.resetPassword(token, password);
+
+    res.json({ message: 'Mot de passe mis à jour avec succès. Vous pouvez vous connecter.' });
+  } catch (err) {
+    console.error('Reset password error:', err.message);
+    res.status(500).json({ error: 'Impossible de réinitialiser le mot de passe pour le moment' });
   }
 };
 

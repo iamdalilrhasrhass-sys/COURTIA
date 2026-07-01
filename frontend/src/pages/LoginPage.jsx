@@ -584,9 +584,16 @@ export default function Login() {
                 </button>
               </div>
 
-              <div style={{ display:'flex',alignItems:'center',gap:8,margin:'10px 0 18px' }}>
-                <input type="checkbox" id="remember" style={{ width:17,height:17,borderRadius:5,border:'0.5px solid rgba(0,0,0,0.14)',accentColor:'#2563eb',cursor:'pointer' }} />
-                <label htmlFor="remember" style={{ fontSize:'12.5px',color:'rgba(0,0,0,0.5)',cursor:'pointer' }}>Se souvenir de moi</label>
+              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,margin:'10px 0 18px' }}>
+                <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+                  <input type="checkbox" id="remember" style={{ width:17,height:17,borderRadius:5,border:'0.5px solid rgba(0,0,0,0.14)',accentColor:'#2563eb',cursor:'pointer' }} />
+                  <label htmlFor="remember" style={{ fontSize:'12.5px',color:'rgba(0,0,0,0.5)',cursor:'pointer' }}>Se souvenir de moi</label>
+                </div>
+                {!isRegister && (
+                  <Link to="/forgot-password" style={{ fontSize:'12.5px', color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
+                    Mot de passe oublié ?
+                  </Link>
+                )}
               </div>
 
               <button type="submit" disabled={loading} className="btn-primary">
