@@ -59,15 +59,27 @@ function ArkScorePreview({ clientData }) {
   )
 }
 
-const RadioButton = ({ id, name, value, label, icon: Icon, checked, onChange, color }) => (
+// Classes statiques (les classes dynamiques `border-${color}-500` sont purgées par Tailwind au build)
+const RADIO_COLORS = {
+  blue:   { border: 'border-blue-500',   bg: 'bg-blue-500/10',   icon: 'text-blue-400',   text: 'text-blue-300' },
+  green:  { border: 'border-green-500',  bg: 'bg-green-500/10',  icon: 'text-green-400',  text: 'text-green-300' },
+  gray:   { border: 'border-gray-400',   bg: 'bg-gray-500/10',   icon: 'text-gray-300',   text: 'text-gray-300' },
+  purple: { border: 'border-purple-500', bg: 'bg-purple-500/10', icon: 'text-purple-400', text: 'text-purple-300' },
+  amber:  { border: 'border-amber-500',  bg: 'bg-amber-500/10',  icon: 'text-amber-400',  text: 'text-amber-300' },
+}
+
+const RadioButton = ({ id, name, value, label, icon: Icon, checked, onChange, color }) => {
+  const c = RADIO_COLORS[color] || RADIO_COLORS.blue
+  return (
     <div className="relative">
         <input type="radio" id={id} name={name} value={value} checked={checked} onChange={onChange} className="sr-only" />
-        <label htmlFor={id} className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${checked ? `shadow-lg scale-105 border-${color}-500 bg-${color}-50` : 'border-gray-200 bg-white hover:border-gray-300'}`}>
-            <Icon size={24} className={checked ? `text-${color}-600` : 'text-gray-400'} />
-            <span className={`text-sm font-semibold ${checked ? `text-${color}-700` : 'text-gray-600'}`}>{label}</span>
+        <label htmlFor={id} className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${checked ? `shadow-lg scale-105 ${c.border} ${c.bg}` : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+            <Icon size={24} className={checked ? c.icon : 'text-gray-400'} />
+            <span className={`text-sm font-semibold ${checked ? c.text : 'text-gray-600'}`}>{label}</span>
         </label>
     </div>
-)
+  )
+}
 
 export default function ClientNew() {
   const { id } = useParams()
@@ -118,7 +130,7 @@ export default function ClientNew() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.prenom?.trim() || !form.nom?.trim()) return
+    if (!form.prenom?.trim() || !form.nom?.trim()) { toast.error('Le prénom et le nom sont obligatoires.'); return }
     setLoading(true); setSubmitState('submitting')
     try {
       const { data } = isEditMode
@@ -138,7 +150,7 @@ export default function ClientNew() {
   if (pageLoading) return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-sans p-4 md:p-8">
+    <div className="min-h-screen font-sans p-4 md:p-8">
       <style>{`
         @keyframes borderRotate { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         .animated-border::before { content: ''; position: absolute; inset: -2px; z-index: -1;
