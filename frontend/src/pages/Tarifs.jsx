@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } from 'lucide-react'
+import { MARKET_PRICING, MARKET_OPTIONS, resolveMarketContext, persistMarketOverride, parseMarketFromSearch, readStoredMarketOverride, getDetectedGeoCountry } from '../market/marketContext'
 
 // ─── Feature Configuration ────────────────────────────────────────────────────
 
@@ -148,8 +149,8 @@ const faq = [
 // ─── Plan Card ────────────────────────────────────────────────────────────────
 
 function PlanCard({ plan, index }) {
-  const features = plan.features
-  const featureList = [
+  const features = plan.features || {}
+  const featureList = plan.chFeatures ? plan.chFeatures : [
     features.morning_brief && 'Morning Brief quotidien',
     features.client_score && 'Score Client ARK',
     features.tags_kanban && 'Tags & Kanban',
@@ -197,9 +198,12 @@ function PlanCard({ plan, index }) {
           <span className="text-4xl font-extrabold text-[#0a0a0a]">Sur devis</span>
         ) : (
           <>
-            <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}€</span>
+            <span className="text-4xl font-extrabold text-[#0a0a0a]">{plan.price}{plan.currency === 'CHF' ? ' CHF' : '€'}</span>
             <span className="ml-1 text-sm font-semibold text-gray-400"> HT/mois</span>
           </>
+        )}
+        {plan.setupLabel && (
+          <div className="mt-1.5 text-xs font-bold text-[#534AB7]">{plan.setupLabel}</div>
         )}
       </div>
 
@@ -219,7 +223,7 @@ function PlanCard({ plan, index }) {
 
       <div className="mt-auto">
         <a
-          href="mailto:contact@courtia.fr?subject=Je%20souhaite%20d%C3%A9marrer%20avec%20le%20plan%20Essentiel"
+          href="mailto:contact@courtiark.fr?subject=Je%20souhaite%20une%20d%C3%A9mo%20COURTIA"
           className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-200 ${
             plan.popular
               ? 'bg-[#534AB7] text-white hover:bg-[#4639a6] shadow-lg shadow-[#534AB7]/20'
@@ -385,6 +389,26 @@ function FraisCard({ item, index }) {
 // ─── MAIN EXPORT ──────────────────────────────────────────────────────────────
 
 export default function Tarifs() {
+  const [market, setMarket] = useState(() => resolveMarketContext({
+    queryMarket: typeof window !== 'undefined' ? parseMarketFromSearch(window.location.search) : null,
+    storedOverride: readStoredMarketOverride(),
+    geoCountry: getDetectedGeoCountry(),
+  }).market)
+  const isCH = market === 'CH'
+  const marketCfg = MARKET_PRICING[market]
+  const displayPlans = isCH
+    ? marketCfg.plans.map(p => ({
+        name: p.name,
+        desc: p.description,
+        popular: !!p.highlighted,
+        price: p.monthly === null ? 'Sur devis' : String(p.monthly),
+        currency: 'CHF',
+        setupLabel: p.setupLabel,
+        chFeatures: p.features,
+      }))
+    : plans
+  const switchMarket = (code) => { persistMarketOverride(code); setMarket(code) }
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
@@ -406,15 +430,36 @@ export default function Tarifs() {
             Pas de frais cachés, pas d'engagement. Choisissez le plan adapté à
             votre activité de courtage.
           </p>
+          <div className="mt-6 inline-flex rounded-full border border-gray-200 bg-gray-50 p-1">
+            {MARKET_OPTIONS.map(opt => (
+              <button
+                key={opt.code}
+                onClick={() => switchMarket(opt.code)}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                  market === opt.code
+                    ? 'bg-white text-[#0a0a0a] shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                {opt.flag} {opt.label}
+              </button>
+            ))}
+          </div>
+          {isCH && (
+            <p className="mt-4 text-xs font-bold tracking-wide text-[#534AB7]">
+              LSA · FINMA · nLPD — {marketCfg.taxNote}
+            </p>
+          )}
         </motion.div>
 
         {/* ── Plan Cards ── */}
         <div className="mb-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:items-start">
-          {plans.map((plan, i) => (
+          {displayPlans.map((plan, i) => (
             <PlanCard key={plan.name} plan={plan} index={i} />
           ))}
         </div>
 
+        {!isCH && (<>
         {/* ── Comparison Table ── */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -451,6 +496,7 @@ export default function Tarifs() {
             ))}
           </div>
         </motion.div>
+        </>)}
 
         {/* ── FAQ ── */}
         <motion.div
@@ -487,7 +533,7 @@ export default function Tarifs() {
               cabinet.
             </p>
             <a
-              href="mailto:contact@courtia.fr"
+              href="mailto:contact@courtiark.fr"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#534AB7] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#534AB7]/20 transition-all hover:bg-[#4639a6] hover:shadow-xl hover:shadow-[#534AB7]/30"
             >
               <Mail size={18} />
