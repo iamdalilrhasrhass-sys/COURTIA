@@ -1,6 +1,6 @@
 /**
  * planStore.js — Store unifié des plans COURTIA
- * Plans : starter (89€), pro (199€), premium (sur devis)
+ * Plans : starter (89€), pro (159€), cabinet (sur devis)
  */
 
 import { create } from 'zustand'
@@ -48,7 +48,7 @@ export const PLANS_DEFINITION = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 199,
+    price: 159,
     currency: '€',
     interval: '/mois',
     description: 'La solution complète pour les professionnels — OFFRE RECOMMANDÉE',
@@ -84,9 +84,46 @@ export const PLANS_DEFINITION = {
       max_users: 1,
     },
   },
+  cabinet: {
+    id: 'cabinet',
+    name: 'Cabinet',
+    price: null,
+    currency: '€',
+    interval: '/mois',
+    description: 'Solution sur-mesure pour les cabinets',
+    highlighted: false,
+    badge: 'Sur devis',
+    color: 'amber',
+    features_list: [
+      'Tout Pro +',
+      'Multi-utilisateurs',
+      'Support prioritaire',
+      'Accompagnement dédié',
+      'Fonctionnalités sur mesure',
+    ],
+    feature_map: {
+      ark_basic: true,
+      ark_full: true,
+      reach: true,
+      automations: true,
+      advanced_reports: true,
+      premium_support: true,
+      multi_user: true,
+      csv_import: true,
+      crm_full: true,
+      scoring: true,
+    },
+    limits: {
+      max_clients: Infinity,
+      max_contrats: Infinity,
+      max_ark_messages: Infinity,
+      max_pdf_generations: Infinity,
+      max_users: Infinity,
+    },
+  },
   premium: {
-    id: 'premium',
-    name: 'Premium',
+    id: 'cabinet',
+    name: 'Cabinet',
     price: null,
     currency: '€',
     interval: '/mois',
@@ -130,8 +167,8 @@ export const FEATURE_GATES = {
   reach: 'pro',
   automations: 'pro',
   advanced_reports: 'pro',
-  premium_support: 'premium',
-  multi_user: 'premium',
+  premium_support: 'cabinet',
+  multi_user: 'cabinet',
   csv_import: 'starter',
   crm_full: 'pro',
   scoring: 'pro',

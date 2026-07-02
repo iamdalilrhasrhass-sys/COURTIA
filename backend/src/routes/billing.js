@@ -24,7 +24,7 @@ function cleanPlanLabel(planCode) {
   if (planCode === 'pro') return 'Pro';
   if (planCode === 'cabinet') return 'Cabinet';
   if (planCode === 'starter') return 'Starter';
-  return 'Premium';
+  return 'Cabinet';
 }
 
 function isMissingOptionalTableError(err) {
@@ -572,12 +572,12 @@ async function createCheckoutSessionHandler(req, res) {
     if (!planCode) {
       return res.status(400).json({ success: false, error: 'invalid_plan' });
     }
-    if (planCode === 'premium') {
+    if (planCode === 'cabinet') {
       return res.status(409).json({
         success: false,
-        error: 'premium_contact_required',
+        error: 'cabinet_contact_required',
         contact_required: true,
-        message: 'L’offre Premium est sur devis. Merci de demander un contact commercial.',
+        message: 'L’offre Cabinet est sur devis. Merci de demander un contact commercial.',
       });
     }
 

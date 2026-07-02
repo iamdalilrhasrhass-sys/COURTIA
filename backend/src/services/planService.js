@@ -1,6 +1,6 @@
 /**
  * planService.js — Source unique de vérité pour les plans COURTIA
- * Plans V1 : starter (89€), pro (199€), cabinet (399€), premium (sur devis)
+ * Plans V1 : starter (89€), pro (159€), cabinet (sur devis)
  */
 
 const pool = require('../db');
@@ -11,12 +11,12 @@ function stripePriceFor(planCode) {
   if (BILLING_MODE === 'test') {
     if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
     if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
-    if (planCode === 'cabinet') return process.env.STRIPE_CABINET_PRICE_ID_TEST || process.env.STRIPE_PRICE_CABINET || null;
+    if (planCode === 'cabinet') return null;
     if (planCode === 'premium') return null;
   }
   if (planCode === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
   if (planCode === 'pro') return process.env.STRIPE_PRICE_PRO || null;
-  if (planCode === 'cabinet') return process.env.STRIPE_PRICE_CABINET || null;
+  if (planCode === 'cabinet') return null;
   if (planCode === 'premium') return null;
   return null;
 }
@@ -61,7 +61,7 @@ const PLANS = {
   },
   pro: {
     name: 'Pro',
-    price: 199,
+    price: 159,
     currency: 'EUR',
     interval: 'month',
     description: 'La solution complète pour les courtiers qui veulent ARK, les intégrations et les documents métier.',
@@ -98,7 +98,7 @@ const PLANS = {
   },
   cabinet: {
     name: 'Cabinet',
-    price: 399,
+    price: null,
     currency: 'EUR',
     interval: 'month',
     description: 'Pour les cabinets structurés avec plusieurs collaborateurs et pilotage avancé.',
@@ -133,8 +133,10 @@ const PLANS = {
     },
     stripe_price_id: stripePriceFor('cabinet'),
   },
+  // Legacy DB alias: older accounts can still carry plan='premium'.
+  // Public/API surfaces expose it as Cabinet to keep the commercial grid current.
   premium: {
-    name: 'Premium',
+    name: 'Cabinet',
     price: null,
     currency: 'EUR',
     interval: 'month',
@@ -168,7 +170,7 @@ const PLANS = {
       max_pdf_generations: Infinity,
       max_users: Infinity,
     },
-    stripe_price_id: stripePriceFor('premium'),
+    stripe_price_id: null,
   },
 };
 
@@ -186,7 +188,7 @@ function getPlan(name) {
  * Retourne tous les plans (sans secrets Stripe pour les routes publiques)
  */
 function getAllPlans() {
-  return Object.entries(PLANS).map(([key, plan]) => ({
+  return Object.entries(PLANS).filter(([key]) => key !== 'premium').map(([key, plan]) => ({
     id: key,
     name: plan.name,
     price: plan.price,
@@ -232,6 +234,7 @@ async function getUserPlanInfo(userId) {
     }
     const user = rows[0];
     const planKey = PLANS[user.plan] ? user.plan : DEFAULT_PLAN;
+    const publicPlanKey = planKey === 'premium' ? 'cabinet' : planKey;
     const plan = { ...PLANS[planKey] };
 
     // Vérifier si l'utilisateur est en période d'essai
@@ -242,7 +245,7 @@ async function getUserPlanInfo(userId) {
     const activeFeatures = onTrial ? TRIAL_FEATURES : plan.features;
 
     return {
-      plan: planKey,
+      plan: publicPlanKey,
       plan_name: plan.name,
       price: plan.price,
       subscription_status: user.subscription_status,
@@ -394,8 +397,8 @@ const FEATURE_GATES = {
   reach: 'pro',
   automations: 'pro',
   advanced_reports: 'pro',
-  premium_support: 'premium',
-  multi_user: 'premium',
+  premium_support: 'cabinet',
+  multi_user: 'cabinet',
   csv_import: 'starter',
   crm_full: 'pro',
   scoring: 'pro',

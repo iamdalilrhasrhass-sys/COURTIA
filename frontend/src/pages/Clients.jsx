@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus, Search, X, UserCheck, UserPlus, AlertTriangle, Users, MapPin,
@@ -6,6 +6,12 @@ import {
 } from 'lucide-react'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
+import api from '../api'
+import {
+  buildClientStats,
+  filterClientViewModels,
+  normalizeClient,
+} from '../lib/clientViewModel'
 
 // ─── Aurora tokens ─────────────────────────────────────────────
 const T = {
@@ -30,26 +36,6 @@ const T = {
 
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 
-// ─── Demo data ────────────────────────────────────────────────
-const DEMO_CLIENTS = [
-  { id: 1, name: 'Sophie Moreau',    type: 'Particulier', status: 'actif',     city: 'Lyon',        contracts: 3, prime: 2480,  score: 88, lastContact: '3 j',  ark: 'Cross-sell Prévoyance' },
-  { id: 2, name: 'Thomas Bernard',   type: 'Pro',         status: 'actif',     city: 'Paris',       contracts: 3, prime: 6150,  score: 84, lastContact: '8 j',  ark: null },
-  { id: 3, name: 'Amélie Dubois',    type: 'Particulier', status: 'prospect',  city: 'Bordeaux',    contracts: 1, prime: 890,   score: 62, lastContact: '1 j',  ark: 'Devis à transformer' },
-  { id: 4, name: 'Laurent Petit',    type: 'Particulier', status: 'a_risque',  city: 'Marseille',   contracts: 1, prime: 1340,  score: 38, lastContact: '47 j', ark: 'Relance urgente' },
-  { id: 5, name: 'Claire Martin',    type: 'Pro',         status: 'actif',     city: 'Nantes',      contracts: 4, prime: 12800, score: 92, lastContact: '5 j',  ark: null },
-  { id: 6, name: 'Jean Dupont',      type: 'Particulier', status: 'silencieux',city: 'Toulouse',    contracts: 2, prime: 1760,  score: 55, lastContact: '32 j', ark: 'Silencieux 32j' },
-  { id: 7, name: 'Marie Lefebvre',   type: 'Particulier', status: 'actif',     city: 'Lille',       contracts: 3, prime: 3200,  score: 79, lastContact: '6 j',  ark: null },
-  { id: 8, name: 'Nicolas Roux',     type: 'Pro',         status: 'prospect',  city: 'Strasbourg',  contracts: 0, prime: 0,     score: 48, lastContact: '2 j',  ark: 'Premier devis' },
-  { id: 9, name: 'Isabelle Garnier', type: 'Particulier', status: 'actif',     city: 'Nice',        contracts: 4, prime: 4100,  score: 90, lastContact: '12 j', ark: null },
-  { id: 10, name: 'Leroy Marie',     type: 'Particulier', status: 'a_risque',  city: 'Rennes',      contracts: 1, prime: 680,   score: 22, lastContact: '52 j', ark: 'Risque perte 80%' },
-  { id: 11, name: 'Céline Fournier', type: 'Pro',         status: 'actif',     city: 'Montpellier', contracts: 3, prime: 7850,  score: 86, lastContact: '4 j',  ark: null },
-  { id: 12, name: 'Karim Benali',    type: 'Particulier', status: 'silencieux',city: 'Grenoble',    contracts: 2, prime: 1200,  score: 51, lastContact: '29 j', ark: 'Devis sans réponse' },
-  { id: 13, name: 'Anne Rousseau',   type: 'Particulier', status: 'actif',     city: 'Dijon',       contracts: 2, prime: 1950,  score: 76, lastContact: '14 j', ark: null },
-  { id: 14, name: 'Martin Conseil',  type: 'Pro',         status: 'actif',     city: 'Lyon',        contracts: 5, prime: 15880, score: 89, lastContact: '7 j',  ark: 'Renouvellement J-21' },
-  { id: 15, name: 'BatiSens Pro',    type: 'Pro',         status: 'actif',     city: 'Toulouse',    contracts: 4, prime: 9800,  score: 83, lastContact: '11 j', ark: null },
-  { id: 16, name: 'Romain Gauthier', type: 'Particulier', status: 'actif',     city: 'Reims',       contracts: 3, prime: 2870,  score: 80, lastContact: '9 j',  ark: null },
-]
-
 const FILTERS = [
   { key: 'tous',       label: 'Tous' },
   { key: 'particulier',label: 'Particulier' },
@@ -64,6 +50,9 @@ const STATUS = {
   prospect:   { label: 'Prospect',  color: T.info,      bg: 'rgba(59,130,246,0.10)' },
   a_risque:   { label: 'À risque',  color: T.danger,    bg: 'rgba(239,68,68,0.12)' },
   silencieux: { label: 'Silencieux',color: T.warning,   bg: 'rgba(245,158,11,0.12)' },
+  inactif:    { label: 'Inactif',   color: T.textMuted, bg: 'rgba(107,114,128,0.10)' },
+  resilié:    { label: 'Résilié',   color: T.textMuted, bg: 'rgba(107,114,128,0.10)' },
+  résilié:    { label: 'Résilié',   color: T.textMuted, bg: 'rgba(107,114,128,0.10)' },
   perdu:      { label: 'Perdu',     color: T.textMuted, bg: 'rgba(107,114,128,0.10)' },
 }
 
@@ -300,33 +289,38 @@ function ClientTable({ clients, onClick }) {
 
 export default function Clients() {
   const navigate = useNavigate()
+  const [clients, setClients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('tous')
   const [view, setView] = useState('table') // 'table' | 'bubbles'
 
-  const filtered = useMemo(() => {
-    let list = DEMO_CLIENTS
-    if (search.trim()) {
-      const s = search.toLowerCase()
-      list = list.filter(c =>
-        c.name.toLowerCase().includes(s) ||
-        c.city.toLowerCase().includes(s) ||
-        c.type.toLowerCase().includes(s),
-      )
+  async function loadClients() {
+    setLoading(true)
+    setError('')
+    try {
+      const { data } = await api.get('/clients')
+      const rows = Array.isArray(data) ? data : (data?.data || [])
+      setClients(rows.map(normalizeClient))
+    } catch (_err) {
+      setClients([])
+      setError('Impossible de charger le portefeuille clients.')
+    } finally {
+      setLoading(false)
     }
-    if (filter === 'particulier') list = list.filter(c => c.type === 'Particulier')
-    else if (filter === 'pro')    list = list.filter(c => c.type === 'Pro')
-    else if (filter !== 'tous')   list = list.filter(c => c.status === filter)
-    return list
-  }, [search, filter])
+  }
 
-  const stats = useMemo(() => {
-    const total = DEMO_CLIENTS.length
-    const actifs = DEMO_CLIENTS.filter(c => c.status === 'actif').length
-    const inactifs = DEMO_CLIENTS.filter(c => ['silencieux', 'a_risque'].includes(c.status)).length
-    const avgScore = Math.round(DEMO_CLIENTS.reduce((s, c) => s + c.score, 0) / total)
-    return { total, actifs, inactifs, avgScore }
+  useEffect(() => {
+    loadClients()
   }, [])
+
+  const filtered = useMemo(
+    () => filterClientViewModels(clients, { search, filter }),
+    [clients, search, filter],
+  )
+
+  const stats = useMemo(() => buildClientStats(clients), [clients])
 
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '24px 24px 48px' }}>
@@ -434,7 +428,25 @@ export default function Clients() {
         </div>
 
         {/* LISTE */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{
+            textAlign: 'center', padding: '60px 20px',
+            background: T.cardBg, border: `1px solid ${T.cardBorder}`,
+            borderRadius: 14, color: T.textSecondary,
+          }}>
+            Chargement du portefeuille...
+          </div>
+        ) : error ? (
+          <div style={{
+            textAlign: 'center', padding: '48px 20px',
+            background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.22)',
+            borderRadius: 14, color: T.textSecondary,
+          }}>
+            <AlertTriangle size={32} style={{ opacity: 0.6, marginBottom: 10, color: T.danger }} />
+            <p style={{ fontSize: 14, color: T.text, fontWeight: 600, marginBottom: 4 }}>{error}</p>
+            <button onClick={loadClients} style={{ ...btnGhost, marginTop: 12 }}>Réessayer</button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{
             textAlign: 'center', padding: '60px 20px',
             background: T.cardBg, border: `1px dashed ${T.cardBorder}`,
@@ -461,7 +473,7 @@ export default function Clients() {
         {/* Footer compteur */}
         {filtered.length > 0 && (
           <p style={{ marginTop: 18, fontSize: 11, color: T.textMuted, textAlign: 'center' }}>
-            {filtered.length} client{filtered.length !== 1 ? 's' : ''} affiché{filtered.length !== 1 ? 's' : ''} sur {DEMO_CLIENTS.length}
+            {filtered.length} client{filtered.length !== 1 ? 's' : ''} affiché{filtered.length !== 1 ? 's' : ''} sur {clients.length}
           </p>
         )}
       </main>

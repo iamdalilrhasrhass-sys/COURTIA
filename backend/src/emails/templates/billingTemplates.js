@@ -47,9 +47,9 @@ function buildBillingTemplate(kind, vars = {}) {
       text: `${firstName}, votre facture a bien été réglée.`,
     },
     premium_contact_received: {
-      subject: `COURTIA — Demande Premium reçue`,
-      html: `<p>${firstName}, nous avons bien reçu votre demande Premium.</p>`,
-      text: `${firstName}, nous avons bien reçu votre demande Premium.`,
+      subject: `COURTIA — Demande Cabinet reçue`,
+      html: `<p>${firstName}, nous avons bien reçu votre demande Cabinet.</p>`,
+      text: `${firstName}, nous avons bien reçu votre demande Cabinet.`,
     },
     legal_acceptance_recorded: {
       subject: `COURTIA — Consentements enregistrés`,

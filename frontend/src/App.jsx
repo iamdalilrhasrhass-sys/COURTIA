@@ -22,6 +22,17 @@ const ClientNew = lazy(() => import('./pages/ClientNew'))
 const ContratNew = lazy(() => import('./pages/ContratNew'))
 const Taches = lazy(() => import('./pages/Taches'))
 const Rapports = lazy(() => import('./pages/Rapports'))
+const Objectifs = lazy(() => import('./pages/Objectifs'))
+const Devis = lazy(() => import('./pages/Devis'))
+const DevisWizard = lazy(() => import('./pages/DevisWizard'))
+const Documents = lazy(() => import('./pages/Documents'))
+const Relances = lazy(() => import('./pages/Relances'))
+const Opportunites = lazy(() => import('./pages/Opportunites'))
+const Prospection = lazy(() => import('./pages/Prospection'))
+const Commissions = lazy(() => import('./pages/Commissions'))
+const CommissionsCalculator = lazy(() => import('./pages/CommissionsCalculator'))
+const ArkIntelligence = lazy(() => import('./pages/ArkIntelligence'))
+const SantePortefeuille = lazy(() => import('./pages/SantePortefeuille'))
 const ReachDashboard = lazy(() => import('./pages/ReachDashboard'))
 const ReachSearch = lazy(() => import('./pages/ReachSearch'))
 const ReachProspects = lazy(() => import('./pages/ReachProspects'))
@@ -34,11 +45,17 @@ const Parametres = lazy(() => import('./pages/Parametres'))
 const Capitia = lazy(() => import('./pages/Capitia'))
 const AnalyticsExecutive = lazy(() => import('./pages/AnalyticsExecutive'))
 const Abonnement = lazy(() => import('./pages/Abonnement'))
+const Billing = lazy(() => import('./pages/Billing'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Partenaires = lazy(() => import('./pages/Partenaires'))
 const Comparateur = lazy(() => import('./pages/Comparateur'))
+const Equipe = lazy(() => import('./pages/Equipe'))
+const Conformite = lazy(() => import('./pages/Conformite'))
+const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
+const Academy = lazy(() => import('./pages/Academy'))
+const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 
 function RouteFallback() {
   return (
@@ -123,15 +140,36 @@ export default function App() {
           <Route path="/contrats"      element={<Contrats />} />
           <Route path="/contrats/new"  element={<ContratNew />} />
           <Route path="/taches"        element={<Taches />} />
+          <Route path="/rendez-vous"   element={<Taches />} />
           <Route path="/rapports"      element={<Rapports />} />
+          <Route path="/objectifs"     element={<Objectifs />} />
+          <Route path="/devis"         element={<Devis />} />
+          <Route path="/devis/new"     element={<DevisWizard />} />
+          <Route path="/documents"     element={<Documents />} />
+          <Route path="/relances"      element={<Relances />} />
+          <Route path="/opportunites"  element={<Opportunites />} />
+          <Route path="/prospection"   element={<Prospection />} />
+          <Route path="/commissions"   element={<Commissions />} />
+          <Route path="/commissions/calculator" element={<CommissionsCalculator />} />
           <Route path="/parametres"    element={<Parametres />} />
+          <Route path="/parametres/integrations" element={<Parametres />} />
           <Route path="/morning-brief" element={<MorningBrief />} />
           <Route path="/capitia"       element={<Capitia />} />
+          <Route path="/assistant-ark" element={<ArkIntelligence />} />
+          <Route path="/ark-intelligence" element={<ArkIntelligence />} />
+          <Route path="/sante-portefeuille" element={<SantePortefeuille />} />
           <Route path="/analytics"     element={<AnalyticsExecutive />} />
           <Route path="/analyses"     element={<AnalyticsExecutive />} />
           <Route path="/abonnement"    element={<Abonnement />} />
+          <Route path="/billing"       element={<Billing />} />
           <Route path="/partenaires"   element={<Partenaires />} />
           <Route path="/comparateur"   element={<Comparateur />} />
+          <Route path="/equipe"        element={<Equipe />} />
+          <Route path="/conformite"    element={<Conformite />} />
+          <Route path="/import"        element={<ImportPortfolio />} />
+          <Route path="/academy"       element={<Academy />} />
+          <Route path="/aide"          element={<Academy />} />
+          <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
           <Route path="/reach"             element={<ReachDashboard />} />
@@ -153,4 +191,3 @@ export default function App() {
 }
 // Trigger Vercel rebuild
 /* Build trigger 2 */
-

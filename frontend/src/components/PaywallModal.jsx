@@ -12,7 +12,7 @@ export default function PaywallModal({ open, error, onClose, onUpgrade }) {
   const navigate = useNavigate()
 
   const getTitle = () => {
-    if (!error) return 'Fonctionnalité Premium'
+    if (!error) return 'Fonctionnalité Cabinet'
     if (error.error === 'capitia_addon_inactive') return 'Module CAPITIA'
     const plan = error.required_plan || 'Pro'
     return `Fonctionnalité ${plan.charAt(0).toUpperCase() + plan.slice(1)}`

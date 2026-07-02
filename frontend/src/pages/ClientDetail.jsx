@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -13,6 +13,13 @@ import { GlassPanel, ArkStatusBadge, EmptyStateAurora } from '../components/auro
 import DossierOrbitalRings from '../components/widgets/DossierOrbitalRings'
 import DealTimelineScrubber from '../components/widgets/DealTimelineScrubber'
 import RiskDnaHelix from '../components/widgets/RiskDnaHelix'
+import api from '../api'
+import {
+  buildClientHistory,
+  normalizeClientDetail,
+  normalizeContract,
+  normalizeTask,
+} from '../lib/clientViewModel'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -37,64 +44,15 @@ const T = {
 
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 
-// ─── Demo client 360° ─────────────────────────────────────────
-const DEMO_CLIENT = {
-  id: 'martin-conseil',
-  prenom: 'Martin',
-  nom: 'Conseil',
-  type: 'Professionnel',
-  statut: 'actif',
-  email: 'm.conseil@martinconseil.fr',
-  telephone: '06 12 34 56 78',
-  city: 'Lyon',
-  siret: '812 345 678 00021',
-  created_at: '2021-03-15T10:00:00.000Z',
-  last_contact: '2026-04-29T14:30:00.000Z',
-  portfolio_value: 15880,
-  score: 89,
-  risque: 'Faible',
-}
-
-const DEMO_CONTRACTS = [
-  { id: 'c1', type: 'RC Pro',      compagnie: 'Aurora',  prime: 2800,  echeance: '01 juin 2026', alert: true,  jours: 21,  statut: 'actif' },
-  { id: 'c2', type: 'Flotte Auto', compagnie: 'Novalia', prime: 12400, echeance: '01 janv 2027', alert: false, jours: 236, statut: 'actif' },
-  { id: 'c3', type: 'MRH',         compagnie: 'Helios',  prime: 680,   echeance: '01 sept 2026', alert: false, jours: 113, statut: 'actif' },
-]
-
-const DEMO_DEVIS = [
-  { id: 'd1', ref: '#247', produit: 'Prévoyance TNS', montant: 520, envoye: '20 avr', statut: 'en_attente' },
-  { id: 'd2', ref: '#240', produit: 'PJ',             montant: 1200,envoye: '15 mars',statut: 'signe' },
-]
-
-const DEMO_DOCS = [
-  { id: 1, name: 'CGV RC Pro 2026.pdf',      type: 'pdf', when: '15 mai' },
-  { id: 2, name: 'Attestation Aurora.pdf',   type: 'pdf', when: '12 mai' },
-  { id: 3, name: 'Devis Prévoyance #247.pdf',type: 'pdf', when: '20 avr' },
-]
-
-const DEMO_TASKS = [
-  { id: 1, label: 'Vérifier renouvellement RC Pro',          due: 'Demain',     priority: 'haute' },
-  { id: 2, label: 'Appel suivi devis Prévoyance #247',       due: 'Cette sem.', priority: 'moyenne' },
-]
-
-const DEMO_RELANCES = [
-  { id: 1, motif: 'Devis Prévoyance #247 sans réponse',     since: '23 j',  level: 'haute' },
-]
-
-const DEMO_HISTORY = [
-  { id: 1, label: 'ARK : Cross-sell PJ détecté',          date: '02 mai 2026', color: T.ark,     icon: Sparkles },
-  { id: 2, label: 'Devis Prévoyance TNS envoyé',          date: '20 avr 2026', color: T.warning, icon: FileSignature },
-  { id: 3, label: 'Appel commercial — RC Pro',            date: '15 avr 2026', color: T.blue,    icon: Phone },
-  { id: 4, label: 'Contrat MRH souscrit (Helios)',        date: '01 sept 2025',color: T.success, icon: Shield },
-  { id: 5, label: 'Contrat Flotte Auto souscrit (Novalia)',date: '01 janv 2024',color: T.success, icon: FileText },
-  { id: 6, label: 'Client créé',                          date: '15 mars 2021',color: T.textMuted, icon: User },
-]
-
 const STATUS = {
   actif:      { label: 'Actif',     color: T.success },
   prospect:   { label: 'Prospect',  color: T.blue },
   a_risque:   { label: 'À risque',  color: T.danger },
   silencieux: { label: 'Silencieux',color: T.warning },
+  inactif:    { label: 'Inactif',   color: T.textMuted },
+  resilié:    { label: 'Résilié',   color: T.textMuted },
+  résilié:    { label: 'Résilié',   color: T.textMuted },
+  perdu:      { label: 'Perdu',     color: T.textMuted },
 }
 
 const getInitials = (c) => ((c?.prenom || '').charAt(0) + (c?.nom || '').charAt(0)).toUpperCase() || '?'
@@ -168,7 +126,7 @@ function TabButton({ label, active, onClick, badge }) {
 }
 
 // ─── Vue 360° ────────────────────────────────────────────────
-function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate }) {
+function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, navigate }) {
   const st = STATUS[client.statut] || STATUS.actif
   return (
     <motion.div
@@ -259,6 +217,11 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
             Tâches ({tasks.length})
           </div>
+          {tasks.length === 0 && (
+            <div style={{ fontSize: 12, color: T.textMuted, padding: '7px 0', borderTop: `1px solid ${T.cardBorder}` }}>
+              Aucune tâche planifiée.
+            </div>
+          )}
           {tasks.map(t => (
             <div key={t.id} style={{
               display: 'flex', alignItems: 'center', gap: 8,
@@ -275,9 +238,14 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
         </div>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
-            Relances ({DEMO_RELANCES.length})
+            Relances ({relances.length})
           </div>
-          {DEMO_RELANCES.map(r => (
+          {relances.length === 0 && (
+            <div style={{ fontSize: 12, color: T.textMuted, padding: '7px 0', borderTop: `1px solid ${T.cardBorder}` }}>
+              Aucune relance active.
+            </div>
+          )}
+          {relances.map(r => (
             <div key={r.id} style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '7px 0', borderTop: `1px solid ${T.cardBorder}`,
@@ -297,7 +265,7 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
           fieldsScore={75}
           missingDocs={docs.length < 3 ? [{ id: 'ri', label: "Relevé d'information", action: 'whatsapp' }] : []}
           missingFields={[{ id: 'bonus_malus', label: 'Bonus/malus' }]}
-          clientName={client?.first_name ? `${client.first_name} ${client.last_name}` : 'Client'}
+          clientName={client?.name || 'Client'}
           onAction={({ type, item }) => console.log('Orbital action:', type, item)}
           size={200}
         />
@@ -326,7 +294,7 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, history, navigate })
         <SectionTitle icon={Clock} title="Historique du dossier" iconColor={T.ark} />
         <DealTimelineScrubber
           events={history.slice(0, 8).map((e, i) => ({
-            id: String(e.id), label: e.action, date: e.when,
+            id: String(e.id), label: e.label, date: e.date,
             type: i === 0 ? 'current' : 'past', icon: e.icon?.name || 'file'
           }))}
         />
@@ -408,6 +376,14 @@ function InfoRow({ icon: Icon, label, value, last }) {
 
 // ─── Onglet Activité (timeline complète) ────────────────────
 function ActiviteTab({ history }) {
+  if (history.length === 0) {
+    return (
+      <GlassPanel style={{ padding: 18 }}>
+        <div style={{ fontSize: 13, color: T.textMuted }}>Aucune activité enregistrée.</div>
+      </GlassPanel>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
@@ -447,10 +423,86 @@ export default function ClientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('vue360')
+  const [client, setClient] = useState(null)
+  const [contracts, setContracts] = useState([])
+  const [devis, setDevis] = useState([])
+  const [docs, setDocs] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [relances, setRelances] = useState([])
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  const client = useMemo(() => DEMO_CLIENT, [id])
+  async function loadClient() {
+    setLoading(true)
+    setError('')
+    try {
+      const [clientRes, contractsRes, tasksRes] = await Promise.all([
+        api.get(`/clients/${id}`),
+        api.get(`/contrats?client_id=${id}`).catch(() => ({ data: [] })),
+        api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] })),
+      ])
+
+      const nextClient = normalizeClientDetail(clientRes.data)
+      const nextContracts = (Array.isArray(contractsRes.data) ? contractsRes.data : []).map(normalizeContract)
+      const nextTasks = (Array.isArray(tasksRes.data) ? tasksRes.data : []).map(normalizeTask)
+      const nextHistory = buildClientHistory(nextClient, nextContracts, nextTasks).map((event) => ({
+        ...event,
+        icon: event.id.startsWith('task') ? CheckCircle : event.id.startsWith('contract') ? Shield : User,
+      }))
+
+      setClient(nextClient)
+      setContracts(nextContracts)
+      setTasks(nextTasks)
+      setHistory(nextHistory)
+      setDevis([])
+      setDocs([])
+      setRelances([])
+    } catch (_err) {
+      setClient(null)
+      setContracts([])
+      setTasks([])
+      setHistory([])
+      setError('Client introuvable ou inaccessible.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadClient()
+  }, [id])
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', color: T.text, padding: '20px 24px 48px', display: 'grid', placeItems: 'center' }}>
+        <VibeBackdrop intensity={0.7} />
+        <div style={{ position: 'relative', zIndex: 1, color: T.textSecondary }}>Chargement du dossier client...</div>
+      </div>
+    )
+  }
+
+  if (error || !client) {
+    return (
+      <div style={{ minHeight: '100vh', color: T.text, padding: '20px 24px 48px', display: 'grid', placeItems: 'center' }}>
+        <VibeBackdrop intensity={0.7} />
+        <GlassPanel style={{ padding: 24, maxWidth: 520, textAlign: 'center' }}>
+          <AlertTriangle size={34} color={T.danger} style={{ marginBottom: 12 }} />
+          <div style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 8 }}>{error || 'Client introuvable.'}</div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
+            <button onClick={() => navigate('/clients')} style={btnGhost}>Retour clients</button>
+            <button onClick={loadClient} style={btnPrimary}>Réessayer</button>
+          </div>
+        </GlassPanel>
+      </div>
+    )
+  }
+
   const status = STATUS[client.statut] || STATUS.actif
-  const totalPrime = DEMO_CONTRACTS.reduce((s, c) => s + c.prime, 0)
+  const totalPrime = contracts.reduce((s, c) => s + c.prime, 0)
+  const arkInsight = contracts.length > 0
+    ? `${contracts.length} contrat${contracts.length > 1 ? 's' : ''} chargé${contracts.length > 1 ? 's' : ''}. Prime annuelle suivie : ${fmtEur(totalPrime)}.`
+    : 'Aucun contrat rattaché à ce client pour le moment.'
 
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '20px 24px 48px' }}>
@@ -504,7 +556,7 @@ export default function ClientDetail() {
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 700, fontSize: 28, letterSpacing: '-0.025em',
               color: T.text, margin: 0, lineHeight: 1.2,
-            }}>{client.prenom} {client.nom}</h1>
+            }}>{client.name}</h1>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
               <ArkStatusBadge label={status.label} variant={statusToVariant(client.statut)} />
               <span style={{
@@ -515,19 +567,19 @@ export default function ClientDetail() {
               <span style={{
                 padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
                 background: 'rgba(59,130,246,0.10)', color: T.blue,
-              }}>{DEMO_CONTRACTS.length} contrats • {fmtEur(totalPrime)}/an</span>
+              }}>{contracts.length} contrat{contracts.length !== 1 ? 's' : ''} • {fmtEur(totalPrime)}/an</span>
               <span style={{ fontSize: 12, color: T.textMuted }}>{client.type} • {client.city}</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => navigate(`/devis/new?client=${client.id}`)} style={btnPrimary}>
-              <Plus size={13} /> Nouveau devis
+            <button onClick={() => navigate(`/contrats/new?clientId=${client.id}`)} style={btnPrimary}>
+              <Plus size={13} /> Nouveau contrat
             </button>
-            <button onClick={() => navigate('/taches')} style={btnGhost}>
+            <button onClick={() => navigate(`/taches?clientId=${client.id}`)} style={btnGhost}>
               <CheckCircle size={13} /> Ajouter tâche
             </button>
-            <button onClick={() => window.location.href = `mailto:${client.email}`} style={btnGhost}>
+            <button onClick={() => { if (client.email !== '—') window.location.href = `mailto:${client.email}` }} style={btnGhost}>
               <Send size={13} /> Contacter
             </button>
           </div>
@@ -555,7 +607,7 @@ export default function ClientDetail() {
               textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 4,
             }}>ARK Insight</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.4 }}>
-              Renouvellement RC Pro J-21. Préparer comparatif Aurora / Novalia. Opportunité PJ détectée (potentiel 1 200€).
+              {arkInsight}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -566,12 +618,12 @@ export default function ClientDetail() {
             }}>
               <Target size={12} /> Comparer
             </button>
-            <button onClick={() => navigate(`/devis/new?client=${client.id}`)} style={{
+            <button onClick={() => navigate(`/contrats/new?clientId=${client.id}`)} style={{
               padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
               background: T.ark, color: '#fff', border: 'none',
               cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
             }}>
-              <Zap size={12} /> Créer devis PJ
+              <Zap size={12} /> Nouveau contrat
             </button>
           </div>
         </div>
@@ -582,9 +634,9 @@ export default function ClientDetail() {
           marginBottom: 18, overflowX: 'auto',
         }}>
           <TabButton label="Vue 360°"  active={tab === 'vue360'}    onClick={() => setTab('vue360')} />
-          <TabButton label="Contrats"  active={tab === 'contrats'}  onClick={() => setTab('contrats')}  badge={DEMO_CONTRACTS.length} />
-          <TabButton label="Devis"     active={tab === 'devis'}     onClick={() => setTab('devis')}     badge={DEMO_DEVIS.length} />
-          <TabButton label="Documents" active={tab === 'documents'} onClick={() => setTab('documents')} badge={DEMO_DOCS.length} />
+          <TabButton label="Contrats"  active={tab === 'contrats'}  onClick={() => setTab('contrats')}  badge={contracts.length} />
+          <TabButton label="Devis"     active={tab === 'devis'}     onClick={() => setTab('devis')}     badge={devis.length} />
+          <TabButton label="Documents" active={tab === 'documents'} onClick={() => setTab('documents')} badge={docs.length} />
           <TabButton label="Activité"  active={tab === 'activite'}  onClick={() => setTab('activite')} />
           <TabButton label="ARK"       active={tab === 'ark'}       onClick={() => setTab('ark')} />
         </div>
@@ -593,15 +645,20 @@ export default function ClientDetail() {
         <AnimatePresence mode="wait">
           {tab === 'vue360' && (
             <Vue360Tab key="vue360" client={client}
-              contracts={DEMO_CONTRACTS} devis={DEMO_DEVIS}
-              docs={DEMO_DOCS} tasks={DEMO_TASKS} history={DEMO_HISTORY}
+              contracts={contracts} devis={devis}
+              docs={docs} tasks={tasks} relances={relances} history={history}
               navigate={navigate}
             />
           )}
           {tab === 'contrats' && (
             <motion.div key="ct" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {DEMO_CONTRACTS.map(c => (
+                {contracts.length === 0 && (
+                  <GlassPanel style={{ padding: 14 }}>
+                    <div style={{ fontSize: 13, color: T.textMuted }}>Aucun contrat rattaché à ce client.</div>
+                  </GlassPanel>
+                )}
+                {contracts.map(c => (
                   <GlassPanel key={c.id} hover style={{ padding: 14 }} onClick={() => navigate('/contrats')}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -623,7 +680,12 @@ export default function ClientDetail() {
           {tab === 'devis' && (
             <motion.div key="dv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {DEMO_DEVIS.map(d => (
+                {devis.length === 0 && (
+                  <GlassPanel style={{ padding: 14 }}>
+                    <div style={{ fontSize: 13, color: T.textMuted }}>Aucun devis rattaché à ce client.</div>
+                  </GlassPanel>
+                )}
+                {devis.map(d => (
                   <GlassPanel key={d.id} hover style={{ padding: 14 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -647,11 +709,14 @@ export default function ClientDetail() {
           {tab === 'documents' && (
             <motion.div key="dc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <GlassPanel style={{ padding: 14 }}>
-                {DEMO_DOCS.map((d, i) => (
+                {docs.length === 0 && (
+                  <div style={{ fontSize: 13, color: T.textMuted }}>Aucun document rattaché à ce client.</div>
+                )}
+                {docs.map((d, i) => (
                   <div key={d.id} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '10px 0',
-                    borderBottom: i < DEMO_DOCS.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
+                    borderBottom: i < docs.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
                   }}>
                     <FileText size={14} color={T.textMuted} />
                     <span style={{ flex: 1, fontSize: 13, color: T.text }}>{d.name}</span>
@@ -661,15 +726,15 @@ export default function ClientDetail() {
               </GlassPanel>
             </motion.div>
           )}
-          {tab === 'activite' && <ActiviteTab key="act" history={DEMO_HISTORY} />}
+          {tab === 'activite' && <ActiviteTab key="act" history={history} />}
           {tab === 'ark' && (
             <motion.div key="ark" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <GlassPanel style={{ padding: 20, background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(91,77,245,0.03))' }}>
                 <SectionTitle icon={Sparkles} title="Recommandations ARK" iconColor={T.ark} />
                 <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>
-                  <p><strong style={{ color: T.text }}>🎯 Cross-sell PJ</strong> — Profil idéal pour Protection Juridique. Potentiel <strong style={{ color: T.success }}>1 200€/an</strong>.</p>
-                  <p><strong style={{ color: T.text }}>⚠️ Renouvellement RC Pro J-21</strong> — Préparer comparatif Aurora / Novalia. La prime actuelle (2 800€) est <strong style={{ color: T.warning }}>au-dessus du marché</strong>.</p>
-                  <p><strong style={{ color: T.text }}>💡 Multi-équipement</strong> — 3 contrats, mais pas de Santé ni Prévoyance. Suggérer un bilan complet.</p>
+                  <p><strong style={{ color: T.text }}>Dossier réel chargé</strong> — {client.name} est synchronisé avec le portefeuille du cabinet.</p>
+                  <p><strong style={{ color: T.text }}>Contrats</strong> — {contracts.length} contrat{contracts.length !== 1 ? 's' : ''} associé{contracts.length !== 1 ? 's' : ''}, {fmtEur(totalPrime)}/an suivi.</p>
+                  <p><strong style={{ color: T.text }}>Suivi</strong> — {tasks.length} tâche{tasks.length !== 1 ? 's' : ''} planifiée{tasks.length !== 1 ? 's' : ''}.</p>
                 </div>
               </GlassPanel>
             </motion.div>

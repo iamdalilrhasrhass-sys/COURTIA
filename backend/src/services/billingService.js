@@ -56,9 +56,8 @@ async function ensureBillingFoundation() {
     INSERT INTO billing_plans (code, display_name, price_amount_cents, currency, interval, is_active)
     VALUES
       ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
-      ('pro', 'Pro', 19900, 'EUR', 'month', TRUE),
-      ('cabinet', 'Cabinet', 39900, 'EUR', 'month', TRUE),
-      ('premium', 'Premium', NULL, 'EUR', 'month', TRUE)
+      ('pro', 'Pro', 15900, 'EUR', 'month', TRUE),
+      ('cabinet', 'Cabinet', NULL, 'EUR', 'month', TRUE)
     ON CONFLICT (code) DO UPDATE SET
       display_name = EXCLUDED.display_name,
       price_amount_cents = EXCLUDED.price_amount_cents,
@@ -215,7 +214,8 @@ async function ensureBillingFoundation() {
 function normalizePlanCode(code) {
   if (!code) return null;
   const v = String(code).trim().toLowerCase();
-  return ['starter', 'pro', 'cabinet', 'premium'].includes(v) ? v : null;
+  if (v === 'premium') return 'cabinet';
+  return ['starter', 'pro', 'cabinet'].includes(v) ? v : null;
 }
 
 function getPlans() {
@@ -232,8 +232,8 @@ function getPlans() {
     currency: p.currency,
     interval: p.interval,
     highlighted: p.highlighted,
-    trial_days: p.id === 'premium' ? 0 : TRIAL_DAYS,
-    has_checkout: p.id !== 'premium',
+    trial_days: p.id === 'cabinet' ? 0 : TRIAL_DAYS,
+    has_checkout: !!p.has_stripe_price,
     fiscal_label: FISCAL_LABEL,
     features: p.features,
   }));

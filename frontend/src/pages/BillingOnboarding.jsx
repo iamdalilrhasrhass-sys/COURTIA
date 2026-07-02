@@ -13,7 +13,7 @@ const PLAN_COPY = {
   },
   pro: {
     title: 'Pro',
-    banner: 'Pro — 199 € HT / mois (238,80 € TTC avec TVA 20 %).',
+    banner: 'Pro — 159 € HT / mois (190,80 € TTC avec TVA 20 %).',
   },
   cabinet: {
     title: 'Cabinet',
