@@ -8,7 +8,9 @@
 
 const axios = require('axios');
 const pool = require('../db');
-const arkBrief = require('./arkBrief');
+// arkBrief est optionnel (module jamais versionné) — dégradation propre si absent
+let arkBrief = null;
+try { arkBrief = require('./arkBrief'); } catch (_) { arkBrief = null; }
 
 const VAPI_BASE = 'https://api.vapi.ai';
 const VAPI_KEY = process.env.VAPI_API_KEY;
@@ -125,6 +127,7 @@ async function placeMorningBriefCall(userId) {
   }
 
   const userResult = await pool.query(`SELECT id, first_name, last_name FROM users WHERE id=$1`, [userId]);
+  if (!arkBrief) return { success: false, reason: 'brief_module_unavailable' };
   const brief = await arkBrief.generateMorningBrief(userId, pool);
   const assistant = buildMorningBriefAssistant(brief, userResult.rows[0]);
 
