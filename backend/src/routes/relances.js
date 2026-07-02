@@ -18,6 +18,8 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
+const { sendEmail, getEmailStatus } = require('../services/emailService')
+const { sendSMS, getSmsStatus } = require('../services/smsService')
 const logger = require('../lib/logger')
 
 // =============================================================================
@@ -440,18 +442,79 @@ router.post('/:id/send', async (req, res) => {
     const brokerId = req.user.id
     const relanceId = parseInt(req.params.id, 10)
 
+    // Charge la relance + coordonnées du client (envoi réel, plus de simulation)
+    const found = await pool.query(`
+      SELECT r.*, c.email AS client_email, c.phone AS client_phone,
+             c.first_name AS client_first_name, c.last_name AS client_last_name,
+             c.company_name AS client_company
+      FROM relances r
+      LEFT JOIN clients c ON r.client_id = c.id
+      WHERE r.id = $1 AND r.broker_id = $2
+    `, [relanceId, brokerId])
+
+    if (found.rows.length === 0) {
+      return res.status(404).json({ error: 'Relance non trouvée' })
+    }
+
+    const relance = found.rows[0]
+    const clientName = relance.client_company || `${relance.client_first_name || ''} ${relance.client_last_name || ''}`.trim() || 'client'
+    const channel = String(relance.channel || 'email').toLowerCase()
+    const subject = relance.subject || `Relance — ${clientName}`
+    const content = relance.content || subject
+    let delivery = { channel, provider: null, id: null, manual: false }
+
+    if (channel === 'email') {
+      if (!relance.client_email) {
+        return res.status(400).json({ error: "Ce client n'a pas d'adresse email." })
+      }
+      const sent = await sendEmail({
+        to: relance.client_email,
+        subject,
+        text: content,
+        html: `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;line-height:1.6;color:#111">${String(content).replace(/\n/g, '<br/>')}</div>`,
+      })
+      if (!sent.success) {
+        const status = getEmailStatus()
+        const code = sent.skipped ? 503 : 502
+        return res.status(code).json({
+          error: sent.skipped
+            ? `Envoi email non configuré (${(status.missing || []).join(', ')} manquant).`
+            : "L'envoi de l'email a échoué. Réessayez ou vérifiez la configuration.",
+          email_status: status,
+        })
+      }
+      delivery.provider = sent.provider
+      delivery.id = sent.id || null
+    } else if (channel === 'sms') {
+      if (!relance.client_phone) {
+        return res.status(400).json({ error: "Ce client n'a pas de numéro de téléphone." })
+      }
+      const sent = await sendSMS({ to: relance.client_phone, message: content })
+      if (!sent.success) {
+        const status = getSmsStatus()
+        return res.status(sent.skipped ? 503 : 502).json({
+          error: sent.skipped
+            ? `Envoi SMS non configuré (${(status.missing || []).join(', ')} manquant).`
+            : "L'envoi du SMS a échoué. Réessayez ou vérifiez la configuration.",
+          sms_status: status,
+        })
+      }
+      delivery.provider = sent.provider
+      delivery.id = sent.id || null
+    } else {
+      // Canal "appel" ou autre : action humaine, on marque simplement comme traitée
+      delivery.manual = true
+    }
+
     const result = await pool.query(`
-      UPDATE relances 
+      UPDATE relances
       SET status = 'sent', sent_at = NOW(), updated_at = NOW()
       WHERE id = $1 AND broker_id = $2
       RETURNING *
     `, [relanceId, brokerId])
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Relance non trouvée' })
-    }
-
-    res.json({ success: true, relance: result.rows[0] })
+    logger.info({ brokerId, relanceId, channel, provider: delivery.provider }, 'Relance envoyée (réel)')
+    res.json({ success: true, relance: result.rows[0], delivery })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances/:id/send error')
     res.status(500).json({ error: 'Erreur serveur', details: err.message })

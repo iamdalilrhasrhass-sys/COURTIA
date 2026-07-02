@@ -121,6 +121,17 @@ export default function ClientNew() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  // Normalise en E.164 — l'UI affiche le préfixe +33, on le matérialise à l'enregistrement
+  const normalizeTelephone = (raw) => {
+    if (!raw) return raw
+    let p = String(raw).replace(/[\s.\-()]/g, '')
+    if (p.startsWith('+')) return p
+    if (p.startsWith('00')) return '+' + p.slice(2)
+    if (/^0\d{9}$/.test(p)) return '+33' + p.slice(1)
+    if (/^[1-9]\d{8}$/.test(p)) return '+33' + p
+    return p
+  }
+
   const handleAddressSelect = (suggestion) => {
     set('adresse', suggestion.properties.name)
     set('postal_code', suggestion.properties.postcode)
@@ -133,9 +144,10 @@ export default function ClientNew() {
     if (!form.prenom?.trim() || !form.nom?.trim()) { toast.error('Le prénom et le nom sont obligatoires.'); return }
     setLoading(true); setSubmitState('submitting')
     try {
+      const payload = { ...form, telephone: normalizeTelephone(form.telephone) }
       const { data } = isEditMode
-        ? await api.put(`/clients/${id}`, form)
-        : await api.post('/clients', form)
+        ? await api.put(`/clients/${id}`, payload)
+        : await api.post('/clients', payload)
       setSubmitState('success')
       toast.success(`Client ${isEditMode ? 'mis à jour' : 'créé'} !`)
       setTimeout(() => navigate(isEditMode ? `/clients/${id}` : `/clients/${data.id}`), 1200)
