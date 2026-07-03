@@ -123,12 +123,11 @@ SELECT
   COUNT(DISTINCT ct.id) as total_contracts,
   COALESCE(SUM(ct.prime_annuelle), 0) as total_premium,
   COUNT(DISTINCT CASE WHEN ct.date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days' THEN ct.id END) as contracts_expiring_90d,
-  COUNT(DISTINCT d.id) as total_documents,
-  COALESCE(AVG(c.ark_score), 0) as avg_ark_score
+  0 as total_documents,
+  0::numeric as avg_ark_score
 FROM users u
-LEFT JOIN clients c ON c.user_id = u.id
-LEFT JOIN contracts ct ON ct.client_id = c.id
-LEFT JOIN documents d ON d.user_id = u.id
+LEFT JOIN clients c ON c.courtier_id = u.id
+LEFT JOIN contrats ct ON ct.client_id = c.id
 GROUP BY u.id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_user_kpis_user ON mv_user_kpis(user_id);
