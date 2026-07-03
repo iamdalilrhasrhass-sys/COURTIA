@@ -85,6 +85,11 @@ BEGIN
       ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
     CREATE UNIQUE INDEX IF NOT EXISTS uq_onboarding_progress_user
       ON onboarding_progress(user_id);
+    -- colonne legacy non utilisée par le nouveau code : contrainte relâchée
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_name='onboarding_progress' AND column_name='cabinet_id') THEN
+      ALTER TABLE onboarding_progress ALTER COLUMN cabinet_id DROP NOT NULL;
+    END IF;
   END IF;
 
   IF to_regclass('public.calendar_events') IS NOT NULL THEN
