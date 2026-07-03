@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Send, Phone, MessageSquare, Calendar, TrendingUp, Sparkles, Zap, Search,
-  User, AlertTriangle, Clock, Euro, Target, FileText
+  User, AlertTriangle, Clock, Euro, Target, FileText, Loader, CheckCircle
 } from 'lucide-react'
+import api from '../api'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -15,20 +16,39 @@ const T = {
 
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 
-const DEMO_RELANCES = [
-  { id: 1, client: 'Karim B.', raison: 'Devis Auto #247 sans réponse', urgence: 'Haute', produit: 'Auto', potentiel: 840, dernierContact: '2026-05-04', type: 'devis', ark: 'Devis envoyé il y a 7 jours sans réponse. Client déjà actif Habitation. Probabilité élevée de conversion.' },
-  { id: 2, client: 'Martin Conseil', raison: 'Échéance RC Pro dans 21 jours', urgence: 'Haute', produit: 'RC Pro', potentiel: 2800, dernierContact: '2026-04-20', type: 'echeance', ark: 'Échéance RC Pro imminente. Préparer une proposition de renouvellement avec option Prévoyance TNS.' },
-  { id: 3, client: 'Leroy Marie', raison: 'Cliente silencieuse depuis 52 jours', urgence: 'Moyenne', produit: 'Habitation', potentiel: 380, dernierContact: '2026-03-18', type: 'silencieux', ark: 'Cliente silencieuse avec score risque 80%. Contacter pour vérifier satisfaction et proposer MRH.' },
-  { id: 4, client: 'Dupont SAS', raison: 'Devis PJ envoyé sans réponse', urgence: 'Moyenne', produit: 'PJ', potentiel: 2100, dernierContact: '2026-05-02', type: 'devis', ark: 'Devis PJ envoyé il y a 9 jours. Client RC Pro actif. Multi-équipement favorable.' },
-  { id: 5, client: 'Auto Évolution 89', raison: 'Flotte Auto : échéance dépassée', urgence: 'Haute', produit: 'Flotte Auto', potentiel: 4200, dernierContact: '2026-04-15', type: 'renouvellement', ark: 'Échéance dépassée de 26 jours. Renouvellement urgent. Risque de mise en concurrence.' },
-  { id: 6, client: 'Petit Philippe', raison: 'Devis Auto sans réponse depuis 18 jours', urgence: 'Haute', produit: 'Auto', potentiel: 1100, dernierContact: '2026-04-22', type: 'devis', ark: 'Devis envoyé il y a 19 jours. Relancer par téléphone avant expiration.' },
-  { id: 7, client: 'BatiSens Pro', raison: 'Devis Prévoyance accepté à transformer', urgence: 'Moyenne', produit: 'Prévoyance', potentiel: 950, dernierContact: '2026-04-25', type: 'opportunite', ark: 'Devis accepté il y a 16 jours. Transformer en contrat avant perte d\'intérêt.' },
-  { id: 8, client: 'Groupe Ardent', raison: 'Document FIC manquant', urgence: 'Basse', produit: 'Cyber', potentiel: 0, dernierContact: '2026-04-15', type: 'document', ark: 'Dossier incomplet : FIC manquante. Conformité réglementaire.' },
-  { id: 9, client: 'Sophie L.', raison: 'Opportunité Prévoyance non couverte', urgence: 'Moyenne', produit: 'Prévoyance', potentiel: 520, dernierContact: '2026-05-06', type: 'opportunite', ark: 'Cliente Santé active sans Prévoyance. Nouveau devis envoyé. Probabilité 70%.' },
-  { id: 10, client: 'Cabinet Moreau', raison: 'Document Attestation PJ à vérifier', urgence: 'Basse', produit: 'PJ', potentiel: 0, dernierContact: '2026-04-05', type: 'document', ark: 'Attestation PJ marquée À vérifier. Action conformité.' },
-]
+const PRIORITY_LABELS = { high: 'Haute', medium: 'Moyenne', low: 'Basse' }
+const TYPE_LABELS = {
+  devis: 'Devis sans réponse', quote_followup: 'Devis sans réponse',
+  echeance: 'Échéance proche', renouvellement: 'Renouvellement', renewal: 'Renouvellement',
+  silencieux: 'Client silencieux', silent: 'Client silencieux',
+  document: 'Document manquant', opportunite: 'Opportunité', opportunity: 'Opportunité',
+  prospect: 'Prospect à relancer',
+}
+const FILTER_TYPES = {
+  'Devis': ['devis', 'quote_followup'],
+  'Échéances': ['echeance', 'renouvellement', 'renewal'],
+  'Silencieux': ['silencieux', 'silent'],
+  'Documents': ['document'],
+  'Opportunités': ['opportunite', 'opportunity'],
+  'Prospects': ['prospect'],
+}
+const FILTERS = ['Toutes', ...Object.keys(FILTER_TYPES)]
 
-const FILTERS = ['Toutes', 'Devis', 'Échéances', 'Silencieux', 'Documents', 'Opportunités', 'Prospects']
+const normalizeRelance = (r) => ({
+  id: r.id,
+  clientId: r.client_id,
+  client: r.client_name || 'Client inconnu',
+  phone: r.client_phone || null,
+  raison: r.subject || TYPE_LABELS[r.type] || 'Relance',
+  urgence: PRIORITY_LABELS[r.priority] || 'Moyenne',
+  produit: r.quote_product || r.metadata?.product || null,
+  potentiel: Number(r.metadata?.potentiel || r.metadata?.amount || 0),
+  dernierContact: r.sent_at || r.scheduled_at || r.created_at,
+  type: r.type,
+  status: r.status,
+  channel: r.channel,
+  ark: r.ai_reasoning || null,
+})
 
 function KpiCard({ icon: Icon, title, value, accent }) {
   return (
@@ -46,29 +66,65 @@ export default function Relances() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Toutes')
+  const [relances, setRelances] = useState([])
+  const [apiStats, setApiStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [sendingId, setSendingId] = useState(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [listRes, statsRes] = await Promise.all([
+        api.get('/relances', { params: { limit: 100 } }),
+        api.get('/relances/stats').catch(() => null),
+      ])
+      setRelances((listRes.data?.relances || []).map(normalizeRelance))
+      setApiStats(statsRes?.data || null)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Impossible de charger les relances.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const handleSend = async (r) => {
+    if (!window.confirm(`Envoyer la relance à ${r.client} par ${r.channel || 'email'} ?`)) return
+    setSendingId(r.id)
+    try {
+      await api.post(`/relances/${r.id}/send`)
+      setRelances(prev => prev.map(x => x.id === r.id ? { ...x, status: 'sent' } : x))
+    } catch (err) {
+      window.alert(err.response?.data?.error || 'Échec de l\'envoi.')
+    } finally {
+      setSendingId(null)
+    }
+  }
 
   const filtered = useMemo(() => {
-    let list = DEMO_RELANCES
+    let list = relances
     if (search) {
       const q = search.toLowerCase()
-      list = list.filter(r => r.client.toLowerCase().includes(q) || r.raison.toLowerCase().includes(q))
+      list = list.filter(r => r.client.toLowerCase().includes(q) || (r.raison || '').toLowerCase().includes(q))
     }
-    if (filter === 'Devis') list = list.filter(r => r.type === 'devis')
-    else if (filter === 'Échéances') list = list.filter(r => r.type === 'echeance' || r.type === 'renouvellement')
-    else if (filter === 'Silencieux') list = list.filter(r => r.type === 'silencieux')
-    else if (filter === 'Documents') list = list.filter(r => r.type === 'document')
-    else if (filter === 'Opportunités') list = list.filter(r => r.type === 'opportunite')
+    if (FILTER_TYPES[filter]) list = list.filter(r => FILTER_TYPES[filter].includes(r.type))
     return list
-  }, [search, filter])
+  }, [relances, search, filter])
 
-  const stats = useMemo(() => ({
-    aujourdhui: DEMO_RELANCES.filter(r => r.urgence === 'Haute').length,
-    semaine: DEMO_RELANCES.length,
-    devis: DEMO_RELANCES.filter(r => r.type === 'devis').length,
-    echeances: DEMO_RELANCES.filter(r => r.type === 'echeance' || r.type === 'renouvellement').length,
-    silencieux: DEMO_RELANCES.filter(r => r.type === 'silencieux').length,
-    potentiel: DEMO_RELANCES.reduce((s, r) => s + r.potentiel, 0),
-  }), [])
+  const stats = useMemo(() => {
+    const byType = (types) => relances.filter(r => types.includes(r.type)).length
+    return {
+      urgentes: apiStats?.totals?.urgent_pending ?? relances.filter(r => r.urgence === 'Haute' && r.status !== 'sent').length,
+      enAttente: apiStats?.totals?.pending ?? relances.filter(r => r.status !== 'sent').length,
+      devis: byType(FILTER_TYPES['Devis']),
+      echeances: byType(FILTER_TYPES['Échéances']),
+      tauxReponse: apiStats?.period?.taux_reponse ?? null,
+      potentiel: relances.reduce((s, r) => s + r.potentiel, 0),
+    }
+  }, [relances, apiStats])
 
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
@@ -90,11 +146,11 @@ export default function Relances() {
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          <KpiCard icon={Target} title="Aujourd'hui" value={stats.aujourdhui} accent={T.danger} />
-          <KpiCard icon={Calendar} title="Cette semaine" value={stats.semaine} />
+          <KpiCard icon={Target} title="Urgentes" value={stats.urgentes} accent={T.danger} />
+          <KpiCard icon={Calendar} title="En attente" value={stats.enAttente} />
           <KpiCard icon={Send} title="Devis sans réponse" value={stats.devis} accent={T.warning} />
           <KpiCard icon={AlertTriangle} title="Échéances" value={stats.echeances} accent={T.warning} />
-          <KpiCard icon={Clock} title="Silencieux" value={stats.silencieux} accent={T.danger} />
+          {stats.tauxReponse !== null && <KpiCard icon={TrendingUp} title="Taux de réponse" value={stats.tauxReponse + ' %'} accent={T.success} />}
           <KpiCard icon={Euro} title="Potentiel" value={fmtEur(stats.potentiel)} accent={T.success} />
         </div>
 
@@ -120,23 +176,40 @@ export default function Relances() {
           </div>
         </div>
 
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>
+            <Loader size={28} style={{ marginBottom: 10, opacity: 0.5 }} className="animate-spin" />
+            <p style={{ fontSize: 13 }}>Chargement des relances…</p>
+          </div>
+        )}
+
+        {error && !loading && (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: T.danger }}>
+            <AlertTriangle size={32} style={{ marginBottom: 10, opacity: 0.6 }} />
+            <p style={{ fontSize: 13 }}>{error}</p>
+            <button onClick={load} style={btnStyle(T.accent)}>Réessayer</button>
+          </div>
+        )}
+
+        {!loading && !error && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map(r => (
             <motion.div key={r.id}
               whileHover={{ borderColor: 'rgba(255,255,255,0.12)' }}
-              style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 12, padding: '14px 16px', transition: 'all 0.15s' }}
+              style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 12, padding: '14px 16px', transition: 'all 0.15s', opacity: r.status === 'sent' ? 0.6 : 1 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{r.client}</span>
                     <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: r.urgence === 'Haute' ? 'rgba(239,68,68,0.08)' : r.urgence === 'Moyenne' ? 'rgba(245,158,11,0.08)' : 'rgba(100,116,139,0.08)', color: r.urgence === 'Haute' ? '#EF4444' : r.urgence === 'Moyenne' ? '#F59E0B' : '#9CA3AF' }}>{r.urgence}</span>
+                    {r.status === 'sent' && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.08)', color: T.success }}><CheckCircle size={9} style={{ verticalAlign: 'middle', marginRight: 3 }} />Envoyée</span>}
                     <span style={{ fontSize: 11, color: T.textMuted }}>{r.raison}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 11, color: T.textSecondary }}>
-                    <span><FileText size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{r.produit}</span>
+                  <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 11, color: T.textSecondary, flexWrap: 'wrap' }}>
+                    {r.produit && <span><FileText size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{r.produit}</span>}
                     {r.potentiel > 0 && <span style={{ color: T.success }}><Euro size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{fmtEur(r.potentiel)}</span>}
-                    <span><Clock size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{new Date(r.dernierContact).toLocaleDateString('fr-FR')}</span>
+                    {r.dernierContact && <span><Clock size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{new Date(r.dernierContact).toLocaleDateString('fr-FR')}</span>}
                   </div>
                 </div>
               </div>
@@ -147,18 +220,19 @@ export default function Relances() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <button style={actionBtnStyle(T.success)}><Phone size={11} /> Appeler</button>
-                <button style={actionBtnStyle(null)}><MessageSquare size={11} /> Message</button>
-                <button onClick={() => navigate('/clients/' + r.id)} style={actionBtnStyle(T.ark)}><User size={11} /> Voir client</button>
+                <button onClick={() => r.phone && (window.location.href = 'tel:' + r.phone)} disabled={!r.phone} title={r.phone || 'Pas de téléphone'} style={{ ...actionBtnStyle(T.success), opacity: r.phone ? 1 : 0.4, cursor: r.phone ? 'pointer' : 'not-allowed' }}><Phone size={11} /> Appeler</button>
+                <button onClick={() => handleSend(r)} disabled={r.status === 'sent' || sendingId === r.id} style={{ ...actionBtnStyle(null), opacity: r.status === 'sent' ? 0.4 : 1 }}><MessageSquare size={11} /> {sendingId === r.id ? 'Envoi…' : r.status === 'sent' ? 'Envoyée' : 'Envoyer'}</button>
+                <button onClick={() => r.clientId && navigate('/clients/' + r.clientId)} disabled={!r.clientId} style={{ ...actionBtnStyle(T.ark), opacity: r.clientId ? 1 : 0.4 }}><User size={11} /> Voir client</button>
               </div>
             </motion.div>
           ))}
         </div>
+        )}
 
-        {filtered.length === 0 && (
+        {!loading && !error && filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>
             <Send size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ fontSize: 14 }}>Aucune relance trouvée.</p>
+            <p style={{ fontSize: 14 }}>Aucune relance en attente. ARK en génère automatiquement dès qu'un devis reste sans réponse.</p>
           </div>
         )}
       </div>
