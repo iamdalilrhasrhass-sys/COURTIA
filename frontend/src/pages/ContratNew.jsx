@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -39,15 +39,22 @@ export default function ContratNew() {
     statut: 'actif',
   })
 
+  const [searchParams] = useSearchParams()
+
   useEffect(() => {
     api.get('/clients')
       .then(r => {
         const arr = Array.isArray(r.data) ? r.data : (r.data?.data || r.data?.clients || [])
         setClients(arr)
-        if (arr.length > 0) setForm(f => ({ ...f, client_id: String(arr[0].id) }))
+        // Respecte ?clientId= de l'URL (ex : bouton "Nouveau contrat" depuis une fiche client)
+        const urlId = searchParams.get('clientId')
+        const preselect = urlId && arr.some(c => String(c.id) === String(urlId))
+          ? String(urlId)
+          : (arr.length > 0 ? String(arr[0].id) : '')
+        if (preselect) setForm(f => ({ ...f, client_id: preselect }))
       })
       .catch(() => {})
-  }, [])
+  }, [searchParams])
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
   const focus = e => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)' }

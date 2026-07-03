@@ -120,7 +120,7 @@ export default function DevisWizard() {
     let cancelled = false
     if (clientQuery.length < 2) return
     api.get(`/clients?search=${encodeURIComponent(clientQuery)}&limit=10`)
-      .then(({ data }) => { if (!cancelled) setClients(data?.clients || data || []) })
+      .then(({ data }) => { if (!cancelled) setClients(Array.isArray(data) ? data : (data?.data || data?.clients || [])) })
       .catch(() => {})
     return () => { cancelled = true }
   }, [clientQuery])
