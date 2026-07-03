@@ -87,6 +87,14 @@ BEGIN
       ON onboarding_progress(user_id);
   END IF;
 
+  IF to_regclass('public.calendar_events') IS NOT NULL THEN
+    ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS event_date TIMESTAMPTZ;
+    ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS end_date TIMESTAMPTZ;
+    ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS google_event_id VARCHAR(255);
+    ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS event_type VARCHAR(50) DEFAULT 'rdv';
+    ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT FALSE;
+  END IF;
+
   IF to_regclass('public.audit_logs') IS NOT NULL THEN
     ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS resource_type VARCHAR(50);
     ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS resource_id   VARCHAR(100);
