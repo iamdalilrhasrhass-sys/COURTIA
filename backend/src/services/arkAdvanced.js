@@ -28,7 +28,7 @@ QUESTION: ${userMessage}
 Réponds en 3 parties claires, très précises et actionables.`;
 
     const response = await client.messages.create({
-      model: 'claude-opus-4-1-20250805',
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       messages: [{
         role: 'user',

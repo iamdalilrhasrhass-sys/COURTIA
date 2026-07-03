@@ -508,7 +508,7 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
     if (process.env.ANTHROPIC_API_KEY) {
       const anthropic  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
       const response   = await anthropic.messages.create({
-        model:      'claude-opus-4-6',
+        model:      'claude-haiku-4-5',
         max_tokens: 2500,
         messages:   [{ role: 'user', content: prompt }],
       });

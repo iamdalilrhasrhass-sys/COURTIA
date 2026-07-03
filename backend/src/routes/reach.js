@@ -1402,7 +1402,7 @@ Format de sortie : JSON strict { subject, body }. Body en français, sans HTML.$
       if (process.env.ANTHROPIC_API_KEY) {
         const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
         const resp = await client.messages.create({
-          model: 'claude-3-5-sonnet-latest',
+          model: 'claude-haiku-4-5',
           max_tokens: 600,
           system: systemMsg,
           messages: [{ role: 'user', content: prompt }],

@@ -203,7 +203,7 @@ async function claudeAiScore(prospect) {
 
   try {
     const msg = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-haiku-4-5',
       max_tokens: 2048,
       system: `Tu es un expert en scoring de prospects assurance pour courtiers. Analyse le prospect et retourne UNIQUEMENT un JSON valide avec ces champs exacts :
 {

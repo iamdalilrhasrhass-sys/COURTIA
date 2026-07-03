@@ -5,7 +5,7 @@ const client = new Anthropic()
 export async function callClaudeAPI(systemContext, userMessage) {
   try {
     const message = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       messages: [
         {
