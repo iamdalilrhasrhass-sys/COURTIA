@@ -80,13 +80,14 @@ BEGIN
     ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
   END IF;
 
-  -- onboarding_progress legacy (clé cabinet_id) incompatible avec le design
-  -- user-based de 025 : on l'archive, 025 créera la nouvelle table.
+  -- onboarding_progress legacy (clé cabinet_id) = ancienne table du module cabinet.
+  -- Renommée en cabinet_onboarding_progress (013 corrigé l'utilise désormais),
+  -- ce qui libère le nom onboarding_progress pour la version user_id/badges (025).
   IF to_regclass('public.onboarding_progress') IS NOT NULL
      AND EXISTS (SELECT 1 FROM information_schema.columns
                  WHERE table_name='onboarding_progress' AND column_name='cabinet_id')
-     AND to_regclass('public.onboarding_progress_legacy') IS NULL THEN
-    ALTER TABLE onboarding_progress RENAME TO onboarding_progress_legacy;
+     AND to_regclass('public.cabinet_onboarding_progress') IS NULL THEN
+    ALTER TABLE onboarding_progress RENAME TO cabinet_onboarding_progress;
   END IF;
 
   IF to_regclass('public.calendar_events') IS NOT NULL THEN

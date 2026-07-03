@@ -209,13 +209,13 @@ async function acceptInvitation(pool, { token, userId }) {
 
 async function getOnboardingProgress(pool, cabinetId) {
   const result = await pool.query(
-    `SELECT * FROM onboarding_progress WHERE cabinet_id = $1 LIMIT 1`,
+    `SELECT * FROM cabinet_onboarding_progress WHERE cabinet_id = $1 LIMIT 1`,
     [cabinetId]
   )
   if (result.rows[0]) return result.rows[0]
 
   const created = await pool.query(
-    `INSERT INTO onboarding_progress (cabinet_id, updated_at)
+    `INSERT INTO cabinet_onboarding_progress (cabinet_id, updated_at)
      VALUES ($1, NOW())
      RETURNING *`,
     [cabinetId]
@@ -232,7 +232,7 @@ async function markOnboardingStep(pool, cabinetId, step) {
 
   await getOnboardingProgress(pool, cabinetId)
   const result = await pool.query(
-    `UPDATE onboarding_progress
+    `UPDATE cabinet_onboarding_progress
      SET ${column} = TRUE,
          updated_at = NOW(),
          completed_at = CASE

@@ -45,7 +45,9 @@ CREATE TABLE IF NOT EXISTS cabinet_invitations (
 CREATE INDEX IF NOT EXISTS idx_cabinet_invitations_cabinet ON cabinet_invitations(cabinet_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_cabinet_invitations_email ON cabinet_invitations(LOWER(email));
 
-CREATE TABLE IF NOT EXISTS onboarding_progress (
+-- NB: table renommée cabinet_onboarding_progress pour éviter la collision
+-- avec onboarding_progress (user_id + badges) de la migration 025.
+CREATE TABLE IF NOT EXISTS cabinet_onboarding_progress (
   cabinet_id UUID PRIMARY KEY REFERENCES cabinets(id) ON DELETE CASCADE,
   step_profile_done BOOLEAN NOT NULL DEFAULT FALSE,
   step_import_done BOOLEAN NOT NULL DEFAULT FALSE,
