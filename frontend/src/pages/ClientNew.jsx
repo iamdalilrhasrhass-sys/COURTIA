@@ -90,6 +90,7 @@ export default function ClientNew() {
   const [isEditMode] = useState(!!id)
   const [showInsurance, setShowInsurance] = useState(false)
   const [addressSuggestions, setAddressSuggestions] = useState([])
+  const [dialCode, setDialCode] = useState('+33') // +33 FR / +41 CH
   
   const [form, setForm] = useState({
     prenom: '', nom: '', email: '', telephone: '',
@@ -121,14 +122,14 @@ export default function ClientNew() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  // Normalise en E.164 — l'UI affiche le préfixe +33, on le matérialise à l'enregistrement
-  const normalizeTelephone = (raw) => {
+  // Normalise en E.164 selon l'indicatif choisi (+33 FR / +41 CH)
+  const normalizeTelephone = (raw, dial = dialCode) => {
     if (!raw) return raw
     let p = String(raw).replace(/[\s.\-()]/g, '')
     if (p.startsWith('+')) return p
     if (p.startsWith('00')) return '+' + p.slice(2)
-    if (/^0\d{9}$/.test(p)) return '+33' + p.slice(1)
-    if (/^[1-9]\d{8}$/.test(p)) return '+33' + p
+    if (p.startsWith('0')) return dial + p.slice(1)   // 06… → +336…  /  079… → +4179…
+    if (/^\d{6,}$/.test(p)) return dial + p
     return p
   }
 
@@ -186,7 +187,7 @@ export default function ClientNew() {
                   <div><label className={labelClass}>Prénom *</label><input value={form.prenom} onChange={e => set('prenom', e.target.value)} required className={inputClass} /></div>
                   <div><label className={labelClass}>Nom *</label><input value={form.nom} onChange={e => set('nom', e.target.value)} required className={inputClass} /></div>
                   <div><label className={labelClass}>Email</label><input type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} /></div>
-                  <div><label className={labelClass}>Téléphone</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">+33</span><input type="tel" value={form.telephone} onChange={e => set('telephone', e.target.value)} className={`${inputClass} pl-10`} /></div></div>
+                  <div><label className={labelClass}>Téléphone</label><div className="relative flex"><select value={dialCode} onChange={e => setDialCode(e.target.value)} className="px-2 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-300"><option value="+33">🇫🇷 +33</option><option value="+41">🇨🇭 +41</option></select><input type="tel" value={form.telephone} onChange={e => set('telephone', e.target.value)} placeholder="6 12 34 56 78" className={`${inputClass} rounded-l-none`} /></div></div>
                 </div>
                 <div className="mt-4 relative">
                   <label className={labelClass}>Adresse</label>
