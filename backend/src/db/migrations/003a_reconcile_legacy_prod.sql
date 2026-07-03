@@ -55,6 +55,29 @@ BEGIN
   IF to_regclass('public.signature_requests') IS NOT NULL THEN
     ALTER TABLE signature_requests
       ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS document_id INTEGER;
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL;
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS yousign_request_id VARCHAR(255);
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS signer_email VARCHAR(255);
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS signer_name VARCHAR(255);
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS signature_url TEXT;
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS last_reminder_at TIMESTAMPTZ;
+    ALTER TABLE signature_requests ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+
+  IF to_regclass('public.whatsapp_messages') IS NOT NULL THEN
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(50) DEFAULT 'text';
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS message TEXT;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS template_name VARCHAR(100);
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS template_params JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS whatsapp_message_id VARCHAR(200);
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS error_message TEXT;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
   END IF;
 
   IF to_regclass('public.onboarding_progress') IS NOT NULL THEN
