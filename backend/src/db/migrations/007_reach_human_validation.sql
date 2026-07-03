@@ -28,4 +28,4 @@ CREATE INDEX IF NOT EXISTS idx_reach_send_log_campaign
 
 -- Log migration
 INSERT INTO reach_activity_log (prospect_id, user_id, action, details)
-VALUES (0, 0, 'system_migration', '{"migration": "007_reach_human_validation", "note": "Ajout human_validation_required + rate_limit_reset_at + send_log"}');
+VALUES (NULL, NULL, 'system_migration', '{"migration": "007_reach_human_validation", "note": "Ajout human_validation_required + rate_limit_reset_at + send_log"}');

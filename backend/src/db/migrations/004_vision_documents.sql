@@ -16,7 +16,7 @@ ALTER TABLE clients
 -- 2. Créer la table documents_indexes
 CREATE TABLE IF NOT EXISTS documents_indexes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   categorie VARCHAR(50),
   donnees_extraites JSONB DEFAULT '{}'::jsonb,
