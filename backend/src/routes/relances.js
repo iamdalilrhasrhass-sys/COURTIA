@@ -20,6 +20,7 @@ const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
 const { sendEmail, getEmailStatus } = require('../services/emailService')
 const { sendSMS, getSmsStatus } = require('../services/smsService')
+const whatsappMeta = require('../services/whatsappMetaService')
 const logger = require('../lib/logger')
 
 // =============================================================================
@@ -501,6 +502,27 @@ router.post('/:id/send', async (req, res) => {
       }
       delivery.provider = sent.provider
       delivery.id = sent.id || null
+    } else if (channel === 'whatsapp') {
+      if (!relance.client_phone) {
+        return res.status(400).json({ error: "Ce client n'a pas de numéro de téléphone." })
+      }
+      if (!whatsappMeta.isConfigured()) {
+        // Pas de mode mock ici : on refuse clairement plutôt que simuler un envoi
+        return res.status(503).json({
+          error: 'Envoi WhatsApp non configuré (WHATSAPP_ACCESS_TOKEN et WHATSAPP_PHONE_NUMBER_ID manquants).',
+        })
+      }
+      try {
+        const sent = await whatsappMeta.sendMessage(pool, brokerId, {
+          phone: relance.client_phone,
+          message: content,
+          clientId: relance.client_id,
+        })
+        delivery.provider = 'whatsapp_meta'
+        delivery.id = (sent && sent.data && (sent.data.wa_message_id || sent.data.id)) || null
+      } catch (waErr) {
+        return res.status(502).json({ error: "L'envoi WhatsApp a échoué : " + waErr.message })
+      }
     } else {
       // Canal "appel" ou autre : action humaine, on marque simplement comme traitée
       delivery.manual = true
