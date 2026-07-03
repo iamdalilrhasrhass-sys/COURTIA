@@ -588,29 +588,29 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
 
     let actionsData = { actions: [] };
 
-    if (process.env.ANTHROPIC_API_KEY) {
-      const response = await anthropic.messages.create({
-        model:      'claude-opus-4-6',
-        max_tokens: 4000,
-        messages:   [{ role: 'user', content: prompt }],
-      });
-
-      const rawText = response.content?.[0]?.text || '{"actions":[]}';
-      // Nettoyer les éventuels blocs markdown (```json ... ```)
-      const cleaned = rawText
-        .replace(/^```[a-z]*\n?/i, '')
-        .replace(/\n?```$/i, '')
-        .trim();
-
+    // Passe par le moteur ARK unifié (Anthropic avec failover DeepSeek automatique)
+    if (process.env.ANTHROPIC_API_KEY || process.env.DEEPSEEK_API_KEY) {
       try {
-        actionsData = JSON.parse(cleaned);
-      } catch (parseErr) {
-        console.error(`[portfolioAnalyzer] Erreur parsing JSON Opus user ${userId}:`, parseErr.message);
-        console.error('[portfolioAnalyzer] Réponse brute:', rawText.substring(0, 300));
-        // Continuer avec tableau vide plutôt que crasher
+        const { callArk } = require('./arkEngine');
+        const arkRes = await callArk({
+          system: 'Tu es ARK, analyste de portefeuille assurance. Réponds uniquement en JSON valide.',
+          user: prompt,
+          maxTokens: 4000,
+          jsonMode: true,
+          userId,
+          route: 'portfolio_analyzer',
+        });
+        if (arkRes.structured) {
+          actionsData = arkRes.structured;
+        } else if (arkRes.text) {
+          const cleaned = arkRes.text.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+          try { actionsData = JSON.parse(cleaned); } catch (_) { /* tableau vide */ }
+        }
+      } catch (aiErr) {
+        console.warn(`[portfolioAnalyzer] IA indisponible user ${userId}: ${aiErr.message} — actions vides`);
       }
     } else {
-      console.warn('[portfolioAnalyzer] ANTHROPIC_API_KEY absente — actions IA non générées');
+      console.warn('[portfolioAnalyzer] Aucune clé IA (ANTHROPIC/DEEPSEEK) — actions IA non générées');
     }
 
     // 6. Mettre à jour portfolio_insights avec le score

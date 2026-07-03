@@ -105,6 +105,61 @@ function getAnthropicClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 }
 
+// ── Fallback DeepSeek (compatible OpenAI SDK) ────────────────────────────────
+// Utilisé quand Anthropic est indisponible (crédits épuisés / clé absente).
+// Conforme à la décision Obsidian "migré DeepSeek".
+const DEEPSEEK_MODEL = process.env.ARK_DEEPSEEK_MODEL || 'deepseek-chat'
+let _deepseekClient = null
+function getDeepseekClient() {
+  if (!process.env.DEEPSEEK_API_KEY) return null
+  if (!_deepseekClient) {
+    const OpenAI = require('openai')
+    _deepseekClient = new OpenAI({
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: 'https://api.deepseek.com/v1',
+    })
+  }
+  return _deepseekClient
+}
+
+async function callViaDeepseek({ system, user, maxTokens, jsonMode, startTime, userId, clientId, route }) {
+  const client = getDeepseekClient()
+  if (!client) throw new Error('DEEPSEEK_API_KEY non configurée')
+  const response = await client.chat.completions.create({
+    model: DEEPSEEK_MODEL,
+    max_tokens: maxTokens,
+    ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+  })
+  const latencyMs = Date.now() - startTime
+  const text = response.choices?.[0]?.message?.content || ''
+  const usage = {
+    inputTokens: response.usage?.prompt_tokens || 0,
+    outputTokens: response.usage?.completion_tokens || 0,
+  }
+  await logArkCall({ userId, clientId, route, model: DEEPSEEK_MODEL, inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, latencyMs, success: true }).catch(() => {})
+  let structured = null
+  if (jsonMode) {
+    try {
+      let clean = text.trim().replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '')
+      structured = JSON.parse(clean)
+    } catch (e) { /* laissé null */ }
+  }
+  return { text, structured, usage, latencyMs, model: DEEPSEEK_MODEL, costUsd: 0, provider: 'deepseek' }
+}
+
+// Détecte les erreurs Anthropic qui justifient un basculement DeepSeek
+function shouldFailoverToDeepseek(err) {
+  if (!process.env.DEEPSEEK_API_KEY) return false
+  const status = err && err.status
+  const msg = String((err && err.message) || '').toLowerCase()
+  return status === 400 || status === 401 || status === 402 || status === 403 || status === 429 || status === 529
+    || msg.includes('credit balance') || msg.includes('too low') || msg.includes('quota') || msg.includes('overload')
+}
+
 async function callArk(options) {
   const {
     system,
@@ -221,7 +276,17 @@ async function callArk(options) {
         currentModel = FALLBACK_MODEL
         continue
       }
-      
+
+      // Anthropic KO (crédits épuisés, quota, auth) → bascule DeepSeek
+      if (shouldFailoverToDeepseek(err)) {
+        try {
+          logger.warn({ error: err.message }, 'ARK failover Anthropic → DeepSeek')
+          return await callViaDeepseek({ system: enrichedSystem, user, maxTokens, jsonMode, startTime, userId, clientId, route })
+        } catch (dsErr) {
+          logger.error({ error: dsErr.message }, 'ARK failover DeepSeek a échoué aussi')
+        }
+      }
+
       await logArkCall({
         userId, clientId, route,
         model: currentModel,
