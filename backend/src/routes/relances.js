@@ -1,7 +1,7 @@
 /**
  * Module Relances — LOT 6
  * Système de relances automatiques et manuelles avec IA ARK
- * 
+ *
  * Routes:
  * - GET    /api/relances                     Liste des relances
  * - GET    /api/relances/stats               KPIs et statistiques
@@ -12,6 +12,21 @@
  * - POST   /api/relances/:id/send            Marquer comme envoyée
  * - POST   /api/relances/auto-generate       ARK génère relances prioritaires
  * - POST   /api/relances/:id/ai-content      ARK génère contenu personnalisé
+ *
+ * NOTE SCHEMA (corrigé le 2026-07-04) :
+ * La table `relances` de base (migration 004) ne contient que
+ * id/client_id/etape/derniere_relance/prochaine_relance/canal/statut/created_at,
+ * utilisée par jobs/relanceScheduler.js (cron quotidien). La migration 032
+ * ajoute les colonnes nécessaires à ce routeur (type/channel/priority/status/
+ * subject/content/scheduled_at/sent_at/ai_generated/ai_reasoning/
+ * response_received/response_at/metadata/updated_at/quote_id/quote_request_id)
+ * SANS toucher aux colonnes historiques.
+ *
+ * Il n'y a pas de colonne broker_id/courtier_id sur `relances` ni sur `quotes` :
+ * l'appartenance à un courtier est toujours dérivée via client_id -> clients.courtier_id
+ * (cf. routes/contrats.js, routes/clients.js). `quotes.quote_data` est un JSONB
+ * contenant notamment 'numero', 'type_contrat', 'compagnie', 'prime_annuelle',
+ * 'date_effet', 'date_echeance'. `quotes.status` prend la valeur 'actif' (pas 'active').
  */
 
 const express = require('express')
@@ -82,21 +97,21 @@ const SCHEMA_AI_CONTENT = {
 
 router.get('/', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const { status, client_id, type, priority, channel, limit = 50, offset = 0 } = req.query
 
     let sql = `
-      SELECT 
+      SELECT
         r.*,
         c.first_name AS client_first_name, c.last_name AS client_last_name,
         c.company_name AS client_company, c.email AS client_email, c.phone AS client_phone,
-        q.reference AS quote_reference, q.product_type AS quote_product
+        q.quote_data->>'numero' AS quote_reference, q.quote_data->>'type_contrat' AS quote_product
       FROM relances r
-      LEFT JOIN clients c ON r.client_id = c.id
+      JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
-      WHERE r.broker_id = $1
+      WHERE c.courtier_id = $1
     `
-    const params = [brokerId]
+    const params = [courtierId]
     let paramIndex = 2
 
     if (status) {
@@ -120,7 +135,7 @@ router.get('/', async (req, res) => {
       params.push(channel)
     }
 
-    sql += ` ORDER BY 
+    sql += ` ORDER BY
       CASE r.priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
       r.scheduled_at ASC NULLS LAST,
       r.created_at DESC
@@ -168,44 +183,51 @@ router.get('/', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const { days = 30 } = req.query
+    const daysInt = parseInt(days, 10) || 30
 
     const statsResult = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) AS total,
-        COUNT(*) FILTER (WHERE status = 'pending') AS pending,
-        COUNT(*) FILTER (WHERE status = 'sent') AS sent,
-        COUNT(*) FILTER (WHERE status = 'sent' AND created_at >= NOW() - INTERVAL '${parseInt(days, 10)} days') AS sent_period,
-        COUNT(*) FILTER (WHERE response_received = true) AS responses,
-        COUNT(*) FILTER (WHERE response_received = true AND created_at >= NOW() - INTERVAL '${parseInt(days, 10)} days') AS responses_period,
-        COUNT(*) FILTER (WHERE priority = 'high' AND status = 'pending') AS urgent_pending,
-        COUNT(*) FILTER (WHERE ai_generated = true) AS ai_generated_count
-      FROM relances WHERE broker_id = $1
-    `, [brokerId])
+        COUNT(*) FILTER (WHERE r.status = 'pending') AS pending,
+        COUNT(*) FILTER (WHERE r.status = 'sent') AS sent,
+        COUNT(*) FILTER (WHERE r.status = 'sent' AND r.created_at >= NOW() - ($2 || ' days')::interval) AS sent_period,
+        COUNT(*) FILTER (WHERE r.response_received = true) AS responses,
+        COUNT(*) FILTER (WHERE r.response_received = true AND r.created_at >= NOW() - ($2 || ' days')::interval) AS responses_period,
+        COUNT(*) FILTER (WHERE r.priority = 'high' AND r.status = 'pending') AS urgent_pending,
+        COUNT(*) FILTER (WHERE r.ai_generated = true) AS ai_generated_count
+      FROM relances r
+      JOIN clients c ON r.client_id = c.id
+      WHERE c.courtier_id = $1
+    `, [courtierId, daysInt])
 
     // Calcul taux de réponse
     const stats = statsResult.rows[0]
-    const tauxReponse = stats.sent_period > 0 
-      ? Math.round((stats.responses_period / stats.sent_period) * 100) 
+    const tauxReponse = stats.sent_period > 0
+      ? Math.round((stats.responses_period / stats.sent_period) * 100)
       : 0
 
     // Relances par type
     const byTypeResult = await pool.query(`
-      SELECT type, COUNT(*) AS count
-      FROM relances WHERE broker_id = $1 AND created_at >= NOW() - INTERVAL '${parseInt(days, 10)} days'
-      GROUP BY type ORDER BY count DESC
-    `, [brokerId])
+      SELECT r.type, COUNT(*) AS count
+      FROM relances r
+      JOIN clients c ON r.client_id = c.id
+      WHERE c.courtier_id = $1 AND r.created_at >= NOW() - ($2 || ' days')::interval
+      GROUP BY r.type ORDER BY count DESC
+    `, [courtierId, daysInt])
 
     // Relances par canal
     const byChannelResult = await pool.query(`
-      SELECT channel, COUNT(*) AS count
-      FROM relances WHERE broker_id = $1 AND created_at >= NOW() - INTERVAL '${parseInt(days, 10)} days'
-      GROUP BY channel ORDER BY count DESC
-    `, [brokerId])
+      SELECT r.channel, COUNT(*) AS count
+      FROM relances r
+      JOIN clients c ON r.client_id = c.id
+      WHERE c.courtier_id = $1 AND r.created_at >= NOW() - ($2 || ' days')::interval
+      GROUP BY r.channel ORDER BY count DESC
+    `, [courtierId, daysInt])
 
     res.json({
-      period_days: parseInt(days, 10),
+      period_days: daysInt,
       totals: {
         total: parseInt(stats.total, 10),
         pending: parseInt(stats.pending, 10),
@@ -233,20 +255,20 @@ router.get('/stats', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const relanceId = parseInt(req.params.id, 10)
 
     const result = await pool.query(`
-      SELECT 
+      SELECT
         r.*,
         c.first_name AS client_first_name, c.last_name AS client_last_name,
         c.company_name AS client_company, c.email AS client_email, c.phone AS client_phone,
-        q.reference AS quote_reference, q.product_type AS quote_product
+        q.quote_data->>'numero' AS quote_reference, q.quote_data->>'type_contrat' AS quote_product
       FROM relances r
-      LEFT JOIN clients c ON r.client_id = c.id
+      JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
-      WHERE r.id = $1 AND r.broker_id = $2
-    `, [relanceId, brokerId])
+      WHERE r.id = $1 AND c.courtier_id = $2
+    `, [relanceId, courtierId])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -294,21 +316,26 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const { client_id, quote_id, quote_request_id, type, channel, priority, subject, content, scheduled_at, metadata } = req.body
 
     if (!client_id) {
       return res.status(400).json({ error: 'client_id requis' })
     }
 
+    // Vérifier que le client appartient bien au courtier connecté
+    const own = await pool.query('SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2', [client_id, courtierId])
+    if (own.rows.length === 0) {
+      return res.status(403).json({ error: 'Client non trouvé ou non autorisé' })
+    }
+
     const result = await pool.query(`
       INSERT INTO relances (
-        broker_id, client_id, quote_id, quote_request_id, type, channel, priority,
+        client_id, quote_id, quote_request_id, type, channel, priority,
         subject, content, scheduled_at, ai_generated, metadata
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, $10)
       RETURNING *
     `, [
-      brokerId,
       client_id,
       quote_id || null,
       quote_request_id || null,
@@ -321,7 +348,7 @@ router.post('/', async (req, res) => {
       metadata || {}
     ])
 
-    logger.info({ brokerId, relanceId: result.rows[0].id }, 'Relance created')
+    logger.info({ courtierId, relanceId: result.rows[0].id }, 'Relance created')
 
     res.status(201).json({
       success: true,
@@ -339,12 +366,16 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const relanceId = parseInt(req.params.id, 10)
     const { status, priority, channel, subject, content, scheduled_at, response_received, metadata } = req.body
 
-    // Vérifier appartenance
-    const check = await pool.query('SELECT id FROM relances WHERE id = $1 AND broker_id = $2', [relanceId, brokerId])
+    // Vérifier appartenance (via client -> courtier)
+    const check = await pool.query(`
+      SELECT r.id FROM relances r
+      JOIN clients c ON r.client_id = c.id
+      WHERE r.id = $1 AND c.courtier_id = $2
+    `, [relanceId, courtierId])
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
     }
@@ -395,10 +426,10 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Aucune modification fournie' })
     }
 
-    params.push(relanceId, brokerId)
+    params.push(relanceId)
     const result = await pool.query(`
       UPDATE relances SET ${updates.join(', ')}
-      WHERE id = $${paramIndex++} AND broker_id = $${paramIndex}
+      WHERE id = $${paramIndex}
       RETURNING *
     `, params)
 
@@ -415,13 +446,15 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const relanceId = parseInt(req.params.id, 10)
 
-    const result = await pool.query(
-      'DELETE FROM relances WHERE id = $1 AND broker_id = $2 RETURNING id',
-      [relanceId, brokerId]
-    )
+    const result = await pool.query(`
+      DELETE FROM relances r
+      USING clients c
+      WHERE r.id = $1 AND r.client_id = c.id AND c.courtier_id = $2
+      RETURNING r.id
+    `, [relanceId, courtierId])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -440,18 +473,18 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/:id/send', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const relanceId = parseInt(req.params.id, 10)
 
     // Charge la relance + coordonnées du client (envoi réel, plus de simulation)
     const found = await pool.query(`
       SELECT r.*, c.email AS client_email, c.phone AS client_phone,
              c.first_name AS client_first_name, c.last_name AS client_last_name,
-             c.company_name AS client_company
+             c.company_name AS client_company, c.courtier_id AS owner_id
       FROM relances r
-      LEFT JOIN clients c ON r.client_id = c.id
-      WHERE r.id = $1 AND r.broker_id = $2
-    `, [relanceId, brokerId])
+      JOIN clients c ON r.client_id = c.id
+      WHERE r.id = $1 AND c.courtier_id = $2
+    `, [relanceId, courtierId])
 
     if (found.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -513,7 +546,7 @@ router.post('/:id/send', async (req, res) => {
         })
       }
       try {
-        const sent = await whatsappMeta.sendMessage(pool, brokerId, {
+        const sent = await whatsappMeta.sendMessage(pool, courtierId, {
           phone: relance.client_phone,
           message: content,
           clientId: relance.client_id,
@@ -531,11 +564,11 @@ router.post('/:id/send', async (req, res) => {
     const result = await pool.query(`
       UPDATE relances
       SET status = 'sent', sent_at = NOW(), updated_at = NOW()
-      WHERE id = $1 AND broker_id = $2
+      WHERE id = $1
       RETURNING *
-    `, [relanceId, brokerId])
+    `, [relanceId])
 
-    logger.info({ brokerId, relanceId, channel, provider: delivery.provider }, 'Relance envoyée (réel)')
+    logger.info({ courtierId, relanceId, channel, provider: delivery.provider }, 'Relance envoyée (réel)')
     res.json({ success: true, relance: result.rows[0], delivery })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances/:id/send error')
@@ -549,48 +582,57 @@ router.post('/:id/send', async (req, res) => {
 
 router.post('/auto-generate', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const { max_relances = 10 } = req.body
 
     // Récupérer données du portefeuille pour l'analyse
     // 1. Clients silencieux (pas de contact depuis 45+ jours)
     const silencieuxRes = await pool.query(`
       SELECT c.id, c.first_name, c.last_name, c.company_name, c.email, c.type,
-             MAX(COALESCE(q.updated_at, c.created_at)) AS last_activity
+             MAX(COALESCE(q.created_at, c.created_at)) AS last_activity
       FROM clients c
       LEFT JOIN quotes q ON q.client_id = c.id
-      WHERE c.id IN (SELECT DISTINCT client_id FROM quotes WHERE broker_id = $1)
+      WHERE c.courtier_id = $1
       GROUP BY c.id
-      HAVING MAX(COALESCE(q.updated_at, c.created_at)) < NOW() - INTERVAL '45 days'
+      HAVING MAX(COALESCE(q.created_at, c.created_at)) < NOW() - INTERVAL '45 days'
       LIMIT 20
-    `, [brokerId])
+    `, [courtierId])
 
     // 2. Devis sans réponse (quote_requests submitted sans résultat accepté)
-    const devisSansReponseRes = await pool.query(`
-      SELECT qr.id AS request_id, qr.product_type, qr.created_at, qr.client_id,
-             c.first_name, c.last_name, c.company_name
-      FROM quote_requests qr
-      JOIN clients c ON qr.client_id = c.id
-      WHERE qr.broker_id = $1 AND qr.status IN ('submitted', 'completed')
-        AND qr.created_at > NOW() - INTERVAL '30 days'
-        AND NOT EXISTS (
-          SELECT 1 FROM relances r WHERE r.quote_request_id = qr.id AND r.status = 'sent'
-            AND r.created_at > NOW() - INTERVAL '7 days'
-        )
-      LIMIT 20
-    `, [brokerId])
+    // NOTE: la table quote_requests (comparateur multi-compagnies) peut être
+    // absente selon l'environnement — on tolère l'échec sans bloquer la route.
+    let devisSansReponseRes = { rows: [] }
+    try {
+      devisSansReponseRes = await pool.query(`
+        SELECT qr.id AS request_id, qr.product_type, qr.created_at, qr.client_id,
+               c.first_name, c.last_name, c.company_name
+        FROM quote_requests qr
+        JOIN clients c ON qr.client_id = c.id
+        WHERE c.courtier_id = $1 AND qr.status IN ('submitted', 'completed')
+          AND qr.created_at > NOW() - INTERVAL '30 days'
+          AND NOT EXISTS (
+            SELECT 1 FROM relances r WHERE r.quote_request_id = qr.id AND r.status = 'sent'
+              AND r.created_at > NOW() - INTERVAL '7 days'
+          )
+        LIMIT 20
+      `, [courtierId])
+    } catch (qrErr) {
+      logger.warn({ error: qrErr.message }, 'quote_requests indisponible pour auto-generate (ignoré)')
+    }
 
-    // 3. Échéances contrats dans 30 jours
+    // 3. Échéances contrats dans 30 jours (quotes.quote_data->>'date_echeance')
     const echeancesRes = await pool.query(`
-      SELECT q.id AS quote_id, q.product_type, q.end_date, q.client_id, q.premium,
+      SELECT q.id AS quote_id, q.quote_data->>'type_contrat' AS product_type,
+             q.quote_data->>'date_echeance' AS end_date, q.client_id,
+             NULLIF(q.quote_data->>'prime_annuelle', '')::numeric AS premium,
              c.first_name, c.last_name, c.company_name
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
-      WHERE q.broker_id = $1 AND q.status = 'active'
-        AND q.end_date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
-      ORDER BY q.end_date ASC
+      WHERE c.courtier_id = $1 AND q.status = 'actif'
+        AND NULLIF(q.quote_data->>'date_echeance', '')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
+      ORDER BY (q.quote_data->>'date_echeance') ASC
       LIMIT 20
-    `, [brokerId])
+    `, [courtierId])
 
     // Appel ARK pour prioriser
     const arkResponse = await callArkStructured({
@@ -623,7 +665,7 @@ Génère les relances les plus impactantes.`,
         devis_count: devisSansReponseRes.rows.length,
         echeances_count: echeancesRes.rows.length
       },
-      userId: brokerId,
+      userId: courtierId,
       route: 'relances-auto-generate'
     })
 
@@ -634,32 +676,27 @@ Génère les relances les plus impactantes.`,
     for (const rel of relancesProposees.slice(0, max_relances)) {
       // Vérifier que le client existe et appartient au courtier
       const clientCheck = await pool.query(`
-        SELECT c.id FROM clients c
-        JOIN quotes q ON q.client_id = c.id
-        WHERE c.id = $1 AND q.broker_id = $2
-        LIMIT 1
-      `, [rel.client_id, brokerId])
+        SELECT id FROM clients WHERE id = $1 AND courtier_id = $2
+      `, [rel.client_id, courtierId])
 
       if (clientCheck.rows.length === 0) continue
 
       // Éviter les doublons récents
       const dupCheck = await pool.query(`
-        SELECT id FROM relances 
-        WHERE broker_id = $1 AND client_id = $2 AND type = $3
+        SELECT id FROM relances
+        WHERE client_id = $1 AND type = $2
           AND created_at > NOW() - INTERVAL '7 days'
-        LIMIT 1
-      `, [brokerId, rel.client_id, rel.type])
+      `, [rel.client_id, rel.type])
 
       if (dupCheck.rows.length > 0) continue
 
       const insertRes = await pool.query(`
         INSERT INTO relances (
-          broker_id, client_id, type, channel, priority, subject,
+          client_id, type, channel, priority, subject,
           ai_generated, ai_reasoning, scheduled_at, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, $9)
+        ) VALUES ($1, $2, $3, $4, $5, true, $6, $7, $8)
         RETURNING *
       `, [
-        brokerId,
         rel.client_id,
         rel.type,
         rel.channel || 'email',
@@ -673,7 +710,7 @@ Génère les relances les plus impactantes.`,
       insertedRelances.push(insertRes.rows[0])
     }
 
-    logger.info({ brokerId, generated: insertedRelances.length }, 'Auto-generated relances')
+    logger.info({ courtierId, generated: insertedRelances.length }, 'Auto-generated relances')
 
     res.json({
       success: true,
@@ -696,19 +733,20 @@ Génère les relances les plus impactantes.`,
 
 router.post('/:id/ai-content', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const courtierId = req.user.id
     const relanceId = parseInt(req.params.id, 10)
     const { channel } = req.body // email, sms, whatsapp
 
     // Récupérer la relance avec infos client
     const relanceRes = await pool.query(`
       SELECT r.*, c.first_name, c.last_name, c.company_name, c.type AS client_type,
-             c.preferred_canal, q.product_type AS quote_product, q.premium
+             q.quote_data->>'type_contrat' AS quote_product,
+             NULLIF(q.quote_data->>'prime_annuelle', '')::numeric AS premium
       FROM relances r
-      LEFT JOIN clients c ON r.client_id = c.id
+      JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
-      WHERE r.id = $1 AND r.broker_id = $2
-    `, [relanceId, brokerId])
+      WHERE r.id = $1 AND c.courtier_id = $2
+    `, [relanceId, courtierId])
 
     if (relanceRes.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -733,7 +771,6 @@ ${channelInstructions[targetChannel] || channelInstructions.email}
 Le message doit être naturel et adapté au profil du client.`,
       user: `Génère un message de relance ${targetChannel} pour:
 Client: ${clientName} (${relance.client_type || 'particulier'})
-Canal préféré: ${relance.preferred_canal || 'email'}
 Type de relance: ${relance.type}
 Contexte: ${relance.ai_reasoning || 'Relance standard'}
 ${relance.quote_product ? `Produit concerné: ${relance.quote_product}` : ''}
@@ -742,14 +779,14 @@ ${relance.premium ? `Prime: ${relance.premium}€` : ''}
 Génère le contenu avec variantes si possible.`,
       schema: SCHEMA_AI_CONTENT,
       context: { channel: targetChannel, relance_type: relance.type, client_type: relance.client_type },
-      userId: brokerId,
+      userId: courtierId,
       clientId: relance.client_id,
       route: 'relances-ai-content'
     })
 
     // Mettre à jour la relance avec le contenu généré
     await pool.query(`
-      UPDATE relances 
+      UPDATE relances
       SET subject = COALESCE(subject, $1),
           content = $2,
           channel = $3,
