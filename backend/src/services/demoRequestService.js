@@ -19,6 +19,9 @@ function normalizeBoolean(value) {
 }
 
 function sanitizeDemoRequestPayload(body = {}) {
+  const market = normalizeString(body.market, 2).toUpperCase() === 'CH' ? 'CH' : 'FR'
+  const marketingConsent = normalizeBoolean(body.marketing_consent)
+
   return {
     first_name: normalizeString(body.first_name, 120),
     last_name: normalizeString(body.last_name, 120),
@@ -33,6 +36,14 @@ function sanitizeDemoRequestPayload(body = {}) {
     wants_email_sync: normalizeBoolean(body.wants_email_sync),
     message: normalizeString(body.message, 2000),
     consent: normalizeBoolean(body.consent),
+    consent_version: normalizeString(body.consent_version, 100) || 'demo-contact-v2-2026-07-12',
+    marketing_consent: marketingConsent,
+    marketing_consent_version: marketingConsent
+      ? (normalizeString(body.marketing_consent_version, 100) || 'marketing-email-optin-v1-2026-07-12')
+      : '',
+    market,
+    preferred_locale: normalizeString(body.preferred_locale, 16) || (market === 'CH' ? 'fr-CH' : 'fr-FR'),
+    source_url: normalizeString(body.source_url, 500),
     source: normalizeString(body.source || 'landing', 120) || 'landing',
   }
 }

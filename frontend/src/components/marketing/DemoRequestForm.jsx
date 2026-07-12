@@ -25,13 +25,19 @@ const INITIAL_FORM = {
   wants_email_sync: false,
   message: '',
   consent: false,
+  marketing_consent: false,
 }
 
-export default function DemoRequestForm({ compact = false }) {
+const CONTACT_CONSENT_VERSION = 'demo-contact-v2-2026-07-12'
+const MARKETING_CONSENT_VERSION = 'marketing-email-optin-v1-2026-07-12'
+
+export default function DemoRequestForm({ compact = false, market = 'FR', source = '' }) {
   const [form, setForm] = useState(INITIAL_FORM)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('idle')
   const [feedback, setFeedback] = useState('')
+  const normalizedMarket = String(market).toUpperCase() === 'CH' ? 'CH' : 'FR'
+  const isSwiss = normalizedMarket === 'CH'
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -52,7 +58,12 @@ export default function DemoRequestForm({ compact = false }) {
     try {
       await apiPost('/leads/demo-request', {
         ...form,
-        source: compact ? 'landing_compact' : 'landing',
+        market: normalizedMarket,
+        preferred_locale: isSwiss ? 'fr-CH' : 'fr-FR',
+        source: source || (compact ? 'landing_compact' : 'landing'),
+        source_url: typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : '/demo',
+        consent_version: CONTACT_CONSENT_VERSION,
+        marketing_consent_version: form.marketing_consent ? MARKETING_CONSENT_VERSION : '',
       })
       await trackMarketingEvent('submit_demo_request', {
         city: form.city || '',
@@ -86,15 +97,15 @@ export default function DemoRequestForm({ compact = false }) {
         </label>
         <label>
           Email professionnel *
-          <input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} placeholder="nom@cabinet.fr" required />
+          <input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} placeholder={isSwiss ? 'nom@cabinet.ch' : 'nom@cabinet.fr'} required />
         </label>
         <label>
           Téléphone (optionnel)
-          <input value={form.phone} onChange={(e) => updateField('phone', e.target.value)} placeholder="06 00 00 00 00" />
+          <input value={form.phone} onChange={(e) => updateField('phone', e.target.value)} placeholder={isSwiss ? '+41 79 000 00 00' : '06 00 00 00 00'} />
         </label>
         <label>
           Ville
-          <input value={form.city} onChange={(e) => updateField('city', e.target.value)} placeholder="Lyon" />
+          <input value={form.city} onChange={(e) => updateField('city', e.target.value)} placeholder={isSwiss ? 'Genève' : 'Lyon'} />
         </label>
         <label>
           Collaborateurs
@@ -110,7 +121,7 @@ export default function DemoRequestForm({ compact = false }) {
           <input
             value={form.current_tools}
             onChange={(e) => updateField('current_tools', e.target.value)}
-            placeholder="Ex: Excel, CRM, Agenda Google, WhatsApp"
+            placeholder={isSwiss ? 'Ex : BrokerStar, Winbiz, Excel, Outlook' : 'Ex : Excel, CRM, Agenda Google, WhatsApp'}
           />
         </label>
         <label className="full">
@@ -162,13 +173,24 @@ export default function DemoRequestForm({ compact = false }) {
             style={{ width: 15, height: 15, marginTop: 2 }}
           />
           <span style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(236,242,255,0.74)' }}>
-            J'accepte d'être recontacté(e) par COURTIA au sujet de ma demande de démo (prospection B2B, opt-out possible à tout moment).
+            J'accepte d'être recontacté(e) par Courtiark au sujet de ma demande de démo. Je peux retirer cet accord à tout moment.
+          </span>
+        </label>
+        <label className="full" style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={form.marketing_consent}
+            onChange={(e) => updateField('marketing_consent', e.target.checked)}
+            style={{ width: 15, height: 15, marginTop: 2 }}
+          />
+          <span style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(236,242,255,0.74)' }}>
+            J'accepte aussi de recevoir par e-mail les nouveautés et invitations Courtiark. Ce choix est facultatif et révocable gratuitement à tout moment.
           </span>
         </label>
       </div>
 
       <p className="mk-inline-note" style={{ margin: '10px 0 0' }}>
-        COURTIA traite uniquement les données nécessaires à votre demande. Aucune cession à des tiers.
+        Courtiark traite uniquement les données nécessaires à votre demande. Aucune cession à des tiers. <a href="/legal/confidentialite">Politique de confidentialité</a>.
       </p>
 
       <button

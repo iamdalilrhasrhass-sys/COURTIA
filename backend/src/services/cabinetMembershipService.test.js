@@ -58,18 +58,18 @@ function createPoolMock() {
         return { rows: row ? [row] : [] }
       }
 
-      if (compact.includes('FROM onboarding_progress') && compact.includes('cabinet_id = $1')) {
+      if (compact.includes('FROM cabinet_onboarding_progress') && compact.includes('cabinet_id = $1')) {
         const row = state.onboarding.get(params[0])
         return { rows: row ? [row] : [] }
       }
 
-      if (compact.startsWith('INSERT INTO onboarding_progress')) {
+      if (compact.startsWith('INSERT INTO cabinet_onboarding_progress')) {
         const row = { cabinet_id: params[0], step_profile_done: false, step_import_done: false, step_google_done: false, step_first_client_done: false, step_first_brief_done: false, completed_at: null, updated_at: new Date().toISOString() }
         state.onboarding.set(params[0], row)
         return { rows: [row] }
       }
 
-      if (compact.startsWith('UPDATE onboarding_progress')) {
+      if (compact.startsWith('UPDATE cabinet_onboarding_progress')) {
         const row = state.onboarding.get(params[0])
         const step = compact.match(/SET (step_[a-z_]+) = TRUE/)?.[1]
         if (!step) throw new Error(`Missing onboarding step in SQL: ${compact}`)
