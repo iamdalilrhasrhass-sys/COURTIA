@@ -1,5 +1,7 @@
 # Séquence e-mail Suisse — uniquement après opt-in
 
+> Activation : utiliser cette séquence uniquement après fusion de la PR #31, test réussi du formulaire de production et validation d'une boîte de réponse Courtiark avec MX/SPF/DKIM/DMARC.
+
 Variables : `{{prenom}}`, `{{cabinet}}`, `{{ville}}`, `{{permission_context}}`.
 
 ## E-mail 1 — fiche promise

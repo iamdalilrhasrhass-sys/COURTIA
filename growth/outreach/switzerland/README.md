@@ -12,6 +12,19 @@ Ce dossier contient le premier lot vérifié de cabinets romands et le protocole
 - Chaque e-mail identifie l'émetteur et permet une opposition simple et gratuite.
 - Toute opposition passe immédiatement en liste de suppression.
 
+## Portes d'activation obligatoires
+
+Ne contacter aucun prospect tant que ces points ne sont pas tous validés :
+
+1. fusionner la PR #31 et redéployer la production ;
+2. ouvrir `https://courtiark.fr/demo?market=CH` en navigation privée et soumettre une demande test ;
+3. confirmer la réception interne de cette demande ;
+4. publier et relire les pages légales avec l'identité complète de l'éditeur ;
+5. configurer une boîte de réponse sur le domaine Courtiark et vérifier ses enregistrements MX/SPF/DKIM/DMARC ;
+6. seulement ensuite, commencer les appels humains de permission.
+
+Au 12 juillet 2026, `courtiark.fr` ne publie pas d'enregistrement MX. L'adresse Gmail opérationnelle peut recevoir les demandes internes, mais elle ne doit pas servir à lancer une campagne de marque suisse.
+
 ## Sources juridiques officielles
 
 - PFPDT : https://www.edoeb.admin.ch/fr/publicite-et-marketing
