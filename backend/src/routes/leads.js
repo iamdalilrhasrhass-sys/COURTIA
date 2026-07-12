@@ -5,6 +5,7 @@ const {
   sanitizeDemoRequestPayload,
   validateDemoRequestPayload,
 } = require('../services/demoRequestService')
+const { sendEmail } = require('../services/emailService')
 const { isAdminRole } = require('../constants/roles')
 
 const router = express.Router()
@@ -41,6 +42,14 @@ async function ensureDemoRequestsTable(pool) {
       wants_email_sync BOOLEAN DEFAULT false,
       message TEXT,
       consent BOOLEAN DEFAULT false,
+      consent_version TEXT,
+      consent_at TIMESTAMPTZ,
+      marketing_consent BOOLEAN DEFAULT false,
+      marketing_consent_version TEXT,
+      marketing_consent_at TIMESTAMPTZ,
+      market TEXT DEFAULT 'FR',
+      preferred_locale TEXT DEFAULT 'fr-FR',
+      source_url TEXT,
       source TEXT DEFAULT 'landing',
       status TEXT DEFAULT 'a_contacter',
       opt_out BOOLEAN DEFAULT false,
@@ -57,6 +66,14 @@ async function ensureDemoRequestsTable(pool) {
   await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS wants_google_calendar BOOLEAN DEFAULT false;')
   await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS wants_whatsapp BOOLEAN DEFAULT false;')
   await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS wants_email_sync BOOLEAN DEFAULT false;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS consent_version TEXT;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS marketing_consent BOOLEAN DEFAULT false;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS marketing_consent_version TEXT;')
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS marketing_consent_at TIMESTAMPTZ;')
+  await pool.query("ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS market TEXT DEFAULT 'FR';")
+  await pool.query("ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS preferred_locale TEXT DEFAULT 'fr-FR';")
+  await pool.query('ALTER TABLE demo_requests ADD COLUMN IF NOT EXISTS source_url TEXT;')
 }
 
 async function ensureMarketingEventsTable(pool) {
@@ -93,11 +110,16 @@ router.post('/demo-request', async (req, res) => {
       `INSERT INTO demo_requests (
          first_name, last_name, company_name, email, phone, city, team_size,
          current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
-         message, consent, source
+         message, consent, consent_version, consent_at,
+         marketing_consent, marketing_consent_version, marketing_consent_at,
+         market, preferred_locale, source_url, source
        )
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),$15,$16,
+               CASE WHEN $15 THEN NOW() ELSE NULL END,$17,$18,$19,$20)
        RETURNING id, first_name, last_name, company_name, email, city, team_size, current_tools,
-                 wants_google_calendar, wants_whatsapp, wants_email_sync, status, source, created_at`,
+                 wants_google_calendar, wants_whatsapp, wants_email_sync, status, source,
+                 market, preferred_locale, consent, consent_version, consent_at,
+                 marketing_consent, marketing_consent_version, marketing_consent_at, created_at`,
       [
         payload.first_name,
         payload.last_name,
@@ -112,13 +134,43 @@ router.post('/demo-request', async (req, res) => {
         payload.wants_email_sync,
         payload.message,
         payload.consent,
+        payload.consent_version,
+        payload.marketing_consent,
+        payload.marketing_consent_version,
+        payload.market,
+        payload.preferred_locale,
+        payload.source_url,
         payload.source,
       ]
     )
 
+    const savedLead = insert.rows[0]
+    const notifyEmail = process.env.DEMO_REQUEST_NOTIFY_EMAIL || process.env.SALES_EMAIL || 'arkcourtia@gmail.com'
+    const subjectCompany = payload.company_name.replace(/[\r\n]+/g, ' ')
+    sendEmail({
+      to: notifyEmail,
+      subject: `Nouvelle demande de démo ${payload.market} — ${subjectCompany}`,
+      text: [
+        `Lead #${savedLead.id}`,
+        `Marché : ${payload.market}`,
+        `Contact : ${payload.first_name} ${payload.last_name}`,
+        `Cabinet : ${payload.company_name}`,
+        `Email : ${payload.email}`,
+        `Téléphone : ${payload.phone || 'non renseigné'}`,
+        `Ville : ${payload.city || 'non renseignée'}`,
+        `Équipe : ${payload.team_size || 'non renseignée'}`,
+        `Source : ${payload.source_url || payload.source}`,
+        `Opt-in nouveautés : ${payload.marketing_consent ? 'oui' : 'non'}`,
+        '',
+        payload.message || 'Aucun message.',
+      ].join('\n'),
+    }).catch((error) => {
+      console.error('[LEADS] demo notification failed:', error.message)
+    })
+
     return res.status(201).json({
       success: true,
-      lead: insert.rows[0],
+      lead: savedLead,
       message: 'Demande de démo reçue. Notre équipe vous recontacte rapidement.',
     })
   } catch (err) {
@@ -163,6 +215,7 @@ router.get('/demo-requests', verifyToken, requireAdmin, async (req, res) => {
 
     const status = normalizeString(req.query?.status, 40)
     const priority = normalizeString(req.query?.priority, 1)
+    const market = normalizeString(req.query?.market, 2).toUpperCase()
     const page = Math.max(Number.parseInt(req.query?.page, 10) || 1, 1)
     const limit = Math.min(Math.max(Number.parseInt(req.query?.limit, 10) || 50, 1), 200)
     const offset = (page - 1) * limit
@@ -186,12 +239,19 @@ router.get('/demo-requests', verifyToken, requireAdmin, async (req, res) => {
       `)
     }
 
+    if (market === 'FR' || market === 'CH') {
+      params.push(market)
+      where.push(`market = $${params.length}`)
+    }
+
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : ''
 
     const rows = await pool.query(
       `SELECT id, first_name, last_name, company_name, email, phone, city, team_size,
               current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
-              message, consent, source, status, opt_out, notes, created_at, updated_at,
+              message, consent, consent_version, consent_at,
+              marketing_consent, marketing_consent_version, marketing_consent_at,
+              market, preferred_locale, source_url, source, status, opt_out, notes, created_at, updated_at,
               CASE
                 WHEN team_size ILIKE '%10-20%' OR team_size ILIKE '%11-20%' THEN 'A'
                 WHEN team_size ILIKE '%6-10%' OR team_size ILIKE '%3-5%' THEN 'B'
@@ -291,7 +351,10 @@ router.get('/demo-requests/export', verifyToken, requireAdmin, async (req, res) 
     const rows = await pool.query(
       `SELECT id, first_name, last_name, company_name, email, phone, city, team_size,
               current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
-              status, source, consent, opt_out, created_at, updated_at
+              status, market, preferred_locale, source_url, source,
+              consent, consent_version, consent_at,
+              marketing_consent, marketing_consent_version, marketing_consent_at,
+              opt_out, created_at, updated_at
        FROM demo_requests
        ORDER BY created_at DESC`
     )
@@ -299,7 +362,10 @@ router.get('/demo-requests/export', verifyToken, requireAdmin, async (req, res) 
     const header = [
       'id', 'first_name', 'last_name', 'company_name', 'email', 'phone', 'city', 'team_size',
       'current_tools', 'wants_google_calendar', 'wants_whatsapp', 'wants_email_sync',
-      'status', 'source', 'consent', 'opt_out', 'created_at', 'updated_at'
+      'status', 'market', 'preferred_locale', 'source_url', 'source',
+      'consent', 'consent_version', 'consent_at',
+      'marketing_consent', 'marketing_consent_version', 'marketing_consent_at',
+      'opt_out', 'created_at', 'updated_at'
     ]
 
     const csvRows = rows.rows.map((row) => {

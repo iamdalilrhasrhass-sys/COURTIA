@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import CourtiaMiniLogo from '../brand/CourtiaMiniLogo'
 import '../../pages/marketing.css'
@@ -12,6 +12,10 @@ const NAV_ITEMS = [
 ]
 
 export default function MarketingShell({ activePath = '/', children }) {
+  const location = useLocation()
+  const isSwiss = new URLSearchParams(location.search).get('market')?.toUpperCase() === 'CH'
+  const marketHref = (path) => isSwiss ? `${path}?market=CH` : path
+
   return (
     <div className="mk-page">
       <div className="mk-grid-overlay" aria-hidden="true" />
@@ -20,20 +24,20 @@ export default function MarketingShell({ activePath = '/', children }) {
       <div className="mk-shell courtia-depth-stage">
         <div className="mk-nav-wrap">
           <header className="mk-nav">
-            <Link to="/" className="mk-brand" aria-label="COURTIA Home">
+            <Link to={marketHref('/')} className="mk-brand" aria-label="Courtiark — Accueil">
               <CourtiaMiniLogo size={26} />
             </Link>
             <nav className="mk-links" aria-label="Navigation marketing COURTIA">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.to}
-                  to={item.to}
+                  to={marketHref(item.to)}
                   className={`mk-link ${activePath === item.to ? 'is-active' : ''}`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Link to="/demo" className="mk-cta-inline">
+              <Link to={marketHref('/demo')} className="mk-cta-inline">
                 Demander une démo <ArrowRight size={13} />
               </Link>
             </nav>
@@ -43,7 +47,7 @@ export default function MarketingShell({ activePath = '/', children }) {
         {children}
 
         <footer className="mk-footer">
-          <div>COURTIA · Cockpit IA des courtiers en assurance français</div>
+          <div>{isSwiss ? 'Courtiark · Cockpit IA des courtiers suisses' : 'Courtiark · Cockpit IA des courtiers en assurance'}</div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link to="/legal/mentions-legales">Mentions légales</Link>
             <Link to="/legal/confidentialite">Confidentialité</Link>

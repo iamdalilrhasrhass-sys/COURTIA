@@ -52,7 +52,7 @@ export default function ProtectedRoute({ children, requireFeature }) {
   }, [token])
 
   if (!token) {
-    return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname)}`} replace />
+    return <Navigate to={`/login?next=${encodeURIComponent(`${loc.pathname}${loc.search}`)}`} replace />
   }
 
   if (!me && !err) {

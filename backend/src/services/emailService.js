@@ -6,7 +6,7 @@ const logger = require('../lib/logger');
 const RESEND_API_URL = 'https://api.resend.com/emails';
 
 function getEmailFrom() {
-  return process.env.EMAIL_FROM || 'COURTIA <noreply@courtiark.fr>';
+  return process.env.EMAIL_FROM || 'Courtiark <noreply@courtiark.fr>';
 }
 
 function getEmailStatus() {

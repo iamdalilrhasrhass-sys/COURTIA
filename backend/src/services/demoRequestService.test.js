@@ -29,6 +29,12 @@ describe('demoRequestService', () => {
       wants_whatsapp: 1,
       wants_email_sync: false,
       consent: 'true',
+      market: 'ch',
+      preferred_locale: 'fr-CH',
+      source_url: '/demo?market=CH',
+      consent_version: 'demo-contact-v2-2026-07-12',
+      marketing_consent: 'true',
+      marketing_consent_version: 'marketing-email-optin-v1-2026-07-12',
     })
 
     expect(payload.first_name).toBe('Dalil')
@@ -41,6 +47,25 @@ describe('demoRequestService', () => {
     expect(payload.wants_email_sync).toBe(false)
     expect(payload.source).toBe('landing')
     expect(payload.consent).toBe(true)
+    expect(payload.market).toBe('CH')
+    expect(payload.preferred_locale).toBe('fr-CH')
+    expect(payload.source_url).toBe('/demo?market=CH')
+    expect(payload.consent_version).toBe('demo-contact-v2-2026-07-12')
+    expect(payload.marketing_consent).toBe(true)
+    expect(payload.marketing_consent_version).toBe('marketing-email-optin-v1-2026-07-12')
+  })
+
+  it('never keeps a marketing consent version without an explicit opt-in', () => {
+    const payload = sanitizeDemoRequestPayload({
+      market: 'invalid',
+      marketing_consent: false,
+      marketing_consent_version: 'forged-version',
+    })
+
+    expect(payload.market).toBe('FR')
+    expect(payload.preferred_locale).toBe('fr-FR')
+    expect(payload.marketing_consent).toBe(false)
+    expect(payload.marketing_consent_version).toBe('')
   })
 
   it('rejects incomplete payloads', () => {

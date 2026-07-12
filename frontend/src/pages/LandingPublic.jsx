@@ -157,12 +157,13 @@ body { overscroll-behavior-y: none; }
   min-width: 0;
 }
 .cinema-title {
-  font-size: clamp(2.55rem, 7vw, 6.8rem);
-  line-height: 0.94;
+  font-size: clamp(2.55rem, 4.5vw, 4.8rem);
+  line-height: 0.98;
   font-weight: 950;
   letter-spacing: -0.045em;
   max-width: 100%;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
   text-wrap: balance;
 }
 .scene-title {
@@ -390,7 +391,7 @@ const pricing = [
     label: 'Pour reprendre la main',
     headline: 'Pour sortir des tableurs, des post-it et des relances dans la tête.',
     note: '0 € aujourd’hui, puis 89 € HT / mois après le 7e jour. Soit 106,80 € TTC / mois avec TVA 20 %.',
-    href: '/register?plan=starter',
+    href: '/register?plan=starter&market=FR',
     cta: 'Structurer mon cabinet',
     featured: false,
     items: ['Clients et contrats centralisés', 'Relances et tâches visibles', 'Échéances sous contrôle', 'Tableau de bord essentiel', 'Essai gratuit 7 jours'],
@@ -402,7 +403,7 @@ const pricing = [
     label: 'Le vrai levier commercial',
     headline: 'Pour ne plus porter la gestion, les relances et les dossiers à bout de bras.',
     note: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour. Soit 190,80 € TTC / mois avec TVA 20 %. Un seul renouvellement sauvé peut déjà justifier le mois.',
-    href: '/register?plan=pro',
+    href: '/register?plan=pro&market=FR',
     cta: 'Gagner du temps maintenant',
     featured: true,
     items: ['Gestion quotidienne prise en charge', 'Brief ARK chaque matin', 'Appels et relances priorisés', 'Dossiers incomplets suivis', 'Opportunités multi-équipement', 'Rapports commerciaux avancés'],
@@ -414,7 +415,7 @@ const pricing = [
     label: 'Cabinets qui veulent scaler',
     headline: 'Pour industrialiser le suivi commercial sur toute l’équipe.',
     note: 'Accompagnement, déploiement, organisation multi-utilisateurs et workflows avancés étudiés avec le cabinet.',
-    externalHref: 'mailto:contact@courtia.fr?subject=COURTIA%20Cabinet',
+    href: '/demo?market=FR&plan=cabinet',
     cta: 'Construire mon déploiement',
     featured: false,
     items: ['Tout Pro', 'Multi-utilisateurs', 'Méthode de déploiement', 'Suivi équipe', 'Support prioritaire'],
@@ -507,7 +508,8 @@ const landingCopy = {
       subtitle: 'Priorités commerciales du jour',
       status: 'ARK au travail',
       plan: 'Plan d’attaque ARK',
-      prepared: 'du suivi quotidien préparé',
+      metric: 'Chaque matin',
+      prepared: 'un plan priorisé, prêt à valider',
       actions: ['Appel renouvellement prioritaire', 'Relance prospect chaud prête', 'Dossier incomplet suivi'],
       stats: [['3', 'Appels à forte valeur'], ['2', 'Relances prêtes'], ['1', 'Rebond détecté']],
     },
@@ -632,7 +634,8 @@ const landingCopy = {
       subtitle: 'Commercial priorities of the day',
       status: 'ARK at work',
       plan: 'ARK attack plan',
-      prepared: 'of daily follow-up prepared',
+      metric: 'Every morning',
+      prepared: 'a prioritized plan ready for review',
       actions: ['Priority renewal call', 'Warm prospect follow-up ready', 'Incomplete file tracked'],
       stats: [['3', 'High-value calls'], ['2', 'Follow-ups ready'], ['1', 'Opportunity detected']],
     },
@@ -666,7 +669,8 @@ landingCopy.de = {
     subtitle: 'Kommerzielle Prioritäten des Tages',
     status: 'ARK arbeitet',
     plan: 'ARK Angriffsplan',
-    prepared: 'des täglichen Follow-ups vorbereitet',
+    metric: 'Jeden Morgen',
+    prepared: 'ein priorisierter Plan zur Freigabe',
     actions: ['Prioritärer Verlängerungsanruf', 'Warmer Prospect-Follow-up bereit', 'Unvollständiges Dossier verfolgt'],
     stats: [['3', 'Wertvolle Anrufe'], ['2', 'Follow-ups bereit'], ['1', 'Chance erkannt']],
   },
@@ -699,7 +703,8 @@ landingCopy.it = {
     subtitle: 'Priorità commerciali del giorno',
     status: 'ARK al lavoro',
     plan: 'Piano d’attacco ARK',
-    prepared: 'del follow-up quotidiano preparato',
+    metric: 'Ogni mattina',
+    prepared: 'un piano prioritario pronto da validare',
     actions: ['Chiamata rinnovo prioritaria', 'Follow-up prospect caldo pronto', 'Pratica incompleta seguita'],
     stats: [['3', 'Chiamate ad alto valore'], ['2', 'Follow-up pronti'], ['1', 'Opportunità rilevata']],
   },
@@ -790,7 +795,7 @@ const swissPricing = [
     label: 'Courtier suisse solo',
     headline: 'CHF, LSA, nLPD et vocabulaire suisse romand dès le premier écran.',
     note: '490 CHF de frais d’inscription one-shot : onboarding, migration, paramétrage LSA et formation. TVA 8,1 % en sus.',
-    href: '/onboarding?plan=starter&market=CH',
+    href: '/demo?market=CH&plan=starter',
     cta: 'Réserver une démo',
     featured: false,
     items: ['Conformité LSA de base', 'Langues FR-CH / DE-CH / IT-CH', 'Caisse-maladie, LAA, LCA/LAMal', 'Document précontractuel préparé', 'Setup 490 CHF'],
@@ -802,7 +807,7 @@ const swissPricing = [
     label: '3 accès inclus',
     headline: 'Le cockpit complet pour cabinet suisse avec traçabilité du conseil.',
     note: '990 CHF de setup one-shot. Utilisateur supplémentaire : +49 CHF / mois. TVA 8,1 % en sus.',
-    href: '/onboarding?plan=pro&market=CH',
+    href: '/demo?market=CH&plan=pro',
     cta: 'Réserver une démo',
     featured: true,
     items: ['3 accès inclus', 'Journal de conseil LSA', 'Informations rémunération et données', 'Export preuve de conseil', 'ARK portefeuille CH'],
@@ -814,7 +819,7 @@ const swissPricing = [
     label: 'Verticale suisse',
     headline: 'Assurance, fiduciaire, TVA suisse, échéances cantonales et GED hashée.',
     note: "Dès 1'500 CHF de setup. Déploiement, flux de données et sécurité nLPD cadrés au cas par cas.",
-    externalHref: 'mailto:contact@courtia.fr?subject=Courtiark%20Suisse%20Fiduciaire',
+    href: '/demo?market=CH&plan=cabinet',
     cta: 'Parler du déploiement',
     featured: false,
     items: ['Module Fiduciaire', 'Mandats et échéanciers cantonaux', 'TVA suisse 8,1 / 2,6 / 3,8 %', 'GED versionnée + hash', 'Plan hébergement CH'],
@@ -840,7 +845,7 @@ function applyMarketCopy(baseCopy, market, locale) {
       pricingKicker: 'Marché Suisse · activation',
       pricingTitle: 'Tarifs CHF avec frais d’inscription assumés.',
       pricingBody: 'Le setup finance l’onboarding, la migration des données, le paramétrage conformité LSA et la formation. Le produit France reste disponible en EUR via le sélecteur de marché.',
-      taxNote: 'Prix HT. TVA suisse 8,1 % en sus. Données en Suisse et flux LLM : à promettre uniquement selon l’architecture réellement déployée.',
+      taxNote: 'Prix HT. TVA suisse 8,1 % en sus. Hébergement et flux IA détaillés pendant la démo selon l’architecture activée.',
       footerPricing: 'Tarifs CHF',
       footerContact: 'Contact Suisse',
     },
@@ -853,7 +858,7 @@ function applyMarketCopy(baseCopy, market, locale) {
       pricingKicker: 'Swiss market · activation',
       pricingTitle: 'CHF pricing with clear setup fees.',
       pricingBody: 'The setup covers onboarding, data migration, LSA compliance configuration and training. The France product remains available in EUR through the market selector.',
-      taxNote: 'Prices excl. tax. Swiss VAT 8.1% applies. Swiss data hosting and LLM flows must only be promised according to the architecture actually deployed.',
+      taxNote: 'Prices excl. tax. Swiss VAT 8.1% applies. Hosting and AI data flows are explained during the demo for the selected architecture.',
       footerPricing: 'CHF pricing',
       footerContact: 'Swiss contact',
     },
@@ -866,7 +871,7 @@ function applyMarketCopy(baseCopy, market, locale) {
       pricingKicker: 'Schweizer Markt · Aktivierung',
       pricingTitle: 'CHF Preise mit klaren Setup-Gebühren.',
       pricingBody: 'Das Setup finanziert Onboarding, Datenmigration, LSA-Konfiguration und Schulung. Das Frankreich-Produkt bleibt über den Marktumschalter in EUR verfügbar.',
-      taxNote: 'Preise exkl. Steuern. Schweizer MWST 8,1 % zusätzlich. Schweizer Datenhaltung und LLM-Flüsse nur versprechen, wenn sie in der Architektur wirklich umgesetzt sind.',
+      taxNote: 'Preise exkl. Steuern. Schweizer MWST 8,1 % zusätzlich. Hosting und KI-Datenflüsse werden in der Demo für die gewählte Architektur erläutert.',
       footerPricing: 'CHF Preise',
       footerContact: 'Kontakt Schweiz',
     },
@@ -879,7 +884,7 @@ function applyMarketCopy(baseCopy, market, locale) {
       pricingKicker: 'Mercato svizzero · attivazione',
       pricingTitle: 'Prezzi CHF con costi di setup chiari.',
       pricingBody: 'Il setup copre onboarding, migrazione dati, configurazione conformità LSA e formazione. Il prodotto Francia resta disponibile in EUR tramite il selettore mercato.',
-      taxNote: 'Prezzi IVA esclusa. IVA svizzera 8,1 % in aggiunta. Dati in Svizzera e flussi LLM da promettere solo secondo l’architettura realmente distribuita.',
+      taxNote: 'Prezzi IVA esclusa. IVA svizzera 8,1 % in aggiunta. Hosting e flussi IA vengono illustrati durante la demo per l’architettura scelta.',
       footerPricing: 'Prezzi CHF',
       footerContact: 'Contatto Svizzera',
     },
@@ -887,8 +892,8 @@ function applyMarketCopy(baseCopy, market, locale) {
   const marketUi = swissUiCopy[locale] || swissUiCopy.fr
   const swissHeroCopy = {
     fr: {
-      heroKicker: 'COURTIA · gestion courtier et fiduciaire pilotée par IA',
-      heroTitle: 'COURTIA s’occupe de tout. Courtiers et fiduciaires développent leur portefeuille.',
+      heroKicker: 'Courtiark · cockpit IA pour courtiers suisses',
+      heroTitle: 'Courtiark pilote le cabinet. Vous développez le portefeuille.',
       heroBody: 'Plus besoin de porter la gestion, les relances, les appels, les dossiers, les échéances et le suivi fiduciaire à la main. COURTIA et ARK prennent en charge le quotidien opérationnel du cabinet. Vous gardez uniquement ce qui crée de la valeur: la relation client, le closing, le conseil et le développement du portefeuille.',
     },
     en: {
@@ -1036,7 +1041,7 @@ function CockpitMockup({ copy = landingCopy.fr.cockpit }) {
             <Brain size={17} className="text-violet-200" />
             <p className="text-xs font-black uppercase tracking-[0.16em] text-violet-100/70">{copy.plan}</p>
           </div>
-          <p className="mt-4 text-4xl font-black text-white">95%</p>
+          <p className="mt-4 text-3xl font-black text-white">{copy.metric}</p>
           <p className="mt-1 text-sm text-white/54">{copy.prepared}</p>
           <div className="mt-5 space-y-2">
             {copy.actions.map((item) => (
@@ -1477,8 +1482,8 @@ export default function LandingPublic() {
               {copy.closingBody}
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <AuroraButton href="/register?plan=pro" size="lg" icon={<ArrowRight size={17} />} className="w-full sm:w-auto">
-                {copy.closingPrimary}
+              <AuroraButton href={marketContext.market === 'CH' ? '/demo?market=CH&plan=pro' : '/register?plan=pro&market=FR'} size="lg" icon={<ArrowRight size={17} />} className="w-full sm:w-auto">
+                {marketContext.market === 'CH' ? copy.heroPrimary : copy.closingPrimary}
               </AuroraButton>
               <AuroraButton href="/login" variant="secondary" size="lg" className="w-full sm:w-auto">
                 {copy.closingSecondary}
@@ -1500,7 +1505,7 @@ export default function LandingPublic() {
           <div className="flex flex-wrap gap-4">
             <button type="button" onClick={() => scrollTo('pricing')} className="hover:text-white">{copy.footerPricing}</button>
             <Link to="/login" className="hover:text-white">{copy.footerLogin}</Link>
-            <a href="mailto:contact@courtia.fr" className="hover:text-white">{copy.footerContact}</a>
+            <Link to={`/contact?market=${marketContext.market}`} className="hover:text-white">{copy.footerContact}</Link>
           </div>
           <MarketSwitcher market={marketContext.market} onChange={changeMarket} />
           <RhasrhassSignature compact />
