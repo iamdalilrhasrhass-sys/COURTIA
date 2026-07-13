@@ -8,6 +8,8 @@
     "dev": "nodemon server.js",
     "test": "jest",
     "migrate": "node scripts/migrate.js",
+    "init:sales-users": "node scripts/init-sales-users.js",
+    "qa:sales-smoke": "node scripts/sales-prospecting-smoke.js",
     "qa:preview-smoke": "node scripts/preview-smoke-playwright.js",
     "qa:prod-smoke": "PROD_URL=https://app.courtiark.fr node scripts/preview-smoke-playwright.js"
   },

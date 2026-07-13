@@ -474,7 +474,7 @@ export default function Login() {
     setError('')
     try {
       const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login'
-      const payload = isRegister ? { email, password, firstName, lastName } : { email, password }
+      const payload = isRegister ? { email, password, firstName, lastName } : { identifier: email, password }
       const res = await api.post(endpoint, payload)
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
@@ -482,7 +482,8 @@ export default function Login() {
       const requestedNext = searchParams.get('next')
       const safeNext = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : null
       const onboardingPath = `/onboarding?plan=${selectedPlan}&market=${selectedMarket}`
-      navigate(safeNext || (isRegister ? onboardingPath : '/dashboard'))
+      const destination = user?.role === 'prospecteur' ? '/prospection' : safeNext || (isRegister ? onboardingPath : '/dashboard')
+      navigate(destination)
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || (isRegister ? 'Inscription impossible pour le moment.' : 'Une erreur est survenue. Vérifiez vos identifiants.'))
     } finally {
@@ -591,8 +592,8 @@ export default function Login() {
                   <rect x="2" y="4" width="20" height="16" rx="4"/>
                   <path d="M2 7l10 6 10-6"/>
                 </svg>
-                <input id="email" type="email" autoComplete="email" required value={email}
-                  onChange={e => setEmail(e.target.value)} placeholder="votre@email.fr" />
+                <input id="email" type={isRegister ? 'email' : 'text'} autoComplete={isRegister ? 'email' : 'username'} required value={email}
+                  onChange={e => setEmail(e.target.value)} placeholder={isRegister ? 'votre@email.fr' : 'E-mail ou nom d’utilisateur'} />
               </div>
 
               <div className="field-wrap">

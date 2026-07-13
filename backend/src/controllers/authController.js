@@ -9,6 +9,8 @@ const User = require('../models/User');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { trackEvent } = require('../services/analyticsService');
 const { sendEmail } = require('../services/emailService');
+const pool = require('../db');
+const { appendSalesAudit } = require('../services/salesAuditService');
 
 // Générer un JWT token
 function generateToken(user) {
@@ -74,20 +76,21 @@ exports.register = async (req, res) => {
 // Connexion
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const identifier = req.body.email || req.body.username || req.body.identifier;
+    const { password } = req.body;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
-        error: 'Email et mot de passe requis'
+        error: 'Identifiant et mot de passe requis'
       });
     }
 
     // Vérifier les credentials
-    const user = await User.verifyPassword(email, password);
+    const user = await User.verifyPassword(identifier, password);
 
     if (!user) {
       return res.status(401).json({
-        error: 'Email ou mot de passe incorrect'
+        error: 'Identifiant ou mot de passe incorrect'
       });
     }
 
@@ -100,14 +103,29 @@ exports.login = async (req, res) => {
       properties: { method: 'password' },
     }).catch(() => {});
 
+    await pool.query('UPDATE users SET last_login_at=NOW(), updated_at=NOW() WHERE id=$1', [user.id]).catch(() => {});
+    if (['super_admin', 'prospecteur'].includes(user.role)) {
+      await appendSalesAudit({
+        actorId: user.id,
+        action: 'auth.login',
+        entityType: 'user',
+        entityId: user.id,
+        metadata: { method: 'password' },
+        ipAddress: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null,
+        userAgent: req.headers['user-agent'] || null,
+      }).catch(() => {});
+    }
+
     res.json({
       message: 'Connexion réussie',
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
+        must_change_password: user.must_change_password
       },
       token
     });

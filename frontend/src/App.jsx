@@ -107,9 +107,9 @@ function ScrollToTop() {
 function getTokenState(token) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    return { valid: true, expired: payload.exp * 1000 < Date.now() }
+    return { valid: true, expired: payload.exp * 1000 < Date.now(), role: String(payload.role || '').toLowerCase() }
   } catch {
-    return { valid: false, expired: true }
+    return { valid: false, expired: true, role: '' }
   }
 }
 
@@ -123,6 +123,9 @@ function PrivateRoute({ children }) {
     localStorage.removeItem('courtia_token')
     localStorage.removeItem('token')
     return <Navigate to={`/login?next=${encodeURIComponent(`${location.pathname}${location.search}`)}`} replace />
+  }
+  if (tokenState.role === 'prospecteur' && location.pathname !== '/prospection') {
+    return <Navigate to="/prospection" replace />
   }
   return children
 }

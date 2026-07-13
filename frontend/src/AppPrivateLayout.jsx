@@ -11,6 +11,7 @@ import { Particles, ScrollGlow } from './components/vibe/VibePage'
 import ArkNeuralPulse from './components/widgets/ArkNeuralPulse'
 import { usePlanStore } from './stores/planStore'
 import { onPaywallTriggered } from './api'
+import { isProspectorRole } from './lib/roles'
 
 export default function AppPrivateLayout() {
   const navigate = useNavigate()
@@ -18,9 +19,13 @@ export default function AppPrivateLayout() {
   const [paywallError, setPaywallError] = useState(null)
   const [cmdOpen, setCmdOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const storedUser = (() => {
+    try { return JSON.parse(localStorage.getItem('courtia_user') || 'null') } catch { return null }
+  })()
+  const isProspector = isProspectorRole(storedUser?.role)
 
-  useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
-  useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
+  useEffect(() => { if (!isProspector) fetchPlanInfo() }, [fetchPlanInfo, isProspector])
+  useEffect(() => { if (!isProspector) return onPaywallTriggered(err => setPaywallError(err)); return undefined }, [isProspector])
 
   const handleKeyDown = useCallback((e) => {
     if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
@@ -42,7 +47,7 @@ export default function AppPrivateLayout() {
       
       {/* Aurora Mobile Components */}
       <AuroraMobileTopbar onMenuClick={() => setMobileMenuOpen(true)} />
-      <AuroraBottomNav />
+      {!isProspector && <AuroraBottomNav />}
 
       <Sidebar mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
       
@@ -50,20 +55,20 @@ export default function AppPrivateLayout() {
         <ImpersonationBanner />
         <Outlet />
       </main>
-      <PaywallModal
+      {!isProspector && <PaywallModal
         open={!!paywallError}
         error={paywallError}
         onClose={() => setPaywallError(null)}
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
-      />
-      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+      />}
+      {!isProspector && <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />}
 
       {/* ARK Neural Pulse — indicateur signature */}
-      <div style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 200, opacity: 0.55, pointerEvents: 'none' }}>
+      {!isProspector && <div style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 200, opacity: 0.55, pointerEvents: 'none' }}>
         <ArkNeuralPulse isThinking={false} confidence={78} label="ARK actif" width={200} height={80} />
-      </div>
+      </div>}
 
-      <button
+      {!isProspector && <button
         onClick={() => setCmdOpen(true)}
         title="Ouvrir la palette (⌘K)"
         style={{
@@ -83,7 +88,7 @@ export default function AppPrivateLayout() {
       >
         <span style={{ fontSize: 13 }}>⌘K</span>
         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Recherche</span>
-      </button>
+      </button>}
     </div>
     </AuroraBackground>
   )

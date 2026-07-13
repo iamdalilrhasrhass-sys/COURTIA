@@ -6,6 +6,7 @@ const ROLES = Object.freeze({
   ASSISTANT: 'assistant',
   VIEWER: 'viewer',
   ADMIN: 'admin',
+  PROSPECTEUR: 'prospecteur',
 })
 
 const ADMIN_ROLES = new Set([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.OWNER, ROLES.MANAGER])
@@ -21,9 +22,15 @@ function isAdminRole(role) {
   return ADMIN_ROLES.has(normalizeRole(role))
 }
 
+function isSalesRole(role) {
+  const normalized = normalizeRole(role)
+  return normalized === ROLES.SUPER_ADMIN || normalized === ROLES.PROSPECTEUR
+}
+
 module.exports = {
   ROLES,
   ADMIN_ROLES,
   normalizeRole,
   isAdminRole,
+  isSalesRole,
 }

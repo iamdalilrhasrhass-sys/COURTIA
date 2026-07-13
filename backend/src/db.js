@@ -36,7 +36,9 @@ try {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: String(process.env.DATABASE_SSL || '').toLowerCase() === 'false'
+    ? false
+    : { rejectUnauthorized: false }
 });
 
 pool.on('error', (err) => {
