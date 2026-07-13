@@ -71,7 +71,7 @@ export default function AdminUsers() {
         <AuroraEmptyState icon={Search} title="Aucun courtier trouvé" subtitle="Modifiez vos filtres ou votre recherche." />
       ) : (
         <>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+          <div className="courtia-desktop-data-table" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -113,6 +113,15 @@ export default function AdminUsers() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="courtia-mobile-data-list" aria-label="Liste des courtiers">
+            {users.map(u => (
+              <Link key={u.id} to={`/admin/users/${u.id}`} className="courtia-mobile-data-card">
+                <span className="courtia-mobile-data-card-head"><span className="courtia-mobile-data-card-icon">{([u.first_name, u.last_name].filter(Boolean).map(value => value[0]).join('').slice(0, 2) || '?').toUpperCase()}</span><span><strong>{[u.first_name, u.last_name].filter(Boolean).join(' ') || 'Courtier'}</strong><small>{u.cabinet || u.email}</small></span><ChevronRight size={18} /></span>
+                <span className="courtia-mobile-data-card-tags"><em style={{ color: PLAN_COLORS[u.subscription_plan] || '#9ca3af', background: `${PLAN_COLORS[u.subscription_plan] || '#6b7280'}20` }}>{(u.subscription_plan || 'start').charAt(0).toUpperCase() + (u.subscription_plan || 'start').slice(1)}</em><em style={{ color: STATUS_COLORS[u.subscription_status] || '#9ca3af', background: `${STATUS_COLORS[u.subscription_status] || '#6b7280'}20` }}>{STATUS_LABELS[u.subscription_status] || u.subscription_status}</em></span>
+                <span className="courtia-mobile-data-card-foot"><span>{u.email}</span><time>{u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—'}</time></span>
+              </Link>
+            ))}
           </div>
 
           {/* Pagination */}

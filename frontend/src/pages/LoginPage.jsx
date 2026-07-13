@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import api from '../api'
 import Logo from '../components/Logo'
 
@@ -441,8 +441,16 @@ const Bubble = ({ className }) => (
 )
 
 export default function Login() {
+  const location = useLocation()
+  const isRegister = location.pathname === '/register'
+  const searchParams = new URLSearchParams(location.search)
+  const selectedPlan = ['starter', 'pro', 'cabinet'].includes(searchParams.get('plan')) ? searchParams.get('plan') : 'pro'
+  const selectedMarket = searchParams.get('market')?.toUpperCase() === 'CH' ? 'CH' : 'FR'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPw, setShowPw] = useState(false)
@@ -450,20 +458,34 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!email || !password) {
-      setError('Veuillez renseigner votre email et votre mot de passe.')
+    if (!email || !password || (isRegister && (!firstName || !lastName))) {
+      setError(isRegister ? 'Veuillez renseigner votre identité, votre email et votre mot de passe.' : 'Veuillez renseigner votre email et votre mot de passe.')
+      return
+    }
+    if (isRegister && password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.')
+      return
+    }
+    if (isRegister && !acceptTerms) {
+      setError('Merci d’accepter les conditions d’utilisation et la politique de confidentialité.')
       return
     }
     setLoading(true)
     setError('')
     try {
-      const res = await api.post('/api/auth/login', { email, password })
+      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login'
+      const payload = isRegister ? { email, password, firstName, lastName } : { identifier: email, password }
+      const res = await api.post(endpoint, payload)
       const { token, user } = res.data
       localStorage.setItem('courtia_token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
-      navigate('/dashboard')
+      const requestedNext = searchParams.get('next')
+      const safeNext = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : null
+      const onboardingPath = `/onboarding?plan=${selectedPlan}&market=${selectedMarket}`
+      const destination = user?.role === 'prospecteur' ? '/prospection' : safeNext || (isRegister ? onboardingPath : '/dashboard')
+      navigate(destination)
     } catch (err) {
-      setError(err.response?.data?.message || 'Une erreur est survenue. Vérifiez vos identifiants.')
+      setError(err.response?.data?.message || err.response?.data?.error || (isRegister ? 'Inscription impossible pour le moment.' : 'Une erreur est survenue. Vérifiez vos identifiants.'))
     } finally {
       setLoading(false)
     }
@@ -536,10 +558,10 @@ export default function Login() {
             </div>
 
             <h1 style={{ fontSize:'21px', fontWeight:500, color:'#0a0a0a', margin:0, marginBottom:4 }}>
-              Connexion
+              {isRegister ? 'Créer votre compte' : 'Connexion'}
             </h1>
             <p style={{ fontSize:'13px', color:'rgba(0,0,0,0.42)', marginBottom:24 }}>
-              Accédez à votre espace courtier
+              {isRegister ? `Démarrez avec l’offre ${selectedPlan === 'starter' ? 'Starter' : selectedPlan === 'cabinet' ? 'Cabinet' : 'Pro'} · marché ${selectedMarket}` : 'Accédez à votre espace courtier'}
             </p>
 
             <form onSubmit={handleSubmit} noValidate>
@@ -552,13 +574,26 @@ export default function Login() {
                 </div>
               )}
 
+              {isRegister && (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                  <div className="field-wrap">
+                    <input id="first-name" type="text" autoComplete="given-name" required value={firstName}
+                      onChange={e => setFirstName(e.target.value)} placeholder="Prénom" style={{ paddingLeft:14 }} />
+                  </div>
+                  <div className="field-wrap">
+                    <input id="last-name" type="text" autoComplete="family-name" required value={lastName}
+                      onChange={e => setLastName(e.target.value)} placeholder="Nom" style={{ paddingLeft:14 }} />
+                  </div>
+                </div>
+              )}
+
               <div className="field-wrap">
                 <svg className="icon-left" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1.5">
                   <rect x="2" y="4" width="20" height="16" rx="4"/>
                   <path d="M2 7l10 6 10-6"/>
                 </svg>
-                <input id="email" type="email" autoComplete="email" required value={email}
-                  onChange={e => setEmail(e.target.value)} placeholder="votre@email.fr" />
+                <input id="email" type={isRegister ? 'email' : 'text'} autoComplete={isRegister ? 'email' : 'username'} required value={email}
+                  onChange={e => setEmail(e.target.value)} placeholder={isRegister ? 'votre@email.fr' : 'E-mail ou nom d’utilisateur'} />
               </div>
 
               <div className="field-wrap">
@@ -567,7 +602,7 @@ export default function Login() {
                   <path d="M7 11V7a5 5 0 0110 0v4"/>
                   <circle cx="12" cy="16" r="1"/>
                 </svg>
-                <input id="password" type={showPw?'text':'password'} autoComplete="current-password" required
+                <input id="password" type={showPw?'text':'password'} autoComplete={isRegister ? 'new-password' : 'current-password'} required
                   value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
                 <button type="button" className="eye-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
                   {showPw ? (
@@ -584,24 +619,31 @@ export default function Login() {
                 </button>
               </div>
 
-              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,margin:'10px 0 18px' }}>
-                <div style={{ display:'flex',alignItems:'center',gap:8 }}>
-                  <input type="checkbox" id="remember" style={{ width:17,height:17,borderRadius:5,border:'0.5px solid rgba(0,0,0,0.14)',accentColor:'#2563eb',cursor:'pointer' }} />
-                  <label htmlFor="remember" style={{ fontSize:'12.5px',color:'rgba(0,0,0,0.5)',cursor:'pointer' }}>Se souvenir de moi</label>
+              {isRegister ? (
+                <label style={{ display:'flex',alignItems:'flex-start',gap:8,margin:'10px 0 18px',fontSize:'12px',lineHeight:1.45,color:'rgba(0,0,0,0.55)' }}>
+                  <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} style={{ width:17,height:17,marginTop:1,accentColor:'#2563eb',cursor:'pointer',flexShrink:0 }} />
+                  <span>J’accepte les <Link to="/legal/conditions-utilisation">conditions d’utilisation</Link> et la <Link to="/legal/confidentialite">politique de confidentialité</Link>.</span>
+                </label>
+              ) : (
+                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,margin:'10px 0 18px' }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+                    <input type="checkbox" id="remember" style={{ width:17,height:17,borderRadius:5,border:'0.5px solid rgba(0,0,0,0.14)',accentColor:'#2563eb',cursor:'pointer' }} />
+                    <label htmlFor="remember" style={{ fontSize:'12.5px',color:'rgba(0,0,0,0.5)',cursor:'pointer' }}>Se souvenir de moi</label>
+                  </div>
+                  <Link to="/forgot-password" style={{ fontSize:'12.5px', color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
+                    Mot de passe oublié ?
+                  </Link>
                 </div>
-                <Link to="/forgot-password" style={{ fontSize:'12.5px', color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
-                  Mot de passe oublié ?
-                </Link>
-              </div>
+              )}
 
               <button type="submit" disabled={loading} className="btn-primary">
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? (isRegister ? 'Création...' : 'Connexion...') : (isRegister ? 'Créer mon compte' : 'Se connecter')}
               </button>
             </form>
 
-            <div className="divider-or"><span>ou</span></div>
+            {!isRegister && <div className="divider-or"><span>ou</span></div>}
 
-            <button type="button" className="btn-google" onClick={handleGoogleLogin} aria-disabled="true">
+            {!isRegister && <button type="button" className="btn-google" onClick={handleGoogleLogin} aria-disabled="true">
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -609,12 +651,12 @@ export default function Login() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
               Google indisponible
-            </button>
+            </button>}
 
             <p style={{ textAlign:'center', fontSize:'12.5px', color:'rgba(0,0,0,0.4)', marginTop:20 }}>
-              Pas encore de compte ?{' '}
-              <Link to="/register" style={{ color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
-                Inscrivez-vous gratuitement
+              {isRegister ? 'Déjà un compte ? ' : 'Pas encore de compte ? '}
+              <Link to={`${isRegister ? '/login' : '/register'}${location.search}`} style={{ color:'#2563eb', fontWeight:500, textDecoration:'none' }}>
+                {isRegister ? 'Se connecter' : 'Créer un compte'}
               </Link>
             </p>
           </div>

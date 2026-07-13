@@ -70,7 +70,7 @@ function scoreColor(s) {
 // ─── KPI mini ──────────────────────────────────────────────
 function KpiMini({ label, value, accent, icon: Icon }) {
   return (
-    <div style={{
+    <div className="courtia-mobile-kpi" style={{
       flex: '1 1 200px',
       minWidth: 180,
       background: T.cardBg,
@@ -104,7 +104,8 @@ function BubbleClientCard({ client, onClick }) {
   const st = STATUS[client.status] || STATUS.actif
   const sCol = scoreColor(client.score)
   return (
-    <div onClick={() => onClick(client.id)} style={{
+    <button type="button" onClick={() => onClick(client.id)} style={{
+      width: '100%', textAlign: 'left', font: 'inherit', color: 'inherit',
       background: T.cardBg,
       border: `1px solid ${T.cardBorder}`,
       borderRadius: 16,
@@ -193,7 +194,7 @@ function BubbleClientCard({ client, onClick }) {
           <span style={{ color: T.textSecondary }}>{client.ark}</span>
         </div>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -294,7 +295,7 @@ export default function Clients() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('tous')
-  const [view, setView] = useState('table') // 'table' | 'bubbles'
+  const [view, setView] = useState(() => window.matchMedia?.('(max-width: 768px)').matches ? 'bubbles' : 'table') // 'table' | 'bubbles'
 
   async function loadClients() {
     setLoading(true)

@@ -16,21 +16,21 @@ export default function LegalConfidentialite() {
       <section className="mk-section">
         <h1 className="mk-section-title">Politique de confidentialité</h1>
         <div className="mk-card">
-          <p>Dernière mise à jour: 9 mai 2026.</p>
+          <p>Dernière mise à jour : 12 juillet 2026.</p>
           <p>
-            COURTIA collecte les données strictement nécessaires au fonctionnement de la plateforme et aux demandes de démo B2B.
+            Courtiark collecte les données strictement nécessaires au fonctionnement de la plateforme et aux demandes de démo B2B.
           </p>
           <p>
             Finalités principales: gestion de la relation client cabinet, suivi des tâches, pilotage portefeuille, assistance ARK et support utilisateur.
           </p>
           <p>
-            Base légale principale pour les contacts commerciaux: intérêt légitime B2B, avec possibilité d\'opposition (opt-out) à tout moment.
+            Une demande de démo déclenche uniquement le contact nécessaire pour traiter cette demande. L\'inscription aux e-mails de nouveautés et d\'invitations repose sur un consentement séparé, facultatif, non pré-coché et révocable gratuitement à tout moment.
           </p>
           <p>
-            Données collectées sur formulaire démo: identité professionnelle, coordonnées professionnelles, informations cabinet, message libre.
+            Données collectées sur le formulaire démo : identité et coordonnées professionnelles, informations cabinet, message libre, marché choisi, source de la demande, version du texte de consentement et date du consentement.
           </p>
           <p>
-            Les données ne sont pas revendues à des tiers. Elles sont conservées pour le suivi commercial et la relation contractuelle, dans une durée proportionnée.
+            Les données ne sont pas revendues à des tiers. Une demande de démo sans relation contractuelle est conservée au maximum 12 mois après le dernier échange, sauf opposition ou obligation légale contraire. La preuve d\'un consentement retiré peut être conservée dans une liste de suppression afin d\'éviter toute nouvelle sollicitation.
           </p>
           <p>
             Intégrations (Google Agenda, WhatsApp Business, Gmail/Outlook): activées uniquement sur action explicite du cabinet. Les tokens restent côté backend.
@@ -46,7 +46,7 @@ export default function LegalConfidentialite() {
             Vous pouvez demander export, rectification, limitation ou suppression de vos données selon les cas applicables.
           </p>
           <p>
-            Toute demande d\'accès, correction ou suppression peut être adressée à contact@courtiark.fr.
+            Pour la Suisse, l\'adresse professionnelle publiée d\'un tiers n\'est jamais traitée comme un consentement à recevoir une campagne e-mail. Toute demande d\'accès, correction, retrait du consentement ou suppression peut être adressée à arkcourtia@gmail.com.
           </p>
         </div>
       </section>

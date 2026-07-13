@@ -807,3 +807,556 @@
     font-size: var(--aurora-text-sm);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   18. COURTIARK APP SHELL — all authenticated roles
+   One coherent phone layout for broker, owner, admin and sales workspaces.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.aurora-mobile-topbar,
+.courtia-admin-mobile-nav,
+.courtia-admin-sidebar-backdrop {
+  display: none !important;
+}
+
+.courtia-admin-sidebar-close {
+  display: none;
+}
+
+.courtia-route-viewport {
+  width: 100%;
+  min-width: 0;
+}
+
+.courtia-mobile-data-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    overscroll-behavior-x: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .vibe-particles {
+    display: none !important;
+  }
+
+  .vibe-scroll-glow {
+    opacity: .35 !important;
+  }
+
+  .courtia-ark-pulse-fab,
+  .courtia-command-palette-fab {
+    display: none !important;
+  }
+
+  .aurora-mobile-topbar {
+    display: flex !important;
+    z-index: 1400 !important;
+  }
+
+  .aurora-mobile-topbar-context {
+    max-width: calc(100vw - 124px);
+    color: #fff;
+  }
+
+  .aurora-mobile-topbar-title {
+    max-width: 128px;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: -.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .courtia-private-mobile-root {
+    width: 100%;
+    min-width: 0;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  }
+
+  .courtia-route-viewport > * {
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
+  }
+
+  .courtia-route-viewport > :not(.sales-page) {
+    min-height: calc(100dvh - 56px) !important;
+    padding: 15px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .courtia-route-viewport > :not(.sales-page) > [style*="max-width"],
+  .courtia-route-viewport > :not(.sales-page) main[style*="max-width"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .courtia-route-viewport :where(h1) {
+    max-width: 100%;
+    font-size: clamp(25px, 7.3vw, 30px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.035em !important;
+    text-wrap: balance;
+  }
+
+  .courtia-route-viewport :where(h2) {
+    font-size: clamp(18px, 5.5vw, 22px) !important;
+    line-height: 1.16 !important;
+  }
+
+  .courtia-route-viewport :where(p) {
+    max-width: 100%;
+    line-height: 1.55;
+  }
+
+  .courtia-route-viewport [style*="grid-template-columns: 1fr 1fr"],
+  .courtia-route-viewport [style*="grid-template-columns: minmax(0, 1fr) minmax"],
+  .courtia-route-viewport [style*="grid-template-columns: minmax(0, 1.15fr)"],
+  .courtia-route-viewport [style*="grid-template-columns: 1fr 360px"],
+  .courtia-route-viewport [style*="grid-template-columns: 220px minmax"],
+  .courtia-route-viewport [style*="grid-template-columns: 2fr 1fr"],
+  .courtia-route-viewport [style*="grid-template-columns: 40px 1fr 100px"],
+  .courtia-route-viewport [style*="grid-template-columns: repeat(3"],
+  .courtia-route-viewport [style*="grid-template-columns: repeat(4"],
+  .courtia-route-viewport [style*="grid-template-columns: repeat(5"],
+  .courtia-route-viewport [style*="grid-template-columns: repeat(6"],
+  .courtia-route-viewport [style*="grid-template-columns: repeat(7"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .courtia-route-viewport [style*="width: 500px"][style*="position: fixed"],
+  .courtia-route-viewport [style*="height: 500px"][style*="position: fixed"] {
+    display: none !important;
+  }
+
+  .courtia-route-viewport :where(.courtia-depth-card, .courtia-glass-card, .aurora-card) {
+    border-radius: 17px !important;
+  }
+
+  .courtia-mobile-kpi {
+    min-width: calc(50% - 5px) !important;
+    min-height: 94px;
+    flex: 1 1 calc(50% - 5px) !important;
+    padding: 12px !important;
+    border-radius: 15px !important;
+  }
+
+  .courtia-route-viewport :where(table) {
+    width: max-content !important;
+    min-width: 680px;
+    max-width: none;
+    white-space: nowrap;
+  }
+
+  .courtia-route-viewport :where(table) :where(th, td) {
+    padding: 11px 12px !important;
+  }
+
+  .courtia-route-viewport [style*="overflow-x: auto"],
+  .courtia-route-viewport .overflow-x-auto {
+    width: 100%;
+    max-width: calc(100vw - 24px);
+    border: 1px solid rgba(245,243,255,.08);
+    border-radius: 16px;
+    background: rgba(255,255,255,.018);
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .courtia-route-viewport [style*="overflow-x: auto"]::-webkit-scrollbar,
+  .courtia-route-viewport .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+
+  .courtia-route-viewport [style*="position: fixed"][style*="inset: 0"] {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .courtia-route-viewport [style*="position: fixed"][style*="inset: 0"] > [style*="max-width"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    margin: 0 !important;
+    padding: 22px 15px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto;
+    border-radius: 24px 24px 0 0 !important;
+    overscroll-behavior: contain;
+  }
+
+  .courtia-desktop-data-table {
+    display: none !important;
+  }
+
+  .courtia-mobile-data-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .courtia-mobile-data-card {
+    width: 100%;
+    min-width: 0;
+    padding: 14px;
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 11px;
+    border: 1px solid rgba(245,243,255,.1);
+    border-radius: 18px;
+    color: #f8f8ff;
+    text-align: left;
+    text-decoration: none;
+    background: linear-gradient(145deg, rgba(21,22,44,.92), rgba(9,10,27,.95));
+    box-shadow: 0 12px 30px rgba(0,0,0,.18);
+  }
+
+  .courtia-mobile-data-card:active {
+    background: linear-gradient(145deg, rgba(33,31,66,.95), rgba(11,13,34,.98));
+    transform: scale(.992);
+  }
+
+  .courtia-mobile-data-card-head {
+    display: grid;
+    grid-template-columns: 40px minmax(0,1fr) 20px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .courtia-mobile-data-card-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(167,139,250,.24);
+    border-radius: 12px;
+    color: #a9eff8;
+    background: rgba(139,92,246,.12);
+    font-size: 11px;
+    font-weight: 850;
+  }
+
+  .courtia-mobile-data-card-head > span:nth-child(2) {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .courtia-mobile-data-card-head strong,
+  .courtia-mobile-data-card-head small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .courtia-mobile-data-card-head strong {
+    font-size: 13px;
+  }
+
+  .courtia-mobile-data-card-head small {
+    color: rgba(245,243,255,.54);
+    font-size: 10px;
+  }
+
+  .courtia-mobile-data-card-head > svg {
+    color: rgba(245,243,255,.36);
+  }
+
+  .courtia-mobile-data-card-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .courtia-mobile-data-card-tags em {
+    padding: 5px 8px;
+    border-radius: 999px;
+    color: rgba(245,243,255,.64);
+    background: rgba(255,255,255,.045);
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 750;
+  }
+
+  .courtia-mobile-data-card-foot {
+    padding-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(245,243,255,.07);
+    color: rgba(245,243,255,.5);
+    font-size: 10px;
+  }
+
+  .vibe-page-header {
+    gap: 10px !important;
+    margin-bottom: 17px !important;
+  }
+
+  .vibe-page-header-bubble {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .vibe-page-header-bubble > * {
+    max-width: 38px;
+    max-height: 38px;
+  }
+
+  .vibe-page-header-copy {
+    min-width: calc(100% - 50px) !important;
+  }
+
+  .vibe-page-header-copy p {
+    margin-top: 5px !important;
+    font-size: 12px !important;
+  }
+
+  .vibe-page-header-actions {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 8px !important;
+  }
+
+  .vibe-page-header-actions > * {
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .aurora-bottom-nav {
+    height: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding: 5px 6px env(safe-area-inset-bottom, 0px);
+    align-items: stretch;
+    gap: 2px;
+    background: rgba(7,8,22,.9) !important;
+    border-top-color: rgba(245,243,255,.11) !important;
+    box-shadow: 0 -14px 40px rgba(0,0,0,.38) !important;
+  }
+
+  .aurora-bottom-nav-item {
+    min-width: 0;
+    height: 58px;
+    flex: 1;
+    padding: 5px 2px;
+    border-radius: 13px;
+  }
+
+  .aurora-bottom-nav-item--active {
+    color: #fff;
+    background: linear-gradient(145deg, rgba(139,92,246,.22), rgba(34,211,238,.07));
+  }
+
+  .aurora-bottom-nav-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .aurora-bottom-nav-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .aurora-bottom-nav-label {
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .aurora-bottom-nav-indicator {
+    top: 3px;
+    width: 42px;
+    height: 27px;
+  }
+
+  .courtia-mobile-sidebar-layer {
+    z-index: 1600 !important;
+  }
+
+  .courtia-mobile-sidebar-layer .courtia-sidebar {
+    width: min(88vw, 330px) !important;
+    box-shadow: 24px 0 80px rgba(0,0,0,.58);
+  }
+}
+
+/* Owner back-office receives the same phone-grade shell. */
+@media (max-width: 768px) {
+  .courtia-admin-shell {
+    width: 100%;
+    min-height: 100dvh !important;
+    display: block !important;
+    overflow-x: hidden;
+  }
+
+  .courtia-admin-sidebar {
+    z-index: 1610 !important;
+    width: min(88vw, 330px) !important;
+    transform: translateX(-105%);
+    transition: transform .24s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 24px 0 80px rgba(0,0,0,.6) !important;
+  }
+
+  .courtia-admin-sidebar.is-mobile-open {
+    transform: translateX(0);
+  }
+
+  .courtia-admin-sidebar-close {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    color: rgba(255,255,255,.72);
+    background: rgba(255,255,255,.04);
+  }
+
+  .courtia-admin-sidebar-backdrop {
+    position: fixed;
+    z-index: 1600;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block !important;
+    border: 0;
+    background: rgba(0,0,0,.62);
+    backdrop-filter: blur(5px);
+  }
+
+  .courtia-admin-main {
+    width: 100%;
+    min-width: 0;
+    min-height: 100dvh !important;
+    margin-left: 0 !important;
+    padding: calc(71px + env(safe-area-inset-top, 0px)) 12px calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .courtia-admin-route {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .courtia-admin-route > * {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .courtia-admin-route :where(h1) {
+    font-size: 27px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .courtia-admin-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .courtia-admin-kpi-grid > * {
+    min-height: 132px;
+    padding: 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .courtia-admin-kpi-grid > * [style*="font-size: 28px"] {
+    font-size: 24px !important;
+  }
+
+  .courtia-admin-route [style*="grid-template-columns: 1fr 1fr"],
+  .courtia-admin-route [style*="grid-template-columns: minmax(0, 1fr) minmax"],
+  .courtia-admin-route [style*="grid-template-columns: repeat(3"],
+  .courtia-admin-route [style*="grid-template-columns: repeat(4"],
+  .courtia-admin-route [style*="grid-template-columns: repeat(5"],
+  .courtia-admin-route [style*="grid-template-columns: repeat(6"] {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+
+  .courtia-admin-route :where(table) {
+    width: max-content !important;
+    min-width: 760px;
+    white-space: nowrap;
+  }
+
+  .courtia-admin-route > * [style*="overflow: hidden"]:has(> table) {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto !important;
+    border-radius: 16px !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .courtia-admin-footer {
+    display: none !important;
+  }
+
+  .courtia-admin-mobile-nav {
+    position: fixed;
+    z-index: 1450;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    min-height: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding: 5px 6px env(safe-area-inset-bottom, 0px);
+    display: flex !important;
+    align-items: stretch;
+    gap: 2px;
+    border-top: 1px solid rgba(245,243,255,.11);
+    background: rgba(7,8,22,.91);
+    box-shadow: 0 -14px 40px rgba(0,0,0,.38);
+    backdrop-filter: blur(20px) saturate(150%);
+  }
+
+  .courtia-admin-mobile-nav :where(a, button) {
+    min-width: 0;
+    min-height: 58px;
+    flex: 1;
+    padding: 5px 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    border: 0;
+    border-radius: 13px;
+    color: #777990;
+    background: transparent;
+    font: inherit;
+    font-size: 9px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .courtia-admin-mobile-nav :where(a, button).is-active {
+    color: #fff;
+    background: linear-gradient(145deg, rgba(139,92,246,.22), rgba(34,211,238,.07));
+  }
+}
+
+@media (max-width: 380px) {
+  .aurora-mobile-topbar-title {
+    max-width: 104px;
+  }
+
+  .courtia-route-viewport > :not(.sales-page) {
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+  }
+
+  .vibe-page-header-actions {
+    grid-template-columns: 1fr;
+  }
+}

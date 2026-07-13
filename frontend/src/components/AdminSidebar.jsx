@@ -1,9 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, CreditCard, Activity, FileText, LifeBuoy, Shield, BrainCircuit, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Activity, FileText, LifeBuoy, Shield, BrainCircuit, MessageCircle, PhoneCall, X } from 'lucide-react'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 
 const links = [
     { to: '/admin', icon: LayoutDashboard, label: "Vue d'ensemble" },
+  { to: '/prospection', icon: PhoneCall, label: 'Activité commerciale' },
   { to: '/admin/users', icon: Users, label: 'Courtiers' },
   { to: '/admin/subscriptions', icon: CreditCard, label: 'Abonnements' },
   { to: '/admin/growth-leads', icon: Users, label: 'Growth Leads' },
@@ -14,7 +15,7 @@ const links = [
   { to: '/admin/support', icon: LifeBuoy, label: 'Support' },
 ]
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ mobileOpen = false, onClose }) {
   const location = useLocation()
   const growthLeadsEnabled = String(import.meta.env.VITE_ENABLE_GROWTH_LEADS || '').toLowerCase() === 'true'
   const visibleLinks = growthLeadsEnabled
@@ -22,7 +23,9 @@ export default function AdminSidebar() {
     : links.filter((link) => link.to !== '/admin/growth-leads')
 
   return (
-    <aside style={{
+    <>
+    {mobileOpen && <button type="button" className="courtia-admin-sidebar-backdrop" aria-label="Fermer le menu administrateur" onClick={onClose} />}
+    <aside className={`courtia-admin-sidebar ${mobileOpen ? 'is-mobile-open' : ''}`} style={{
       width: 220, minHeight: '100vh',
       background: 'linear-gradient(180deg, rgba(6,10,24,0.92), rgba(2,6,18,0.94))',
       borderRight: '1px solid rgba(255,255,255,0.10)',
@@ -36,7 +39,8 @@ export default function AdminSidebar() {
       <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <CourtiaMiniLogo size={24} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>Admin</span>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>Admin</span>
+          <button type="button" className="courtia-admin-sidebar-close" onClick={onClose} aria-label="Fermer le menu administrateur"><X size={19} /></button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <Shield size={10} style={{ color: '#f59e0b' }} />
@@ -52,6 +56,7 @@ export default function AdminSidebar() {
             <NavLink
               key={link.to}
               to={link.to}
+              onClick={onClose}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '9px 12px', borderRadius: 8, marginBottom: 2,
@@ -75,5 +80,6 @@ export default function AdminSidebar() {
         COURTIA Admin · v1.0
       </div>
     </aside>
+    </>
   )
 }

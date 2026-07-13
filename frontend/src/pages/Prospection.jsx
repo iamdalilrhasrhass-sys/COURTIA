@@ -1,120 +1,334 @@
-import { UserPlus, Target, MapPin, TrendingUp, Zap, Search, CalendarDays } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  ArrowLeft, ArrowRight, CalendarDays, CheckSquare2, ChevronDown, ChevronRight,
+  Clock3, Database, Fingerprint, LayoutDashboard, Loader2, MapPin, PhoneCall,
+  RefreshCw, Search, ShieldCheck, SlidersHorizontal, UploadCloud, UsersRound,
+} from 'lucide-react'
+import toast from 'react-hot-toast'
+import { salesApi } from '../api/salesProspecting'
+import CabinetDrawer from '../components/sales/CabinetDrawer'
+import CallOutcomeWizard from '../components/sales/CallOutcomeWizard'
+import SalesAuditPanel from '../components/sales/SalesAuditPanel'
+import SalesCalendarPanel from '../components/sales/SalesCalendarPanel'
+import SalesDashboard from '../components/sales/SalesDashboard'
+import SalesImportPanel from '../components/sales/SalesImportPanel'
+import SalesUsersPanel from '../components/sales/SalesUsersPanel'
+import {
+  formatDateTime, INTEREST_LABELS, PIPELINE_LABELS, SIZE_LABELS, STATUS_COLORS,
+} from '../lib/salesProspecting'
+import './salesProspecting.css'
 
-const DEMO_PROSPECTS = [
-  { id: 1, nom: 'Entreprise Lambert', secteur: 'BTP', ville: 'Lyon', potentiel: 18000, statut: 'contacte', date: '03/05/2026' },
-  { id: 2, nom: 'Clinique Vétérinaire du Parc', secteur: 'Santé', ville: 'Paris', potentiel: 12400, statut: 'qualifie', date: '01/05/2026' },
-  { id: 3, nom: 'SARL Dupuis Transport', secteur: 'Transport', ville: 'Marseille', potentiel: 28500, statut: 'rdv', date: '28/04/2026' },
-  { id: 4, nom: 'Restaurant Le Gourmet', secteur: 'Restauration', ville: 'Bordeaux', potentiel: 4200, statut: 'contacte', date: '25/04/2026' },
-  { id: 5, nom: 'Agence Web DigitalPro', secteur: 'Tech', ville: 'Nantes', potentiel: 3800, statut: 'nouveau', date: '05/05/2026' },
-  { id: 6, nom: 'Cabinet Dentaire Sourire', secteur: 'Santé', ville: 'Lille', potentiel: 6400, statut: 'qualifie', date: '22/04/2026' },
+const PAGE_SIZE = 30
+
+const ADMIN_TABS = [
+  { id: 'cockpit', label: 'Cockpit', icon: LayoutDashboard },
+  { id: 'cabinets', label: 'Cabinets', icon: Database },
+  { id: 'calendar', label: 'Agenda', icon: CalendarDays },
+  { id: 'import', label: 'Import national', icon: UploadCloud },
+  { id: 'team', label: 'Équipe', icon: UsersRound },
+  { id: 'audit', label: 'Audit', icon: Fingerprint },
 ]
 
-const STATUT_STYLE = {
-  nouveau:  { bg: 'rgba(59,130,246,0.10)', text: '#3B82F6' },
-  contacte: { bg: 'rgba(245,158,11,0.10)', text: '#F59E0B' },
-  qualifie: { bg: 'rgba(139,92,246,0.10)', text: '#8B5CF6' },
-  rdv:      { bg: 'rgba(34,197,94,0.10)', text: '#22C55E' },
+const PROSPECTOR_TABS = ADMIN_TABS.filter(({ id }) => ['cockpit', 'cabinets', 'calendar'].includes(id))
+
+const EMPTY_FILTERS = {
+  search: '', status: '', size_category: '', interest_level: '', assigned_to: '',
+  sort: 'size_asc', page: 1, limit: PAGE_SIZE,
 }
 
-const STATUT_LABEL = {
-  nouveau: 'Nouveau', contacte: 'Contacté', qualifie: 'Qualifié', rdv: 'RDV planifié',
+function cleanParams(value) {
+  return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== '' && item !== undefined && item !== null))
+}
+
+function CabinetTable({ cabinets, loading, selectable, selected, onSelect, onSelectAll, onOpen }) {
+  if (loading) return <div className="sales-loading"><Loader2 size={22} className="sales-spin" /> Chargement des cabinets…</div>
+  if (!cabinets.length) return <div className="sales-empty-state"><Search size={26} /><strong>Aucun cabinet ne correspond aux filtres.</strong><span>Modifiez les critères ou importez une base nationale.</span></div>
+
+  return (
+    <>
+      <div className="sales-table-wrap">
+        <table className="sales-table sales-cabinet-table">
+          <thead><tr>
+            {selectable && <th className="sales-check-cell"><input aria-label="Tout sélectionner" type="checkbox" checked={cabinets.length > 0 && cabinets.every((item) => selected.includes(item.id))} onChange={(event) => onSelectAll(event.target.checked)} /></th>}
+            <th>Cabinet</th><th>Taille</th><th>Localisation</th><th>Commercial</th><th>Statut</th><th>Dernier appel</th><th>Prochaine action</th>
+          </tr></thead>
+          <tbody>{cabinets.map((cabinet) => (
+            <tr key={cabinet.id} onClick={() => onOpen(cabinet.id)}>
+              {selectable && <td className="sales-check-cell" onClick={(event) => event.stopPropagation()}><input aria-label={`Sélectionner ${cabinet.legal_name}`} type="checkbox" checked={selected.includes(cabinet.id)} onChange={(event) => onSelect(cabinet.id, event.target.checked)} /></td>}
+              <td><div className="sales-company-cell"><span>{(cabinet.trade_name || cabinet.legal_name || '?').slice(0, 1).toUpperCase()}</span><div><strong>{cabinet.trade_name || cabinet.legal_name}</strong>{cabinet.trade_name && <small>{cabinet.legal_name}</small>}<small>{cabinet.siren ? `SIREN ${cabinet.siren}` : cabinet.orias_number ? `ORIAS ${cabinet.orias_number}` : 'Identifiant à compléter'}</small></div></div></td>
+              <td><strong>{SIZE_LABELS[cabinet.size_category] || cabinet.size_category}</strong><small className="sales-table-sub">Score {cabinet.size_score}{cabinet.size_is_estimated ? ' · estimé' : ''}</small></td>
+              <td>{cabinet.city || '—'}<small className="sales-table-sub">{cabinet.department || cabinet.region || 'France'}</small></td>
+              <td>{cabinet.assigned_username ? `@${cabinet.assigned_username}` : <span className="sales-muted">Non attribué</span>}</td>
+              <td><span className={`sales-status tone-${STATUS_COLORS[cabinet.commercial_status] || 'slate'}`}>{PIPELINE_LABELS[cabinet.commercial_status] || cabinet.commercial_status}</span>{cabinet.interest_level && <small className="sales-table-sub">Intérêt {INTEREST_LABELS[cabinet.interest_level]}</small>}</td>
+              <td>{formatDateTime(cabinet.last_call_at)}{cabinet.last_call_outcome && <small className="sales-table-sub">{cabinet.last_call_outcome}</small>}</td>
+              <td>{formatDateTime(cabinet.next_followup_at)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+
+      <div className="sales-cabinet-cards" aria-label="Liste des cabinets">
+        {selectable && <label className="sales-mobile-select-all"><input type="checkbox" checked={cabinets.every((item) => selected.includes(item.id))} onChange={(event) => onSelectAll(event.target.checked)} /><span>Tout sélectionner</span></label>}
+        {cabinets.map((cabinet) => (
+          <article className={`sales-cabinet-card ${selected.includes(cabinet.id) ? 'is-selected' : ''}`} key={cabinet.id}>
+            {selectable && <label className="sales-card-checkbox" onClick={(event) => event.stopPropagation()}><input aria-label={`Sélectionner ${cabinet.legal_name}`} type="checkbox" checked={selected.includes(cabinet.id)} onChange={(event) => onSelect(cabinet.id, event.target.checked)} /></label>}
+            <button type="button" className="sales-cabinet-card-main" onClick={() => onOpen(cabinet.id)}>
+              <span className="sales-card-company-row">
+                <span className="sales-card-avatar">{(cabinet.trade_name || cabinet.legal_name || '?').slice(0, 1).toUpperCase()}</span>
+                <span className="sales-card-company-copy"><strong>{cabinet.trade_name || cabinet.legal_name}</strong><small>{cabinet.city || 'Localisation à compléter'}{cabinet.department ? ` · ${cabinet.department}` : ''}</small></span>
+                <ChevronRight size={19} />
+              </span>
+              <span className="sales-card-badges"><span className={`sales-status tone-${STATUS_COLORS[cabinet.commercial_status] || 'slate'}`}>{PIPELINE_LABELS[cabinet.commercial_status] || cabinet.commercial_status}</span>{cabinet.interest_level && <span className="sales-card-interest">Intérêt {INTEREST_LABELS[cabinet.interest_level]}</span>}</span>
+              <span className="sales-card-facts">
+                <span><MapPin size={14} /><span><small>Localisation</small><strong>{cabinet.city || '—'}</strong></span></span>
+                <span><UsersRound size={14} /><span><small>Commercial</small><strong>{cabinet.assigned_username ? `@${cabinet.assigned_username}` : 'Non attribué'}</strong></span></span>
+              </span>
+              <span className="sales-card-footer"><span><Clock3 size={14} />{cabinet.next_followup_at ? `Relance ${formatDateTime(cabinet.next_followup_at)}` : cabinet.last_call_at ? `Dernier appel ${formatDateTime(cabinet.last_call_at)}` : 'Premier contact à effectuer'}</span><strong>{SIZE_LABELS[cabinet.size_category] || cabinet.size_category}</strong></span>
+            </button>
+          </article>
+        ))}
+      </div>
+    </>
+  )
 }
 
 export default function Prospection() {
-  const totalPotentiel = DEMO_PROSPECTS.reduce((s, p) => s + p.potentiel, 0)
+  const [tab, setTab] = useState('cockpit')
+  const [user, setUser] = useState(null)
+  const [metrics, setMetrics] = useState({})
+  const [users, setUsers] = useState([])
+  const [cabinets, setCabinets] = useState([])
+  const [total, setTotal] = useState(0)
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [draftSearch, setDraftSearch] = useState('')
+  const [selected, setSelected] = useState([])
+  const [detail, setDetail] = useState(null)
+  const [activeCall, setActiveCall] = useState(null)
+  const [conflicts, setConflicts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadingList, setLoadingList] = useState(false)
+  const [loadingNext, setLoadingNext] = useState(false)
+  const [assignTo, setAssignTo] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+
+  const isAdmin = user?.role === 'super_admin'
+  const tabs = isAdmin ? ADMIN_TABS : PROSPECTOR_TABS
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const activeFilterCount = [filters.status, filters.size_category, filters.interest_level, filters.assigned_to].filter(Boolean).length + (filters.sort !== EMPTY_FILTERS.sort ? 1 : 0)
+  const activeTabLabel = tabs.find((item) => item.id === tab)?.label || 'Cockpit'
+
+  const loadDashboard = useCallback(async () => {
+    const response = await salesApi.dashboard()
+    setMetrics(response.data || {})
+  }, [])
+
+  const loadCabinets = useCallback(async (nextFilters = filters) => {
+    setLoadingList(true)
+    try {
+      const response = await salesApi.listCabinets(cleanParams(nextFilters))
+      setCabinets(response.data.cabinets || [])
+      setTotal(Number(response.data.total) || 0)
+    } catch (error) {
+      toast.error(error?.response?.data?.error || 'Chargement des cabinets impossible')
+    } finally { setLoadingList(false) }
+  }, [filters])
+
+  const loadUsers = useCallback(async () => {
+    if (!isAdmin) return
+    const response = await salesApi.users()
+    setUsers((response.data.users || []).filter((item) => item.role === 'prospecteur' && !item.suspended_at && !item.deleted_at))
+  }, [isAdmin])
+
+  const openCabinet = useCallback(async (id) => {
+    try {
+      const response = await salesApi.getCabinet(id)
+      setDetail(response.data)
+    } catch (error) {
+      toast.error(error?.response?.data?.error === 'cabinet_not_assigned_to_user' ? 'Ce cabinet est déjà attribué à un autre prospecteur.' : error?.response?.data?.error || 'Fiche inaccessible')
+    }
+  }, [])
+
+  const refreshEverything = useCallback(async () => {
+    await Promise.all([loadDashboard(), loadCabinets(), loadUsers()])
+    if (detail?.cabinet?.id) await openCabinet(detail.cabinet.id)
+  }, [detail, loadCabinets, loadDashboard, loadUsers, openCabinet])
+
+  useEffect(() => {
+    let active = true
+    async function bootstrap() {
+      try {
+        const response = await salesApi.me()
+        if (!active) return
+        setUser(response.data)
+      } catch (error) {
+        toast.error(error?.response?.data?.error || 'Accès à la prospection refusé')
+      } finally { if (active) setLoading(false) }
+    }
+    bootstrap()
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const timer = window.setTimeout(() => {
+      Promise.all([loadDashboard(), loadCabinets(), user.role === 'super_admin' ? salesApi.users().then((response) => setUsers((response.data.users || []).filter((item) => item.role === 'prospecteur' && !item.suspended_at && !item.deleted_at))) : Promise.resolve()]).catch(() => {})
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [loadCabinets, loadDashboard, user])
+
+  useEffect(() => {
+    if (tab !== 'cabinets' || !user) return undefined
+    const timer = window.setTimeout(() => { loadCabinets() }, 0)
+    return () => window.clearTimeout(timer)
+  }, [filters, loadCabinets, tab, user])
+
+  useEffect(() => {
+    if (!user || draftSearch.trim().length < 3) return undefined
+    const timer = window.setTimeout(() => {
+      salesApi.searchConflicts(draftSearch.trim()).then((response) => setConflicts(response.data.cabinets || [])).catch(() => setConflicts([]))
+    }, 350)
+    return () => window.clearTimeout(timer)
+  }, [draftSearch, user])
+
+  function updateFilter(key, value) {
+    setFilters((current) => ({ ...current, [key]: value, page: key === 'page' ? value : 1 }))
+    setSelected([])
+  }
+
+  function submitSearch(event) {
+    event.preventDefault()
+    updateFilter('search', draftSearch.trim())
+    setConflicts([])
+  }
+
+  function resetFilters() {
+    setFilters(EMPTY_FILTERS)
+    setDraftSearch('')
+    setSelected([])
+    setMobileFiltersOpen(false)
+  }
+
+  async function startCall(cabinet) {
+    try {
+      const response = await salesApi.startCall(cabinet.id)
+      setActiveCall({ cabinet, call: response.data.call })
+      setDetail(null)
+    } catch (error) {
+      const code = error?.response?.data?.error
+      toast.error(code === 'cabinet_locked' ? 'Un autre prospecteur est déjà en train d’appeler ce cabinet.' : code === 'cabinet_not_assigned_to_user' ? 'Cette fiche ne vous est pas attribuée.' : code || 'Impossible de démarrer l’appel')
+    }
+  }
+
+  async function callNext() {
+    setLoadingNext(true)
+    try {
+      const response = await salesApi.nextCabinet()
+      if (!response.data.cabinet) return toast('Aucun cabinet disponible pour le moment.')
+      await startCall(response.data.cabinet)
+    } catch (error) { toast.error(error?.response?.data?.error || 'Sélection impossible') }
+    finally { setLoadingNext(false) }
+  }
+
+  async function cancelCall() {
+    if (!activeCall) return
+    try { await salesApi.releaseLock(activeCall.cabinet.id) } catch { /* le verrou expirera automatiquement */ }
+    setActiveCall(null)
+    await refreshEverything()
+  }
+
+  async function completeCall() {
+    setActiveCall(null)
+    await refreshEverything()
+  }
+
+  async function assignSelected() {
+    if (!selected.length) return toast.error('Sélectionnez au moins un cabinet.')
+    try {
+      await salesApi.assign({ cabinet_ids: selected, to_user_id: assignTo ? Number(assignTo) : null, method: 'manual', justification: 'Attribution depuis la liste nationale' })
+      toast.success(`${selected.length} cabinet(s) attribué(s)`)
+      setSelected([])
+      await refreshEverything()
+    } catch (error) { toast.error(error?.response?.data?.error || 'Attribution impossible') }
+  }
+
+  async function autoAssign() {
+    if (!users.length) return toast.error('Aucun prospecteur actif.')
+    try {
+      const response = await salesApi.autoAssign({ user_ids: users.map((item) => item.id), size_category: filters.size_category || undefined, strategy: 'round_robin' })
+      toast.success(`${response.data.updated || 0} cabinets répartis équitablement`)
+      await refreshEverything()
+    } catch (error) { toast.error(error?.response?.data?.error || 'Répartition impossible') }
+  }
+
+  function openFilter(next) {
+    if (next.open_id) { openCabinet(next.open_id); return }
+    setTab('cabinets')
+    setFilters((current) => ({ ...EMPTY_FILTERS, ...current, ...next, page: 1 }))
+  }
+
+  const conflictResults = useMemo(() => draftSearch.trim().length < 3 ? [] : conflicts.filter((item) => item.assigned_to && Number(item.assigned_to) !== Number(user?.id)).slice(0, 6), [conflicts, draftSearch, user?.id])
+
+  if (loading) return <div className="sales-page"><div className="sales-loading fullscreen"><Loader2 size={26} className="sales-spin" /> Ouverture du cockpit sécurisé…</div></div>
+  if (!user) return <div className="sales-page"><div className="sales-empty-state"><ShieldCheck size={30} /><strong>Accès non autorisé</strong><span>Votre compte ne possède pas le rôle commercial requis.</span></div></div>
 
   return (
-    <div style={{ padding: 32, minHeight: '100vh' }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Prospection</h1>
-        <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>Pipeline de nouveaux clients potentiels</p>
-      </div>
+    <div className="sales-page">
+      <header className="sales-page-head">
+        <div><span className="sales-kicker"><ShieldCheck size={15} /> Prospection France · accès cloisonné</span><h1>Courtiark Sales Command</h1><p>{isAdmin ? 'Vision nationale, attribution et pilotage complet de la conversion.' : `Bonjour ${user.first_name || user.username}. Votre portefeuille est isolé et prêt à appeler.`}</p></div>
+        <button className="sales-button secondary" onClick={refreshEverything}><RefreshCw size={16} /> Actualiser</button>
+      </header>
 
-      {/* KPIs */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        {[
-          { label: 'Prospects', value: DEMO_PROSPECTS.length, icon: UserPlus, accent: '#5B4DF5' },
-          { label: 'Potentiel', value: `${(totalPotentiel / 1000).toFixed(0)}k €`, icon: TrendingUp, accent: '#22C55E' },
-          { label: 'RDV planifiés', value: 1, icon: CalendarDays, accent: '#F59E0B' },
-          { label: 'Taux de conversion', value: '22%', icon: Target, accent: '#3B82F6' },
-        ].map((kpi, i) => (
-          <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>{kpi.label}</span>
-              <kpi.icon size={16} color={kpi.accent} />
+      <header className="sales-mobile-page-head">
+        <div><span>Bonjour {user.first_name || user.username}</span><h1>{activeTabLabel}</h1></div>
+        <button type="button" className="sales-icon-button" onClick={refreshEverything} aria-label="Actualiser les données"><RefreshCw size={17} /></button>
+      </header>
+
+      <nav className="sales-main-tabs" aria-label="Sections prospection">
+        {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'is-active' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}><Icon size={16} />{label}</button>)}
+      </nav>
+
+      <main className="sales-page-body">
+        {tab === 'cockpit' && <SalesDashboard metrics={metrics} user={user} onOpenFilter={openFilter} onCallNext={callNext} loadingNext={loadingNext} />}
+
+        {tab === 'cabinets' && <section className="sales-panel sales-list-panel">
+          <header className="sales-list-header"><div><span className="sales-kicker"><Database size={15} /> Base cabinets</span><h3>{total.toLocaleString('fr-FR')} cabinet{total > 1 ? 's' : ''}</h3></div>{!isAdmin && <button className="sales-button primary sales-list-next-call" disabled={loadingNext} onClick={callNext}><PhoneCall size={16} /> Prochain appel</button>}</header>
+
+          <div className="sales-filter-zone">
+            <form className="sales-search-form" onSubmit={submitSearch}><Search size={17} /><input value={draftSearch} onChange={(event) => setDraftSearch(event.target.value)} placeholder="Cabinet, ville, SIREN…" /><button type="submit" aria-label="Rechercher"><Search size={16} /><span>Rechercher</span></button></form>
+            {!!conflictResults.length && <div className="sales-conflict-popover"><strong>Présence détectée dans la base</strong>{conflictResults.map((item) => <div key={item.id}><span>{item.legal_name} · {item.city || 'France'}</span><em>{item.locked_by_username ? `Appel en cours par @${item.locked_by_username}` : `Attribué à @${item.assigned_username}`}</em></div>)}</div>}
+            <div className="sales-mobile-filter-bar">
+              <button type="button" className={mobileFiltersOpen ? 'is-open' : ''} onClick={() => setMobileFiltersOpen((current) => !current)} aria-expanded={mobileFiltersOpen} aria-controls="sales-filter-fields"><SlidersHorizontal size={16} /> Filtres {activeFilterCount > 0 && <b>{activeFilterCount}</b>}<ChevronDown size={15} /></button>
+              {(activeFilterCount > 0 || draftSearch) && <button type="button" onClick={resetFilters}>Réinitialiser</button>}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{kpi.value}</div>
+            <div id="sales-filter-fields" className={`sales-filters ${mobileFiltersOpen ? 'is-mobile-open' : ''}`}><SlidersHorizontal size={16} />
+              <select value={filters.status} onChange={(event) => updateFilter('status', event.target.value)}><option value="">Tous les statuts</option>{Object.entries(PIPELINE_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
+              <select value={filters.size_category} onChange={(event) => updateFilter('size_category', event.target.value)}><option value="">Toutes les tailles</option>{Object.entries(SIZE_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
+              <select value={filters.interest_level} onChange={(event) => updateFilter('interest_level', event.target.value)}><option value="">Tout intérêt</option>{Object.entries(INTEREST_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
+              {isAdmin && <select value={filters.assigned_to} onChange={(event) => updateFilter('assigned_to', event.target.value)}><option value="">Tous les commerciaux</option><option value="unassigned">Non attribué</option>{users.map((item) => <option key={item.id} value={item.id}>@{item.username}</option>)}</select>}
+              <select value={filters.sort} onChange={(event) => updateFilter('sort', event.target.value)}><option value="size_asc">Taille croissante</option><option value="size_desc">Taille décroissante</option><option value="priority">Priorité</option><option value="next_followup">Prochaine relance</option><option value="last_call">Dernier appel</option><option value="updated">Dernière modification</option></select>
+              <button type="button" className="sales-text-button sales-desktop-filter-reset" onClick={resetFilters}>Effacer</button>
+              <button type="button" className="sales-button primary sales-mobile-filter-apply" onClick={() => setMobileFiltersOpen(false)}>Afficher {total.toLocaleString('fr-FR')} résultat{total > 1 ? 's' : ''}</button>
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Barre de recherche + filtres */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', gap: 8,
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 8, padding: '8px 14px',
-        }}>
-          <Search size={14} color="#6B7280" />
-          <input placeholder="Rechercher un prospect..." style={{
-            background: 'none', border: 'none', color: '#fff', fontSize: 13, outline: 'none', flex: 1,
-          }} />
-        </div>
-        <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.05)', color: '#9CA3AF', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
-          + Nouveau prospect
-        </button>
-      </div>
+          {isAdmin && <div className="sales-assignment-bar"><CheckSquare2 size={16} /><strong>{selected.length} sélectionné{selected.length > 1 ? 's' : ''}</strong><select value={assignTo} onChange={(event) => setAssignTo(event.target.value)}><option value="">Désattribuer</option>{users.map((item) => <option key={item.id} value={item.id}>Attribuer à @{item.username}</option>)}</select><button className="sales-button secondary" disabled={!selected.length} onClick={assignSelected}>Appliquer</button><span /><button className="sales-button secondary" onClick={autoAssign}><UsersRound size={15} /> Répartir équitablement</button></div>}
 
-      {/* ARK */}
-      <div style={{
-        background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)',
-        borderRadius: 12, padding: '14px 18px', marginBottom: 24,
-        display: 'flex', alignItems: 'center', gap: 12,
-      }}>
-        <Zap size={16} color="#8B5CF6" />
-        <p style={{ fontSize: 13, color: '#c4b5fd', margin: 0 }}>
-          <strong style={{ color: '#a78bfa' }}>ARK</strong> — 6 prospects en pipeline. Le secteur Transport affiche le plus fort potentiel (28 500 €). SARL Dupuis Transport a un RDV planifié.
-        </p>
-      </div>
+          <CabinetTable cabinets={cabinets} loading={loadingList} selectable={isAdmin} selected={selected} onSelect={(id, checked) => setSelected((current) => checked ? [...new Set([...current, id])] : current.filter((item) => item !== id))} onSelectAll={(checked) => setSelected(checked ? cabinets.map((item) => item.id) : [])} onOpen={openCabinet} />
+          <footer className="sales-pagination"><span>Page {filters.page} sur {pageCount}</span><div><button disabled={filters.page <= 1} onClick={() => updateFilter('page', filters.page - 1)}><ArrowLeft size={15} /> Précédent</button><button disabled={filters.page >= pageCount} onClick={() => updateFilter('page', filters.page + 1)}>Suivant <ArrowRight size={15} /></button></div></footer>
+        </section>}
 
-      {/* Tableau */}
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Prospect</th>
-              <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Secteur</th>
-              <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Ville</th>
-              <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Potentiel</th>
-              <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Statut</th>
-              <th style={{ textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DEMO_PROSPECTS.map(p => {
-              const s = STATUT_STYLE[p.statut]
-              return (
-                <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{p.nom}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{p.secteur}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <MapPin size={11} /> {p.ville}
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#22C55E' }}>{p.potentiel.toLocaleString('fr-FR')} €</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: s.bg, color: s.text }}>
-                      {STATUT_LABEL[p.statut]}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{p.date}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+        {tab === 'calendar' && <SalesCalendarPanel user={user} />}
+        {tab === 'import' && isAdmin && <SalesImportPanel onImported={refreshEverything} />}
+        {tab === 'team' && isAdmin && <SalesUsersPanel onUsersChanged={loadUsers} />}
+        {tab === 'audit' && isAdmin && <SalesAuditPanel />}
+      </main>
+
+      <nav className={`sales-mobile-nav ${isAdmin ? 'is-admin' : ''}`} aria-label="Navigation mobile de la prospection">
+        {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'is-active' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}><Icon size={19} /><span>{label}</span></button>)}
+      </nav>
+
+      {detail && <CabinetDrawer detail={detail} user={user} onClose={() => setDetail(null)} onStartCall={startCall} onRefresh={refreshEverything} />}
+      {activeCall && <CallOutcomeWizard cabinet={activeCall.cabinet} call={activeCall.call} onComplete={completeCall} onCancel={cancelCall} />}
     </div>
   )
 }

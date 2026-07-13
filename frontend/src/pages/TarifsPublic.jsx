@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import MarketingShell from '../components/marketing/MarketingShell'
 import { applySeo } from '../lib/seo'
 import { trackMarketingEvent } from '../lib/marketingEvents'
 import { VibeScrollSection } from '../components/vibe'
+import { formatMarketPrice, getMarketPricing } from '../market/marketContext'
 
 const FAQ = [
   { q: 'COURTIA est-il adapté à un courtier solo ?', a: 'Oui. Le plan Starter est calibré pour les indépendants et petits cabinets.' },
@@ -15,13 +16,20 @@ const FAQ = [
 ]
 
 export default function TarifsPublic() {
+  const location = useLocation()
+  const market = new URLSearchParams(location.search).get('market')?.toUpperCase() === 'CH' ? 'CH' : 'FR'
+  const pricing = getMarketPricing(market)
+  const isSwiss = market === 'CH'
+
   useEffect(() => {
     applySeo({
-      title: 'Tarifs COURTIA — Starter 89€ / Pro 159€ / Cabinet sur devis',
-      description: 'Plans COURTIA pour courtiers assurance: Starter, Pro (offre principale) et Cabinet sur devis.',
+      title: isSwiss ? 'Tarifs Courtiark Suisse — offres en CHF' : 'Tarifs Courtiark — Starter 89€ / Pro 159€ / Cabinet sur devis',
+      description: isSwiss
+        ? 'Offres Courtiark en CHF pour courtiers indépendants et cabinets suisses.'
+        : 'Plans Courtiark pour courtiers assurance : Starter, Pro et Cabinet sur devis.',
       canonicalPath: '/tarifs',
     })
-  }, [])
+  }, [isSwiss])
 
   const onClickPricing = () => {
     trackMarketingEvent('click_pricing', { section: 'tarifs_page' })
@@ -30,20 +38,16 @@ export default function TarifsPublic() {
   return (
     <MarketingShell activePath="/tarifs">
       <section className="mk-section">
-        <span className="mk-eyebrow">Tarifs COURTIA</span>
-        <h1 className="mk-section-title">Des offres conçues pour la réalité du courtage</h1>
-        <p className="mk-section-sub">Commencez en Starter, passez en Pro pour déployer pleinement ARK et le pilotage avancé.</p>
+        <span className="mk-eyebrow">Tarifs Courtiark · {pricing.country}</span>
+        <h1 className="mk-section-title">{isSwiss ? 'Des offres en CHF conçues pour le courtage suisse' : 'Des offres conçues pour la réalité du courtage'}</h1>
+        <p className="mk-section-sub">{isSwiss ? 'Onboarding, paramétrage LSA et formation sont cadrés avant activation.' : 'Commencez en Starter, passez en Pro pour déployer pleinement ARK et le pilotage avancé.'}</p>
 
         <VibeScrollSection parallax={16}>
           <div className="mk-price-grid" style={{ perspective: 1400 }}>
-            {[
-              { key: 'starter', eyebrow: 'Starter', price: '89€', sub: 'HT/mois', items: ['Dashboard portefeuille', 'Clients, contrats, tâches', 'Rapports essentiels', 'Pour 1 à 5 collaborateurs'], featured: false },
-              { key: 'pro', eyebrow: 'Pro · recommandé', price: '159€', sub: 'HT/mois', items: ['Morning Brief complet', 'Clients à risque & relances intelligentes', 'Rapports avancés + admin costs', 'Pour cabinets en croissance'], featured: true },
-              { key: 'cabinet', eyebrow: 'Cabinet', price: 'Sur devis', sub: '', items: ['Multi-utilisateurs avancé', 'Commissions et reporting cabinet', 'Intégrations étendues', 'Support renforcé'], featured: false },
-            ].map((p, i) => (
+            {pricing.plans.map((p, i) => (
               <motion.article
-                key={p.key}
-                className={`mk-price-card${p.featured ? ' featured' : ''}`}
+                key={p.code}
+                className={`mk-price-card${p.highlighted ? ' featured' : ''}`}
                 initial={{ opacity: 0, y: 24, rotateX: -6 }}
                 whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -51,24 +55,25 @@ export default function TarifsPublic() {
                 whileHover={{ rotateX: 4, rotateY: -4, y: -6, scale: 1.02 }}
                 style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
               >
-                <p className="mk-price-eyebrow">{p.eyebrow}</p>
-                <p className="mk-price">{p.price} {p.sub && <small>{p.sub}</small>}</p>
+                <p className="mk-price-eyebrow">{p.name}{p.highlighted ? ' · recommandé' : ''}</p>
+                <p className="mk-price">{formatMarketPrice(p.monthly, market)} {p.monthly && <small>HT/mois</small>}</p>
+                <p className="mk-inline-note">{p.description} · {p.setupLabel}</p>
                 <ul className="mk-plain-list">
-                  {p.items.map((it) => <li key={it}>{it}</li>)}
+                  {p.features.map((it) => <li key={it}>{it}</li>)}
                 </ul>
               </motion.article>
             ))}
           </div>
         </VibeScrollSection>
-        <p className="mk-section-sub">Le plan Pro est le plus choisi par les courtiers indépendants.</p>
+        <p className="mk-section-sub">{pricing.compliance} · {pricing.taxNote}</p>
       </section>
 
       <section className="mk-section">
         <div className="mk-hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/demo" className="mk-button primary" onClick={onClickPricing}>
-            Demander une démo <ArrowRight size={14} />
+          <Link to={`/demo?market=${market}`} className="mk-button primary" onClick={onClickPricing}>
+            {isSwiss ? 'Réserver une démo Suisse' : 'Demander une démo'} <ArrowRight size={14} />
           </Link>
-          <Link to="/contact" className="mk-button secondary" onClick={onClickPricing}>
+          <Link to={`/contact?market=${market}`} className="mk-button secondary" onClick={onClickPricing}>
             Parler à l'équipe
           </Link>
         </div>
@@ -78,7 +83,9 @@ export default function TarifsPublic() {
         <div className="mk-card">
           <span className="mk-eyebrow"><Sparkles size={12} /> Positionnement commercial</span>
           <p className="mk-section-sub" style={{ marginTop: 10 }}>
-            COURTIA présente une grille simple: Starter à 89€ HT/mois, Pro à 159€ HT/mois et Cabinet sur devis.
+            {isSwiss
+              ? 'Courtiark présente les frais de setup et l’abonnement CHF avant toute activation.'
+              : 'Courtiark présente une grille simple : Starter à 89 € HT/mois, Pro à 159 € HT/mois et Cabinet sur devis.'}
           </p>
         </div>
       </section>

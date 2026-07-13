@@ -22,7 +22,7 @@ export default function LegalCgv() {
           <p>Les intégrations optionnelles (Google, Meta WhatsApp, Yousign, email transactionnel, SMS) nécessitent une configuration dédiée et peuvent rester en “Configuration requise”.</p>
           <p>Le courtier reste responsable de l’exactitude des informations saisies, de la validation des documents remis aux clients et de ses obligations réglementaires.</p>
           <p>La responsabilité de COURTIA est limitée aux sommes effectivement payées sur la période contractuelle concernée, sauf règle légale impérative contraire.</p>
-          <p>Support: support@courtiark.fr. Contact commercial et résiliation: contact@courtiark.fr.</p>
+          <p>Support, contact commercial et résiliation : arkcourtia@gmail.com.</p>
         </div>
       </section>
     </MarketingShell>

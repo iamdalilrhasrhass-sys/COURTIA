@@ -20,6 +20,12 @@ const PRIORITY_OPTIONS = [
   { key: 'C', label: 'Priorité C' },
 ]
 
+const MARKET_OPTIONS = [
+  { key: 'all', label: 'Tous marchés' },
+  { key: 'FR', label: 'France' },
+  { key: 'CH', label: 'Suisse' },
+]
+
 function badge(status) {
   const map = {
     a_contacter: { bg: 'rgba(59,130,246,0.14)', color: '#93c5fd', label: 'À contacter' },
@@ -44,6 +50,7 @@ export default function AdminGrowthLeads() {
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('tous')
   const [priorityFilter, setPriorityFilter] = useState('all')
+  const [marketFilter, setMarketFilter] = useState('all')
   const [refreshNonce, setRefreshNonce] = useState(0)
 
   const token = getAuthToken()
@@ -57,6 +64,7 @@ export default function AdminGrowthLeads() {
         params.set('limit', '200')
         if (statusFilter !== 'tous') params.set('status', statusFilter)
         if (priorityFilter !== 'all') params.set('priority', priorityFilter)
+        if (marketFilter !== 'all') params.set('market', marketFilter)
 
         const res = await fetch(buildApiUrl(`/leads/demo-requests?${params.toString()}`, API_URL), {
           headers: { Authorization: `Bearer ${token}` },
@@ -77,14 +85,15 @@ export default function AdminGrowthLeads() {
 
     run()
     return () => { cancelled = true }
-  }, [statusFilter, priorityFilter, refreshNonce, token])
+  }, [statusFilter, priorityFilter, marketFilter, refreshNonce, token])
 
   const kpis = useMemo(() => {
     const total = rows.length
     const aContacter = rows.filter((r) => r.status === 'a_contacter').length
     const demos = rows.filter((r) => r.status === 'demo_prevue').length
     const won = rows.filter((r) => r.status === 'gagne').length
-    return { total, aContacter, demos, won }
+    const marketingOptIns = rows.filter((r) => r.marketing_consent && !r.opt_out).length
+    return { total, aContacter, demos, won, marketingOptIns }
   }, [rows])
 
   async function updateStatus(id, nextStatus) {
@@ -169,6 +178,7 @@ export default function AdminGrowthLeads() {
           { label: 'À contacter', value: kpis.aContacter },
           { label: 'Démos prévues', value: kpis.demos },
           { label: 'Gagnés', value: kpis.won },
+          { label: 'Opt-ins e-mail', value: kpis.marketingOptIns },
         ].map((item) => (
           <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '16px 18px' }}>
             <p style={{ margin: '0 0 5px', fontSize: 11, color: 'rgba(255,255,255,0.46)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</p>
@@ -205,13 +215,25 @@ export default function AdminGrowthLeads() {
             {option.label}
           </button>
         ))}
+        {MARKET_OPTIONS.map((option) => (
+          <button
+            key={option.key}
+            onClick={() => {
+              setLoading(true)
+              setMarketFilter(option.key)
+            }}
+            style={{ border: marketFilter === option.key ? '1px solid rgba(236,72,153,0.9)' : '1px solid rgba(255,255,255,0.12)', background: marketFilter === option.key ? 'rgba(236,72,153,0.2)' : 'rgba(255,255,255,0.03)', color: '#fff', borderRadius: 999, padding: '6px 11px', fontSize: 12, cursor: 'pointer' }}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 980 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1160 }}>
           <thead>
             <tr>
-              {['Lead', 'Cabinet', 'Ville', 'Taille', 'Priorité', 'Source', 'Statut', 'Créé', 'Actions'].map((h) => (
+              {['Lead', 'Cabinet', 'Ville', 'Marché', 'Taille', 'Priorité', 'Opt-in e-mail', 'Source', 'Statut', 'Créé', 'Actions'].map((h) => (
                 <th key={h} style={{ textAlign: 'left', fontSize: 11, color: 'rgba(255,255,255,0.52)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.09)' }}>{h}</th>
               ))}
             </tr>
@@ -219,11 +241,11 @@ export default function AdminGrowthLeads() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={9} style={{ padding: 18, color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Chargement des leads…</td>
+                <td colSpan={11} style={{ padding: 18, color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Chargement des leads…</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ padding: 22, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Aucun lead pour ces filtres.</td>
+                <td colSpan={11} style={{ padding: 22, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Aucun lead pour ces filtres.</td>
               </tr>
             ) : rows.map((row) => {
               const s = badge(row.status)
@@ -235,9 +257,13 @@ export default function AdminGrowthLeads() {
                   </td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.88)', fontSize: 13 }}>{row.company_name || '—'}</td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>{row.city || '—'}</td>
+                  <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: row.market === 'CH' ? '#f9a8d4' : '#93c5fd', fontSize: 12, fontWeight: 700 }}>{row.market || 'FR'}</td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>{row.team_size || '—'}</td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <span style={{ color: scoreColor(row.priority), fontWeight: 700, fontSize: 12 }}>{row.priority}</span>
+                  </td>
+                  <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: row.marketing_consent && !row.opt_out ? '#6ee7b7' : 'rgba(255,255,255,0.42)', fontSize: 12, fontWeight: 700 }}>
+                    {row.marketing_consent && !row.opt_out ? 'Oui' : 'Non'}
                   </td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>{row.source || 'landing'}</td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>

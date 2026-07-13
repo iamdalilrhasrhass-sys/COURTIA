@@ -7,9 +7,27 @@ import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import LandingPublic from './pages/LandingPublic'
-import Tarifs from './pages/Tarifs'
 import DesignSystem from './pages/DesignSystem'
 import VibePage from './components/vibe/VibePage'
+
+// Public marketing and trust pages are code-split to keep the landing bundle lean.
+const FonctionnalitesPublic = lazy(() => import('./pages/FonctionnalitesPublic'))
+const DemoPublic = lazy(() => import('./pages/DemoPublic'))
+const ContactPublic = lazy(() => import('./pages/ContactPublic'))
+const TarifsPublic = lazy(() => import('./pages/TarifsPublic'))
+const LegalMentionsLegales = lazy(() => import('./pages/LegalMentionsLegales'))
+const LegalConfidentialite = lazy(() => import('./pages/LegalConfidentialite'))
+const LegalCookies = lazy(() => import('./pages/LegalCookies'))
+const LegalConditionsUtilisation = lazy(() => import('./pages/LegalConditionsUtilisation'))
+const LegalCgv = lazy(() => import('./pages/LegalCgv'))
+const LegalDpa = lazy(() => import('./pages/LegalDpa'))
+const LegalSubprocessors = lazy(() => import('./pages/LegalSubprocessors'))
+const SecurityPublic = lazy(() => import('./pages/TrustPages').then((module) => ({ default: module.SecurityPublic })))
+const RgpdPublic = lazy(() => import('./pages/TrustPages').then((module) => ({ default: module.RgpdPublic })))
+const ChangelogPublic = lazy(() => import('./pages/TrustPages').then((module) => ({ default: module.ChangelogPublic })))
+const RoadmapPublic = lazy(() => import('./pages/TrustPages').then((module) => ({ default: module.RoadmapPublic })))
+const HelpPublic = lazy(() => import('./pages/TrustPages').then((module) => ({ default: module.HelpPublic })))
+const StatusPublic = lazy(() => import('./pages/TrustPages').then((module) => ({ default: module.StatusPublic })))
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
@@ -57,6 +75,20 @@ const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Academy = lazy(() => import('./pages/Academy'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 
+// Owner back-office. AdminRoute validates the role before rendering the layout.
+const AdminRoute = lazy(() => import('./components/AdminRoute'))
+const AdminLayout = lazy(() => import('./components/AdminLayout'))
+const AdminOverview = lazy(() => import('./pages/AdminOverview'))
+const AdminUsers = lazy(() => import('./pages/AdminUsers'))
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
+const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'))
+const AdminGrowthLeads = lazy(() => import('./pages/AdminGrowthLeads'))
+const AdminCostsDashboard = lazy(() => import('./pages/AdminCostsDashboard'))
+const AdminSystem = lazy(() => import('./pages/AdminSystem'))
+const AdminLogs = lazy(() => import('./pages/AdminLogs'))
+const AdminFeedback = lazy(() => import('./pages/AdminFeedback'))
+const AdminSupport = lazy(() => import('./pages/AdminSupport'))
+
 function RouteFallback() {
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#02030b', color: '#f8f8ff', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -72,21 +104,28 @@ function ScrollToTop() {
   return null
 }
 
-// PrivateRoute — supporte courtia_token (nouveau) et token (legacy)
-function PrivateRoute({ children }) {
-  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-  if (!token) return <Navigate to="/login" replace />
+function getTokenState(token) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    if (payload.exp * 1000 < Date.now()) {
-      localStorage.removeItem('courtia_token')
-      localStorage.removeItem('token')
-      return <Navigate to="/login" replace />
-    }
+    return { valid: true, expired: payload.exp * 1000 < Date.now(), role: String(payload.role || '').toLowerCase() }
   } catch {
+    return { valid: false, expired: true, role: '' }
+  }
+}
+
+// PrivateRoute — supporte courtia_token (nouveau) et token (legacy)
+function PrivateRoute({ children }) {
+  const location = useLocation()
+  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
+  if (!token) return <Navigate to={`/login?next=${encodeURIComponent(`${location.pathname}${location.search}`)}`} replace />
+  const tokenState = getTokenState(token)
+  if (!tokenState.valid || tokenState.expired) {
     localStorage.removeItem('courtia_token')
     localStorage.removeItem('token')
-    return <Navigate to="/login" replace />
+    return <Navigate to={`/login?next=${encodeURIComponent(`${location.pathname}${location.search}`)}`} replace />
+  }
+  if (tokenState.role === 'prospecteur' && location.pathname !== '/prospection') {
+    return <Navigate to="/prospection" replace />
   }
   return children
 }
@@ -120,12 +159,31 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
-        <Route path="/tarifs" element={<Tarifs />} />
+        <Route path="/tarifs" element={<TarifsPublic />} />
+        <Route path="/pricing" element={<TarifsPublic />} />
         <Route path="/design-system" element={<DesignSystem />} />
         <Route path="/vibe" element={<VibePage />} />
-        <Route path="/fonctionnalites" element={<LandingPublic />} />
-        <Route path="/demo" element={<LandingPublic />} />
-        <Route path="/contact" element={<LandingPublic />} />
+        <Route path="/fonctionnalites" element={<FonctionnalitesPublic />} />
+        <Route path="/demo" element={<DemoPublic />} />
+        <Route path="/contact" element={<ContactPublic />} />
+        <Route path="/legal/mentions-legales" element={<LegalMentionsLegales />} />
+        <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
+        <Route path="/legal/cookies" element={<LegalCookies />} />
+        <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
+        <Route path="/legal/cgv" element={<LegalCgv />} />
+        <Route path="/legal/dpa" element={<LegalDpa />} />
+        <Route path="/legal/sous-traitants" element={<LegalSubprocessors />} />
+        <Route path="/mentions-legales" element={<Navigate to="/legal/mentions-legales" replace />} />
+        <Route path="/confidentialite" element={<Navigate to="/legal/confidentialite" replace />} />
+        <Route path="/cgu" element={<Navigate to="/legal/conditions-utilisation" replace />} />
+        <Route path="/conditions" element={<Navigate to="/legal/conditions-utilisation" replace />} />
+        <Route path="/cookies" element={<Navigate to="/legal/cookies" replace />} />
+        <Route path="/securite" element={<SecurityPublic />} />
+        <Route path="/rgpd" element={<RgpdPublic />} />
+        <Route path="/changelog" element={<ChangelogPublic />} />
+        <Route path="/roadmap" element={<RoadmapPublic />} />
+        <Route path="/aide" element={<HelpPublic />} />
+        <Route path="/status" element={<StatusPublic />} />
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
@@ -168,7 +226,6 @@ export default function App() {
           <Route path="/conformite"    element={<Conformite />} />
           <Route path="/import"        element={<ImportPortfolio />} />
           <Route path="/academy"       element={<Academy />} />
-          <Route path="/aide"          element={<Academy />} />
           <Route path="/browser-pilot" element={<BrowserPilot />} />
           <Route path="/paiement-succes" element={<PaiementSucces />} />
           <Route path="/paiement-annule" element={<PaiementAnnule />} />
@@ -181,6 +238,20 @@ export default function App() {
           <Route path="/reach/inbox"       element={<ReachInbox />} />
           <Route path="/reach/map"         element={<ReachMap />} />
           <Route path="/reach/settings"    element={<ReachSettings />} />
+        </Route>
+
+        {/* Owner back-office — every route is role-gated by AdminRoute. */}
+        <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route path="/admin" element={<AdminOverview />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+          <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/growth-leads" element={<AdminGrowthLeads />} />
+          <Route path="/admin/costs" element={<AdminCostsDashboard />} />
+          <Route path="/admin/system" element={<AdminSystem />} />
+          <Route path="/admin/logs" element={<AdminLogs />} />
+          <Route path="/admin/feedback" element={<AdminFeedback />} />
+          <Route path="/admin/support" element={<AdminSupport />} />
         </Route>
 
         {/* 404 */}

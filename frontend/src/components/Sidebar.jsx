@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 import { clearStoredSession } from '../api/sessionPolicy'
 import { resetSessionUserCache } from '../api/sessionUser'
-import { isAdminRole } from '../lib/roles'
+import { isAdminRole, isProspectorRole } from '../lib/roles'
 
 // ─── Aurora tokens ─────────────────────────────────────────────
 const T = {
@@ -112,11 +112,13 @@ const UNIVERSES = [
   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen: controlledMobileOpen, setMobileOpen: setControlledMobileOpen }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false)
+  const mobileOpen = controlledMobileOpen ?? internalMobileOpen
+  const setMobileOpen = setControlledMobileOpen || setInternalMobileOpen
 
   // ─── Univers : ouverts par défaut, repli au clic ────────────
   const initialOpen = useMemo(() => {
@@ -155,12 +157,7 @@ export default function Sidebar() {
       window.removeEventListener('courtia:open-sidebar', open)
       window.removeEventListener('courtia:close-sidebar', close)
     }
-  }, [])
-
-  // Close drawer on route change
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname])
+  }, [setMobileOpen])
 
   function logout() {
     clearStoredSession()
@@ -186,6 +183,10 @@ export default function Sidebar() {
   const userEmail = user?.email || ''
   const userCabinet = user?.cabinet_name || user?.cabinetName || ''
   const isAdmin = isAdminRole((user?.role || '').toLowerCase())
+  const isProspector = isProspectorRole(user?.role)
+  const visibleUniverses = isProspector
+    ? [{ id: 'acquisition', label: 'PROSPECTION FRANCE', glyph: 'FR', items: [{ path: '/prospection', label: 'Cockpit commercial', icon: Phone }] }]
+    : UNIVERSES
   const initials = ((userFirst[0] || '') + (userLast[0] || '')).toUpperCase() || '?'
 
   // ─── Item ─────────────────────────────────────────────────
@@ -286,7 +287,7 @@ export default function Sidebar() {
 
   // ─── Contenu ──────────────────────────────────────────────
   const sidebarContent = (
-    <div className={`md:block ${mobileOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-[1050] md:relative md:z-0`} style={{
+    <div className={`courtia-mobile-sidebar-layer md:block ${mobileOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-[1050] md:relative md:z-0`} style={{
       height: '100%',
       display: mobileOpen ? 'flex' : undefined,
     }}>
@@ -321,6 +322,7 @@ export default function Sidebar() {
         </div>
         <button
           onClick={() => setMobileOpen(false)}
+          aria-label="Fermer le menu"
           style={{ padding: 6, color: T.textMuted, borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer' }}
           className="md:hidden"
         >
@@ -330,7 +332,7 @@ export default function Sidebar() {
 
       {/* Nav : 7 univers */}
       <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
-        {UNIVERSES.map(u => renderUniverse(u))}
+        {visibleUniverses.map(u => renderUniverse(u))}
 
         {isAdmin && (
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
@@ -340,7 +342,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Bandeau ARK Intelligence */}
-      <div className="courtia-sidebar-ark" style={{
+      {!isProspector && <div className="courtia-sidebar-ark" style={{
         margin: '0 10px 8px',
         padding: '10px 12px',
         background: 'linear-gradient(135deg, rgba(139,92,246,0.16), rgba(34,211,238,0.07))',
@@ -363,7 +365,7 @@ export default function Sidebar() {
           <div style={{ fontSize: 11, fontWeight: 700, color: T.text, letterSpacing: '0.02em' }}>ARK Intelligence</div>
           <div style={{ fontSize: 10, color: T.textMuted }}>3 priorités aujourd'hui</div>
         </div>
-      </div>
+      </div>}
 
       {/* Profil */}
       <div className="courtia-sidebar-profile" style={{
@@ -403,11 +405,10 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Container wrapper handles desktop/mobile states via Tailwind classes */}
-      {/* On desktop: normal document flow. On mobile: hidden because AppPrivateLayout manages it */}
       <div className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:z-50">
         {sidebarContent}
       </div>
+      {mobileOpen && <div className="block md:hidden">{sidebarContent}</div>}
     </>
   )
 }

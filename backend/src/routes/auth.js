@@ -31,8 +31,9 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     const userResult = await pool.query(
-      `SELECT id, email, first_name, last_name, role, plan, subscription_status, created_at
-       FROM users WHERE id = $1`,
+      `SELECT id, email, username, first_name, last_name, role, plan, subscription_status,
+              must_change_password, status, suspended_at, created_at
+       FROM users WHERE id = $1 AND deleted_at IS NULL`,
       [userId]
     );
 
@@ -55,12 +56,14 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
     res.json({
       id: user.id,
       email: user.email,
+      username: user.username,
       first_name: user.first_name,
       last_name: user.last_name,
       role: user.role,
       plan: user.plan || 'trial',
       subscription_status: user.subscription_status || 'trialing',
       created_at: user.created_at,
+      must_change_password: Boolean(user.must_change_password),
       cabinet: brokerProfile.cabinet || '',
       orias: brokerProfile.orias || '',
       telephone: brokerProfile.telephone || '',

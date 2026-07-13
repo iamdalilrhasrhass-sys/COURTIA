@@ -43,14 +43,15 @@ async function migrate() {
     const sql = fs.readFileSync(filepath, 'utf8');
 
     console.log(`\n▶️  Exécution: ${file}`);
+    const client = await pool.connect();
     try {
-      await pool.query('BEGIN');
-      await pool.query(sql);
-      await pool.query('COMMIT');
+      await client.query('BEGIN');
+      await client.query(sql);
+      await client.query('COMMIT');
       console.log(`   ✅ OK`);
       success++;
     } catch (err) {
-      await pool.query('ROLLBACK').catch(() => {});
+      await client.query('ROLLBACK').catch(() => {});
       // Si l'erreur est "already exists", on considère que c'est déjà appliqué
       if (err.message.includes('already exists') || err.message.includes('duplicate')) {
         console.log(`   ⏭️  Déjà appliqué (${err.message.split('\n')[0]})`);
@@ -59,6 +60,8 @@ async function migrate() {
         console.error(`   ❌ Erreur: ${err.message}`);
         errors++;
       }
+    } finally {
+      client.release();
     }
   }
 

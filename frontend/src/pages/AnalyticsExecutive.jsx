@@ -1,6 +1,7 @@
-import { useState, useEffect, _useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { TrendingUp, Users, FileText, Percent, Star, CheckSquare } from 'lucide-react'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
@@ -77,7 +78,7 @@ function KPICard({ icon: Icon, title, value, format = 'number', loading, color, 
   )
 }
 
-// ─── Mini SVG Line Chart ─────────────────────────────────────────────────────
+// ─── Responsive revenue chart ────────────────────────────────────────────────
 const MONTHLY_DATA = [
   { month: 'Jan', value: 98000 },
   { month: 'Fév', value: 105000 },
@@ -94,92 +95,91 @@ const MONTHLY_DATA = [
 ]
 
 function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 }) {
-  const width = 100
-  const padding = { top: 10, right: 8, bottom: 24, left: 8 }
-  const chartW = width
-  const chartH = height
-
-  const values = data.map((d) => d.value)
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  const range = max - min || 1
-
-  const xScale = (i) => padding.left + (i / (data.length - 1)) * (chartW - padding.left - padding.right)
-  const yScale = (v) => padding.top + (1 - (v - min) / range) * (chartH - padding.top - padding.bottom)
-
-  const _points = data.map((d, i) => `${xScale(i)},${yScale(d.value)}`).join(' ')
-
-  const pathD = data.reduce((acc, d, i) => {
-    const x = xScale(i)
-    const y = yScale(d.value)
-    if (i === 0) return `M ${x} ${y}`
-    const prevX = xScale(i - 1)
-    const prevY = yScale(data[i - 1].value)
-    const cpx1 = (prevX + x) / 2
-    return `${acc} C ${cpx1} ${prevY}, ${cpx1} ${y}, ${x} ${y}`
-  }, '')
-
-  const areaD = `${pathD} L ${xScale(data.length - 1)} ${chartH - padding.bottom} L ${xScale(0)} ${chartH - padding.bottom} Z`
-
   return (
     <>
       <style>{`
-        .mini-chart-svg {
-          max-height: 320px;
+        .ae-chart-card {
+          min-width: 0;
+        }
+        .ae-title {
+          color: #f8fafc !important;
+        }
+        .ae-page-subtitle {
+          color: rgba(226, 232, 240, 0.68) !important;
+        }
+        #root .ae-card-title {
+          color: #0f172a !important;
+        }
+        .ae-chart-shell {
           width: 100%;
-          height: auto;
-          display: block;
+          min-width: 0;
+          height: clamp(var(--ae-chart-height, 240px), 27vw, 320px);
+        }
+        .ae-chart-shell .recharts-wrapper,
+        .ae-chart-shell .recharts-surface {
+          overflow: visible;
         }
         @media (max-width: 767px) {
-          .mini-chart-svg {
-            max-height: 260px;
-          }
           .ae-container { padding: 24px 16px !important; }
           .ae-bottom-grid { grid-template-columns: 1fr !important; }
           .ae-title { font-size: 22px !important; }
           .ae-heatmap { gap: 2px !important; }
+          .ae-chart-shell { height: 260px; }
+          .ae-chart-heading { align-items: flex-start !important; gap: 10px; }
+          .ae-chart-heading > :last-child { flex-shrink: 0; }
         }
       `}</style>
-      <svg className="mini-chart-svg" viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet">
-      {/* Grid lines */}
-      {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
-        <line
-          key={pct}
-          x1={padding.left}
-          x2={chartW - padding.right}
-          y1={yScale(min + range * pct)}
-          y2={yScale(min + range * pct)}
-          stroke="rgba(0,0,0,0.05)"
-          strokeWidth="0.3"
-        />
-      ))}
-      {/* Area fill */}
-      <path d={areaD} fill={`${color}10`} />
-      {/* Line */}
-      <path d={pathD} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Dots */}
-      {data.map((d, i) => (
-        <circle key={i} cx={xScale(i)} cy={yScale(d.value)} r="2" fill={color} stroke="white" strokeWidth="1" />
-      ))}
-      {/* Month labels */}
-      {data.filter((_, i) => i % 2 === 0).map((d, i) => {
-        const idx = i * 2
-        return (
-          <text
-            key={idx}
-            x={xScale(idx)}
-            y={chartH - 4}
-            textAnchor="middle"
-            fill="rgba(0,0,0,0.35)"
-            fontSize="4"
-            fontWeight="500"
-            fontFamily="Arial, sans-serif"
-          >
-            {d.month}
-          </text>
-        )
-      })}
-      </svg>
+      <div
+        className="ae-chart-shell"
+        style={{ '--ae-chart-height': `${height}px` }}
+        role="img"
+        aria-label="Évolution du chiffre d’affaires mensuel de janvier à décembre"
+      >
+        <ResponsiveContainer width="100%" height="100%" debounce={80}>
+          <AreaChart data={data} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="revenue-area-gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="rgba(15,23,42,0.09)" strokeDasharray="4 6" />
+            <XAxis
+              dataKey="month"
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              minTickGap={18}
+              tick={{ fill: 'rgba(15,23,42,0.52)', fontSize: 11, fontWeight: 600 }}
+              dy={9}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              width={58}
+              domain={[(min) => Math.floor(min * 0.95), (max) => Math.ceil(max * 1.03)]}
+              tickFormatter={(value) => `${Math.round(value / 1000)} k€`}
+              tick={{ fill: 'rgba(15,23,42,0.48)', fontSize: 10, fontWeight: 600 }}
+            />
+            <Tooltip
+              cursor={{ stroke: 'rgba(37,99,235,0.24)', strokeWidth: 1 }}
+              formatter={(value) => [new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value), 'Chiffre d’affaires']}
+              contentStyle={{ border: '1px solid rgba(15,23,42,0.10)', borderRadius: 12, background: 'rgba(255,255,255,0.96)', boxShadow: '0 16px 40px rgba(15,23,42,0.14)', color: '#0f172a' }}
+              labelStyle={{ color: '#475569', fontWeight: 700, marginBottom: 4 }}
+            />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={color}
+              strokeWidth={3}
+              fill="url(#revenue-area-gradient)"
+              dot={{ r: 3.5, fill: '#fff', stroke: color, strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: color, stroke: '#fff', strokeWidth: 3 }}
+              animationDuration={700}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </>
   )
 }
@@ -191,6 +191,8 @@ const PRODUCT_DATA = [
   { label: 'Santé', value: 18, color: '#10b981' },
   { label: 'Prévoyance', value: 12, color: '#f59e0b' },
 ]
+
+const HEATMAP_OPACITY = Array.from({ length: 35 }, (_, index) => 0.06 + ((index * 17) % 20) / 100)
 
 function ProductBars({ data = PRODUCT_DATA }) {
   const maxVal = Math.max(...data.map((d) => d.value))
@@ -271,7 +273,7 @@ export default function AnalyticsExecutive() {
           <h1 className="ae-title" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
             Analyses dirigeants
           </h1>
-          <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>
+          <p className="ae-page-subtitle" style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>
             Vue d'ensemble et indicateurs clés de votre portefeuille.
           </p>
         </motion.div>
@@ -295,9 +297,9 @@ export default function AnalyticsExecutive() {
         {/* Chart + bottom sections */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Monthly evolution chart */}
-          <BubbleCard hover={false} padding={24}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
+          <BubbleCard className="ae-chart-card" hover={false} padding={24}>
+            <div className="ae-chart-heading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 className="ae-card-title" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
                 Évolution mensuelle du CA
               </h3>
               <BubbleBadge color="#2563eb" size="sm">Cumul annuel +14%</BubbleBadge>
@@ -309,7 +311,7 @@ export default function AnalyticsExecutive() {
           <div className="ae-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             {/* Product repartition */}
             <BubbleCard hover={false} padding={24}>
-              <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
+              <h3 className="ae-card-title" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
                 Répartition par type de produit
               </h3>
               <ProductBars data={PRODUCT_DATA} />
@@ -317,7 +319,7 @@ export default function AnalyticsExecutive() {
 
             {/* Heatmap placeholder */}
             <BubbleCard hover={false} padding={24}>
-              <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
+              <h3 className="ae-card-title" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
                 Activité hebdomadaire
               </h3>
               <div
@@ -329,9 +331,7 @@ export default function AnalyticsExecutive() {
                   aspectRatio: '7 / 5',
                 }}
               >
-                {Array.from({ length: 35 }).map((_, i) => {
-                  const intensity = Math.random()
-                  const opacity = 0.04 + intensity * 0.18
+                {HEATMAP_OPACITY.map((opacity, i) => {
                   return (
                     <div
                       key={i}
