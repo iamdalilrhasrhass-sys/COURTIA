@@ -45,6 +45,7 @@ export default function CallOutcomeWizard({ cabinet, call, onComplete, onCancel 
   const [error, setError] = useState('')
   const reached = form.outcome === 'oui'
   const wantsAppointment = reached && form.next_step === 'organiser_demo'
+  const currentStep = !form.outcome ? 1 : wantsAppointment ? 3 : 2
 
   const canSubmit = useMemo(() => {
     if (!form.outcome) return false
@@ -101,6 +102,10 @@ export default function CallOutcomeWizard({ cabinet, call, onComplete, onCancel 
           </div>
           <button className="sales-icon-button" onClick={onCancel} aria-label="Annuler l’appel"><X size={18} /></button>
         </header>
+
+        <div className="sales-call-progress" aria-label={`Étape ${currentStep} sur 3`}>
+          {['Résultat', 'Qualification', 'Action'].map((label, index) => <span key={label} className={currentStep >= index + 1 ? 'is-active' : ''}><i />{label}</span>)}
+        </div>
 
         <form onSubmit={submit} className="sales-modal-body">
           <div className="sales-form-section">

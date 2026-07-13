@@ -287,7 +287,7 @@ export default function Sidebar({ mobileOpen: controlledMobileOpen, setMobileOpe
 
   // ─── Contenu ──────────────────────────────────────────────
   const sidebarContent = (
-    <div className={`md:block ${mobileOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-[1050] md:relative md:z-0`} style={{
+    <div className={`courtia-mobile-sidebar-layer md:block ${mobileOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-[1050] md:relative md:z-0`} style={{
       height: '100%',
       display: mobileOpen ? 'flex' : undefined,
     }}>

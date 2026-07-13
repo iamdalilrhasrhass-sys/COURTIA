@@ -13,7 +13,7 @@
  *   - parallaxStrength (int) : intensité parallax (def 20)
  *   - particleCount (int)    : nombre de particules (def 30)
  */
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useState } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 import VibeBackdrop from './VibeBackdrop'
@@ -31,17 +31,22 @@ const T = {
 }
 
 // Particules animées (orbs flottantes)
+const particleValue = (index, salt) => {
+  const value = Math.sin((index + 1) * (salt + 1) * 12.9898) * 43758.5453
+  return value - Math.floor(value)
+}
+
 export function Particles({ count = 30 }) {
   return (
-    <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: 'none', overflow: 'hidden' }}>
+    <div className="vibe-particles" aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: 'none', overflow: 'hidden' }}>
       {Array.from({ length: count }).map((_, i) => {
-        const size = 2 + Math.random() * 4
-        const x = Math.random() * 100
-        const y = Math.random() * 100
-        const duration = 15 + Math.random() * 30
-        const delay = Math.random() * 10
+        const size = 2 + particleValue(i, 0) * 4
+        const x = particleValue(i, 1) * 100
+        const y = particleValue(i, 2) * 100
+        const duration = 15 + particleValue(i, 3) * 30
+        const delay = particleValue(i, 4) * 10
         const colors = ['rgba(139,92,246,0.3)', 'rgba(34,211,238,0.25)', 'rgba(91,77,245,0.2)', 'rgba(255,255,255,0.15)']
-        const color = colors[Math.floor(Math.random() * colors.length)]
+        const color = colors[Math.floor(particleValue(i, 5) * colors.length)]
         return (
           <motion.div
             key={i}
@@ -54,8 +59,8 @@ export function Particles({ count = 30 }) {
               left: `${x}%`, top: `${y}%`,
             }}
             animate={{
-              x: [0, (Math.random() - 0.5) * 100, 0],
-              y: [0, (Math.random() - 0.5) * 100, 0],
+              x: [0, (particleValue(i, 6) - 0.5) * 100, 0],
+              y: [0, (particleValue(i, 7) - 0.5) * 100, 0],
               opacity: [0.3, 0.7, 0.3],
             }}
             transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}
@@ -75,6 +80,7 @@ export function ScrollGlow() {
 
   return (
     <motion.div
+      className="vibe-scroll-glow"
       ref={ref}
       aria-hidden
       style={{
@@ -125,7 +131,6 @@ export default function VibePage({
   children,
   parallaxStrength = 20,
   particleCount = 30,
-  pageKey,
 }) {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })

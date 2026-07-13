@@ -14,6 +14,7 @@ export function AuroraMobileTopbar({
   onBellClick,
   notificationsCount = 0,
   logoTo = '/dashboard',
+  title = 'Cockpit',
   className = '',
   rightExtra = null,
 }) {
@@ -34,8 +35,7 @@ export function AuroraMobileTopbar({
         top: 0,
         left: 0,
         right: 0,
-        height: 56,
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        height: 'calc(56px + env(safe-area-inset-top, 0px))',
         background: 'rgba(5,5,16,0.85)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
@@ -43,7 +43,8 @@ export function AuroraMobileTopbar({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
+        padding: 'env(safe-area-inset-top, 0px) 12px 0',
+        boxSizing: 'border-box',
         zIndex: 50,
       }}
     >
@@ -71,7 +72,8 @@ export function AuroraMobileTopbar({
       <button
         type="button"
         onClick={() => navigate(logoTo)}
-        aria-label="Accueil COURTIA"
+        aria-label={`Accueil COURTIA — ${title}`}
+        className="aurora-mobile-topbar-context"
         style={{
           background: 'transparent',
           border: 'none',
@@ -80,9 +82,12 @@ export function AuroraMobileTopbar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: 8,
+          minWidth: 0,
         }}
       >
         <CourtiaMiniLogo size={26} />
+        <span className="aurora-mobile-topbar-title">{title}</span>
       </button>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

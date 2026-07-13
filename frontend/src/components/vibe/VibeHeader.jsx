@@ -20,6 +20,7 @@ export default function VibeHeader({
 }) {
   return (
     <motion.header
+      className="vibe-page-header"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -32,6 +33,7 @@ export default function VibeHeader({
       }}
     >
       <div
+        className="vibe-page-header-bubble"
         aria-hidden
         style={{
           flexShrink: 0,
@@ -45,7 +47,7 @@ export default function VibeHeader({
         <BubbleC size={bubbleSize} showHalo={false} animated breathe />
       </div>
 
-      <div style={{ flex: 1, minWidth: 200 }}>
+      <div className="vibe-page-header-copy" style={{ flex: 1, minWidth: 200 }}>
         {kicker && (
           <div
             style={{
@@ -90,7 +92,7 @@ export default function VibeHeader({
       </div>
 
       {actions && (
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
+        <div className="vibe-page-header-actions" style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
           {actions}
         </div>
       )}

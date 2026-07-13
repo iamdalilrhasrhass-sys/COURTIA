@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Upload, Search, X, Check, Sparkles, Shield, Zap,
-  Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle
+  Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle, ChevronRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -51,7 +51,7 @@ const FILTERS = ['Tous', 'Validés', 'À vérifier', 'Manquants', 'Expirés', 'P
 
 function KpiCard({ icon: Icon, title, value, accent }) {
   return (
-    <div style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 10, padding: '12px 16px', flex: '1 1 auto', minWidth: 130 }}>
+    <div className="courtia-mobile-kpi" style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 10, padding: '12px 16px', flex: '1 1 auto', minWidth: 130 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase' }}>{title}</span>
         <Icon size={14} color={accent || T.accent} />
@@ -163,7 +163,19 @@ export default function Documents() {
         )}
 
         {/* TABLE */}
-        <div style={{ overflowX: 'auto' }}>
+        <div className="courtia-mobile-data-list" aria-label="Documents">
+          {filtered.map(d => {
+            const statut = STATUT_STYLE[d.statut] || STATUT_STYLE.valide
+            const typeInfo = getTypeInfo(d.type)
+            const TypeIcon = typeInfo.icon
+            return <button type="button" key={d.id} className="courtia-mobile-data-card" onClick={() => navigate('/clients')}>
+              <span className="courtia-mobile-data-card-head"><span className="courtia-mobile-data-card-icon"><TypeIcon size={17} /></span><span><strong>{d.nom}</strong><small>{d.client}</small></span><ChevronRight size={18} /></span>
+              <span className="courtia-mobile-data-card-tags"><em style={{ color: statut.text, background: statut.bg }}>{statut.label}</em><em>{typeInfo.label}</em></span>
+              <span className="courtia-mobile-data-card-foot"><span>{d.lieA}</span><time>{new Date(d.date).toLocaleDateString('fr-FR')}</time></span>
+            </button>
+          })}
+        </div>
+        <div className="courtia-desktop-data-table" style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid ' + T.cardBorder }}>

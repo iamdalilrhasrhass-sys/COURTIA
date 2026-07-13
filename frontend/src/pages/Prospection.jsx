@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ArrowLeft, ArrowRight, CalendarDays, CheckSquare2, Database, Fingerprint,
-  LayoutDashboard, Loader2, PhoneCall, RefreshCw, Search, ShieldCheck,
-  SlidersHorizontal, UploadCloud, UsersRound,
+  ArrowLeft, ArrowRight, CalendarDays, CheckSquare2, ChevronDown, ChevronRight,
+  Clock3, Database, Fingerprint, LayoutDashboard, Loader2, MapPin, PhoneCall,
+  RefreshCw, Search, ShieldCheck, SlidersHorizontal, UploadCloud, UsersRound,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { salesApi } from '../api/salesProspecting'
@@ -40,31 +40,55 @@ function cleanParams(value) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== '' && item !== undefined && item !== null))
 }
 
-function CabinetTable({ cabinets, loading, selected, onSelect, onSelectAll, onOpen }) {
+function CabinetTable({ cabinets, loading, selectable, selected, onSelect, onSelectAll, onOpen }) {
   if (loading) return <div className="sales-loading"><Loader2 size={22} className="sales-spin" /> Chargement des cabinets…</div>
   if (!cabinets.length) return <div className="sales-empty-state"><Search size={26} /><strong>Aucun cabinet ne correspond aux filtres.</strong><span>Modifiez les critères ou importez une base nationale.</span></div>
 
   return (
-    <div className="sales-table-wrap">
-      <table className="sales-table sales-cabinet-table">
-        <thead><tr>
-          <th className="sales-check-cell"><input aria-label="Tout sélectionner" type="checkbox" checked={cabinets.length > 0 && cabinets.every((item) => selected.includes(item.id))} onChange={(event) => onSelectAll(event.target.checked)} /></th>
-          <th>Cabinet</th><th>Taille</th><th>Localisation</th><th>Commercial</th><th>Statut</th><th>Dernier appel</th><th>Prochaine action</th>
-        </tr></thead>
-        <tbody>{cabinets.map((cabinet) => (
-          <tr key={cabinet.id} onClick={() => onOpen(cabinet.id)}>
-            <td className="sales-check-cell" onClick={(event) => event.stopPropagation()}><input aria-label={`Sélectionner ${cabinet.legal_name}`} type="checkbox" checked={selected.includes(cabinet.id)} onChange={(event) => onSelect(cabinet.id, event.target.checked)} /></td>
-            <td><div className="sales-company-cell"><span>{(cabinet.trade_name || cabinet.legal_name || '?').slice(0, 1).toUpperCase()}</span><div><strong>{cabinet.trade_name || cabinet.legal_name}</strong>{cabinet.trade_name && <small>{cabinet.legal_name}</small>}<small>{cabinet.siren ? `SIREN ${cabinet.siren}` : cabinet.orias_number ? `ORIAS ${cabinet.orias_number}` : 'Identifiant à compléter'}</small></div></div></td>
-            <td><strong>{SIZE_LABELS[cabinet.size_category] || cabinet.size_category}</strong><small className="sales-table-sub">Score {cabinet.size_score}{cabinet.size_is_estimated ? ' · estimé' : ''}</small></td>
-            <td>{cabinet.city || '—'}<small className="sales-table-sub">{cabinet.department || cabinet.region || 'France'}</small></td>
-            <td>{cabinet.assigned_username ? `@${cabinet.assigned_username}` : <span className="sales-muted">Non attribué</span>}</td>
-            <td><span className={`sales-status tone-${STATUS_COLORS[cabinet.commercial_status] || 'slate'}`}>{PIPELINE_LABELS[cabinet.commercial_status] || cabinet.commercial_status}</span>{cabinet.interest_level && <small className="sales-table-sub">Intérêt {INTEREST_LABELS[cabinet.interest_level]}</small>}</td>
-            <td>{formatDateTime(cabinet.last_call_at)}{cabinet.last_call_outcome && <small className="sales-table-sub">{cabinet.last_call_outcome}</small>}</td>
-            <td>{formatDateTime(cabinet.next_followup_at)}</td>
-          </tr>
-        ))}</tbody>
-      </table>
-    </div>
+    <>
+      <div className="sales-table-wrap">
+        <table className="sales-table sales-cabinet-table">
+          <thead><tr>
+            {selectable && <th className="sales-check-cell"><input aria-label="Tout sélectionner" type="checkbox" checked={cabinets.length > 0 && cabinets.every((item) => selected.includes(item.id))} onChange={(event) => onSelectAll(event.target.checked)} /></th>}
+            <th>Cabinet</th><th>Taille</th><th>Localisation</th><th>Commercial</th><th>Statut</th><th>Dernier appel</th><th>Prochaine action</th>
+          </tr></thead>
+          <tbody>{cabinets.map((cabinet) => (
+            <tr key={cabinet.id} onClick={() => onOpen(cabinet.id)}>
+              {selectable && <td className="sales-check-cell" onClick={(event) => event.stopPropagation()}><input aria-label={`Sélectionner ${cabinet.legal_name}`} type="checkbox" checked={selected.includes(cabinet.id)} onChange={(event) => onSelect(cabinet.id, event.target.checked)} /></td>}
+              <td><div className="sales-company-cell"><span>{(cabinet.trade_name || cabinet.legal_name || '?').slice(0, 1).toUpperCase()}</span><div><strong>{cabinet.trade_name || cabinet.legal_name}</strong>{cabinet.trade_name && <small>{cabinet.legal_name}</small>}<small>{cabinet.siren ? `SIREN ${cabinet.siren}` : cabinet.orias_number ? `ORIAS ${cabinet.orias_number}` : 'Identifiant à compléter'}</small></div></div></td>
+              <td><strong>{SIZE_LABELS[cabinet.size_category] || cabinet.size_category}</strong><small className="sales-table-sub">Score {cabinet.size_score}{cabinet.size_is_estimated ? ' · estimé' : ''}</small></td>
+              <td>{cabinet.city || '—'}<small className="sales-table-sub">{cabinet.department || cabinet.region || 'France'}</small></td>
+              <td>{cabinet.assigned_username ? `@${cabinet.assigned_username}` : <span className="sales-muted">Non attribué</span>}</td>
+              <td><span className={`sales-status tone-${STATUS_COLORS[cabinet.commercial_status] || 'slate'}`}>{PIPELINE_LABELS[cabinet.commercial_status] || cabinet.commercial_status}</span>{cabinet.interest_level && <small className="sales-table-sub">Intérêt {INTEREST_LABELS[cabinet.interest_level]}</small>}</td>
+              <td>{formatDateTime(cabinet.last_call_at)}{cabinet.last_call_outcome && <small className="sales-table-sub">{cabinet.last_call_outcome}</small>}</td>
+              <td>{formatDateTime(cabinet.next_followup_at)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+
+      <div className="sales-cabinet-cards" aria-label="Liste des cabinets">
+        {selectable && <label className="sales-mobile-select-all"><input type="checkbox" checked={cabinets.every((item) => selected.includes(item.id))} onChange={(event) => onSelectAll(event.target.checked)} /><span>Tout sélectionner</span></label>}
+        {cabinets.map((cabinet) => (
+          <article className={`sales-cabinet-card ${selected.includes(cabinet.id) ? 'is-selected' : ''}`} key={cabinet.id}>
+            {selectable && <label className="sales-card-checkbox" onClick={(event) => event.stopPropagation()}><input aria-label={`Sélectionner ${cabinet.legal_name}`} type="checkbox" checked={selected.includes(cabinet.id)} onChange={(event) => onSelect(cabinet.id, event.target.checked)} /></label>}
+            <button type="button" className="sales-cabinet-card-main" onClick={() => onOpen(cabinet.id)}>
+              <span className="sales-card-company-row">
+                <span className="sales-card-avatar">{(cabinet.trade_name || cabinet.legal_name || '?').slice(0, 1).toUpperCase()}</span>
+                <span className="sales-card-company-copy"><strong>{cabinet.trade_name || cabinet.legal_name}</strong><small>{cabinet.city || 'Localisation à compléter'}{cabinet.department ? ` · ${cabinet.department}` : ''}</small></span>
+                <ChevronRight size={19} />
+              </span>
+              <span className="sales-card-badges"><span className={`sales-status tone-${STATUS_COLORS[cabinet.commercial_status] || 'slate'}`}>{PIPELINE_LABELS[cabinet.commercial_status] || cabinet.commercial_status}</span>{cabinet.interest_level && <span className="sales-card-interest">Intérêt {INTEREST_LABELS[cabinet.interest_level]}</span>}</span>
+              <span className="sales-card-facts">
+                <span><MapPin size={14} /><span><small>Localisation</small><strong>{cabinet.city || '—'}</strong></span></span>
+                <span><UsersRound size={14} /><span><small>Commercial</small><strong>{cabinet.assigned_username ? `@${cabinet.assigned_username}` : 'Non attribué'}</strong></span></span>
+              </span>
+              <span className="sales-card-footer"><span><Clock3 size={14} />{cabinet.next_followup_at ? `Relance ${formatDateTime(cabinet.next_followup_at)}` : cabinet.last_call_at ? `Dernier appel ${formatDateTime(cabinet.last_call_at)}` : 'Premier contact à effectuer'}</span><strong>{SIZE_LABELS[cabinet.size_category] || cabinet.size_category}</strong></span>
+            </button>
+          </article>
+        ))}
+      </div>
+    </>
   )
 }
 
@@ -85,10 +109,13 @@ export default function Prospection() {
   const [loadingList, setLoadingList] = useState(false)
   const [loadingNext, setLoadingNext] = useState(false)
   const [assignTo, setAssignTo] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const isAdmin = user?.role === 'super_admin'
   const tabs = isAdmin ? ADMIN_TABS : PROSPECTOR_TABS
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const activeFilterCount = [filters.status, filters.size_category, filters.interest_level, filters.assigned_to].filter(Boolean).length + (filters.sort !== EMPTY_FILTERS.sort ? 1 : 0)
+  const activeTabLabel = tabs.find((item) => item.id === tab)?.label || 'Cockpit'
 
   const loadDashboard = useCallback(async () => {
     const response = await salesApi.dashboard()
@@ -174,6 +201,13 @@ export default function Prospection() {
     setConflicts([])
   }
 
+  function resetFilters() {
+    setFilters(EMPTY_FILTERS)
+    setDraftSearch('')
+    setSelected([])
+    setMobileFiltersOpen(false)
+  }
+
   async function startCall(cabinet) {
     try {
       const response = await salesApi.startCall(cabinet.id)
@@ -244,32 +278,42 @@ export default function Prospection() {
         <button className="sales-button secondary" onClick={refreshEverything}><RefreshCw size={16} /> Actualiser</button>
       </header>
 
+      <header className="sales-mobile-page-head">
+        <div><span>Bonjour {user.first_name || user.username}</span><h1>{activeTabLabel}</h1></div>
+        <button type="button" className="sales-icon-button" onClick={refreshEverything} aria-label="Actualiser les données"><RefreshCw size={17} /></button>
+      </header>
+
       <nav className="sales-main-tabs" aria-label="Sections prospection">
-        {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'is-active' : ''} onClick={() => setTab(id)}><Icon size={16} />{label}</button>)}
+        {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'is-active' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}><Icon size={16} />{label}</button>)}
       </nav>
 
       <main className="sales-page-body">
         {tab === 'cockpit' && <SalesDashboard metrics={metrics} user={user} onOpenFilter={openFilter} onCallNext={callNext} loadingNext={loadingNext} />}
 
         {tab === 'cabinets' && <section className="sales-panel sales-list-panel">
-          <header className="sales-list-header"><div><span className="sales-kicker"><Database size={15} /> Base cabinets</span><h3>{total.toLocaleString('fr-FR')} cabinet{total > 1 ? 's' : ''}</h3></div>{!isAdmin && <button className="sales-button primary" disabled={loadingNext} onClick={callNext}><PhoneCall size={16} /> Prochain appel</button>}</header>
+          <header className="sales-list-header"><div><span className="sales-kicker"><Database size={15} /> Base cabinets</span><h3>{total.toLocaleString('fr-FR')} cabinet{total > 1 ? 's' : ''}</h3></div>{!isAdmin && <button className="sales-button primary sales-list-next-call" disabled={loadingNext} onClick={callNext}><PhoneCall size={16} /> Prochain appel</button>}</header>
 
           <div className="sales-filter-zone">
-            <form className="sales-search-form" onSubmit={submitSearch}><Search size={17} /><input value={draftSearch} onChange={(event) => setDraftSearch(event.target.value)} placeholder="Raison sociale, SIREN, ORIAS, ville, contact…" /><button type="submit">Rechercher</button></form>
+            <form className="sales-search-form" onSubmit={submitSearch}><Search size={17} /><input value={draftSearch} onChange={(event) => setDraftSearch(event.target.value)} placeholder="Cabinet, ville, SIREN…" /><button type="submit" aria-label="Rechercher"><Search size={16} /><span>Rechercher</span></button></form>
             {!!conflictResults.length && <div className="sales-conflict-popover"><strong>Présence détectée dans la base</strong>{conflictResults.map((item) => <div key={item.id}><span>{item.legal_name} · {item.city || 'France'}</span><em>{item.locked_by_username ? `Appel en cours par @${item.locked_by_username}` : `Attribué à @${item.assigned_username}`}</em></div>)}</div>}
-            <div className="sales-filters"><SlidersHorizontal size={16} />
+            <div className="sales-mobile-filter-bar">
+              <button type="button" className={mobileFiltersOpen ? 'is-open' : ''} onClick={() => setMobileFiltersOpen((current) => !current)} aria-expanded={mobileFiltersOpen} aria-controls="sales-filter-fields"><SlidersHorizontal size={16} /> Filtres {activeFilterCount > 0 && <b>{activeFilterCount}</b>}<ChevronDown size={15} /></button>
+              {(activeFilterCount > 0 || draftSearch) && <button type="button" onClick={resetFilters}>Réinitialiser</button>}
+            </div>
+            <div id="sales-filter-fields" className={`sales-filters ${mobileFiltersOpen ? 'is-mobile-open' : ''}`}><SlidersHorizontal size={16} />
               <select value={filters.status} onChange={(event) => updateFilter('status', event.target.value)}><option value="">Tous les statuts</option>{Object.entries(PIPELINE_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
               <select value={filters.size_category} onChange={(event) => updateFilter('size_category', event.target.value)}><option value="">Toutes les tailles</option>{Object.entries(SIZE_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
               <select value={filters.interest_level} onChange={(event) => updateFilter('interest_level', event.target.value)}><option value="">Tout intérêt</option>{Object.entries(INTEREST_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
               {isAdmin && <select value={filters.assigned_to} onChange={(event) => updateFilter('assigned_to', event.target.value)}><option value="">Tous les commerciaux</option><option value="unassigned">Non attribué</option>{users.map((item) => <option key={item.id} value={item.id}>@{item.username}</option>)}</select>}
               <select value={filters.sort} onChange={(event) => updateFilter('sort', event.target.value)}><option value="size_asc">Taille croissante</option><option value="size_desc">Taille décroissante</option><option value="priority">Priorité</option><option value="next_followup">Prochaine relance</option><option value="last_call">Dernier appel</option><option value="updated">Dernière modification</option></select>
-              <button className="sales-text-button" onClick={() => { setFilters(EMPTY_FILTERS); setDraftSearch(''); setSelected([]) }}>Effacer</button>
+              <button type="button" className="sales-text-button sales-desktop-filter-reset" onClick={resetFilters}>Effacer</button>
+              <button type="button" className="sales-button primary sales-mobile-filter-apply" onClick={() => setMobileFiltersOpen(false)}>Afficher {total.toLocaleString('fr-FR')} résultat{total > 1 ? 's' : ''}</button>
             </div>
           </div>
 
           {isAdmin && <div className="sales-assignment-bar"><CheckSquare2 size={16} /><strong>{selected.length} sélectionné{selected.length > 1 ? 's' : ''}</strong><select value={assignTo} onChange={(event) => setAssignTo(event.target.value)}><option value="">Désattribuer</option>{users.map((item) => <option key={item.id} value={item.id}>Attribuer à @{item.username}</option>)}</select><button className="sales-button secondary" disabled={!selected.length} onClick={assignSelected}>Appliquer</button><span /><button className="sales-button secondary" onClick={autoAssign}><UsersRound size={15} /> Répartir équitablement</button></div>}
 
-          <CabinetTable cabinets={cabinets} loading={loadingList} selected={selected} onSelect={(id, checked) => setSelected((current) => checked ? [...new Set([...current, id])] : current.filter((item) => item !== id))} onSelectAll={(checked) => setSelected(checked ? cabinets.map((item) => item.id) : [])} onOpen={openCabinet} />
+          <CabinetTable cabinets={cabinets} loading={loadingList} selectable={isAdmin} selected={selected} onSelect={(id, checked) => setSelected((current) => checked ? [...new Set([...current, id])] : current.filter((item) => item !== id))} onSelectAll={(checked) => setSelected(checked ? cabinets.map((item) => item.id) : [])} onOpen={openCabinet} />
           <footer className="sales-pagination"><span>Page {filters.page} sur {pageCount}</span><div><button disabled={filters.page <= 1} onClick={() => updateFilter('page', filters.page - 1)}><ArrowLeft size={15} /> Précédent</button><button disabled={filters.page >= pageCount} onClick={() => updateFilter('page', filters.page + 1)}>Suivant <ArrowRight size={15} /></button></div></footer>
         </section>}
 
@@ -278,6 +322,10 @@ export default function Prospection() {
         {tab === 'team' && isAdmin && <SalesUsersPanel onUsersChanged={loadUsers} />}
         {tab === 'audit' && isAdmin && <SalesAuditPanel />}
       </main>
+
+      <nav className={`sales-mobile-nav ${isAdmin ? 'is-admin' : ''}`} aria-label="Navigation mobile de la prospection">
+        {tabs.map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'is-active' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}><Icon size={19} /><span>{label}</span></button>)}
+      </nav>
 
       {detail && <CabinetDrawer detail={detail} user={user} onClose={() => setDetail(null)} onStartCall={startCall} onRefresh={refreshEverything} />}
       {activeCall && <CallOutcomeWizard cabinet={activeCall.cabinet} call={activeCall.call} onComplete={completeCall} onCancel={cancelCall} />}

@@ -28,6 +28,13 @@ export default function SalesDashboard({ metrics = {}, user, onOpenFilter, onCal
 
   return (
     <div className="sales-dashboard-grid">
+      {isAdmin && (
+        <section className="sales-boss-command">
+          <div className="sales-boss-command-copy"><span className="sales-kicker"><UsersRound size={15} /> Activité commerciale en direct</span><h2>Suivez ce que fait votre équipe.</h2><p>Appels, relances, rendez-vous et signatures sont centralisés ici pour garder une vision factuelle de l’avancement.</p></div>
+          <div className="sales-boss-command-stats"><span><small>Appels aujourd’hui</small><strong>{metrics.calls_today || 0}</strong></span><span><small>Relances en retard</small><strong>{metrics.overdue_followups || 0}</strong></span><span><small>Signatures</small><strong>{metrics.signatures || 0}</strong></span></div>
+          <button className="sales-button secondary" onClick={() => onOpenFilter({ called: 'true' })}>Voir tous les appels <ArrowRight size={15} /></button>
+        </section>
+      )}
       {!isAdmin && (
         <section className="sales-next-call-hero">
           <div><span className="sales-kicker"><Target size={15} /> Priorité du jour</span><h2>Avancez cabinet par cabinet.</h2><p>Courtiark choisit le prochain cabinet disponible, du plus petit au plus grand, sans doublon ni relance prématurée.</p></div>
@@ -61,7 +68,7 @@ export default function SalesDashboard({ metrics = {}, user, onOpenFilter, onCal
       </section>}
 
       <section className="sales-panel sales-activity-panel">
-        <header><div><span className="sales-kicker"><Clock3 size={14} /> Temps réel</span><h3>Activité récente</h3></div></header>
+        <header><div><span className="sales-kicker"><Clock3 size={14} /> Temps réel</span><h3>{isAdmin ? 'Activité récente des commerciaux' : 'Activité récente'}</h3></div></header>
         <div className="sales-activity-list">
           {!metrics.recent_activity?.length && <div className="sales-empty-small">Aucune activité enregistrée.</div>}
           {metrics.recent_activity?.map((activity) => <div key={activity.id}><span className="sales-activity-icon">{activity.action.includes('call') ? <PhoneCall size={14} /> : activity.action.includes('appointment') ? <CalendarCheck2 size={14} /> : activity.action.includes('assign') ? <UsersRound size={14} /> : activity.action.includes('status') ? <RefreshCw size={14} /> : <CheckCircle2 size={14} />}</span><div><strong>{activity.username || 'Système'} · {activity.action}</strong><p>{activity.cabinet_name || activity.entity_type}</p></div><time>{formatDateTime(activity.created_at)}</time></div>)}
