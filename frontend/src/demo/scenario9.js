@@ -208,6 +208,14 @@ export const ETAPES = [
     tenue: 3200,
   },
 
+  {
+    route: '/demo/sante-portefeuille', chapitre: 'piloter',
+    cible: { texte: 'SUR 100' },
+    titre: 'Et la santé de tout le portefeuille',
+    texte: 'Un score unique, alimenté par vos vrais dossiers : 78/100, rétention, churn, échéances à venir. Le même chiffre que sur le cockpit — une seule vérité.',
+    tenue: 6000,
+  },
+
   /* --- EXPLORER --- */
   {
     route: '/demo/dashboard', chapitre: 'explorer',

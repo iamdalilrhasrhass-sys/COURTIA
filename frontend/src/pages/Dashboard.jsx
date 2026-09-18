@@ -221,10 +221,18 @@ export default function Dashboard() {
 
   const metrics = useMemo(() => {
     const statusMap = stats?.clientsParStatut || {}
-    const activeClients = Number(statusMap.actif || 0) || clients.length || 124
-    const activeContracts = Number(stats?.contratsActifs || 0) || 312
-    const annualPrime = Number(stats?.primeTotale || 0) || 248000
-    const healthScore = 82
+    // Aucun repli chiffré : les anciennes valeurs (124 clients, 312 contrats,
+    // 248 000 €, score 82) étaient FABRIQUÉES. Quand un appel échouait, le
+    // cockpit annonçait 124 clients pendant que les autres écrans en affichaient
+    // 8 — une contradiction visible par le prospect. On retombe sur les données
+    // réellement chargées, sinon sur 0, ce qui reste honnête.
+    const activeClients = Number(statusMap.actif || 0) || clients.length || 0
+    const activeContracts = Number(stats?.contratsActifs || 0) || 0
+    const annualPrime = Number(stats?.primeTotale || 0) || 0
+    const scoreClients = clients.length
+      ? Math.round(clients.reduce((t, c) => t + (Number(c.score) || 0), 0) / clients.length)
+      : 0
+    const healthScore = Number(stats?.health_score ?? stats?.scoreMoyen ?? 0) || scoreClients || 0
     return { activeClients, activeContracts, annualPrime, healthScore }
   }, [stats, clients])
 
@@ -461,7 +469,7 @@ export default function Dashboard() {
             <SectionTitle icon={TrendingUp} iconColor={T.success} title="Performance 90 jours" />
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 }}>
               <div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: T.text, lineHeight: 1 }}>{fmtEur(248000)}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: T.text, lineHeight: 1 }}>{fmtEur(metrics.annualPrime)}</div>
                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Primes cumulées</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 10 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.success, fontSize: 12, fontWeight: 600 }}>
