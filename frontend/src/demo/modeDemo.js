@@ -39,7 +39,10 @@ export function estModeDemo() {
 export function cheminApi(url = '') {
   const sansHote = String(url).replace(/^https?:\/\/[^/]+/i, '')
   const sansApi = sansHote.replace(/^\/api(?=\/|$)/, '')
-  return sansApi.split('?')[0] || '/'
+  // La chaîne de requête est CONSERVÉE : `repondre` en a besoin pour filtrer
+  // (ex. /contrats?client_id=3). L'éclater ici faisait fuiter tous les
+  // contrats du portefeuille dans chaque dossier client.
+  return sansApi || '/'
 }
 
 function reponseJson(donnees, statut = 200) {

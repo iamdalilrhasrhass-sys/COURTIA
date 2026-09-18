@@ -1,17 +1,118 @@
-/* Bandeau de démonstration + styles de la visite guidée. */
+/* ============================================================================
+   COURTIA — Démonstration : bandeau permanent, curseur, projecteur, légende.
+   Tout est préfixé `dt-` : aucune règle n'affecte le cockpit privé.
+   ========================================================================== */
+
 .dt-bandeau {
-  position: sticky; top: 0; z-index: 400;
+  position: sticky; top: 0; z-index: 1400;
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 7px 16px; font-size: 12px; line-height: 1.4;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: linear-gradient(90deg, rgba(169,241,255,.16), rgba(255,113,189,.14));
   border-bottom: 1px solid rgba(255,255,255,.12);
   color: rgba(255,255,255,.86);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
-.dt-bandeau-marque {
-  letter-spacing: .14em; text-transform: uppercase; font-weight: 800;
-  color: #a9f1ff;
-}
+.dt-bandeau-marque { letter-spacing: .14em; text-transform: uppercase; font-weight: 800; color: #a9f1ff; }
 .dt-bandeau-sep { width: 1px; height: 13px; background: rgba(255,255,255,.24); }
 .dt-bandeau-txt { color: rgba(255,255,255,.66); }
+
+/* ------------------------------------------------------------------ progrès */
+.dt-progres { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 1500; background: rgba(255,255,255,.07); }
+.dt-progres > div { height: 100%; background: linear-gradient(90deg, #a9f1ff, #ff71bd); transition: width .4s ease; }
+
+/* ------------------------------------------------------------------ curseur */
+.dt-curseur {
+  position: fixed; z-index: 5200; pointer-events: none;
+  width: 22px; height: 22px; margin: -4px 0 0 -3px;
+  filter: drop-shadow(0 3px 9px rgba(0,0,0,.55));
+}
+.dt-curseur svg { display: block; }
+
+/* --------------------------------------------------------------- projecteur */
+.dt-spot {
+  position: fixed; z-index: 5190; pointer-events: none; border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(169,241,255,.62), 0 0 0 9999px rgba(2,3,11,.42);
+  transition: all .34s cubic-bezier(.2,.8,.2,1);
+  animation: dt-pulse 1.8s ease-in-out infinite;
+}
+@keyframes dt-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(169,241,255,.62), 0 0 0 9999px rgba(2,3,11,.42); }
+  50%      { box-shadow: 0 0 0 5px rgba(255,113,189,.70), 0 0 0 9999px rgba(2,3,11,.48); }
+}
+
+/* ------------------------------------------------------------------ légende */
+.dt-legende {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+  z-index: 5300; width: min(700px, calc(100vw - 24px));
+  background: rgba(10,8,26,.94);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  border: 1px solid rgba(169,241,255,.26); border-radius: 16px;
+  padding: 14px 16px; box-shadow: 0 22px 60px rgba(0,0,0,.62);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  animation: dt-monter .4s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes dt-monter { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.dt-legende-haut { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; flex-wrap: wrap; }
+.dt-pastille {
+  display: inline-flex; align-items: center; padding: 2.5px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 750; white-space: nowrap;
+  background: rgba(169,241,255,.14); color: #bff3ff; border: 1px solid rgba(169,241,255,.3);
+}
+.dt-legende-titre { font-weight: 800; font-size: 14.5px; letter-spacing: -.01em; color: #fff; }
+.dt-legende-txt { font-size: 12.5px; line-height: 1.62; color: rgba(255,255,255,.76); margin-top: 4px; }
+.dt-legende-pied { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.dt-compteur { font-size: 11px; color: rgba(255,255,255,.34); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+.dt-btn {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 6px 12px; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 700;
+  background: transparent; color: rgba(255,255,255,.78);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.dt-btn:hover { background: rgba(255,255,255,.07); color: #fff; }
+.dt-btn-fort { background: linear-gradient(135deg, #a9f1ff, #ff71bd); color: #06070f; border: 0; }
+
+/* ----------------------------------------------------------------- chapitres */
+.dt-chapitres {
+  position: fixed; top: 46px; right: 12px; z-index: 5260;
+  background: rgba(10,8,26,.88);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 8px; max-width: 190px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dt-chapitres-titre { font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.34); margin-bottom: 6px; }
+.dt-chapitre {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 6px 8px; border-radius: 8px; font: inherit; font-size: 11.5px;
+  color: rgba(255,255,255,.72); background: transparent; border: 1px solid transparent;
+}
+.dt-chapitre:hover { background: rgba(255,255,255,.06); color: #fff; }
+.dt-chapitre[data-actif='true'] { background: rgba(169,241,255,.12); color: #fff; border-color: rgba(169,241,255,.24); }
+
+/* ---------------------------------------------------------------- mode libre */
+.dt-barre {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  z-index: 5300; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  width: min(700px, calc(100vw - 24px));
+  background: rgba(10,8,26,.94); border: 1px solid rgba(169,241,255,.24);
+  border-radius: 14px; padding: 11px 14px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.dt-barre-marque {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(126,255,196,.14); color: #b6ffdd; border: 1px solid rgba(126,255,196,.3);
+}
+.dt-barre-txt { font-size: 12px; color: rgba(255,255,255,.72); flex: 1; min-width: 160px; }
+
+/* --------------------------------------------------------------- adaptation */
+@media (max-width: 940px) {
+  .dt-chapitres { display: none; }
+  .dt-legende { bottom: 12px; padding: 12px; }
+  .dt-legende-pied .dt-btn { padding: 6px 10px; font-size: 11.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-curseur, .dt-spot, .dt-legende { animation: none !important; transition: none !important; }
+}

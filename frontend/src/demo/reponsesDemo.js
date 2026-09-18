@@ -192,9 +192,21 @@ export function repondre(methode, cheminBrut, corps) {
 
   /* ------------------------------------------------------------------- contrats */
   if ((chemin === '/contrats' || chemin === '/contracts') && M === 'GET') {
+    // ClientDetail fait `Array.isArray(res.data) ? res.data : []` :
+    // une enveloppe { data: [...] } ferait disparaître les contrats SANS erreur.
     const clientId = Number(params.client_id || params.clientId)
-    const liste = clientId ? CONTRATS_DETAIL.filter((c) => c.clientId === clientId) : CONTRATS_DETAIL
-    return { statut: 200, donnees: { ...paginer(liste, params), contrats: liste, contracts: liste } }
+    const source = clientId ? CONTRATS_DETAIL.filter((c) => c.clientId === clientId) : CONTRATS_DETAIL
+    const liste = source.map((c) => ({
+      id: c.id, type_contrat: c.type, type: c.type,
+      compagnie: c.compagnie, company: c.compagnie,
+      prime_annuelle: c.prime, prime: c.prime,
+      date_echeance: dateCourte(c.echeance), echeance: dateCourte(c.echeance),
+      statut: c.statut, status: c.statut,
+      client_id: c.clientId, numero: c.numero,
+    }))
+    const arr = liste.slice()
+    arr.data = arr; arr.contrats = arr; arr.contracts = arr; arr.total = arr.length
+    return { statut: 200, donnees: arr }
   }
   if ((morceaux[0] === 'contrats' || morceaux[0] === 'contracts') && morceaux[1]) {
     const c = contratParId(morceaux[1])
@@ -214,9 +226,9 @@ export function repondre(methode, cheminBrut, corps) {
       created_at: t.createdAt,
       statut: t.echeance < 0 ? 'en_retard' : 'a_faire',
     }))
-    const arr = listePaginee(liste, params)
-    arr.taches = arr
-    arr.tasks = arr
+    // Même contrainte : ClientDetail lit un tableau nu.
+    const arr = liste.slice()
+    arr.data = arr; arr.taches = arr; arr.tasks = arr; arr.total = arr.length
     return { statut: 200, donnees: arr }
   }
 
@@ -225,17 +237,49 @@ export function repondre(methode, cheminBrut, corps) {
     const dues = relancesDues()
     if (chemin.endsWith('/stats')) {
       return { statut: 200, donnees: {
-        total: TACHES.filter((t) => t.type === 'relance').length,
-        en_attente: dues.length, enAttente: dues.length,
-        envoyees: 6, repondues: 3, data: { total: dues.length, en_attente: dues.length },
+        period_days: 30,
+        totals: {
+          total: dues.length, pending: dues.length, sent: 6,
+          urgent_pending: dues.filter((t) => t.echeance < 0).length, ai_generated: dues.length,
+        },
+        period: { sent: 6, responses: 3, taux_reponse: 43 },
+        by_type: [{ type: 'devis', count: dues.length }],
+        by_channel: [{ channel: 'phone', count: dues.length }],
       } }
     }
-    const liste = dues.map((t) => ({
-      id: t.id, titre: t.titre, canal: t.canal, statut: 'a_envoyer',
-      echeance: t.dateEcheance, retard_jours: t.echeance < 0 ? Math.abs(t.echeance) : 0,
-      client: t.client, nomClient: t.nomClient, message: '',
-    }))
-    return { statut: 200, donnees: { ...paginer(liste, params), relances: liste, data: liste } }
+    const TYPES = ['devis', 'echeance', 'silencieux', 'document', 'opportunite', 'prospect']
+    const liste = dues.map((t, i) => {
+      const c = t.client
+      return {
+        id: t.id,
+        client_id: t.clientId || 0,
+        client_name: c ? c.nom : (t.nomClient || 'Client inconnu'),
+        client_email: c ? c.email : null,
+        client_phone: c ? c.telephone : null,
+        quote_id: 900 + i,
+        quote_reference: `DEV-2026-${String(271 + i).padStart(4, '0')}`,
+        quote_product: c ? (CONTRATS_DETAIL.find((k) => k.clientId === c.id)?.type || 'Contrat') : 'Contrat',
+        type: TYPES[i % TYPES.length],
+        channel: 'phone',          // évite toute tentative d'envoi réel
+        priority: t.echeance < 0 ? 'high' : 'medium',
+        status: 'pending',
+        subject: t.titre,
+        content: `Bonjour, je reviens vers vous concernant votre dossier.`,
+        scheduled_at: t.createdAt,
+        sent_at: null,
+        ai_generated: true,
+        ai_reasoning: t.echeance < 0
+          ? `Relance en retard de ${Math.abs(t.echeance)} jours.`
+          : 'Relance due aujourd’hui.',
+        response_received: false,
+        created_at: t.createdAt,
+        metadata: { produit: t.type, potentiel: 1200, amount: 1200 },
+      }
+    })
+    return { statut: 200, donnees: {
+      relances: liste, data: liste, total: liste.length,
+      pagination: { limit: liste.length, offset: 0 },
+    } }
   }
 
   /* ------------------------------------------------------------------ documents */
@@ -342,6 +386,76 @@ export function repondre(methode, cheminBrut, corps) {
   if (chemin === '/ark-chat/context') {
     return { statut: 200, donnees: {
       cabinet: CABINET.nom, stats: statsPortefeuille(), data: statsPortefeuille(),
+    } }
+  }
+
+  /* -------------------------------------------------------- ARK Intelligence
+     Contrats relevés dans pages/ArkIntelligence.jsx. `products` et
+     `opportunities` sont OBLIGATOIRES : le composant appelle
+     `data.products.map()` et `c.opportunities.find()` — leur absence le fait
+     planter dès qu'un client est présent. */
+  if (chemin === '/ark-intelligence/churn-predict') {
+    const top = CLIENTS.slice(0, 5).map((c, i) => ({
+      client_id: c.id,
+      client_name: c.nom,
+      risk_level: ['eleve', 'critique', 'modere', 'faible', 'modere'][i],
+      score: [52, 38, 68, 88, 72][i],
+      churn_score: [52, 38, 68, 88, 72][i],
+      lifetime_value: CONTRATS_DETAIL.filter((k) => k.clientId === c.id).reduce((a, k) => a + k.prime, 0),
+      city: c.ville,
+      factors: ['Aucun contact depuis 45 jours', 'Échéance à moins de 30 jours'],
+      retention_plan: { steps: ['Appeler sous 48 h', 'Proposer une révision de garantie'], cost_eur: 0 },
+    }))
+    return { statut: 200, donnees: {
+      at_risk_count: top.filter((t) => t.risk_level !== 'faible').length,
+      top_risks: top, data: top, total: top.length,
+    } }
+  }
+  if (chemin === '/ark-intelligence/cross-sell/matrix') {
+    const produits = ['Prévoyance 3a', 'Protection juridique', 'Ménage', 'Prévoyance décès']
+    const clients = CLIENTS.slice(0, 6).map((c) => {
+      const detenus = CONTRATS_DETAIL.filter((k) => k.clientId === c.id).map((k) => k.type)
+      const opps = produits.filter((p) => !detenus.includes(p)).slice(0, 2).map((p, i) => ({
+        product: p,
+        score: 82 - i * 11,
+        estimated_eur: 900 - i * 320,
+        estimated_revenue: 900 - i * 320,
+        status: i === 0 ? 'owned' : 'opportunity',
+        rationale: `Absent du dossier ${c.nom} — couverture à proposer.`,
+      }))
+      return {
+        client_id: c.id, client_name: c.nom, city: c.ville, score: c.score,
+        total_opportunity_eur: opps.reduce((a, o) => a + o.estimated_eur, 0),
+        opportunities: opps,
+      }
+    })
+    return { statut: 200, donnees: {
+      clients, products: produits,
+      total_potential_eur: clients.reduce((a, c) => a + c.total_opportunity_eur, 0),
+    } }
+  }
+  if (chemin === '/ark-intelligence/renewals/optimize') {
+    const proches = CONTRATS_DETAIL.filter((c) => c.echeance <= 90).sort((a, b) => a.echeance - b.echeance)
+    const renewals = proches.map((c, i) => ({
+      contract_id: c.id,
+      days_to_echeance: c.echeance,
+      recommendation: i % 2 === 0 ? 'migrate' : 'renew',
+      client_name: c.nomClient,
+      product: c.type,
+      rationale: i % 2 === 0
+        ? 'Prime supérieure à la moyenne du portefeuille — mise en concurrence conseillée.'
+        : 'Prime cohérente — renouvellement à confirmer.',
+      current_provider: c.compagnie,
+      current_premium_eur: c.prime,
+      recommended_provider: i % 2 === 0 ? 'Helios Protection' : c.compagnie,
+      saving_eur: i % 2 === 0 ? Math.round(c.prime * 0.12) : 0,
+    }))
+    return { statut: 200, donnees: {
+      renewals, data: renewals,
+      total_contracts_90d: renewals.length,
+      migrate_count: renewals.filter((r) => r.recommendation === 'migrate').length,
+      renew_count: renewals.filter((r) => r.recommendation !== 'migrate').length,
+      total_potential_saving_eur: renewals.reduce((a, r) => a + r.saving_eur, 0),
     } }
   }
 
