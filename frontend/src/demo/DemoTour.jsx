@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Play, Pause, RotateCcw, SkipForward, MousePointerClick } from 'lucide-react'
-import { ETAPES, CHAPITRES } from './scenarioDemo'
+import { ETAPES, CHAPITRES } from './scenario9'
 
 /* --------------------------------------------------------------- résolution */
 const estVisible = (el) => {
@@ -243,6 +243,21 @@ export default function DemoTour() {
         <div className="dt-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} />
       )}
 
+      {etape.compact ? (
+        /* Fin de parcours : bandeau discret. Le cockpit reste entièrement visible. */
+        <div className="dt-final">
+          <div className="dt-final-titre">{etape.titre}</div>
+          <div className="dt-final-txt">{etape.texte}</div>
+          <div className="dt-final-pied">
+            <button type="button" className="dt-btn dt-btn-fort" onClick={reprendreLaMain}>
+              <MousePointerClick size={13} /> Prendre la main
+            </button>
+            <button type="button" className="dt-btn" onClick={relancer}>
+              <RotateCcw size={13} /> Rejouer
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="dt-legende">
         <div className="dt-legende-haut">
           <span className="dt-pastille">
@@ -268,6 +283,7 @@ export default function DemoTour() {
           </button>
         </div>
       </div>
+      )}
 
       <div className="dt-chapitres">
         <div className="dt-chapitres-titre">Parcours</div>

@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   FileText, TrendingUp, Clock, CheckCircle2, XCircle, Send, Euro, Zap,
   ChevronRight, Sparkles, Plus, Search, AlertTriangle, Target
 } from 'lucide-react'
+import api from '../api'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -85,9 +86,31 @@ export default function Devis() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Tous')
+  const [devis, setDevis] = useState(DEMO_DEVIS)
+
+  useEffect(() => {
+    let actif = true
+    const charger = async () => {
+      try {
+        const res = await api.get('/devis')
+        const d = res?.data
+        const liste = Array.isArray(d) ? d
+          : Array.isArray(d?.data) ? d.data
+          : Array.isArray(d?.devis) ? d.devis
+          : null
+        // On ne remplace les données de démonstration que si l'API renvoie
+        // réellement des devis ; en erreur ou réponse vide, on ne touche à rien.
+        if (actif && liste && liste.length > 0) setDevis(liste)
+      } catch {
+        // Erreur API : on conserve les données de démonstration.
+      }
+    }
+    charger()
+    return () => { actif = false }
+  }, [])
 
   const filtered = useMemo(() => {
-    let list = DEMO_DEVIS
+    let list = devis
     if (search) {
       const q = search.toLowerCase()
       list = list.filter(d => d.client.toLowerCase().includes(q) || d.produit.toLowerCase().includes(q))
@@ -100,16 +123,16 @@ export default function Devis() {
     else if (filter === 'Expirés') list = list.filter(d => d.statut === 'expire')
     else if (filter === 'Opportunité ARK') list = list.filter(d => d.ark)
     return list
-  }, [search, filter])
+  }, [devis, search, filter])
 
   const stats = useMemo(() => ({
-    total: DEMO_DEVIS.length,
-    aRelancer: DEMO_DEVIS.filter(d => d.statut === 'envoye' && !d.derniereRelance).length,
-    potentiel: DEMO_DEVIS.filter(d => d.statut !== 'refuse' && d.statut !== 'expire').reduce((s, d) => s + d.montant, 0),
-    taux: Math.round(DEMO_DEVIS.filter(d => d.statut === 'accepte').length / DEMO_DEVIS.length * 100),
-    acceptes: DEMO_DEVIS.filter(d => d.statut === 'accepte').length,
-    ark: DEMO_DEVIS.filter(d => d.ark).length,
-  }), [])
+    total: devis.length,
+    aRelancer: devis.filter(d => d.statut === 'envoye' && !d.derniereRelance).length,
+    potentiel: devis.filter(d => d.statut !== 'refuse' && d.statut !== 'expire').reduce((s, d) => s + d.montant, 0),
+    taux: devis.length ? Math.round(devis.filter(d => d.statut === 'accepte').length / devis.length * 100) : 0,
+    acceptes: devis.filter(d => d.statut === 'accepte').length,
+    ark: devis.filter(d => d.ark).length,
+  }), [devis])
 
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>

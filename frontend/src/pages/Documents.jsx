@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -6,6 +6,7 @@ import {
   Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import api from '../api'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -66,9 +67,24 @@ export default function Documents() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Tous')
   const [showUpload, setShowUpload] = useState(false)
+  const [documents, setDocuments] = useState(DEMO_DOCS)
+
+  useEffect(() => {
+    api.get('/documents')
+      .then(res => {
+        const payload = res && res.data
+        const liste = Array.isArray(payload) ? payload
+          : Array.isArray(payload && payload.data) ? payload.data
+          : Array.isArray(payload && payload.documents) ? payload.documents
+          : Array.isArray(payload && payload.prospects) ? payload.prospects
+          : null
+        if (Array.isArray(liste) && liste.length > 0) setDocuments(liste)
+      })
+      .catch(() => { /* erreur réseau/API : on garde les données de démonstration */ })
+  }, [])
 
   const filtered = useMemo(() => {
-    let list = DEMO_DOCS
+    let list = documents
     if (search) {
       const q = search.toLowerCase()
       list = list.filter(d => d.nom.toLowerCase().includes(q) || d.client.toLowerCase().includes(q))
@@ -80,15 +96,15 @@ export default function Documents() {
     else if (filter === 'Pièces client') list = list.filter(d => ['piece_identite', 'permis', 'carte_grise', 'rib'].includes(d.type))
     else if (filter === 'Documents contrat') list = list.filter(d => ['fic', 'mandat_courtage', 'devoir_conseil', 'attestation'].includes(d.type))
     return list
-  }, [search, filter])
+  }, [documents, search, filter])
 
   const stats = useMemo(() => ({
-    total: DEMO_DOCS.length,
-    aVerifier: DEMO_DOCS.filter(d => d.statut === 'a_verifier').length,
-    manquants: DEMO_DOCS.filter(d => d.statut === 'manquant').length,
-    expires: DEMO_DOCS.filter(d => d.statut === 'expire').length,
-    recents: DEMO_DOCS.filter(d => new Date(d.date) > new Date('2026-05-01')).length,
-  }), [])
+    total: documents.length,
+    aVerifier: documents.filter(d => d.statut === 'a_verifier').length,
+    manquants: documents.filter(d => d.statut === 'manquant').length,
+    expires: documents.filter(d => d.statut === 'expire').length,
+    recents: documents.filter(d => new Date(d.date) > new Date('2026-05-01')).length,
+  }), [documents])
 
   const getTypeInfo = (type) => {
     const t = DOC_TYPES.find(ti => ti.value === type)

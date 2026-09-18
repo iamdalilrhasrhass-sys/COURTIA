@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ListTodo, CheckCircle2, Clock, AlertTriangle, Sparkles, Zap, Plus, Search,
   ChevronRight, Calendar, User, Target, TrendingUp
 } from 'lucide-react'
+import api from '../api'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -50,9 +51,27 @@ export default function Taches() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Toutes')
+  // Valeur initiale = jeu de démonstration ; remplacée par l'API si elle répond.
+  const [taches, setTaches] = useState(DEMO_TACHES)
+
+  useEffect(() => {
+    let annule = false
+    api.get('/taches')
+      .then(res => {
+        if (annule) return
+        const d = res.data
+        const liste = Array.isArray(d) ? d
+          : Array.isArray(d?.data) ? d.data
+          : Array.isArray(d?.taches) ? d.taches
+          : []
+        if (liste.length > 0) setTaches(liste)
+      })
+      .catch(() => { /* API indisponible : on garde le jeu de démonstration */ })
+    return () => { annule = true }
+  }, [])
 
   const filtered = useMemo(() => {
-    let list = DEMO_TACHES
+    let list = taches
     if (search) {
       const q = search.toLowerCase()
       list = list.filter(t => t.titre.toLowerCase().includes(q) || t.client.toLowerCase().includes(q))
@@ -64,15 +83,15 @@ export default function Taches() {
     else if (filter === 'ARK') list = list.filter(t => t.source === 'ARK')
     else if (filter === 'Terminées') list = []
     return list
-  }, [search, filter])
+  }, [taches, search, filter])
 
   const stats = useMemo(() => ({
-    retard: DEMO_TACHES.filter(t => new Date(t.date) < new Date('2026-05-11')).length,
-    aujourdhui: DEMO_TACHES.filter(t => t.date === '2026-05-11').length,
-    semaine: DEMO_TACHES.filter(t => new Date(t.date) <= new Date('2026-05-17')).length,
-    ark: DEMO_TACHES.filter(t => t.source === 'ARK').length,
+    retard: taches.filter(t => new Date(t.date) < new Date('2026-05-11')).length,
+    aujourdhui: taches.filter(t => t.date === '2026-05-11').length,
+    semaine: taches.filter(t => new Date(t.date) <= new Date('2026-05-17')).length,
+    ark: taches.filter(t => t.source === 'ARK').length,
     terminees: 22,
-  }), [])
+  }), [taches])
 
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>

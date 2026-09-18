@@ -167,9 +167,9 @@ export const ETAPES = [
   /* --- EXPLORER --- */
   {
     route: '/demo/dashboard', chapitre: 'explorer',
-    cible: { texte: 'COURTIA' },
+    cible: { sel: 'main' }, compact: true,
     titre: 'À vous de jouer',
-    texte: 'Vous prenez la main : naviguez librement dans tous les modules du cockpit. La suite, c’est un essai encadré sur votre portefeuille.',
+    texte: 'Naviguez librement dans tous les modules. La suite : un essai sur votre portefeuille.',
     tenue: 4900,
   },
 ]

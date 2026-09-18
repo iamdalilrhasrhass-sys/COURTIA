@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { UserPlus, Target, MapPin, TrendingUp, Zap, Search, CalendarDays } from 'lucide-react'
+import api from '../api'
 
 const DEMO_PROSPECTS = [
   { id: 1, nom: 'Entreprise Lambert', secteur: 'BTP', ville: 'Lyon', potentiel: 18000, statut: 'contacte', date: '03/05/2026' },
@@ -21,7 +23,23 @@ const STATUT_LABEL = {
 }
 
 export default function Prospection() {
-  const totalPotentiel = DEMO_PROSPECTS.reduce((s, p) => s + p.potentiel, 0)
+  const [prospects, setProspects] = useState(DEMO_PROSPECTS)
+
+  useEffect(() => {
+    api.get('/prospection')
+      .then(res => {
+        const payload = res && res.data
+        const liste = Array.isArray(payload) ? payload
+          : Array.isArray(payload && payload.data) ? payload.data
+          : Array.isArray(payload && payload.prospects) ? payload.prospects
+          : Array.isArray(payload && payload.documents) ? payload.documents
+          : null
+        if (Array.isArray(liste) && liste.length > 0) setProspects(liste)
+      })
+      .catch(() => { /* erreur réseau/API : on garde les données de démonstration */ })
+  }, [])
+
+  const totalPotentiel = prospects.reduce((s, p) => s + p.potentiel, 0)
 
   return (
     <div style={{ padding: 32, minHeight: '100vh' }}>
@@ -33,7 +51,7 @@ export default function Prospection() {
       {/* KPIs */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Prospects', value: DEMO_PROSPECTS.length, icon: UserPlus, accent: '#5B4DF5' },
+          { label: 'Prospects', value: prospects.length, icon: UserPlus, accent: '#5B4DF5' },
           { label: 'Potentiel', value: `${(totalPotentiel / 1000).toFixed(0)}k €`, icon: TrendingUp, accent: '#22C55E' },
           { label: 'RDV planifiés', value: 1, icon: CalendarDays, accent: '#F59E0B' },
           { label: 'Taux de conversion', value: '22%', icon: Target, accent: '#3B82F6' },
@@ -91,7 +109,7 @@ export default function Prospection() {
             </tr>
           </thead>
           <tbody>
-            {DEMO_PROSPECTS.map(p => {
+            {prospects.map(p => {
               const s = STATUT_STYLE[p.statut]
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}

@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import api from '../api'
 import { VibeBackdrop, VibeHeader, VibeScrollSection, Vibe3DCard } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import {
@@ -96,9 +97,27 @@ export default function Contrats() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Tous')
   const [viewMode, setViewMode] = useState('cards')
+  // Valeur initiale = jeu de démonstration ; remplacée par l'API si elle répond.
+  const [contrats, setContrats] = useState(DEMO_CONTRACTS)
+
+  useEffect(() => {
+    let annule = false
+    api.get('/contrats')
+      .then(res => {
+        if (annule) return
+        const d = res.data
+        const liste = Array.isArray(d) ? d
+          : Array.isArray(d?.data) ? d.data
+          : Array.isArray(d?.contrats) ? d.contrats
+          : []
+        if (liste.length > 0) setContrats(liste)
+      })
+      .catch(() => { /* API indisponible : on garde le jeu de démonstration */ })
+    return () => { annule = true }
+  }, [])
 
   const filtered = useMemo(() => {
-    let list = DEMO_CONTRACTS
+    let list = contrats
     if (search) {
       const q = search.toLowerCase()
       list = list.filter(c => c.client.toLowerCase().includes(q) || c.produit.toLowerCase().includes(q) || c.compagnie.toLowerCase().includes(q))
@@ -110,16 +129,16 @@ export default function Contrats() {
     else if (filter === 'Risque élevé') list = list.filter(c => c.risque >= 60)
     else if (filter === 'Opportunité ARK') list = list.filter(c => c.ark)
     return list
-  }, [search, filter])
+  }, [contrats, search, filter])
 
   const stats = useMemo(() => ({
-    actifs: DEMO_CONTRACTS.filter(c => c.statut === 'actif').length,
-    total: DEMO_CONTRACTS.length,
-    primes: DEMO_CONTRACTS.reduce((s, c) => s + c.prime, 0),
-    echeance30: DEMO_CONTRACTS.filter(c => c.jours <= 30 && c.jours > -999).length,
-    risque: DEMO_CONTRACTS.filter(c => c.risque >= 60).length,
-    ark: DEMO_CONTRACTS.filter(c => c.ark).length,
-  }), [])
+    actifs: contrats.filter(c => c.statut === 'actif').length,
+    total: contrats.length,
+    primes: contrats.reduce((s, c) => s + c.prime, 0),
+    echeance30: contrats.filter(c => c.jours <= 30 && c.jours > -999).length,
+    risque: contrats.filter(c => c.risque >= 60).length,
+    ark: contrats.filter(c => c.ark).length,
+  }), [contrats])
 
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text, perspective: 1400 }}>

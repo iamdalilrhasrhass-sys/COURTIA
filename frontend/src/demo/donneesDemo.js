@@ -229,6 +229,55 @@ export const RENDEZ_VOUS = [
   client: null,
 }))
 
+
+/* ------------------------------------------------------------------- DEVIS
+   CYCLE COMMERCIAL COHÉRENT : un devis naît d'un prospect ou d'un client
+   existant, et son montant découle des contrats réels du portefeuille.
+   Statuts alignés sur l'écran (signe | envoye | brouillon | refuse). */
+export const DEVIS = [
+  [9101, 'Groupe Vernex',   'P-1006', 5400, 'envoye',   -6,  'Cabinet 18 postes',  'Trimestriel'],
+  [9102, 'Riviera Assurances', 'P-1004', 3200, 'envoye', -3,  'Cabinet 9 postes',   'Trimestriel'],
+  [9103, 'Batilog SA',      null, 16700, 'signe',      -42, 'Multirisque + LAA',  'Annuel'],
+  [9104, 'Fiduciaire Béroche & Cie', 'P-1002', 1800, 'brouillon', -1, 'Cabinet 4 postes', 'Trimestriel'],
+  [9105, 'Étude Moret & Associés', null, 4020, 'signe',   -88, 'RC pro + PJ',      'Annuel'],
+  [9106, 'Courtilia SA',    'P-1001', 2400, 'envoye',    -9,  'Cabinet 6 postes',   'Trimestriel'],
+].map(([id, clientNom, prospectId, montant, statut, emis, objet, periodicite]) => ({
+  id, client_nom: clientNom, prospect_id: prospectId, montant, statut,
+  objet, periodicite,
+  reference: `DEV-2026-${String(id).slice(-4)}`,
+  date_emission: dateCourte(emis),
+  date_validite: dateCourte(emis + 30),
+  emis_depuis_jours: Math.abs(emis),
+}))
+
+/* -------------------------------------------------------------- PARTENAIRES
+   Apporteurs d'affaires : mêmes personnes que les prospects convertis, pour
+   que l'histoire reste cohérente d'un écran à l'autre. */
+export const PARTENAIRES = [
+  [9201, 'Groupe Vernex',   'apporteur', 'actif',    12, 5400, 'Genève'],
+  [9202, 'Valais Broker Group', 'apporteur', 'actif', 7, 3900, 'Martigny'],
+  [9203, 'Alpina Courtage', 'prescripteur', 'en_attente', 3, 1500, 'Sion'],
+  [9204, 'Courtilia SA',    'prescripteur', 'actif',  5, 2400, 'Lausanne'],
+].map(([id, nom, type, statut, dossiers, volume, ville]) => ({
+  id, nom, type, statut, dossiers, volume, ville,
+  email: `contact@${nom.toLowerCase().replace(/[^a-z]+/g, '-')}.example.invalid`,
+  depuis: dateCourte(-120 - id % 90),
+}))
+
+/* --------------------------------------------------------- AUTOMATISATIONS
+   Uniquement des règles RÉELLEMENT présentes dans le produit (relances,
+   collecte de pièces, surveillance d'échéances, brief du matin). */
+export const AUTOMATISATIONS = [
+  [9301, 'Relance des devis sans réponse', 'J+7 après envoi', 'actif', 2, 6],
+  [9302, 'Collecte des pièces manquantes', 'J+3 puis J+10', 'actif', 5, 17],
+  [9303, 'Alerte échéance contrat', 'J-30 avant échéance', 'actif', 7, 0],
+  [9304, 'Brief du matin ARK', 'Chaque jour 7h00', 'actif', 1, 0],
+  [9305, 'Détection client silencieux', 'Aucun contact depuis 45 j', 'actif', 3, 0],
+].map(([id, nom, declencheur, statut, executions, enAttente]) => ({
+  id, nom, declencheur, statut, executions, en_attente: enAttente,
+  derniere_execution: iso(-1),
+}))
+
 /* =========================================================== Agrégats ==== */
 export const contratParId = (id) => CONTRATS_DETAIL.find((c) => c.id === Number(id))
 export const clientDetail = (id) => {

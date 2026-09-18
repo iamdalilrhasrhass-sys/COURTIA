@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { Plus, Sparkles, TrendingUp, Target, Calendar, Euro } from 'lucide-react'
+import api from '../api'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 
@@ -100,6 +101,27 @@ export default function Opportunites() {
   const navigate = useNavigate()
   const [columns, setColumns] = useState(() => initStages(DEMO_OPPS))
   const [dragging, setDragging] = useState(null)
+
+  useEffect(() => {
+    let actif = true
+    const charger = async () => {
+      try {
+        const res = await api.get('/opportunites')
+        const d = res?.data
+        const liste = Array.isArray(d) ? d
+          : Array.isArray(d?.data) ? d.data
+          : Array.isArray(d?.opportunites) ? d.opportunites
+          : null
+        // On ne remplace le pipeline de démonstration que si l'API renvoie
+        // réellement des opportunités ; en erreur ou réponse vide, on ne touche à rien.
+        if (actif && liste && liste.length > 0) setColumns(initStages(liste))
+      } catch {
+        // Erreur API : on conserve le pipeline de démonstration.
+      }
+    }
+    charger()
+    return () => { actif = false }
+  }, [])
 
   function moveOpp(oppId, fromStage, toStage) {
     if (fromStage === toStage) return
