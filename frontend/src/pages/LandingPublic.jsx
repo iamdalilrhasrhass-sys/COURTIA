@@ -469,6 +469,10 @@ const landingCopy = {
     heroBody: 'Plus besoin de porter la gestion, les relances, les appels, les dossiers et les échéances à la main. COURTIA et ARK prennent en charge le quotidien opérationnel du cabinet. Vous gardez uniquement ce qui crée de la valeur: la relation client, le closing et le développement du portefeuille.',
     heroPrimary: 'Laisser COURTIA gérer',
     heroSecondary: 'Voir comment ARK travaille',
+    /* CTA de CAPTATION : l'accueil ne menait à AUCUN formulaire de demande de
+       démo (seuls /register et /login étaient liés). Le formulaire /demo-public
+       était donc orphelin depuis la page la plus visitée du site. */
+    demo: 'Demander une démo',
     conversion: ['0 € aujourd’hui', '7 jours d’essai', 'COURTIA s’occupe de tout'],
     chips: ['Plus de gestion manuelle', 'Plus de relances à suivre', 'Plus de dossiers à courir', 'Appels préparés'],
     heroStats: [['Tout', 'est géré'], ['3', 'appels préparés'], ['2', 'relances gérées']],
@@ -594,6 +598,7 @@ const landingCopy = {
     heroBody: 'No more carrying management, follow-ups, calls, files and deadlines by hand. COURTIA and ARK run the agency’s daily operations. You keep only what creates value: client relationships, closing and portfolio growth.',
     heroPrimary: 'Let COURTIA manage it',
     heroSecondary: 'See how ARK works',
+    demo: 'Request a demo',
     conversion: ['0 today', '7-day trial', 'COURTIA handles the work'],
     chips: ['No manual management', 'No follow-ups to chase', 'No files to run after', 'Calls prepared'],
     heroStats: [['All', 'handled'], ['3', 'calls prepared'], ['2', 'follow-ups managed']],
@@ -650,6 +655,7 @@ landingCopy.de = {
   heroBody: 'Verwaltung, Nachfassaktionen, Anrufe, Dossiers und Fristen müssen nicht mehr manuell getragen werden. COURTIA und ARK übernehmen den operativen Alltag der Agentur. Sie behalten das, was Wert schafft: Kundenbeziehung, Abschluss und Wachstum.',
   heroPrimary: 'COURTIA übernehmen lassen',
   heroSecondary: 'Sehen, wie ARK arbeitet',
+  demo: 'Demo anfordern',
   conversion: ['0 heute', '7 Tage Test', 'COURTIA übernimmt den Alltag'],
   chips: ['Keine manuelle Verwaltung', 'Keine Nachfassaktionen verlieren', 'Keine Dossiers jagen', 'Anrufe vorbereitet'],
   heroStats: [['Alles', 'verwaltet'], ['3', 'Anrufe vorbereitet'], ['2', 'Nachfassaktionen erledigt']],
@@ -683,6 +689,7 @@ landingCopy.it = {
   heroBody: 'Gestione, follow-up, chiamate, pratiche e scadenze non devono più essere portati a mano. COURTIA e ARK prendono in carico l’operatività quotidiana dello studio. A voi resta ciò che crea valore: relazione cliente, closing e crescita del portafoglio.',
   heroPrimary: 'Lasciare gestire a COURTIA',
   heroSecondary: 'Vedere come lavora ARK',
+  demo: 'Richiedi una demo',
   conversion: ['0 oggi', '7 giorni di prova', 'COURTIA gestisce il quotidiano'],
   chips: ['Niente gestione manuale', 'Niente follow-up dispersi', 'Niente pratiche da rincorrere', 'Chiamate preparate'],
   heroStats: [['Tutto', 'gestito'], ['3', 'chiamate preparate'], ['2', 'follow-up gestiti']],
@@ -1249,6 +1256,16 @@ export default function LandingPublic() {
             ))}
             <MarketSwitcher market={marketContext.market} onChange={changeMarket} />
             <LanguageSwitcher locale={locale} onChange={changeLocale} label={copy.languageLabel} />
+            {/* CTA de CAPTATION : mène au formulaire de demande de démo (même
+                origine, même service de capture). Sans lui, l'accueil ne menait
+                à aucun formulaire — le seul chemin était /register.
+                Le clic est mesuré (demo_cta_click) par lib/mesureCta. */}
+            <Link
+              to="/demo-public"
+              className="text-sm font-bold text-cyan-200/80 transition hover:text-cyan-100"
+            >
+              {copy.demo || 'Demander une démo'}
+            </Link>
             <Link to="/login" className="text-sm font-bold text-white/60 transition hover:text-white">{copy.login}</Link>
             <AuroraButton href={copy.trialHref || '/register?plan=pro'} size="sm">{copy.trial}</AuroraButton>
           </div>
@@ -1269,6 +1286,11 @@ export default function LandingPublic() {
               ))}
               <MarketSwitcher market={marketContext.market} onChange={changeMarket} mobile />
               <LanguageSwitcher locale={locale} onChange={changeLocale} label={copy.languageLabel} mobile />
+              {/* Accès au formulaire de demande de démo depuis le menu mobile :
+                  l'accueil n'en proposait aucun. */}
+              <Link to="/demo-public" onClick={() => setMenuOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-semibold text-cyan-200/85 hover:bg-white/[0.06]">
+                {copy.demo || 'Demander une démo'}
+              </Link>
               <Link to="/login" onClick={() => setMenuOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-semibold text-white/70 hover:bg-white/[0.06]">
                 {copy.login}
               </Link>
