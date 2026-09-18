@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestion de portefeuille d'assurance en Suisse — contrats et échéances | COURTIA</title>
+<meta name="description" content="Contrats, échéances 30/60/90 jours, renouvellements et concentration par branche : un seul écran pour piloter un portefeuille de courtage suisse.">
+<link rel="canonical" href="https://courtiark.fr/ch/gestion-portefeuille-assurance-suisse">
+<link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/ch/gestion-portefeuille-assurance-suisse">
+<link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/fonctionnalites">
+<link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#050510">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gestion de portefeuille d'assurance en Suisse — COURTIA">
+<meta property="og:description" content="Combien de contrats, quelles branches, quelles échéances sous 90 jours, quels dossiers sans renouvellement : la réponse tient dans un écran.">
+<meta property="og:url" content="https://courtiark.fr/ch/gestion-portefeuille-assurance-suisse">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Suisse", "item": "https://courtiark.fr/ch"}, {"@type": "ListItem", "position": 3, "name": "Gestion de portefeuille", "item": "https://courtiark.fr/ch/gestion-portefeuille-assurance-suisse"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Peut-on reprendre un portefeuille existant dans COURTIA ?", "acceptedAnswer": {"@type": "Answer", "text": "COURTIA dispose d'un écran d'import de portefeuille avec aide au mapping des colonnes, utilisable à partir d'un export tabulaire. La reprise complète depuis un logiciel de courtage suisse existant est cadrée au cas par cas pendant le paramétrage : nous ne la promettons pas automatique."}}, {"@type": "Question", "name": "Les polices PDF sont-elles rattachées aux contrats ?", "acceptedAnswer": {"@type": "Answer", "text": "Les documents se rattachent au dossier client, aux côtés des contrats, devis et de l'historique d'activité. L'objectif est qu'une police ne se cherche plus dans une arborescence de dossiers."}}, {"@type": "Question", "name": "COURTIA gère-t-il plusieurs collaborateurs sur le même portefeuille ?", "acceptedAnswer": {"@type": "Answer", "text": "L'offre Cabinet inclut trois accès, avec un tarif par utilisateur supplémentaire. Au-delà, l'offre Sur-Mesure se cale sur l'organisation réelle du cabinet."}}, {"@type": "Question", "name": "Que se passe-t-il à la sortie de COURTIA ?", "acceptedAnswer": {"@type": "Answer", "text": "Vos clients, contrats et documents s'exportent dans un format réutilisable. C'est une question que nous posons nous-mêmes aux cabinets en démonstration."}}, {"@type": "Question", "name": "Est-ce que cela fonctionne pour un cabinet d'une seule personne ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, l'offre Indépendant est prévue pour cela. L'intérêt est simplement plus visible dès que le volume dépasse ce qu'une personne peut tenir de tête — soit quelques centaines de polices."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--pink:#ff7cc3;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--fg)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  .scenario{border-left:3px solid var(--cyan);padding:2px 0 2px 18px;margin:20px 0}
+  .limit{border:1px dashed var(--line);border-radius:18px;padding:18px 22px;background:rgba(255,255,255,.02);margin:18px 0}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details summary{cursor:pointer;color:var(--fg);font-weight:600}
+  details p{margin:10px 0 0}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:6px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+  footer div{margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="/ch">Suisse</a>
+  <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+  <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
+<main>
+  <nav class="crumbs" aria-label="fil d'Ariane">Accueil › <a href="/ch">Suisse</a> › Gestion de portefeuille</nav>
+  <p class="eyebrow">Suisse · contrats, échéances, renouvellements</p>
+  <h1>Gestion de portefeuille d'assurance en Suisse : contrats, échéances, renouvellements</h1>
+  <p class="lede">Un portefeuille suisse ne se pilote pas au nombre de clients, mais au nombre d'échéances. Entre les contrats qui se renouvellent au 1<sup>er</sup> janvier, les polices réparties sur l'année et les couvertures d'entreprise, un cabinet de 400 polices fait face à plusieurs dizaines d'échéances par trimestre. COURTIA les rassemble dans un échéancier filtrable, avec les contrats et les statuts dans la même fiche.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="https://courtiark.fr/contact">Poser une question</a></p>
+
+  <h2>Le problème réel : la donnée est dans les polices, pas dans un système</h2>
+  <p>Dans beaucoup de cabinets, la vérité d'un portefeuille est répartie dans une pile de polices PDF, un tableur de primes et la mémoire de deux personnes. Cela fonctionne jusqu'au jour où l'une des deux personnes est absente.</p>
+  <ul>
+    <li><strong>Le renouvellement tacite endort.</strong> Le client reste, donc personne ne s'en occupe — alors que la couverture n'est plus adaptée (nouvelle activité, nouveau véhicule, nouveau logement) et que le tarif dérive chaque année.</li>
+    <li><strong>Les échéances suisses sont concentrées.</strong> Une part significative du portefeuille se renouvelle à date fixe, avec des délais d'opposition en fin d'année. Découvrir un contrat en décembre, c'est le traiter en urgence, mal.</li>
+    <li><strong>La concentration n'est jamais mesurée.</strong> Savoir quelle part du portefeuille repose sur une branche ou sur une seule compagnie est une question de survie du cabinet, pas de curiosité. Peu de cabinets savent y répondre.</li>
+  </ul>
+
+  <h2>Avant COURTIA / avec COURTIA</h2>
+  <table>
+    <thead><tr><th>Question du cabinet</th><th>Sans outil centralisé</th><th>Avec COURTIA</th></tr></thead>
+    <tbody>
+      <tr><td>Quels contrats arrivent à échéance ?</td><td>On compare les dates dans les polices, une par une</td><td>Échéancier filtrable <strong>30 / 60 / 90 jours</strong></td></tr>
+      <tr><td>Quels dossiers n'ont pas été renouvelés ?</td><td>Découvert quand le client appelle</td><td>Alerte « contrats sans renouvellement » dans la santé du portefeuille</td></tr>
+      <tr><td>Quelle est la répartition par produit ?</td><td>Estimation de mémoire</td><td>Répartition produits et indicateurs détaillés</td></tr>
+      <tr><td>Comment reprendre un portefeuille existant ?</td><td>Ressaisie complète</td><td>Écran d'import avec aide au mapping des colonnes</td></tr>
+      <tr><td>Où sont les polices ?</td><td>Dans une arborescence de dossiers</td><td>Documents rattachés au client et au contrat</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ce que le produit fait réellement</h2>
+  <div class="grid">
+    <div class="card"><h3>Contrats dans la fiche client</h3><p>Une fiche client avec ses contrats actifs, leurs statuts et leurs échéances, plus les devis et les documents du dossier. La vue 360° regroupe l'essentiel sans changer d'écran.</p></div>
+    <div class="card"><h3>Échéancier 30 / 60 / 90 jours</h3><p>Les échéances et renouvellements à venir, filtrables, avec les échéances proches remontées en alerte dans la santé du portefeuille.</p></div>
+    <div class="card"><h3>Santé du portefeuille</h3><p>Alertes actives, recommandations ARK, répartition des produits et indicateurs détaillés : une vue de contrôle sur ce qui décroche.</p></div>
+    <div class="card"><h3>Clients silencieux et concentration</h3><p>Le nombre de clients sans contact depuis plus de 90 jours et les déséquilibres de branche (par exemple une concentration RC Pro) sont remontés comme points d'attention.</p></div>
+    <div class="card"><h3>Import de portefeuille</h3><p>Un écran d'import de fichier client avec aide au mapping des colonnes, pour ne pas ressaisir un portefeuille existant ligne par ligne.</p></div>
+    <div class="card"><h3>Vue cabinet et objectifs</h3><p>Les écrans de rapports et d'objectifs donnent la vue d'ensemble : clients, contrats, primes, commissions par produit, par compagnie et par mois.</p></div>
+  </div>
+
+  <h2>Scénario : préparer janvier en octobre</h2>
+  <p class="note">Cas de figure, pas une référence client.</p>
+  <div class="scenario">
+    <p>Un cabinet suit <strong>412 contrats</strong>. Le filtre 90 jours de l'échéancier affiche <strong>37 contrats</strong>, dont 8 qui se renouvellent au 1<sup>er</sup> janvier — le cœur du problème, puisque c'est la période où les délais d'opposition tombent et où le client est le plus sollicité par la concurrence.</p>
+    <p>La santé du portefeuille remonte par ailleurs <strong>23 contrats sans renouvellement</strong> : des dossiers dont l'échéance est passée sans qu'une action soit enregistrée. Chacun est rattaché au client concerné, avec l'historique du dossier : le courtier sait immédiatement s'il a déjà parlé au client ou non.</p>
+    <p>Troisième alerte : la répartition par produit montre une <strong>concentration marquée sur la RC professionnelle</strong>. Ce n'est pas un problème de logiciel, c'est une information de pilotage — et le cabinet ne l'avait jamais mesurée.</p>
+  </div>
+
+  <h2>Ce que cette page ne couvre pas (et où le trouver)</h2>
+  <div class="limit">
+    <ul>
+      <li><strong>La relation client</strong> — historique des échanges, journal du dossier, segmentation : voir <a href="/ch/crm-courtier-assurance-suisse">CRM courtier d'assurance en Suisse</a>.</li>
+      <li><strong>La file d'actions du jour</strong> — qui appeler maintenant : voir <a href="/ch/relances-courtier-assurance-suisse">Relances et tâches</a>.</li>
+      <li><strong>Les commissions</strong> — attendu, encaissé, à suivre : voir <a href="/ch/gestion-commissions-courtier-assurance-suisse">Gestion des commissions</a>.</li>
+      <li><strong>La reprise d'un portefeuille depuis un logiciel suisse existant</strong> n'est pas promise « automatique » : elle est cadrée au cas par cas, compagnie par compagnie, pendant le paramétrage.</li>
+      <li><strong>Les données cantonales.</strong> Nous ne publions pas de page par canton ni par ville : nous n'avons pas de données cantonales vérifiables, et une page locale sans donnée spécifique ne servirait personne.</li>
+    </ul>
+  </div>
+
+  <h2>Questions fréquentes</h2>
+  <details><summary>Peut-on reprendre un portefeuille existant dans COURTIA ?</summary><p>COURTIA dispose d'un écran d'import de portefeuille avec aide au mapping des colonnes, utilisable à partir d'un export tabulaire. La reprise complète depuis un logiciel de courtage suisse existant est cadrée au cas par cas pendant le paramétrage : nous ne la promettons pas automatique.</p></details>
+  <details><summary>Les polices PDF sont-elles rattachées aux contrats ?</summary><p>Les documents se rattachent au dossier client, aux côtés des contrats, devis et de l'historique d'activité. L'objectif est qu'une police ne se cherche plus dans une arborescence de dossiers.</p></details>
+  <details><summary>COURTIA gère-t-il plusieurs collaborateurs sur le même portefeuille ?</summary><p>L'offre Cabinet inclut trois accès, avec un tarif par utilisateur supplémentaire. Au-delà, l'offre Sur-Mesure se cale sur l'organisation réelle du cabinet.</p></details>
+  <details><summary>Que se passe-t-il à la sortie de COURTIA ?</summary><p>Vos clients, contrats et documents s'exportent dans un format réutilisable. C'est une question que nous posons nous-mêmes aux cabinets en démonstration.</p></details>
+  <details><summary>Est-ce que cela fonctionne pour un cabinet d'une seule personne ?</summary><p>Oui, l'offre Indépendant est prévue pour cela. L'intérêt est simplement plus visible dès que le volume dépasse ce qu'une personne peut tenir de tête — soit quelques centaines de polices.</p></details>
+
+  <h2>Pour aller plus loin</h2>
+  <ul class="links">
+    <li><a href="/ch">Page pilier : logiciel et CRM pour courtiers d'assurance en Suisse</a></li>
+    <li><a href="/ch/crm-courtier-assurance-suisse">CRM courtier d'assurance : le dossier client</a></li>
+    <li><a href="/ch/gestion-commissions-courtier-assurance-suisse">Gestion des commissions par compagnie</a></li>
+    <li><a href="/ch/ia-courtier-assurance-suisse">IA / ARK : churn, cross-sell, renouvellements</a></li>
+    <li><a href="/ch/tarifs-logiciel-courtier-chf">Tarifs en CHF</a></li>
+  </ul>
+
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="/ch">Le cluster suisse</a></p>
+</main>
+<footer>
+  <strong>COURTIA</strong> — courtiark.fr · Page publiée pour la Suisse romande (fr-CH). Aucun élément de cette page ne constitue un conseil juridique ou un avis réglementaire.
+  <div>
+    <a href="/ch">Suisse</a>
+    <a href="/ch/crm-courtier-assurance-suisse">CRM courtier</a>
+    <a href="/ch/gestion-portefeuille-assurance-suisse">Portefeuille</a>
+    <a href="/ch/gestion-commissions-courtier-assurance-suisse">Commissions</a>
+    <a href="/ch/relances-courtier-assurance-suisse">Relances</a>
+    <a href="/ch/logiciel-prospection-courtier-assurance-suisse">Prospection</a>
+    <a href="/ch/logiciel-devis-courtier-assurance-suisse">Devis</a>
+    <a href="/ch/ia-courtier-assurance-suisse">IA / ARK</a>
+    <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+</footer>
+</body>
+</html>

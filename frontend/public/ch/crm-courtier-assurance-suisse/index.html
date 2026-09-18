@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRM pour courtier d'assurance en Suisse : le dossier client 360° — COURTIA</title>
+<meta name="description" content="Fiche client 360°, historique du dossier, contrats, devis, documents, activité et recommandations ARK dans un seul écran, pour un cabinet suisse.">
+<link rel="canonical" href="https://courtiark.fr/ch/crm-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/ch/crm-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/fonctionnalites">
+<link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#050510">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CRM pour courtier d'assurance en Suisse : le dossier client 360° — COURTIA">
+<meta property="og:description" content="Trois questions en un écran : que détient ce client, qu'est-ce qui s'est dit, qu'est-ce qui arrive ? Le CRM de courtage de COURTIA.">
+<meta property="og:url" content="https://courtiark.fr/ch/crm-courtier-assurance-suisse">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Suisse", "item": "https://courtiark.fr/ch"}, {"@type": "ListItem", "position": 3, "name": "CRM courtier", "item": "https://courtiark.fr/ch/crm-courtier-assurance-suisse"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Qu'est-ce qu'un CRM apporte à un courtier d'assurance suisse ?", "acceptedAnswer": {"@type": "Answer", "text": "Un endroit unique où le dossier client tient en entier : contrats, devis, documents, historique des échanges et prochaines échéances. L'objectif n'est pas de « mieux gérer » en général, mais de ne plus reconstituer un contexte à chaque appel."}}, {"@type": "Question", "name": "Quelle différence avec la page « gestion de portefeuille » ?", "acceptedAnswer": {"@type": "Answer", "text": "Le CRM traite la relation avec chaque client : ce qui s'est dit, ce qui est au dossier. La gestion de portefeuille traite les contrats et les échéances de l'ensemble du cabinet. Les deux se complètent, ils ne se substituent pas."}}, {"@type": "Question", "name": "Les documents clients sont-ils conservés dans COURTIA ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, rattachés au client, avec un état (à vérifier, manquant, expiré, récent). Un logiciel ne « met pas en conformité » à lui seul ; il permet en revanche de retrouver une pièce au moment où on vous la demande."}}, {"@type": "Question", "name": "Comment les données personnelles sont-elles traitées (nLPD) ?", "acceptedAnswer": {"@type": "Answer", "text": "La nLPD est en vigueur depuis le 1<sup>er</sup> septembre 2023 et impose de documenter les finalités, la conservation et les droits des personnes. L'hébergement et les sous-traitants se valident au cas par cas selon les exigences de votre cabinet : nous en parlons en démonstration plutôt que d'afficher une certification que nous n'avons pas."}}, {"@type": "Question", "name": "Puis-je reprendre mon fichier client existant ?", "acceptedAnswer": {"@type": "Answer", "text": "COURTIA dispose d'un écran d'import de fichier client avec aide au mapping des colonnes. La reprise complète depuis un logiciel de courtage suisse existant est cadrée au cas par cas pendant le paramétrage."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--pink:#ff7cc3;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--fg)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  .scenario{border-left:3px solid var(--cyan);padding:2px 0 2px 18px;margin:20px 0}
+  .limit{border:1px dashed var(--line);border-radius:18px;padding:18px 22px;background:rgba(255,255,255,.02);margin:18px 0}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details summary{cursor:pointer;color:var(--fg);font-weight:600}
+  details p{margin:10px 0 0}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:6px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+  footer div{margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="/ch">Suisse</a>
+  <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+  <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
+<main>
+  <nav class="crumbs" aria-label="fil d'Ariane">Accueil › <a href="/ch">Suisse</a> › CRM courtier</nav>
+  <p class="eyebrow">Suisse · dossier client et relation</p>
+  <h1>CRM pour courtier d'assurance en Suisse : le dossier client en un écran</h1>
+  <p class="lede">Le dossier d'un client suisse est éclaté : les polices dans une boîte mail, le compte rendu de la dernière visite dans un carnet, la date de renouvellement dans la tête du courtier. Un CRM de courtage n'a de valeur que s'il répond en un écran à trois questions : que détient ce client, qu'est-ce qui s'est dit, et qu'est-ce qui arrive ?</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="https://courtiark.fr/contact">Poser une question</a></p>
+
+  <h2>Le problème réel : l'information existe, mais elle est dispersée</h2>
+  <p>La plupart des cabinets suisses n'ont pas un problème de mémoire, ils ont un problème de dispersion. Tout est su, rien n'est au même endroit — et c'est la dispersion qui coûte, parce qu'elle oblige à reconstituer un contexte à chaque appel.</p>
+  <ul>
+    <li><strong>Avant un rendez-vous, il faut retrouver les contrats.</strong> Trois compagnies, trois PDF, une date de renouvellement à vérifier : vingt minutes pour préparer un appel de dix.</li>
+    <li><strong>Ce qui s'est dit n'est écrit nulle part.</strong> Le client rappelle six mois plus tard en disant « comme on avait dit » ; personne ne sait ce qui avait été dit.</li>
+    <li><strong>Les documents ne sont pas rattachés aux personnes.</strong> Une pièce d'identité, un permis de circulation, une attestation d'employeur : ils vivent dans des dossiers, pas dans des fiches client.</li>
+    <li><strong>Le suivi du conseil est introuvable.</strong> Le journal de conseil de l'offre Cabinet existe précisément pour répondre à cette question : qu'a-t-on remis à ce client, et quand.</li>
+  </ul>
+
+  <h2>Avant COURTIA / avec COURTIA</h2>
+  <table>
+    <thead><tr><th>Moment</th><th>Sans CRM</th><th>Avec COURTIA</th></tr></thead>
+    <tbody>
+      <tr><td>Préparer un appel</td><td>Recherche des polices dans la messagerie et les dossiers</td><td>Fiche client : contrats actifs, devis, documents, actions à venir, historique du dossier</td></tr>
+      <tr><td>Comprendre un dossier</td><td>Reconstitution de mémoire</td><td>Vue 360°, profil de risque, activité récente, onglet ARK</td></tr>
+      <tr><td>Retrouver ce qui a été dit</td><td>Invisible</td><td>Historique du dossier et onglet Activité (chronologie complète)</td></tr>
+      <tr><td>Trouver un client</td><td>Tri d'un tableur</td><td>Recherche et filtres, affichage en tableau ou en vue bulles</td></tr>
+      <tr><td>Reprendre un portefeuille</td><td>Ressaisie</td><td>Import de fichier client avec aide au mapping des colonnes</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ce que le produit fait réellement</h2>
+  <div class="grid">
+    <div class="card"><h3>Fiche client 360°</h3><p>Six onglets : Vue 360°, Contrats, Devis, Documents, Activité et ARK. L'information d'un client est dans une fiche, pas dans une arborescence de dossiers.</p></div>
+    <div class="card"><h3>Blocs du dossier</h3><p>Informations, contrats actifs, devis, actions à venir, documents, historique du dossier, profil de risque, activité récente et recommandations ARK.</p></div>
+    <div class="card"><h3>Actions à venir</h3><p>Les prochaines échéances et relances du client, remontées dans sa fiche : le courtier voit ce qui vient avant que ça arrive.</p></div>
+    <div class="card"><h3>Historique et activité</h3><p>Une chronologie des actions du cabinet sur le dossier. C'est ce qui distingue un CRM utilisé d'un CRM rempli.</p></div>
+    <div class="card"><h3>Liste de portefeuille</h3><p>La liste des clients se parcourt en tableau ou en vue bulles, avec recherche et filtres, et un accès direct à l'import de portefeuille.</p></div>
+    <div class="card"><h3>Journal de conseil</h3><p>Inclus dans l'offre Cabinet : il conserve la trace de ce qui a été préparé et remis au client, en lien avec les obligations documentaires de l'intermédiaire.</p></div>
+  </div>
+
+  <h2>Scénario : le client qui rappelle six mois plus tard</h2>
+  <p class="note">Cas de figure, pas une référence client.</p>
+  <div class="scenario">
+    <p>Un client appelle : « Vous m'aviez parlé d'une extension pour l'activité de ma femme, on avait dit qu'on verrait en janvier. » Sans CRM, ce coup de fil déclenche une recherche dans la messagerie et une reconstitution approximative.</p>
+    <p>Avec COURTIA, le courtier ouvre la fiche. L'onglet Activité montre l'échange, la date, ce qui avait été évoqué. L'onglet Contrats montre les polices en cours et celle qui se renouvelle en janvier. L'onglet Documents montre ce qui manque pour monter le dossier. Trois minutes, et la réponse est factuelle.</p>
+    <p>Le courtier crée le devis depuis la fiche, et l'action à venir apparaît dans le dossier. Si le client ne répond pas, c'est la file de relances qui reprend le fil — pas la mémoire du courtier.</p>
+  </div>
+
+  <h2>Périmètre de cette page (pour éviter les confusions)</h2>
+  <div class="limit">
+    <ul>
+      <li><strong>Cette page traite la relation client</strong> : qui est ce client, qu'est-ce qui s'est dit, quels documents sont au dossier.</li>
+      <li><strong>Les contrats et les échéances du portefeuille</strong> sont traités sur <a href="/ch/gestion-portefeuille-assurance-suisse">Gestion de portefeuille d'assurance en Suisse</a>.</li>
+      <li><strong>La file d'actions du jour</strong> est traitée sur <a href="/ch/relances-courtier-assurance-suisse">Relances et tâches</a>.</li>
+      <li><strong>Ce n'est pas un CRM généraliste.</strong> COURTIA n'est pas conçu pour vendre des produits sans rapport avec l'assurance, ni pour faire du marketing de masse.</li>
+      <li><strong>La conformité n'est pas automatique.</strong> Le journal de conseil conserve une trace ; il ne délivre ni attestation, ni audit, ni agrément — voir <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>.</li>
+    </ul>
+  </div>
+
+  <h2>Questions fréquentes</h2>
+  <details><summary>Qu'est-ce qu'un CRM apporte à un courtier d'assurance suisse ?</summary><p>Un endroit unique où le dossier client tient en entier : contrats, devis, documents, historique des échanges et prochaines échéances. L'objectif n'est pas de « mieux gérer » en général, mais de ne plus reconstituer un contexte à chaque appel.</p></details>
+  <details><summary>Quelle différence avec la page « gestion de portefeuille » ?</summary><p>Le CRM traite la relation avec chaque client : ce qui s'est dit, ce qui est au dossier. La gestion de portefeuille traite les contrats et les échéances de l'ensemble du cabinet. Les deux se complètent, ils ne se substituent pas.</p></details>
+  <details><summary>Les documents clients sont-ils conservés dans COURTIA ?</summary><p>Oui, rattachés au client, avec un état (à vérifier, manquant, expiré, récent). Un logiciel ne « met pas en conformité » à lui seul ; il permet en revanche de retrouver une pièce au moment où on vous la demande.</p></details>
+  <details><summary>Comment les données personnelles sont-elles traitées (nLPD) ?</summary><p>La nLPD est en vigueur depuis le 1<sup>er</sup> septembre 2023 et impose de documenter les finalités, la conservation et les droits des personnes. L'hébergement et les sous-traitants se valident au cas par cas selon les exigences de votre cabinet : nous en parlons en démonstration plutôt que d'afficher une certification que nous n'avons pas.</p></details>
+  <details><summary>Puis-je reprendre mon fichier client existant ?</summary><p>COURTIA dispose d'un écran d'import de fichier client avec aide au mapping des colonnes. La reprise complète depuis un logiciel de courtage suisse existant est cadrée au cas par cas pendant le paramétrage.</p></details>
+
+  <h2>Pour aller plus loin</h2>
+  <ul class="links">
+    <li><a href="/ch">Page pilier : logiciel et CRM pour courtiers d'assurance en Suisse</a></li>
+    <li><a href="/ch/gestion-portefeuille-assurance-suisse">Contrats, échéances et renouvellements du portefeuille</a></li>
+    <li><a href="/ch/relances-courtier-assurance-suisse">Relances et tâches : la file d'actions du jour</a></li>
+    <li><a href="/ch/logiciel-devis-courtier-assurance-suisse">Devis et propositions</a></li>
+    <li><a href="/ch/tarifs-logiciel-courtier-chf">Tarifs en CHF</a></li>
+  </ul>
+
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="/ch">Le cluster suisse</a></p>
+</main>
+<footer>
+  <strong>COURTIA</strong> — courtiark.fr · Page publiée pour la Suisse romande (fr-CH). Aucun élément de cette page ne constitue un conseil juridique ou un avis réglementaire.
+  <div>
+    <a href="/ch">Suisse</a>
+    <a href="/ch/crm-courtier-assurance-suisse">CRM courtier</a>
+    <a href="/ch/gestion-portefeuille-assurance-suisse">Portefeuille</a>
+    <a href="/ch/gestion-commissions-courtier-assurance-suisse">Commissions</a>
+    <a href="/ch/relances-courtier-assurance-suisse">Relances</a>
+    <a href="/ch/logiciel-prospection-courtier-assurance-suisse">Prospection</a>
+    <a href="/ch/logiciel-devis-courtier-assurance-suisse">Devis</a>
+    <a href="/ch/ia-courtier-assurance-suisse">IA / ARK</a>
+    <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+</footer>
+</body>
+</html>

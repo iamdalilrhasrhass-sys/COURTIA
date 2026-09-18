@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestion des commissions d'un courtier d'assurance en Suisse — COURTIA</title>
+<meta name="description" content="Suivez les commissions attendues, encaissées et à réclamer, par compagnie et par apporteur, dans le même outil que vos contrats suisses.">
+<link rel="canonical" href="https://courtiark.fr/ch/gestion-commissions-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/ch/gestion-commissions-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/fonctionnalites">
+<link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#050510">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gestion des commissions d'un courtier d'assurance en Suisse — COURTIA">
+<meta property="og:description" content="Attendu, encaissé, à suivre, par compagnie et par apporteur. Rapprochez les décomptes de vos compagnies suisses et préparez l'information due au client.">
+<meta property="og:url" content="https://courtiark.fr/ch/gestion-commissions-courtier-assurance-suisse">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Suisse", "item": "https://courtiark.fr/ch"}, {"@type": "ListItem", "position": 3, "name": "Gestion des commissions", "item": "https://courtiark.fr/ch/gestion-commissions-courtier-assurance-suisse"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Comment les décomptes des compagnies suisses entrent-ils dans COURTIA ?", "acceptedAnswer": {"@type": "Answer", "text": "Par import d'un fichier de décompte, ou par saisie rapide d'une ligne depuis un contrat existant. Aucune connexion automatique aux systèmes des compagnies n'est promise : les compagnies suisses ne publient pas d'API commune à cet effet."}}, {"@type": "Question", "name": "COURTIA calcule-t-il lui-même les taux de commission ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Les taux dépendent des conventions signées entre votre cabinet et chaque compagnie. Le barème se paramètre dans COURTIA ; nous ne publions pas de taux de référence inventés."}}, {"@type": "Question", "name": "Est-ce que cela remplace ma fiduciaire ou ma comptabilité ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. COURTIA est un outil de gestion de cabinet : il suit la commission, l'apporteur et le contrat. La comptabilité, la TVA et les bouclements restent chez votre fiduciaire, qui peut travailler sur des exportations."}}, {"@type": "Question", "name": "Comment je justifie ma rémunération à un client (courtier non lié) ?", "acceptedAnswer": {"@type": "Answer", "text": "Le suivi des commissions fournit la matière de l'information due au client au titre de l'art. 45<sup>b</sup> LSA. Le journal de conseil de l'offre Cabinet conserve la trace de ce qui a été remis. COURTIA ne remplace ni votre analyse juridique ni la LSA — voir la page conformité LSA / FINMA."}}, {"@type": "Question", "name": "Et si mes décomptes arrivent en euros et ma facturation en francs suisses ?", "acceptedAnswer": {"@type": "Answer", "text": "L'échéancier de facturation est en CHF. Pour les montants de commission, la devise dépend de vos conventions : c'est un point à valider explicitement pendant le paramétrage, et nous le disons plutôt que de le promettre."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--pink:#ff7cc3;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--fg)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  .scenario{border-left:3px solid var(--cyan);padding:2px 0 2px 18px;margin:20px 0}
+  .limit{border:1px dashed var(--line);border-radius:18px;padding:18px 22px;background:rgba(255,255,255,.02);margin:18px 0}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details summary{cursor:pointer;color:var(--fg);font-weight:600}
+  details p{margin:10px 0 0}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:6px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+  footer div{margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="/ch">Suisse</a>
+  <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+  <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
+<main>
+  <nav class="crumbs" aria-label="fil d'Ariane">Accueil › <a href="/ch">Suisse</a> › Gestion des commissions</nav>
+  <p class="eyebrow">Suisse · suivi et réconciliation des commissions</p>
+  <h1>Gestion des commissions d'un courtier d'assurance en Suisse : attendu, encaissé, à suivre</h1>
+  <p class="lede">Un courtier suisse travaille couramment avec huit à quinze compagnies, chacune avec son décompte, sa périodicité et sa façon d'arrondir. Savoir ce qui est attendu, ce qui a été encaissé et ce qui reste à réclamer demande aujourd'hui de recouper des PDF avec un tableur. COURTIA tient ce suivi dans le même outil que les contrats, par compagnie et par apporteur.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="https://courtiark.fr/contact">Poser une question</a></p>
+
+  <h2>Le problème réel : le décompte est l'endroit où l'on perd de l'argent sans le voir</h2>
+  <p>Un courtier ne perd pas ses commissions d'un coup. Il les perd par petites lignes : un contrat résilié en cours d'année dont la commission n'a jamais été régularisée, une part d'apporteur recalculée à la main, un décompte trimestriel qu'on ne rapproche pas parce que le trimestre a été chargé.</p>
+  <ul>
+    <li><strong>Les contrats qui bougent en cours d'année.</strong> Un portefeuille suisse change tous les mois : avenants, résiliations, changements de véhicule ou de surface assurée. Chaque mouvement déplace une ligne de commission, et personne ne le recalcule.</li>
+    <li><strong>Les apporteurs.</strong> Fiduciaires, courtiers en réseau, agences immobilières, gérants de fortune vous apportent des clients. Ils attendent leur part, et ce n'est pas le métier du courtier de la reconstituer sur un carnet.</li>
+    <li><strong>L'information due au client.</strong> Pour un <strong>intermédiaire d'assurance non lié</strong>, l'art. 45<sup>b</sup> LSA impose d'informer le client sur tous les types de rémunération reçus d'entreprises d'assurance ou de tiers. Cette information se prépare sur des données de commission, pas de mémoire.</li>
+  </ul>
+
+  <h2>Avant COURTIA / avec COURTIA</h2>
+  <table>
+    <thead><tr><th>Moment</th><th>Sans suivi centralisé</th><th>Avec COURTIA</th></tr></thead>
+    <tbody>
+      <tr><td>Réception des décomptes</td><td>Un PDF par compagnie, à relire ligne par ligne</td><td>Import du décompte dans la vue commissions, rattaché à vos contrats</td></tr>
+      <tr><td>Lecture de la situation</td><td>Aucune, sauf à tout additionner</td><td>Attendu, encaissé, à suivre et nombre d'apporteurs suivis, en tête d'écran</td></tr>
+      <tr><td>Suivi par compagnie</td><td>Une feuille par compagnie, jamais alignée</td><td>Vue par compagnie comparable d'un trimestre à l'autre</td></tr>
+      <tr><td>Part des apporteurs</td><td>Recalculée à la main</td><td>Suivi par apporteur dans le même écran que les contrats</td></tr>
+      <tr><td>Information au client (non liés)</td><td>Reconstituée au moment de la question</td><td>Préparée à partir des commissions réellement suivies</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ce que le module Commissions fait réellement</h2>
+  <div class="grid">
+    <div class="card"><h3>Vue commissions</h3><p>Quatre indicateurs en tête : ce qui est <strong>attendu</strong>, ce qui a été <strong>encaissé</strong>, ce qui reste <strong>à suivre</strong> (le reste théorique), et le nombre d'<strong>apporteurs</strong> suivis. Chaque ligne est rattachée à un client et à un contrat.</p></div>
+    <div class="card"><h3>Import de décompte</h3><p>Les décomptes s'importent (fichier CSV) plutôt que se saisir ligne à ligne — c'est la seule méthode tenable quand une compagnie vous envoie 200 lignes.</p></div>
+    <div class="card"><h3>Saisie rapide depuis un contrat</h3><p>Pour une ligne isolée, la commission se saisit directement depuis le contrat existant, sans ressaisir le client ni la compagnie.</p></div>
+    <div class="card"><h3>Répartition par produit, par compagnie, par mois</h3><p>Les écrans Objectifs et Analyses présentent les commissions par produit, par compagnie et par mois : de quoi voir une compagnie qui décroche ou un produit qui porte le cabinet.</p></div>
+    <div class="card"><h3>Estimation de commission</h3><p>Un écran dédié estime la commission d'une affaire à partir de la compagnie, du produit et de la prime, sur un barème que vous paramétrez — et compare les compagnies entre elles, avec l'écart sur la sélection.</p></div>
+    <div class="card"><h3>Protocole de conseil</h3><p>Le journal de conseil de l'offre Cabinet conserve qui a remis quoi, quand : utile quand un client demande d'où vient votre rémunération.</p></div>
+  </div>
+
+  <h2>Scénario : les 380 CHF qui ne reviennent jamais</h2>
+  <p class="note">Cas de figure, pas une référence client.</p>
+  <div class="scenario">
+    <p>Un cabinet encaisse ses décomptes de trois compagnies au trimestre. La vue commissions affiche un attendu de <strong>24 700 CHF</strong> et un encaissé de <strong>24 320 CHF</strong>. L'écart est trop petit pour justifier une soirée de tableur — et c'est exactement comme ça qu'il disparaît.</p>
+    <p>En filtrant par compagnie, l'écart se concentre sur une seule d'entre elles. En regardant les lignes, deux contrats ont été résiliés en cours de trimestre : l'un a produit un rappel de commission, l'autre un trop-perçu non régularisé. Le courrier de réclamation part avec les numéros de contrat et les montants, pas avec une impression.</p>
+    <p>Le même écran montre la part due à deux apporteurs. Elle est calculée sur des lignes réellement suivies, et non sur un pourcentage appliqué à un total de primes souvenir.</p>
+  </div>
+
+  <h2>Ce que ce module n'est pas</h2>
+  <div class="limit">
+    <ul>
+      <li><strong>Ce n'est pas un logiciel de comptabilité.</strong> COURTIA suit la commission ; il ne produit ni votre bilan, ni votre décompte TVA, ni une écriture comptable.</li>
+      <li><strong>Les taux ne sont pas inventés.</strong> Un barème de commission dépend de vos conventions signées avec chaque compagnie. Nous ne publions pas de taux « moyens du marché » : ils se paramètrent avec vous.</li>
+      <li><strong>Les devises doivent être cadrées.</strong> Selon vos conventions, un décompte peut arriver en CHF ou en EUR. Le traitement des devises se valide sur vos conventions pendant le paramétrage ; nous ne prétendons pas le régler à l'aveugle.</li>
+      <li><strong>Aucun rapprochement bancaire automatique n'est promis.</strong> L'import du décompte reste un acte du cabinet, déclenché par la réception réelle du document.</li>
+    </ul>
+  </div>
+
+  <h2>Questions fréquentes</h2>
+  <details><summary>Comment les décomptes des compagnies suisses entrent-ils dans COURTIA ?</summary><p>Par import d'un fichier de décompte, ou par saisie rapide d'une ligne depuis un contrat existant. Aucune connexion automatique aux systèmes des compagnies n'est promise : les compagnies suisses ne publient pas d'API commune à cet effet.</p></details>
+  <details><summary>COURTIA calcule-t-il lui-même les taux de commission ?</summary><p>Non. Les taux dépendent des conventions signées entre votre cabinet et chaque compagnie. Le barème se paramètre dans COURTIA ; nous ne publions pas de taux de référence inventés.</p></details>
+  <details><summary>Est-ce que cela remplace ma fiduciaire ou ma comptabilité ?</summary><p>Non. COURTIA est un outil de gestion de cabinet : il suit la commission, l'apporteur et le contrat. La comptabilité, la TVA et les bouclements restent chez votre fiduciaire, qui peut travailler sur des exportations.</p></details>
+  <details><summary>Comment je justifie ma rémunération à un client (courtier non lié) ?</summary><p>Le suivi des commissions fournit la matière de l'information due au client au titre de l'art. 45<sup>b</sup> LSA. Le journal de conseil de l'offre Cabinet conserve la trace de ce qui a été remis. COURTIA ne remplace ni votre analyse juridique ni la LSA — voir la page conformité LSA / FINMA.</p></details>
+  <details><summary>Et si mes décomptes arrivent en euros et ma facturation en francs suisses ?</summary><p>L'échéancier de facturation est en CHF. Pour les montants de commission, la devise dépend de vos conventions : c'est un point à valider explicitement pendant le paramétrage, et nous le disons plutôt que de le promettre.</p></details>
+
+  <h2>Pour aller plus loin</h2>
+  <ul class="links">
+    <li><a href="/ch">Page pilier : logiciel et CRM pour courtiers d'assurance en Suisse</a></li>
+    <li><a href="/ch/gestion-portefeuille-assurance-suisse">Gestion de portefeuille : les contrats d'où viennent les commissions</a></li>
+    <li><a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA : art. 45<sup>b</sup> et publicité des rémunérations</a></li>
+    <li><a href="/ch/ia-courtier-assurance-suisse">IA : ce qu'ARK analyse dans le portefeuille</a></li>
+    <li><a href="/ch/tarifs-logiciel-courtier-chf">Tarifs en CHF</a></li>
+  </ul>
+
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="/ch">Le cluster suisse</a></p>
+</main>
+<footer>
+  <strong>COURTIA</strong> — courtiark.fr · Page publiée pour la Suisse romande (fr-CH). Aucun élément de cette page ne constitue un conseil juridique ou un avis réglementaire.
+  <div>
+    <a href="/ch">Suisse</a>
+    <a href="/ch/crm-courtier-assurance-suisse">CRM courtier</a>
+    <a href="/ch/gestion-portefeuille-assurance-suisse">Portefeuille</a>
+    <a href="/ch/gestion-commissions-courtier-assurance-suisse">Commissions</a>
+    <a href="/ch/relances-courtier-assurance-suisse">Relances</a>
+    <a href="/ch/logiciel-prospection-courtier-assurance-suisse">Prospection</a>
+    <a href="/ch/logiciel-devis-courtier-assurance-suisse">Devis</a>
+    <a href="/ch/ia-courtier-assurance-suisse">IA / ARK</a>
+    <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+</footer>
+</body>
+</html>

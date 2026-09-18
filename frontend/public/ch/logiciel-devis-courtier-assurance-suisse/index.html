@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devis d'assurance en Suisse : produire et suivre ses propositions — COURTIA</title>
+<meta name="description" content="Devis en cours, à relancer, potentiel, taux de transformation, comparateur de compagnies : ne laissez plus une proposition d'assurance sans réponse.">
+<link rel="canonical" href="https://courtiark.fr/ch/logiciel-devis-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/ch/logiciel-devis-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/fonctionnalites">
+<link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#050510">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Devis d'assurance en Suisse : produire et suivre ses propositions — COURTIA">
+<meta property="og:description" content="Un devis sans réponse n'est pas un devis en attente : c'est un devis perdu. COURTIA suit les propositions, du montage à l'acceptation.">
+<meta property="og:url" content="https://courtiark.fr/ch/logiciel-devis-courtier-assurance-suisse">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Suisse", "item": "https://courtiark.fr/ch"}, {"@type": "ListItem", "position": 3, "name": "Devis", "item": "https://courtiark.fr/ch/logiciel-devis-courtier-assurance-suisse"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA est-il un comparateur d'assurances ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. COURTIA n'est ni un courtier, ni un comparateur, ni un intermédiaire : c'est un outil de gestion pour votre cabinet. Le comparateur interne compare les offres que vous avez obtenues ; il n'interroge aucune compagnie à votre place."}}, {"@type": "Question", "name": "Les devis sont-ils suivis automatiquement ?", "acceptedAnswer": {"@type": "Answer", "text": "Un devis sans réponse apparaît dans la famille de relances correspondante, et le module Devis affiche le nombre de devis à relancer ainsi que le potentiel concerné. La relance elle-même est écrite et envoyée par le courtier."}}, {"@type": "Question", "name": "Est-ce que cela me protège juridiquement (art. 45 LSA) ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, et aucun logiciel ne le fait. COURTIA aide à préparer et à conserver les informations remises au client avant la conclusion, en les rattachant à son dossier. L'appréciation de vos obligations reste la vôtre."}}, {"@type": "Question", "name": "Puis-je rattacher un devis à un client déjà existant ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui. La fiche client comporte un onglet devis : les propositions faites à une personne restent dans son dossier, à côté de ses contrats, de ses documents et de son historique."}}, {"@type": "Question", "name": "Le devis peut-il être exporté pour le client ?", "acceptedAnswer": {"@type": "Answer", "text": "Le comparateur produit un document présentable, exportable, à partir des offres que vous avez saisies. Le but est d'éviter de refaire une mise en forme à chaque proposition."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--pink:#ff7cc3;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--fg)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  .scenario{border-left:3px solid var(--cyan);padding:2px 0 2px 18px;margin:20px 0}
+  .limit{border:1px dashed var(--line);border-radius:18px;padding:18px 22px;background:rgba(255,255,255,.02);margin:18px 0}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details summary{cursor:pointer;color:var(--fg);font-weight:600}
+  details p{margin:10px 0 0}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:6px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+  footer div{margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="/ch">Suisse</a>
+  <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+  <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
+<main>
+  <nav class="crumbs" aria-label="fil d'Ariane">Accueil › <a href="/ch">Suisse</a> › Devis</nav>
+  <p class="eyebrow">Suisse · devis et propositions d'assurance</p>
+  <h1>Devis d'assurance en Suisse : produire et suivre les propositions</h1>
+  <p class="lede">Un devis sans réponse n'est pas un devis en attente : c'est un devis perdu. Entre la comparaison des offres obtenues auprès des compagnies, la remise de la proposition au client, et l'information qui doit lui être fournie avant la conclusion du contrat (art. 45 LSA), le suivi d'un devis est un dossier à part entière. COURTIA le traite comme tel.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="https://courtiark.fr/contact">Poser une question</a></p>
+
+  <h2>Le problème réel : le devis sort du radar dès qu'il est envoyé</h2>
+  <p>Le moment où un devis est le plus fragile est celui où il vient d'être remis. Le courtier a fait son travail, le client a dit « je regarde », et le dossier quitte la mémoire active du cabinet.</p>
+  <ul>
+    <li><strong>Personne ne sait combien de devis sont en attente.</strong> Un cabinet de courtage de taille moyenne en a souvent vingt à quarante ouverts, sans savoir lesquels sont chauds et lesquels sont morts.</li>
+    <li><strong>La relance arrive trop tard ou n'arrive pas.</strong> Le client signe chez celui qui a rappelé ; c'est une règle qui n'a rien de technique.</li>
+    <li><strong>L'information précontractuelle se perd.</strong> Pour les contrats assurant des personnes, l'art. 45 LSA impose la remise d'informations au client avant la conclusion. Retrouver ce qui a été remis, à qui et quand, doit se faire au dossier — pas de mémoire.</li>
+    <li><strong>Comparer trois offres prend une heure.</strong> Les compagnies ne présentent pas leurs garanties de la même façon, et la comparaison se fait souvent sur la prime seule, ce qui n'est pas une comparaison.</li>
+  </ul>
+
+  <h2>Avant COURTIA / avec COURTIA</h2>
+  <table>
+    <thead><tr><th>Moment</th><th>Sans suivi de devis</th><th>Avec COURTIA</th></tr></thead>
+    <tbody>
+      <tr><td>Production de la proposition</td><td>Un document par compagnie, refait à chaque client</td><td>Assistant de création de devis, puis comparateur des offres avec score et badges par offre</td></tr>
+      <tr><td>Suivi des devis ouverts</td><td>Aucun compteur fiable</td><td>Devis en cours, à relancer, potentiel et taux de transformation, en tête d'écran</td></tr>
+      <tr><td>Relance du client</td><td>Quand on y pense</td><td>Relance de type « devis sans réponse » dans la file de relances</td></tr>
+      <tr><td>Information précontractuelle</td><td>Retrouvée dans la boîte mail</td><td>Documents rattachés au client et au devis, conservés au dossier</td></tr>
+      <tr><td>Décision de suivi</td><td>Aucun signal</td><td>Alertes ARK sur les devis, et devis acceptés du mois</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ce que le produit fait réellement</h2>
+  <div class="grid">
+    <div class="card"><h3>Tableau de bord des devis</h3><p>Six indicateurs : devis en cours, à relancer, potentiel correspondant, taux de transformation, devis acceptés du mois et alertes ARK.</p></div>
+    <div class="card"><h3>Assistant de création</h3><p>Le devis se construit dans un écran dédié, puis se rattache au client existant — pour que la proposition ne vive pas en dehors du dossier.</p></div>
+    <div class="card"><h3>Comparateur d'offres</h3><p>Pour un même client, les offres obtenues se comparent avec un score et des badges par offre, et s'exportent en document présentable. Utile quand le client demande « pourquoi celle-là et pas l'autre ».</p></div>
+    <div class="card"><h3>Espace devis de la fiche client</h3><p>La fiche client contient un onglet devis : l'historique des propositions faites à cette personne, à côté de ses contrats et de ses documents.</p></div>
+    <div class="card"><h3>Relance intégrée</h3><p>Un devis sans réponse alimente automatiquement la famille de relances correspondante : le devis ne peut plus disparaître sans que quelqu'un l'ait décidé.</p></div>
+    <div class="card"><h3>Documents du dossier</h3><p>Rattachement des pièces au client et au devis, avec l'état du document (à vérifier, manquant, expiré, récent) : c'est là que se prépare la remise d'information avant conclusion.</p></div>
+  </div>
+
+  <h2>Scénario : les 23 jours d'un devis sans réponse</h2>
+  <p class="note">Cas de figure, pas une référence client.</p>
+  <div class="scenario">
+    <p>Un devis de couverture d'entreprise est remis à un client. Le courtier a comparé trois offres, remis un document, et attendu. Trois semaines plus tard, la ligne du devis affiche <strong>23 jours sans réponse</strong> dans le module Devis.</p>
+    <p>Le courtier ouvre la fiche : le devis, les documents remis et l'historique sont là. Il relance — non pas pour demander « alors ? », mais avec l'information manquante : la différence de franchise, chiffrée, entre les deux offres en tête. Le client répond le jour même.</p>
+    <p>Le devis est accepté, le contrat est créé dans le même dossier, et la commission correspondante entre dans le suivi des commissions. Le compteur du mois gagne une ligne, et le cabinet une trace de ce qui a été remis au client avant la conclusion.</p>
+  </div>
+
+  <h2>Ce que ce module n'est pas</h2>
+  <div class="limit">
+    <ul>
+      <li><strong>COURTIA n'est ni un comparateur d'assurances ni un courtier.</strong> Le comparateur interne compare les offres <em>que vous</em> avez obtenues auprès des compagnies. Aucune tarification automatique auprès d'un assureur n'est promise.</li>
+      <li><strong>Aucune signature électronique de l'assureur n'est prétendue.</strong> Le devis est un document de travail du cabinet.</li>
+      <li><strong>COURTIA ne vous met pas en conformité à lui seul.</strong> Il aide à préparer, rattacher et conserver l'information due au client au titre de l'art. 45 LSA. L'analyse juridique de votre situation reste la vôtre : voir la page conformité LSA / FINMA.</li>
+      <li><strong>Pas d'envoi automatique au client.</strong> Comme partout dans COURTIA, le message part parce que le courtier l'a décidé.</li>
+    </ul>
+  </div>
+
+  <h2>Questions fréquentes</h2>
+  <details><summary>COURTIA est-il un comparateur d'assurances ?</summary><p>Non. COURTIA n'est ni un courtier, ni un comparateur, ni un intermédiaire : c'est un outil de gestion pour votre cabinet. Le comparateur interne compare les offres que vous avez obtenues ; il n'interroge aucune compagnie à votre place.</p></details>
+  <details><summary>Les devis sont-ils suivis automatiquement ?</summary><p>Un devis sans réponse apparaît dans la famille de relances correspondante, et le module Devis affiche le nombre de devis à relancer ainsi que le potentiel concerné. La relance elle-même est écrite et envoyée par le courtier.</p></details>
+  <details><summary>Est-ce que cela me protège juridiquement (art. 45 LSA) ?</summary><p>Non, et aucun logiciel ne le fait. COURTIA aide à préparer et à conserver les informations remises au client avant la conclusion, en les rattachant à son dossier. L'appréciation de vos obligations reste la vôtre.</p></details>
+  <details><summary>Puis-je rattacher un devis à un client déjà existant ?</summary><p>Oui. La fiche client comporte un onglet devis : les propositions faites à une personne restent dans son dossier, à côté de ses contrats, de ses documents et de son historique.</p></details>
+  <details><summary>Le devis peut-il être exporté pour le client ?</summary><p>Le comparateur produit un document présentable, exportable, à partir des offres que vous avez saisies. Le but est d'éviter de refaire une mise en forme à chaque proposition.</p></details>
+
+  <h2>Pour aller plus loin</h2>
+  <ul class="links">
+    <li><a href="/ch">Page pilier : logiciel et CRM pour courtiers d'assurance en Suisse</a></li>
+    <li><a href="/ch/logiciel-prospection-courtier-assurance-suisse">Prospection : d'où viennent les devis</a></li>
+    <li><a href="/ch/relances-courtier-assurance-suisse">Relances : les devis sans réponse</a></li>
+    <li><a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA : information avant conclusion (art. 45)</a></li>
+    <li><a href="/ch/tarifs-logiciel-courtier-chf">Tarifs en CHF</a></li>
+  </ul>
+
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="/ch">Le cluster suisse</a></p>
+</main>
+<footer>
+  <strong>COURTIA</strong> — courtiark.fr · Page publiée pour la Suisse romande (fr-CH). Aucun élément de cette page ne constitue un conseil juridique ou un avis réglementaire.
+  <div>
+    <a href="/ch">Suisse</a>
+    <a href="/ch/crm-courtier-assurance-suisse">CRM courtier</a>
+    <a href="/ch/gestion-portefeuille-assurance-suisse">Portefeuille</a>
+    <a href="/ch/gestion-commissions-courtier-assurance-suisse">Commissions</a>
+    <a href="/ch/relances-courtier-assurance-suisse">Relances</a>
+    <a href="/ch/logiciel-prospection-courtier-assurance-suisse">Prospection</a>
+    <a href="/ch/logiciel-devis-courtier-assurance-suisse">Devis</a>
+    <a href="/ch/ia-courtier-assurance-suisse">IA / ARK</a>
+    <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+</footer>
+</body>
+</html>

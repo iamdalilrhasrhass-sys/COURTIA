@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IA pour courtier d'assurance en Suisse — ARK, l'assistance de COURTIA</title>
+<meta name="description" content="ARK trie chaque matin un portefeuille suisse : clients à risque de perte, couvertures manquantes, renouvellements sous 90 jours. Le courtier valide chaque action.">
+<link rel="canonical" href="https://courtiark.fr/ch/ia-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/ch/ia-courtier-assurance-suisse">
+<link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/fonctionnalites">
+<link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#050510">
+<meta property="og:type" content="website">
+<meta property="og:title" content="IA pour courtier d'assurance en Suisse — ARK, l'assistance de COURTIA">
+<meta property="og:description" content="Churn Predictor, Cross-Sell Engine, Renewal Optimizer et Morning Brief : ce que l'IA de COURTIA fait réellement dans un cabinet suisse, et ce qu'elle ne fait pas.">
+<meta property="og:url" content="https://courtiark.fr/ch/ia-courtier-assurance-suisse">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Suisse", "item": "https://courtiark.fr/ch"}, {"@type": "ListItem", "position": 3, "name": "IA pour courtier d'assurance", "item": "https://courtiark.fr/ch/ia-courtier-assurance-suisse"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "ARK est-il un chatbot qui répond aux clients ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. ARK n'écrit jamais à un client et ne répond à personne à votre place. ARK produit un ordre de priorité et des recommandations dans votre cockpit ; l'envoi d'un message reste un acte du courtier, avec ses mots."}}, {"@type": "Question", "name": "L'IA fonctionne-t-elle avec les produits suisses ?", "acceptedAnswer": {"@type": "Answer", "text": "Le paramétrage suisse de COURTIA prévoit la caisse-maladie, la LAA et la LCA/LAMal dans les offres Indépendant et Cabinet. La qualité du tri dépend ensuite de ce que contient réellement votre portefeuille : les branches et les échéances doivent être renseignées."}}, {"@type": "Question", "name": "Est-ce que je peux utiliser COURTIA avec 150 contrats ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, techniquement. L'intérêt d'un tri automatique commence quand le volume dépasse ce qu'un courtier peut tenir de tête, ce qui arrive vite : dès quelques centaines de polices, la troisième question du lundi matin n'a plus de réponse fiable sans outil."}}, {"@type": "Question", "name": "Que se passe-t-il si je quitte COURTIA ?", "acceptedAnswer": {"@type": "Answer", "text": "Vous exportez vos clients, vos contrats et vos documents dans un format réutilisable. C'est une question que nous posons nous-mêmes aux cabinets en démonstration, et elle se règle avant la signature, pas après."}}, {"@type": "Question", "name": "Combien de temps avant d'être opérationnel ?", "acceptedAnswer": {"@type": "Answer", "text": "Cela dépend du portefeuille à reprendre, pas de l'installation. C'est précisément le rôle du paramétrage initial : cadrer les branches, les compagnies et les échéances. Nous ne promettons pas une migration « automatique » depuis un autre logiciel."}}, {"@type": "Question", "name": "Que voit ARK, exactement ?", "acceptedAnswer": {"@type": "Answer", "text": "Vos clients, vos contrats, vos échéances, vos devis, vos documents et l'historique d'actions de votre cabinet. Pas les données d'un autre cabinet, et pas un portefeuille d'exemple une fois que vous êtes en production."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--pink:#ff7cc3;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--fg)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  .scenario{border-left:3px solid var(--cyan);padding:2px 0 2px 18px;margin:20px 0}
+  .limit{border:1px dashed var(--line);border-radius:18px;padding:18px 22px;background:rgba(255,255,255,.02);margin:18px 0}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details summary{cursor:pointer;color:var(--fg);font-weight:600}
+  details p{margin:10px 0 0}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:6px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+  footer div{margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="/ch">Suisse</a>
+  <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+  <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
+<main>
+  <nav class="crumbs" aria-label="fil d'Ariane">Accueil › <a href="/ch">Suisse</a> › IA pour courtier d'assurance</nav>
+  <p class="eyebrow">Suisse · assistance IA pour cabinets de courtage</p>
+  <h1>IA pour courtier d'assurance en Suisse : ARK trie, vous décidez</h1>
+  <p class="lede">Un cabinet suisse gère couramment 300 à 900 contrats. Aucune de ces polices ne se plaint de ne pas être suivie : le client résilie, ou va voir ailleurs, sans prévenir. ARK, l'assistance IA intégrée à COURTIA, fait chaque matin le tri que personne n'a le temps de faire — quels clients risquent de partir, quelles couvertures manquent à quel client, quels contrats arrivent à échéance dans moins de 90 jours — puis s'arrête. Chaque recommandation doit être ouverte, lue et validée par le courtier avant de devenir une action.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="https://courtiark.fr/contact">Poser une question</a></p>
+
+  <h2>Le problème réel : on traite la dernière urgence, pas le vrai risque</h2>
+  <p>Dans un cabinet de courtage, la file d'attente du lundi est décidée par celui qui a appelé le dernier. Le dossier le plus récent gagne ; le dossier le plus dangereux attend. Or un client qui part ne fait pas de bruit : il compare, il signe ailleurs, et il l'annonce au moment de résilier.</p>
+  <p>En Suisse, cette dérive a un calendrier précis. Une part importante des contrats se renouvelle à date fixe, souvent au 1<sup>er</sup> janvier, avec des délais d'opposition qui tombent en fin d'année. Un contrat qu'on redécouvre en décembre se défend mal, et une échéance ratée coûte une année entière de commission.</p>
+  <p>Trois questions simples, auxquelles un cabinet de 500 polices ne répond pas en moins d'une heure :</p>
+  <ul>
+    <li>Quels clients n'ont eu <strong>aucun contact</strong> avec le cabinet depuis 90 jours ?</li>
+    <li>Quels clients n'ont qu'une seule police alors que leur situation en appelle une deuxième ?</li>
+    <li>Quels contrats arrivent à échéance dans les <strong>90 prochains jours</strong> ?</li>
+  </ul>
+  <p>C'est exactement le périmètre d'ARK : ces trois questions, plus l'ordre dans lequel les traiter.</p>
+
+  <h2>Avant COURTIA / avec COURTIA</h2>
+  <table>
+    <thead><tr><th>Moment</th><th>Sans outil de tri</th><th>Avec ARK dans COURTIA</th></tr></thead>
+    <tbody>
+      <tr><td>7 h du matin</td><td>On ouvre sa boîte mail et on traite par ordre d'arrivée</td><td><strong>Morning Brief</strong> : priorités critiques, à traiter aujourd'hui, relances du jour, opportunités, points d'attention</td></tr>
+      <tr><td>Qui relancer</td><td>Celui qui a rappelé en dernier</td><td><strong>Churn Predictor ARK</strong> : clients à risque de perte, top 20, liste relançable à la demande</td></tr>
+      <tr><td>Couvertures manquantes</td><td>Au feeling, quand le client en parle de lui-même</td><td><strong>Cross-Sell Engine</strong> : matrice client × produit, avec le potentiel total chiffré</td></tr>
+      <tr><td>Renouvellements</td><td>Redécouverts dans les PDF des compagnies</td><td><strong>Renewal Optimizer</strong> : contrats à échéance sous 90 jours, recommandation et économie potentielle</td></tr>
+      <tr><td>Traçabilité</td><td>Dans la mémoire du courtier</td><td>Chaque recommandation devient une tâche ou une relance rattachée au client</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ce que contient concrètement l'assistance ARK</h2>
+  <div class="grid">
+    <div class="card"><h3>Morning Brief</h3><p>L'écran d'ouverture du cabinet : un résumé exécutif, les priorités critiques, ce qui doit être traité aujourd'hui, les relances du jour, les opportunités et les points d'attention. Un compteur indique aussi les tâches générées par ARK.</p></div>
+    <div class="card"><h3>Churn Predictor ARK</h3><p>Les clients à risque de perte, classés, avec la possibilité de relancer l'analyse (« Re-scanner ») après avoir mis le portefeuille à jour. Le courtier décide ensuite de relancer, d'appeler ou d'écarter.</p></div>
+    <div class="card"><h3>Cross-Sell Engine</h3><p>Une matrice client × produit : ce que chaque client détient, ce qu'il n'a pas, et le potentiel total correspondant. Utile pour les produits suisses de prévoyance et de RC, souvent absents d'un portefeuille par simple oubli.</p></div>
+    <div class="card"><h3>Renewal Optimizer</h3><p>Les contrats à échéance sous 90 jours, avec une recommandation par contrat et l'économie potentielle estimée. De quoi préparer une vague de renouvellements avant le dernier moment.</p></div>
+    <div class="card"><h3>Recommandations dans la fiche client</h3><p>Le dossier client comporte un onglet ARK : les recommandations concernant ce client précis, dans le contexte de son historique et de ses contrats.</p></div>
+    <div class="card"><h3>Santé portefeuille</h3><p>Les alertes actives et les recommandations ARK au niveau du portefeuille : contrats sans renouvellement, devis sans réponse, échéances proches, concentration par branche.</p></div>
+  </div>
+  <p class="note">Toutes les fonctions citées ici existent dans l'application. <a href="https://courtiark.fr/demo">La démonstration</a> les montre sur un portefeuille d'exemple : c'est la seule façon honnête de juger un tri automatique.</p>
+
+  <h2>Scénario : un lundi matin dans un cabinet de deux personnes</h2>
+  <p class="note">Cas de figure, pas une référence client : aucun cabinet n'est nommé, les volumes sont ceux d'un cabinet suisse de taille courante.</p>
+  <div class="scenario">
+    <p>Un cabinet de deux courtiers suit <strong>680 contrats</strong>. Lundi, 7 h 10, le Morning Brief affiche trois priorités critiques. L'une d'elles : un client dont le dossier n'a pas bougé depuis <strong>52 jours</strong> et dont la police principale arrive à échéance dans six semaines.</p>
+    <p>Le courtier ouvre la fiche : l'historique du dossier est là, avec les contrats, les devis et les documents. Il valide la relance — elle part à son nom, avec ses mots, parce que l'envoi reste un acte du courtier. Il écarte ensuite deux autres recommandations : il connaît le contexte familial de ces clients, la proposition n'était pas pertinente.</p>
+    <p>Il ouvre le Renewal Optimizer : <strong>19 contrats</strong> sous 90 jours, dont 8 qui se renouvellent au 1<sup>er</sup> janvier. Il en prépare 6 avant la fin de la matinée. Le Churn Predictor signale de son côté une liste de clients silencieux depuis plus de 90 jours : le courtier n'en traite pas la totalité, il traite les six premiers, dans l'ordre proposé.</p>
+    <p>En une heure, le cabinet a traité ce qu'il aurait découvert — au mieux — en décembre.</p>
+  </div>
+
+  <h2>Ce qu'ARK ne fait pas</h2>
+  <div class="limit">
+    <ul>
+      <li><strong>ARK ne contacte aucun client de lui-même.</strong> Pas d'e-mail automatique, pas de SMS, pas de message sortant. La recommandation s'arrête à l'écran.</li>
+      <li><strong>ARK ne remplace pas le devoir de conseil</strong> au sens de l'art. 45 LSA : une recommandation est une proposition de travail interne, pas un conseil remis au client.</li>
+      <li><strong>ARK ne transmet rien à une compagnie</strong> et ne signe rien. Elle ne remplit aucune démarche auprès de la FINMA.</li>
+      <li><strong>Nous ne prétendons pas que l'IA ne se trompe jamais.</strong> C'est précisément pour cela qu'aucune recommandation n'est appliquée automatiquement dans COURTIA.</li>
+      <li><strong>Rien n'est inventé quand la donnée manque.</strong> Si les branches ou les échéances ne sont pas renseignées dans le portefeuille, aucune IA ne les devinera : le paramétrage initial est donc une étape réelle, et c'est ce que finance le setup.</li>
+    </ul>
+  </div>
+
+  <h2>Questions fréquentes</h2>
+  <details><summary>ARK est-il un chatbot qui répond aux clients ?</summary><p>Non. ARK n'écrit jamais à un client et ne répond à personne à votre place. ARK produit un ordre de priorité et des recommandations dans votre cockpit ; l'envoi d'un message reste un acte du courtier, avec ses mots.</p></details>
+  <details><summary>L'IA fonctionne-t-elle avec les produits suisses ?</summary><p>Le paramétrage suisse de COURTIA prévoit la caisse-maladie, la LAA et la LCA/LAMal dans les offres Indépendant et Cabinet. La qualité du tri dépend ensuite de ce que contient réellement votre portefeuille : les branches et les échéances doivent être renseignées.</p></details>
+  <details><summary>Est-ce que je peux utiliser COURTIA avec 150 contrats ?</summary><p>Oui, techniquement. L'intérêt d'un tri automatique commence quand le volume dépasse ce qu'un courtier peut tenir de tête, ce qui arrive vite : dès quelques centaines de polices, la troisième question du lundi matin n'a plus de réponse fiable sans outil.</p></details>
+  <details><summary>Que se passe-t-il si je quitte COURTIA ?</summary><p>Vous exportez vos clients, vos contrats et vos documents dans un format réutilisable. C'est une question que nous posons nous-mêmes aux cabinets en démonstration, et elle se règle avant la signature, pas après.</p></details>
+  <details><summary>Combien de temps avant d'être opérationnel ?</summary><p>Cela dépend du portefeuille à reprendre, pas de l'installation. C'est précisément le rôle du paramétrage initial : cadrer les branches, les compagnies et les échéances. Nous ne promettons pas une migration « automatique » depuis un autre logiciel.</p></details>
+  <details><summary>Que voit ARK, exactement ?</summary><p>Vos clients, vos contrats, vos échéances, vos devis, vos documents et l'historique d'actions de votre cabinet. Pas les données d'un autre cabinet, et pas un portefeuille d'exemple une fois que vous êtes en production.</p></details>
+
+  <h2>Pour aller plus loin</h2>
+  <ul class="links">
+    <li><a href="/ch">Page pilier : logiciel et CRM pour courtiers d'assurance en Suisse</a></li>
+    <li><a href="/ch/relances-courtier-assurance-suisse">Relances et tâches : transformer une recommandation en appel</a></li>
+    <li><a href="/ch/gestion-portefeuille-assurance-suisse">Gestion de portefeuille : contrats, échéances, renouvellements</a></li>
+    <li><a href="/ch/gestion-commissions-courtier-assurance-suisse">Gestion des commissions : attendu, encaissé, à suivre</a></li>
+    <li><a href="/ch/tarifs-logiciel-courtier-chf">Tarifs en CHF</a></li>
+  </ul>
+
+  <p><a class="cta" href="https://courtiark.fr/demo">VOIR COURTIA EN ACTION</a><a class="cta ghost" href="/ch">Le cluster suisse</a></p>
+</main>
+<footer>
+  <strong>COURTIA</strong> — courtiark.fr · Page publiée pour la Suisse romande (fr-CH). Aucun élément de cette page ne constitue un conseil juridique ou un avis réglementaire.
+  <div>
+    <a href="/ch">Suisse</a>
+    <a href="/ch/crm-courtier-assurance-suisse">CRM courtier</a>
+    <a href="/ch/gestion-portefeuille-assurance-suisse">Portefeuille</a>
+    <a href="/ch/gestion-commissions-courtier-assurance-suisse">Commissions</a>
+    <a href="/ch/relances-courtier-assurance-suisse">Relances</a>
+    <a href="/ch/logiciel-prospection-courtier-assurance-suisse">Prospection</a>
+    <a href="/ch/logiciel-devis-courtier-assurance-suisse">Devis</a>
+    <a href="/ch/ia-courtier-assurance-suisse">IA / ARK</a>
+    <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+</footer>
+</body>
+</html>
