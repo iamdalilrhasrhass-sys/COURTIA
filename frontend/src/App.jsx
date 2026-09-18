@@ -189,7 +189,6 @@ export default function App() {
         <Route path="/design-system" element={<DesignSystem />} />
         <Route path="/vibe" element={<VibePage />} />
         <Route path="/fonctionnalites" element={<LandingPublic />} />
-        <Route path="/demo" element={<LandingPublic />} />
         <Route path="/contact" element={<LandingPublic />} />
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />

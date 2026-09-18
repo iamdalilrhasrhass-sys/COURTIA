@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
 import { apiPost } from '../../utils/api'
 import { trackMarketingEvent } from '../../lib/marketingEvents'
+import { useNavigate } from 'react-router-dom'
 
 const TEAM_SIZES = [
   '1',
@@ -28,6 +29,7 @@ const INITIAL_FORM = {
 }
 
 export default function DemoRequestForm({ compact = false }) {
+  const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL_FORM)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('idle')
@@ -59,8 +61,11 @@ export default function DemoRequestForm({ compact = false }) {
         team_size: form.team_size || '',
       })
       setStatus('success')
-      setFeedback('Votre demande est bien reçue. Nous revenons vers vous rapidement pour planifier la démo.')
+      setFeedback('Votre demande est bien reçue. Nous vous conduisons à la démonstration…')
       setForm(INITIAL_FORM)
+      /* Le lead est ENREGISTRÉ avant toute redirection : on ne sacrifie jamais
+         la capture pour naviguer. La démonstration prend le relais aussitôt. */
+      setTimeout(() => navigate('/demo'), 1400)
     } catch (err) {
       setStatus('error')
       setFeedback(err?.message || 'Impossible d\'envoyer la demande pour le moment.')
