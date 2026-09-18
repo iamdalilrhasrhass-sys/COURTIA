@@ -24,6 +24,7 @@ import LegalDpa from './pages/LegalDpa'
 import LegalSubprocessors from './pages/LegalSubprocessors'
 import { SecurityPublic, RgpdPublic, ChangelogPublic, RoadmapPublic, StatusPublic } from './pages/TrustPages'
 import { applySeo, absoluteUrl } from './lib/seo'
+import AdminRoute from './components/AdminRoute'
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
@@ -72,6 +73,8 @@ const Conformite = lazy(() => import('./pages/Conformite'))
 const ImportPortfolio = lazy(() => import('./pages/ImportPortfolio'))
 const Academy = lazy(() => import('./pages/Academy'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
+// Écran interne de pilotage commercial (réservé aux administrateurs).
+const AcquisitionCourtia = lazy(() => import('./pages/AcquisitionCourtia'))
 
 function RouteFallback() {
   return (
@@ -251,6 +254,20 @@ export default function App() {
         <Route path="/roadmap" element={<RoadmapPublic />} />
         <Route path="/status" element={<StatusPublic />} />
 
+
+        {/* ── Cockpit privé RÉEL ──────────────────────────────────────────────
+            Ces routes étaient ABSENTES du routeur : /dashboard, /prospection,
+            /relances… répondaient la page 404 sur courtiark.fr comme en local.
+            Le cockpit n'était donc atteignable par personne, alors que ses pages
+            et ses modules existent. Restaurées ici, protégées par PrivateRoute,
+            avec EXACTEMENT les mêmes composants que la démonstration. */}
+        <Route element={<PrivateRoute><AppPrivateLayout /></PrivateRoute>}>
+          {ROUTES_PRIVEES}
+          {/* ACQUISITION COURTIA — écran interne, administrateurs uniquement.
+              Monté à la racine SEULEMENT (jamais sous /demo) : il lit le
+              service de capture réel, jamais des données synthétiques. */}
+          <Route path="/acquisition" element={<AdminRoute><AcquisitionCourtia /></AdminRoute>} />
+        </Route>
 
         {/* Démonstration — mêmes pages, mêmes composants que le cockpit réel */}
         <Route path="/demo" element={<DemoLayout />}>
