@@ -77,11 +77,11 @@
   "rewrites": [
     {
       "source": "/api/leads/demo-request",
-      "destination": "https://grow-hour-experimental-financial.trycloudflare.com/api/leads/demo-request"
+      "destination": "https://freebsd-mobility-core-valued.trycloudflare.com/api/leads/demo-request"
     },
     {
       "source": "/api/leads/events",
-      "destination": "https://grow-hour-experimental-financial.trycloudflare.com/api/leads/events"
+      "destination": "https://freebsd-mobility-core-valued.trycloudflare.com/api/leads/events"
     },
     {
       "source": "/api/(.*)",
