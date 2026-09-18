@@ -13,6 +13,8 @@ import VibePage from './components/vibe/VibePage'
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
+// Démonstration : MÊMES pages, MÊMES composants, données synthétiques.
+const DemoLayout = lazy(() => import('./demo/DemoLayout'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const MorningBrief = lazy(() => import('./pages/MorningBrief'))
 const Clients = lazy(() => import('./pages/Clients'))
@@ -74,6 +76,12 @@ function ScrollToTop() {
 
 // PrivateRoute — supporte courtia_token (nouveau) et token (legacy)
 function PrivateRoute({ children }) {
+  // En démonstration, la route privée est autorisée : la couche de données
+  // synthétiques remplace l'API. Aucun jeton n'est fabriqué, et hors /demo le
+  // comportement reste strictement inchangé.
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/demo')) {
+    return children
+  }
   const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
   if (!token) return <Navigate to="/login" replace />
   try {
@@ -108,6 +116,63 @@ function PublicNotFound() {
   )
 }
 
+// Routes du cockpit privé, déclarées UNE fois et montées deux fois :
+//   — à la racine, protégées par PrivateRoute (production) ;
+//   — sous /demo, avec LES MÊMES composants et des données synthétiques.
+// Toute évolution du produit se répercute donc automatiquement sur la démo.
+const ROUTES_PRIVEES = [
+  <Route key="dashboard" path="/dashboard"     element={<Dashboard />} />,
+  <Route key="clients" path="/clients"       element={<Clients />} />,
+  <Route key="clients-new" path="/clients/new"   element={<ClientNew />} />,
+  <Route key="client-id" path="/client/:id"     element={<ClientDetail />} />,
+  <Route key="clients-id" path="/clients/:id"   element={<ClientDetail />} />,
+  <Route key="clients-id-edit" path="/clients/:id/edit" element={<ClientNew />} />,
+  <Route key="contrats" path="/contrats"      element={<Contrats />} />,
+  <Route key="contrats-new" path="/contrats/new"  element={<ContratNew />} />,
+  <Route key="taches" path="/taches"        element={<Taches />} />,
+  <Route key="rendez-vous" path="/rendez-vous"   element={<Taches />} />,
+  <Route key="rapports" path="/rapports"      element={<Rapports />} />,
+  <Route key="objectifs" path="/objectifs"     element={<Objectifs />} />,
+  <Route key="devis" path="/devis"         element={<Devis />} />,
+  <Route key="devis-new" path="/devis/new"     element={<DevisWizard />} />,
+  <Route key="documents" path="/documents"     element={<Documents />} />,
+  <Route key="relances" path="/relances"      element={<Relances />} />,
+  <Route key="opportunites" path="/opportunites"  element={<Opportunites />} />,
+  <Route key="prospection" path="/prospection"   element={<Prospection />} />,
+  <Route key="commissions" path="/commissions"   element={<Commissions />} />,
+  <Route key="commissions-calculator" path="/commissions/calculator" element={<CommissionsCalculator />} />,
+  <Route key="parametres" path="/parametres"    element={<Parametres />} />,
+  <Route key="parametres-integrations" path="/parametres/integrations" element={<Parametres />} />,
+  <Route key="morning-brief" path="/morning-brief" element={<MorningBrief />} />,
+  <Route key="capitia" path="/capitia"       element={<Capitia />} />,
+  <Route key="assistant-ark" path="/assistant-ark" element={<ArkIntelligence />} />,
+  <Route key="ark-intelligence" path="/ark-intelligence" element={<ArkIntelligence />} />,
+  <Route key="sante-portefeuille" path="/sante-portefeuille" element={<SantePortefeuille />} />,
+  <Route key="analytics" path="/analytics"     element={<AnalyticsExecutive />} />,
+  <Route key="analyses" path="/analyses"     element={<AnalyticsExecutive />} />,
+  <Route key="abonnement" path="/abonnement"    element={<Abonnement />} />,
+  <Route key="billing" path="/billing"       element={<Billing />} />,
+  <Route key="partenaires" path="/partenaires"   element={<Partenaires />} />,
+  <Route key="comparateur" path="/comparateur"   element={<Comparateur />} />,
+  <Route key="equipe" path="/equipe"        element={<Equipe />} />,
+  <Route key="conformite" path="/conformite"    element={<Conformite />} />,
+  <Route key="import" path="/import"        element={<ImportPortfolio />} />,
+  <Route key="academy" path="/academy"       element={<Academy />} />,
+  <Route key="aide" path="/aide"          element={<Academy />} />,
+  <Route key="browser-pilot" path="/browser-pilot" element={<BrowserPilot />} />,
+  <Route key="paiement-succes" path="/paiement-succes" element={<PaiementSucces />} />,
+  <Route key="paiement-annule" path="/paiement-annule" element={<PaiementAnnule />} />,
+  <Route key="reach" path="/reach"             element={<ReachDashboard />} />,
+  <Route key="reach-search" path="/reach/search"      element={<ReachSearch />} />,
+  <Route key="reach-prospects-id" path="/reach/prospects/:id" element={<ReachProspectDetail />} />,
+  <Route key="reach-prospects" path="/reach/prospects"   element={<ReachProspects />} />,
+  <Route key="reach-campaigns-id" path="/reach/campaigns/:id" element={<ReachCampaigns />} />,
+  <Route key="reach-campaigns" path="/reach/campaigns"   element={<ReachCampaigns />} />,
+  <Route key="reach-inbox" path="/reach/inbox"       element={<ReachInbox />} />,
+  <Route key="reach-map" path="/reach/map"         element={<ReachMap />} />,
+  <Route key="reach-settings" path="/reach/settings"    element={<ReachSettings />} />,
+]
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -129,58 +194,14 @@ export default function App() {
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
-        {/* Routes privées — AppLayout monte une seule fois, pages via Outlet */}
-        <Route element={<PrivateRoute><AppPrivateLayout /></PrivateRoute>}>
-          <Route path="/dashboard"     element={<Dashboard />} />
-          <Route path="/clients"       element={<Clients />} />
-          <Route path="/clients/new"   element={<ClientNew />} />
-          <Route path="/client/:id"     element={<ClientDetail />} />
-          <Route path="/clients/:id"   element={<ClientDetail />} />
-          <Route path="/clients/:id/edit" element={<ClientNew />} />
-          <Route path="/contrats"      element={<Contrats />} />
-          <Route path="/contrats/new"  element={<ContratNew />} />
-          <Route path="/taches"        element={<Taches />} />
-          <Route path="/rendez-vous"   element={<Taches />} />
-          <Route path="/rapports"      element={<Rapports />} />
-          <Route path="/objectifs"     element={<Objectifs />} />
-          <Route path="/devis"         element={<Devis />} />
-          <Route path="/devis/new"     element={<DevisWizard />} />
-          <Route path="/documents"     element={<Documents />} />
-          <Route path="/relances"      element={<Relances />} />
-          <Route path="/opportunites"  element={<Opportunites />} />
-          <Route path="/prospection"   element={<Prospection />} />
-          <Route path="/commissions"   element={<Commissions />} />
-          <Route path="/commissions/calculator" element={<CommissionsCalculator />} />
-          <Route path="/parametres"    element={<Parametres />} />
-          <Route path="/parametres/integrations" element={<Parametres />} />
-          <Route path="/morning-brief" element={<MorningBrief />} />
-          <Route path="/capitia"       element={<Capitia />} />
-          <Route path="/assistant-ark" element={<ArkIntelligence />} />
-          <Route path="/ark-intelligence" element={<ArkIntelligence />} />
-          <Route path="/sante-portefeuille" element={<SantePortefeuille />} />
-          <Route path="/analytics"     element={<AnalyticsExecutive />} />
-          <Route path="/analyses"     element={<AnalyticsExecutive />} />
-          <Route path="/abonnement"    element={<Abonnement />} />
-          <Route path="/billing"       element={<Billing />} />
-          <Route path="/partenaires"   element={<Partenaires />} />
-          <Route path="/comparateur"   element={<Comparateur />} />
-          <Route path="/equipe"        element={<Equipe />} />
-          <Route path="/conformite"    element={<Conformite />} />
-          <Route path="/import"        element={<ImportPortfolio />} />
-          <Route path="/academy"       element={<Academy />} />
-          <Route path="/aide"          element={<Academy />} />
-          <Route path="/browser-pilot" element={<BrowserPilot />} />
-          <Route path="/paiement-succes" element={<PaiementSucces />} />
-          <Route path="/paiement-annule" element={<PaiementAnnule />} />
-          <Route path="/reach"             element={<ReachDashboard />} />
-          <Route path="/reach/search"      element={<ReachSearch />} />
-          <Route path="/reach/prospects/:id" element={<ReachProspectDetail />} />
-          <Route path="/reach/prospects"   element={<ReachProspects />} />
-          <Route path="/reach/campaigns/:id" element={<ReachCampaigns />} />
-          <Route path="/reach/campaigns"   element={<ReachCampaigns />} />
-          <Route path="/reach/inbox"       element={<ReachInbox />} />
-          <Route path="/reach/map"         element={<ReachMap />} />
-          <Route path="/reach/settings"    element={<ReachSettings />} />
+
+        {/* Démonstration — mêmes pages, mêmes composants que le cockpit réel */}
+        <Route path="/demo" element={<DemoLayout />}>
+          <Route index element={<Navigate to="/demo/dashboard" replace />} />
+          {ROUTES_PRIVEES.map((r) => (
+            <Route key={`demo-${r.key}`} path={r.props.path.replace(/^\//, '')} element={r.props.element} />
+          ))}
+          <Route path="*" element={<Navigate to="/demo/dashboard" replace />} />
         </Route>
 
         {/* 404 */}

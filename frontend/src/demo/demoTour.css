@@ -1,0 +1,17 @@
+/* Bandeau de démonstration + styles de la visite guidée. */
+.dt-bandeau {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 7px 16px; font-size: 12px; line-height: 1.4;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(90deg, rgba(169,241,255,.16), rgba(255,113,189,.14));
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.86);
+  backdrop-filter: blur(14px);
+}
+.dt-bandeau-marque {
+  letter-spacing: .14em; text-transform: uppercase; font-weight: 800;
+  color: #a9f1ff;
+}
+.dt-bandeau-sep { width: 1px; height: 13px; background: rgba(255,255,255,.24); }
+.dt-bandeau-txt { color: rgba(255,255,255,.66); }

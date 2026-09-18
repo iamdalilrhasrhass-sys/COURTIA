@@ -2,6 +2,7 @@ import './styles/hyper-premium-injection.js';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { estModeDemo, installerDemo } from './demo/modeDemo'
 import './index.css'
 import './styles/design-system.css'
 import './styles/aurora-mobile.css'
@@ -30,6 +31,16 @@ window.addEventListener('unhandledrejection', (event) => {
   if (document.getElementById('root')?.childElementCount) return
   renderBootFallback('Promesse rejetée au démarrage.', event.reason)
 })
+
+// La couche de démonstration doit être en place AVANT le premier rendu :
+// les effets des pages enfants s'exécutent avant ceux de leur parent, donc une
+// installation dans un useEffect laisserait passer les premières requêtes.
+try {
+  if (estModeDemo()) installerDemo()
+} catch (e) {
+  window.__demoBootError = String((e && e.stack) || e)
+  console.error('[demo] installation impossible', e)
+}
 
 const container = document.getElementById('root')
 
