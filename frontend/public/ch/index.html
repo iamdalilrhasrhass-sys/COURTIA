@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logiciel et CRM pour courtiers d'assurance en Suisse — COURTIA</title>
+<meta name="description" content="COURTIA, cockpit IA pour courtiers d'assurance en Suisse : registre FINMA (LSA), devoir d'information, commissions, nLPD. Tarifs en CHF : 199 Indépendant, 349 Cabinet.">
+<link rel="canonical" href="https://courtiark.fr/ch">
+<link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/ch">
+<link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/">
+<link rel="alternate" hreflang="x-default" href="https://courtiark.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#050510">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Logiciel et CRM pour courtiers d'assurance en Suisse — COURTIA">
+<meta property="og:description" content="Cockpit IA pour courtiers d'assurance en Suisse : conformité LSA/FINMA, relances, commissions, tarifs en CHF.">
+<meta property="og:url" content="https://courtiark.fr/ch">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"COURTIA","url":"https://courtiark.fr","logo":"https://courtiark.fr/og-courtia.png","email":"contact@courtiark.fr","description":"COURTIA est un logiciel de gestion (cockpit IA) destiné aux courtiers d'assurance, en France et en Suisse.","areaServed":[{"@type":"Country","name":"Suisse"},{"@type":"Country","name":"France"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"COURTIA","applicationCategory":"BusinessApplication","applicationSubCategory":"CRM et gestion de portefeuille d'assurance","operatingSystem":"Web (navigateur)","url":"https://courtiark.fr/ch","inLanguage":"fr-CH","description":"Cockpit IA pour courtiers d'assurance : suivi clients et contrats, échéances, relances, commissions, préparation des obligations LSA (registre FINMA, devoir d'information) et nLPD.","featureList":["Fiche client portefeuille et contrats","Échéances et renouvellements","Relances et suivi des tâches","Suivi des commissions par compagnie","Documents précontractuels (information avant conclusion)","Journal des actions et traçabilité","Assistance IA (ARK) soumise à validation humaine"],"offers":[{"@type":"Offer","name":"Indépendant","price":"199","priceCurrency":"CHF","url":"https://courtiark.fr/ch/tarifs-logiciel-courtier-chf"},{"@type":"Offer","name":"Cabinet","price":"349","priceCurrency":"CHF","url":"https://courtiark.fr/ch/tarifs-logiciel-courtier-chf"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://courtiark.fr/"},{"@type":"ListItem","position":2,"name":"Suisse","item":"https://courtiark.fr/ch"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"COURTIA est-il disponible en Suisse ?","acceptedAnswer":{"@type":"Answer","text":"Oui. COURTIA est une application web accessible depuis la Suisse, avec une grille tarifaire en francs suisses et une prise en compte du cadre LSA, du registre FINMA et de la nLPD."}},{"@type":"Question","name":"COURTIA est-il un logiciel suisse ?","acceptedAnswer":{"@type":"Answer","text":"Non. COURTIA est un logiciel français, conçu par un courtier, qui prend en charge les libellés, les bases légales et la facturation suisses (CHF, TVA, LSA). Les données et l'hébergement doivent être validés au cas par cas selon les exigences du cabinet."}},{"@type":"Question","name":"COURTIA remplace-t-il le registre FINMA ?","acceptedAnswer":{"@type":"Answer","text":"Non. L'inscription au registre public des intermédiaires d'assurance est une démarche auprès de la FINMA, via la plateforme EHP. COURTIA n'est pas une plateforme d'enregistrement : il aide à organiser la preuve documentaire du cabinet."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--pink:#ff7cc3;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.9rem,5vw,3rem);line-height:1.05;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.25rem,2.6vw,1.7rem);letter-spacing:-.02em}
+  h3{margin-top:26px;font-size:1.05rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{color:var(--fg)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:12px 20px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;text-decoration:none}
+  .note{font-size:.86rem;color:#8f93ad}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/tarifs">Tarifs</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
+<main>
+  <nav class="crumbs" aria-label="fil d'Ariane">Accueil › Suisse</nav>
+  <p class="eyebrow">Suisse romande · fr-CH</p>
+  <h1>Logiciel et CRM pour courtiers d'assurance en Suisse</h1>
+
+  <p>COURTIA est un <strong>logiciel de gestion et CRM pour courtiers d'assurance</strong>. En Suisse, un courtier — qu'il soit <strong>intermédiaire d'assurance lié ou non lié</strong> — travaille avec un cadre réglementaire précis. Cette page explique ce que COURTIA fait, ce qu'il ne fait pas, et comment il s'articule avec les obligations réellement imposées aux intermédiaires d'assurance par la Loi sur la surveillance des assurances (LSA) et la FINMA depuis le 1<sup>er</sup> janvier 2024.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">Ce que COURTIA n'est pas</h2>
+    <ul>
+      <li>Ce n'est <strong>pas un registre FINMA</strong> ni une plateforme d'enregistrement : l'inscription se fait auprès de la FINMA, via la plateforme EHP.</li>
+      <li>Ce n'est <strong>pas un comparateur d'assurances</strong> ni un courtier : COURTIA est un outil, pas un intermédiaire.</li>
+      <li>Ce n'est <strong>pas un logiciel suisse</strong> : COURTIA est développé en France. Le vocabulaire, la facturation et les bases légales suisses sont pris en charge, mais l'hébergement et le traitement des données doivent être validés avec nous selon les exigences du cabinet.</li>
+    </ul>
+  </div>
+
+  <h2>Le cadre réel d'un cabinet de courtage en Suisse</h2>
+  <p>Depuis le 1<sup>er</sup> janvier 2024, la réglementation de l'intermédiation d'assurance en Suisse impose un ensemble d'obligations documentées par la FINMA. Un cabinet de courtage doit pouvoir démontrer, pièce par pièce, qu'il s'y conforme : ce sont exactement les documents dont un logiciel de gestion doit faciliter la production et la conservation.</p>
+  <table>
+    <caption class="note" style="text-align:left;caption-side:bottom">Sources officielles : finma.ch (obligations des intermédiaires d'assurance, autorisation), sif.admin.ch (LSA), estv.admin.ch (taux de TVA), kmu.admin.ch (nLPD).</caption>
+    <thead><tr><th>Obligation</th><th>Base légale citée par la FINMA</th></tr></thead>
+    <tbody>
+      <tr><td>Remise d'informations au client avant la conclusion du contrat</td><td>art. 45 LSA</td></tr>
+      <tr><td>Publicité des rémunérations (intermédiaires non liés)</td><td>art. 45<sup>b</sup> LSA</td></tr>
+      <tr><td>Capacités et connaissances — formation initiale et continue</td><td>art. 43 al. 1 LSA, art. 190 OS</td></tr>
+      <tr><td>Activité irréprochable (aptitudes + intégrité)</td><td>art. 41 al. 2 let. b LSA, art. 187 OS</td></tr>
+      <tr><td>Annonce immédiate des modifications à la FINMA (plateforme EHP)</td><td>art. 184 al. 1 / art. 185 al. 1 OS</td></tr>
+      <tr><td>Interdiction d'exercer à la fois comme lié et non lié</td><td>art. 44 al. 1 let. b LSA</td></tr>
+      <tr><td>Obligations spécifiques au conseil en assurance-vie qualifiée</td><td>art. 39<sup>h</sup>, 39<sup>j</sup> à 39<sup>k</sup> LSA</td></tr>
+      <tr><td>Taxe de surveillance annuelle</td><td>475 CHF — art. 15 LFINMA (RS 956.1)</td></tr>
+    </tbody>
+  </table>
+  <p>La FINMA précise également que les intermédiaires d'assurance non liés sont invités chaque année à lui communiquer leurs chiffres clés et informations d'activité. À cela s'ajoute la <strong>nLPD</strong>, la loi fédérale révisée sur la protection des données, <strong>en vigueur depuis le 1<sup>er</sup> septembre 2023</strong> : un cabinet doit pouvoir documenter les finalités, la conservation et les droits des personnes dont il traite les données.</p>
+  <p>Détail de ces obligations, source par source : <a href="/ch/conformite-intermediaire-assurance-lsa-finma">page conformité LSA / FINMA</a>.</p>
+
+  <h2>Ce que COURTIA met à disposition du cabinet</h2>
+  <div class="grid">
+    <div class="card"><h3>Portefeuille et contrats</h3><p>Clients, contrats, échéances et statuts réunis dans une seule fiche, avec l'historique des actions du cabinet.</p></div>
+    <div class="card"><h3>Échéances et renouvellements</h3><p>Échéanciers filtrables (30/60/90 jours) pour ne pas laisser passer un renouvellement ou une résiliation.</p></div>
+    <div class="card"><h3>Relances et tâches</h3><p>Suivi des tâches par urgence, retard et statut, rattachées au client concerné.</p></div>
+    <div class="card"><h3>Commissions</h3><p>Suivi des commissions par compagnie et vue cabinet, pour réconcilier les décomptes reçus.</p></div>
+    <div class="card"><h3>Documents</h3><p>Préparation et conservation des documents d'information remis avant la conclusion du contrat, et des pièces liées au conseil.</p></div>
+    <div class="card"><h3>Assistance IA (ARK)</h3><p>ARK priorise et prépare ; <strong>le courtier valide</strong>. Aucune recommandation n'est appliquée automatiquement, ce qui préserve le devoir de conseil et la décision professionnelle.</p></div>
+  </div>
+
+  <h2>Tarifs en francs suisses</h2>
+  <p>Grille actuellement publiée pour la Suisse, hors taxes :</p>
+  <table>
+    <thead><tr><th>Offre</th><th>Prix mensuel</th><th>Frais d'inscription (one-shot)</th><th>Périmètre annoncé</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Indépendant</strong></td><td>199 CHF / mois</td><td>490 CHF</td><td>Onboarding, paramétrage conformité LSA, langues FR-CH / DE-CH / IT-CH, caisse-maladie, LAA, LCA/LAMal</td></tr>
+      <tr><td><strong>Cabinet</strong></td><td>349 CHF / mois</td><td>990 CHF</td><td>3 accès inclus, journal de conseil LSA, préparation du document précontractuel, +49 CHF / mois par utilisateur supplémentaire</td></tr>
+      <tr><td><strong>Sur-Mesure / Fiduciaire</strong></td><td>Sur devis</td><td>dès 1 500 CHF</td><td>Module fiduciaire, TVA suisse et échéanciers cantonaux, GED versionnée, déploiement sur devis</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Prix hors taxes. <strong>TVA suisse 8,1 % en sus</strong> (taux normal en vigueur depuis le 1<sup>er</sup> janvier 2024 ; taux réduit 2,6 % et taux spécial hébergement 3,8 % — estv.admin.ch). Le détail et les conditions figurent sur la <a href="/ch/tarifs-logiciel-courtier-chf">page tarifs CHF</a>.</p>
+
+  <h2>Ce qui existe déjà sur le marché suisse</h2>
+  <p>Nous ne publions pas de classement ni de note : nous n'avons pas réalisé d'étude comparative indépendante, et un avis inventé n'aurait aucune valeur. Voici les solutions et acteurs suisses qui apparaissent réellement dans les résultats de recherche francophones sur le courtage d'assurance, avec leur domaine, à titre de repères à examiner vous-même :</p>
+  <ul>
+    <li><strong>BrokerStar</strong> — brokerstar.swiss : plateforme de courtage (polices, sinistres, clients, leads, décomptes), avec une offre annoncée autour de l'IA.</li>
+    <li><strong>Arilla</strong> — arilla.ch : CRM suisse présenté comme développé par des courtiers pour des courtiers.</li>
+    <li><strong>Noovo</strong> — noovo.ch : logiciel de gestion pour le courtage (clientèle, assurances, facturation, commissions).</li>
+    <li><strong>SWISS BROKER SOFTWARE</strong> — swiss-broker-software.ch : logiciel de gestion pour courtiers, incluant comptabilité et campagnes.</li>
+    <li><strong>Brokin (Brokinsoft)</strong> — brokinsoft.ch : suite logicielle pour courtiers en assurance en Suisse.</li>
+    <li><strong>SWOFFICE</strong> — swoffice.ch : CRM orienté courtage.</li>
+    <li><strong>Sobrado</strong> — sobrado.ch : plateforme de collaboration entre courtiers et prestataires d'assurance.</li>
+  </ul>
+  <p>Faites-les démontrer. La bonne question n'est pas « qui est le meilleur », elle est : « quelle solution suit <em>mes</em> compagnies, <em>mes</em> commissions et <em>mes</em> obligations documentaires, et à quel coût total avec le setup ? »</p>
+
+  <h2>Suisse romande, Suisse alémanique, Tessin</h2>
+  <p>COURTIA est utilisable dans les trois régions linguistiques. Nous ne publions <strong>pas</strong> de page par canton ni par ville : nous n'avons pas accès à des données cantonales vérifiables (nombre d'intermédiaires enregistrés par canton, densité de cabinets) et une page locale sans donnée spécifique serait une page creuse. Si vous êtes un cabinet de Genève, Lausanne, Fribourg, Neuchâtel, Sion ou Berne, la conversation est la même — et elle commence par votre portefeuille réel, pas par une page géographique.</p>
+
+  <h2>Questions fréquentes</h2>
+  <details><summary>COURTIA est-il disponible en Suisse ?</summary><p>Oui, l'application est accessible par navigateur depuis la Suisse, avec une grille tarifaire en CHF et une prise en compte des libellés LSA, du registre FINMA et de la nLPD.</p></details>
+  <details><summary>COURTIA est-il un logiciel suisse ?</summary><p>Non. COURTIA est développé en France par un courtier en exercice. Le paramétrage suisse existe, mais nous ne revendiquons pas une localisation suisse des données ou de l'hébergement : ce point se traite au cas par cas.</p></details>
+  <details><summary>COURTIA remplace-t-il le registre FINMA ?</summary><p>Non. L'inscription au registre public des intermédiaires d'assurance se fait auprès de la FINMA via la plateforme EHP. COURTIA aide à organiser la preuve documentaire du cabinet, pas à s'enregistrer.</p></details>
+  <details><summary>Et si je suis un cabinet de plusieurs collaborateurs ?</summary><p>L'offre Cabinet inclut trois accès et un tarif par utilisateur supplémentaire. Au-delà, l'offre Sur-Mesure se cale sur votre organisation.</p></details>
+
+  <p>
+    <a class="cta" href="https://courtiark.fr/contact">Parler à l'équipe</a>
+    <a class="cta" href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a class="cta" href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+  </p>
+</main>
+<footer>
+  <strong>COURTIA</strong> — courtiark.fr · Aucune donnée de cette page ne constitue un conseil juridique ou un avis réglementaire.
+  <div style="margin-top:8px">
+    <a href="https://courtiark.fr/">Accueil</a>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+    <a href="/ch">Suisse</a>
+    <a href="/ch/conformite-intermediaire-assurance-lsa-finma">Conformité LSA / FINMA</a>
+    <a href="/ch/tarifs-logiciel-courtier-chf">Tarifs CHF</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+</footer>
+</body>
+</html>

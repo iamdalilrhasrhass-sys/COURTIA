@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Sitemap des pages publiques françaises réellement servies.
+     Mise à jour 2026-09-18 : ajout des pages légales et de confiance qui étaient
+     déclarées ici ou dans les liens de pied de page sans être routées (elles
+     tombaient sur le 404 du SPA), + /roadmap.
+     Le cluster suisse vit dans /sitemap-ch.xml. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://courtiark.fr/</loc></url>
   <url><loc>https://courtiark.fr/fonctionnalites</loc></url>
   <url><loc>https://courtiark.fr/tarifs</loc></url>
   <url><loc>https://courtiark.fr/demo</loc></url>
+  <url><loc>https://courtiark.fr/demo-public</loc></url>
   <url><loc>https://courtiark.fr/contact</loc></url>
+  <url><loc>https://courtiark.fr/securite</loc></url>
+  <url><loc>https://courtiark.fr/rgpd</loc></url>
+  <url><loc>https://courtiark.fr/changelog</loc></url>
+  <url><loc>https://courtiark.fr/roadmap</loc></url>
+  <url><loc>https://courtiark.fr/status</loc></url>
   <url><loc>https://courtiark.fr/legal/mentions-legales</loc></url>
   <url><loc>https://courtiark.fr/legal/confidentialite</loc></url>
   <url><loc>https://courtiark.fr/legal/cookies</loc></url>
+  <url><loc>https://courtiark.fr/legal/conditions-utilisation</loc></url>
 </urlset>

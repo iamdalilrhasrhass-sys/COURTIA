@@ -2,8 +2,106 @@
   "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
+  "redirects": [
+    {
+      "source": "/tarifs/",
+      "destination": "/tarifs",
+      "permanent": true
+    },
+    {
+      "source": "/contact/",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/fonctionnalites/",
+      "destination": "/fonctionnalites",
+      "permanent": true
+    },
+    {
+      "source": "/demo/",
+      "destination": "/demo",
+      "permanent": true
+    },
+    {
+      "source": "/demo-public/",
+      "destination": "/demo-public",
+      "permanent": true
+    },
+    {
+      "source": "/securite/",
+      "destination": "/securite",
+      "permanent": true
+    },
+    {
+      "source": "/rgpd/",
+      "destination": "/rgpd",
+      "permanent": true
+    },
+    {
+      "source": "/changelog/",
+      "destination": "/changelog",
+      "permanent": true
+    },
+    {
+      "source": "/roadmap/",
+      "destination": "/roadmap",
+      "permanent": true
+    },
+    {
+      "source": "/status/",
+      "destination": "/status",
+      "permanent": true
+    },
+    {
+      "source": "/legal/:page/",
+      "destination": "/legal/:page",
+      "permanent": true
+    },
+    {
+      "source": "/ch/",
+      "destination": "/ch",
+      "permanent": true
+    },
+    {
+      "source": "/ch/tarifs-logiciel-courtier-chf/",
+      "destination": "/ch/tarifs-logiciel-courtier-chf",
+      "permanent": true
+    },
+    {
+      "source": "/ch/conformite-intermediaire-assurance-lsa-finma/",
+      "destination": "/ch/conformite-intermediaire-assurance-lsa-finma",
+      "permanent": true
+    }
+  ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://courtia.onrender.com/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/leads/demo-request",
+      "destination": "https://grow-hour-experimental-financial.trycloudflare.com/api/leads/demo-request"
+    },
+    {
+      "source": "/api/leads/events",
+      "destination": "https://grow-hour-experimental-financial.trycloudflare.com/api/leads/events"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://courtia.onrender.com/api/$1"
+    },
+    {
+      "source": "/ch",
+      "destination": "/ch/index.html"
+    },
+    {
+      "source": "/ch/tarifs-logiciel-courtier-chf",
+      "destination": "/ch/tarifs-logiciel-courtier-chf/index.html"
+    },
+    {
+      "source": "/ch/conformite-intermediaire-assurance-lsa-finma",
+      "destination": "/ch/conformite-intermediaire-assurance-lsa-finma/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

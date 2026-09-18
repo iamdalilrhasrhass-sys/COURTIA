@@ -14,10 +14,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Play, Pause, RotateCcw, SkipForward, MousePointerClick } from 'lucide-react'
+import { Play, Pause, RotateCcw, SkipForward, MousePointerClick, Sparkles } from 'lucide-react'
 import { ETAPES, CHAPITRES } from './scenario9'
+import ConversionFin from './ConversionFin'
 
-/* --------------------------------------------------------------- résolution */
+/* --------------------------------------------------------------- résolution
+   Titre de l'étape FINALE : il appartient au bloc de conversion, quelle que
+   soit la façon d'y arriver (fin de visite ou réouverture depuis le mode
+   libre). Le lire sur `ETAPES[index]` afficherait le titre de l'étape où le
+   visiteur se trouvait — donc un titre faux. */
+const ETAPE_FINALE = ETAPES.find((e) => e.compact) || ETAPES[ETAPES.length - 1]
+
 const estVisible = (el) => {
   const r = el.getBoundingClientRect()
   return r.width > 4 && r.height > 4
@@ -48,6 +55,7 @@ export default function DemoTour() {
   const [pause, setPause] = useState(false)
   const [index, setIndex] = useState(0)
   const [prisMain, setPrisMain] = useState(false)
+  const [fin, setFin] = useState(false)
   const [curseur, setCurseur] = useState({ x: 0, y: 0, visible: false, clic: false })
   const [spot, setSpot] = useState(null)
 
@@ -96,6 +104,7 @@ export default function DemoTour() {
     running.current = true
     cancel.current = false
     setPrisMain(false)
+    setFin(false)
     setActif(true)
     setPause(false)
 
@@ -109,6 +118,15 @@ export default function DemoTour() {
         await attendre(1300)          // laisser le vrai écran se monter et charger
       }
       if (cancel.current) break
+
+      /* Étape finale (compacte) : AUCUN projecteur, aucun voile. Le bloc de
+         conversion s'affiche et COURTIA doit rester net et lisible derrière. */
+      if (e.compact) {
+        setSpot(null)
+        setCurseur((c) => ({ ...c, visible: false }))
+        await attendre(e.tenue || 2800)
+        continue
+      }
 
       const el = e.cible.sel
         ? document.querySelector(e.cible.sel)
@@ -158,8 +176,9 @@ export default function DemoTour() {
 
     running.current = false
     if (!cancel.current) {
-      // Fin du parcours : on rend la main au visiteur (mode libre).
-      setPrisMain(true)
+      /* Fin du parcours : le bloc de conversion prend la place du bandeau et
+         RESTE affiché — le cockpit COURTIA reste entièrement visible derrière. */
+      setFin(true)
       setActif(false)
       setSpot(null)
       setCurseur((c) => ({ ...c, visible: false }))
@@ -190,6 +209,7 @@ export default function DemoTour() {
     running.current = false
     nettoyer()
     setPrisMain(true)
+    setFin(false)
     setActif(false)
     setSpot(null)
     setCurseur((c) => ({ ...c, visible: false }))
@@ -201,6 +221,7 @@ export default function DemoTour() {
     cancel.current = false
     running.current = false
     setPrisMain(false)
+    setFin(false)
     setPause(false)
     jouer(0)
   }, [jouer, nettoyer])
@@ -223,6 +244,8 @@ export default function DemoTour() {
     [chapitre],
   )
 
+  /* Mode libre : barre réduite — le visiteur pilote. La conversion reste
+     accessible d'un clic, sans jamais s'imposer. */
   if (prisMain) {
     return (
       <div className="dt-barre">
@@ -230,6 +253,10 @@ export default function DemoTour() {
         <span className="dt-barre-txt">
           Vous pilotez la démo — naviguez dans tous les modules. Cabinet fictif, données synthétiques.
         </span>
+        <button type="button" className="dt-btn dt-btn-fort"
+          onClick={() => { setPrisMain(false); setFin(true) }}>
+          <Sparkles size={13} /> Essayer COURTIA avec mon cabinet
+        </button>
         <button type="button" className="dt-btn" onClick={relancer}>
           <RotateCcw size={13} /> Revoir la visite
         </button>
@@ -237,15 +264,22 @@ export default function DemoTour() {
     )
   }
 
-  if (!actif || !etape) return null
+  const enVisite = Boolean(actif && etape && !fin)
+  /* Bloc de conversion : montré à la dernière étape (compacte) PUIS à la fin
+     du parcours — même position dans l'arbre, donc l'état saisi est conservé. */
+  const blocFinal = Boolean(fin || (actif && etape && etape.compact))
+
+  if (!enVisite && !blocFinal) return null
 
   return (
     <>
-      <div className="dt-progres">
-        <div style={{ width: `${((index + 1) / ETAPES.length) * 100}%` }} />
-      </div>
+      {enVisite && (
+        <div className="dt-progres">
+          <div style={{ width: `${((index + 1) / ETAPES.length) * 100}%` }} />
+        </div>
+      )}
 
-      {curseur.visible && (
+      {enVisite && curseur.visible && (
         <div className="dt-curseur" style={{ left: curseur.x, top: curseur.y }}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 2 L4 19 L9 14.5 L12 21 L15 19.5 L12 13 L18 13 Z"
@@ -254,65 +288,61 @@ export default function DemoTour() {
         </div>
       )}
 
-      {curseur.clic && (
+      {enVisite && curseur.clic && (
         <span className="dt-onde" style={{ left: curseur.x, top: curseur.y }} />
       )}
 
-      {spot && (
+      {enVisite && spot && (
         <div className="dt-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} />
       )}
 
-      {etape.compact ? (
-        /* Fin de parcours : bandeau discret. Le cockpit reste entièrement visible. */
-        <div className="dt-final">
-          <div className="dt-final-titre">{etape.titre}</div>
-          <div className="dt-final-txt">{etape.texte}</div>
-          <div className="dt-final-pied">
-            <button type="button" className="dt-btn dt-btn-fort" onClick={reprendreLaMain}>
-              <MousePointerClick size={13} /> Prendre la main
+      {enVisite && etape && !etape.compact && (
+        <div className="dt-legende">
+          <div className="dt-legende-haut">
+            <span className="dt-pastille">
+              Chapitre {chapitre + 1}/{CHAPITRES.length} · {CHAPITRES[chapitre]?.titre}
+            </span>
+            <span className="dt-compteur">{index + 1} / {ETAPES.length}</span>
+          </div>
+          <div className="dt-legende-titre">{etape.titre}</div>
+          <div className="dt-legende-txt">{etape.texte}</div>
+          <div className="dt-legende-pied">
+            <button type="button" className="dt-btn" onClick={basculerPause}>
+              {pause ? <><Play size={13} /> Reprendre</> : <><Pause size={13} /> Pause</>}
             </button>
             <button type="button" className="dt-btn" onClick={relancer}>
               <RotateCcw size={13} /> Rejouer
             </button>
+            <button type="button" className="dt-btn"
+              onClick={() => { nettoyer(); cancel.current = false; running.current = false; jouer(Math.min(index + 1, ETAPES.length - 1)) }}>
+              <SkipForward size={13} /> Étape suivante
+            </button>
+            <button type="button" className="dt-btn dt-btn-fort" onClick={reprendreLaMain}>
+              <MousePointerClick size={13} /> Prendre la main
+            </button>
           </div>
         </div>
-      ) : (
-      <div className="dt-legende">
-        <div className="dt-legende-haut">
-          <span className="dt-pastille">
-            Chapitre {chapitre + 1}/{CHAPITRES.length} · {CHAPITRES[chapitre]?.titre}
-          </span>
-          <span className="dt-compteur">{index + 1} / {ETAPES.length}</span>
-        </div>
-        <div className="dt-legende-titre">{etape.titre}</div>
-        <div className="dt-legende-txt">{etape.texte}</div>
-        <div className="dt-legende-pied">
-          <button type="button" className="dt-btn" onClick={basculerPause}>
-            {pause ? <><Play size={13} /> Reprendre</> : <><Pause size={13} /> Pause</>}
-          </button>
-          <button type="button" className="dt-btn" onClick={relancer}>
-            <RotateCcw size={13} /> Rejouer
-          </button>
-          <button type="button" className="dt-btn"
-            onClick={() => { nettoyer(); cancel.current = false; running.current = false; jouer(Math.min(index + 1, ETAPES.length - 1)) }}>
-            <SkipForward size={13} /> Étape suivante
-          </button>
-          <button type="button" className="dt-btn dt-btn-fort" onClick={reprendreLaMain}>
-            <MousePointerClick size={13} /> Prendre la main
-          </button>
-        </div>
-      </div>
       )}
 
-      <div className="dt-chapitres">
-        <div className="dt-chapitres-titre">Parcours</div>
-        {chapitres.map((c) => (
-          <button key={c.titre} type="button" className="dt-chapitre" data-actif={c.courant}
-            onClick={() => { nettoyer(); cancel.current = false; running.current = false; jouer(c.debut) }}>
-            {c.titre}
-          </button>
-        ))}
-      </div>
+      {blocFinal && (
+        <ConversionFin
+          titre={ETAPE_FINALE ? ETAPE_FINALE.titre : undefined}
+          onExplorer={reprendreLaMain}
+          onRejouer={relancer}
+        />
+      )}
+
+      {enVisite && (
+        <div className="dt-chapitres">
+          <div className="dt-chapitres-titre">Parcours</div>
+          {chapitres.map((c) => (
+            <button key={c.titre} type="button" className="dt-chapitre" data-actif={c.courant}
+              onClick={() => { nettoyer(); cancel.current = false; running.current = false; jouer(c.debut) }}>
+              {c.titre}
+            </button>
+          ))}
+        </div>
+      )}
     </>
   )
 }

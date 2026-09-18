@@ -7,9 +7,23 @@ import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import LandingPublic from './pages/LandingPublic'
+import ContactPublic from './pages/ContactPublic'
+import DemoPublic from './pages/DemoPublic'
 import Tarifs from './pages/Tarifs'
 import DesignSystem from './pages/DesignSystem'
 import VibePage from './components/vibe/VibePage'
+// Pages publiques présentes dans le dépôt mais NON routées : orphelines, donc
+// inatteignables et non indexables, alors que sitemap.xml en déclarait une partie.
+import FonctionnalitesPublic from './pages/FonctionnalitesPublic'
+import LegalMentionsLegales from './pages/LegalMentionsLegales'
+import LegalConfidentialite from './pages/LegalConfidentialite'
+import LegalCookies from './pages/LegalCookies'
+import LegalConditionsUtilisation from './pages/LegalConditionsUtilisation'
+import LegalCgv from './pages/LegalCgv'
+import LegalDpa from './pages/LegalDpa'
+import LegalSubprocessors from './pages/LegalSubprocessors'
+import { SecurityPublic, RgpdPublic, ChangelogPublic, RoadmapPublic, StatusPublic } from './pages/TrustPages'
+import { applySeo, absoluteUrl } from './lib/seo'
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
@@ -100,7 +114,30 @@ function PrivateRoute({ children }) {
 }
 
 
+// Enveloppe des routes purement applicatives (connexion, onboarding, design system…) :
+// elles ne doivent jamais être indexées. Sans cette consigne, elles héritaient du
+// `index, follow` du shell HTML et pouvaient apparaître dans les SERP.
+function NoIndex({ children, title = 'COURTIA' }) {
+  useEffect(() => {
+    applySeo({
+      title,
+      description: 'Espace applicatif COURTIA — accès réservé.',
+      canonicalUrl: absoluteUrl(window.location.pathname),
+      robots: 'noindex, follow',
+    })
+  }, [title])
+  return children
+}
+
 function PublicNotFound() {
+  useEffect(() => {
+    applySeo({
+      title: 'Page introuvable (404) — COURTIA',
+      description: 'Cette page n’existe pas ou n’existe plus.',
+      canonicalUrl: absoluteUrl(window.location.pathname),
+      robots: 'noindex, follow',
+    })
+  }, [])
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#02030b', color: '#f8f8ff', fontFamily: 'Inter, system-ui, sans-serif' }}>
       <main style={{ maxWidth: 620, textAlign: 'center' }}>
@@ -180,18 +217,39 @@ export default function App() {
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
       <Suspense fallback={<RouteFallback />}><Routes>
         {/* Routes publiques */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/login" element={<NoIndex title="Connexion — COURTIA"><LoginPage /></NoIndex>} />
+        <Route path="/register" element={<NoIndex title="Créer un compte — COURTIA"><LoginPage /></NoIndex>} />
+        <Route path="/forgot-password" element={<NoIndex title="Mot de passe oublié — COURTIA"><ForgotPasswordPage /></NoIndex>} />
+        <Route path="/reset-password" element={<NoIndex title="Réinitialiser le mot de passe — COURTIA"><ResetPasswordPage /></NoIndex>} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
-        <Route path="/design-system" element={<DesignSystem />} />
-        <Route path="/vibe" element={<VibePage />} />
-        <Route path="/fonctionnalites" element={<LandingPublic />} />
-        <Route path="/contact" element={<LandingPublic />} />
+        <Route path="/design-system" element={<NoIndex title="Design system — COURTIA"><DesignSystem /></NoIndex>} />
+        <Route path="/vibe" element={<NoIndex title="Vibe — COURTIA"><VibePage /></NoIndex>} />
+        <Route path="/fonctionnalites" element={<FonctionnalitesPublic />} />
+        {/* Pages marketing publiques qui portent le formulaire de demande de démo.
+            /demo-public est le pendant marketing de /demo (cockpit de démonstration,
+            routes /demo/* ci-dessous, inchangées). */}
+        <Route path="/demo-public" element={<DemoPublic />} />
+        <Route path="/contact" element={<ContactPublic />} />
         <Route path="/" element={<LandingPublic />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/onboarding" element={<NoIndex title="Onboarding — COURTIA"><Onboarding /></NoIndex>} />
+
+        {/* Pages légales et de confiance : présentes dans le dépôt mais jusqu'ici
+            non routées, alors que sitemap.xml et les liens de pied de page les
+            déclaraient. Elles répondent maintenant en 200 avec leur propre
+            title/description/canonical au lieu de tomber sur le 404 du SPA. */}
+        <Route path="/legal/mentions-legales" element={<LegalMentionsLegales />} />
+        <Route path="/legal/confidentialite" element={<LegalConfidentialite />} />
+        <Route path="/legal/cookies" element={<LegalCookies />} />
+        <Route path="/legal/conditions-utilisation" element={<LegalConditionsUtilisation />} />
+        <Route path="/legal/cgv" element={<LegalCgv />} />
+        <Route path="/legal/dpa" element={<LegalDpa />} />
+        <Route path="/legal/sous-traitants" element={<LegalSubprocessors />} />
+        <Route path="/securite" element={<SecurityPublic />} />
+        <Route path="/rgpd" element={<RgpdPublic />} />
+        <Route path="/changelog" element={<ChangelogPublic />} />
+        <Route path="/roadmap" element={<RoadmapPublic />} />
+        <Route path="/status" element={<StatusPublic />} />
 
 
         {/* Démonstration — mêmes pages, mêmes composants que le cockpit réel */}

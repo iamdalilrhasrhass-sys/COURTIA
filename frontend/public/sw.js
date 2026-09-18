@@ -8,14 +8,13 @@
    • Stale-while-revalidate pour assets hashés (/assets/*.js, *.css)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const VERSION = 'courtia-pwa-v3-2026-05-11';
+const VERSION = 'courtia-pwa-v4-2026-09-18';
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const API_CACHE = `api-${VERSION}`;
 
 const PRECACHE_URLS = [
   '/',
-  '/dashboard',
   '/manifest.json',
   '/favicon.svg',
   '/icon-192.png',
@@ -125,11 +124,17 @@ async function networkFirstNavigation(request) {
     }
     return fresh;
   } catch {
-    const cached = await caches.match(request) || await caches.match('/') || await caches.match('/dashboard');
+    // Hors-ligne : on ne sert QUE la copie exacte de l'URL demandée.
+    // Servir la page d'accueil (ou pire, /dashboard) sous une autre URL
+    // fabriquait une page en 200 au contenu faux pour n'importe quelle adresse
+    // (risque de contenu dupliqué et de « soft 404 »). Sans copie exacte, on
+    // répond une vraie page hors-ligne en 503, statut que les moteurs
+    // interprètent comme une indisponibilité temporaire et non comme un contenu.
+    const cached = await caches.match(request);
     if (cached) return cached;
     return new Response(
-      '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>COURTIA — Hors-ligne</title><style>body{background:#050510;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:20px}h1{font-size:24px;margin:0 0 12px}p{color:#9CA3AF}</style></head><body><div><h1>Hors-ligne</h1><p>COURTIA reprendra dès que la connexion sera rétablie.</p></div></body></html>',
-      { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>COURTIA — Hors-ligne</title><meta name="robots" content="noindex"><style>body{background:#050510;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:20px}h1{font-size:24px;margin:0 0 12px}p{color:#9CA3AF}</style></head><body><div><h1>Hors-ligne</h1><p>Cette page n’est pas disponible hors connexion. COURTIA reprendra dès que la connexion sera rétablie.</p></div></body></html>',
+      { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } }
     );
   }
 }

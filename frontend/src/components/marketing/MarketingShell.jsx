@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Accueil' },
   { to: '/fonctionnalites', label: 'Fonctionnalités' },
   { to: '/tarifs', label: 'Tarifs' },
-  { to: '/demo', label: 'Démo' },
+  { to: '/demo-public', label: 'Démo' },
   { to: '/contact', label: 'Contact' },
 ]
 
@@ -33,7 +33,7 @@ export default function MarketingShell({ activePath = '/', children }) {
                   {item.label}
                 </Link>
               ))}
-              <Link to="/demo" className="mk-cta-inline">
+              <Link to="/demo-public" className="mk-cta-inline">
                 Demander une démo <ArrowRight size={13} />
               </Link>
             </nav>
@@ -43,7 +43,7 @@ export default function MarketingShell({ activePath = '/', children }) {
         {children}
 
         <footer className="mk-footer">
-          <div>COURTIA · Cockpit IA des courtiers en assurance français</div>
+          <div>COURTIA · Cockpit IA des courtiers en assurance — France (DDA · ORIAS · RGPD) et Suisse (LSA · FINMA · nLPD)</div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link to="/legal/mentions-legales">Mentions légales</Link>
             <Link to="/legal/confidentialite">Confidentialité</Link>
@@ -53,6 +53,9 @@ export default function MarketingShell({ activePath = '/', children }) {
             <Link to="/aide">Aide</Link>
             <Link to="/legal/cookies">Cookies</Link>
             <Link to="/legal/conditions-utilisation">Conditions</Link>
+            {/* /ch est une page statique servie hors du routeur SPA : lien natif
+                obligatoire (<Link> tomberait sur le 404 applicatif). */}
+            <a href="/ch">Suisse (LSA · FINMA · CHF)</a>
             <Link to="/login">Se connecter</Link>
           </div>
         </footer>

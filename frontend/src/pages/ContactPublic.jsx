@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Mail, PhoneCall, MapPin } from 'lucide-react'
+import { Mail, MapPin } from 'lucide-react'
 import MarketingShell from '../components/marketing/MarketingShell'
 import DemoRequestForm from '../components/marketing/DemoRequestForm'
 import { applySeo } from '../lib/seo'
@@ -29,11 +29,12 @@ export default function ContactPublic() {
             <h3 style={{ marginTop: 0 }}>Coordonnées</h3>
             <ul className="mk-plain-list">
               <li><Mail size={14} style={{ marginRight: 6 }} /> contact@courtiark.fr</li>
-              <li><PhoneCall size={14} style={{ marginRight: 6 }} /> +33 6 00 00 00 00</li>
-              <li><MapPin size={14} style={{ marginRight: 6 }} /> France métropolitaine</li>
+              <li><MapPin size={14} style={{ marginRight: 6 }} /> France et Suisse (accompagnement à distance)</li>
             </ul>
             <p className="mk-inline-note" style={{ marginTop: 12 }}>
-              Réponse sous 24 à 48h ouvrées. Pour une démo rapide, utilisez le formulaire.
+              Aucun numéro de téléphone public n’est publié : nous ne diffusons pas de
+              coordonnée non vérifiée. Réponse par e-mail sous 24 à 48h ouvrées. Pour une
+              démo rapide, utilisez le formulaire.
             </p>
           </div>
 

@@ -10,10 +10,28 @@ const { isAdminRole } = require('../constants/roles')
 const router = express.Router()
 
 const ALLOWED_EVENT_NAMES = new Set([
+  /* Historique — campagne d'origine (frontend/src/lib/marketingEvents.js) */
   'click_demo_cta',
   'submit_demo_request',
   'click_pricing',
   'open_video',
+  /* Convention de mesure 2026 (frontend/src/lib/analytics.js — liste EVENEMENTS).
+     Toute addition côté client doit être ajoutée ICI, sinon le POST reçoit 400
+     « invalid_event » et la mesure disparaît en silence. */
+  'site_visit',
+  'pricing_view',
+  'demo_cta_click',
+  'demo_form_view',
+  'demo_form_submit',
+  'demo_request_success',
+  'demo_request_failure',
+  'demo_started',
+  'demo_chapter_view',
+  'demo_completed',
+  'demo_take_control',
+  'trial_requested',
+  'meeting_requested',
+  'contact_requested',
 ])
 
 function requireAdmin(req, res, next) {

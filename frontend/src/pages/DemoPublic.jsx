@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { ArrowRight, PlayCircle, Users, CalendarClock, BarChart3 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import MarketingShell from '../components/marketing/MarketingShell'
 import DemoRequestForm from '../components/marketing/DemoRequestForm'
 import { applySeo } from '../lib/seo'
@@ -28,12 +29,12 @@ export default function DemoPublic() {
     applySeo({
       title: 'Démo COURTIA — Parcours courtier complet',
       description: 'Réservez une démo COURTIA et découvrez le cockpit IA orienté courtage assurance français.',
-      canonicalPath: '/demo',
+      canonicalPath: '/demo-public',
     })
   }, [])
 
   return (
-    <MarketingShell activePath="/demo">
+    <MarketingShell activePath="/demo-public">
       <section className="mk-section">
         <span className="mk-eyebrow"><PlayCircle size={12} /> Démo COURTIA</span>
         <h1 className="mk-section-title">Une démo orientée terrain courtier, pas une visite gadget</h1>
@@ -79,6 +80,14 @@ export default function DemoPublic() {
             >
               Ouvrir la présentation vidéo <ArrowRight size={14} />
             </button>
+            <Link
+              to="/demo"
+              className="mk-button secondary"
+              style={{ marginTop: 14, marginLeft: 8, display: 'inline-flex' }}
+              onClick={() => trackMarketingEvent('click_demo_cta', { section: 'demo_page_interactive' })}
+            >
+              Lancer la démo interactive <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>

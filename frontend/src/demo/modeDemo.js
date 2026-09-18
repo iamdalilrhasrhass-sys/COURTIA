@@ -24,6 +24,17 @@ import { repondre } from './reponsesDemo'
 
 const PREFIXE_DEMO = '/demo'
 
+/* ------------------------------------------------------- sortie autorisée
+   La conversion de fin de parcours n'est PAS une donnée de démonstration :
+   c'est une demande réelle. Ces chemins ne sont donc pas résolus par la couche
+   synthétique — ils atteignent le service de capture COURTIA
+   (POST /api/leads/events, qui répond 202). Rien d'autre ne sort. */
+const CHEMINS_CAPTURE = [/^\/leads\/events$/, /^\/leads\/demo-request$/]
+
+export function estCheminCapture(chemin) {
+  return CHEMINS_CAPTURE.some((motif) => motif.test(chemin))
+}
+
 let installe = false
 let fetchOrigine = null
 let adaptateurOrigine = null
@@ -68,6 +79,28 @@ export function installerDemo() {
     const chemin = cheminApi(config.url || '')
     const methode = String(config.method || 'get').toUpperCase()
 
+    /* Capture commerciale : la requête part réellement (voir CHEMINS_CAPTURE).
+       On ne passe pas par un adaptateur d'origine inconnu : appel HTTP direct. */
+    if (estCheminCapture(chemin)) {
+      const relais = fetchOrigine || window.fetch.bind(window)
+      const base = String(config.baseURL || api.defaults.baseURL || '').replace(/\/+$/, '')
+      const url = `${base}${config.url || ''}`
+      const corps = typeof config.data === 'string' ? config.data : JSON.stringify(config.data || {})
+      const reponse = await relais(url, {
+        method: methode,
+        headers: { 'Content-Type': 'application/json' },
+        body: corps,
+      })
+      const donnees = await reponse.json().catch(() => null)
+      if (reponse.status >= 400) {
+        const erreur = new Error(`Capture HTTP ${reponse.status}`)
+        erreur.response = { status: reponse.status, data: donnees, config }
+        erreur.config = config
+        throw erreur
+      }
+      return { data: donnees, status: reponse.status, statusText: 'OK', headers: {}, config }
+    }
+
     let corps = config.data
     if (typeof corps === 'string') {
       try { corps = JSON.parse(corps) } catch { /* corps non JSON : laissé tel quel */ }
@@ -98,6 +131,11 @@ export function installerDemo() {
     if (!/\/api(\/|$)/.test(url)) return fetchOrigine(ressource, options)
 
     const chemin = cheminApi(url)
+    /* Capture commerciale : la demande de conversion SORT réellement
+       (service de capture COURTIA, 202). Elle n'est jamais simulée : une
+       demande perdue ne doit pas ressembler à une demande reçue. */
+    if (estCheminCapture(chemin)) return fetchOrigine(ressource, options)
+
     const methode = String(options.method || 'GET').toUpperCase()
     let corps = options.body
     if (typeof corps === 'string') {

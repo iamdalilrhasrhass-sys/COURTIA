@@ -34,6 +34,7 @@ import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
 import AuroraButton from '../components/brand/AuroraButton'
 import RhasrhassSignature from '../components/brand/RhasrhassSignature'
+import { applySeo, setJsonLd } from '../lib/seo'
 import {
   MARKET_OPTIONS,
   getDetectedGeoCountry,
@@ -1152,6 +1153,59 @@ export default function LandingPublic() {
     document.documentElement.dataset.market = marketContext.market
   }, [marketContext.market])
 
+  // Métadonnées propres à l'accueil. Le shell HTML ne peut pas les porter : il
+  // est servi pour TOUTES les routes du SPA (même title, même description, même
+  // canonical https://courtiark.fr/ pour /tarifs, /contact, /login…), d'où des
+  // titres et canonical dupliqués. Les routes publiques portent désormais leurs
+  // propres métadonnées via applySeo.
+  // Alternances fr-FR / fr-CH réciproques avec le cluster /ch, déclarées
+  // uniquement lorsque le français est affiché.
+  useEffect(() => {
+    applySeo({
+      title: 'COURTIA — Le cockpit IA des courtiers d’assurance',
+      description:
+        'COURTIA centralise clients, contrats, relances et conformité des courtiers d’assurance, en France (DDA · ORIAS · RGPD) comme en Suisse (LSA · FINMA · nLPD).',
+      canonicalPath: '/',
+      robots: 'index, follow',
+      alternates:
+        locale === 'fr'
+          ? [
+              { hreflang: 'fr-FR', href: '/' },
+              { hreflang: 'fr-CH', href: '/ch' },
+              { hreflang: 'x-default', href: '/' },
+            ]
+          : [],
+    })
+  }, [locale])
+
+  // SoftwareApplication uniquement sur l'accueil : décrire le produit sur
+  // /login ou /onboarding n'aurait pas de sens. Aucun aggregateRating, aucun
+  // review : nous n'avons pas d'avis vérifiables à publier.
+  useEffect(() => {
+    setJsonLd('courtia-jsonld-software', {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'COURTIA',
+      applicationCategory: 'BusinessApplication',
+      applicationSubCategory: "CRM et gestion de portefeuille d'assurance",
+      operatingSystem: 'Web (navigateur)',
+      url: 'https://courtiark.fr/',
+      inLanguage: 'fr',
+      description:
+        "Cockpit de gestion assisté par IA pour courtiers d'assurance : clients, contrats, échéances, relances, commissions, documents et préparation des obligations de conformité.",
+      areaServed: [
+        { '@type': 'Country', name: 'France' },
+        { '@type': 'Country', name: 'Suisse' },
+      ],
+      offers: [
+        { '@type': 'Offer', name: 'Starter', price: '89', priceCurrency: 'EUR' },
+        { '@type': 'Offer', name: 'Pro', price: '159', priceCurrency: 'EUR' },
+        { '@type': 'Offer', name: 'Indépendant (Suisse)', price: '199', priceCurrency: 'CHF' },
+        { '@type': 'Offer', name: 'Cabinet (Suisse)', price: '349', priceCurrency: 'CHF' },
+      ],
+    })
+  }, [])
+
   const changeLocale = (nextLocale) => {
     if (!landingCopy[nextLocale]) return
     setLocale(nextLocale)
@@ -1500,6 +1554,10 @@ export default function LandingPublic() {
           <div className="flex flex-wrap gap-4">
             <button type="button" onClick={() => scrollTo('pricing')} className="hover:text-white">{copy.footerPricing}</button>
             <Link to="/login" className="hover:text-white">{copy.footerLogin}</Link>
+            {/* Lien réel (et non <Link>) : /ch est une page statique servie hors du
+                routeur SPA — un <Link> la renverrait vers le 404 applicatif.
+                C'est le lien d'entrée du cluster suisse depuis l'accueil. */}
+            <a href="/ch" className="hover:text-white">Page suisse (LSA · FINMA · CHF)</a>
             <a href="mailto:contact@courtia.fr" className="hover:text-white">{copy.footerContact}</a>
           </div>
           <MarketSwitcher market={marketContext.market} onChange={changeMarket} />

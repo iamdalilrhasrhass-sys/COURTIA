@@ -85,27 +85,115 @@
 .dt-btn:hover { background: rgba(255,255,255,.07); color: #fff; }
 .dt-btn-fort { background: linear-gradient(135deg, #a9f1ff, #ff71bd); color: #06070f; border: 0; }
 
-/* ------------------------------------------------------- fin de parcours
-   Bandeau discret : COURTIA doit rester LA STAR. On ne masque jamais le
-   cockpit avec un panneau plus imposant que lui. */
-.dt-final {
+/* ------------------------------------------------------- conversion de fin
+   Bloc de conversion intégré (pas une popup) : panneau borné en hauteur,
+   translucide, réductible. COURTIA doit rester LA STAR et rester utilisable
+   derrière — on ne masque jamais le cockpit. */
+.dt-conv {
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
-  z-index: 5300; width: min(560px, calc(100vw - 24px));
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  background: rgba(10,8,26,.90);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  border: 1px solid rgba(169,241,255,.24); border-radius: 999px;
-  padding: 10px 14px;
+  z-index: 5300; width: min(680px, calc(100vw - 24px));
+  max-height: min(62vh, 520px); overflow-y: auto; overscroll-behavior: contain;
+  background: rgba(10,8,26,.93);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid rgba(169,241,255,.26); border-radius: 18px;
+  padding: 13px 16px 14px; box-shadow: 0 18px 44px rgba(0,0,0,.55);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  animation: dt-monter .35s cubic-bezier(.2,.8,.2,1);
+  animation: dt-monter .38s cubic-bezier(.2,.8,.2,1);
 }
-.dt-final-titre { font-weight: 800; font-size: 13.5px; color: #fff; white-space: nowrap; }
-.dt-final-txt { font-size: 11.5px; color: rgba(255,255,255,.66); flex: 1; min-width: 140px; }
-.dt-final-pied { display: flex; gap: 7px; flex-wrap: wrap; }
+.dt-conv-tete { display: flex; align-items: center; gap: 9px; }
+.dt-conv-etiquette {
+  display: inline-flex; align-items: center; padding: 2.5px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 750; white-space: nowrap;
+  background: linear-gradient(135deg, rgba(169,241,255,.2), rgba(255,113,189,.2));
+  color: #bff3ff; border: 1px solid rgba(169,241,255,.32);
+}
+.dt-conv-titre { font-weight: 800; font-size: 14px; letter-spacing: -.01em; color: #fff; }
+.dt-conv-reduire {
+  margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 9px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.7);
+}
+.dt-conv-reduire:hover { background: rgba(255,255,255,.07); color: #fff; }
+.dt-conv-texte { font-size: 12px; line-height: 1.55; color: rgba(255,255,255,.7); margin: 8px 0 0; }
 
-@media (max-width: 620px) {
-  .dt-final { border-radius: 16px; padding: 10px 12px; }
-  .dt-final-txt { display: none; }
+.dt-conv-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 11px; align-items: center; }
+.dt-conv-libelle { white-space: normal; text-align: left; }
+.dt-conv-cta {
+  grid-column: 1 / -1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; padding: 12px 18px; border: 0; border-radius: 12px;
+  font: inherit; font-size: 13.5px; font-weight: 800; color: #06070f;
+  background: linear-gradient(135deg, #a9f1ff, #ff71bd);
+  box-shadow: 0 10px 26px rgba(169,241,255,.22);
+}
+.dt-conv-cta:hover { filter: brightness(1.06); }
+.dt-conv-cta:disabled { opacity: .6; cursor: default; filter: none; }
+.dt-conv-secondaire {
+  grid-column: 1; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 10px 15px; border-radius: 12px; font: inherit; font-size: 12.5px; font-weight: 700;
+  color: #dff8ff; background: rgba(169,241,255,.08); border: 1px solid rgba(169,241,255,.34);
+}
+.dt-conv-secondaire:hover { background: rgba(169,241,255,.15); }
+.dt-conv-secondaire:disabled, .dt-conv-discret:disabled { opacity: .55; cursor: default; }
+.dt-conv-discret {
+  grid-column: 2; justify-self: end; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  background: none; border: 0; padding: 8px 6px; font: inherit; font-size: 12px; font-weight: 650;
+  color: rgba(255,255,255,.6); text-decoration: underline; text-underline-offset: 3px;
+}
+.dt-conv-discret:hover { color: #fff; }
+
+.dt-conv-mail { margin-top: 10px; padding: 10px 11px; border-radius: 12px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.1); }
+.dt-conv-mail-lbl { display: block; font-size: 11.5px; color: rgba(255,255,255,.72); margin-bottom: 7px; }
+.dt-conv-mail-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dt-conv-mail-champ {
+  flex: 1; min-width: 170px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(4,6,16,.82); border: 1px solid rgba(169,241,255,.3); color: #fff;
+  font: inherit; font-size: 13px;
+}
+.dt-conv-mail-champ:focus { outline: 2px solid rgba(169,241,255,.5); outline-offset: 1px; }
+.dt-conv-mail-envoyer { grid-column: auto; padding: 10px 18px; }
+
+.dt-conv-info { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 12px; line-height: 1.5; margin: 10px 0 0; color: rgba(255,255,255,.8); }
+.dt-conv-ok { color: #b6ffdd; }
+.dt-conv-echec { color: #ffd0d3; }
+.dt-conv-echec .dt-conv-discret { color: #ffd0d3; }
+
+.dt-conv-pied { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08); }
+.dt-conv-note { font-size: 10.5px; line-height: 1.5; color: rgba(255,255,255,.44); }
+.dt-conv-note--pied { margin-left: auto; }
+.dt-conv-lien { background: none; border: 0; padding: 0; font: inherit; font-size: 10.5px; color: #a9f1ff; text-decoration: underline; cursor: pointer; }
+
+/* ---------------------------------------------------------------- adaptation */
+@media (max-width: 940px) {
+  .dt-chapitres { display: none; }
+  .dt-legende { bottom: 12px; padding: 12px; }
+  .dt-legende-pied .dt-btn { padding: 6px 10px; font-size: 11.5px; }
+}
+
+/* Mobile : sous 768 px la barre de navigation basse (64 px) doit rester
+   visible et cliquable — le panneau se pose AU-DESSUS, jamais dessus. */
+@media (max-width: 768px) {
+  .dt-conv, .dt-barre, .dt-legende { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 560px) {
+  .dt-conv { width: calc(100vw - 16px); max-height: 58vh; border-radius: 16px; padding: 12px; }
+  .dt-conv-titre { font-size: 13px; }
+  .dt-conv-actions { grid-template-columns: 1fr; }
+  .dt-conv-cta, .dt-conv-secondaire { grid-column: 1; justify-content: center; }
+  .dt-conv-discret { grid-column: 1; justify-self: start; }
+  .dt-conv-mail-champ { min-width: 0; flex: 1 1 100%; }
+  .dt-conv-mail-envoyer, .dt-conv-mail .dt-conv-discret { flex: 1 1 auto; justify-content: center; }
+  .dt-conv-note--pied { margin-left: 0; }
+}
+
+/* Écrans bas (téléphone en paysage) : le panneau ne dépasse jamais la moitié
+   de l'écran, COURTIA reste visible. */
+@media (max-height: 560px) {
+  .dt-conv { max-height: 46vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-curseur, .dt-spot, .dt-legende, .dt-conv { animation: none !important; transition: none !important; }
 }
 
 /* ----------------------------------------------------------------- chapitres */
@@ -141,13 +229,3 @@
 }
 .dt-barre-txt { font-size: 12px; color: rgba(255,255,255,.72); flex: 1; min-width: 160px; }
 
-/* --------------------------------------------------------------- adaptation */
-@media (max-width: 940px) {
-  .dt-chapitres { display: none; }
-  .dt-legende { bottom: 12px; padding: 12px; }
-  .dt-legende-pied .dt-btn { padding: 6px 10px; font-size: 11.5px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dt-curseur, .dt-spot, .dt-legende { animation: none !important; transition: none !important; }
-}

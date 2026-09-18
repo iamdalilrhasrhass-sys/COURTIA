@@ -1,7 +1,17 @@
 User-agent: *
 Allow: /
 
+# Sitemaps
+# sitemap.xml         : pages publiques FR réellement servies
+# sitemap-ch.xml      : cluster suisse fr-CH (/ch)
 Sitemap: https://courtiark.fr/sitemap.xml
+Sitemap: https://courtiark.fr/sitemap-ch.xml
+
+# sitemap-seo.xml : 1 109 URL, dont ~1 086 pages de ville /fr/* qui partagent un
+# bloc de contenu identique (686 pages sur 1 086 contiennent le même paragraphe).
+# Il reste déclaré ici parce qu'il est publié, mais ce sont des pages quasi
+# dupliquées : à arbitrer avant toute nouvelle production de pages locales.
+Sitemap: https://courtiark.fr/sitemap-seo.xml
 
 # --- IA crawlers (ajout GEO) ---
 User-agent: GPTBot
@@ -12,4 +22,3 @@ User-agent: ClaudeBot
 Allow: /
 User-agent: Google-Extended
 Allow: /
-Sitemap: https://courtiark.fr/sitemap-seo.xml

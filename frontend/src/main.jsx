@@ -1,8 +1,12 @@
 import './styles/hyper-premium-injection.js';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import App from './App'
 import { estModeDemo, installerDemo } from './demo/modeDemo'
+import { evenement } from './lib/analytics'
+import { demarrerSuiviDemo } from './lib/suiviDemo'
 import './index.css'
 import './styles/design-system.css'
 import './styles/aurora-mobile.css'
@@ -51,9 +55,30 @@ if (!container) {
     ReactDOM.createRoot(container).render(
       <React.StrictMode>
         <App />
+        {/* Mesure de trafic et de performance (anonyme). Montées hors des
+            écrans : elles ne dépendent d'aucune route et n'affichent rien. */}
+        <Analytics />
+        <SpeedInsights />
       </React.StrictMode>
     )
   } catch (error) {
     renderBootFallback('Crash synchronisé au démarrage.', error)
   }
+}
+
+/* Première visite : un seul appel, hors du cycle de rendu (donc insensible au
+   double rendu de StrictMode). Les vues de page suivantes sont mesurées par la
+   mesure installée elle-même. */
+try {
+  evenement('site_visit')
+} catch {
+  /* la mesure ne doit jamais empêcher l'application de démarrer */
+}
+
+/* Visite guidée /demo : lecture des étapes pour demo_started / chapitre /
+   completion / prise en main. Inerte hors /demo. */
+try {
+  if (estModeDemo()) demarrerSuiviDemo()
+} catch {
+  /* idem */
 }

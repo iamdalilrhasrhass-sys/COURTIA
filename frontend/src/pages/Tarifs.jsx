@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } from 'lucide-react'
 import { MARKET_PRICING, MARKET_OPTIONS, resolveMarketContext, persistMarketOverride, parseMarketFromSearch, readStoredMarketOverride, getDetectedGeoCountry } from '../market/marketContext'
+import { applySeo } from '../lib/seo'
 
 // ─── Feature Configuration ────────────────────────────────────────────────────
 
@@ -408,6 +409,27 @@ export default function Tarifs() {
       }))
     : plans
   const switchMarket = (code) => { persistMarketOverride(code); setMarket(code) }
+
+  // /tarifs n'avait AUCUNE métadonnée propre : la page héritait du title, de la
+  // description et du canonical de l'accueil (duplication). Le title reflète le
+  // marché affiché, et l'alternance pointe vers la page tarifs CHF du cluster /ch.
+  useEffect(() => {
+    applySeo({
+      title: isCH
+        ? 'Tarifs COURTIA Suisse — CHF 199 Indépendant / 349 Cabinet (TVA 8,1 % en sus)'
+        : 'Tarifs COURTIA — Starter 89 € / Pro 159 € / Cabinet sur devis',
+      description: isCH
+        ? 'Grille tarifaire COURTIA en francs suisses pour courtiers d’assurance en Suisse : Indépendant 199 CHF/mois, Cabinet 349 CHF/mois, Sur-Mesure sur devis. Setup et TVA 8,1 % indiqués.'
+        : 'Grille tarifaire COURTIA pour courtiers d’assurance : Starter 89 € HT/mois, Pro 159 € HT/mois, Cabinet sur devis. Sans frais cachés ni engagement.',
+      canonicalPath: '/tarifs',
+      robots: 'index, follow',
+      alternates: [
+        { hreflang: 'fr-FR', href: '/tarifs' },
+        { hreflang: 'fr-CH', href: '/ch/tarifs-logiciel-courtier-chf' },
+        { hreflang: 'x-default', href: '/tarifs' },
+      ],
+    })
+  }, [isCH])
 
   return (
     <div className="min-h-screen bg-white">
