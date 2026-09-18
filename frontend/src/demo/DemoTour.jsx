@@ -15,78 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Play, Pause, RotateCcw, SkipForward, MousePointerClick } from 'lucide-react'
-
-/* ------------------------------------------------------------------ étapes */
-/* `cible` accepte :
-     { texte: 'Batilog SA' }   → plus petit élément visible contenant ce texte
-     { sel: 'main' }           → sélecteur CSS direct                          */
-const ETAPES = [
-  {
-    route: '/demo/dashboard', chapitre: 0,
-    cible: { texte: 'CLIENTS ACTIFS' },
-    titre: 'Votre cabinet, d’un seul regard',
-    texte: 'Huit clients suivis, quinze contrats, 39 810 € de primes annuelles. Le cockpit lit ce qui existe dans votre portefeuille — vous ne saisissez rien.',
-    tenue: 3200,
-  },
-  {
-    route: '/demo/dashboard', chapitre: 0,
-    cible: { texte: 'Priorités ARK aujourd’hui' },
-    titre: 'ARK a déjà trié votre journée',
-    texte: 'Échéances, clients silencieux, devis sans réponse : ARK remonte ce qui compte, classé par urgence.',
-    tenue: 2800,
-  },
-  {
-    route: '/demo/clients', chapitre: 1,
-    cible: { texte: 'PRIME ANNUELLE' },
-    titre: 'Tout votre portefeuille sur une ligne',
-    texte: 'Par client : nombre de contrats, prime annuelle, score de risque et date du dernier contact. La colonne ARK signale ce qui demande une action.',
-    tenue: 3000,
-  },
-  {
-    route: '/demo/clients/2003', chapitre: 2,
-    cible: { texte: 'ARK INSIGHT' },
-    titre: 'Un dossier client, en entier',
-    texte: 'Batilog SA : deux contrats, 16 700 € de primes suivies, ses échéances et son historique. ARK résume le dossier et propose la prochaine action.',
-    tenue: 3200,
-  },
-  {
-    route: '/demo/relances', chapitre: 3,
-    cible: { texte: 'URGENTES' },
-    titre: 'Qui relancer, et maintenant',
-    texte: 'Sept relances en attente, quatre urgentes, 8 400 € de potentiel. Le message est préparé depuis le dossier réel — pas depuis un modèle générique.',
-    tenue: 3000,
-  },
-  {
-    route: '/demo/ark-intelligence', chapitre: 4,
-    cible: { texte: 'Churn Predictor' },
-    titre: 'ARK anticipe les départs',
-    texte: 'Quatre clients signalés à risque, avec le motif et le plan de rétention. Puis les ventes croisées possibles et les contrats à renouveler sous 90 jours.',
-    tenue: 3400,
-  },
-  {
-    route: '/demo/ark-intelligence', chapitre: 4,
-    cible: { texte: 'Cross-Sell Engine' },
-    titre: 'Les couvertures oubliées, chiffrées',
-    texte: 'Pour chaque client, les produits absents de son dossier et le revenu correspondant. Vous savez où chercher avant d’appeler.',
-    tenue: 3000,
-  },
-  {
-    route: '/demo/dashboard', chapitre: 5,
-    cible: { texte: 'Morning Brief' },
-    titre: 'Voilà ce que COURTIA fait chez vous',
-    texte: 'Le même cockpit, avec vos clients, vos contrats et vos échéances. La suite : un essai encadré, sur votre portefeuille.',
-    tenue: 3800,
-  },
-]
-
-const CHAPITRES = [
-  { titre: 'Ma journée', sous: 'Le cockpit au réveil' },
-  { titre: 'Mon portefeuille', sous: 'Tous mes clients' },
-  { titre: 'Un dossier', sous: 'Le client en entier' },
-  { titre: 'Les relances', sous: 'Qui rappeler, et pourquoi' },
-  { titre: 'ARK anticipe', sous: 'Départs, ventes croisées' },
-  { titre: 'Chez vous', sous: 'Essayer COURTIA' },
-]
+import { ETAPES, CHAPITRES } from './scenarioDemo'
 
 /* --------------------------------------------------------------- résolution */
 const estVisible = (el) => {
@@ -119,7 +48,7 @@ export default function DemoTour() {
   const [pause, setPause] = useState(false)
   const [index, setIndex] = useState(0)
   const [prisMain, setPrisMain] = useState(false)
-  const [curseur, setCurseur] = useState({ x: 0, y: 0, visible: false })
+  const [curseur, setCurseur] = useState({ x: 0, y: 0, visible: false, clic: false })
   const [spot, setSpot] = useState(null)
 
   const minuteurs = useRef([])
@@ -129,7 +58,7 @@ export default function DemoTour() {
   const demarre = useRef(false)
 
   const etape = ETAPES[index]
-  const chapitre = etape?.chapitre ?? 0
+  const chapitre = etape ? CHAPITRES.findIndex((c) => c.id === etape.chapitre) : 0
 
   const nettoyer = useCallback(() => {
     minuteurs.current.forEach(clearTimeout)
@@ -192,6 +121,14 @@ export default function DemoTour() {
         const c = centrer(el)
         setSpot({ x: c.x - c.w / 2 - 8, y: c.y - c.h / 2 - 8, w: c.w + 16, h: c.h + 16 })
         await deplacer(c.x, c.y)
+        if (e.clic && !cancel.current) {
+          setCurseur((cur) => ({ ...cur, clic: true }))
+          await attendre(160)
+          setCurseur((cur) => ({ ...cur, clic: false }))
+          // Clic réel : React reçoit l'événement, l'écran change pour de bon.
+          try { el.click() } catch { /* cible non cliquable : le scénario continue */ }
+          await attendre(420)
+        }
       } else {
         setSpot(null)
         await deplacer(window.innerWidth / 2, window.innerHeight / 2, 500)
@@ -201,13 +138,29 @@ export default function DemoTour() {
     }
 
     running.current = false
-    if (!cancel.current) setActif(false)   // fin naturelle : on libère l'écran
+    if (!cancel.current) {
+      // Fin du parcours : on rend la main au visiteur (mode libre).
+      setPrisMain(true)
+      setActif(false)
+      setSpot(null)
+      setCurseur((c) => ({ ...c, visible: false }))
+    }
   }, [navigate, deplacer])
 
-  /* Lancement automatique : le visiteur voit la démonstration démarrer seule. */
+  /* Deux façons d'entrer :
+       — sans paramètre  : la visite guidée démarre seule (le prospect regarde) ;
+       — avec `?libre`   : on ouvre directement en navigation libre (lien à
+         partager, et permet d'inspecter un module précis sans être ramené par
+         le scénario). */
   useEffect(() => {
     if (demarre.current) return
     demarre.current = true
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('libre')) {
+      cancel.current = true
+      setPrisMain(true)
+      return
+    }
     const t = setTimeout(() => { if (!cancel.current) jouer(0) }, 1400)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -244,7 +197,8 @@ export default function DemoTour() {
   const chapitres = useMemo(
     () => CHAPITRES.map((c, i) => ({
       ...c,
-      debut: ETAPES.findIndex((e) => e.chapitre === i),
+      rang: i,
+      debut: ETAPES.findIndex((e) => e.chapitre === c.id),
       courant: i === chapitre,
     })).filter((c) => c.debut >= 0),
     [chapitre],
@@ -254,7 +208,9 @@ export default function DemoTour() {
     return (
       <div className="dt-barre">
         <span className="dt-barre-marque">Mode libre</span>
-        <span className="dt-barre-txt">Vous pilotez la démo — cabinet fictif, données synthétiques.</span>
+        <span className="dt-barre-txt">
+          Vous pilotez la démo — naviguez dans tous les modules. Cabinet fictif, données synthétiques.
+        </span>
         <button type="button" className="dt-btn" onClick={relancer}>
           <RotateCcw size={13} /> Revoir la visite
         </button>
@@ -279,6 +235,10 @@ export default function DemoTour() {
         </div>
       )}
 
+      {curseur.clic && (
+        <span className="dt-onde" style={{ left: curseur.x, top: curseur.y }} />
+      )}
+
       {spot && (
         <div className="dt-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} />
       )}
@@ -286,7 +246,7 @@ export default function DemoTour() {
       <div className="dt-legende">
         <div className="dt-legende-haut">
           <span className="dt-pastille">
-            Chapitre {chapitre + 1}/{CHAPITRES.length} · {CHAPITRES[chapitre].titre}
+            Chapitre {chapitre + 1}/{CHAPITRES.length} · {CHAPITRES[chapitre]?.titre}
           </span>
           <span className="dt-compteur">{index + 1} / {ETAPES.length}</span>
         </div>

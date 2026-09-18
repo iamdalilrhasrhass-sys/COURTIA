@@ -17,7 +17,7 @@
 import {
   CABINET, CLIENTS, CONTRATS_DETAIL, TACHES, DOCUMENTS, OPPORTUNITES,
   PROSPECTS, MESSAGES, RENDEZ_VOUS, clientDetail, contratParId,
-  statsPortefeuille, relancesDues, dossiersIncomplets, reponseArk, dateCourte,
+  statsPortefeuille, relancesDues, dossiersIncomplets, reponseArk, dateCourte, iso,
 } from './donneesDemo'
 
 /* ------------------------------------------------------------- utilitaires */
@@ -166,7 +166,38 @@ export function repondre(methode, cheminBrut, corps) {
       opportunites: s.opportunites, prospects: s.prospects,
       messages_non_lus: s.messagesNonLus, messagesNonLus: s.messagesNonLus,
     }
-    return { statut: 200, donnees: { ...charge, data: charge, stats: charge } }
+    // Payload complet de l'API réelle (backend/src/routes/dashboard.js) : les
+    // écrans de pilotage lisent ces champs-là, pas seulement les 4 du cockpit.
+    const revenus6Mois = [5200, 5450, 5300, 5900, 6120, 6400].map((revenue, i) => ({
+      mois: ['Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep'][i], revenue,
+    }))
+    const complet = {
+      ...charge,
+      totalClients: s.clients,
+      commissionsMois: Math.round(s.primes / 12),
+      contratsUrgents: s.echeances30j,
+      tauxConversion: 75,
+      scoreRisqueMoyen: s.scoreMoyen,
+      clientsParSegment: {
+        professionnel: CLIENTS.filter((c) => c.type === 'entreprise').length,
+        particulier: CLIENTS.filter((c) => c.type !== 'entreprise').length,
+      },
+      revenus6Mois,
+      typesContrats: CONTRATS_DETAIL.reduce((acc, c) => {
+        const t = acc.find((x) => x.type === c.type)
+        if (t) { t.count += 1; t.total_primes += c.prime } else { acc.push({ type: c.type, count: 1, total_primes: c.prime }) }
+        return acc
+      }, []),
+      alertes: CONTRATS_DETAIL.filter((c) => c.echeance <= 30).map((c) => ({
+        nom: c.nomClient, prenom: '', type_contrat: c.type,
+        date_echeance: dateCourte(c.echeance), jours_restants: c.echeance,
+      })),
+      clientsRecents: CLIENTS.slice(0, 5).map((c) => ({
+        id: c.id, nom: c.nom, prenom: c.prenom || '', statut: 'actif',
+        score_risque: c.score, created_at: iso(-30),
+      })),
+    }
+    return { statut: 200, donnees: { ...complet, data: complet, stats: complet } }
   }
 
   /* -------------------------------------------------------------------- clients */
