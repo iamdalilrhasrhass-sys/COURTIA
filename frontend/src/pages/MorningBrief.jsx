@@ -10,6 +10,8 @@ import toast from 'react-hot-toast'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
 import { computeDailyPriorities } from '../lib/priorities'
+import { chargerResume } from '../lib/salesApi'
+import { blocsResume, NON_MESURE } from '../lib/salesViewModel'
 import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
@@ -182,6 +184,128 @@ function adapterPriorites(resultat, contexte = {}) {
 }
 /* ADAPTATEUR-FIN */
 
+/* ─── COURTIA SALES : bloc d'acquisition alimenté par le service de capture ───
+   Source UNIQUE : GET /api/sales/summary (service_capture.py). Rien n'est
+   calculé ici, rien n'est inventé : le service dit pour chaque compteur s'il est
+   « mesuré » ou « non mesuré », et l'écran affiche exactement cela. Un compteur
+   non mesuré s'écrit « non mesuré » — jamais 0. */
+function BlocCourtiaSales() {
+  const [etat, setEtat] = useState({ chargement: true, blocs: [], erreur: null, fenetre: null, environ: null })
+
+  useEffect(() => {
+    let annule = false
+    const charger = async () => {
+      try {
+        const resume = await chargerResume({ heures: 24 })
+        if (annule) return
+        setEtat({
+          chargement: false,
+          blocs: blocsResume(resume),
+          erreur: null,
+          fenetre: resume?.fenetre?.heures ?? 24,
+          environ: resume?.environment || 'production',
+        })
+      } catch (err) {
+        if (annule) return
+        setEtat({ chargement: false, blocs: [], erreur: err, fenetre: null, environ: null })
+      }
+    }
+    charger()
+    return () => { annule = true }
+  }, [])
+
+  const chauds = etat.blocs.find((b) => b.cle === 'leads_chauds')?.leads || []
+  const relances = etat.blocs.find((b) => b.cle === 'relances_a_faire')?.leads || []
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(34,211,238,0.05), rgba(139,92,246,0.04))',
+      border: '1px solid rgba(34,211,238,0.20)', borderRadius: 14, padding: '18px 22px', marginBottom: 24,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <Target size={15} color="#22D3EE" />
+        <span style={{ fontSize: 11, fontWeight: 800, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Courtia Sales
+        </span>
+        <span style={{ fontSize: 10.5, color: T.textMuted }}>
+          demandes de démo, funnel et relances — service de capture, {etat.fenetre ? `${etat.fenetre} h` : '24 h'}
+          {etat.environ ? `, ${etat.environ}` : ''}
+        </span>
+      </div>
+      <p style={{ margin: '0 0 14px', fontSize: 11.5, color: T.textMuted }}>
+        Un compteur n'est affiché que s'il est réellement mesuré. Sinon il porte la mention « non mesuré » —
+        jamais un 0 qui ferait croire à une mesure.
+      </p>
+
+      {etat.chargement && (
+        <p style={{ margin: 0, fontSize: 12, color: T.textMuted }}>Lecture du service de capture…</p>
+      )}
+
+      {!etat.chargement && etat.erreur && (
+        <div style={{ fontSize: 12, color: '#fca5a5' }}>
+          {etat.blocs.length === 0 && 'Service de capture illisible : les compteurs sont '}
+          <strong>{NON_MESURE}</strong>
+          {' — '}{etat.erreur.message}
+        </div>
+      )}
+
+      {!etat.chargement && !etat.erreur && (
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {etat.blocs.map((b) => (
+            <div key={b.cle} title={b.detail} style={{
+              background: T.cardBg,
+              border: `1px solid ${b.cle === 'leads_chauds' && b.estMesure && b.valeur > 0 ? 'rgba(245,158,11,0.35)' : T.cardBorder}`,
+              borderRadius: 10, padding: '10px 14px', minWidth: 132, flex: '1 1 auto',
+            }}>
+              <div style={{ fontSize: 10.5, color: T.textMuted, fontWeight: 600, marginBottom: 4 }}>{b.libelle}</div>
+              <div style={{
+                fontSize: 20, fontWeight: 800,
+                color: b.estMesure ? T.text : T.textMuted,
+                fontStyle: b.estMesure ? 'normal' : 'italic',
+              }}>
+                {b.cle === 'leads_chauds' && b.estMesure && b.valeur > 0 ? `${b.valeur} 🔥` : b.texte}
+              </div>
+              {b.ecart && (
+                <div style={{ marginTop: 4, fontSize: 10, color: T.warning }} title={b.detail}>écart entre canaux</div>
+              )}
+            </div>
+          ))}
+          {etat.blocs.length === 0 && (
+            <p style={{ margin: 0, fontSize: 12, color: T.textMuted }}>
+              Aucun compteur renvoyé par le service.
+            </p>
+          )}
+        </div>
+      )}
+
+      {(chauds.length > 0 || relances.length > 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginTop: 16 }}>
+          {chauds.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#fcd34d', marginBottom: 6 }}>Leads chauds (score expliqué)</div>
+              {chauds.map((l) => (
+                <div key={l.id} style={{ fontSize: 11.5, color: T.textSecondary, padding: '4px 0' }}>
+                  <strong style={{ color: T.text }}>{l.cabinet}</strong> · {l.lead_score}/100 · {(l.score_raisons || []).slice(0, 2).join(' · ')}
+                </div>
+              ))}
+            </div>
+          )}
+          {relances.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.warning, marginBottom: 6 }}>Relances à faire</div>
+              {relances.map((l) => (
+                <div key={l.id} style={{ fontSize: 11.5, color: T.textSecondary, padding: '4px 0' }}>
+                  <strong style={{ color: T.text }}>{l.cabinet}</strong> · {l.statut} · dernière activité {String(l.last_activity_at || '').slice(0, 10) || NON_MESURE}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function MorningBrief() {
   const navigate = useNavigate()
   const [user, setUser] = useState({ first_name: '', last_name: '' })
@@ -233,13 +357,19 @@ export default function MorningBrief() {
   const hasPriorities = priorities.urgentes?.length > 0 || priorities.aFaire?.length > 0 || priorities.relances?.length > 0
 
   if (!hasPriorities) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.bg }}>
-      <EmptyStateAurora
-        title="Aucune priorité détectée"
-        description="Aucune priorité détectée pour aujourd'hui. Ajoutez des clients et contrats pour qu'ARK puisse vous aider."
-        actionLabel="Ajouter un client"
-        onAction={() => navigate('/clients/new')}
-      />
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: T.bg, padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 1000 }}>
+        {/* Le bloc d'acquisition est affiché MÊME sans priorité de portefeuille :
+            des demandes de démo peuvent exister sans qu'aucun client soit encore
+            enregistré — c'est exactement le cas au démarrage. */}
+        <BlocCourtiaSales />
+        <EmptyStateAurora
+          title="Aucune priorité détectée"
+          description="Aucune priorité détectée pour aujourd'hui. Ajoutez des clients et contrats pour qu'ARK puisse vous aider."
+          actionLabel="Ajouter un client"
+          onAction={() => navigate('/clients/new')}
+        />
+      </div>
     </div>
   )
 
@@ -295,6 +425,9 @@ export default function MorningBrief() {
             </button>
           </div>
         </div>
+
+        {/* COURTIA SALES — acquisition réelle (service de capture) */}
+        <BlocCourtiaSales />
 
         {/* SUMMARY COUNTERS */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
