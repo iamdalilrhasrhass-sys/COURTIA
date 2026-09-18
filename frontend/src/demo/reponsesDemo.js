@@ -123,6 +123,11 @@ const listePaginee = (lignes, params) => {
   return tranche
 }
 
+/* Objectifs saisis dans la démonstration : conservés en mémoire de session.
+   Déclaré au niveau module — dans `repondre`, la valeur serait perdue à
+   chaque appel. */
+let objectifsSaisis = null
+
 /* ============================================================== ROUTAGE ==== */
 export function repondre(methode, cheminBrut, corps) {
   const { chemin, params } = lireParams(cheminBrut)
@@ -222,6 +227,259 @@ export function repondre(methode, cheminBrut, corps) {
   }
 
   /* ------------------------------------------------------------------- contrats */
+  /* ==================================================== objectifs & commissions
+     Écrans couverts :
+       pages/Objectifs.jsx    → GET /objectifs/current      (l.75)
+                                GET /objectifs/ranking      (l.76)
+                                GET /commissions/dashboard  (l.77)
+                                POST /objectifs/set         (l.93)
+       pages/Commissions.jsx  → GET /commissions                     (l.82)
+                                GET /commissions/stats?year=YYYY     (l.83)
+                                POST /commissions/import             (l.148)
+                                POST /contracts/:id/commissions      (l.127)
+
+     Aucun montant n'est écrit en dur : tout est CALCULÉ depuis CONTRATS_DETAIL,
+     CLIENTS et CABINET. Taux retenu : 12 %, celui qu'utilise déjà l'écran
+     Objectifs (commissions_target_cents = CA cible × 0,12).
+
+     ATTENTION à l'ORDRE : ce bloc doit être inséré AVANT le gestionnaire générique
+     `if ((morceaux[0] === 'contrats' || morceaux[0] === 'contracts') && morceaux[1])`
+     (l.211), sinon POST /contracts/:id/commissions tombe dedans et répond 404 dès
+     que l'identifiant saisi n'est pas un contrat du jeu de démonstration.
+
+     DEUX POINTS D'INSERTION :
+       A. au niveau MODULE, juste après `const PLAN = { … }` (l.88) :
+          `let objectifsSaisis = null`
+        (hors de `repondre`, sinon la valeur serait perdue à chaque appel) ;
+       B. tout le reste, DANS `repondre`, avant le marqueur de section « contrats »
+          (l.193, juste avant le gestionnaire générique `morceaux[0] === 'contrats'`). */
+
+/** Année courante de la démonstration (tout le jeu de données est daté
+ *  relativement à aujourd'hui : `dateCourte(-150)`, `iso(-10)`…). */
+const ANNEE_COURANTE = new Date().getFullYear()
+
+/** Taux de commission du cabinet sur les primes (celui de l'écran Objectifs). */
+const TAUX_COMMISSION = 0.12
+
+/** Marge de croissance appliquée à la cible de CA : +12 %, arrondie au millier. */
+const CROISSANCE_CIBLE = 1.12
+
+/** Cibles saisies depuis l'écran Objectifs — DÉCLARÉE AU NIVEAU MODULE (partie A
+ *  ci-dessus), sinon elle serait remise à `null` à chaque appel. */
+
+/** Ligne de commission = un contrat × une année. Noms de champs BRUTS attendus par
+ *  Commissions.jsx : insurer, period_month / period_year, *_amount_eur, status. */
+const ligneCommission = (contrat, decalageAnnee, index) => {
+  const client = contrat.client
+  const attendu = Math.round(contrat.prime * TAUX_COMMISSION)
+  const annee = ANNEE_COURANTE - decalageAnnee
+  // Années closes : tout est encaissé. Année en cours : les cinq statuts connus de
+  // `getCommissionStatusMeta` (src/lib/commissions.js) sont représentés.
+  const etat = decalageAnnee > 0
+    ? { status: 'paid', recu: attendu }
+    : [
+      { status: 'paid', recu: attendu },
+      { status: 'partial', recu: Math.round(attendu * 0.5) },
+      { status: 'expected', recu: 0 },
+      { status: 'overdue', recu: 0 },
+      { status: 'cancelled', recu: 0 },
+      { status: 'paid', recu: attendu },
+      { status: 'partial', recu: Math.round(attendu / 3) },
+    ][index % 7]
+  return {
+    id: contrat.id * 10 + decalageAnnee,
+    contract_id: contrat.id,
+    contract_number: contrat.numero,          // « CT-3001 »
+    type_contrat: contrat.type,
+    client_id: contrat.clientId,
+    client_nom: client ? client.nom : '',
+    client_prenom: client?.prenom || '',      // vide pour les personnes morales
+    insurer: contrat.compagnie,
+    broker_name: CABINET.courtier,
+    period_year: annee,
+    period_month: (index % 12) + 1,
+    expected_amount_eur: attendu,
+    received_amount_eur: etat.recu,
+    status: etat.status,
+    currency: 'EUR',
+  }
+}
+
+/** Toutes les lignes : années N, N-1, N-2 (le sélecteur d'année de l'écran
+ *  Commissions reste ainsi cohérent avec le tableau, qui n'est pas filtré). */
+const LIGNES_COMMISSIONS = [0, 1, 2].flatMap((decalage) =>
+  CONTRATS_DETAIL.map((contrat, i) => ligneCommission(contrat, decalage, i)))
+
+/** Regroupe des lignes par clé et somme les montants attendus / encaissés. */
+const grouperCommissions = (lignes, cle) => {
+  const groupes = new Map()
+  for (const ligne of lignes) {
+    const nom = cle(ligne)
+    const groupe = groupes.get(nom) || { expected_amount_eur: 0, received_amount_eur: 0, count: 0 }
+    groupe.expected_amount_eur += ligne.expected_amount_eur
+    groupe.received_amount_eur += ligne.received_amount_eur
+    groupe.count += 1
+    groupes.set(nom, groupe)
+  }
+  return groupes
+}
+
+/** Primes annuelles du portefeuille : le « CA annuel » du cabinet dans cette démo
+ *  (cohérent avec `statsPortefeuille().primes` de /dashboard/stats : 39 810 €). */
+const primesPortefeuille = () => CONTRATS_DETAIL.reduce((total, c) => total + c.prime, 0)
+
+/* ---------------------------------------------------------------- objectifs */
+if (chemin === '/objectifs/current') {
+  const primes = primesPortefeuille()
+  const cibleCa = Math.ceil((primes * CROISSANCE_CIBLE) / 1000) * 1000
+  const objectif = {
+    year: ANNEE_COURANTE,
+    ca_target_cents: cibleCa * 100,
+    new_clients_target: 4,
+    new_contracts_target: 8,
+    commissions_target_cents: Math.round(cibleCa * 100 * TAUX_COMMISSION),
+  }
+  // Cibles saisies à l'écran : elles survivent au rechargement (démo en mémoire).
+  Object.assign(objectif, objectifsSaisis || {})
+  const lignesAnnee = LIGNES_COMMISSIONS.filter((l) => l.period_year === ANNEE_COURANTE)
+  return { statut: 200, donnees: {
+    year: ANNEE_COURANTE,
+    objectif,
+    progression: {
+      ca: { current_cents: primes * 100, target_cents: objectif.ca_target_cents },
+      new_clients: {
+        current: CLIENTS.filter((c) => String(c.depuis).slice(0, 4) === String(ANNEE_COURANTE)).length,
+        target: objectif.new_clients_target,
+      },
+      new_contracts: {
+        current: CONTRATS_DETAIL.filter((c) => String(c.dateDebut).slice(0, 4) === String(ANNEE_COURANTE)).length,
+        target: objectif.new_contracts_target,
+      },
+      commissions: {
+        current_cents: lignesAnnee.reduce((total, l) => total + l.received_amount_eur, 0) * 100,
+        target_cents: objectif.commissions_target_cents,
+      },
+    },
+  } }
+}
+
+if (chemin === '/objectifs/set' && M === 'POST') {
+  objectifsSaisis = { ...(corps || {}) }
+  return { statut: 200, donnees: { success: true, saved: true, objectif: { year: ANNEE_COURANTE, ...objectifsSaisis } } }
+}
+
+if (chemin === '/objectifs/ranking') {
+  // Un seul apporteur dans le jeu de démonstration : le courtier responsable du
+  // cabinet. Ses agrégats sont ceux du portefeuille (il en est le seul auteur).
+  const primes = primesPortefeuille()
+  const classement = [{
+    user_id: UTILISATEUR.id,
+    rank: 1,
+    name: CABINET.courtier,                   // « A. Rochat »
+    email: UTILISATEUR.email,
+    ca_cents: primes * 100,                   // même CA que la jauge « CA Annuel »
+    clients_count: CLIENTS.length,
+    contracts_count: CONTRATS_DETAIL.length,
+    quotes_count: CONTRATS_DETAIL.length,     // colonne « Contrats » de l'écran
+  }]
+  return { statut: 200, donnees: { ranking: classement, data: classement, total: classement.length } }
+}
+
+/* -------------------------------------------------- commissions (dashboard) */
+if (chemin === '/commissions/dashboard') {
+  const lignes = LIGNES_COMMISSIONS.filter((l) => l.period_year === ANNEE_COURANTE)
+  const parProduit = grouperCommissions(lignes, (l) => l.type_contrat)
+  const parCompagnie = grouperCommissions(lignes, (l) => l.insurer)
+  const parMois = grouperCommissions(lignes, (l) => l.period_month)
+  const by_product = [...parProduit.entries()]
+    .map(([product, g]) => ({ product, commission_eur: g.expected_amount_eur }))
+    .sort((a, b) => b.commission_eur - a.commission_eur)
+  const by_company = [...parCompagnie.entries()]
+    .map(([provider, g]) => ({ provider, commission_eur: g.expected_amount_eur }))
+    .sort((a, b) => b.commission_eur - a.commission_eur)
+  const by_month = [...parMois.entries()]
+    .map(([mois, g]) => ({
+      month: `${ANNEE_COURANTE}-${String(mois).padStart(2, '0')}`,
+      month_number: mois,
+      commission_eur: g.expected_amount_eur,
+    }))
+    .sort((a, b) => a.month_number - b.month_number)
+  return { statut: 200, donnees: {
+    year: ANNEE_COURANTE,
+    currency: 'EUR',
+    total_eur: by_product.reduce((total, r) => total + r.commission_eur, 0),
+    total_received_eur: lignes.reduce((total, l) => total + l.received_amount_eur, 0),
+    by_product,
+    by_company,
+    by_month,
+  } }
+}
+
+/* ------------------------------------------------------ commissions (suivi) */
+if (chemin === '/commissions' && M === 'GET') {
+  // Commissions.jsx lit `listRes.data.data` et exige un TABLEAU : une enveloppe
+  // fausse ferait disparaître les lignes sans erreur.
+  const annee = Number(params.year)
+  const lignes = annee ? LIGNES_COMMISSIONS.filter((l) => l.period_year === annee) : LIGNES_COMMISSIONS
+  return { statut: 200, donnees: { data: lignes, commissions: lignes, total: lignes.length } }
+}
+
+if (chemin === '/commissions/stats' && M === 'GET') {
+  const annee = Number(params.year) || ANNEE_COURANTE
+  const lignes = LIGNES_COMMISSIONS.filter((l) => l.period_year === annee)
+  // `by_month[].month` est un NUMÉRO de mois : CommissionsV2 l'utilise comme index
+  // de son tableau MONTHS, et Commissions.jsx l'affiche « Mois 3 ».
+  const by_month = [...grouperCommissions(lignes, (l) => l.period_month).entries()]
+    .map(([month, g]) => ({ month, ...g }))
+    .sort((a, b) => a.month - b.month)
+  const by_insurer = [...grouperCommissions(lignes, (l) => l.insurer).entries()]
+    .map(([insurer, g]) => ({ insurer, ...g }))
+    .sort((a, b) => b.received_amount_eur - a.received_amount_eur)
+  const by_broker = [...grouperCommissions(lignes, (l) => l.broker_name).entries()]
+    .map(([broker_name, g]) => ({ broker_name, ...g }))
+    .sort((a, b) => b.received_amount_eur - a.received_amount_eur)
+  const by_status = [...grouperCommissions(lignes, (l) => l.status).entries()]
+    .map(([status, g]) => ({ status, ...g }))
+  const totals = lignes.reduce((acc, l) => {
+    acc.expected_amount_eur += l.expected_amount_eur
+    acc.received_amount_eur += l.received_amount_eur
+    acc.count += 1
+    return acc
+  }, { expected_amount_eur: 0, received_amount_eur: 0, count: 0 })
+  totals.pending_amount_eur = totals.expected_amount_eur - totals.received_amount_eur
+  return { statut: 200, donnees: { year: annee, currency: 'EUR', totals, by_month, by_insurer, by_broker, by_status } }
+}
+
+if (chemin === '/commissions/import' && M === 'POST') {
+  // Nombre de lignes réellement transmises : le CSV est fourni par l'utilisateur,
+  // on ne l'invente pas. La démo ne persiste pas l'import (pas de rechargement).
+  const lignesCsv = String((corps && corps.csv) || '').split(/\r?\n/).filter((l) => l.trim())
+  const imported = Math.max(0, lignesCsv.length - 1)   // -1 : la ligne d'en-tête
+  return { statut: 200, donnees: { success: true, imported, total: imported, demo: true } }
+}
+
+if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] === 'commissions') {
+  // Saisie rapide depuis un contrat : toute référence numérique est acceptée, le
+  // contrat n'est utilisé que pour renseigner les champs manquants.
+  const contrat = contratParId(morceaux[1])
+  const montant = (v) => {
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 ? n : 0
+  }
+  const commission = {
+    id: 9000 + Number(morceaux[1] || 0),
+    contract_id: Number(morceaux[1]),
+    contract_number: contrat ? contrat.numero : null,
+    client_id: contrat ? contrat.clientId : null,
+    insurer: (corps && corps.insurer) || (contrat ? contrat.compagnie : ''),
+    period: (corps && corps.period) || `${ANNEE_COURANTE}-01`,
+    expected_amount_eur: montant(corps && corps.expected_amount),
+    received_amount_eur: montant(corps && corps.received_amount),
+    status: (corps && corps.status) || 'expected',
+  }
+  return { statut: 200, donnees: { success: true, commission, data: commission } }
+}
+
   if ((chemin === '/contrats' || chemin === '/contracts') && M === 'GET') {
     // ClientDetail fait `Array.isArray(res.data) ? res.data : []` :
     // une enveloppe { data: [...] } ferait disparaître les contrats SANS erreur.

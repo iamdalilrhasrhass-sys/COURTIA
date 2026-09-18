@@ -25,6 +25,7 @@ export const CHAPITRES = [
   { id: 'clients',   titre: 'Mes clients',      sous: 'Tout le portefeuille' },
   { id: 'dossier',   titre: 'Un dossier',       sous: 'Le client en entier' },
   { id: 'relances',  titre: 'Les relances',     sous: 'Qui joindre, et pourquoi' },
+  { id: 'pilotage',  titre: 'Pilotage',        sous: 'Objectifs et commissions' },
   { id: 'explorer',  titre: 'Explorer',         sous: 'Vous prenez la main' },
 ]
 
@@ -148,6 +149,20 @@ export const ETAPES = [
     titre: 'Et vous mesurez ce que ça donne',
     texte: 'Taux de réponse de vos relances, en direct. Vous ajustez sur des faits, pas au ressenti.',
     tenue: 4100,
+  },
+  {
+    route: '/demo/objectifs', chapitre: 'pilotage',
+    cible: { texte: 'CA Annuel' },
+    titre: 'Vos objectifs, suivis en direct',
+    texte: '88 % du CA annuel atteint, deux nouveaux clients sur quatre, sept contrats sur huit. COURTIA tient le compte à votre place.',
+    tenue: 3400,
+  },
+  {
+    route: '/demo/commissions', chapitre: 'pilotage',
+    cible: { texte: 'ATTENDU' },
+    titre: 'Et l’argent qui rentre vraiment',
+    texte: '4 777 € de commissions attendues, 2 240 € encaissées, ce qui reste à suivre — par compagnie et par apporteur.',
+    tenue: 3400,
   },
   /* --- EXPLORER --- */
   {
