@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } from 'lucide-react'
 import { MARKET_PRICING, MARKET_OPTIONS, resolveMarketContext, persistMarketOverride, parseMarketFromSearch, readStoredMarketOverride, getDetectedGeoCountry } from '../market/marketContext'
 import { applySeo } from '../lib/seo'
-
+import { evenement } from '../lib/analytics'
 // ─── Feature Configuration ────────────────────────────────────────────────────
 
 const featureLabels = {
@@ -430,6 +430,13 @@ export default function Tarifs() {
       ],
     })
   }, [isCH])
+
+  /* Vue de la page tarifs : maillon du funnel qui n'était mesuré par personne.
+     Une seule fois par affichage (jamais à chaque bascule FR/CH), pour ne pas
+     gonfler artificiellement le compteur. */
+  useEffect(() => {
+    evenement('pricing_view', { page: '/tarifs' })
+  }, [])
 
   return (
     <div className="min-h-screen bg-white">

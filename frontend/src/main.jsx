@@ -6,6 +6,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 import App from './App'
 import { estModeDemo, installerDemo } from './demo/modeDemo'
 import { evenement } from './lib/analytics'
+import { installerMesureCta } from './lib/mesureCta'
 import { demarrerSuiviDemo } from './lib/suiviDemo'
 import './index.css'
 import './styles/design-system.css'
@@ -81,4 +82,13 @@ try {
   if (estModeDemo()) demarrerSuiviDemo()
 } catch {
   /* idem */
+}
+
+/* Clic sur un CTA « Demander une démo » : écouté au niveau du document, donc
+   valable pour tous les CTA du site (navigation, pages marketing, tarifs), y
+   compris ceux ajoutés plus tard. Inerte si la mesure est indisponible. */
+try {
+  installerMesureCta()
+} catch {
+  /* la mesure ne doit jamais empêcher l'application de démarrer */
 }

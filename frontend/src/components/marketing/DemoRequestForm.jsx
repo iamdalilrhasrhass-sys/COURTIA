@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
-import { trackMarketingEvent } from '../../lib/marketingEvents'
+import { evenement } from '../../lib/analytics'
 import { useNavigate } from 'react-router-dom'
 import {
   CAPTURE_ERROR_MESSAGE,
@@ -48,6 +48,13 @@ export default function DemoRequestForm({ compact = false }) {
   // Acquisition figée à l'arrivée sur la page (UTM, referrer, landing page).
   const acquisition = useMemo(() => captureAcquisition(readWindowContext()), [])
 
+  /* Le formulaire a été AFFICHÉ : c'est le maillon qui manquait entre le clic
+     sur le CTA et l'envoi. Sans lui, un visiteur qui regarde le formulaire sans
+     le remplir était invisible dans la mesure. */
+  useEffect(() => {
+    evenement('demo_form_view', { variant: compact ? 'contact_compact' : 'demo_page' })
+  }, [compact])
+
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
@@ -71,14 +78,12 @@ export default function DemoRequestForm({ compact = false }) {
     }
 
     setLoading(true)
+    /* Envoi TENTÉ : mesuré AVANT de connaître le résultat, sinon un envoi raté
+       disparaîtrait de la mesure et le taux d'échec serait toujours nul. */
+    evenement('demo_form_submit', { variant: compact ? 'contact_compact' : 'demo_page' })
     try {
       const payload = mergeAcquisition({ ...form }, acquisition)
       const data = await postDemoRequest(payload)
-      await trackMarketingEvent('submit_demo_request', {
-        city: form.city || '',
-        team_size: form.team_size || '',
-        variant: compact ? 'contact_compact' : 'demo_page',
-      })
       setStatus('success')
       setFeedback('Votre demande est bien reçue. Nous vous conduisons à la démonstration…')
       setForm(INITIAL_FORM)
@@ -87,8 +92,13 @@ export default function DemoRequestForm({ compact = false }) {
       const target = resolveRedirect(data)
       setTimeout(() => navigate(target), 1400)
     } catch (err) {
-      /* Échec réel d'enregistrement : message d'erreur explicite, AUCUNE
-         redirection vers /demo — sinon la demande serait silencieusement perdue. */
+      /* Échec réel d'enregistrement : mesuré comme tel, message d'erreur
+         explicite, AUCUNE redirection vers /demo — sinon la demande serait
+         silencieusement perdue. */
+      evenement('demo_request_failure', {
+        variant: compact ? 'contact_compact' : 'demo_page',
+        statut: String((err && err.status) || 0),
+      })
       setStatus('error')
       setFeedback(
         err?.message
