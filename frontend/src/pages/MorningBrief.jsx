@@ -283,7 +283,7 @@ export default function MorningBrief() {
                 ARK a analysé votre portefeuille et identifié <strong style={{ color: '#fff' }}>{priorities.totalActions} actions utiles</strong> pour aujourd'hui.
               </p>
               <p style={{ fontSize: 12, color: T.textMuted, margin: 0 }}>
-                Portefeuille : {priorities.activeClients || 124} clients • {priorities.activeContracts || 312} contrats • Score santé : <strong style={{ color: T.success }}>{priorities.score}/100</strong>
+                Portefeuille : {priorities.activeClients || 0} clients • {priorities.activeContracts || 0} contrats • Score santé : <strong style={{ color: T.success }}>{priorities.score}/100</strong>
               </p>
             </div>
             <button onClick={() => { setRefreshKey(k => k + 1); toast.success('Analyse actualisée') }} style={{

@@ -91,7 +91,18 @@ export default function Prospection() {
       }}>
         <Zap size={16} color="#8B5CF6" />
         <p style={{ fontSize: 13, color: '#c4b5fd', margin: 0 }}>
-          <strong style={{ color: '#a78bfa' }}>ARK</strong> — 6 prospects en pipeline. Le secteur Transport affiche le plus fort potentiel (28 500 €). SARL Dupuis Transport a un RDV planifié.
+          <strong style={{ color: '#a78bfa' }}>ARK</strong> — {prospects.length} prospect{prospects.length > 1 ? 's' : ''} en pipeline. {
+            (() => {
+              if (!prospects.length) return 'Aucun prospect à analyser pour le moment.'
+              const parts = [...prospects].sort((a, b) => b.potentiel - a.potentiel)
+              const top = parts[0]
+              const ph = `Le plus fort potentiel : ${top.nom} (${(top.potentiel || 0).toLocaleString('fr-FR')} €)`
+              const rdv = prospects.filter((p) => p.statut === 'rdv')
+              return rdv.length
+                ? `${ph}. ${rdv.length > 1 ? rdv.length + ' rendez-vous sont' : rdv[0].nom + ' a un rendez-vous'} planifié${rdv.length > 1 ? 's' : ''}.`
+                : `${ph}. Prochaine action : qualifier les prospects sans rendez-vous.`
+            })()
+          }
         </p>
       </div>
 

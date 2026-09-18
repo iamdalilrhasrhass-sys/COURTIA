@@ -18,6 +18,8 @@ import {
   CABINET, CLIENTS, CONTRATS_DETAIL, TACHES, DOCUMENTS, OPPORTUNITES,
   PROSPECTS, MESSAGES, RENDEZ_VOUS, clientDetail, contratParId,
   statsPortefeuille, relancesDues, dossiersIncomplets, reponseArk, dateCourte, iso,
+  DEVIS,
+  PARTENAIRES,
 } from './donneesDemo'
 
 /* ------------------------------------------------------------- utilitaires */
@@ -129,7 +131,124 @@ const listePaginee = (lignes, params) => {
 let objectifsSaisis = null
 
 /* ============================================================== ROUTAGE ==== */
-export function repondre(methode, cheminBrut, corps) {
+function _repondreBrut(methode, cheminBrut, corps) {
+
+  /* ========================================================================
+     SURCOUCHE — formes EXACTES attendues par les pages branchées sur l'API.
+     Placée en tête du résolveur : elle prime sur les handlers génériques.
+     Chaque forme est celle que la page lit réellement dans son JSX.
+     ====================================================================== */
+
+  const _c = String(cheminBrut || '').split('?')[0].replace(/\/$/, '')
+  const _M = String(methode || 'GET').toUpperCase()
+  const _fin = (c, suffixe) => String(c || '').replace(/\/$/, '').endsWith(suffixe)
+
+  const _jjmm = (iso) => {
+    const d = iso instanceof Date ? iso : new Date(iso)
+    if (isNaN(d)) return ''
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+  }
+  const _ilYA = (jours) => {
+    const d = new Date(); d.setDate(d.getDate() + jours)
+    return d.toISOString().slice(0, 10)
+  }
+
+  /* ---- /devis : pages/Devis.jsx ----------------------------------------
+     statut ∈ preparation | envoye | accepte | refuse | expire           */
+  if (_fin(_c, '/devis') && _M === 'GET') {
+    const STATUTS = { brouillon: 'preparation', envoye: 'envoye', signe: 'accepte', refuse: 'refuse' }
+    const PROBA = { preparation: 25, envoye: 62, accepte: 100, refuse: 0, expire: 0 }
+    return { statut: 200, donnees: DEVIS.map((d) => {
+      const statut = STATUTS[d.statut] || 'envoye'
+      return {
+        id: d.id, client: d.client_nom, produit: d.objet, montant: d.montant, statut,
+        derniereRelance: statut === 'envoye' ? `Relancé il y a ${Math.max(1, (d.emis_depuis_jours || 7) - 5)} j` : null,
+        probabilite: PROBA[statut],
+        ark: statut === 'preparation' ? 'Devis prêt : ARK recommande l’envoi aujourd’hui.' : null,
+      }
+    }) }
+  }
+
+  /* ---- /opportunites : pages/Opportunites.jsx (kanban) ------------------
+     stage ∈ prospect | rdv | devis | signe · ark = booléen · proba = score  */
+  if (_fin(_c, '/opportunites') && _M === 'GET') {
+    const ordre = ['prospect', 'rdv', 'devis', 'signe']
+    const tri = [...OPPORTUNITES].sort((a, b) => (b.score || 0) - (a.score || 0))
+    return { statut: 200, donnees: tri.map((o, i) => {
+      const quart = Math.floor((i / tri.length) * 4)
+      return {
+        id: o.id,
+        stage: ordre[Math.min(3, quart)],
+        client: o.nomClient || (o.client ? `${o.client.prenom || ''} ${o.client.nom || ''}`.trim() : ''),
+        produit: o.titre,
+        potentiel: o.potentiel || o.gain, proba: o.score,
+        date: _jjmm(_ilYA(-(4 + i * 3))),
+        ark: (o.score || 0) >= 70,
+      }
+    }) }
+  }
+
+  /* ---- /documents : pages/Documents.jsx ---------------------------------
+     type ∈ fic | mandat_courtage | devoir_conseil | attestation |
+            piece_identite | permis | carte_grise | rib
+     statut ∈ valide | a_verifier | manquant | expire                   */
+  if (_fin(_c, '/documents') && _M === 'GET') {
+    const typeDe = (nom) => {
+      const n = (nom || '').toLowerCase()
+      if (n.includes('fic')) return 'fic'
+      if (n.includes('mandat')) return 'mandat_courtage'
+      if (n.includes('conseil')) return 'devoir_conseil'
+      if (n.includes('attestation')) return 'attestation'
+      if (n.includes('permis')) return 'permis'
+      if (n.includes('grise')) return 'carte_grise'
+      if (n.includes('rib') || n.includes('iban')) return 'rib'
+      return 'piece_identite'
+    }
+    const statutDe = (s) => (s === 'attendu' ? 'manquant' : s === 'recu' ? 'valide' : s === 'a_verifier' ? 'a_verifier' : 'manquant')
+    return { statut: 200, donnees: DOCUMENTS.map((d) => ({
+      id: d.id, nom: d.nom,
+      client: d.nomClient || (d.client ? `${d.client.prenom || ''} ${d.client.nom || ''}`.trim() : ''),
+      type: typeDe(d.nom), lieA: 'Client',
+      date: d.demandeLe, statut: statutDe(d.statut),
+    })) }
+  }
+
+  /* ---- /prospection : pages/Prospection.jsx -----------------------------
+     statut ∈ nouveau | contacte | qualifie | rdv                       */
+  if (_fin(_c, '/prospection') && _M === 'GET') {
+    const STATUTS = { a_contacter: 'nouveau', contacte: 'contacte', interesse: 'qualifie', demo_planifiee: 'rdv', rdv: 'rdv', negociation: 'qualifie', client: 'rdv' }
+    return { statut: 200, donnees: PROSPECTS.map((p, i) => ({
+      id: p.id, nom: p.societe,
+      secteur: 'Courtage', ville: p.ville,
+      potentiel: p.potentiel, statut: STATUTS[p.statut] || 'nouveau',
+      date: _jjmm(_ilYA(-(6 + i * 5))),
+    })) }
+  }
+
+  /* ---- /partners : pages/Partenaires.jsx -------------------------------
+     categorie grossiste|mga|mgas -> Apporteurs ; sinon -> Compagnies.
+     Les compagnies sont CALCULÉES depuis les contrats réels du portefeuille. */
+  if (_fin(_c, '/partners') && _M === 'GET') {
+    const parCompagnie = new Map()
+    for (const c of CONTRATS_DETAIL) {
+      const cle = c.compagnie
+      if (!parCompagnie.has(cle)) parCompagnie.set(cle, { contrats: 0, primes: 0 })
+      const e = parCompagnie.get(cle)
+      e.contrats += 1; e.primes += c.prime || 0
+    }
+    const compagnies = [...parCompagnie.entries()].map(([nom, e], i) => ({
+      id: 8000 + i, nom, categorie: 'compagnie', type_partenaire: 'porteur_risque',
+      contrats: e.contrats,
+      commission: Math.round(e.primes * 0.12),
+    }))
+    const apporteurs = PARTENAIRES.map((p) => ({
+      id: p.id, nom: p.nom, categorie: 'grossiste', type_partenaire: 'grossiste',
+      contrats: p.dossiers, commission: p.volume,
+    }))
+    return { statut: 200, donnees: [...compagnies, ...apporteurs] }
+  }
+
+
   const { chemin, params } = lireParams(cheminBrut)
   const M = methode.toUpperCase()
   const morceaux = chemin.split('/').filter(Boolean)
@@ -585,7 +704,7 @@ if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] =
   }
 
   /* ------------------------------------------------------------------ documents */
-  if (chemin === '/documents' && M === 'GET') {
+  if (_fin(chemin, '/documents') && M === 'GET') {
     return { statut: 200, donnees: { ...paginer(DOCUMENTS, params), documents: DOCUMENTS } }
   }
   if (chemin === '/document-inbox/checklist' || chemin === '/document-inbox/stats') {
@@ -796,4 +915,8 @@ if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] =
     return { statut: 200, donnees: { success: false, data: [], total: 0, demo: true } }
   }
   return { statut: 200, donnees: { success: false, demo: true, data: null } }
+}
+
+export function repondre(methode, cheminBrut, corps) {
+  return _repondreBrut(methode, cheminBrut, corps)
 }
