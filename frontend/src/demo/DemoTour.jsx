@@ -127,6 +127,25 @@ export default function DemoTour() {
           setCurseur((cur) => ({ ...cur, clic: false }))
           // Clic réel : React reçoit l'événement, l'écran change pour de bon.
           try { el.click() } catch { /* cible non cliquable : le scénario continue */ }
+
+          /* Question posée à ARK : on ouvre la VRAIE console (ArkBubbleV2) et on
+             y saisit la question, comme le ferait un courtier. La réponse est
+             une DEMO RESPONSE déterministe calculée sur le dataset central. */
+          if (e.arkQuestion) {
+            setTimeout(() => {
+              const lanceur = document.querySelector('button[aria-label="Ouvrir ARK"]')
+              if (lanceur) lanceur.click()
+              setTimeout(() => {
+                const inp = [...document.querySelectorAll('input')]
+                  .find((i) => (i.placeholder || '').includes('message'))
+                if (!inp) return
+                const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+                set.call(inp, e.arkQuestion)
+                inp.dispatchEvent(new Event('input', { bubbles: true }))
+                inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+              }, 320)
+            }, 110)
+          }
           await attendre(420)
         }
       } else {

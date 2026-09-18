@@ -86,12 +86,16 @@ const versCompagnie = (p) => ({
   logo: initiales(p.nom),
 })
 
-/** Partenaire API → ligne « Apporteur » (champs lus par le JSX). */
+/** Partenaire API → ligne « Apporteur » (champs lus par le JSX).
+ *  La colonne « Clients » de l'écran affiche les clients apportés si l'API les
+ *  expose, sinon le nombre de dossiers transmis (`contrats`) — une valeur
+ *  inconnue reste 0, elle n'est jamais devinée. */
 const versApporteur = (p) => ({
   id: p.id,
   nom: p.nom,
   type: 'Apporteur',
-  clients: nombreClients(p),
+  clients: nombreClients(p) || nombreContrats(p),
+  contrats: nombreContrats(p),
   commission: nombre(p.commission),
   tendance: String(p.tendance ?? ''),
 })
@@ -102,6 +106,13 @@ const repartirPartenaires = (partenaires) => partenaires.reduce((acc, p) => {
   else acc.compagnies.push(versCompagnie(p))
   return acc
 }, { compagnies: [], apporteurs: [] })
+
+/** Somme un champ numérique sur une liste de lignes (0 si la liste est vide). */
+const somme = (liste, valeur) => liste.reduce((total, ligne) => total + valeur(ligne), 0)
+
+/** Contrats portés par une ligne : `contrats` côté API, `clients` pour le repli
+ *  DEMO_APPORTEURS qui ne porte que ce champ-là. */
+const contratsLigne = (ligne) => nombre(ligne?.contrats ?? ligne?.clients)
 /* PARTENAIRES-ADAPT-FIN */
 
 export default function Partenaires() {
@@ -113,17 +124,26 @@ export default function Partenaires() {
   const chargerPartenaires = useCallback(async () => {
     try {
       const { data } = await api.get('/partners')
-      const liste = Array.isArray(data?.partners)
-        ? data.partners
-        : (Array.isArray(data?.data) ? data.data : [])
+      // GET /partners peut répondre en tableau nu ou sous une enveloppe
+      // { data } / { partners } / { donnees } : les quatre formes sont lues.
+      const liste = Array.isArray(data)
+        ? data
+        : [data?.partners, data?.data, data?.donnees].find(Array.isArray) || []
+      // Réponse vide ou illisible : les constantes DEMO_* restent affichées.
       if (liste.length === 0) return
       const { compagnies, apporteurs: apporteursApi } = repartirPartenaires(liste)
-      if (compagnies.length > 0) setPartenaires(compagnies)
-      if (apporteursApi.length > 0) setApporteurs(apporteursApi)
+      // Les DEUX listes viennent de la réponse : aucune n'est complétée par une
+      // constante de démonstration, les KPI restent donc égaux aux listes.
+      setPartenaires(compagnies)
+      setApporteurs(apporteursApi)
     } catch { /* repli : les constantes DEMO_* sont conservées */ }
   }, [])
 
   useEffect(() => { chargerPartenaires() }, [chargerPartenaires])
+
+  // KPI CALCULÉS depuis les deux listes affichées : aucune valeur figée.
+  const totalCommissions = somme([...partenaires, ...apporteurs], (ligne) => nombre(ligne.commission))
+  const totalContrats = somme([...partenaires, ...apporteurs], contratsLigne)
 
   return (
     <div style={{ padding: 32, minHeight: '100vh' }}>
@@ -135,10 +155,10 @@ export default function Partenaires() {
       {/* KPIs */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
         {[
-          { label: 'Compagnies', value: 6, icon: Building, accent: '#5B4DF5' },
-          { label: 'Apporteurs', value: 3, icon: HeartHandshake, accent: '#22C55E' },
-          { label: 'Commissions', value: '106 300 €', icon: Euro, accent: '#F59E0B' },
-          { label: 'Contrats générés', value: '149', icon: TrendingUp, accent: '#3B82F6' },
+          { label: 'Compagnies', value: partenaires.length, icon: Building, accent: '#5B4DF5' },
+          { label: 'Apporteurs', value: apporteurs.length, icon: HeartHandshake, accent: '#22C55E' },
+          { label: 'Commissions', value: `${totalCommissions.toLocaleString('fr-FR')} €`, icon: Euro, accent: '#F59E0B' },
+          { label: 'Contrats générés', value: totalContrats.toLocaleString('fr-FR'), icon: TrendingUp, accent: '#3B82F6' },
         ].map((kpi, i) => (
           <div key={i} style={{
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',

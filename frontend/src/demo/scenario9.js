@@ -75,6 +75,15 @@ export const ETAPES = [
     tenue: 3000,
   },
 
+  {
+    route: '/demo/dashboard', chapitre: 'ark',
+    cible: { sel: 'button[aria-label="Ouvrir ARK"]' }, clic: true,
+    arkQuestion: 'Fais-moi le point sur ma journée et dis-moi ce qui nécessite mon attention.',
+    titre: 'Posez la question à ARK',
+    texte: 'ARK lit vos huit clients, vos quinze contrats et vos échéances — puis répond : urgences, pièces manquantes, prospects à relancer, devis sans réponse.',
+    tenue: 9600,
+  },
+
   /* --- ACQUÉRIR --- */
   {
     route: '/demo/prospection', chapitre: 'acquerir',

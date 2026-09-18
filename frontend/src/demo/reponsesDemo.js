@@ -153,6 +153,38 @@ function _repondreBrut(methode, cheminBrut, corps) {
     return d.toISOString().slice(0, 10)
   }
 
+  /* ---- POST /ark/chat : console ARK -------------------------------------
+     DEMO RESPONSE. Ce n'est PAS un appel IA : c'est une réponse déterministe,
+     calculée depuis le dataset central, et explicitement balisée `demo: true`.
+     L'API réelle (POST /api/ark/chat) exige DEEPSEEK_API_KEY et est documentée
+     cassée (Bugs_ouverts.md — QA 01/07/2026 : « Aucune réponse générée ») :
+     elle ne peut donc pas être exposée sur une preview publique. Le VRAI
+     composant (components/ark/ArkBubbleV2.jsx) est utilisé tel quel. */
+  if (_fin(_c, '/ark/chat') && _M === 'POST') {
+    const eur = (n) => `${Number(n || 0).toLocaleString('fr-FR')} €`
+    const nomDe = (o) => o.nomClient || (o.client ? `${o.client.prenom || ''} ${o.client.nom || ''}`.trim() : '') || '—'
+    const retard = TACHES.filter((t) => t.echeance < 0)
+    const manquants = DOCUMENTS.filter((d) => d.statut === 'attendu')
+    const aRelancer = PROSPECTS.filter((p) => p.statut === 'interesse')
+    const echeances = CONTRATS_DETAIL.filter((c) => c.echeance > 0 && c.echeance <= 30)
+    const devisAttente = DEVIS.filter((d) => d.statut === 'envoye')
+    const opps = OPPORTUNITES.reduce((s, o) => s + (o.potentiel || o.gain || 0), 0)
+    const clientsPieces = [...new Set(manquants.map(nomDe))].filter((n) => n !== '—')
+    const texte = [
+      'Bonjour. Voici ce qui demande votre attention aujourd’hui :',
+      '',
+      `• ${retard.length} tâche${retard.length > 1 ? 's' : ''} en retard — ${retard.slice(0, 2).map((t) => t.titre).join(' ; ') || 'aucune'}`,
+      `• ${manquants.length} pièce${manquants.length > 1 ? 's' : ''} manquante${manquants.length > 1 ? 's' : ''}${clientsPieces.length ? ` (${clientsPieces.slice(0, 3).join(', ')})` : ''}`,
+      `• ${aRelancer.length} prospect${aRelancer.length > 1 ? 's' : ''} à relancer — ${eur(aRelancer.reduce((s, p) => s + (p.potentiel || 0), 0))} de potentiel`,
+      `• ${echeances.length} contrat${echeances.length > 1 ? 's' : ''} à échéance sous 30 jours — ${eur(echeances.reduce((s, c) => s + (c.prime || 0), 0))} de primes à renouveler`,
+      `• ${devisAttente.length} devis sans réponse — ${eur(devisAttente.reduce((s, d) => s + d.montant, 0))}`,
+      `• ${OPPORTUNITES.length} opportunité${OPPORTUNITES.length > 1 ? 's' : ''} identifiée${OPPORTUNITES.length > 1 ? 's' : ''} — ${eur(opps)} de potentiel`,
+      '',
+      `Ma recommandation : traiter d’abord ${retard[0] ? `« ${retard[0].titre} »` : 'les échéances à venir'}, puis les pièces manquantes — elles bloquent ${manquants.length} dossier${manquants.length > 1 ? 's' : ''}.`,
+    ].join('\n')
+    return { statut: 200, donnees: { response: texte, reponse: texte, demo: true } }
+  }
+
   /* ---- /devis : pages/Devis.jsx ----------------------------------------
      statut ∈ preparation | envoye | accepte | refuse | expire           */
   if (_fin(_c, '/devis') && _M === 'GET') {
@@ -704,7 +736,7 @@ if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] =
   }
 
   /* ------------------------------------------------------------------ documents */
-  if (_fin(chemin, '/documents') && M === 'GET') {
+  if (_fin(_c, '/documents') && M === 'GET') {
     return { statut: 200, donnees: { ...paginer(DOCUMENTS, params), documents: DOCUMENTS } }
   }
   if (chemin === '/document-inbox/checklist' || chemin === '/document-inbox/stats') {

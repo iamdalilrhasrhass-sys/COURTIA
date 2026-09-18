@@ -1,5 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
+import ArkBubbleV2 from './components/ark/ArkBubbleV2'
 import Sidebar from './components/Sidebar'
 import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
@@ -57,6 +58,12 @@ export default function AppPrivateLayout() {
         onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+
+      {/* ARK Assistant — composant RÉEL du produit (components/ark/ArkBubbleV2).
+          Il existait mais n'était monté nulle part : l'API /api/ark/chat était
+          donc inatteignable depuis le cockpit. Monté ici, dans le layout privé,
+          c'est-à-dire au bon endroit produit. */}
+      <ArkBubbleV2 />
 
       {/* ARK Neural Pulse — indicateur signature */}
       <div style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 200, opacity: 0.55, pointerEvents: 'none' }}>

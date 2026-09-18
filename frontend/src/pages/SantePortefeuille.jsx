@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -33,18 +33,127 @@ const DEMO = {
   echeancesProches: 18,
 }
 
-const ALERTS = [
+/* ─── Synthèse : lecture défensive des réponses API ──────────────────────────
+   Les constantes de DEMO ne servent plus que de REPLI. Dès que /contrats et
+   /clients répondent, la synthèse est recalculée à partir des données réelles
+   (mêmes chiffres que le Cockpit). Aucune métrique nouvelle n'est introduite :
+   seules les valeurs déjà affichées sont recalculées. */
+
+/** Tableau utile quelle que soit l'enveloppe : [ … ], { data: [ … ] }, { donnees: [ … ] }. */
+function listeDe(payload, cles = []) {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.donnees)) return payload.donnees
+  for (const cle of cles) {
+    if (Array.isArray(payload?.[cle])) return payload[cle]
+  }
+  return []
+}
+
+const nombreDe = (v) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+const primeDe = (c) => nombreDe(c?.prime ?? c?.prime_annuelle ?? c?.primeAnnuelle) ?? 0
+
+const statutDe = (ligne) => String(ligne?.statut ?? ligne?.status ?? '').toLowerCase()
+
+const estActif = (ligne) => statutDe(ligne) === 'actif'
+const estResilie = (ligne) => ['resilie', 'résilié'].includes(statutDe(ligne))
+
+/** Jours avant échéance. Dans le modèle, `echeance` est un NOMBRE de jours ;
+ *  certains payloads le renvoient en date et exposent alors `jours`
+ *  (cf. lib/clientViewModel.js). Les deux formes sont acceptées. */
+function joursAvantEcheance(c) {
+  const direct = nombreDe(c?.echeance)
+  if (direct !== null) return direct
+  const jours = nombreDe(c?.jours)
+  if (jours !== null) return jours
+  const date = c?.dateEcheance || c?.date_echeance
+  const t = date ? new Date(date).getTime() : NaN
+  return Number.isNaN(t) ? null : Math.ceil((t - Date.now()) / 86400000)
+}
+
+/** Jours écoulés depuis une date (dernier contact). `null` si non datable. */
+function joursDepuis(v) {
+  const t = v ? new Date(v).getTime() : NaN
+  if (Number.isNaN(t)) return null
+  return Math.max(0, Math.floor((Date.now() - t) / 86400000))
+}
+
+/** Champs lus — contrat : prime | prime_annuelle, statut | status,
+ *  echeance | jours | dateEcheance. Client : statut | status,
+ *  dernierContact | last_contact, score | score_risque, risque.
+ *  @returns {Object|null} null si aucune donnée exploitable (repli sur DEMO). */
+function calculerSynthese(contrats, clients) {
+  if (contrats.length === 0 && clients.length === 0) return null
+  const synthese = {}
+
+  if (contrats.length > 0) {
+    synthese.primesAnnuelles = Math.round(
+      contrats.filter(estActif).reduce((total, c) => total + primeDe(c), 0)
+    )
+    synthese.totalContrats = contrats.length
+    synthese.echeancesProches = contrats.filter((c) => {
+      if (estResilie(c)) return false
+      const j = joursAvantEcheance(c)
+      return j !== null && j <= 30
+    }).length
+    synthese.sansRenouvellement = contrats.filter((c) => {
+      if (estResilie(c)) return false
+      if (statutDe(c) === 'renouvellement') return true
+      const j = joursAvantEcheance(c)
+      return j !== null && j < 0
+    }).length
+    synthese.churn = Math.round((contrats.filter(estResilie).length / contrats.length) * 100)
+  }
+
+  if (clients.length > 0) {
+    synthese.totalClients = clients.length
+    synthese.retention = Math.round((clients.filter(estActif).length / clients.length) * 100)
+    synthese.sansContact90j = clients.filter((c) => {
+      const j = joursDepuis(c?.dernierContact ?? c?.last_contact ?? c?.dernier_contact)
+      return j !== null && j > 90            // seuil déjà utilisé par lib/priorities.js
+    }).length
+    // « À risque » = statut a_risque, celui du filtre /clients?filter=a_risque.
+    // Repli sur le niveau `risque` uniquement si le client n'expose aucun statut.
+    synthese.churnRisk = clients.filter((c) => {
+      const statut = statutDe(c)
+      if (statut) return statut === 'a_risque'
+      return String(c?.risque || '').toLowerCase() === 'élevé'
+    }).length
+    const scores = clients
+      .map((c) => nombreDe(c?.score ?? c?.score_risque))
+      .filter((v) => v !== null)
+    // Même définition que le back : health_score = moyenne des scores clients.
+    if (scores.length > 0) {
+      synthese.scoreMoyenClients = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    }
+  }
+
+  return synthese
+}
+
+/* Alertes : seuls les compteurs dérivables des données réelles sont calculés
+   (renouvellements, échéances). Les intitulés nominatifs et le devis ne sont
+   dérivables d'aucune donnée chargée : ils restent tels quels. */
+const alertsPour = ({ sansRenouvellement, echeancesProches }) => [
   { id: 1, level: 'danger',  title: 'Leroy Marie — 52 jours sans contact', desc: 'Risque de perte estimé à 80%', cta: 'Préparer relance', to: '/relances' },
-  { id: 2, level: 'warning', title: '14 contrats sans renouvellement', desc: 'Échéance dépassée — action urgente', cta: 'Voir contrats', to: '/contrats' },
+  { id: 2, level: 'warning', title: `${sansRenouvellement} contrats sans renouvellement`, desc: 'Échéance dépassée — action urgente', cta: 'Voir contrats', to: '/contrats' },
   { id: 3, level: 'warning', title: 'Devis #247 sans réponse', desc: 'Karim B. — 23 jours sans relance', cta: 'Relancer', to: '/devis' },
   { id: 4, level: 'info',    title: 'Forte concentration RC Pro', desc: 'Diversification à améliorer (3 branches dominantes)', cta: 'Voir analytics', to: '/analytics' },
-  { id: 5, level: 'info',    title: '18 échéances < 30 jours', desc: 'Pic de renouvellements à anticiper', cta: 'Préparer', to: '/contrats' },
+  { id: 5, level: 'info',    title: `${echeancesProches} échéances < 30 jours`, desc: 'Pic de renouvellements à anticiper', cta: 'Préparer', to: '/contrats' },
 ]
 
-const RECOS = [
+/* Recommandations : même règle — seuls les compteurs dérivables sont calculés.
+   Le croisement « Auto sans Prévoyance » et la comparaison marché MRH
+   supposent une nomenclature produits et un référentiel externes absents
+   des données chargées : ils restent tels quels. */
+const recosPour = ({ sansContact90j }) => [
   { id: 1, title: 'Cross-sell Prévoyance', desc: '12 clients Auto sans Prévoyance. Potentiel estimé : 8 400 €/an.', cta: 'Lancer campagne', to: '/devis' },
-  { id: 2, title: 'Relance silencieux',    desc: '27 clients silencieux > 90j. Plan d\'appels priorisé prêt.',     cta: 'Voir le plan',    to: '/relances' },
-  { id: 3, title: 'Optimiser MRH',         desc: '6 contrats MRH au-dessus du marché. Comparer compagnies.',       cta: 'Comparer',         to: '/comparateur' },
+  { id: 2, title: 'Relance silencieux',    desc: `${sansContact90j} clients silencieux > 90j. Plan d'appels priorisé prêt.`, cta: 'Voir le plan', to: '/relances' },
+  { id: 3, title: 'Optimiser MRH',         desc: '6 contrats MRH au-dessus du marché. Comparer compagnies.', cta: 'Comparer', to: '/comparateur' },
 ]
 
 const PRODUITS = [
@@ -177,6 +286,8 @@ const ALERT_STYLE = {
 export default function SantePortefeuille() {
   const navigate = useNavigate()
   const [data, setData] = useState(DEMO)
+  // Score renvoyé par /portfolio/health-score : il prime sur le calcul local.
+  const scoreApi = useRef(null)
 
   useEffect(() => {
     let cancel = false
@@ -186,9 +297,10 @@ export default function SantePortefeuille() {
       const scoreRaw = r.score ?? r.health_score ?? null
       const score = typeof scoreRaw === 'number' ? scoreRaw : null
       if (score !== null) {
+        scoreApi.current = Math.round(score)
         setData(prev => ({
           ...prev,
-          score: Math.round(score),
+          score: scoreApi.current,
           totalClients: r.clients_count || prev.totalClients,
           totalContrats: r.contracts_count || prev.totalContrats,
         }))
@@ -196,6 +308,34 @@ export default function SantePortefeuille() {
     }).catch(() => {})
     return () => { cancel = true }
   }, [])
+
+  // Synthèse alimentée par les données réelles (contrats + clients).
+  // Si la réponse est vide ou en erreur, les constantes DEMO restent affichées.
+  useEffect(() => {
+    let annule = false
+    Promise.all([
+      api.get('/contrats').catch(() => null),
+      api.get('/clients').catch(() => null),
+    ]).then(([resContrats, resClients]) => {
+      if (annule) return
+      const contrats = listeDe(resContrats?.data, ['contrats', 'contracts'])
+      const clients = listeDe(resClients?.data, ['clients'])
+      const synthese = calculerSynthese(contrats, clients)
+      if (!synthese) return
+      setData(prev => {
+        const { scoreMoyenClients, ...valeurs } = synthese
+        const suivant = { ...prev, ...valeurs }
+        if (scoreApi.current === null && scoreMoyenClients !== undefined) {
+          suivant.score = scoreMoyenClients
+        }
+        return suivant
+      })
+    }).catch(() => {})
+    return () => { annule = true }
+  }, [])
+
+  const alertes = alertsPour(data)
+  const recos = recosPour(data)
 
   const scoreColor = data.score >= 80 ? T.success : data.score >= 65 ? T.cyan : data.score >= 45 ? T.warning : T.danger
   const scoreLabel = data.score >= 85 ? 'Excellent' : data.score >= 70 ? 'Bon' : data.score >= 50 ? 'À surveiller' : 'Critique'
@@ -287,11 +427,11 @@ export default function SantePortefeuille() {
               <AlertTriangle size={14} color={T.warning} />
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Alertes actives</h3>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: 'rgba(245,158,11,0.15)', color: T.warning }}>
-                {ALERTS.length}
+                {alertes.length}
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ALERTS.map(a => {
+              {alertes.map(a => {
                 const st = ALERT_STYLE[a.level] || ALERT_STYLE.info
                 return (
                   <div key={a.id} onClick={() => navigate(a.to)} style={{
@@ -325,11 +465,11 @@ export default function SantePortefeuille() {
               <Sparkles size={14} color={T.ark} />
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Recommandations ARK</h3>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: T.arkBg, color: T.ark }}>
-                {RECOS.length}
+                {recos.length}
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {RECOS.map(r => (
+              {recos.map(r => (
                 <div key={r.id} onClick={() => navigate(r.to)} style={{
                   padding: 12, borderRadius: 10,
                   background: 'rgba(255,255,255,0.03)',
