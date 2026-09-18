@@ -33,6 +33,18 @@ const PRIORITE_STYLE = {
   basse: { bg: 'rgba(100,116,139,0.08)', text: '#9CA3AF', label: 'Basse' },
 }
 
+
+// Bornes de date DYNAMIQUES. Elles étaient figées au 11/05/2026 : toute tâche
+// datée d'un autre jour disparaissait des filtres et des compteurs, y compris
+// les vraies tâches du cabinet. Calculées à chaque rendu.
+const AUJOURDHUI_ISO = new Date().toISOString().slice(0, 10)
+const FIN_SEMAINE_ISO = (() => {
+  const d = new Date()
+  const reste = (7 - d.getDay()) % 7
+  d.setDate(d.getDate() + (d.getDay() === 0 ? 0 : reste))
+  return d.toISOString().slice(0, 10)
+})()
+
 const FILTERS = ['Toutes', 'En retard', 'Aujourd\'hui', 'Cette semaine', 'Priorité haute', 'ARK', 'Client', 'Contrat', 'Devis', 'Terminées']
 
 function KpiCard({ icon: Icon, title, value, accent }) {
@@ -76,9 +88,9 @@ export default function Taches() {
       const q = search.toLowerCase()
       list = list.filter(t => t.titre.toLowerCase().includes(q) || t.client.toLowerCase().includes(q))
     }
-    if (filter === 'En retard') list = list.filter(t => new Date(t.date) < new Date('2026-05-11'))
-    else if (filter === 'Aujourd\'hui') list = list.filter(t => t.date === '2026-05-11')
-    else if (filter === 'Cette semaine') list = list.filter(t => new Date(t.date) <= new Date('2026-05-17'))
+    if (filter === 'En retard') list = list.filter(t => new Date(t.date) < new Date(AUJOURDHUI_ISO))
+    else if (filter === 'Aujourd\'hui') list = list.filter(t => t.date === AUJOURDHUI_ISO)
+    else if (filter === 'Cette semaine') list = list.filter(t => new Date(t.date) <= new Date(FIN_SEMAINE_ISO))
     else if (filter === 'Priorité haute') list = list.filter(t => t.priorite === 'haute')
     else if (filter === 'ARK') list = list.filter(t => t.source === 'ARK')
     else if (filter === 'Terminées') list = []
@@ -86,9 +98,9 @@ export default function Taches() {
   }, [taches, search, filter])
 
   const stats = useMemo(() => ({
-    retard: taches.filter(t => new Date(t.date) < new Date('2026-05-11')).length,
-    aujourdhui: taches.filter(t => t.date === '2026-05-11').length,
-    semaine: taches.filter(t => new Date(t.date) <= new Date('2026-05-17')).length,
+    retard: taches.filter(t => new Date(t.date) < new Date(AUJOURDHUI_ISO)).length,
+    aujourdhui: taches.filter(t => t.date === AUJOURDHUI_ISO).length,
+    semaine: taches.filter(t => new Date(t.date) <= new Date(FIN_SEMAINE_ISO)).length,
     ark: taches.filter(t => t.source === 'ARK').length,
     terminees: 22,
   }), [taches])

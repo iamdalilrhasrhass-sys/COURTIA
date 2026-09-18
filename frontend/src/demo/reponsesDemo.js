@@ -492,6 +492,12 @@ if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] =
       date_echeance: dateCourte(c.echeance), echeance: dateCourte(c.echeance),
       statut: c.statut, status: c.statut,
       client_id: c.clientId, numero: c.numero,
+      // Champs lus par pages/Contrats.jsx (client en CHAÎNE, jours, risque, ark)
+      client: c.nomClient || (c.client ? c.client.nom : '') || '',
+      produit: c.type,
+      jours: c.echeance,
+      risque: c.client ? c.client.score : 70,
+      ark: c.echeance <= 30 ? `Échéance dans ${c.echeance} jours.` : null,
     }))
     const arr = liste.slice()
     arr.data = arr; arr.contrats = arr; arr.contracts = arr; arr.total = arr.length
@@ -508,8 +514,15 @@ if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] =
     const clientId = Number(params.clientId || params.client_id)
     const source = clientId ? TACHES.filter((t) => t.clientId === clientId) : TACHES
     // Champs bruts attendus par le moteur de priorités local (src/lib/priorities.js)
+    // `client` est une CHAÎNE : pages/Taches.jsx l'affiche directement. Un objet
+    // ferait planter React (« Objects are not valid as a React child »).
     const liste = source.map((t) => ({
       ...t,
+      client: t.nomClient || (t.client ? t.client.nom : '') || '',
+      contexte: t.description,
+      date: t.dateEcheance,
+      source: t.type === 'relance' || t.type === 'document' ? 'ARK' : 'Manuel',
+      ark: t.priorite === 'haute' ? 'Action prioritaire selon ARK.' : null,
       client_id: t.clientId,
       date_echeance: t.dateEcheance,
       created_at: t.createdAt,

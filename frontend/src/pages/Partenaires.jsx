@@ -1,4 +1,6 @@
+import { useState, useEffect, useCallback } from 'react'
 import { HeartHandshake, Building, Euro, TrendingUp, Zap, ArrowUpRight, Globe } from 'lucide-react'
+import api from '../api'
 import PartnerSolarSystem from '../components/widgets/PartnerSolarSystem'
 
 const DEMO_PARTENAIRES = [
@@ -16,7 +18,113 @@ const DEMO_APPORTEURS = [
   { id: 103, nom: 'Garage Auto Prestige', type: 'Apporteur', clients: 6, commission: 2800, tendance: '+18%' },
 ]
 
+/* ─── Adaptation de /partners ────────────────────────────────────────────────
+   GET /partners (backend/src/routes/partners.js) répond
+   { success, partners: [...] } ; chaque partenaire porte :
+   id, user_id, nom, categorie, type_partenaire, contact_nom, contact_email,
+   contact_telephone, produit_principal, code_courtage, commission (VARCHAR
+   libre côté base), extranet_url, extranet_login, statut, documents_envoyes,
+   notes, date_contact, date_relance, priorite, vague, volume_potentiel,
+   created_at, updated_at.
+
+   L'écran, lui, affiche DEUX listes distinctes : « Compagnies » (nom, type,
+   contrats, commission, tendance, logo) et « Apporteurs d'affaires » (nom,
+   type, clients, commission, tendance). Le modèle backend ne porte pas de
+   drapeau « apporteur » : on répartit donc sur categorie / type_partenaire.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* PARTENAIRES-ADAPT-DEBUT */
+
+/* Porteurs de risque → liste « Compagnies ». */
+const CATEGORIES_COMPAGNIE = ['compagnie', 'mutuelle', 'prevoyance', 'niche']
+/* Intermédiaires qui apportent les affaires → liste « Apporteurs ». */
+const CATEGORIES_APPORTEUR = ['grossiste', 'mga', 'mgas']
+
+/** Nombre exploitable uniquement si la valeur est un nombre nu.
+ *  `commission` est un VARCHAR libre en base (« 12 % », « 1 200 € »…) : une
+ *  valeur non numérique reste INCONNUE (0), elle n'est jamais devinée
+ *  et n'alimente donc pas l'affichage en euros. */
+const nombre = (v) => {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0
+  const texte = String(v ?? '').trim()
+  if (!/^-?\d+([.,]\d+)?$/.test(texte)) return 0
+  const n = Number(texte.replace(',', '.'))
+  return Number.isFinite(n) ? n : 0
+}
+
+const nombreContrats = (p) => nombre(p?.contrats ?? p?.nb_contrats ?? p?.contracts_count)
+const nombreClients = (p) => nombre(p?.clients ?? p?.nb_clients ?? p?.clients_count)
+
+/** Initiales affichées faute de logo (2 lettres maximum). */
+const initiales = (nom) => String(nom || '')
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((mot) => mot[0])
+  .join('')
+  .toUpperCase() || '—'
+
+/** Vrai si le partenaire est un intermédiaire (apporteur) plutôt qu'un porteur
+ *  de risque. Un partenaire sans categorie ni type connus reste côté
+ *  « Compagnies » : aucune donnée n'est perdue. */
+const estApporteur = (p) => {
+  const categorie = String(p?.categorie || '').toLowerCase()
+  const type = String(p?.type_partenaire || '').toLowerCase()
+  if (CATEGORIES_APPORTEUR.includes(categorie) || CATEGORIES_APPORTEUR.includes(type)) return true
+  if (CATEGORIES_COMPAGNIE.includes(categorie) || type === 'porteur_risque') return false
+  return false
+}
+
+/** Partenaire API → ligne « Compagnie » (champs lus par le JSX). */
+const versCompagnie = (p) => ({
+  id: p.id,
+  nom: p.nom,
+  type: 'Compagnie',
+  contrats: nombreContrats(p),
+  commission: nombre(p.commission),
+  tendance: String(p.tendance ?? ''),
+  logo: initiales(p.nom),
+})
+
+/** Partenaire API → ligne « Apporteur » (champs lus par le JSX). */
+const versApporteur = (p) => ({
+  id: p.id,
+  nom: p.nom,
+  type: 'Apporteur',
+  clients: nombreClients(p),
+  commission: nombre(p.commission),
+  tendance: String(p.tendance ?? ''),
+})
+
+/** Répartit les partenaires de l'API dans les deux listes de l'écran. */
+const repartirPartenaires = (partenaires) => partenaires.reduce((acc, p) => {
+  if (estApporteur(p)) acc.apporteurs.push(versApporteur(p))
+  else acc.compagnies.push(versCompagnie(p))
+  return acc
+}, { compagnies: [], apporteurs: [] })
+/* PARTENAIRES-ADAPT-FIN */
+
 export default function Partenaires() {
+  // Les constantes DEMO_* restent la valeur INITIALE : si /partners ne répond
+  // rien (ou échoue), l'écran garde exactement son rendu de démonstration.
+  const [partenaires, setPartenaires] = useState(DEMO_PARTENAIRES)
+  const [apporteurs, setApporteurs] = useState(DEMO_APPORTEURS)
+
+  const chargerPartenaires = useCallback(async () => {
+    try {
+      const { data } = await api.get('/partners')
+      const liste = Array.isArray(data?.partners)
+        ? data.partners
+        : (Array.isArray(data?.data) ? data.data : [])
+      if (liste.length === 0) return
+      const { compagnies, apporteurs: apporteursApi } = repartirPartenaires(liste)
+      if (compagnies.length > 0) setPartenaires(compagnies)
+      if (apporteursApi.length > 0) setApporteurs(apporteursApi)
+    } catch { /* repli : les constantes DEMO_* sont conservées */ }
+  }, [])
+
+  useEffect(() => { chargerPartenaires() }, [chargerPartenaires])
+
   return (
     <div style={{ padding: 32, minHeight: '100vh' }}>
       <div style={{ marginBottom: 28 }}>
@@ -49,7 +157,7 @@ export default function Partenaires() {
       <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>Écosystème partenaires</h2>
         <PartnerSolarSystem
-          partners={DEMO_PARTENAIRES.map(p => ({
+          partners={partenaires.map(p => ({
             id: String(p.id), name: p.nom,
             status: 'connected', compatibility: Math.floor(50 + Math.random() * 45), volume: Math.floor(20 + (p.contrats / 34) * 60),
             branch: p.type
@@ -67,7 +175,7 @@ export default function Partenaires() {
           </button>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-          {DEMO_PARTENAIRES.map(c => (
+          {partenaires.map(c => (
             <div key={c.id} style={{
               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 12, padding: 18, minWidth: 220, flex: '1 1 auto',
@@ -132,7 +240,7 @@ export default function Partenaires() {
               </tr>
             </thead>
             <tbody>
-              {DEMO_APPORTEURS.map(a => (
+              {apporteurs.map(a => (
                 <tr key={a.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{a.nom}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{a.type}</td>

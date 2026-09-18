@@ -70,6 +70,118 @@ const DEMO_BRIEF = {
   ]
 }
 
+/* ─── Adaptateur : moteur de priorités → forme lue par cet écran ─────────────
+   src/lib/priorities.js renvoie { critiques, importantes, suggerees } — des
+   éléments de la forme :
+     { id, type, clientId, clientNom, titre, sousTitre,
+       cta:{ label, action, target }, score_urgence }
+   avec type ∈ { echeance_critique, risque_critique, completude_critique,
+                 echeance_importante, relance_fidelite, opportunite,
+                 echeance_suggeree, valeur_elevee }.
+
+   Cet écran, lui, lit une AUTRE forme :
+     { urgentes, aFaire, relances, totalActions, score, echeances, devis,
+       silencieux, opportunites, conformite, activeClients, activeContracts }
+   où chaque élément porte { client, type, sujet, raison, impact, action }.
+
+   L'adaptateur ci-dessous fait la traduction. Ni le moteur ni le JSX ne sont
+   modifiés : on alimente simplement la forme attendue à l'écran.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ADAPTATEUR-DEBUT */
+
+/** type du moteur → type compris par le JSX de l'écran.
+ *  Le JSX branche explicitement sur 'echeance' | 'silence' | 'devis' |
+ *  'opportunite' ; toute autre valeur tombe sur sa branche neutre (Sparkles),
+ *  utilisée ici pour les points de conformité. */
+const TYPE_MOTEUR_VERS_ECRAN = {
+  echeance_critique: 'echeance',
+  echeance_importante: 'echeance',
+  echeance_suggeree: 'echeance',
+  risque_critique: 'silence',        // profil à risque → à recontacter
+  relance_fidelite: 'silence',       // aucun contact depuis N jours
+  opportunite: 'opportunite',        // cross-sell
+  valeur_elevee: 'opportunite',      // client mono-contrat à fort potentiel
+  completude_critique: 'document',   // dossier incomplet → point de conformité
+}
+
+/** Une réponse d'API peut être un tableau nu ou une enveloppe. */
+function listeApi(data) {
+  if (Array.isArray(data)) return data
+  if (Array.isArray(data?.data)) return data.data
+  if (Array.isArray(data?.clients)) return data.clients
+  if (Array.isArray(data?.contrats)) return data.contrats
+  if (Array.isArray(data?.contracts)) return data.contracts
+  if (Array.isArray(data?.taches)) return data.taches
+  return []
+}
+
+/** Contrats d'un client — le moteur comme l'API nomment le champ `client_id`. */
+function contratsDuClient(contrats, clientId) {
+  return (contrats || []).filter(c => String(c.client_id ?? c.clientId) === String(clientId))
+}
+
+/** Impact chiffré quand il est calculable depuis les contrats réels (somme des
+ *  primes annuelles du client) ; à défaut, l'urgence brute du moteur. */
+function impactDuMoteur(p, contrats) {
+  const prime = contratsDuClient(contrats, p.clientId)
+    .reduce((total, c) => total + (Number(c.prime_annuelle ?? c.prime) || 0), 0)
+  if (prime > 0) return `${fmtEur(prime)} de prime annuelle`
+  return `Urgence ${p.score_urgence}/100`
+}
+
+/** Priorité du moteur → élément affiché par le JSX. */
+function elementDuMoteur(p, contexte) {
+  const type = TYPE_MOTEUR_VERS_ECRAN[p.type] || 'opportunite'
+  return {
+    client: p.clientNom || 'Client',
+    type,
+    sujet: [p.titre, p.sousTitre].filter(Boolean).join(' — '),
+    raison: `${p.sousTitre || p.titre} — priorité calculée localement par ARK (score ${p.score_urgence}/100).`,
+    impact: impactDuMoteur(p, contexte.contrats),
+    action: p.cta?.label || 'Contacter',
+  }
+}
+
+/** Résultat de computeDailyPriorities → forme attendue par MorningBrief.
+ *  `contexte` ({ clients, contrats }) ne sert qu'aux compteurs de portefeuille. */
+function adapterPriorites(resultat, contexte = {}) {
+  const { clients = [], contrats = [] } = contexte
+  const ctx = { clients, contrats }
+
+  const critiques = resultat?.critiques || []
+  const importantes = resultat?.importantes || []
+  const suggerees = resultat?.suggerees || []
+
+  const urgentes = critiques.map(p => elementDuMoteur(p, ctx))
+  const aFaire = importantes.map(p => elementDuMoteur(p, ctx))
+  const relances = suggerees.map(p => elementDuMoteur(p, ctx))
+  const tous = [...urgentes, ...aFaire, ...relances]
+
+  const compter = (type) => tous.filter(x => x.type === type).length
+  const urgenceMoyenne = tous.length
+    ? [...critiques, ...importantes, ...suggerees]
+      .reduce((somme, p) => somme + (Number(p.score_urgence) || 0), 0) / tous.length
+    : 0
+
+  return {
+    urgentes,
+    aFaire,
+    relances,
+    totalActions: tous.length,
+    // Score santé DÉRIVÉ du moteur : 100 − urgence moyenne des priorités.
+    score: tous.length ? Math.max(0, Math.min(100, Math.round(100 - urgenceMoyenne))) : 0,
+    echeances: compter('echeance'),
+    devis: compter('devis'),          // le moteur local n'émet pas de devis : 0
+    silencieux: compter('silence'),
+    opportunites: compter('opportunite'),
+    conformite: compter('document'),
+    activeClients: clients.length,
+    activeContracts: contrats.length,
+  }
+}
+/* ADAPTATEUR-FIN */
+
 export default function MorningBrief() {
   const navigate = useNavigate()
   const [user, setUser] = useState({ first_name: '', last_name: '' })
@@ -85,13 +197,20 @@ export default function MorningBrief() {
       ])
       setUser(userRes.data || {})
 
-      // Try to compute real priorities, fall back to demo
+      // Priorités réelles : moteur local (src/lib/priorities.js) → adaptateur.
+      // computeDailyPriorities attend (clients, contrats, taches) : les trois
+      // jeux sont chargés ici, l'adaptateur traduit son retour pour l'écran.
       try {
-        const [clientsRes, tasksRes] = await Promise.all([
+        const [clientsRes, contratsRes, tasksRes] = await Promise.all([
           api.get('/clients?limit=300').catch(() => ({ data: [] })),
+          api.get('/contrats').catch(() => ({ data: [] })),
           api.get('/taches').catch(() => ({ data: [] })),
         ])
-        const realPriorities = computeDailyPriorities(clientsRes.data, tasksRes.data)
+        const clients = listeApi(clientsRes.data)
+        const contrats = listeApi(contratsRes.data)
+        const taches = listeApi(tasksRes.data)
+        const moteur = computeDailyPriorities(clients, contrats, taches)
+        const realPriorities = adapterPriorites(moteur, { clients, contrats })
         if (realPriorities && realPriorities.totalActions > 0) {
           setPriorities(realPriorities)
         }
@@ -111,7 +230,7 @@ export default function MorningBrief() {
     </div>
   )
 
-  const hasPriorities = priorities.urgentes?.length > 0 || priorities.aFaire?.length > 0
+  const hasPriorities = priorities.urgentes?.length > 0 || priorities.aFaire?.length > 0 || priorities.relances?.length > 0
 
   if (!hasPriorities) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.bg }}>
