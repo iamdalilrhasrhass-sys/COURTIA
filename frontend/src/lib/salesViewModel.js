@@ -30,6 +30,7 @@ export const STATUTS = Object.freeze({
 })
 
 export const LIBELLES_FUNNEL = Object.freeze({
+  trafic_organique: 'Trafic organique',
   visiteurs_mesurables: 'Visiteurs mesurables',
   cta: 'CTA',
   demandes: 'Demandes',

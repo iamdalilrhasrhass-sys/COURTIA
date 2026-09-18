@@ -47,6 +47,7 @@ import { inject, track } from '@vercel/analytics'
  *  202 sans rien enregistrer : un échec silencieux est le pire des cas). */
 export const EVENEMENTS = Object.freeze([
   'site_visit',
+  'organic_visit',
   'pricing_view',
   'demo_cta_click',
   'demo_form_view',
@@ -200,6 +201,80 @@ function attribution() {
     return garde
   } catch {
     return {}
+  }
+}
+
+/* ------------------------------------------------------------ origine trafic */
+
+/**
+ * Nom d'hôte référent, en minuscules, SANS masquer les erreurs de lecture.
+ * `hoteReferent()` avale l'exception et renvoie null : utiliser cette variante
+ * ici permet de distinguer « aucun référent » (=> direct) de « référent
+ * illisible » (=> origine inconnue). Un test a montré que sans cela, une
+ * lecture en échec était rapportée à tort comme du trafic direct.
+ */
+function hoteReferentBrut() {
+  const ref = document.referrer        // une exception ici remonte volontairement
+  if (!ref) return ''
+  try {
+    return (new URL(ref).hostname || '').toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+/** Moteurs de recherche reconnus à partir du seul nom d'hôte référent.
+ *  Aucune donnée personnelle : on ne lit que le domaine référent. */
+const MOTEURS_ORGANIQUES = [
+  ['google.', 'google'], ['bing.', 'bing'], ['duckduckgo', 'duckduckgo'],
+  ['search.brave', 'brave'], ['ecosia.', 'ecosia'], ['qwant.', 'qwant'],
+  ['startpage.', 'startpage'], ['mojeek.', 'mojeek'], ['searx', 'searx'],
+  ['yahoo.', 'yahoo'], ['aol.', 'aol'], ['baidu.', 'baidu'],
+  ['yandex.', 'yandex'], ['swisscows', 'swisscows'], ['search.ch', 'search.ch'],
+  ['bluewin', 'bluewin'], ['web.de', 'web.de'], ['t-online', 't-online'],
+]
+
+const MEDIAS_PAYANTS = new Set(['cpc', 'ppc', 'paid', 'paidsearch', 'ads',
+                                'display', 'banner', 'retargeting'])
+
+/**
+ * Classe l'entrée sur le site. Le but est de pouvoir SÉPARER l'organique du
+ * payant et du direct — sans quoi « visite » ne veut rien dire pour l'acquisition.
+ *
+ * Règles, dans l'ordre :
+ *   - utm_medium payant      -> 'payant'
+ *   - utm_source présent     -> 'campagne'
+ *   - référent = moteur      -> 'organique' (+ nom du moteur)
+ *   - référent externe autre -> 'referent'
+ *   - aucun référent, aucun utm -> 'direct'
+ *
+ * MESURE du 18/09/2026 : aucun événement ne distinguait l'origine du trafic.
+ * Le tunnel commençait à « site_visit » et ne pouvait donc pas répondre à
+ * « d'où viennent les visiteurs ». `organic_visit` comble ce premier maillon.
+ * `direct` n'est PAS compté comme organique : c'est une mesure honnête.
+ */
+export function origineTrafic() {
+  try {
+    const utm = attribution()
+    const medium = (utm.utm_medium || '').toLowerCase()
+    if (medium && MEDIAS_PAYANTS.has(medium)) {
+      return { origine: 'payant', moteur: null, utm_present: true }
+    }
+    if (utm.utm_source) {
+      return { origine: 'campagne', moteur: null, utm_present: true }
+    }
+    const hote = hoteReferentBrut()
+    if (hote) {
+      for (const [motif, nom] of MOTEURS_ORGANIQUES) {
+        if (hote.includes(motif)) {
+          return { origine: 'organique', moteur: nom, utm_present: false }
+        }
+      }
+      return { origine: 'referent', moteur: hote.slice(0, 60), utm_present: false }
+    }
+    return { origine: 'direct', moteur: null, utm_present: false }
+  } catch {
+    return { origine: 'inconnu', moteur: null, utm_present: false }
   }
 }
 

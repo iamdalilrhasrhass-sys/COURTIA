@@ -6,6 +6,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 import App from './App'
 import { estModeDemo, installerDemo } from './demo/modeDemo'
 import { evenement } from './lib/analytics'
+import { origineTrafic } from './lib/analytics'
 import { installerMesureCta } from './lib/mesureCta'
 import { demarrerSuiviDemo } from './lib/suiviDemo'
 import './index.css'
@@ -72,6 +73,14 @@ if (!container) {
    mesure installée elle-même. */
 try {
   evenement('site_visit')
+  /* Premier maillon du tunnel d'acquisition : d'où vient la visite.
+     `organic_visit` n'est émis QUE si l'origine est réellement organique
+     (référent = moteur de recherche). Direct, payant et référent externe ne
+     sont pas maquillés en organique : ils ne sont simplement pas comptés ici. */
+  const origine = origineTrafic()
+  if (origine.origine === 'organique') {
+    evenement('organic_visit', { moteur: origine.moteur || 'inconnu' })
+  }
 } catch {
   /* la mesure ne doit jamais empêcher l'application de démarrer */
 }
