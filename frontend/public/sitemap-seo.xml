@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/crm-courtier-assurance</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/ia-courtier-assurance</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/gestion-portefeuille-courtier</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/relance-client-assurance</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-gestion-cabinet-courtage</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/comparateur-assurance-courtier</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/alternative-courtigo</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/alternative-oggo-data</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/alternative-lya</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -93,7 +86,6 @@
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-niort</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-chambery</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-beauvais</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-cholet</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-vannes</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-saint-malo</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-assurance-frejus</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -569,11 +561,6 @@
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-emprunteur-beauvais</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-prevoyance-beauvais</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-mutuelle-beauvais</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-sante-cholet</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-iard-cholet</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-emprunteur-cholet</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-prevoyance-cholet</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://courtiark.fr/fr/logiciel-courtier-mutuelle-cholet</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-sante-vannes</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-iard-vannes</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/logiciel-courtier-emprunteur-vannes</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -1109,4 +1096,5 @@
   <url><loc>https://courtiark.fr/fr/guide/audit-acpr</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/guide/sanctions-acpr</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://courtiark.fr/fr/guide/conformite-2026</loc><lastmod>2026-06-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <!-- 2026-09-18 (audit SEO) : retrait de 7 <loc> sans page servie (ces URL tombent sur le fallback SPA, donc soft 404) et de 6 <loc> dupliques. Aucune page n'a ete supprimee. Les 1 074 pages de ville (1 096 pages /fr au total) restent declarees : leur arbitrage canonical/noindex n'est pas execute. -->
 </urlset>
