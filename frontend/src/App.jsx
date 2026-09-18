@@ -13,6 +13,8 @@ import VibePage from './components/vibe/VibePage'
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
+// Visite guidée publique — chargée à la demande pour ne pas alourdir la landing.
+const DemoExperience = lazy(() => import('./demo/DemoExperience'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const MorningBrief = lazy(() => import('./pages/MorningBrief'))
 const Clients = lazy(() => import('./pages/Clients'))
@@ -124,7 +126,7 @@ export default function App() {
         <Route path="/design-system" element={<DesignSystem />} />
         <Route path="/vibe" element={<VibePage />} />
         <Route path="/fonctionnalites" element={<LandingPublic />} />
-        <Route path="/demo" element={<LandingPublic />} />
+        <Route path="/demo" element={<DemoExperience />} />
         <Route path="/contact" element={<LandingPublic />} />
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<Onboarding />} />
