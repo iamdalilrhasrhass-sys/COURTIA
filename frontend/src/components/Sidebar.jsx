@@ -7,7 +7,7 @@ import {
   Activity, ChevronRight, Sparkles, HelpCircle, GraduationCap,
   Sunrise, BarChart3, BarChart2, FileSignature, FolderOpen, Phone,
   Briefcase, CalendarDays, Target, Search, Globe, Users2, Wallet,
-  Bot, Building2, CreditCard, Database, BookOpen, Brain,
+  Bot, Building2, CreditCard, Database, BookOpen, Brain, Flame,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
@@ -334,6 +334,9 @@ export default function Sidebar() {
 
         {isAdmin && (
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+            {/* ACQUISITION COURTIA — leads réellement captés (service de capture).
+                Administrateurs uniquement, comme la route /acquisition elle-même. */}
+            {renderItem({ path: '/acquisition', label: 'Acquisition', icon: Flame })}
             {renderItem({ path: '/admin', label: 'Admin', icon: Shield })}
           </div>
         )}
