@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Sitemap du cluster suisse (pages statiques servies sous /ch, en fr-CH).
-     Trois URL seulement : chaque page doit porter une valeur spécifique
-     vérifiable (cadre LSA/FINMA, grille CHF réelle). Aucune page cantonale ni
+     Dix URL : le hub, deux pages documentaires (cadre LSA/FINMA, grille CHF
+     réelle) et sept pages commerciales, chacune portant une intention
+     distincte et un contenu produit vérifiable. Aucune page cantonale ni
      communale n'est créée : nous ne disposons pas de données cantonales
      vérifiables (nombre d'intermédiaires enregistrés par canton). -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -19,6 +20,48 @@
   </url>
   <url>
     <loc>https://courtiark.fr/ch/tarifs-logiciel-courtier-chf</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/crm-courtier-assurance-suisse</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/gestion-portefeuille-assurance-suisse</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/gestion-commissions-courtier-assurance-suisse</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/relances-courtier-assurance-suisse</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/logiciel-prospection-courtier-assurance-suisse</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/logiciel-devis-courtier-assurance-suisse</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/ch/ia-courtier-assurance-suisse</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
