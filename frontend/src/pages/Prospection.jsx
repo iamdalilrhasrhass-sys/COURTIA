@@ -2,14 +2,11 @@ import { useState, useEffect } from 'react'
 import { UserPlus, Target, MapPin, TrendingUp, Zap, Search, CalendarDays } from 'lucide-react'
 import api from '../api'
 
-const DEMO_PROSPECTS = [
-  { id: 1, nom: 'Entreprise Lambert', secteur: 'BTP', ville: 'Lyon', potentiel: 18000, statut: 'contacte', date: '03/05/2026' },
-  { id: 2, nom: 'Clinique Vétérinaire du Parc', secteur: 'Santé', ville: 'Paris', potentiel: 12400, statut: 'qualifie', date: '01/05/2026' },
-  { id: 3, nom: 'SARL Dupuis Transport', secteur: 'Transport', ville: 'Marseille', potentiel: 28500, statut: 'rdv', date: '28/04/2026' },
-  { id: 4, nom: 'Restaurant Le Gourmet', secteur: 'Restauration', ville: 'Bordeaux', potentiel: 4200, statut: 'contacte', date: '25/04/2026' },
-  { id: 5, nom: 'Agence Web DigitalPro', secteur: 'Tech', ville: 'Nantes', potentiel: 3800, statut: 'nouveau', date: '05/05/2026' },
-  { id: 6, nom: 'Cabinet Dentaire Sourire', secteur: 'Santé', ville: 'Lille', potentiel: 6400, statut: 'qualifie', date: '22/04/2026' },
-]
+/* Aucun jeu de données d'exemple : cet écran affichait six entreprises inventées
+   (Entreprise Lambert, Clinique Vétérinaire du Parc, SARL Dupuis Transport…)
+   dès que l'API ne répondait pas — ce qui est le cas en production, faute de
+   route backend /api/prospection. Un pipeline vide et une erreur explicite
+   valent mieux qu'un pipeline imaginaire. */
 
 const STATUT_STYLE = {
   nouveau:  { bg: 'rgba(59,130,246,0.10)', text: '#3B82F6' },
@@ -23,7 +20,8 @@ const STATUT_LABEL = {
 }
 
 export default function Prospection() {
-  const [prospects, setProspects] = useState(DEMO_PROSPECTS)
+  const [prospects, setProspects] = useState([])
+  const [erreur, setErreur] = useState(null)
 
   useEffect(() => {
     api.get('/prospection')
@@ -36,7 +34,10 @@ export default function Prospection() {
           : null
         if (Array.isArray(liste) && liste.length > 0) setProspects(liste)
       })
-      .catch(() => { /* erreur réseau/API : on garde les données de démonstration */ })
+      .catch(() => setErreur(
+        "Le module prospection n'est pas disponible : aucune donnée n'a pu être chargée. " +
+        "Aucun prospect n'est affiché tant que le chargement n'a pas abouti."
+      ))
   }, [])
 
   const totalPotentiel = prospects.reduce((s, p) => s + p.potentiel, 0)
@@ -53,8 +54,8 @@ export default function Prospection() {
         {[
           { label: 'Prospects', value: prospects.length, icon: UserPlus, accent: '#5B4DF5' },
           { label: 'Potentiel', value: `${(totalPotentiel / 1000).toFixed(0)}k €`, icon: TrendingUp, accent: '#22C55E' },
-          { label: 'RDV planifiés', value: 1, icon: CalendarDays, accent: '#F59E0B' },
-          { label: 'Taux de conversion', value: '22%', icon: Target, accent: '#3B82F6' },
+          { label: 'RDV planifiés', value: prospects.filter(p => String(p.statut || p.status || '').toLowerCase().includes('rdv')).length, icon: CalendarDays, accent: '#F59E0B' },
+          { label: 'Qualifiés', value: prospects.filter(p => ['qualifie', 'rdv'].includes(String(p.statut || p.status || '').toLowerCase())).length, icon: Target, accent: '#3B82F6' },
         ].map((kpi, i) => (
           <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -65,6 +66,26 @@ export default function Prospection() {
           </div>
         ))}
       </div>
+
+      {/* Aucune donnée inventée : on dit ce qui s'est passé */}
+      {erreur && (
+        <div role="alert" style={{
+          marginBottom: 16, padding: '10px 14px', borderRadius: 10,
+          background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.25)',
+          color: '#FCD34D', fontSize: 12,
+        }}>
+          {erreur}
+        </div>
+      )}
+      {!erreur && prospects.length === 0 && (
+        <div style={{
+          marginBottom: 16, padding: '10px 14px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+          color: '#9CA3AF', fontSize: 12,
+        }}>
+          Aucun prospect enregistré pour le moment.
+        </div>
+      )}
 
       {/* Barre de recherche + filtres */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>

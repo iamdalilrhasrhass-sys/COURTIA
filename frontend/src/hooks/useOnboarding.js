@@ -12,7 +12,11 @@ export default function useOnboarding() {
   const [error, setError] = useState(null);
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    /* Le jeton est écrit sous `courtia_token` à la connexion (pages/LoginPage.jsx)
+       et App.jsx accepte les deux clés. Lire seulement `token` produisait
+       « Authorization: Bearer undefined » → 401/403 systématique : progression
+       et badges n'étaient jamais affichés. */
+    const token = localStorage.getItem('courtia_token') || localStorage.getItem('token');
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',

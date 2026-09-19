@@ -25,7 +25,7 @@ const STEPS = [
     title: 'Analysez votre portefeuille avec ARK',
     description: 'Lancez une analyse ARK pour découvrir les insights de votre portefeuille',
     badge: { name: 'Analyste ARK', emoji: '📊' },
-    action: { label: 'Ouvrir ARK', route: '/v2/ark-watch' },
+    action: { label: 'Ouvrir ARK', route: '/sante-portefeuille' },
     color: '#22d3ee',
   },
   {
@@ -34,7 +34,7 @@ const STEPS = [
     title: 'Générez votre premier document',
     description: 'Utilisez ARK Compose pour créer un document DDA, IPID ou Devoir de Conseil',
     badge: { name: 'Maître des Docs', emoji: '📄' },
-    action: { label: 'Ouvrir Compose', route: '/v2/compose' },
+    action: { label: 'Ouvrir les documents', route: '/documents' },
     color: '#10b981',
   },
   {
@@ -43,7 +43,7 @@ const STEPS = [
     title: 'Activez ARK Watch',
     description: 'Configurez la surveillance proactive de votre portefeuille',
     badge: { name: 'Sentinelle', emoji: '🛡️' },
-    action: { label: 'Configurer Watch', route: '/v2/ark-watch' },
+    action: { label: 'Configurer ARK Watch', route: '/ark-intelligence' },
     color: '#f59e0b',
   },
   {
@@ -124,7 +124,7 @@ export default function OnboardingGamified() {
 
   const fetchProgress = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('courtia_token') || localStorage.getItem('token');
       const res = await fetch('/api/onboarding/gamified/progress', {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -141,7 +141,7 @@ export default function OnboardingGamified() {
 
   const autoCheck = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('courtia_token') || localStorage.getItem('token');
       const res = await fetch('/api/onboarding/gamified/auto-check', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -169,9 +169,18 @@ export default function OnboardingGamified() {
     navigate(step.action.route);
   };
 
-  const completedSteps = progress?.steps?.filter(s => s.completed).length || 0;
-  const totalSteps = STEPS.length;
-  const progressPercent = Math.round((completedSteps / totalSteps) * 100);
+  /* La progression vient du SERVEUR (summary renvoyé par
+     GET /api/onboarding/gamified/progress). La recalculer ici depuis la
+     constante locale STEPS créait deux sources de vérité pour un même chiffre :
+     toute étape créée côté serveur ou tout badge sans étape front affichait un
+     pourcentage faux. */
+  const completedSteps = Number.isFinite(progress?.summary?.completedSteps)
+    ? progress.summary.completedSteps
+    : (progress?.steps?.filter(s => s.completed).length || 0);
+  const totalSteps = progress?.summary?.totalSteps || STEPS.length;
+  const progressPercent = Number.isFinite(progress?.summary?.progressPercent)
+    ? progress.summary.progressPercent
+    : Math.round((completedSteps / totalSteps) * 100);
 
   if (loading) {
     return (

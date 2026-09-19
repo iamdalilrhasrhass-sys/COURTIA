@@ -1,7 +1,11 @@
 /* ============================================================================
    COURTIA — Démonstration : scénario de la visite guidée (9 chapitres)
    ----------------------------------------------------------------------------
-   UNE JOURNÉE AVEC COURTIA. 9 chapitres cliquables, 23 étapes, cible 2 min 30.
+   UNE JOURNÉE AVEC COURTIA. 9 chapitres cliquables, 25 étapes.
+   Durée théorique : dureeTheorique() (somme des `tenue` + 1 900 ms de
+   déplacement par étape) — mesurée à 136 s, en dessous de la cible de
+   2 min 30 : l'ancien en-tête annonçait « 23 étapes, cible 2 min 30 », deux
+   chiffres qui n'étaient plus vrais.
 
    ARK est le FIL ROUGE : présent dans le cockpit, l'acquisition, la conversion,
    le suivi et le pilotage — pas seulement sur une page.
