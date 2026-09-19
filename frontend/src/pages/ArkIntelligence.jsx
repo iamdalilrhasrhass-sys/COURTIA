@@ -24,7 +24,13 @@ const T = {
   cardBorder: 'rgba(255,255,255,0.06)',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0)
+// CORRECTION 2026-09-19 : `format(v || 0)` transformait « inconnu » en « 0 € ».
+// Un montant absent s'affiche desormais « — », jamais zero.
+const fmtEur = (v) => {
+  const n = Number(v)
+  if (v === null || v === undefined || v === '' || Number.isNaN(n)) return '—'
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
+}
 
 // ────────────────────────────────────────────────────────────
 // WIDGET 1 — CHURN PREDICTOR
@@ -196,7 +202,9 @@ function RetentionPlanModal({ client, onClose }) {
           borderRadius: 8, padding: 12, marginBottom: 16,
         }}>
           <div style={{ color: T.ark, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>
-            🎯 FOCUS — Taux récupération estimé : {plan.estimated_recovery_pct}%
+            🎯 FOCUS{plan.estimated_recovery_pct === null || plan.estimated_recovery_pct === undefined
+              ? ' — taux de récupération : non disponible (aucune mesure)'
+              : ` — Taux récupération estimé : ${plan.estimated_recovery_pct}%`}
           </div>
           <div style={{ color: T.text, fontSize: 13 }}>{plan.focus}</div>
         </div>
@@ -308,7 +316,9 @@ function CrossSellMatrix() {
             padding: '6px 12px', borderRadius: 8,
             fontSize: 12, fontWeight: 600,
           }}>
-            Potentiel total : {fmtEur(data.total_potential_eur)}/an
+            {data.total_potential_eur === null || data.total_potential_eur === undefined
+              ? 'Potentiel total : non disponible — aucun tarif de référence dans les dossiers'
+              : `Potentiel total : ${fmtEur(data.total_potential_eur)}/an`}
           </div>
         )}
       </div>
@@ -439,7 +449,9 @@ function RenewalOptimizer() {
             padding: '6px 12px', borderRadius: 8,
             fontSize: 12, fontWeight: 600,
           }}>
-            Économie potentielle : {fmtEur(data.total_potential_saving_eur)}
+            {data.total_potential_saving_eur === null || data.total_potential_saving_eur === undefined
+              ? 'Économie potentielle : non calculée — COURTIA ne dispose d\'aucun tarif de marché vérifié'
+              : `Économie potentielle : ${fmtEur(data.total_potential_saving_eur)}`}
           </div>
         )}
       </div>
@@ -512,14 +524,16 @@ function RenewalOptimizer() {
                 </div>
                 <div>
                   <div style={{ color: T.textSecondary, fontSize: 10, textTransform: 'uppercase' }}>Actuel</div>
-                  <div style={{ color: T.text, fontSize: 12 }}>{r.current_provider}</div>
+                  <div style={{ color: T.text, fontSize: 12 }}>{r.current_provider || '—'}</div>
                   <div style={{ color: T.textMuted, fontSize: 11 }}>{fmtEur(r.current_premium_eur)}</div>
                 </div>
                 <div>
                   <div style={{ color: T.textSecondary, fontSize: 10, textTransform: 'uppercase' }}>Recommandé</div>
-                  <div style={{ color: T.text, fontSize: 12 }}>{r.recommended_provider}</div>
+                  <div style={{ color: T.text, fontSize: 12 }}>{r.recommended_provider || '—'}</div>
                   <div style={{ color: r.saving_eur > 30 ? T.success : T.textMuted, fontSize: 11 }}>
-                    {r.saving_eur > 0 ? `−${fmtEur(r.saving_eur)}` : 'équivalent'}
+                    {r.saving_eur === null || r.saving_eur === undefined
+                      ? 'non calculé'
+                      : r.saving_eur > 0 ? `−${fmtEur(r.saving_eur)}` : 'équivalent'}
                   </div>
                 </div>
                 <div>

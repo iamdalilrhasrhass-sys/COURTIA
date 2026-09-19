@@ -130,7 +130,10 @@ function buildRetentionPlan(client, factors, score) {
   return {
     focus,
     urgency: score >= 75 ? 'immediat' : score >= 55 ? 'haute' : 'normale',
-    estimated_recovery_pct: score >= 75 ? 55 : score >= 55 ? 72 : 88,
+    // CORRECTION 2026-09-19 : 55/72/88 % etaient des constantes arbitraires
+    // presentees comme un « taux de recuperation estime ». Aucune mesure ne les
+    // fonde : la valeur est nulle et l'interface affiche « non disponible ».
+    estimated_recovery_pct: null,
     steps,
   }
 }
@@ -140,13 +143,13 @@ function buildRetentionPlan(client, factors, score) {
 // ──────────────────────────────────────────────────────────────────────────
 
 const PRODUITS_CATALOG = ['Auto', 'MRH', 'Santé', 'Prévoyance', 'RC Pro', 'Décennale', 'Cyber', 'PJ']
-const COMPAGNIES = ['Aurora', 'Novalia', 'Helios', 'Serenis', 'Atlas', 'Oria', 'Nivalis', 'Solenys']
+// CORRECTION 2026-09-19 : cette liste de compagnies servait a INVENTER un assureur
+// quand le dossier n'en contenait pas. Elle est supprimee : plus aucune compagnie
+// fabriquee ne peut apparaitre comme reelle.
 
-function hashString(s) {
-  let h = 0
-  for (let i = 0; i < (s || '').length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
-  return Math.abs(h)
-}
+// CORRECTION 2026-09-19 : hashString() ne servait qu'a fabriquer des montants,
+// des compagnies et des variations de tarif. Tous ces usages ont ete supprimes :
+// la fonction n'a plus aucune raison d'exister.
 
 async function computeCrossSellMatrix(userId) {
   const { rows: clients } = await pool.query(`
@@ -183,17 +186,19 @@ async function computeCrossSellMatrix(userId) {
       switch (produit) {
         case 'Auto':
           score = 50 + (souscrits.includes('MRH') ? 25 : 0) + (isFamille ? 15 : 0)
-          estimated = 600 + (hashString(c.id + 'auto') % 400)
+          // CORRECTION 2026-09-19 : montant invente par hachage de l'id client.
+          // Aucun tarif de reference n'existe pour ce client : valeur inconnue.
+          estimated = null
           rationale = isFamille ? 'Profil famille — bundle Auto + MRH avantageux' : 'Couverture mobilité essentielle'
           break
         case 'MRH':
           score = 55 + (souscrits.includes('Auto') ? 20 : 0) + (isFamille ? 18 : 0)
-          estimated = 280 + (hashString(c.id + 'mrh') % 220)
+          estimated = null
           rationale = 'MRH = base patrimoine, taux conversion élevé'
           break
         case 'Santé':
           score = 60 + (souscrits.length === 0 ? 15 : 0) + (isFamille ? 12 : 0)
-          estimated = 850 + (hashString(c.id + 'sante') % 600)
+          estimated = null
           rationale = 'Santé = produit ARK star, marge récurrente'
           break
         case 'Prévoyance':
@@ -218,14 +223,23 @@ async function computeCrossSellMatrix(userId) {
           break
         case 'PJ':
           score = 42 + (baseLTV > 3000 ? 10 : 0)
-          estimated = 120 + (hashString(c.id + 'pj') % 80)
+          estimated = null
           rationale = 'Protection juridique = bundle facile, ticket modéré'
           break
       }
 
-      score = clamp(score + (hashString(c.id + produit) % 7) - 3)
+      // Bruit arbitraire (+/-3) retire : le score ne depend plus que de criteres explicites.
+      score = clamp(score)
       const opp_status = score >= 70 ? 'hot' : score >= 45 ? 'warm' : 'cold'
-      return { product: produit, score, estimated_eur: estimated, status: opp_status, rationale }
+      return {
+        product: produit,
+        score,
+        score_method: 'heuristique_courtia (criteres explicites, aucun tirage aleatoire)',
+        estimated_eur: estimated,          // null tant qu'aucun tarif reel n'est connu
+        estimated_eur_source: estimated === null ? 'indisponible' : 'donnee_dossier',
+        status: opp_status,
+        rationale,
+      }
     })
 
     // Persist top 3 opportunities
@@ -259,7 +273,10 @@ async function computeCrossSellMatrix(userId) {
   return {
     products: PRODUITS_CATALOG,
     clients: matrix,
-    total_potential_eur: matrix.reduce((s, r) => s + r.total_opportunity_eur, 0),
+    // CORRECTION 2026-09-19 : cette somme additionnait des montants inventes par
+    // hachage. Sans tarif de reference dans les dossiers, le potentiel est INCONNU.
+    total_potential_eur: null,
+    total_potential_eur_source: 'indisponible — aucun tarif de reference dans les dossiers charges',
     computed_at: new Date().toISOString(),
   }
 }
@@ -284,8 +301,13 @@ async function computeRenewalOptimizations(userId) {
   const renewals = quotes.map(q => {
     const data = q.quote_data || {}
     const produit = data.produit || 'Auto'
-    const currentProvider = data.compagnie || COMPAGNIES[hashString(`${q.id}cp`) % COMPAGNIES.length]
-    const currentPremium = Number(data.prime_annuelle || 600 + (hashString(`${q.id}pa`) % 800))
+    // CORRECTION 2026-09-19 : la compagnie et la prime etaient INVENTEES (compagnie
+    // tiree d'une liste, prime tiree au hash) quand le dossier ne les contenait pas.
+    // Desormais : donnee du dossier, ou null. Jamais de valeur fabriquee.
+    const currentProvider = data.compagnie || null
+    const currentPremium = data.prime_annuelle !== undefined && data.prime_annuelle !== null
+      ? Number(data.prime_annuelle)
+      : null
 
     // Date d'échéance simulée à partir de created_at + 12 mois
     const created = new Date(q.created_at)
@@ -294,20 +316,18 @@ async function computeRenewalOptimizations(userId) {
     while (echeance < new Date()) echeance.setFullYear(echeance.getFullYear() + 1)
     const daysToEcheance = Math.floor((echeance.getTime() - Date.now()) / 86400000)
 
-    // Trouver une compagnie alternative avec gain potentiel
-    const alternates = COMPAGNIES.filter(c => c !== currentProvider)
-    const altIndex = hashString(`${q.id}alt`) % alternates.length
-    const altProvider = alternates[altIndex]
-    const variation = (hashString(`${q.id}var`) % 30) - 12 // -12% à +18%
-    const altPremium = Math.max(200, Math.round(currentPremium * (1 + variation / 100)))
-    const saving = currentPremium - altPremium
-
-    const recommendation = saving > 50 ? 'migrate' : 'renew'
-    const rationale = saving > 100
-      ? `Économie ${saving}€/an chez ${altProvider} (couverture équivalente)`
-      : saving > 30
-      ? `Économie modeste de ${saving}€ — fidélité ${currentProvider} préférable`
-      : `Tarif ${currentProvider} compétitif — reconduction recommandée`
+    // CORRECTION 2026-09-19 : la compagnie alternative, la variation de tarif
+    // (-12 % a +18 %) et donc l'« economie potentielle » etaient toutes tirees au
+    // hash de l'id du devis, puis presentees comme des euros negociables. COURTIA
+    // ne dispose d'AUCUN tarif de marche : aucune economie ne peut etre calculee.
+    // On recommande simplement la reconduction, sans chiffre invente.
+    const recommendedProvider = null
+    const altPremium = null
+    const saving = null
+    const recommendation = 'renew'
+    const rationale = currentPremium === null
+      ? "Echeance a venir. Montant et compagnie non renseignes dans le dossier : aucune comparaison possible."
+      : "Echeance a venir. Aucun tarif de marche verifie dans COURTIA : pas d'economie chiffree — verifier aupres de la compagnie."
 
     return {
       contract_id: q.id,
@@ -316,10 +336,15 @@ async function computeRenewalOptimizations(userId) {
       product: produit,
       current_provider: currentProvider,
       current_premium_eur: currentPremium,
-      recommended_provider: recommendation === 'migrate' ? altProvider : currentProvider,
+      recommended_provider: recommendedProvider,
       alternative_premium_eur: altPremium,
-      saving_eur: saving,
+      saving_eur: saving,                 // null : aucune economie calculee
       recommendation,
+      data_source: {
+        provider: currentProvider === null ? 'absent_du_dossier' : 'quote_data.compagnie',
+        premium: currentPremium === null ? 'absent_du_dossier' : 'quote_data.prime_annuelle',
+        echeance: data.date_echeance ? 'quote_data.date_echeance' : 'derivee (creation + 12 mois)',
+      },
       echeance_date: echeance.toISOString().slice(0, 10),
       days_to_echeance: daysToEcheance,
       rationale,
@@ -334,14 +359,18 @@ async function computeRenewalOptimizations(userId) {
          recommendation, recommended_provider, estimated_saving_cents, echeance_date, rationale, computed_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
     `, [userId, r.client_id, String(r.contract_id), r.product, r.current_provider,
-        Math.round(r.current_premium_eur * 100), r.recommendation, r.recommended_provider,
-        Math.round(r.saving_eur * 100), r.echeance_date, r.rationale])
+        Number.isFinite(r.current_premium_eur) ? Math.round(r.current_premium_eur * 100) : null,
+        r.recommendation, r.recommended_provider,
+        Number.isFinite(r.saving_eur) ? Math.round(r.saving_eur * 100) : null,
+        r.echeance_date, r.rationale])
   }
 
   return {
     renewals,
     total_contracts_90d: renewals.length,
-    total_potential_saving_eur: renewals.reduce((s, r) => s + Math.max(0, r.saving_eur), 0),
+    // CORRECTION 2026-09-19 : cette somme additionnait les economies inventees.
+    total_potential_saving_eur: null,
+    total_potential_saving_eur_source: 'indisponible — aucun tarif de marche verifie dans COURTIA',
     migrate_count: renewals.filter(r => r.recommendation === 'migrate').length,
     renew_count: renewals.filter(r => r.recommendation === 'renew').length,
     computed_at: new Date().toISOString(),
