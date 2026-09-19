@@ -11,7 +11,8 @@ const path = require('path');
 const OpenAI = require('openai');
 const pool = require('../db');
 
-const deepseek = new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY });
+const { clientIA } = require('../lib/aiClient')
+const deepseek = clientIA(OpenAI, { apiKeyVar: 'DEEPSEEK_API_KEY', baseURL: 'https://api.deepseek.com' })
 
 const REPORTS_DIR = process.env.DDA_REPORTS_DIR || '/srv/courtia/backend/reports/dda';
 if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });

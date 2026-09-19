@@ -11,9 +11,8 @@
 const Anthropic = require('@anthropic-ai/sdk').default;
 const telegramService = require('./telegramService');
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
-});
+const { clientIA } = require('../lib/aiClient')
+const anthropic = clientIA(Anthropic, { apiKeyVar: 'ANTHROPIC_API_KEY' })
 
 // ==================== CONFIGURATION ====================
 

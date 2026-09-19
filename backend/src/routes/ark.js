@@ -22,10 +22,8 @@ const { getClientContext, getPortfolioContext, getMorningBriefContext, getMessag
 const { getPrompt, PROMPTS } = require('../services/arkPrompts')
 
 // Initialisation client DeepSeek (compatible OpenAI SDK)
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'dummy_key_to_prevent_startup_crash',
-  baseURL: 'https://api.deepseek.com/v1'
-})
+const { clientIA } = require('../lib/aiClient')
+const openai = clientIA(OpenAI, { apiKeyVar: 'DEEPSEEK_API_KEY', baseURL: 'https://api.deepseek.com/v1' })
 
 function arkConfigurationRequired(res) {
   return res.status(503).json({

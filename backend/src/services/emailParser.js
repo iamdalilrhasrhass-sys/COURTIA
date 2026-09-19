@@ -11,7 +11,19 @@ const OpenAI = require('openai');
 const crypto = require('crypto');
 const pool = require('../db');
 
-const deepseek = new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY });
+/* Client DeepSeek construit À LA DEMANDE, jamais à l'import.
+   Avant : `new OpenAI({...})` s'exécutait au chargement du module, et le SDK
+   lève « Missing credentials » quand la clé est absente — le serveur entier
+   refusait alors de démarrer, y compris pour les routes qui n'utilisent pas
+   l'IA (mesuré en lançant le backend sans DEEPSEEK_API_KEY). Une clé absente
+   doit dégrader la seule fonction qui en a besoin, pas l'API complète. */
+let _deepseek = null;
+function clientDeepseek() {
+  if (_deepseek) return _deepseek;
+  if (!process.env.DEEPSEEK_API_KEY) return null;
+  _deepseek = new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY });
+  return _deepseek;
+}
 
 // Chiffrement password IMAP (AES-256-GCM, clé depuis .env)
 const ENCRYPT_KEY = (process.env.ENCRYPT_KEY || 'courtia-default-key-32-chars-aaa').slice(0, 32).padEnd(32, '0');
@@ -98,7 +110,18 @@ RÈGLES :
 - N'invente JAMAIS un tarif ou une garantie spécifique
 - La réponse doit toujours proposer une prochaine étape claire (RDV, doc à envoyer, etc.)`;
 
-  const c = await deepseek.chat.completions.create({
+  const client = clientDeepseek();
+  if (!client) {
+    // Clé absente : l'analyse IA est INDISPONIBLE, et le dit. Aucun résultat
+    // inventé n'est renvoyé à la place.
+    return {
+      classification: null,
+      reponse_suggeree: null,
+      erreur: 'DEEPSEEK_API_KEY absente — analyse IA indisponible',
+      ia_disponible: false,
+    };
+  }
+  const c = await client.chat.completions.create({
     model: 'deepseek-chat',
     response_format: { type: 'json_object' },
     messages: [{ role: 'user', content: prompt }],

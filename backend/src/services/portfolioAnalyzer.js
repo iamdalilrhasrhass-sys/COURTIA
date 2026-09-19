@@ -28,7 +28,8 @@ const {
   getPortfolioTimestampSelect,
 } = require('../utils/portfolioSchema');
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const { clientIA } = require('../lib/aiClient')
+const anthropic = clientIA(Anthropic, { apiKeyVar: 'ANTHROPIC_API_KEY' })
 
 // ─── HELPERS INTERNES ──────────────────────────────────────────────────────
 

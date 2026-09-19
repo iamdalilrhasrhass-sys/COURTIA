@@ -11,10 +11,8 @@ const { searchProspects: searchExternalProspects } = require('../services/reachS
 const router = express.Router();
 
 // DeepSeek client for AI features
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'dummy_key',
-  baseURL: 'https://api.deepseek.com/v1'
-});
+const { clientIA } = require('../lib/aiClient')
+const openai = clientIA(OpenAI, { apiKeyVar: 'DEEPSEEK_API_KEY', baseURL: 'https://api.deepseek.com/v1' })
 
 // ───────────────────────── HELPERS ─────────────────────────
 
@@ -1400,7 +1398,8 @@ Format de sortie : JSON strict { subject, body }. Body en français, sans HTML.$
       // Tentative Anthropic d'abord
       const Anthropic = require('@anthropic-ai/sdk')
       if (process.env.ANTHROPIC_API_KEY) {
-        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+        const { clientIA } = require('../lib/aiClient')
+        const client = clientIA(Anthropic, { apiKeyVar: 'ANTHROPIC_API_KEY' })
         const resp = await client.messages.create({
           model: 'claude-haiku-4-5',
           max_tokens: 600,
