@@ -51,8 +51,14 @@ export default function ArkActivityFeed({
   activities: propActivities,
   onRefresh,
   autoRefresh = false,
+  /* Données d'EXEMPLE : opt-in explicite. Avant, l'état initial était
+     generateMockActivities() : le cockpit affichait 15 appels ARK fabriqués,
+     avec des noms de clients inventés (Dupont Jean, Martin Sophie…), des
+     latences, des taux de confiance et des coûts simulés — présentés comme
+     l'activité réelle du cabinet. Par défaut, plus aucune invention. */
+  exemple = false,
 }) {
-  const [activities, setActivities] = useState(propActivities ?? generateMockActivities())
+  const [activities, setActivities] = useState(propActivities ?? (exemple ? generateMockActivities() : []))
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(false)
   const intervalRef = useRef(null)
@@ -67,8 +73,8 @@ export default function ArkActivityFeed({
       if (onRefresh) {
         const fresh = await onRefresh()
         if (fresh) setActivities(fresh)
-      } else {
-        // Mock refresh: prepend a new entry
+      } else if (exemple) {
+        // Rafraîchissement simulé : réservé au mode exemple explicite.
         setActivities(prev => [generateMockActivities(1)[0], ...prev.slice(0, 29)])
       }
     } finally {

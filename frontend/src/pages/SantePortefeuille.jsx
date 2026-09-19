@@ -18,26 +18,41 @@ const T = {
   success: '#22C55E', warning: '#F59E0B', danger: '#EF4444', cyan: '#22D3EE', blue: '#3B82F6',
 }
 
-const DEMO = {
-  score: 82,
-  totalClients: 124,
-  totalContrats: 312,
-  primesAnnuelles: 248000,
-  croissance: 5.2,
-  retention: 94,
-  diversification: 78,
-  churn: 6,
-  sansRenouvellement: 14,
-  sansContact90j: 27,
-  churnRisk: 9,
-  echeancesProches: 18,
+/* État neutre : tant que /contrats et /clients n'ont pas répondu, RIEN n'est
+   affiché comme un chiffre. L'ancien état initial portait des constantes de
+   démonstration (124 clients, 312 contrats, 248 000 €, score 82) : elles
+   s'affichaient le temps du chargement et, si l'API ne répondait pas, elles
+   restaient à l'écran — des chiffres fabriqués présentés comme ceux du
+   cabinet. Un tiret est honnête, un faux chiffre ne l'est pas. */
+const VIDE = {
+  score: null,
+  totalClients: null,
+  totalContrats: null,
+  primesAnnuelles: null,
+  primeMoyenne: null,
+  retention: null,
+  diversification: null,
+  churn: null,
+  sansRenouvellement: null,
+  sansContact90j: null,
+  churnRisk: null,
+  echeancesProches: null,
+  produits: [],
+  topProduit: null,
+  clientSilencieux: null,
+  clientsUneCouverture: null,
 }
 
+/** Palette du donut : les libellés viennent des données, jamais d'une liste fixe. */
+const PALETTE = ['#5B4DF5', '#22D3EE', '#22C55E', '#F59E0B', '#8B5CF6', '#EF4444', '#3B82F6', '#14B8A6']
+
+/** `null` s'affiche « — » : jamais 0, jamais un chiffre inventé. */
+const aff = (v, suffixe = '') => (v === null || v === undefined ? '—' : `${v}${suffixe}`)
+
 /* ─── Synthèse : lecture défensive des réponses API ──────────────────────────
-   Les constantes de DEMO ne servent plus que de REPLI. Dès que /contrats et
-   /clients répondent, la synthèse est recalculée à partir des données réelles
-   (mêmes chiffres que le Cockpit). Aucune métrique nouvelle n'est introduite :
-   seules les valeurs déjà affichées sont recalculées. */
+   Tout ce qui s'affiche est CALCULÉ depuis /contrats et /clients. Plus aucune
+   constante de démonstration ne peut se substituer aux chiffres du cabinet :
+   ce qui n'est pas dérivable n'est pas affiché. */
 
 /** Tableau utile quelle que soit l'enveloppe : [ … ], { data: [ … ] }, { donnees: [ … ] }. */
 function listeDe(payload, cles = []) {
@@ -85,7 +100,7 @@ function joursDepuis(v) {
 /** Champs lus — contrat : prime | prime_annuelle, statut | status,
  *  echeance | jours | dateEcheance. Client : statut | status,
  *  dernierContact | last_contact, score | score_risque, risque.
- *  @returns {Object|null} null si aucune donnée exploitable (repli sur DEMO). */
+ *  @returns {Object|null} null si aucune donnée exploitable. */
 function calculerSynthese(contrats, clients) {
   if (contrats.length === 0 && clients.length === 0) return null
   const synthese = {}
@@ -95,6 +110,7 @@ function calculerSynthese(contrats, clients) {
       contrats.filter(estActif).reduce((total, c) => total + primeDe(c), 0)
     )
     synthese.totalContrats = contrats.length
+    synthese.primeMoyenne = Math.round(synthese.primesAnnuelles / contrats.length)
     synthese.echeancesProches = contrats.filter((c) => {
       if (estResilie(c)) return false
       const j = joursAvantEcheance(c)
@@ -107,6 +123,28 @@ function calculerSynthese(contrats, clients) {
       return j !== null && j < 0
     }).length
     synthese.churn = Math.round((contrats.filter(estResilie).length / contrats.length) * 100)
+
+    /* Répartition par branche : agrégée sur les primes réellement portées par
+       les contrats chargés. Les libellés viennent des données (le type de
+       chaque contrat), jamais d'une liste figée. */
+    const parType = new Map()
+    contrats.forEach((c) => {
+      const type = String(c?.type ?? c?.type_contrat ?? c?.categorie ?? '').trim() || 'Non renseigné'
+      parType.set(type, (parType.get(type) || 0) + primeDe(c))
+    })
+    const totalPrimes = [...parType.values()].reduce((a, b) => a + b, 0)
+    if (totalPrimes > 0) {
+      const branches = [...parType.entries()].sort((a, b) => b[1] - a[1])
+      synthese.produits = branches.map(([label, prime], i) => ({
+        label,
+        prime: Math.round(prime),
+        value: Math.round((prime / totalPrimes) * 100),
+        color: PALETTE[i % PALETTE.length],
+      }))
+      synthese.topProduit = synthese.produits[0]
+      // Diversification = ce qui n'est PAS concentré sur la première branche.
+      synthese.diversification = Math.max(0, 100 - synthese.produits[0].value)
+    }
   }
 
   if (clients.length > 0) {
@@ -116,6 +154,16 @@ function calculerSynthese(contrats, clients) {
       const j = joursDepuis(c?.dernierContact ?? c?.last_contact ?? c?.dernier_contact)
       return j !== null && j > 90            // seuil déjà utilisé par lib/priorities.js
     }).length
+    /* Client le plus silencieux : c'est LUI qui doit remonter en alerte — un
+       nom réellement présent dans les données, pas un nom d'exemple. */
+    synthese.clientSilencieux = clients
+      .map((c) => ({
+        nom: [c?.prenom, c?.nom].filter(Boolean).join(' ').trim() || c?.nom || c?.raison_sociale || 'Client',
+        jours: joursDepuis(c?.dernierContact ?? c?.last_contact ?? c?.dernier_contact),
+        score: nombreDe(c?.score ?? c?.score_risque),
+      }))
+      .filter((c) => c.jours !== null)
+      .sort((a, b) => b.jours - a.jours)[0] || null
     // « À risque » = statut a_risque, celui du filtre /clients?filter=a_risque.
     // Repli sur le niveau `risque` uniquement si le client n'expose aucun statut.
     synthese.churnRisk = clients.filter((c) => {
@@ -132,38 +180,104 @@ function calculerSynthese(contrats, clients) {
     }
   }
 
+  if (contrats.length > 0) {
+    const parClient = new Map()
+    contrats.forEach((c) => {
+      const id = c?.client_id ?? c?.clientId ?? c?.client?.id ?? null
+      if (id === null) return
+      parClient.set(id, (parClient.get(id) || 0) + 1)
+    })
+    if (parClient.size > 0) {
+      synthese.clientsUneCouverture = [...parClient.values()].filter((n) => n === 1).length
+    }
+  }
+
   return synthese
 }
 
-/* Alertes : seuls les compteurs dérivables des données réelles sont calculés
-   (renouvellements, échéances). Les intitulés nominatifs et le devis ne sont
-   dérivables d'aucune donnée chargée : ils restent tels quels. */
-const alertsPour = ({ sansRenouvellement, echeancesProches }) => [
-  { id: 1, level: 'danger',  title: 'Leroy Marie — 52 jours sans contact', desc: 'Risque de perte estimé à 80%', cta: 'Préparer relance', to: '/relances' },
-  { id: 2, level: 'warning', title: `${sansRenouvellement} contrats sans renouvellement`, desc: 'Échéance dépassée — action urgente', cta: 'Voir contrats', to: '/contrats' },
-  { id: 3, level: 'warning', title: 'Devis #247 sans réponse', desc: 'Karim B. — 23 jours sans relance', cta: 'Relancer', to: '/devis' },
-  { id: 4, level: 'info',    title: 'Forte concentration RC Pro', desc: 'Diversification à améliorer (3 branches dominantes)', cta: 'Voir analytics', to: '/analytics' },
-  { id: 5, level: 'info',    title: `${echeancesProches} échéances < 30 jours`, desc: 'Pic de renouvellements à anticiper', cta: 'Préparer', to: '/contrats' },
-]
+/* Alertes : chaque ligne est DÉRIVÉE des dossiers chargés. Aucun nom, aucun
+   montant et aucun compteur ne vient d'un texte fixe — une alerte qui n'a pas
+   de donnée derrière n'est pas affichée. */
+const alertsPour = (d) => {
+  const liste = []
+  if (d.clientSilencieux && d.clientSilencieux.jours > 45) {
+    liste.push({
+      id: 1, level: d.clientSilencieux.jours > 90 ? 'danger' : 'warning',
+      title: `${d.clientSilencieux.nom} — ${d.clientSilencieux.jours} jours sans contact`,
+      desc: d.clientSilencieux.score !== null
+        ? `Score ${d.clientSilencieux.score}/100 — le plus ancien contact du portefeuille`
+        : 'Le plus ancien contact du portefeuille',
+      cta: 'Préparer relance', to: '/relances',
+    })
+  }
+  if (d.sansRenouvellement > 0) {
+    liste.push({
+      id: 2, level: 'danger', title: `${d.sansRenouvellement} contrats sans renouvellement`,
+      desc: 'Échéance dépassée — action urgente', cta: 'Voir contrats', to: '/contrats',
+    })
+  }
+  if (d.churnRisk > 0) {
+    liste.push({
+      id: 3, level: 'warning', title: `${d.churnRisk} clients à risque`,
+      desc: 'Statut « à risque » dans le portefeuille', cta: 'Voir clients', to: '/clients?filter=a_risque',
+    })
+  }
+  if (d.clientsUneCouverture > 0) {
+    liste.push({
+      id: 4, level: 'info', title: `${d.clientsUneCouverture} clients avec une seule couverture`,
+      desc: 'Un seul contrat au dossier — développement possible', cta: 'Voir clients', to: '/clients',
+    })
+  }
+  if (d.topProduit && d.topProduit.value >= 25) {
+    liste.push({
+      id: 5, level: 'info', title: `Concentration ${d.topProduit.label}`,
+      desc: `${d.topProduit.value}% des primes annuelles sur une seule branche`, cta: 'Voir analytics', to: '/analytics',
+    })
+  }
+  if (d.echeancesProches > 0) {
+    liste.push({
+      id: 6, level: 'warning', title: `${d.echeancesProches} échéances < 30 jours`,
+      desc: 'Pic de renouvellements à anticiper', cta: 'Préparer', to: '/contrats',
+    })
+  }
+  return liste.slice(0, 5)
+}
 
-/* Recommandations : même règle — seuls les compteurs dérivables sont calculés.
-   Le croisement « Auto sans Prévoyance » et la comparaison marché MRH
-   supposent une nomenclature produits et un référentiel externes absents
-   des données chargées : ils restent tels quels. */
-const recosPour = ({ sansContact90j }) => [
-  { id: 1, title: 'Cross-sell Prévoyance', desc: '12 clients Auto sans Prévoyance. Potentiel estimé : 8 400 €/an.', cta: 'Lancer campagne', to: '/devis' },
-  { id: 2, title: 'Relance silencieux',    desc: `${sansContact90j} clients silencieux > 90j. Plan d'appels priorisé prêt.`, cta: 'Voir le plan', to: '/relances' },
-  { id: 3, title: 'Optimiser MRH',         desc: '6 contrats MRH au-dessus du marché. Comparer compagnies.', cta: 'Comparer', to: '/comparateur' },
-]
-
-const PRODUITS = [
-  { label: 'Auto',        value: 28, color: '#5B4DF5' },
-  { label: 'Habitation',  value: 22, color: '#22D3EE' },
-  { label: 'Santé',       value: 18, color: '#22C55E' },
-  { label: 'RC Pro',      value: 14, color: '#F59E0B' },
-  { label: 'Prévoyance',  value: 10, color: '#8B5CF6' },
-  { label: 'Cyber/PJ',    value: 8,  color: '#EF4444' },
-]
+/* Recommandations : uniquement ce que les dossiers chargés permettent d'affirmer.
+   Les potentiels chiffrés (« 8 400 €/an ») et les comparaisons de marché
+   supposaient un référentiel externe absent : ils ne sont plus affichés. */
+const recosPour = (d) => {
+  const liste = []
+  if (d.clientsUneCouverture > 0) {
+    liste.push({
+      id: 1, title: 'Développer les clients mono-contrat',
+      desc: `${d.clientsUneCouverture} clients n'ont qu'une seule couverture au dossier. Prévoyance et protection juridique se proposent depuis leur fiche.`,
+      cta: 'Voir les clients', to: '/clients',
+    })
+  }
+  if (d.sansContact90j > 0) {
+    liste.push({
+      id: 2, title: 'Relancer les clients silencieux',
+      desc: `${d.sansContact90j} clients sans contact depuis plus de 90 jours.`,
+      cta: 'Voir le plan', to: '/relances',
+    })
+  }
+  if (d.echeancesProches > 0) {
+    liste.push({
+      id: 3, title: 'Préparer les renouvellements',
+      desc: `${d.echeancesProches} contrats arrivent à échéance dans les 30 jours : mise en concurrence à préparer.`,
+      cta: 'Voir les contrats', to: '/contrats',
+    })
+  }
+  if (d.topProduit && d.topProduit.value >= 25) {
+    liste.push({
+      id: 4, title: 'Rééquilibrer le portefeuille',
+      desc: `${d.topProduit.label} représente ${d.topProduit.value}% des primes annuelles.`,
+      cta: 'Voir analytics', to: '/analytics',
+    })
+  }
+  return liste.slice(0, 3)
+}
 
 const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
 
@@ -171,7 +285,8 @@ const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', curren
 function ScoreGauge({ score, color, size = 200 }) {
   const r = (size - 40) / 2
   const c = 2 * Math.PI * r
-  const offset = c - (score / 100) * c
+  const valeur = Number.isFinite(score) ? score : 0
+  const offset = c - (valeur / 100) * c
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} style={{ width: '100%', height: '100%' }}>
@@ -201,7 +316,7 @@ function ScoreGauge({ score, color, size = 200 }) {
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontWeight: 800, fontSize: 56, lineHeight: 1, color: T.text,
           letterSpacing: '-0.04em',
-        }}>{score}</div>
+        }}>{Number.isFinite(score) ? score : '—'}</div>
         <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>
           sur 100
         </div>
@@ -285,7 +400,7 @@ const ALERT_STYLE = {
 
 export default function SantePortefeuille() {
   const navigate = useNavigate()
-  const [data, setData] = useState(DEMO)
+  const [data, setData] = useState(VIDE)
   // Score renvoyé par /portfolio/health-score : il prime sur le calcul local.
   const scoreApi = useRef(null)
 
@@ -310,7 +425,8 @@ export default function SantePortefeuille() {
   }, [])
 
   // Synthèse alimentée par les données réelles (contrats + clients).
-  // Si la réponse est vide ou en erreur, les constantes DEMO restent affichées.
+  // Si la réponse est vide ou en erreur, l'écran reste en « — » : aucun chiffre
+  // fabriqué ne prend le relais.
   useEffect(() => {
     let annule = false
     Promise.all([
@@ -336,9 +452,13 @@ export default function SantePortefeuille() {
 
   const alertes = alertsPour(data)
   const recos = recosPour(data)
+  const produits = data.produits || []
 
-  const scoreColor = data.score >= 80 ? T.success : data.score >= 65 ? T.cyan : data.score >= 45 ? T.warning : T.danger
-  const scoreLabel = data.score >= 85 ? 'Excellent' : data.score >= 70 ? 'Bon' : data.score >= 50 ? 'À surveiller' : 'Critique'
+  const mesure = data.score !== null
+  const scoreColor = !mesure ? T.textMuted
+    : data.score >= 80 ? T.success : data.score >= 65 ? T.cyan : data.score >= 45 ? T.warning : T.danger
+  const scoreLabel = !mesure ? 'Analyse en cours'
+    : data.score >= 85 ? 'Excellent' : data.score >= 70 ? 'Bon' : data.score >= 50 ? 'À surveiller' : 'Critique'
 
   return (
     <div style={{ minHeight: '100vh', color: T.text, padding: '24px 24px 48px' }}>
@@ -390,9 +510,15 @@ export default function SantePortefeuille() {
               letterSpacing: '-0.025em', marginBottom: 8,
             }}>{scoreLabel}</div>
             <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.6, marginBottom: 14 }}>
-              Votre portefeuille est en <strong style={{ color: T.text }}>{scoreLabel.toLowerCase()}</strong>.
-              {data.totalClients} clients, {data.totalContrats} contrats, {fmtEur(data.primesAnnuelles)} de primes annuelles.
-              Croissance <strong style={{ color: T.success }}>+{data.croissance}%</strong> sur 90j.
+              {mesure ? (
+                <>
+                  Votre portefeuille est en <strong style={{ color: T.text }}>{scoreLabel.toLowerCase()}</strong>.
+                  {data.totalClients} clients, {data.totalContrats} contrats, {fmtEur(data.primesAnnuelles)} de primes annuelles
+                  {data.primeMoyenne !== null ? <> (prime moyenne {fmtEur(data.primeMoyenne)} par contrat)</> : null}.
+                </>
+              ) : (
+                <>Analyse de vos dossiers en cours…</>
+              )}
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/morning-brief')} style={btnArk}>
@@ -405,12 +531,12 @@ export default function SantePortefeuille() {
           </div>
         </div>
 
-        {/* 4 KPIs */}
+        {/* 4 KPIs — tous calculés sur les dossiers chargés */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-          <MiniKpi label="Croissance"      value={`+${data.croissance}%`}   accent={T.success} icon={TrendingUp} delta="vs 90j" />
-          <MiniKpi label="Rétention"       value={`${data.retention}%`}     accent={T.cyan}    icon={Heart}      delta="stable" />
-          <MiniKpi label="Diversification" value={`${data.diversification}%`} accent={T.ark}   icon={Target}     delta="6 branches" />
-          <MiniKpi label="Churn"           value={`${data.churn}%`}         accent={T.warning} icon={TrendingDown} delta="à surveiller" />
+          <MiniKpi label="Prime moyenne"   value={data.primeMoyenne === null ? '—' : fmtEur(data.primeMoyenne)} accent={T.success} icon={TrendingUp} delta="par contrat" />
+          <MiniKpi label="Rétention"       value={aff(data.retention, '%')}     accent={T.cyan}    icon={Heart}      delta="clients actifs" />
+          <MiniKpi label="Diversification" value={aff(data.diversification, '%')} accent={T.ark}   icon={Target}     delta={produits.length ? `${produits.length} branches` : '—'} />
+          <MiniKpi label="Churn"           value={aff(data.churn, '%')}         accent={T.warning} icon={TrendingDown} delta="contrats résiliés" />
         </div>
 
         {/* Row : Alertes + Recos ARK */}
@@ -502,9 +628,12 @@ export default function SantePortefeuille() {
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Répartition produits</h3>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <ProduitDonut data={PRODUITS} size={140} />
+              <ProduitDonut data={produits} size={140} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {PRODUITS.map(p => (
+                {produits.length === 0 && (
+                  <span style={{ fontSize: 11, color: T.textMuted }}>Aucun contrat chargé pour l'instant.</span>
+                )}
+                {produits.map(p => (
                   <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: 4, background: p.color, flexShrink: 0 }} />
                     <span style={{ flex: 1, fontSize: 11, color: T.textSecondary }}>{p.label}</span>
@@ -524,12 +653,12 @@ export default function SantePortefeuille() {
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Indicateurs détaillés</h3>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <DetailKpi icon={FileX}        label="Sans renouvellement" value={data.sansRenouvellement} accent={T.danger}  to="/contrats" navigate={navigate} />
-              <DetailKpi icon={Phone}        label="Silencieux > 90 j"   value={data.sansContact90j}      accent={T.warning} to="/relances" navigate={navigate} />
-              <DetailKpi icon={TrendingDown} label="Risque churn"        value={data.churnRisk}           accent={T.danger}  to="/clients?filter=a_risque" navigate={navigate} />
-              <DetailKpi icon={Calendar}     label="Échéances < 30 j"    value={data.echeancesProches}    accent={T.warning} to="/contrats" navigate={navigate} />
-              <DetailKpi icon={Users}        label="Clients actifs"      value={data.totalClients}        accent={T.success} to="/clients"  navigate={navigate} />
-              <DetailKpi icon={Shield}       label="Contrats actifs"     value={data.totalContrats}       accent={T.cyan}    to="/contrats" navigate={navigate} />
+              <DetailKpi icon={FileX}        label="Sans renouvellement" value={aff(data.sansRenouvellement)} accent={T.danger}  to="/contrats" navigate={navigate} />
+              <DetailKpi icon={Phone}        label="Silencieux > 90 j"   value={aff(data.sansContact90j)}      accent={T.warning} to="/relances" navigate={navigate} />
+              <DetailKpi icon={TrendingDown} label="Risque churn"        value={aff(data.churnRisk)}           accent={T.danger}  to="/clients?filter=a_risque" navigate={navigate} />
+              <DetailKpi icon={Calendar}     label="Échéances < 30 j"    value={aff(data.echeancesProches)}    accent={T.warning} to="/contrats" navigate={navigate} />
+              <DetailKpi icon={Users}        label="Clients actifs"      value={aff(data.totalClients)}        accent={T.success} to="/clients"  navigate={navigate} />
+              <DetailKpi icon={Shield}       label="Contrats actifs"     value={aff(data.totalContrats)}       accent={T.cyan}    to="/contrats" navigate={navigate} />
             </div>
           </div>
         </div>

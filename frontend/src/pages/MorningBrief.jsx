@@ -46,30 +46,22 @@ function formatDate() {
 function fmtEur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0)) }
 function fmtNum(v) { return Number(v || 0).toLocaleString('fr-FR') }
 
-// ─── Demo priorities when API data is sparse ─────────────────────────────────
-const DEMO_BRIEF = {
-  score: 82,
-  totalActions: 18,
-  echeances: 7,
-  devis: 5,
-  silencieux: 9,
-  opportunites: 12,
-  conformite: 3,
-  urgentes: [
-    { client: 'Martin Conseil', type: 'échéance', sujet: 'RC Pro — échéance dans 21 jours', raison: 'Client professionnel actif depuis 3 ans. Contrat stratégique (2 800 €/an). Aucun contact enregistré depuis 40 jours. Risque de mise en concurrence détecté : le client a demandé un devis comparatif il y a 6 mois.', impact: '2 800 € de prime annuelle. Perte potentielle si non renouvelé.', action: 'Préparer une relance personnalisée avec proposition de révision de garantie.', priorite: 'haute' },
-    { client: 'Leroy Marie', type: 'silence', sujet: 'Aucun contact depuis 52 jours', raison: 'Cliente active (Habitation Confort, 680 €/an). Score risque : 80%. Dernière interaction : appel entrant le 19 mars. Aucun devis en cours, aucun contrat en renouvellement.', impact: 'Risque de perte estimé à 80%. Contrat Habitation + potentiel MRH non souscrit.', action: 'Appeler pour un bilan de situation et proposer un devis MRH.', priorite: 'haute' },
-    { client: 'Dupont SAS', type: 'opportunite', sujet: 'Potentiel flotte auto + RC Pro + PJ', raison: 'Entreprise de 12 salariés. Actuellement : RC Pro uniquement (12 400 €/an). Véhicules de fonction non assurés via le cabinet. Opportunité multi-équipement détectée.', impact: 'Potentiel additionnel : 12 400 €/an (flotte + PJ).', action: 'Préparer une proposition groupée Flotte Auto + Protection Juridique.', priorite: 'haute' },
-  ],
-  aFaire: [
-    { client: 'Karim B.', type: 'devis', sujet: 'Devis Auto envoyé il y a 6 jours', raison: 'Devis #247 pour une Auto (1 100 €/an). Historique de conversion favorable (72% sur ce profil). Aucune relance effectuée depuis l\'envoi.', impact: '1 100 € de prime annuelle potentielle.', action: 'Envoyer un email de suivi avec rappel des garanties.', priorite: 'moyenne' },
-    { client: 'Garcia Anne', type: 'opportunite', sujet: 'Multi-équipement Santé + MRH', raison: 'Cliente mono-produit Santé (420 €/an). Score opportunité : 78%. Profil familial : MRH pertinente. Aucun devis MRH jamais proposé.', impact: '+420 € de prime annuelle (MRH).', action: 'Créer un devis MRH et l\'envoyer avec un message personnalisé.', priorite: 'moyenne' },
-    { client: 'Moreau Éric', type: 'échéance', sujet: 'Contrat Auto — échéance J-35', raison: 'Contrat Auto 2 400 €/an. Client ponctuel, bon payeur. Aucun sinistre déclaré. Opportunité de révision de garantie à la hausse.', impact: '2 400 € à sécuriser. Potentiel upgrade +300 €.', action: 'Préparer un avenant avec option valeur à neuf.', priorite: 'moyenne' },
-  ],
-  relances: [
-    { client: 'Petit Philippe', type: 'devis', sujet: 'Devis Auto #241 — 18 jours sans réponse', raison: 'Devis envoyé le 22 avril, montant 1 100 €. Client existant (contrat MRH).', impact: '1 100 €', action: 'Relancer par téléphone' },
-    { client: 'Dupont Jean', type: 'silence', sujet: '47 jours sans contact', raison: 'Contrat MRH actif. Score risque 72%.', impact: '480 €', action: 'Envoyer un email de prise de nouvelles' },
-    { client: 'SCP Dubois', type: 'échéance', sujet: 'Décennale — J-42 avant échéance', raison: 'Contrat Décennale 3 500 €. Client entreprise.', impact: '3 500 €', action: 'Préparer le renouvellement' },
-  ]
+/* État initial VIDE : le brief est construit à partir des dossiers chargés
+   (moteur local src/lib/priorities.js). L'ancien état initial portait un brief
+   de démonstration complet — Martin Conseil, Leroy Marie, Dupont SAS, « Devis
+   #247 », « 12 400 €/an » — qui s'affichait avant l'arrivée des données, et
+   restait à l'écran si le moteur ne produisait rien. */
+const BRIEF_VIDE = {
+  score: null,
+  totalActions: 0,
+  echeances: 0,
+  devis: 0,
+  silencieux: 0,
+  opportunites: 0,
+  conformite: 0,
+  urgentes: [],
+  aFaire: [],
+  relances: [],
 }
 
 /* ─── Adaptateur : moteur de priorités → forme lue par cet écran ─────────────
@@ -310,7 +302,8 @@ export default function MorningBrief() {
   const navigate = useNavigate()
   const [user, setUser] = useState({ first_name: '', last_name: '' })
   const [loading, setLoading] = useState(true)
-  const [priorities, setPriorities] = useState(DEMO_BRIEF)
+  const [priorities, setPriorities] = useState(BRIEF_VIDE)
+  const [opportunites, setOpportunites] = useState([])
   const [refreshKey, setRefreshKey] = useState(0)
 
   const loadData = useCallback(async () => {
@@ -325,11 +318,13 @@ export default function MorningBrief() {
       // computeDailyPriorities attend (clients, contrats, taches) : les trois
       // jeux sont chargés ici, l'adaptateur traduit son retour pour l'écran.
       try {
-        const [clientsRes, contratsRes, tasksRes] = await Promise.all([
+        const [clientsRes, contratsRes, tasksRes, oppRes] = await Promise.all([
           api.get('/clients?limit=300').catch(() => ({ data: [] })),
           api.get('/contrats').catch(() => ({ data: [] })),
           api.get('/taches').catch(() => ({ data: [] })),
+          api.get('/opportunites').catch(() => ({ data: [] })),
         ])
+        setOpportunites(listeApi(oppRes.data))
         const clients = listeApi(clientsRes.data)
         const contrats = listeApi(contratsRes.data)
         const taches = listeApi(tasksRes.data)
@@ -413,7 +408,12 @@ export default function MorningBrief() {
                 ARK a analysé votre portefeuille et identifié <strong style={{ color: '#fff' }}>{priorities.totalActions} actions utiles</strong> pour aujourd'hui.
               </p>
               <p style={{ fontSize: 12, color: T.textMuted, margin: 0 }}>
-                Portefeuille : {priorities.activeClients || 0} clients • {priorities.activeContracts || 0} contrats • Score santé : <strong style={{ color: T.success }}>{priorities.score}/100</strong>
+                {/* Ce chiffre est l'inverse de l'urgence moyenne des priorités
+                    du jour : il ne s'agit PAS du score de santé du portefeuille
+                    (l'écran qui le porte est /sante-portefeuille). L'ancien
+                    libellé « Score santé » annonçait 22/100 là où le cockpit
+                    affichait 78/100 — deux chiffres contradictoires. */}
+                Portefeuille : {priorities.activeClients || 0} clients • {priorities.activeContracts || 0} contrats • Priorité du jour : <strong style={{ color: T.success }}>{priorities.score === null || priorities.score === undefined ? '—' : `${priorities.score}/100`}</strong>
               </p>
             </div>
             <button onClick={() => { setRefreshKey(k => k + 1); toast.success('Analyse actualisée') }} style={{
@@ -599,16 +599,18 @@ export default function MorningBrief() {
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: 0 }}>Opportunités</h3>
             </div>
             <div style={{ fontSize: 11, color: T.success, fontWeight: 600, marginBottom: 10 }}>
-              Potentiel total : 14 420 €
+              {opportunites.length === 0
+                ? 'Aucune opportunité enregistrée'
+                : `Potentiel total : ${fmtEur(opportunites.reduce((t, o) => t + Number(o.gain ?? o.potentiel ?? 0), 0))}`}
             </div>
-            {[
-              { text: 'Martin Sophie — Prévoyance non souscrite', montant: '+520 €' },
-              { text: 'Dupont SAS — Flotte Auto + PJ', montant: '+12 400 €' },
-              { text: 'Garcia Anne — MRH', montant: '+420 €' },
-            ].map((o, i) => (
+            {opportunites.slice(0, 3).map((o, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span style={{ fontSize: 11, color: T.textSecondary }}>{o.text}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: T.success }}>{o.montant}</span>
+                <span style={{ fontSize: 11, color: T.textSecondary }}>
+                  {[o.nomClient || o.client || 'Client', o.titre || o.produit || ''].filter(Boolean).join(' — ')}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: T.success }}>
+                  +{fmtEur(o.gain ?? o.potentiel ?? 0)}
+                </span>
               </div>
             ))}
             <button onClick={() => navigate('/opportunites')} style={{ marginTop: 10, fontSize: 11, color: T.success, background: 'none', border: 'none', cursor: 'pointer' }}>

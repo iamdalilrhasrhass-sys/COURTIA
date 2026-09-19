@@ -157,37 +157,160 @@ function Sparkline({ points, color = T.cyan, width = 280, height = 50 }) {
   )
 }
 
-// ─── Demo data (cohérent avec storytelling) ──────────────────────
-const ARK_PRIORITIES = [
-  { id: 1, level: 'urgent',  title: 'Renouvellement RC Pro — Martin Conseil',  meta: 'J-21 • 2 800 €', cta: 'Préparer', accent: T.danger },
-  { id: 2, level: 'urgent',  title: 'Cliente silencieuse — Leroy Marie',       meta: '52 j sans contact • Risque 80%', cta: 'Appeler', accent: T.danger },
-  { id: 3, level: 'haut',    title: 'Devis Auto sans réponse — Karim B.',      meta: 'Devis #247 • 1 200 €', cta: 'Relancer', accent: T.warning },
-  { id: 4, level: 'haut',    title: 'Cross-sell Prévoyance — Sophie L.',       meta: 'Profil idéal • Score 92%', cta: 'Créer devis', accent: T.ark },
-  { id: 5, level: 'moyen',   title: 'Échéance MRH — Dupont SAS',               meta: 'J-42 • 4 200 €', cta: 'Voir', accent: T.warning },
-]
+// ─── Blocs du cockpit : CALCULÉS, jamais écrits en dur ───────────────
+// L'ancienne version portait des listes d'exemple (« Martin Conseil »,
+// « Leroy Marie », « Devis #247 », « 24 devis signés », « +12,4% »). Elles
+// s'affichaient telles quelles — dans le cockpit d'un vrai cabinet comme dans
+// la démonstration publique — et contredisaient les compteurs du haut de page
+// (8 clients, 15 contrats, 7 échéances sous 30 jours). Tout est désormais
+// dérivé des dossiers réellement chargés ; ce qui ne peut pas être calculé
+// n'est pas affiché.
 
-const ECHEANCES = [
-  { id: 1, type: 'RC Pro',      client: 'Martin Conseil',    compagnie: 'Aurora',  date: '01 juin', jours: 21,  prime: 2800 },
-  { id: 2, type: 'Flotte Auto', client: 'Auto Évolution 89', compagnie: 'Novalia', date: '15 juin', jours: 35,  prime: 8500 },
-  { id: 3, type: 'MRH',         client: 'Dupont SAS',        compagnie: 'Aurora',  date: '22 juin', jours: 42,  prime: 4200 },
-  { id: 4, type: 'Cyber',       client: 'Groupe Ardent',     compagnie: 'Atlas',   date: '01 juil', jours: 51,  prime: 5200 },
-  { id: 5, type: 'PJ',          client: 'Cabinet Moreau',    compagnie: 'Serenis', date: '01 juil', jours: 51,  prime: 1200 },
-]
+const joursDe = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null }
+const joursDepuisDate = (v) => {
+  const t = v ? new Date(v).getTime() : NaN
+  return Number.isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / 86400000))
+}
+const nomDe = (c) => {
+  if (typeof c === 'string') return c.trim() || 'Client'
+  return [c?.prenom, c?.nom].filter(Boolean).join(' ').trim()
+    || c?.nom || c?.raison_sociale || c?.nomClient || 'Client'
+}
+/** Nom du client d'un contrat : le champ `client` peut être une chaîne (API
+ *  réelle et démo) ou un objet ; `nomClient` prime quand il existe. */
+const nomContrat = (c) => c?.nomClient || nomDe(c?.client)
+const primeDe = (c) => Number(c?.prime ?? c?.prime_annuelle ?? c?.primeAnnuelle) || 0
+const echeanceDe = (c) => {
+  const n = joursDe(c?.jours ?? c?.echeance_nombre)
+  if (n !== null) return n
+  const direct = joursDe(c?.echeance)
+  if (direct !== null) return direct
+  const d = c?.dateEcheance ?? c?.date_echeance
+  const t = d ? new Date(d).getTime() : NaN
+  return Number.isNaN(t) ? null : Math.round((t - Date.now()) / 86400000)
+}
+const resilie = (c) => ['resilie', 'résilié'].includes(String(c?.statut ?? c?.status ?? '').toLowerCase())
 
-const ACTIVITY = [
-  { id: 1, label: 'Devis Prévoyance envoyé à Sophie L.',        when: 'il y a 1h',   color: T.blue,    icon: FileSignature },
-  { id: 2, label: 'Nouveau client : Amélie Dubois',             when: 'il y a 3h',   color: T.success, icon: UserPlus },
-  { id: 3, label: 'Contrat RC Pro renouvelé — Cabinet Moreau',  when: 'hier',        color: T.success, icon: FileText },
-  { id: 4, label: 'Relance email envoyée à Karim B.',           when: 'hier',        color: T.warning, icon: Phone },
-  { id: 5, label: 'ARK : 3 opportunités détectées',             when: 'il y a 2j',   color: T.ark,     icon: Sparkles },
-  { id: 6, label: 'Tâche terminée — Vérifier RC Moreau',        when: 'il y a 2j',   color: T.textMuted, icon: CheckSquare },
-]
+/** Priorités du jour : échéances proches, clients silencieux, scores faibles. */
+function construirePriorites(contrats, clients) {
+  const liste = []
+  contrats.forEach((c) => {
+    const j = echeanceDe(c)
+    if (j === null || j > 30 || resilie(c)) return
+    liste.push({
+      id: `c${c.id}`,
+      level: j <= 7 ? 'urgent' : 'haut',
+      title: `${j <= 0 ? 'Échéance dépassée' : `Renouvellement ${c.type || 'contrat'}`} — ${nomContrat(c)}`,
+      meta: `${j <= 0 ? `${Math.abs(j)} j de retard` : `J-${j}`} • ${primeDe(c).toLocaleString('fr-FR')} €`,
+      cta: 'Préparer', accent: j <= 7 ? T.danger : T.warning, to: '/contrats',
+    })
+  })
+  clients.forEach((c) => {
+    const jours = joursDepuisDate(c?.dernierContact ?? c?.last_contact ?? c?.dernier_contact)
+    if (jours === null || jours <= 45) return
+    liste.push({
+      id: `s${c.id}`, level: jours > 90 ? 'urgent' : 'haut',
+      title: `Client silencieux — ${nomDe(c)}`,
+      meta: `${jours} j sans contact`, cta: 'Appeler',
+      accent: jours > 90 ? T.danger : T.warning, to: '/relances',
+    })
+  })
+  clients.forEach((c) => {
+    const score = Number(c?.score ?? c?.score_risque)
+    if (!Number.isFinite(score) || score >= 60) return
+    liste.push({
+      id: `r${c.id}`, level: 'moyen',
+      title: `Score faible — ${nomDe(c)}`, meta: `Score ${score}/100`,
+      cta: 'Voir', accent: T.ark, to: `/clients/${c.id}`,
+    })
+  })
+  const ordre = { urgent: 0, haut: 1, moyen: 2 }
+  return liste.sort((a, b) => ordre[a.level] - ordre[b.level]).slice(0, 5)
+}
 
-const SUGGESTIONS = [
-  { id: 1, title: 'Cross-sell Prévoyance', desc: 'Sophie L. — Profil idéal pour Prévoyance TNS. Potentiel 520€/an.', cta: 'Créer le devis', to: '/devis' },
-  { id: 2, title: 'Relance ciblée', desc: 'Leroy Marie silencieuse 52j. Risque 80%. Préparer appel de bilan.', cta: 'Préparer la relance', to: '/relances' },
-  { id: 3, title: 'Optimiser RC Pro', desc: 'Martin Conseil — Comparer 3 compagnies avant renouvellement J-21.', cta: 'Comparer', to: '/comparateur' },
-]
+/** Échéances à venir (30 jours), triées par urgence réelle. */
+function construireEcheances(contrats) {
+  return contrats
+    .map((c) => ({ ...c, jours: echeanceDe(c) }))
+    .filter((c) => c.jours !== null && c.jours <= 30 && !resilie(c))
+    .sort((a, b) => a.jours - b.jours)
+    .slice(0, 5)
+    .map((c) => ({
+      id: c.id,
+      type: c.type || 'Contrat',
+      client: nomContrat(c),
+      compagnie: c.compagnie || '—',
+      jours: c.jours,
+      date: c.dateEcheance ? String(c.dateEcheance).slice(0, 10) : `J-${c.jours}`,
+      prime: primeDe(c),
+    }))
+}
+
+/** Activité récente : dossiers créés et échéances proches, datés réellement. */
+function construireActivite(clients, contrats) {
+  const items = []
+  clients.forEach((c) => {
+    const t = c?.created_at || c?.createdAt
+    const ts = t ? new Date(t).getTime() : NaN
+    if (Number.isFinite(ts)) {
+      items.push({ id: `na${c.id}`, label: `Client ajouté : ${nomDe(c)}`, ts, color: T.success, icon: UserPlus })
+    }
+  })
+  contrats.forEach((c) => {
+    const j = echeanceDe(c)
+    if (j === null || j > 30) return
+    items.push({
+      id: `ec${c.id}`,
+      label: `Échéance dans ${j} j — ${c.type || 'contrat'} ${nomContrat(c)}`.trim(),
+      ts: Date.now() - (30 - j) * 86400000, color: T.warning, icon: FileText,
+    })
+  })
+  return items
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, 6)
+    .map((i) => ({ ...i, when: new Date(i.ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) }))
+}
+
+/** Suggestions ARK : uniquement des constats dérivables des dossiers chargés. */
+function construireSuggestions(contrats, clients) {
+  const liste = []
+  const parClient = new Map()
+  contrats.forEach((c) => {
+    const id = c?.client_id ?? c?.clientId ?? c?.client?.id
+    if (id !== null && id !== undefined) parClient.set(id, (parClient.get(id) || 0) + 1)
+  })
+  const mono = [...parClient.values()].filter((n) => n === 1).length
+  if (mono > 0) {
+    liste.push({
+      id: 1, title: 'Développer les clients mono-contrat',
+      desc: `${mono} clients n'ont qu'une seule couverture au dossier.`,
+      cta: 'Voir les clients', to: '/clients',
+    })
+  }
+  const aConsolider = clients.filter((c) => {
+    const s = Number(c?.score ?? c?.score_risque)
+    return Number.isFinite(s) && s < 70
+  }).length
+  if (aConsolider > 0) {
+    liste.push({
+      id: 2, title: 'Dossiers à consolider',
+      desc: `${aConsolider} clients ont un score de risque inférieur à 70/100.`,
+      cta: 'Voir la liste', to: '/clients',
+    })
+  }
+  const proches = contrats.filter((c) => {
+    const j = echeanceDe(c)
+    return j !== null && j <= 30 && !resilie(c)
+  }).length
+  if (proches > 0) {
+    liste.push({
+      id: 3, title: 'Renouvellements à préparer',
+      desc: `${proches} contrats arrivent à échéance dans les 30 jours.`,
+      cta: 'Voir les contrats', to: '/contrats',
+    })
+  }
+  return liste.slice(0, 3)
+}
 
 const LEVEL_BADGE = {
   urgent: { label: 'Urgent', bg: 'rgba(239,68,68,0.15)', color: '#FCA5A5' },
@@ -199,20 +322,29 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [clients, setClients] = useState([])
+  const [contrats, setContrats] = useState([])
+  const [devis, setDevis] = useState([])
+  const [opportunites, setOpportunites] = useState([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState({ first_name: '', last_name: '' })
 
   const loadAllData = useCallback(async () => {
     try {
       setLoading(true)
-      const [statsRes, userRes, clientsRes] = await Promise.all([
+      const [statsRes, userRes, clientsRes, contratsRes, devisRes, oppRes] = await Promise.all([
         api.get('/dashboard/stats').catch(() => ({ data: null })),
         getSessionUser().then(u => ({ data: u || {} })).catch(() => ({ data: {} })),
         api.get('/clients?limit=300').catch(() => ({ data: [] })),
+        api.get('/contrats').catch(() => ({ data: [] })),
+        api.get('/devis').catch(() => ({ data: [] })),
+        api.get('/opportunites').catch(() => ({ data: [] })),
       ])
       setStats(statsRes.data || null)
       setUser(userRes.data || {})
       setClients(normalizeRows(clientsRes.data))
+      setContrats(normalizeRows(contratsRes.data))
+      setDevis(normalizeRows(devisRes.data))
+      setOpportunites(normalizeRows(oppRes.data))
     } catch (_) { /* silent */ }
     finally { setLoading(false) }
   }, [])
@@ -238,7 +370,41 @@ export default function Dashboard() {
 
   const userName = user?.first_name || user?.firstName || ''
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-  const urgentCount = ARK_PRIORITIES.filter(p => p.level === 'urgent').length
+
+  /* Blocs du cockpit : calculés sur les dossiers chargés (aucune liste d'exemple). */
+  const priorites = useMemo(() => construirePriorites(contrats, clients), [contrats, clients])
+  const echeances = useMemo(() => construireEcheances(contrats), [contrats])
+  const activite = useMemo(() => construireActivite(clients, contrats), [clients, contrats])
+  const suggestions = useMemo(() => construireSuggestions(contrats, clients), [contrats, clients])
+  const urgentCount = priorites.filter(p => p.level === 'urgent').length
+
+  /* Pipeline et tunnel : comptés sur les devis et opportunités réellement
+     chargés. Les anciennes valeurs (14 / 9 / 7 / 4 / 6 et 42 / 28 / 18 / 9 / 6)
+     étaient écrites en dur et ne correspondaient à aucun dossier du cabinet. */
+  const statutDevis = (d) => String(d?.statut ?? d?.status ?? '').toLowerCase()
+  const pipeline = useMemo(() => {
+    const signes = devis.filter(d => ['accepte', 'signe', 'signé'].includes(statutDevis(d))).length
+    const envoyes = devis.filter(d => statutDevis(d) === 'envoye').length
+    const aEnvoyer = devis.filter(d => ['preparation', 'brouillon'].includes(statutDevis(d))).length
+    return [
+      { id: 'opp', label: 'Opportunités', count: opportunites.length, color: T.accent },
+      { id: 'prep', label: 'Devis à envoyer', count: aEnvoyer, color: T.ark },
+      { id: 'env', label: 'Devis envoyés', count: envoyes, color: T.warning },
+      { id: 'sig', label: 'Signés', count: signes, color: T.success },
+    ]
+  }, [devis, opportunites])
+
+  const tunnel = useMemo(() => {
+    const signes = devis.filter(d => ['accepte', 'signe', 'signé'].includes(statutDevis(d))).length
+    const envoyes = devis.filter(d => statutDevis(d) === 'envoye').length
+    // Étapes strictement décroissantes : un entonnoir qui n'est pas décroissant
+    // afficherait un taux de conversion supérieur à 100 %.
+    return [
+      { id: 'devis', label: 'Devis émis', count: devis.length, color: T.cyan },
+      { id: 'envoye', label: 'En attente', count: envoyes, color: T.warning, arkNote: envoyes > 0 ? `${envoyes} sans réponse` : null },
+      { id: 'signe', label: 'Signés', count: signes, color: T.success },
+    ]
+  }, [devis, opportunites])
 
   const isEmpty = !stats && clients.length === 0
 
@@ -369,12 +535,17 @@ export default function Dashboard() {
               icon={Zap}
               iconColor={T.ark}
               title="Priorités ARK aujourd'hui"
-              count={ARK_PRIORITIES.length}
+              count={priorites.length}
               cta="Tout voir"
               onCta={() => navigate('/morning-brief')}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ARK_PRIORITIES.map(p => {
+              {priorites.length === 0 && (
+                <div style={{ fontSize: 12, color: T.textMuted, padding: '10px 2px' }}>
+                  Aucune priorité détectée sur les dossiers chargés.
+                </div>
+              )}
+              {priorites.map(p => {
                 const badge = LEVEL_BADGE[p.level] || LEVEL_BADGE.moyen
                 const isUrgent = p.level === 'urgent'
                 const item = (
@@ -420,18 +591,23 @@ export default function Dashboard() {
               icon={Calendar}
               iconColor={T.warning}
               title="Échéances 30 jours"
-              count={ECHEANCES.length}
+              count={echeances.length}
               cta="Contrats"
               onCta={() => navigate('/contrats')}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {ECHEANCES.map((e, i) => {
+              {echeances.length === 0 && (
+                <div style={{ fontSize: 12, color: T.textMuted, padding: '10px 2px' }}>
+                  Aucune échéance dans les 30 jours.
+                </div>
+              )}
+              {echeances.map((e, i) => {
                 const isUrgent = e.jours <= 30
                 const row = (
                   <div key={e.id} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '11px 0',
-                    borderBottom: i < ECHEANCES.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
+                    borderBottom: i < echeances.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
                   }}>
                     <div style={{
                       width: 38, height: 38, borderRadius: 9,
@@ -464,31 +640,19 @@ export default function Dashboard() {
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)',
           gap: 12, marginBottom: 18,
         }}>
-          {/* Performance 90j */}
+          {/* Portefeuille — uniquement des valeurs calculées */}
           <AuroraCard padding={18} hover={false}>
-            <SectionTitle icon={TrendingUp} iconColor={T.success} title="Performance 90 jours" />
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 4 }}>
+            <SectionTitle icon={TrendingUp} iconColor={T.success} title="Portefeuille" />
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginTop: 4 }}>
               <div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: T.text, lineHeight: 1 }}>{fmtEur(metrics.annualPrime)}</div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Primes cumulées</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 10 }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.success, fontSize: 12, fontWeight: 600 }}>
-                    <TrendingUp size={12} /> +12,4%
-                  </span>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>vs 90j précédents</span>
-                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Primes annuelles suivies</div>
               </div>
-              <Sparkline
-                points={[180, 195, 188, 210, 225, 218, 240, 235, 248]}
-                color={T.success}
-                width={180}
-                height={56}
-              />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.cardBorder}` }}>
-              <MiniStat label="Devis signés" value="24" delta="+6" />
-              <MiniStat label="Taux transfo" value="48%" delta="+4 pts" />
-              <MiniStat label="Rétention" value="94%" delta="stable" deltaPositive={null} />
+              <MiniStat label="Clients actifs" value={String(metrics.activeClients)} />
+              <MiniStat label="Contrats actifs" value={String(metrics.activeContracts)} />
+              <MiniStat label="Échéances 30 j" value={String(echeances.length)} />
             </div>
           </AuroraCard>
 
@@ -496,13 +660,18 @@ export default function Dashboard() {
           <AuroraCard padding={18} hover={false}>
             <SectionTitle icon={Activity} iconColor={T.cyan} title="Activité récente" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {ACTIVITY.map((a, i) => {
+              {activite.length === 0 && (
+                <div style={{ fontSize: 12, color: T.textMuted, padding: '10px 2px' }}>
+                  Aucune activité enregistrée sur les dossiers chargés.
+                </div>
+              )}
+              {activite.map((a, i) => {
                 const Icon = a.icon
                 return (
                   <div key={a.id} style={{
                     display: 'flex', alignItems: 'flex-start', gap: 10,
                     padding: '9px 0',
-                    borderBottom: i < ACTIVITY.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
+                    borderBottom: i < activite.length - 1 ? `1px solid ${T.cardBorder}` : 'none',
                   }}>
                     <div style={{
                       width: 24, height: 24, borderRadius: 6,
@@ -524,14 +693,15 @@ export default function Dashboard() {
         </div>
         </VibeScrollSection>
 
-        {/* ROW 4 — Suggestions ARK */}
+        {/* ROW 4 — Suggestions ARK (calculées ; le bloc disparaît s'il n'y a rien) */}
+        {suggestions.length > 0 && (
         <VibeScrollSection delay={0.25} parallax={20}>
         <div style={{ marginBottom: 12 }}>
           <SectionTitle
             icon={Sparkles}
             iconColor={T.ark}
             title="Suggestions ARK"
-            count={SUGGESTIONS.length}
+            count={suggestions.length}
             inline
           />
           <div style={{
@@ -539,7 +709,7 @@ export default function Dashboard() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: 12, marginTop: 10,
           }}>
-            {SUGGESTIONS.map(s => (
+            {suggestions.map(s => (
               <AuroraCard key={s.id} padding={16} onClick={() => navigate(s.to)} style={{
                 background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(91,77,245,0.03))',
                 borderColor: 'rgba(139,92,246,0.18)',
@@ -569,6 +739,7 @@ export default function Dashboard() {
           </div>
         </div>
         </VibeScrollSection>
+        )}
 
         {/* ARK VOICE — P0 : Assistant téléphonique IA */}
         <VibeScrollSection delay={0.25} parallax={18}>
@@ -596,27 +767,11 @@ export default function Dashboard() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 18 }}>
             <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Pipeline dossiers</h3>
-              <DealFlowRiver
-                stages={[
-                  { id: 'prospect', label: 'Prospect', count: 14, color: T.accent },
-                  { id: 'analyse', label: 'Analyse', count: 9, color: T.cyan },
-                  { id: 'devis', label: 'Devis', count: 7, color: T.warning },
-                  { id: 'nego', label: 'Négo', count: 4, color: T.danger },
-                  { id: 'signe', label: 'Signé', count: 6, color: T.success },
-                ]}
-              />
+              <DealFlowRiver stages={pipeline} />
             </div>
             <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Tunnel de conversion</h3>
-              <ConversionGravityFunnel
-                stages={[
-                  { id: 'prospect', label: 'Prospects', count: 42, color: T.accent },
-                  { id: 'analyse', label: 'En analyse', count: 28, color: T.ark },
-                  { id: 'devis', label: 'Devis envoyés', count: 18, color: T.cyan, arkNote: '4 sans réponse' },
-                  { id: 'nego', label: 'Négociation', count: 9, color: T.warning, arkNote: 'Goulet: 50% drop' },
-                  { id: 'signe', label: 'Signés', count: 6, color: T.success },
-                ]}
-              />
+              <ConversionGravityFunnel stages={tunnel} />
             </div>
           </div>
         </VibeScrollSection>
