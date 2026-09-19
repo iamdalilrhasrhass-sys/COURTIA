@@ -84,22 +84,32 @@ export default function Onboarding() {
 
   const handleImport = async () => {
     setImporting(true)
+    setAnalyzing(true)
     const formData = new FormData()
     formData.append('file', file)
     formData.append('mapping', JSON.stringify(mapping))
     try {
-      await api.post('/import/execute', formData, {
+      const res = await api.post('/import/execute', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       setStep(3)
-      // Simuler analyse ARK
-      setAnalyzing(true)
-      setTimeout(() => {
-        setAnalysis({ imported: 42, duplicates: 3, errors: 1, total: 46 })
-        setAnalyzing(false)
-      }, 2000)
+      /* Résultat RÉEL renvoyé par POST /api/import/execute :
+         { success: true, data: { imported, duplicates, errors, total } }.
+         Avant, la réponse était jetée et l'écran affichait une « analyse ARK »
+         simulée par un setTimeout — 42 importés / 3 doublons / 1 erreur / 46 au
+         total — identique pour n'importe quel fichier. C'étaient des chiffres
+         inventés présentés comme le résultat de l'analyse. */
+      const d = res?.data?.data || res?.data || {}
+      setAnalysis({
+        imported: Number(d.imported) || 0,
+        duplicates: Number(d.duplicates) || 0,
+        errors: Number(d.errors) || 0,
+        total: Number(d.total) || 0,
+      })
+      setAnalyzing(false)
     } catch (_err) {
       toast.error('Erreur lors de l\'import')
+      setAnalyzing(false)
     } finally {
       setImporting(false)
     }
@@ -225,13 +235,13 @@ export default function Onboarding() {
               {analyzing ? (
                 <div className="text-center">
                   <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">ARK analyse votre portefeuille...</h2>
-                  <p className="text-gray-500">Détection des doublons, normalisation des numéros...</p>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Import en cours...</h2>
+                  <p className="text-gray-500">Vérification des doublons et des lignes incomplètes.</p>
                 </div>
               ) : analysis ? (
                 <div className="text-center">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Nettoyage terminé</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Import terminé</h2>
                   <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="bg-green-50 rounded-xl p-4">
                       <p className="text-3xl font-bold text-green-600">{analysis.imported}</p>
@@ -239,11 +249,11 @@ export default function Onboarding() {
                     </div>
                     <div className="bg-blue-50 rounded-xl p-4">
                       <p className="text-3xl font-bold text-blue-600">{analysis.duplicates}</p>
-                      <p className="text-sm text-blue-700">Doublons fusionnés</p>
+                      <p className="text-sm text-blue-700">Lignes en doublon ignorées</p>
                     </div>
                     <div className="bg-orange-50 rounded-xl p-4">
                       <p className="text-3xl font-bold text-orange-600">{analysis.errors}</p>
-                      <p className="text-sm text-orange-700">Erreurs corrigées</p>
+                      <p className="text-sm text-orange-700">Lignes rejetées</p>
                     </div>
                   </div>
                   <button onClick={() => setStep(4)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
@@ -252,7 +262,7 @@ export default function Onboarding() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">Analyse prête...</p>
+                  <p className="text-gray-500">Résultat prêt...</p>
                 </div>
               )}
             </motion.div>
