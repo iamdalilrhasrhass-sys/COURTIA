@@ -25,7 +25,7 @@ const {
   scheduleRelancesForDevis,
   cancelPendingRelancesForDevis,
 } = require('../services/devisRelanceService')
-const { sendEmail } = require('../services/emailService')
+const { sendCommercialEmail } = require('../services/emailService')
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
 
@@ -845,10 +845,22 @@ router.post('/:id/send', async (req, res) => {
         </div>
       </div>
     `
-    try {
-      await sendEmail({ to: email, subject, html })
-    } catch (e) {
-      logger.warn({ err: e.message }, 'devis send email failed (continuing)')
+    /* Un devis ne part QUE si l'e-mail est réellement parti.
+       Avant : l'échec d'envoi était seulement journalisé, puis le devis était
+       marqué `status='sent'` — un état métier faux (mesuré : avec RESEND_API_KEY
+       absente, sendEmail renvoie {success:false, skipped:true} sans exception,
+       le devis était donc « envoyé » alors qu'aucun message n'existait).
+       Passage par sendCommercialEmail : un devis est un message commercial,
+       le client doit pouvoir répondre. */
+    const envoi = await sendCommercialEmail({ to: email, subject, html })
+    if (!envoi || !envoi.success) {
+      logger.warn({ devisId, error: envoi && envoi.error }, 'devis send email failed')
+      return res.status(502).json({
+        error: 'email_not_sent',
+        message: "Le devis n'a pas été envoyé : l'e-mail n'est pas parti. Le devis reste en brouillon.",
+        detail: envoi && envoi.error ? envoi.error : 'send_failed',
+        provider: envoi && envoi.provider ? envoi.provider : 'none',
+      })
     }
 
     await pool.query(
