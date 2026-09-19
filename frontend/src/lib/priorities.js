@@ -36,12 +36,21 @@ export function computeDailyPriorities(clients, contrats, taches) {
       if (d > 0 && (minEch === null || d < minEch)) minEch = d
     }
 
-    // Dernier contact (tâche terminée la plus récente)
+    // Dernier contact : le champ du client quand il existe (dernierContact /
+    // last_contact), sinon la tâche terminée la plus récente. `null` signifie
+    // INCONNU — l'ancien sentinel 999 déclenchait la règle « silencieux » pour
+    // tous les clients sans tâche terminée et affichait « Aucun contact depuis
+    // 999 jours » : un chiffre inventé, présenté comme un fait.
     const termineeTaches = clientTaches.filter(t => t.statut === 'terminee')
-    let joursSansContact = 999
-    if (termineeTaches.length > 0) {
+    let joursSansContact = null
+    const dernierContact = client.dernierContact ?? client.last_contact ?? client.dernier_contact
+    if (dernierContact) {
+      const t = new Date(dernierContact).getTime()
+      if (Number.isFinite(t)) joursSansContact = Math.max(0, Math.floor((now - t) / 86400000))
+    }
+    if (joursSansContact === null && termineeTaches.length > 0) {
       const lastTs = Math.max(...termineeTaches.map(t => new Date(t.echeance || t.created_at || 0).getTime()))
-      joursSansContact = Math.floor((now - lastTs) / 86400000)
+      if (Number.isFinite(lastTs)) joursSansContact = Math.floor((now - lastTs) / 86400000)
     }
 
     // ── CRITIQUES (score_urgence 80-100) ──
@@ -104,8 +113,8 @@ export function computeDailyPriorities(clients, contrats, taches) {
       })
     }
 
-    // Aucun contact > 90j et fidélité > 60
-    if (joursSansContact > 90 && scores.fidelite > 60) {
+    // Aucun contact > 90j et fidélité > 60 — seulement si la date est CONNUE.
+    if (joursSansContact !== null && joursSansContact > 90 && scores.fidelite > 60) {
       all.push({
         id: `contact-imp-${client.id}`,
         type: 'relance_fidelite',
