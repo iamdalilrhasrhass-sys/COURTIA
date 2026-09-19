@@ -1,6 +1,15 @@
 User-agent: *
 Allow: /
 
+# Routes privees : elles repondent 200 dans le HTML initial (coquille SPA) et
+# n'ont rien a faire dans un index. Le noindex JS de NoIndex.jsx n'agit
+# qu'apres execution du JavaScript.
+Disallow: /dashboard
+Disallow: /login
+Disallow: /onboarding
+Disallow: /parametres
+Disallow: /abonnement
+
 # Sitemaps
 # sitemap.xml         : pages publiques FR réellement servies
 # sitemap-ch.xml      : cluster suisse fr-CH (/ch)

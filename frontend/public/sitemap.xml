@@ -3,9 +3,11 @@
      Mise à jour 2026-09-18 : ajout des pages légales et de confiance qui étaient
      déclarées ici ou dans les liens de pied de page sans être routées (elles
      tombaient sur le 404 du SPA), + /roadmap.
-     Le cluster suisse vit dans /sitemap-ch.xml. -->
+     Le cluster suisse vit dans /sitemap-ch.xml. Le hub /fr est désormais
+     prérendu (scripts/generate_fr_hub.py) : il est donc déclaré ici. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://courtiark.fr/</loc></url>
+  <url><loc>https://courtiark.fr/fr</loc></url>
   <url><loc>https://courtiark.fr/fonctionnalites</loc></url>
   <url><loc>https://courtiark.fr/tarifs</loc></url>
   <url><loc>https://courtiark.fr/demo</loc></url>

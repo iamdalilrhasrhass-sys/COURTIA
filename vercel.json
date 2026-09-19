@@ -4,6 +4,11 @@
   "outputDirectory": "frontend/dist",
   "redirects": [
     {
+      "source": "/fr/",
+      "destination": "/fr",
+      "permanent": true
+    },
+    {
       "source": "/tarifs/",
       "destination": "/tarifs",
       "permanent": true
@@ -98,6 +103,10 @@
     {
       "source": "/ch/conformite-intermediaire-assurance-lsa-finma",
       "destination": "/ch/conformite-intermediaire-assurance-lsa-finma/index.html"
+    },
+    {
+      "source": "/fr",
+      "destination": "/fr/index.html"
     },
     {
       "source": "/(.*)",
