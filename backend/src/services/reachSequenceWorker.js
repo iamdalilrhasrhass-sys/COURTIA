@@ -11,7 +11,7 @@
  *   - si plus d'étape → status = 'done'
  */
 const pool = require('../db')
-const { sendEmail } = require('./emailService')
+const { sendEmail, sendCommercialEmail } = require('./emailService')
 const logger = require('../lib/logger')
 
 async function executeStep({ run, prospect, step }) {
@@ -26,7 +26,7 @@ async function executeStep({ run, prospect, step }) {
 
   if (channel === 'email' && prospect.email) {
     try {
-      await sendEmail({ to: prospect.email, subject, html: `<div style="font-family:Inter,Arial;color:#1F2937;max-width:600px;margin:0 auto">${bodyRendered.replace(/\n/g, '<br>')}</div>` })
+      await sendCommercialEmail({ to: prospect.email, subject, html: `<div style="font-family:Inter,Arial;color:#1F2937;max-width:600px;margin:0 auto">${bodyRendered.replace(/\n/g, '<br>')}</div>` })
       await pool.query(`
         INSERT INTO reach_messages (prospect_id, channel, subject, content, status, sent_at, user_id, campaign_id)
         VALUES ($1, 'email', $2, $3, 'sent', NOW(), $4, NULL)

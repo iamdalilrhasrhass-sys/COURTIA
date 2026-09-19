@@ -13,7 +13,7 @@
  */
 
 const pool = require('../db');
-const { sendEmail, getEmailStatus } = require('./emailService');
+const { sendEmail, getEmailStatus, sendCommercialEmail } = require('./emailService');
 const { sendSMS, sendBulkSMS, getSmsStatus } = require('./smsService');
 const telegramService = require('./telegramService');
 const logger = require('../lib/logger');
@@ -25,7 +25,7 @@ const CANAL_PAR_DEFAUT = 'email';
 // Canal → fonction d'envoi
 const SENDERS = {
   email: async ({ to, message, subject }) => {
-    return sendEmail({
+    return sendCommercialEmail({
       to,
       subject: subject || 'Message COURTIA',
       html: `<div style="font-family:Arial,sans-serif;max-width:600px">

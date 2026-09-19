@@ -18,7 +18,7 @@
  */
 
 const cron = require('node-cron');
-const { sendEmail } = require('../services/emailService');
+const { sendEmail, sendCommercialEmail } = require('../services/emailService');
 const { sendSMS, getSmsStatus } = require('../services/smsService');
 const logger = require('../lib/logger');
 
@@ -164,7 +164,7 @@ async function sendRelance(pool, client, etape) {
 
   try {
     // Envoyer l'email
-    const emailResult = await sendEmail({
+    const emailResult = await sendCommercialEmail({
       to: client.email,
       subject: config.sujet_template,
       html: config.corps_template(client),

@@ -9,7 +9,7 @@
 
 const crypto = require('crypto');
 const logger = require('../lib/logger');
-const { sendEmail } = require('../services/emailService');
+const { sendEmail, sendCommercialEmail } = require('../services/emailService');
 const { sendSMS } = require('../services/smsService');
 
 class ReachWorker {
@@ -342,7 +342,7 @@ class ReachWorker {
 
     let delivery;
     if (campaign.channel === 'email') {
-      delivery = await sendEmail({
+      delivery = await sendCommercialEmail({
         to: prospect.email,
         subject,
         text: body,

@@ -7,7 +7,7 @@
  * Stocke logs dans devis_relances.
  */
 const pool = require('../db')
-const { sendEmail } = require('./emailService')
+const { sendEmail, sendCommercialEmail } = require('./emailService')
 const logger = require('../lib/logger')
 
 const TEMPLATES = {
@@ -109,7 +109,7 @@ async function processDueRelances() {
       pdfUrl: `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/devis/${r.devis_id}`,
     }
     try {
-      await sendEmail({
+      await sendCommercialEmail({
         to: r.client_email_cache,
         subject: tpl.subject(ctx),
         html: tpl.html(ctx),

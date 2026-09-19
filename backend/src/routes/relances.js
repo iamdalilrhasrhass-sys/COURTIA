@@ -33,7 +33,7 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
-const { sendEmail, getEmailStatus } = require('../services/emailService')
+const { sendEmail, getEmailStatus, sendCommercialEmail } = require('../services/emailService')
 const { sendSMS, getSmsStatus } = require('../services/smsService')
 const whatsappMeta = require('../services/whatsappMetaService')
 const logger = require('../lib/logger')
@@ -501,7 +501,7 @@ router.post('/:id/send', async (req, res) => {
       if (!relance.client_email) {
         return res.status(400).json({ error: "Ce client n'a pas d'adresse email." })
       }
-      const sent = await sendEmail({
+      const sent = await sendCommercialEmail({
         to: relance.client_email,
         subject,
         text: content,
