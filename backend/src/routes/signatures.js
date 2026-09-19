@@ -47,6 +47,21 @@ router.post('/create', verifyToken, async (req, res) => {
       { title: documentTitle, phone }
     )
 
+    // CORRECTION 2026-09-19 : on ne crée plus de demande de signature quand le
+    // fournisseur n'est pas configuré. Rien n'est écrit en base, rien n'est
+    // annoncé au courtier — 503 explicite, comme routes/documents.js.
+    if (result.not_configured || result.mock || !result.providerRequestId) {
+      return res.status(503).json({
+        success: false,
+        error: 'configuration_required',
+        provider: 'yousign',
+        missing: result.missing || undefined,
+        message:
+          "Yousign n'est pas configuré : aucune demande de signature n'a été créée. " +
+          'Renseignez YOUSIGN_API_KEY et YOUSIGN_WEBHOOK_SECRET côté serveur.',
+      })
+    }
+
     const insertRes = await pool.query(
       `INSERT INTO signature_requests
         (user_id, document_id, client_id, yousign_request_id, status, signer_email, signer_name, signature_url, created_at)

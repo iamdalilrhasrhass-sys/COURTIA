@@ -91,16 +91,21 @@ function getYousignClient() {
 async function createSignatureRequest(documentPathOrObj, signerEmailOrObj, signerName, options = {}) {
   const config = getConfigStatus()
 
-  // Mode mock si non configuré
+  // CORRECTION 2026-09-19 : sans clé Yousign, le service fabriquait un
+  // identifiant (`mock_<uuid>`), une URL de signature factice et un statut
+  // 'sent_to_sign'. La demande était ensuite enregistrée en base comme envoyée :
+  // le cabinet attendait une signature (mandat, DDA, IPID) qui n'existerait
+  // jamais, et la preuve de conseil exigible en contrôle était inexistante.
+  // Désormais : AUCUNE donnée fabriquée, aucun statut métier mensonger.
   if (!config.configured) {
-    console.log('[Yousign] Mode mock — API non configurée')
-    const mockId = `mock_${crypto.randomUUID()}`
+    console.warn('[Yousign] non configuré — aucune demande créée (configuration_required)')
     return {
       configured: false,
-      mock: true,
-      providerRequestId: mockId,
-      signatureUrl: `https://app.yousign.com/procedure/sign?mock=true&id=${mockId}`,
-      status: 'sent_to_sign',
+      not_configured: true,
+      mock: false,
+      providerRequestId: null,
+      signatureUrl: null,
+      status: 'not_configured',
       missing: config.missing,
     }
   }
