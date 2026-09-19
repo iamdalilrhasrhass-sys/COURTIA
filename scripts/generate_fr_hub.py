@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Génère le hub FR /fr — la page la plus liée du silo français.
 
+Les liens vers les 10 pages ville prioritaires (noyau SEO) sont injectés par
+`scripts/ameliorer_pages_ville.py` et repris ici pour qu'une régénération du hub
+ne fasse pas perdre ce maillage.
+
 POURQUOI CE FICHIER EXISTE
 --------------------------
 Mesure du 19/09/2026 : `https://courtiark.fr/fr` renvoyait la coquille SPA
@@ -17,6 +21,10 @@ Usage : python3 scripts/generate_fr_hub.py
 """
 
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ameliorer_pages_ville import bloc_villes_hub_fr  # noqa: E402  (noyau SEO)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "frontend", "public", "fr", "index.html")
@@ -95,6 +103,7 @@ def render():
     alternatives = "\n".join(
         f'      <li><a href="/fr/{slug}">{titre}</a></li>' for slug, titre in ALTERNATIVES
     )
+    villes = bloc_villes_hub_fr()
     return f"""<!DOCTYPE html>
 <html lang="fr-FR">
 <head>
@@ -165,6 +174,7 @@ def render():
 {alternatives}
   </ul>
 
+{villes}
   <h2>Par où commencer</h2>
   <ol class="steps">
     <li><a href="{SITE}/demo">Faire la visite guidée</a> : neuf chapitres, données synthétiques, sans inscription.</li>

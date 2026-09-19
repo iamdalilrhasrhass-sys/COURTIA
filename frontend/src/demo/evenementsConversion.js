@@ -30,6 +30,8 @@ export const EVENEMENTS = {
   question: 'contact_requested',
 }
 
+import { lireLeadId } from '../lib/leadCapture'
+
 /* ------------------------------------------------------------- persistance
    Stockage de SESSION : la visite dure le temps d'un onglet. Un rechargement
    dans le même onglet garde la même session et la même adresse. Toute erreur
@@ -127,10 +129,17 @@ export async function envoyerEvenement(evenement, meta = {}) {
     ts: new Date().toISOString(),
   }
 
+  // Le lead_id de la visite est joint à l'événement : c'est LUI qui permet au
+  // service de capture de faire avancer le pipeline (NEW -> DEMO_STARTED ->
+  // DEMO_COMPLETED). Sans lui, un visiteur qui parcourt toute la démonstration
+  // restait au statut NEW et n'apparaissait jamais comme prospect engagé.
+  const leadId = lireLeadId()
+
   const corps = {
     /* Vocabulaire du service de capture (202) */
     event: evenement,
     session_id: sessionId(),
+    ...(leadId ? { lead_id: leadId } : {}),
     source: 'demo',
     device: classerAppareil(),
     route,

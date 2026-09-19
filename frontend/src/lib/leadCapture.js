@@ -114,6 +114,53 @@ export function resolveLeadEndpoints(env = readEnv()) {
   return endpoints
 }
 
+/* --------------------------------------------------------------- lead_id
+   Le service de capture n'accepte de faire AVANCER UN LEAD que si l'événement
+   porte son `lead_id` (service_capture.py : avancer_lead_sur_evenement lit
+   d.get("lead_id") ; sans lui, l'événement est stocké mais le prospect reste au
+   statut NEW quoi qu'il fasse dans la démonstration). On conserve donc l'id
+   renvoyé par /api/leads/demo-request pour le joindre à tous les événements
+   suivants de la même visite. Stockage de session : la visite dure le temps d'un
+   onglet, et une erreur de stockage (navigation privée) ne casse rien. */
+const CLE_LEAD = 'courtia_demo_lead_id'
+
+function stockageSession() {
+  try { return window.sessionStorage } catch { return null }
+}
+
+/** Extrait l'identifiant de lead d'une réponse de capture, s'il est exploitable. */
+export function identifiantLead(data) {
+  if (!data || typeof data !== 'object') return null
+  const brut = data.lead_id ?? data.leadId ?? data.lead?.id ?? data.id
+  const n = Number(brut)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
+/** Mémorise l'identifiant de lead de la visite. Renvoie l'id mémorisé, ou null. */
+export function memoriserLeadId(data) {
+  const id = identifiantLead(data)
+  if (!id) return null
+  const s = stockageSession()
+  if (s) { try { s.setItem(CLE_LEAD, String(id)) } catch { /* stockage refusé */ } }
+  return id
+}
+
+/** Identifiant de lead de la visite en cours, ou null si la visite n'en a pas. */
+export function lireLeadId() {
+  const s = stockageSession()
+  if (!s) return null
+  let brut = null
+  try { brut = s.getItem(CLE_LEAD) } catch { return null }
+  const n = Number(brut)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
+/** Oublie l'identifiant de lead (utilisé par les tests et la réinitialisation). */
+export function oublierLeadId() {
+  const s = stockageSession()
+  if (s) { try { s.removeItem(CLE_LEAD) } catch { /* sans effet */ } }
+}
+
 /**
  * Vérifie que la demande est RÉELLEMENT enregistrée.
  * Une réponse sans {ok:true} ni lead_id (page HTML servie par un rewrite, etc.)
@@ -181,7 +228,14 @@ export async function postDemoRequest(payload, options = {}) {
     }
     const reponseService = Boolean(data) && typeof data === 'object' && !Array.isArray(data)
 
-    if (response.ok && reponseService) return assertLeadCaptured(data)
+    if (response.ok && reponseService) {
+      const confirme = assertLeadCaptured(data)
+      // La capture est confirmée : on retient l'id pour que les événements de la
+      // visite (demo_started, demo_completed...) fassent réellement avancer le
+      // pipeline côté service de capture.
+      memoriserLeadId(confirme)
+      return confirme
+    }
 
     if (response.ok || response.status === 404 || response.status === 405) {
       derniereErreur = new Error(

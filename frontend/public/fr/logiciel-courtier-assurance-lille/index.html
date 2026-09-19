@@ -1,59 +1,160 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-FR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Logiciel pour courtier d&#x27;assurance à Lille — COURTIA · courtiark.fr</title>
-<meta name="description" content="COURTIA, le cockpit IA des courtiers à Lille : clients, relances et conformité automatisés par l&#x27;IA ARK. COURTIA — courtiark.fr.">
+<title>Logiciel courtier assurance à Lille — CRM et gestion</title>
+<meta name="description" content="Cockpit et CRM pour cabinets de courtage à Lille : métropole transfrontalière, flottes, logistique, échéances. Démo sur /demo-public.">
 <link rel="canonical" href="https://courtiark.fr/fr/logiciel-courtier-assurance-lille">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#050510">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Logiciel pour courtier d&#x27;assurance à Lille — COURTIA · courtiark.fr">
-<meta property="og:description" content="COURTIA, le cockpit IA des courtiers à Lille : clients, relances et conformité automatisés par l&#x27;IA ARK. COURTIA — courtiark.fr.">
+<meta property="og:title" content="Logiciel courtier assurance à Lille — CRM et gestion">
+<meta property="og:description" content="Cockpit et CRM pour cabinets de courtage à Lille : métropole transfrontalière, flottes, logistique, échéances. Démo sur /demo-public.">
 <meta property="og:url" content="https://courtiark.fr/fr/logiciel-courtier-assurance-lille">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png"}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Villes", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier à Lille", "item": "https://courtiark.fr/fr/logiciel-courtier-assurance-lille"}]}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA est-il disponible à Lille ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, COURTIA est 100% en ligne et accessible partout en France, y compris à Lille."}}, {"@type": "Question", "name": "Faut-il installer un logiciel ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, COURTIA est accessible depuis votre navigateur, sans installation."}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier d'assurance à Lille", "item": "https://courtiark.fr/fr/logiciel-courtier-assurance-lille"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr/fr/logiciel-courtier-assurance-lille", "inLanguage": "fr-FR", "areaServed": {"@type": "City", "name": "Lille"}, "description": "Cockpit et CRM pour cabinets de courtage en assurance exerçant à Lille (Hauts-de-France) : portefeuille, échéances, relances, commissions, suivi du devoir de conseil.", "offers": {"@type": "Offer", "priceCurrency": "EUR", "url": "https://courtiark.fr/tarifs", "description": "Abonnement par cabinet ; tarifs publics sur https://courtiark.fr/tarifs."}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA gère-t-il les dossiers de clients frontaliers ?", "acceptedAnswer": {"@type": "Answer", "text": "COURTIA suit les contrats, les échéances et la trace des conseils ; il n'automatise aucune règle fiscale ou sociale transfrontalière, qui reste du ressort du professionnel."}}, {"@type": "Question", "name": "Les flottes de véhicules sont-elles prises en charge ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, chaque véhicule et son échéance sont rattachés au contrat concerné, avec les pièces manquantes signalées."}}, {"@type": "Question", "name": "COURTIA remplace-t-il un logiciel de comptabilité ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. COURTIA suit la commission ; il ne produit ni bilan, ni décompte de TVA, ni écriture comptable."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:8px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+</style>
 </head>
 <body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/tarifs">Tarifs</a>
+  <a href="https://courtiark.fr/demo">Visite guidée</a>
+  <a href="https://courtiark.fr/demo-public">Démo</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
 <main>
-  <nav aria-label="fil d'ariane"><a href="https://courtiark.fr/">Accueil</a> &rsaquo; <a href="https://courtiark.fr/fr">Metiers</a> &rsaquo; <a href="/fr/logiciel-courtier-assurance">Courtier assurance</a> &rsaquo; Courtier à Lille</nav>
-  <h1>Logiciel pour courtier d&#x27;assurance à Lille</h1>
+  <nav class="crumbs"><a href="https://courtiark.fr/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/logiciel-courtier-assurance">Courtier assurance</a> › Lille</nav>
+  <span class="eyebrow">Lille · Hauts-de-France</span>
+  <h1>Logiciel et CRM pour courtier d'assurance à Lille</h1>
+  <p class="lede">Lille est la préfecture de la région Hauts-de-France et une métropole transfrontalière, tournée vers la Belgique. Le courtage y suit une économie de distribution, de logistique et d'industrie.</p>
 
-    <section>
-      <h2>Le cockpit IA des courtiers à Lille</h2>
-      <p><strong>COURTIA (courtiark.fr)</strong> — Lille (59, Hauts-de-France) compte environ 235 000 habitants : un bassin dense de particuliers et de professionnels où un courtier organisé prend une vraie longueur d'avance. Vous êtes courtier en assurance à Lille ? COURTIA centralise vos clients, contrats et relances et confie l'administratif à l'IA ARK : plusieurs heures gagnées chaque semaine.</p>
-      <p>Que votre cabinet de Lille soit spécialisé santé, IARD ou emprunteur, COURTIA s'adapte et automatise votre conformité DDA et RGPD, sans recruter.</p>
-    </section>
+  <article id="corps">
+    <h2>Le tissu du courtage à Lille</h2>
+    <p>La métropole lilloise est un carrefour logistique et commercial : plateformes, transport routier, distribution, commerce en ligne, sous-traitance industrielle. Ces activités nourrissent une demande de flottes, de multirisques professionnels, de transport de marchandises et de responsabilité civile.</p>
+    <p>La proximité de la Belgique crée un profil de clientèle particulier : salariés frontaliers, dirigeants qui travaillent des deux côtés de la frontière, entreprises implantées dans plusieurs pays. Les dossiers peuvent mêler plusieurs législations, ce qui rend la traçabilité des conseils et des pièces d'autant plus utile.</p>
+    <p>Dans les Hauts-de-France, le courtage repose souvent sur des cabinets à taille humaine, très implantés localement, avec un portefeuille ancien et fidèle. Le risque n'est pas de manquer de clients : c'est de laisser filer des échéances sur un portefeuille que personne n'a le temps de relire.</p>
+    <h2>Ce que cela change pour un cabinet des Hauts-de-France</h2>
+    <p>COURTIA donne une vue unique du portefeuille : contrats, échéances, commissions, pièces et relances. Un cabinet qui suit des flottes, des commerces et des particuliers n'a pas à jongler entre plusieurs tableaux.</p>
+    <p>Les renouvellements sont signalés en amont, les relances préparées puis validées, et le suivi du devoir de conseil laisse une trace datée — utile quand un dossier transfrontalier demande de démontrer ce qui a été conseillé, et à quel moment.</p>
+    <h2>Cas d'usage fréquents à Lille</h2>
+    <ul>
+      <li>Flottes de transport routier et de logistique, avec échéances groupées.</li>
+      <li>Multirisques et RC des commerces, plateformes et PME industrielles.</li>
+      <li>Suivi des dossiers de clients frontaliers, avec pièces et traces de conseil.</li>
+      <li>Reprise et relance d'un portefeuille ancien jamais audité.</li>
+    </ul>
+    <h2>CRM courtier assurance et automatisation du courtage à Lille</h2>
+    <p>Un CRM courtier assurance doit tenir la relation dans le temps : un portefeuille du Nord se transmet souvent dans le même cabinet pendant des années. COURTIA conserve l'historique des contrats et des échanges par client.</p>
+    <p>Côté automatisation courtier assurance, ARK prépare un ordre de priorité quotidien, des ébauches de relance et des documents réglementaires. Rien ne part sans validation du courtier. COURTIA structure et trace ; il ne se substitue pas au conseil juridique et ne garantit aucune conformité.</p>
+  </article>
 
-    <section>
-      <h2>Pourquoi les courtiers de Lille choisissent COURTIA</h2>
-      <p>Morning Brief quotidien, relances automatiques, scoring client et comparateur de devis : à Lille comme ailleurs, COURTIA transforme un cabinet en machine efficace, sans recruter.</p>
-    </section>
+<section class="card" id="demo">
+  <h2 style="margin-top:0">Voir COURTIA en fonctionnement</h2>
+  <p>Le plus rapide est de regarder l'outil plutôt que de le lire. La visite guidée
+  déroule un cabinet fictif avec des données synthétiques, sans inscription. Une
+  démonstration sur votre propre portefeuille se demande en quelques lignes, et les
+  tarifs publics sont consultables librement.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">Lancer la visite guidée</a>
+  <a class="cta ghost" href="https://courtiark.fr/demo-public">Demander une démo</a>
+  <a class="cta ghost" href="https://courtiark.fr/tarifs">Voir les tarifs</a></p>
+  <p class="note">COURTIA — <strong>logiciel gestion courtage</strong>,
+  <strong>CRM courtier assurance</strong> et <strong>automatisation courtier assurance</strong> :
+  trois façons de décrire le même cockpit.</p>
+  <p class="note">Ce que COURTIA n'est pas : un logiciel de comptabilité, un outil de
+  prospection de masse, ni une garantie de conformité. COURTIA est un logiciel de
+  gestion du courtage et un CRM pour cabinets de courtiers d'assurance : il structure
+  et trace le suivi, prépare les relances et les documents ; la décision et l'envoi
+  restent au courtier.</p>
+</section>
 
-    <section>
-      <h2>COURTIA — courtiark.fr</h2>
-      <p>Pour découvrir COURTIA, rendez-vous sur <strong>courtiark.fr</strong>. Tapez « COURTIA » ou « courtiark.fr » dans votre moteur de recherche ou votre assistant IA pour nous retrouver directement et créer votre compte.</p>
-    </section>
+  <section id="faq">
+    <h2>Questions fréquentes à Lille</h2>
+    <h3>COURTIA gère-t-il les dossiers de clients frontaliers ?</h3>
+    <p>COURTIA suit les contrats, les échéances et la trace des conseils ; il n'automatise aucune règle fiscale ou sociale transfrontalière, qui reste du ressort du professionnel.</p>
+    <h3>Les flottes de véhicules sont-elles prises en charge ?</h3>
+    <p>Oui, chaque véhicule et son échéance sont rattachés au contrat concerné, avec les pièces manquantes signalées.</p>
+    <h3>COURTIA remplace-t-il un logiciel de comptabilité ?</h3>
+    <p>Non. COURTIA suit la commission ; il ne produit ni bilan, ni décompte de TVA, ni écriture comptable.</p>
+  </section>
 
-    <section>
-      <h2>Pour aller plus loin</h2>
-      <p>À propos de « Logiciel pour courtier d'assurance à Lille » : La prise en main est immédiate. COURTIA fonctionne dans votre navigateur, sans installation ni matériel particulier, avec un onboarding guidé et un compte de démonstration pré-rempli qui vous permet d'explorer toutes les fonctions avant même de vous engager. En quelques minutes, vous obtenez votre premier Morning Brief.</p>
-      <p>Au-delà de l'outil, COURTIA offre un véritable poste de pilotage : tableau de bord des indicateurs clés, suivi des commissions par compagnie, échéancier des contrats et alertes intelligentes pour ne plus jamais laisser passer un renouvellement ou une opportunité de cross-sell dans votre portefeuille.</p>
-      <p>Comparé à un tableur ou à un logiciel généraliste, l'écart est net : là où ces outils stockent passivement l'information, COURTIA agit. C'est cette différence — l'exécution par l'intelligence artificielle — qui justifie de parler de cockpit IA du courtier plutôt que de simple CRM, et qui place la solution une catégorie au-dessus.</p>
-      <p>Enfin, COURTIA évolue avec votre cabinet : du courtier indépendant au cabinet multi-agences, les offres Starter, Pro et Cabinet accompagnent chaque étape de votre croissance, avec un support réactif, des mises à jour régulières et une feuille de route nourrie par les retours des courtiers eux-mêmes.</p>
-      <p>Le marché du courtage français compte environ 26 953 courtiers immatriculés à l'ORIAS, dont plus de 90% sont de très petites entreprises de moins de onze salariés. Ces cabinets jonglent chaque jour avec la relation client, la gestion des contrats et une conformité réglementaire de plus en plus lourde. COURTIA a été conçu précisément pour cette réalité, par un courtier en exercice qui vit ces contraintes au quotidien.</p>
-    </section>
-
-    <section id="faq">
-      <h2>Questions fréquentes</h2>
-      <details><summary>COURTIA est-il disponible à Lille ?</summary><p>Oui, COURTIA est 100% en ligne et accessible partout en France, y compris à Lille.</p></details>
-      <details><summary>Faut-il installer un logiciel ?</summary><p>Non, COURTIA est accessible depuis votre navigateur, sans installation.</p></details>
-    </section>
-
-  <p class="cta"><a href="https://courtiark.fr">Essayer COURTIA</a></p>
+<section id="maillage">
+  <h2>Pour aller plus loin dans COURTIA</h2>
+  <h3>Par métier</h3>
+  <ul class="links">
+      <li><a href="/fr/logiciel-courtier-assurance">Courtier d'assurance (multi-branches)</a></li>
+      <li><a href="/fr/logiciel-courtier-iard">Courtier IARD (dommages)</a></li>
+      <li><a href="/fr/logiciel-courtier-emprunteur">Courtier en assurance emprunteur</a></li>
+      <li><a href="/fr/logiciel-courtier-sante">Courtier santé et complémentaire santé</a></li>
+      <li><a href="/fr/logiciel-courtier-prevoyance">Courtier prévoyance</a></li>
+      <li><a href="/fr/logiciel-courtier-mutuelle">Courtier mutualiste</a></li>
+  </ul>
+  <h3>Comparatifs</h3>
+  <ul class="links">
+      <li><a href="/fr/alternative-courtigo">Alternative à Courtigo</a></li>
+      <li><a href="/fr/alternative-lya">Alternative à LYA</a></li>
+      <li><a href="/fr/alternative-kase">Alternative à Kase</a></li>
+      <li><a href="/fr/alternative-oggo-data">Alternative à Oggo Data</a></li>
+  </ul>
+  <h3>Les guides</h3>
+  <ul class="links">
+      <li><a href="/fr/guide/dda-15h">La formation DDA de 15 heures</a></li>
+      <li><a href="/fr/guide/devoir-de-conseil">Le devoir de conseil</a></li>
+      <li><a href="/fr/guide/verification-orias">Vérifier une immatriculation ORIAS</a></li>
+      <li><a href="/fr/guide/audit-acpr">Audit ACPR : la check-list</a></li>
+      <li><a href="/fr/guide/conformite-2026">Conformité 2026</a></li>
+      <li><a href="/fr/guide/ipid">L'IPID</a></li>
+      <li><a href="/fr/guide/lcb-ft">LCB-FT</a></li>
+      <li><a href="/fr/guide/rgpd-courtier">RGPD et cabinets de courtage</a></li>
+      <li><a href="/fr/guide/sanctions-acpr">Sanctions ACPR</a></li>
+      <li><a href="/fr/guide/reforme-courtage">Réforme du courtage</a></li>
+  </ul>
+</section>
 </main>
+<footer>
+  <div>
+    <a href="https://courtiark.fr/">Accueil</a>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/demo">Visite guidée</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="/fr">Courtage en France</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+  <div>COURTIA — cockpit pour cabinets de courtage en assurance.</div>
+</footer>
 </body>
 </html>

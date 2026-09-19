@@ -244,13 +244,29 @@ async function getUserPlanInfo(userId) {
     // Si en essai, on donne les features Pro
     const activeFeatures = onTrial ? TRIAL_FEATURES : plan.features;
 
+    // COHÉRENCE DES DEUX VUES (correction du 19/09/2026) : pendant l'essai, les
+    // fonctions ouvertes sont celles de TRIAL_FEATURES (= PLANS.pro.features),
+    // mais cette fonction renvoyait `plan: 'starter'` (car `users.plan` vaut
+    // 'trial', absent de PLANS, donc repli sur DEFAULT_PLAN). L'application
+    // affichait donc « Starter » tout en ouvrant les fonctions Pro, et
+    // /api/billing/status affichait « not_started » — trois réponses pour un même
+    // compte. Le plan effectif renvoyé est désormais celui dont les fonctions
+    // sont réellement appliquées.
+    const joursEssai = onTrial && user.trial_ends_at
+      ? Math.max(0, Math.ceil((new Date(user.trial_ends_at).getTime() - Date.now()) / 86400000))
+      : null;
+
     return {
-      plan: publicPlanKey,
-      plan_name: plan.name,
+      plan: onTrial ? 'pro' : publicPlanKey,
+      // Pendant l'essai le nom doit dire le plan dont les fonctions sont ouvertes
+      // (Pro), pas le plan de repli : « Starter (essai) » alors que plan='pro'
+      // etait une contradiction de plus dans le meme objet.
+      plan_name: onTrial ? `${PLANS.pro.name} (essai)` : plan.name,
       price: plan.price,
       subscription_status: user.subscription_status,
       on_trial: onTrial,
       trial_ends_at: user.trial_ends_at,
+      trial_jours_restants: joursEssai,
       stripe_customer_id: user.stripe_customer_id,
       stripe_subscription_id: user.stripe_subscription_id,
       features: activeFeatures,

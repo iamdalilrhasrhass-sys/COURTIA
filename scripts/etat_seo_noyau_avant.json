@@ -1,0 +1,723 @@
+{
+ "pages_fr_total": 1100,
+ "details": {
+  "/fr/logiciel-courtier-assurance-paris": {
+   "absent": false,
+   "taille_octets": 6269,
+   "mots": 481,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Paris"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-paris",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-lyon": {
+   "absent": false,
+   "taille_octets": 6253,
+   "mots": 480,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Lyon"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-lyon",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-marseille": {
+   "absent": false,
+   "taille_octets": 6337,
+   "mots": 482,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Marseille"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-marseille",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-bordeaux": {
+   "absent": false,
+   "taille_octets": 6423,
+   "mots": 492,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Bordeaux"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-bordeaux",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-toulouse": {
+   "absent": false,
+   "taille_octets": 6393,
+   "mots": 488,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Toulouse"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-toulouse",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-nantes": {
+   "absent": false,
+   "taille_octets": 6244,
+   "mots": 475,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Nantes"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-nantes",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-lille": {
+   "absent": false,
+   "taille_octets": 6241,
+   "mots": 481,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Lille"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-lille",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-strasbourg": {
+   "absent": false,
+   "taille_octets": 6437,
+   "mots": 491,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Strasbourg"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-strasbourg",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-montpellier": {
+   "absent": false,
+   "taille_octets": 6456,
+   "mots": 488,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Montpellier"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-montpellier",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance-nice": {
+   "absent": false,
+   "taille_octets": 6259,
+   "mots": 481,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Nice"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-nice",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  },
+  "/fr/logiciel-courtier-assurance": {
+   "absent": false,
+   "taille_octets": 18666,
+   "mots": 474,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier assurance"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 179,
+   "liens_entrants": 180
+  },
+  "/fr/logiciel-courtier-iard": {
+   "absent": false,
+   "taille_octets": 19572,
+   "mots": 725,
+   "mots_corps": 0,
+   "h1": [
+    "Le logiciel du courtier IARD et risques pro"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-iard",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 179,
+   "liens_entrants": 180
+  },
+  "/fr/logiciel-courtier-emprunteur": {
+   "absent": false,
+   "taille_octets": 20943,
+   "mots": 751,
+   "mots_corps": 0,
+   "h1": [
+    "Le logiciel du courtier assurance emprunteur"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-emprunteur",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 179,
+   "liens_entrants": 180
+  },
+  "/fr/logiciel-courtier-sante": {
+   "absent": false,
+   "taille_octets": 17690,
+   "mots": 447,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier santé"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-sante",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 179,
+   "liens_entrants": 180
+  },
+  "/fr/logiciel-courtier-prevoyance": {
+   "absent": false,
+   "taille_octets": 20558,
+   "mots": 699,
+   "mots_corps": 0,
+   "h1": [
+    "Le logiciel du courtier prévoyance"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-prevoyance",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 179,
+   "liens_entrants": 180
+  },
+  "/fr/logiciel-courtier-mutuelle": {
+   "absent": false,
+   "taille_octets": 18295,
+   "mots": 436,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier mutuelle"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-mutuelle",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 179,
+   "liens_entrants": 180
+  },
+  "/fr/alternative-courtigo": {
+   "absent": false,
+   "taille_octets": 6407,
+   "mots": 498,
+   "mots_corps": 0,
+   "h1": [
+    "Alternative à CourtiGo : le cockpit IA des courtiers"
+   ],
+   "canonical": "https://courtiark.fr/fr/alternative-courtigo",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/alternative-lya": {
+   "absent": false,
+   "taille_octets": 6300,
+   "mots": 502,
+   "mots_corps": 0,
+   "h1": [
+    "Alternative à Lya : le cockpit IA des courtiers"
+   ],
+   "canonical": "https://courtiark.fr/fr/alternative-lya",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/alternative-kase": {
+   "absent": false,
+   "taille_octets": 6253,
+   "mots": 494,
+   "mots_corps": 0,
+   "h1": [
+    "Alternative à Kase : le cockpit IA des courtiers"
+   ],
+   "canonical": "https://courtiark.fr/fr/alternative-kase",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/alternative-oggo-data": {
+   "absent": false,
+   "taille_octets": 6214,
+   "mots": 484,
+   "mots_corps": 0,
+   "h1": [
+    "Alternative à Oggo Data : le cockpit IA des courtiers"
+   ],
+   "canonical": "https://courtiark.fr/fr/alternative-oggo-data",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/dda-15h": {
+   "absent": false,
+   "taille_octets": 6107,
+   "mots": 502,
+   "mots_corps": 0,
+   "h1": [
+    "DDA : prouver ses 15h de formation"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/dda-15h",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/devoir-de-conseil": {
+   "absent": false,
+   "taille_octets": 5864,
+   "mots": 471,
+   "mots_corps": 0,
+   "h1": [
+    "Devoir de conseil du courtier"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/devoir-de-conseil",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/verification-orias": {
+   "absent": false,
+   "taille_octets": 5894,
+   "mots": 473,
+   "mots_corps": 0,
+   "h1": [
+    "Vérifier un numéro ORIAS"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/verification-orias",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/audit-acpr": {
+   "absent": false,
+   "taille_octets": 5871,
+   "mots": 481,
+   "mots_corps": 0,
+   "h1": [
+    "Audit ACPR : la check-list"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/audit-acpr",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/conformite-2026": {
+   "absent": false,
+   "taille_octets": 5868,
+   "mots": 471,
+   "mots_corps": 0,
+   "h1": [
+    "Conformité courtage 2026 : le calendrier"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/conformite-2026",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/ipid": {
+   "absent": false,
+   "taille_octets": 5969,
+   "mots": 476,
+   "mots_corps": 0,
+   "h1": [
+    "IPID : le document d&#x27;information produit"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/ipid",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/lcb-ft": {
+   "absent": false,
+   "taille_octets": 5873,
+   "mots": 475,
+   "mots_corps": 0,
+   "h1": [
+    "LCB-FT : conformité du courtier"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/lcb-ft",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/rgpd-courtier": {
+   "absent": false,
+   "taille_octets": 5984,
+   "mots": 491,
+   "mots_corps": 0,
+   "h1": [
+    "RGPD pour courtiers : registre Art.30"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/rgpd-courtier",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/sanctions-acpr": {
+   "absent": false,
+   "taille_octets": 5934,
+   "mots": 471,
+   "mots_corps": 0,
+   "h1": [
+    "Sanctions ACPR : ce qu&#x27;il faut retenir"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/sanctions-acpr",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr/guide/reforme-courtage": {
+   "absent": false,
+   "taille_octets": 6079,
+   "mots": 485,
+   "mots_corps": 0,
+   "h1": [
+    "Réforme du courtage : adhésion association"
+   ],
+   "canonical": "https://courtiark.fr/fr/guide/reforme-courtage",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 0,
+   "liens_entrants": 1
+  },
+  "/fr": {
+   "absent": false,
+   "taille_octets": 11439,
+   "mots": 448,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel et CRM pour courtiers d'assurance en France"
+   ],
+   "canonical": "https://courtiark.fr/fr",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "SoftwareApplication",
+    "FAQPage"
+   ],
+   "cta_demo_public": true,
+   "cta_demo": true,
+   "lien_tarifs": true,
+   "liens_sortants_fr": 20,
+   "liens_entrants": 0
+  },
+  "/fr/logiciel-courtier-assurance-agen": {
+   "absent": false,
+   "taille_octets": 6230,
+   "mots": 478,
+   "mots_corps": 0,
+   "h1": [
+    "Logiciel pour courtier d&#x27;assurance à Agen"
+   ],
+   "canonical": "https://courtiark.fr/fr/logiciel-courtier-assurance-agen",
+   "jsonld": [
+    "Organization",
+    "BreadcrumbList",
+    "FAQPage"
+   ],
+   "cta_demo_public": false,
+   "cta_demo": false,
+   "lien_tarifs": false,
+   "liens_sortants_fr": 1,
+   "liens_entrants": 1
+  }
+ },
+ "unicite_global": {
+  "similarite_mediane": 0.4148,
+  "similarite_max": 0.6789,
+  "partage_median": 0.7998,
+  "partage_par_page": {
+   "/fr/logiciel-courtier-assurance-paris": 0.7996,
+   "/fr/logiciel-courtier-assurance-lyon": 0.8013,
+   "/fr/logiciel-courtier-assurance-marseille": 0.8,
+   "/fr/logiciel-courtier-assurance-bordeaux": 0.7938,
+   "/fr/logiciel-courtier-assurance-toulouse": 0.8087,
+   "/fr/logiciel-courtier-assurance-nantes": 0.7821,
+   "/fr/logiciel-courtier-assurance-lille": 0.8017,
+   "/fr/logiciel-courtier-assurance-strasbourg": 0.7934,
+   "/fr/logiciel-courtier-assurance-montpellier": 0.8087,
+   "/fr/logiciel-courtier-assurance-nice": 0.7996
+  }
+ },
+ "unicite_corps": {
+  "similarite_mediane": 0.0,
+  "similarite_max": 0.0,
+  "partage_median": 0.0,
+  "partage_par_page": {
+   "/fr/logiciel-courtier-assurance-paris": 0.0,
+   "/fr/logiciel-courtier-assurance-lyon": 0.0,
+   "/fr/logiciel-courtier-assurance-marseille": 0.0,
+   "/fr/logiciel-courtier-assurance-bordeaux": 0.0,
+   "/fr/logiciel-courtier-assurance-toulouse": 0.0,
+   "/fr/logiciel-courtier-assurance-nantes": 0.0,
+   "/fr/logiciel-courtier-assurance-lille": 0.0,
+   "/fr/logiciel-courtier-assurance-strasbourg": 0.0,
+   "/fr/logiciel-courtier-assurance-montpellier": 0.0,
+   "/fr/logiciel-courtier-assurance-nice": 0.0
+  }
+ },
+ "vs_controle": {
+  "/fr/logiciel-courtier-assurance-paris": {
+   "global": 0.4858,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-lyon": {
+   "global": 0.4866,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-marseille": {
+   "global": 0.383,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-bordeaux": {
+   "global": 0.3855,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-toulouse": {
+   "global": 0.6386,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-nantes": {
+   "global": 0.2621,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-lille": {
+   "global": 0.3836,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-strasbourg": {
+   "global": 0.4875,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-montpellier": {
+   "global": 0.6386,
+   "corps": null
+  },
+  "/fr/logiciel-courtier-assurance-nice": {
+   "global": 0.4858,
+   "corps": null
+  }
+ },
+ "page_controle": "/fr/logiciel-courtier-assurance-agen"
+}

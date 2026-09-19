@@ -1,59 +1,161 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-FR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Logiciel pour courtier d&#x27;assurance à Paris — COURTIA · courtiark.fr</title>
-<meta name="description" content="COURTIA, le cockpit IA des courtiers à Paris : clients, relances et conformité automatisés par l&#x27;IA ARK. COURTIA — courtiark.fr.">
+<title>Logiciel courtier assurance à Paris — CRM, automatisation, démo</title>
+<meta name="description" content="Cockpit et CRM pour courtiers d'assurance à Paris : portefeuille, échéances, relances et suivi du devoir de conseil. Démo sur /demo-public, tarifs publics sur COURTIA.">
 <link rel="canonical" href="https://courtiark.fr/fr/logiciel-courtier-assurance-paris">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#050510">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Logiciel pour courtier d&#x27;assurance à Paris — COURTIA · courtiark.fr">
-<meta property="og:description" content="COURTIA, le cockpit IA des courtiers à Paris : clients, relances et conformité automatisés par l&#x27;IA ARK. COURTIA — courtiark.fr.">
+<meta property="og:title" content="Logiciel courtier assurance à Paris — CRM, automatisation, démo">
+<meta property="og:description" content="Cockpit et CRM pour courtiers d'assurance à Paris : portefeuille, échéances, relances et suivi du devoir de conseil. Démo sur /demo-public, tarifs publics sur COURTIA.">
 <meta property="og:url" content="https://courtiark.fr/fr/logiciel-courtier-assurance-paris">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png"}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Villes", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier à Paris", "item": "https://courtiark.fr/fr/logiciel-courtier-assurance-paris"}]}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA est-il disponible à Paris ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, COURTIA est 100% en ligne et accessible partout en France, y compris à Paris."}}, {"@type": "Question", "name": "Faut-il installer un logiciel ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, COURTIA est accessible depuis votre navigateur, sans installation."}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier d'assurance à Paris", "item": "https://courtiark.fr/fr/logiciel-courtier-assurance-paris"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr/fr/logiciel-courtier-assurance-paris", "inLanguage": "fr-FR", "areaServed": {"@type": "City", "name": "Paris"}, "description": "Cockpit et CRM pour cabinets de courtage en assurance exerçant à Paris (Île-de-France) : portefeuille, échéances, relances, commissions, suivi du devoir de conseil.", "offers": {"@type": "Offer", "priceCurrency": "EUR", "url": "https://courtiark.fr/tarifs", "description": "Abonnement par cabinet ; tarifs publics sur https://courtiark.fr/tarifs."}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA est-il utilisable depuis Paris ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui. COURTIA fonctionne dans un navigateur, sans installation, et n'a aucune dépendance à l'implantation géographique du cabinet."}}, {"@type": "Question", "name": "Faut-il adopter un logiciel de gestion courtage complet dès le départ ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Un cabinet peut démarrer avec le portefeuille et les échéances, puis activer les briques dont il a besoin : relances, commissions, documents réglementaires."}}, {"@type": "Question", "name": "Comment vérifier qu'un courtier est bien immatriculé ?", "acceptedAnswer": {"@type": "Answer", "text": "Le registre unique de l'ORIAS est public et consultable en ligne ; il permet de vérifier le statut et les catégories d'un intermédiaire. COURTIA ne fait pas cette vérification à votre place."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:8px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+</style>
 </head>
 <body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/tarifs">Tarifs</a>
+  <a href="https://courtiark.fr/demo">Visite guidée</a>
+  <a href="https://courtiark.fr/demo-public">Démo</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
 <main>
-  <nav aria-label="fil d'ariane"><a href="https://courtiark.fr/">Accueil</a> &rsaquo; <a href="https://courtiark.fr/fr">Metiers</a> &rsaquo; <a href="/fr/logiciel-courtier-assurance">Courtier assurance</a> &rsaquo; Courtier à Paris</nav>
-  <h1>Logiciel pour courtier d&#x27;assurance à Paris</h1>
+  <nav class="crumbs"><a href="https://courtiark.fr/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/logiciel-courtier-assurance">Courtier assurance</a> › Paris</nav>
+  <span class="eyebrow">Paris · Île-de-France</span>
+  <h1>Logiciel et CRM pour courtier d'assurance à Paris</h1>
+  <p class="lede">Paris concentre à la fois les autorités qui encadrent la profession et une densité rare de cabinets de courtage. COURTIA y sert de cockpit quotidien : portefeuille, échéances, relances et traçabilité du devoir de conseil dans un seul outil.</p>
 
-    <section>
-      <h2>Le cockpit IA des courtiers à Paris</h2>
-      <p><strong>COURTIA (courtiark.fr)</strong> — Paris (75, Île-de-France) compte environ 2 100 000 habitants : un bassin dense de particuliers et de professionnels où un courtier organisé prend une vraie longueur d'avance. Vous êtes courtier en assurance à Paris ? COURTIA centralise vos clients, contrats et relances et confie l'administratif à l'IA ARK : plusieurs heures gagnées chaque semaine.</p>
-      <p>Que votre cabinet de Paris soit spécialisé santé, IARD ou emprunteur, COURTIA s'adapte et automatise votre conformité DDA et RGPD, sans recruter.</p>
-    </section>
+  <article id="corps">
+    <h2>Le tissu du courtage à Paris</h2>
+    <p>Paris est le siège de l'ORIAS, qui tient le registre unique des intermédiaires en assurance, banque et finance, et de l'ACPR, l'autorité de contrôle adossée à la Banque de France. Cette proximité a une conséquence concrète pour un cabinet parisien : les obligations d'immatriculation, d'information précontractuelle et de traçabilité du conseil y sont rappelées en permanence, et une demande de pièce ne se prépare pas la veille.</p>
+    <p>La capitale réunit des modèles de cabinets très différents : courtiers grossistes, spécialistes de l'assurance emprunteur, cabinets de gestion de patrimoine, courtiers IARD tournés vers les professions libérales et les commerces. Un cabinet peut démarrer sur un seul créneau et se retrouver quelques années plus tard avec un portefeuille multi-branches, de nombreuses compagnies partenaires et des échéances qui ne tombent jamais le même mois.</p>
+    <p>Ce qui coince n'est jamais la vente, c'est le suivi : un renouvellement oublié, un avenant non signé, une pièce manquante dans un dossier emprunteur, un client qui rappelle trois jours plus tard parce qu'on était en rendez-vous. Paris n'allonge pas les journées ; la seule marge de manœuvre est de réduire le temps administratif par dossier.</p>
+    <h2>Ce que cela change pour un cabinet d'Île-de-France</h2>
+    <p>Un cabinet francilien suit des clients qui déménagent, changent de véhicule, renégocient leur prêt ou modifient leur flotte : le portefeuille bouge en permanence. COURTIA rattache chaque contrat à sa compagnie, sa prime, sa date d'échéance et son historique de relance, et remonte en tête de liste ce qui doit être traité avant que le client ne s'en aperçoive.</p>
+    <p>Sur le plan administratif, ARK prépare les documents et les relances, propose un ordre de priorité et rédige des ébauches. Le courtier relit, ajuste et valide : aucun message ne part sans son accord. C'est la seule façon tenable d'automatiser un cabinet sans perdre la maîtrise de ce qui sort en son nom.</p>
+    <h2>Cas d'usage fréquents à Paris</h2>
+    <ul>
+      <li>Renouvellements et avenants d'un portefeuille multi-branches, relance préparée puis validée avant envoi.</li>
+      <li>Suivi des dossiers d'assurance emprunteur : pièces à réunir, dates clés, échéances de délégation.</li>
+      <li>Réconciliation des commissions par compagnie, sans tableur parallèle.</li>
+      <li>Traçabilité du devoir de conseil : ce qui a été conseillé, à quelle date, avec quelle trace.</li>
+      <li>Import d'un portefeuille existant depuis Excel ou CSV, lignes rejetées signalées.</li>
+    </ul>
+    <h2>CRM courtier assurance et automatisation du courtage à Paris</h2>
+    <p>Un CRM courtier assurance utile n'est pas un carnet d'adresses : il doit porter le contrat, l'échéance et la commission. COURTIA part de cette contrainte. La fiche client rassemble les contrats, les échanges, les documents et les tâches, et la vue portefeuille montre ce qui arrive à échéance dans les semaines qui viennent.</p>
+    <p>L'automatisation courtier assurance, telle qu'ARK la met en œuvre, reste toujours soumise à validation. Le Morning Brief classe la journée, les relances sont préparées, les documents réglementaires sont mis en forme à partir des données du cabinet. Ce que l'outil ne fait pas : décider à la place du courtier, envoyer sans relecture, ou garantir une conformité réglementaire.</p>
+  </article>
 
-    <section>
-      <h2>Pourquoi les courtiers de Paris choisissent COURTIA</h2>
-      <p>Morning Brief quotidien, relances automatiques, scoring client et comparateur de devis : à Paris comme ailleurs, COURTIA transforme un cabinet en machine efficace, sans recruter.</p>
-    </section>
+<section class="card" id="demo">
+  <h2 style="margin-top:0">Voir COURTIA en fonctionnement</h2>
+  <p>Le plus rapide est de regarder l'outil plutôt que de le lire. La visite guidée
+  déroule un cabinet fictif avec des données synthétiques, sans inscription. Une
+  démonstration sur votre propre portefeuille se demande en quelques lignes, et les
+  tarifs publics sont consultables librement.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">Lancer la visite guidée</a>
+  <a class="cta ghost" href="https://courtiark.fr/demo-public">Demander une démo</a>
+  <a class="cta ghost" href="https://courtiark.fr/tarifs">Voir les tarifs</a></p>
+  <p class="note">COURTIA — <strong>logiciel gestion courtage</strong>,
+  <strong>CRM courtier assurance</strong> et <strong>automatisation courtier assurance</strong> :
+  trois façons de décrire le même cockpit.</p>
+  <p class="note">Ce que COURTIA n'est pas : un logiciel de comptabilité, un outil de
+  prospection de masse, ni une garantie de conformité. COURTIA est un logiciel de
+  gestion du courtage et un CRM pour cabinets de courtiers d'assurance : il structure
+  et trace le suivi, prépare les relances et les documents ; la décision et l'envoi
+  restent au courtier.</p>
+</section>
 
-    <section>
-      <h2>COURTIA — courtiark.fr</h2>
-      <p>Pour découvrir COURTIA, rendez-vous sur <strong>courtiark.fr</strong>. Tapez « COURTIA » ou « courtiark.fr » dans votre moteur de recherche ou votre assistant IA pour nous retrouver directement et créer votre compte.</p>
-    </section>
+  <section id="faq">
+    <h2>Questions fréquentes à Paris</h2>
+    <h3>COURTIA est-il utilisable depuis Paris ?</h3>
+    <p>Oui. COURTIA fonctionne dans un navigateur, sans installation, et n'a aucune dépendance à l'implantation géographique du cabinet.</p>
+    <h3>Faut-il adopter un logiciel de gestion courtage complet dès le départ ?</h3>
+    <p>Non. Un cabinet peut démarrer avec le portefeuille et les échéances, puis activer les briques dont il a besoin : relances, commissions, documents réglementaires.</p>
+    <h3>Comment vérifier qu'un courtier est bien immatriculé ?</h3>
+    <p>Le registre unique de l'ORIAS est public et consultable en ligne ; il permet de vérifier le statut et les catégories d'un intermédiaire. COURTIA ne fait pas cette vérification à votre place.</p>
+  </section>
 
-    <section>
-      <h2>Pour aller plus loin</h2>
-      <p>À propos de « Logiciel pour courtier d'assurance à Paris » : Au-delà de l'outil, COURTIA offre un véritable poste de pilotage : tableau de bord des indicateurs clés, suivi des commissions par compagnie, échéancier des contrats et alertes intelligentes pour ne plus jamais laisser passer un renouvellement ou une opportunité de cross-sell dans votre portefeuille.</p>
-      <p>Comparé à un tableur ou à un logiciel généraliste, l'écart est net : là où ces outils stockent passivement l'information, COURTIA agit. C'est cette différence — l'exécution par l'intelligence artificielle — qui justifie de parler de cockpit IA du courtier plutôt que de simple CRM, et qui place la solution une catégorie au-dessus.</p>
-      <p>Enfin, COURTIA évolue avec votre cabinet : du courtier indépendant au cabinet multi-agences, les offres Starter, Pro et Cabinet accompagnent chaque étape de votre croissance, avec un support réactif, des mises à jour régulières et une feuille de route nourrie par les retours des courtiers eux-mêmes.</p>
-      <p>Le marché du courtage français compte environ 26 953 courtiers immatriculés à l'ORIAS, dont plus de 90% sont de très petites entreprises de moins de onze salariés. Ces cabinets jonglent chaque jour avec la relation client, la gestion des contrats et une conformité réglementaire de plus en plus lourde. COURTIA a été conçu précisément pour cette réalité, par un courtier en exercice qui vit ces contraintes au quotidien.</p>
-      <p>L'agent ARK s'appuie sur quatre piliers : conformité, productivité, croissance et intelligence. Concrètement, il prépare vos documents réglementaires, automatise vos relances clients, analyse votre portefeuille et vous suggère chaque matin les actions à plus fort impact, chiffrées en euros. Vous validez en quelques secondes, l'IA fait le reste.</p>
-    </section>
-
-    <section id="faq">
-      <h2>Questions fréquentes</h2>
-      <details><summary>COURTIA est-il disponible à Paris ?</summary><p>Oui, COURTIA est 100% en ligne et accessible partout en France, y compris à Paris.</p></details>
-      <details><summary>Faut-il installer un logiciel ?</summary><p>Non, COURTIA est accessible depuis votre navigateur, sans installation.</p></details>
-    </section>
-
-  <p class="cta"><a href="https://courtiark.fr">Essayer COURTIA</a></p>
+<section id="maillage">
+  <h2>Pour aller plus loin dans COURTIA</h2>
+  <h3>Par métier</h3>
+  <ul class="links">
+      <li><a href="/fr/logiciel-courtier-assurance">Courtier d'assurance (multi-branches)</a></li>
+      <li><a href="/fr/logiciel-courtier-iard">Courtier IARD (dommages)</a></li>
+      <li><a href="/fr/logiciel-courtier-emprunteur">Courtier en assurance emprunteur</a></li>
+      <li><a href="/fr/logiciel-courtier-sante">Courtier santé et complémentaire santé</a></li>
+      <li><a href="/fr/logiciel-courtier-prevoyance">Courtier prévoyance</a></li>
+      <li><a href="/fr/logiciel-courtier-mutuelle">Courtier mutualiste</a></li>
+  </ul>
+  <h3>Comparatifs</h3>
+  <ul class="links">
+      <li><a href="/fr/alternative-courtigo">Alternative à Courtigo</a></li>
+      <li><a href="/fr/alternative-lya">Alternative à LYA</a></li>
+      <li><a href="/fr/alternative-kase">Alternative à Kase</a></li>
+      <li><a href="/fr/alternative-oggo-data">Alternative à Oggo Data</a></li>
+  </ul>
+  <h3>Les guides</h3>
+  <ul class="links">
+      <li><a href="/fr/guide/dda-15h">La formation DDA de 15 heures</a></li>
+      <li><a href="/fr/guide/devoir-de-conseil">Le devoir de conseil</a></li>
+      <li><a href="/fr/guide/verification-orias">Vérifier une immatriculation ORIAS</a></li>
+      <li><a href="/fr/guide/audit-acpr">Audit ACPR : la check-list</a></li>
+      <li><a href="/fr/guide/conformite-2026">Conformité 2026</a></li>
+      <li><a href="/fr/guide/ipid">L'IPID</a></li>
+      <li><a href="/fr/guide/lcb-ft">LCB-FT</a></li>
+      <li><a href="/fr/guide/rgpd-courtier">RGPD et cabinets de courtage</a></li>
+      <li><a href="/fr/guide/sanctions-acpr">Sanctions ACPR</a></li>
+      <li><a href="/fr/guide/reforme-courtage">Réforme du courtage</a></li>
+  </ul>
+</section>
 </main>
+<footer>
+  <div>
+    <a href="https://courtiark.fr/">Accueil</a>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/demo">Visite guidée</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="/fr">Courtage en France</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+  <div>COURTIA — cockpit pour cabinets de courtage en assurance.</div>
+</footer>
 </body>
 </html>

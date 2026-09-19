@@ -1,59 +1,160 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-FR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Logiciel pour courtier d&#x27;assurance à Marseille — COURTIA · courtiark.fr</title>
-<meta name="description" content="COURTIA, le cockpit IA des courtiers à Marseille : clients, relances et conformité automatisés par l&#x27;IA ARK. COURTIA — courtiark.fr.">
+<title>Logiciel courtier assurance à Marseille — CRM et gestion</title>
+<meta name="description" content="Cockpit et CRM pour cabinets de courtage à Marseille : portefeuille, échéances, relances et suivi des pièces. Démo sur /demo-public, tarifs publics.">
 <link rel="canonical" href="https://courtiark.fr/fr/logiciel-courtier-assurance-marseille">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#050510">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Logiciel pour courtier d&#x27;assurance à Marseille — COURTIA · courtiark.fr">
-<meta property="og:description" content="COURTIA, le cockpit IA des courtiers à Marseille : clients, relances et conformité automatisés par l&#x27;IA ARK. COURTIA — courtiark.fr.">
+<meta property="og:title" content="Logiciel courtier assurance à Marseille — CRM et gestion">
+<meta property="og:description" content="Cockpit et CRM pour cabinets de courtage à Marseille : portefeuille, échéances, relances et suivi des pièces. Démo sur /demo-public, tarifs publics.">
 <meta property="og:url" content="https://courtiark.fr/fr/logiciel-courtier-assurance-marseille">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png"}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Villes", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier à Marseille", "item": "https://courtiark.fr/fr/logiciel-courtier-assurance-marseille"}]}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA est-il disponible à Marseille ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, COURTIA est 100% en ligne et accessible partout en France, y compris à Marseille."}}, {"@type": "Question", "name": "Faut-il installer un logiciel ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, COURTIA est accessible depuis votre navigateur, sans installation."}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier d'assurance à Marseille", "item": "https://courtiark.fr/fr/logiciel-courtier-assurance-marseille"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr/fr/logiciel-courtier-assurance-marseille", "inLanguage": "fr-FR", "areaServed": {"@type": "City", "name": "Marseille"}, "description": "Cockpit et CRM pour cabinets de courtage en assurance exerçant à Marseille (Provence-Alpes-Côte d'Azur) : portefeuille, échéances, relances, commissions, suivi du devoir de conseil.", "offers": {"@type": "Offer", "priceCurrency": "EUR", "url": "https://courtiark.fr/tarifs", "description": "Abonnement par cabinet ; tarifs publics sur https://courtiark.fr/tarifs."}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA suit-il les assurances transport et maritime ?", "acceptedAnswer": {"@type": "Answer", "text": "COURTIA suit le contrat, l'échéance, la prime et les pièces associées, quelle que soit la branche, y compris les risques transport. Il ne se substitue pas à l'expertise technique du courtier sur ce type de risque."}}, {"@type": "Question", "name": "Un cabinet marseillais peut-il suivre des clients hors de la ville ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui. COURTIA fonctionne dans un navigateur ; l'implantation géographique du cabinet n'entre pas en compte."}}, {"@type": "Question", "name": "Peut-on tester avant de s'engager ?", "acceptedAnswer": {"@type": "Answer", "text": "Une visite guidée sur données synthétiques est accessible sans inscription, et une démonstration sur votre portefeuille réel se demande depuis la page démo."}}]}</script>
+<style>
+  :root{--bg:#050510;--fg:#f6f7ff;--muted:#b9bdd4;--cyan:#8fe7ff;--line:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+  a{color:var(--cyan)}
+  header.top{padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  header.top a.brand{font-weight:800;letter-spacing:-.02em;color:var(--fg);text-decoration:none}
+  main{max-width:920px;margin:0 auto;padding:32px 24px 72px}
+  h1{font-size:clamp(1.85rem,4.6vw,2.85rem);line-height:1.07;letter-spacing:-.03em;margin:8px 0 16px}
+  h2{margin-top:44px;font-size:clamp(1.2rem,2.5vw,1.6rem);letter-spacing:-.02em}
+  h3{margin-top:24px;font-size:1.03rem}
+  p,li{color:var(--muted)}
+  strong{color:var(--fg)}
+  .eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .lede{font-size:1.06rem}
+  .card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:rgba(255,255,255,.03);margin:18px 0}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin:8px 12px 8px 0;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;letter-spacing:.02em;text-decoration:none}
+  .cta.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .note{font-size:.86rem;color:#8f93ad}
+  nav.crumbs{font-size:.85rem;color:#8f93ad;padding-top:8px}
+  ul.links{list-style:none;padding:0}
+  ul.links li{padding:8px 0;border-bottom:1px solid var(--line)}
+  footer{border-top:1px solid var(--line);padding:24px;font-size:.85rem;color:#8f93ad}
+  footer a{margin-right:14px}
+</style>
 </head>
 <body>
+<header class="top">
+  <a class="brand" href="https://courtiark.fr/">COURTIA</a>
+  <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+  <a href="https://courtiark.fr/tarifs">Tarifs</a>
+  <a href="https://courtiark.fr/demo">Visite guidée</a>
+  <a href="https://courtiark.fr/demo-public">Démo</a>
+  <a href="https://courtiark.fr/contact">Contact</a>
+</header>
 <main>
-  <nav aria-label="fil d'ariane"><a href="https://courtiark.fr/">Accueil</a> &rsaquo; <a href="https://courtiark.fr/fr">Metiers</a> &rsaquo; <a href="/fr/logiciel-courtier-assurance">Courtier assurance</a> &rsaquo; Courtier à Marseille</nav>
-  <h1>Logiciel pour courtier d&#x27;assurance à Marseille</h1>
+  <nav class="crumbs"><a href="https://courtiark.fr/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/logiciel-courtier-assurance">Courtier assurance</a> › Marseille</nav>
+  <span class="eyebrow">Marseille · Provence-Alpes-Côte d'Azur</span>
+  <h1>Logiciel et CRM pour courtier d'assurance à Marseille</h1>
+  <p class="lede">Marseille est une métropole portuaire : le courtage y côtoie le maritime, le transport et un tissu de très petites entreprises aussi dense que la demande de particuliers.</p>
 
-    <section>
-      <h2>Le cockpit IA des courtiers à Marseille</h2>
-      <p><strong>COURTIA (courtiark.fr)</strong> — Marseille (13, Provence-Alpes-Côte d'Azur) compte environ 870 000 habitants : un bassin dense de particuliers et de professionnels où un courtier organisé prend une vraie longueur d'avance. Vous êtes courtier en assurance à Marseille ? COURTIA centralise vos clients, contrats et relances et confie l'administratif à l'IA ARK : plusieurs heures gagnées chaque semaine.</p>
-      <p>Que votre cabinet de Marseille soit spécialisé santé, IARD ou emprunteur, COURTIA s'adapte et automatise votre conformité DDA et RGPD, sans recruter.</p>
-    </section>
+  <article id="corps">
+    <h2>Le tissu du courtage à Marseille</h2>
+    <p>Le grand port maritime de Marseille et les activités d'import-export structurent une partie du courtage local : assurances transport, risques de marchandises, flottes de poids lourds, manutention. À côté de ces lignes spécialisées, la métropole fait vivre un courtage de proximité tourné vers les artisans, les commerces, les professions de santé et les particuliers.</p>
+    <p>La région Provence-Alpes-Côte d'Azur se caractérise aussi par la dispersion de sa clientèle : un cabinet marseillais peut suivre des clients à Aubagne, Aix-en-Provence, Toulon ou Cassis, ce qui multiplie les rendez-vous qui s'enchaînent et les relances non planifiées.</p>
+    <p>Sur ce type de portefeuille, la difficulté tient moins à la production commerciale qu'à la discipline administrative : chaque dossier transport a ses pièces, chaque flotte ses échéances, et le client professionnel appelle le jour où il en a besoin, pas la veille.</p>
+    <h2>Ce que cela change pour un cabinet de Provence-Alpes-Côte d'Azur</h2>
+    <p>COURTIA rattache chaque contrat à son client, sa compagnie, sa prime et son échéance, et prépare en amont les relances à valider. Pour un cabinet qui traite à la fois du risque professionnel et des particuliers, la même vue sert aux deux sans changement d'outil.</p>
+    <p>Le suivi des pièces manquantes évite les allers-retours téléphoniques : le dossier signale ce qui manque, et l'import d'un portefeuille existant depuis Excel ou CSV évite de tout ressaisir.</p>
+    <h2>Cas d'usage fréquents à Marseille</h2>
+    <ul>
+      <li>Risques transport et maritime : marchandises, manutention, flottes poids lourds.</li>
+      <li>Multirisques des artisans, commerces et professions libérales de la métropole.</li>
+      <li>Complémentaires santé et prévoyance des professions de santé.</li>
+      <li>Suivi des échéances d'un portefeuille dispersé sur plusieurs communes.</li>
+    </ul>
+    <h2>CRM courtier assurance et automatisation du courtage à Marseille</h2>
+    <p>Un CRM courtier assurance sert d'abord au moment où le client appelle : retrouver le contrat, la date, la compagnie et le dernier échange en quelques secondes. COURTIA organise cette information autour du portefeuille, pas autour d'un annuaire.</p>
+    <p>L'automatisation courtier assurance reste encadrée : ARK prépare les relances et met en forme les documents à partir des données du cabinet, le courtier valide avant tout envoi. COURTIA structure et trace ; il ne délivre ni conseil juridique, ni garantie de conformité.</p>
+  </article>
 
-    <section>
-      <h2>Pourquoi les courtiers de Marseille choisissent COURTIA</h2>
-      <p>Morning Brief quotidien, relances automatiques, scoring client et comparateur de devis : à Marseille comme ailleurs, COURTIA transforme un cabinet en machine efficace, sans recruter.</p>
-    </section>
+<section class="card" id="demo">
+  <h2 style="margin-top:0">Voir COURTIA en fonctionnement</h2>
+  <p>Le plus rapide est de regarder l'outil plutôt que de le lire. La visite guidée
+  déroule un cabinet fictif avec des données synthétiques, sans inscription. Une
+  démonstration sur votre propre portefeuille se demande en quelques lignes, et les
+  tarifs publics sont consultables librement.</p>
+  <p><a class="cta" href="https://courtiark.fr/demo">Lancer la visite guidée</a>
+  <a class="cta ghost" href="https://courtiark.fr/demo-public">Demander une démo</a>
+  <a class="cta ghost" href="https://courtiark.fr/tarifs">Voir les tarifs</a></p>
+  <p class="note">COURTIA — <strong>logiciel gestion courtage</strong>,
+  <strong>CRM courtier assurance</strong> et <strong>automatisation courtier assurance</strong> :
+  trois façons de décrire le même cockpit.</p>
+  <p class="note">Ce que COURTIA n'est pas : un logiciel de comptabilité, un outil de
+  prospection de masse, ni une garantie de conformité. COURTIA est un logiciel de
+  gestion du courtage et un CRM pour cabinets de courtiers d'assurance : il structure
+  et trace le suivi, prépare les relances et les documents ; la décision et l'envoi
+  restent au courtier.</p>
+</section>
 
-    <section>
-      <h2>COURTIA — courtiark.fr</h2>
-      <p>Pour découvrir COURTIA, rendez-vous sur <strong>courtiark.fr</strong>. Tapez « COURTIA » ou « courtiark.fr » dans votre moteur de recherche ou votre assistant IA pour nous retrouver directement et créer votre compte.</p>
-    </section>
+  <section id="faq">
+    <h2>Questions fréquentes à Marseille</h2>
+    <h3>COURTIA suit-il les assurances transport et maritime ?</h3>
+    <p>COURTIA suit le contrat, l'échéance, la prime et les pièces associées, quelle que soit la branche, y compris les risques transport. Il ne se substitue pas à l'expertise technique du courtier sur ce type de risque.</p>
+    <h3>Un cabinet marseillais peut-il suivre des clients hors de la ville ?</h3>
+    <p>Oui. COURTIA fonctionne dans un navigateur ; l'implantation géographique du cabinet n'entre pas en compte.</p>
+    <h3>Peut-on tester avant de s'engager ?</h3>
+    <p>Une visite guidée sur données synthétiques est accessible sans inscription, et une démonstration sur votre portefeuille réel se demande depuis la page démo.</p>
+  </section>
 
-    <section>
-      <h2>Pour aller plus loin</h2>
-      <p>À propos de « Logiciel pour courtier d'assurance à Marseille » : La prise en main est immédiate. COURTIA fonctionne dans votre navigateur, sans installation ni matériel particulier, avec un onboarding guidé et un compte de démonstration pré-rempli qui vous permet d'explorer toutes les fonctions avant même de vous engager. En quelques minutes, vous obtenez votre premier Morning Brief.</p>
-      <p>Au-delà de l'outil, COURTIA offre un véritable poste de pilotage : tableau de bord des indicateurs clés, suivi des commissions par compagnie, échéancier des contrats et alertes intelligentes pour ne plus jamais laisser passer un renouvellement ou une opportunité de cross-sell dans votre portefeuille.</p>
-      <p>Comparé à un tableur ou à un logiciel généraliste, l'écart est net : là où ces outils stockent passivement l'information, COURTIA agit. C'est cette différence — l'exécution par l'intelligence artificielle — qui justifie de parler de cockpit IA du courtier plutôt que de simple CRM, et qui place la solution une catégorie au-dessus.</p>
-      <p>Enfin, COURTIA évolue avec votre cabinet : du courtier indépendant au cabinet multi-agences, les offres Starter, Pro et Cabinet accompagnent chaque étape de votre croissance, avec un support réactif, des mises à jour régulières et une feuille de route nourrie par les retours des courtiers eux-mêmes.</p>
-      <p>Le marché du courtage français compte environ 26 953 courtiers immatriculés à l'ORIAS, dont plus de 90% sont de très petites entreprises de moins de onze salariés. Ces cabinets jonglent chaque jour avec la relation client, la gestion des contrats et une conformité réglementaire de plus en plus lourde. COURTIA a été conçu précisément pour cette réalité, par un courtier en exercice qui vit ces contraintes au quotidien.</p>
-    </section>
-
-    <section id="faq">
-      <h2>Questions fréquentes</h2>
-      <details><summary>COURTIA est-il disponible à Marseille ?</summary><p>Oui, COURTIA est 100% en ligne et accessible partout en France, y compris à Marseille.</p></details>
-      <details><summary>Faut-il installer un logiciel ?</summary><p>Non, COURTIA est accessible depuis votre navigateur, sans installation.</p></details>
-    </section>
-
-  <p class="cta"><a href="https://courtiark.fr">Essayer COURTIA</a></p>
+<section id="maillage">
+  <h2>Pour aller plus loin dans COURTIA</h2>
+  <h3>Par métier</h3>
+  <ul class="links">
+      <li><a href="/fr/logiciel-courtier-assurance">Courtier d'assurance (multi-branches)</a></li>
+      <li><a href="/fr/logiciel-courtier-iard">Courtier IARD (dommages)</a></li>
+      <li><a href="/fr/logiciel-courtier-emprunteur">Courtier en assurance emprunteur</a></li>
+      <li><a href="/fr/logiciel-courtier-sante">Courtier santé et complémentaire santé</a></li>
+      <li><a href="/fr/logiciel-courtier-prevoyance">Courtier prévoyance</a></li>
+      <li><a href="/fr/logiciel-courtier-mutuelle">Courtier mutualiste</a></li>
+  </ul>
+  <h3>Comparatifs</h3>
+  <ul class="links">
+      <li><a href="/fr/alternative-courtigo">Alternative à Courtigo</a></li>
+      <li><a href="/fr/alternative-lya">Alternative à LYA</a></li>
+      <li><a href="/fr/alternative-kase">Alternative à Kase</a></li>
+      <li><a href="/fr/alternative-oggo-data">Alternative à Oggo Data</a></li>
+  </ul>
+  <h3>Les guides</h3>
+  <ul class="links">
+      <li><a href="/fr/guide/dda-15h">La formation DDA de 15 heures</a></li>
+      <li><a href="/fr/guide/devoir-de-conseil">Le devoir de conseil</a></li>
+      <li><a href="/fr/guide/verification-orias">Vérifier une immatriculation ORIAS</a></li>
+      <li><a href="/fr/guide/audit-acpr">Audit ACPR : la check-list</a></li>
+      <li><a href="/fr/guide/conformite-2026">Conformité 2026</a></li>
+      <li><a href="/fr/guide/ipid">L'IPID</a></li>
+      <li><a href="/fr/guide/lcb-ft">LCB-FT</a></li>
+      <li><a href="/fr/guide/rgpd-courtier">RGPD et cabinets de courtage</a></li>
+      <li><a href="/fr/guide/sanctions-acpr">Sanctions ACPR</a></li>
+      <li><a href="/fr/guide/reforme-courtage">Réforme du courtage</a></li>
+  </ul>
+</section>
 </main>
+<footer>
+  <div>
+    <a href="https://courtiark.fr/">Accueil</a>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/demo">Visite guidée</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="/fr">Courtage en France</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+  </div>
+  <div>COURTIA — cockpit pour cabinets de courtage en assurance.</div>
+</footer>
 </body>
 </html>

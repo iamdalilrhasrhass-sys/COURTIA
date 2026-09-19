@@ -36,6 +36,23 @@ function refus(res, code, corps) {
   res.status(code).json(corps)
 }
 
+/* Bornes de temps (19/09/2026) : mesuré en production, GET /api/sales/leads
+   ne renvoyait aucun octet, ni en 8 s ni en 25 s — la page restait sur « Lecture… »
+   sans jamais dire pourquoi. Chaque appel amont est désormais borné et un
+   dépassement devient une erreur explicite. */
+const DELAI_VALIDATION_MS = 5000
+const DELAI_LECTURE_MS = 8000
+
+async function avecDelai(url, options, ms) {
+  const controleur = new AbortController()
+  const minuteur = setTimeout(() => controleur.abort(), ms)
+  try {
+    return await fetch(url, { ...options, signal: controleur.signal })
+  } finally {
+    clearTimeout(minuteur)
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
@@ -70,7 +87,7 @@ module.exports = async function handler(req, res) {
     return refus(res, 401, { error: 'jeton_absent' })
   }
   try {
-    const controle = await fetch(validation, { headers: { Authorization: autorisation } })
+    const controle = await avecDelai(validation, { headers: { Authorization: autorisation } }, DELAI_VALIDATION_MS)
     if (!controle.ok) {
       return refus(res, 401, { error: 'jeton_invalide', statut_verification: controle.status })
     }
@@ -80,9 +97,9 @@ module.exports = async function handler(req, res) {
 
   const cible = origine + req.url
   try {
-    const reponse = await fetch(cible, {
+    const reponse = await avecDelai(cible, {
       headers: { Accept: 'application/json', Authorization: `Bearer ${jeton}` },
-    })
+    }, DELAI_LECTURE_MS)
     const corps = await reponse.text()
     res.status(reponse.status)
     res.setHeader('Content-Type', reponse.headers.get('content-type') || 'application/json; charset=utf-8')

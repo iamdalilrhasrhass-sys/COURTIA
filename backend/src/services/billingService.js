@@ -338,12 +338,55 @@ async function getBillingStatus(userId) {
   );
 
   if (!row.rows[0]) {
+    // UNE SEULE SOURCE DE VÉRITÉ POUR L'ESSAI (correction du 19/09/2026).
+    // L'inscription accorde l'essai dans `users` (plan='trial',
+    // subscription_status='trialing', trial_ends_at), et c'est `users` que lit
+    // planService/planGuard pour débrider les fonctions. Mais cette route ne
+    // lisait QUE la table `subscriptions`, qui n'existe qu'après un paiement
+    // Stripe : un compte en essai voyait donc « not_started / starter » pendant
+    // que le produit lui ouvrait déjà les fonctions Pro — deux réponses
+    // contradictoires pour le même compte, et « jours restants » introuvable.
+    // Tant qu'aucune souscription Stripe n'existe, l'état vient de `users`.
+    // Dès qu'une souscription existe (paiement ou essai Stripe), elle prime.
+    const { rows: utilisateurs } = await pool.query(
+      'SELECT plan, subscription_status, trial_ends_at FROM users WHERE id = $1',
+      [userId]
+    );
+    const utilisateur = utilisateurs[0] || {};
+    const finBrute = utilisateur.trial_ends_at ? new Date(utilisateur.trial_ends_at) : null;
+    const finValide = finBrute && !Number.isNaN(finBrute.getTime()) ? finBrute : null;
+    const enEssai = utilisateur.subscription_status === 'trialing'
+      && finValide !== null && finValide.getTime() > Date.now();
+    const essaiExpire = utilisateur.subscription_status === 'trialing' && !enEssai;
+    const joursRestants = enEssai
+      ? Math.max(0, Math.ceil((finValide.getTime() - Date.now()) / 86400000))
+      : 0;
+
+    // Fonctions réellement ouvertes : la réponse vient de planService, pas d'une
+    // liste recopiée ici (sinon les deux vues divergeraient de nouveau).
+    let planEffectif = null;
+    let fonctions = [];
+    try {
+      const info = await planService.getUserPlanInfo(userId);
+      planEffectif = info.plan;
+      fonctions = info.features || [];
+    } catch (erreur) {
+      console.warn('[billing.getBillingStatus] planService indisponible:', erreur.message);
+    }
+
     return {
       organization_id: org.id,
-      plan_code: 'starter',
-      status: 'not_started',
-      trial_start_at: null,
-      trial_end_at: null,
+      plan_code: enEssai ? 'trial' : 'starter',
+      plan_name: enEssai ? 'Essai gratuit' : 'Starter',
+      status: enEssai ? 'trialing' : (essaiExpire ? 'trial_expired' : 'not_started'),
+      trial_start_at: enEssai || essaiExpire
+        ? new Date(finValide.getTime() - TRIAL_DAYS * 86400000).toISOString()
+        : null,
+      trial_end_at: finValide ? finValide.toISOString() : null,
+      jours_restants: joursRestants,
+      plan_effectif: planEffectif,
+      fonctions_ouvertes: fonctions,
+      source_essai: 'users',
       current_period_start: null,
       current_period_end: null,
       cancel_at_period_end: false,
