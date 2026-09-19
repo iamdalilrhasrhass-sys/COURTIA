@@ -22,7 +22,9 @@ export function ArkVoiceButton({ onResult, onError }) {
         const form = new FormData();
         form.append('audio', blob, 'voice.webm');
         try {
-          const res = await fetch(`${API_BASE}/voice/transcribe`, { method: 'POST', headers: { Authorization: `Bearer ${getToken()}` }, body: form });
+          // CORRECTION 2026-09-19 : /voice/transcribe n'existe pas ; la route reelle
+          // est POST /voice/upload qui attend le champ multipart `audio`.
+          const res = await fetch(`${API_BASE}/voice/upload`, { method: 'POST', headers: { Authorization: `Bearer ${getToken()}` }, body: form });
           const data = await res.json();
           onResult?.(data.text || data.transcript || '');
         } catch (e) { onError?.(e); }

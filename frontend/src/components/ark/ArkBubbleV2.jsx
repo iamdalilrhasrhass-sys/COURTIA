@@ -31,21 +31,34 @@ export function ArkBubbleV2() {
         headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history: messages }),
       });
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantMsg = { role: 'assistant', content: '' };
-      setMessages(prev => [...prev, assistantMsg]);
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value);
-          assistantMsg.content += chunk;
-          setMessages(prev => [...prev.slice(0, -1), { ...assistantMsg }]);
-        }
+      // CORRECTION 2026-09-19 : ce composant lisait la réponse comme un FLUX
+      // alors que POST /api/ark/chat renvoie du JSON, et il ne testait jamais
+      // res.ok. Résultat : le courtier voyait le JSON brut — ou le JSON d'erreur —
+      // dans la bulle. Le contrat est désormais explicite : JSON + contrôle du
+      // statut. (Si ARK passe un jour en streaming, ce sera un endpoint distinct,
+      // pas un accident de lecture.)
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = null;
+      }
+
+      if (!res.ok) {
+        const message = res.status === 401
+          ? 'Session expirée : reconnectez-vous pour utiliser ARK.'
+          : res.status === 400
+            ? (data?.message || data?.error || 'Demande invalide.')
+            : res.status >= 500
+              ? 'ARK est momentanément indisponible. Réessayez dans quelques instants.'
+              : (data?.message || data?.error || `Erreur ${res.status}.`);
+        setMessages(prev => [...prev, { role: 'assistant', content: message, error: true }]);
       } else {
-        const data = await res.json();
-        setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: data.response || data.message || 'OK' }]);
+        const texte = (data?.response || data?.message || '').trim();
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: texte || "ARK n'a pas produit de réponse. Reformulez votre demande.",
+        }]);
       }
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Erreur de connexion' }]);

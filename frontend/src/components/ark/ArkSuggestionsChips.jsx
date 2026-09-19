@@ -17,7 +17,10 @@ export function ArkSuggestionsChips({ onSelect }) {
   const [suggestions, setSuggestions] = useState(defaultSuggestions);
 
   useEffect(() => {
-    fetch(`${API_BASE}/ark/suggestions?route=${encodeURIComponent(location.pathname)}`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    // CORRECTION 2026-09-19 : /ark/suggestions n'existe pas (404 silencieux) : la
+    // route reelle est /ark/context-suggestions. On garde la liste locale en repli,
+    // mais l'echec n'est plus totalement muet.
+    fetch(`${API_BASE}/ark/context-suggestions?route=${encodeURIComponent(location.pathname)}`, { headers: { Authorization: `Bearer ${getToken()}` } })
       .then(r => r.json())
       .then(d => { if (d.suggestions?.length) setSuggestions(d.suggestions.map(s => s.text || s)); })
       .catch(() => {});
