@@ -66,6 +66,11 @@ const Billing = lazy(() => import('./pages/Billing'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
+// Page PUBLIQUE de depot de pieces : le client du courtier recoit un lien
+// /upload/<token> (genere par backend/src/services/documentInboxService.js).
+// Sans cette route, ce lien tombait sur le 404 du SPA : le client ne pouvait
+// pas transmettre ses documents.
+const PublicDocumentUpload = lazy(() => import('./pages/PublicDocumentUpload'))
 // Prise en main guidee : progression persistee par cabinet (voir /prise-en-main).
 const OnboardingGamified = lazy(() => import('./pages/OnboardingGamified'))
 const Partenaires = lazy(() => import('./pages/Partenaires'))
@@ -235,6 +240,9 @@ export default function App() {
             /demo-public est le pendant marketing de /demo (cockpit de démonstration,
             routes /demo/* ci-dessous, inchangées). */}
         <Route path="/demo-public" element={<DemoPublic />} />
+        {/* Dépôt de pièces par le CLIENT, via lien tokenisé — aucune authentification
+            utilisateur : c'est le token (32 octets aléatoires, valable 72 h) qui fait foi. */}
+        <Route path="/upload/:token" element={<NoIndex title="Dépôt de documents — COURTIA"><PublicDocumentUpload /></NoIndex>} />
         <Route path="/contact" element={<ContactPublic />} />
         <Route path="/" element={<LandingPublic />} />
         <Route path="/onboarding" element={<NoIndex title="Onboarding — COURTIA"><Onboarding /></NoIndex>} />

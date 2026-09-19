@@ -23,8 +23,20 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-function generateFilePath(userId, clientId, fileName) {
-  const ext = path.extname(fileName);
+// CORRECTION 2026-09-19 : l'extension du fichier stocké venait du NOM fourni par
+// le client. Un fichier nommé « facture.pdf.exe » (double extension) était donc
+// écrit avec .exe sur le disque tout en déclarant un type MIME autorisé.
+// L'extension est maintenant déduite du type MIME VALIDÉ : le nom envoyé par le
+// client n'influence plus jamais le chemin écrit.
+const EXT_PAR_MIME = {
+  'application/pdf': '.pdf',
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/heic': '.heic',
+};
+
+function generateFilePath(userId, clientId, fileName, mimeType) {
+  const ext = EXT_PAR_MIME[mimeType] || '.bin';
   const safeName = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
   const subDir = `${userId}/${clientId}`;
   const fullDir = path.join(UPLOAD_DIR, subDir);
@@ -85,7 +97,7 @@ async function saveUpload(userId, clientId, file, category) {
 
   const buffer = fs.readFileSync(file.path);
   const checksum = computeChecksum(buffer);
-  const { filePath, storagePath } = generateFilePath(userId, clientId, file.originalname);
+  const { filePath, storagePath } = generateFilePath(userId, clientId, file.originalname, file.mimetype);
 
   fs.copyFileSync(file.path, filePath);
   const guessedCategory = category || guessCategory(file.originalname);
@@ -183,7 +195,7 @@ async function processPublicUpload(token, file) {
 
   const buffer = fs.readFileSync(file.path);
   const checksum = computeChecksum(buffer);
-  const { filePath, storagePath } = generateFilePath(req.user_id, req.client_id, file.originalname);
+  const { filePath, storagePath } = generateFilePath(req.user_id, req.client_id, file.originalname, file.mimetype);
   fs.copyFileSync(file.path, filePath);
 
   const guessedCategory = guessCategory(file.originalname);

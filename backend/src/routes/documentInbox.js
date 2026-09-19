@@ -31,8 +31,15 @@ const verifyToken = require('../middleware/authMiddleware');
 
 const docInboxService = require('../services/documentInboxService');
 
-// Multer : stockage temporaire
-const tmpUpload = multer({ dest: '/tmp/inbox-uploads/' });
+// Multer : stockage temporaire.
+// CORRECTION 2026-09-19 : limite de taille appliquée A LA RECEPTION (le service
+// vérifie déjà 20 Mo, mais seulement après avoir tout écrit sur disque) et un
+// seul fichier par requête.
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+const tmpUpload = multer({
+  dest: '/tmp/inbox-uploads/',
+  limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 },
+});
 const tmpSingle = tmpUpload.single('file');
 
 // Helper pattern for user IDs
