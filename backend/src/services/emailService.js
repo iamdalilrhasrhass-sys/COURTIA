@@ -9,13 +9,23 @@ function getEmailFrom() {
   return process.env.EMAIL_FROM || 'COURTIA <noreply@courtiark.fr>';
 }
 
+/** Adresse de RÉPONSE. Sans elle, un e-mail sortant ne peut pas être répondu :
+ *  la déclarer dans .env.example ne suffisait pas, il fallait la transmettre au
+ *  fournisseur (Resend attend `reply_to`, nodemailer attend `replyTo`). */
+function getReplyTo() {
+  return String(process.env.EMAIL_REPLY_TO || '').trim();
+}
+
 function getEmailStatus() {
+  const replyTo = getReplyTo();
+  const base = { from: getEmailFrom(), reply_to: replyTo || null, reply_to_configured: Boolean(replyTo) };
+
   if (process.env.RESEND_API_KEY) {
     return {
+      ...base,
       configured: true,
       status: 'configured',
       provider: 'resend',
-      from: getEmailFrom(),
       missing: [],
     };
   }
@@ -24,10 +34,10 @@ function getEmailStatus() {
   if (provider === 'smtp') {
     const missing = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'].filter((key) => !process.env[key]);
     return {
+      ...base,
       configured: missing.length === 0,
       status: missing.length === 0 ? 'configured' : 'configuration_required',
       provider: 'smtp',
-      from: getEmailFrom(),
       missing,
     };
   }
@@ -35,25 +45,32 @@ function getEmailStatus() {
   if (provider === 'gmail') {
     const missing = ['EMAIL_USER', 'EMAIL_PASSWORD'].filter((key) => !process.env[key]);
     return {
+      ...base,
       configured: missing.length === 0,
       status: missing.length === 0 ? 'configured' : 'configuration_required',
       provider: 'gmail',
-      from: getEmailFrom(),
       missing,
     };
   }
 
   return {
+    ...base,
     configured: false,
     status: 'configuration_required',
     provider: 'none',
-    from: getEmailFrom(),
     missing: ['RESEND_API_KEY'],
   };
 }
 
 function isEmailEnabled() {
   return getEmailStatus().configured;
+}
+
+/** Un envoi COMMERCIAL (relance, prospection, réponse à une demande de démo)
+ *  n'a de sens que si le destinataire peut répondre. Tant que EMAIL_REPLY_TO
+ *  n'est pas configurée, ces envois échouent volontairement — en le disant. */
+function isCommercialEmailReady() {
+  return isEmailEnabled() && Boolean(getReplyTo());
 }
 
 function createTransporter(provider) {
@@ -78,7 +95,7 @@ function createTransporter(provider) {
   });
 }
 
-async function sendEmail({ to, subject, html, text }) {
+async function sendEmail({ to, subject, html, text, replyTo }) {
   const status = getEmailStatus();
   if (!status.configured) {
     logger.warn({ payload: { to, subject, provider: status.provider, missing: status.missing } }, 'Email configuration required - send skipped');
@@ -92,17 +109,23 @@ async function sendEmail({ to, subject, html, text }) {
     };
   }
 
+  // replyTo explicite > EMAIL_REPLY_TO > aucune adresse de réponse.
+  const adresseReponse = replyTo !== undefined ? String(replyTo).trim() : getReplyTo();
+
   try {
     if (status.provider === 'resend') {
+      const charge = {
+        from: getEmailFrom(),
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+        text,
+      };
+      // Resend attend `reply_to` ; l'omettre rend la réponse impossible.
+      if (adresseReponse) charge.reply_to = adresseReponse;
       const response = await axios.post(
         RESEND_API_URL,
-        {
-          from: getEmailFrom(),
-          to: Array.isArray(to) ? to : [to],
-          subject,
-          html,
-          text,
-        },
+        charge,
         {
           headers: {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -121,12 +144,40 @@ async function sendEmail({ to, subject, html, text }) {
       subject,
       html,
       text,
+      // nodemailer attend `replyTo` (camelCase) : sans lui, même limite.
+      ...(adresseReponse ? { replyTo: adresseReponse } : {}),
     });
-    return { success: true, provider: status.provider };
+    return { success: true, provider: status.provider, reply_to: adresseReponse || null };
   } catch (err) {
     logger.error({ err, payload: { to, subject, provider: status.provider } }, 'Email send failed');
     return { success: false, error: 'send_failed', provider: status.provider };
   }
+}
+
+/**
+ * Envoi COMMERCIAL : refuse de partir si l'adresse de réponse n'est pas
+ * configurée. Un message commercial sans adresse de retour est un prospect
+ * perdu en silence — l'échec doit être visible, jamais silencieux.
+ */
+async function sendCommercialEmail({ to, subject, html, text, replyTo }) {
+  const statut = getEmailStatus();
+  const adresseReponse = replyTo !== undefined ? String(replyTo).trim() : getReplyTo();
+  if (statut.configured && !adresseReponse) {
+    logger.warn(
+      { payload: { to, subject, provider: statut.provider } },
+      'Envoi commercial refuse : EMAIL_REPLY_TO absent - aucune reponse ne pourrait etre recue'
+    );
+    return {
+      success: false,
+      skipped: true,
+      error: 'reply_to_required',
+      provider: statut.provider,
+      missing: ['EMAIL_REPLY_TO'],
+      message:
+        'Envoi commercial refuse : configurez EMAIL_REPLY_TO (adresse de reponse) avant tout envoi sortant.',
+    };
+  }
+  return sendEmail({ to, subject, html, text, replyTo: adresseReponse });
 }
 
 async function sendBillingEmail(kind, vars) {
@@ -169,7 +220,10 @@ async function emailEcheanceContrat({ courtierEmail, clientNom, dateEcheance }) 
 module.exports = {
   getEmailStatus,
   isEmailEnabled,
+  isCommercialEmailReady,
+  getReplyTo,
   sendEmail,
+  sendCommercialEmail,
   sendBillingEmail,
   emailNouveauClient,
   emailNouvelAbonnement,
