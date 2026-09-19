@@ -11,7 +11,17 @@ const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
 const pool = require('../db')
 
-router.use(verifyToken)
+// CORRECTION 2026-09-19 : ce routeur est monte sur '/api' (server.js:435) et
+// appliquait verifyToken a TOUT ce qui passe par ce prefixe. Consequence mesuree :
+// toute requete /api/* non traitee plus haut renvoyait 401 « Token manquant » au
+// lieu d'un 404 — c'est ainsi que GET /api/sales/leads (lecture des leads dans le
+// produit) echouait en 401, et tout routeur public monte APRES cette ligne etait
+// rendu inatteignable. La garde ne couvre plus que les routes qui appartiennent
+// reellement a ce routeur.
+const PREFIXES_PROTEGES = [/^\/objectifs(\/|$)/, /^\/commissions(\/|$)/]
+router.use((req, res, next) =>
+  PREFIXES_PROTEGES.some((motif) => motif.test(req.path)) ? verifyToken(req, res, next) : next()
+)
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
 

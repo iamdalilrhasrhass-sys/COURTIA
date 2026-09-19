@@ -4,11 +4,20 @@ const pool = require('../db');
 class User {
   static async create(email, password, firstName, lastName, role = 'broker') {
     const hashedPassword = await bcrypt.hash(password, 10);
+    // CORRECTION 2026-09-19 : l'inscription ne renseignait NI plan NI statut
+    // d'abonnement (users.plan NULL, subscription_status NULL). L'essai gratuit
+    // annonce sur la landing (« 0 EUR aujourd'hui, 7 jours ») n'existait donc que
+    // cote Stripe (trial_period_days) et jamais dans le produit : les fonctions
+    // payantes restaient bridees et l'activation n'etait jamais comptee.
+    // On accorde desormais l'essai a la creation du compte, duree lue dans
+    // BILLING_TRIAL_DAYS (defaut 7, meme source que billingService et Stripe).
+    const trialDays = Number(process.env.BILLING_TRIAL_DAYS || 7);
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, role, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
-       RETURNING id, email, first_name, last_name, role, created_at`,
-      [email, hashedPassword, firstName, lastName, role]
+      `INSERT INTO users (email, password_hash, first_name, last_name, role,
+                          plan, subscription_status, trial_ends_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'trial', 'trialing', NOW() + ($6 || ' days')::interval, NOW())
+       RETURNING id, email, first_name, last_name, role, plan, subscription_status, trial_ends_at, created_at`,
+      [email, hashedPassword, firstName, lastName, role, String(trialDays)]
     );
     return result.rows[0];
   }
