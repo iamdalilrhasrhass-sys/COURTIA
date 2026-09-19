@@ -203,14 +203,14 @@ CREATE TABLE IF NOT EXISTS compliance_reports (
 );
 
 -- Indices
-CREATE INDEX idx_clients_email ON clients(email);
-CREATE INDEX idx_clients_status ON clients(status);
-CREATE INDEX idx_clients_loyalty ON clients(loyalty_score DESC);
-CREATE INDEX idx_contracts_client ON contracts(client_id);
-CREATE INDEX idx_prospects_stage ON prospects(stage);
-CREATE INDEX idx_appointments_start ON appointments(start_time);
-CREATE INDEX idx_documents_client ON documents(client_id);
-CREATE INDEX idx_audit_user ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);
+CREATE INDEX IF NOT EXISTS idx_clients_loyalty ON clients(loyalty_score DESC);
+CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id);
+CREATE INDEX IF NOT EXISTS idx_prospects_stage ON prospects(stage);
+CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);
+CREATE INDEX IF NOT EXISTS idx_documents_client ON documents(client_id);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
 
 -- ==================== MESSAGING SYSTEM ====================
 

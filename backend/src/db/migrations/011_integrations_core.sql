@@ -48,7 +48,13 @@ CREATE TABLE IF NOT EXISTS calendar_events (
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(user_id, provider, external_event_id)
+  UNIQUE(user_id, provider, external_event_id),
+  -- colonnes indexees par 025 (base neuve) : ajoutees ici, 003a les gere en legacy
+  google_event_id VARCHAR(255),
+  event_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  event_type VARCHAR(50) DEFAULT 'rdv',
+  reminder_sent BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS whatsapp_threads (

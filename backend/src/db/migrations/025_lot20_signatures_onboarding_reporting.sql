@@ -127,7 +127,7 @@ SELECT
   0::numeric as avg_ark_score
 FROM users u
 LEFT JOIN clients c ON c.courtier_id = u.id
-LEFT JOIN contrats ct ON ct.client_id = c.id
+LEFT JOIN quotes ct ON ct.client_id = c.id
 GROUP BY u.id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_user_kpis_user ON mv_user_kpis(user_id);

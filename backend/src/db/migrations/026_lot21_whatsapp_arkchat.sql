@@ -1,6 +1,25 @@
 -- LOT 21 — WhatsApp Business + ARK Chat
 -- Migration 026
 
+-- RECONCILIATION (2026-09-19) : sur une base neuve, `whatsapp_messages` a été
+-- créée par 019_v1_whatsapp_business.sql sans ces colonnes ; le
+-- `CREATE TABLE IF NOT EXISTS` ci-dessous ne fait donc rien et les index
+-- plus bas échouaient (column "user_id" does not exist). Colonnes ajoutées
+-- ici, gardées et idempotentes : aucun effet sur la base de production.
+DO $$
+BEGIN
+  IF to_regclass('public.whatsapp_messages') IS NOT NULL THEN
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(50) DEFAULT 'text';
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS message TEXT;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
+    ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ;
+  END IF;
+END $$;
+
 -- Table messages WhatsApp (enrichie)
 CREATE TABLE IF NOT EXISTS whatsapp_messages (
   id SERIAL PRIMARY KEY,

@@ -83,12 +83,13 @@ CREATE TABLE IF NOT EXISTS prospects (
     next_action_date DATE,
     
     -- Notes
-    notes TEXT,
+    notes TEXT
     
-    INDEX idx_stage (stage),
-    INDEX idx_assigned (assigned_to),
-    INDEX idx_created (created_at)
 );
+
+CREATE INDEX IF NOT EXISTS idx_stage ON prospects (stage);
+CREATE INDEX IF NOT EXISTS idx_assigned ON prospects (assigned_to);
+CREATE INDEX IF NOT EXISTS idx_created ON prospects (created_at);
 
 -- ==================== CONTRATS ====================
 
@@ -118,42 +119,41 @@ CREATE TABLE IF NOT EXISTS contracts (
     status VARCHAR(20) DEFAULT 'actif', -- actif, renouvelé, résilié, suspendu
     
     -- Documents
-    policy_file_id INT REFERENCES documents(id),
+    policy_file_id INT,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    INDEX idx_client (client_id),
-    INDEX idx_renewal (renewal_date),
-    INDEX idx_insurer (insurer)
 );
+
+CREATE INDEX IF NOT EXISTS idx_client ON contracts (client_id);
+CREATE INDEX IF NOT EXISTS idx_renewal ON contracts (renewal_date);
+CREATE INDEX IF NOT EXISTS idx_insurer ON contracts (insurer);
 
 -- ==================== SINISTRES ====================
 
 CREATE TABLE IF NOT EXISTS claims (
-    id SERIAL PRIMARY KEY,
-    client_id INT NOT NULL REFERENCES clients(id),
-    contract_id INT REFERENCES contracts(id),
-    
-    claim_number VARCHAR(100) UNIQUE NOT NULL,
-    claim_date DATE NOT NULL,
-    claim_type VARCHAR(50), -- accident, dégâts, perte, autre
-    description TEXT,
-    
-    -- Montants
-    declared_amount DECIMAL(10, 2),
-    approved_amount DECIMAL(10, 2),
-    paid_amount DECIMAL(10, 2),
-    
-    -- Statut
-    status VARCHAR(20) DEFAULT 'déclarer', -- déclaré, accepté, rejeté, payé, clôturé
-    
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    INDEX idx_client (client_id),
-    INDEX idx_status (status)
+  id SERIAL PRIMARY KEY,
+  client_id INTEGER REFERENCES clients(id),
+  claim_number VARCHAR(50) UNIQUE,
+  type VARCHAR(50),
+  description TEXT,
+  opening_date TIMESTAMP,
+  estimated_closure DATE,
+  amount DECIMAL(10,2),
+  status VARCHAR(20) DEFAULT 'open',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- colonnes reclamees par services/claimsService.js
+  contract_id INTEGER REFERENCES contracts(id) ON DELETE SET NULL,
+  insurer_ref VARCHAR(120),
+  courtier_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  opened_at DATE,
+  ark_summary TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_client ON claims (client_id);
+CREATE INDEX IF NOT EXISTS idx_status ON claims (status);
 
 -- ==================== DOCUMENTS ====================
 
@@ -183,11 +183,12 @@ CREATE TABLE IF NOT EXISTS documents (
     -- Signature
     signed BOOLEAN DEFAULT FALSE,
     signed_at TIMESTAMP,
-    signed_by_id INT REFERENCES users(id),
+    signed_by_id INT REFERENCES users(id)
     
-    INDEX idx_client (client_id),
-    INDEX idx_type (document_type)
 );
+
+CREATE INDEX IF NOT EXISTS idx_client ON documents (client_id);
+CREATE INDEX IF NOT EXISTS idx_type ON documents (document_type);
 
 -- ==================== RENDEZ-VOUS ====================
 
@@ -216,14 +217,15 @@ CREATE TABLE IF NOT EXISTS appointments (
     
     -- Suivi
     status VARCHAR(20) DEFAULT 'planifié', -- planifié, terminé, annulé, reporté
-    notes_after LONGTEXT,
+    notes_after TEXT,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    INDEX idx_client (client_id),
-    INDEX idx_start (start_time)
 );
+
+CREATE INDEX IF NOT EXISTS idx_client ON appointments (client_id);
+CREATE INDEX IF NOT EXISTS idx_start ON appointments (start_time);
 
 -- ==================== COMMISSIONS ====================
 
@@ -239,11 +241,12 @@ CREATE TABLE IF NOT EXISTS commissions (
     status VARCHAR(20) DEFAULT 'pending', -- pending, paid, disputed
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    INDEX idx_contract (contract_id),
-    INDEX idx_status (status)
 );
+
+CREATE INDEX IF NOT EXISTS idx_contract ON commissions (contract_id);
+CREATE INDEX IF NOT EXISTS idx_status ON commissions (status);
 
 -- ==================== RELANCES AUTOMATIQUES ====================
 
@@ -258,7 +261,7 @@ CREATE TABLE IF NOT EXISTS automated_follow_ups (
     sent_at TIMESTAMP,
     status VARCHAR(20) DEFAULT 'pending',
     
-    response LONGTEXT,
+    response TEXT,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -278,11 +281,12 @@ CREATE TABLE IF NOT EXISTS alerts (
     
     status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP,
+    resolved_at TIMESTAMP
     
-    INDEX idx_client (client_id),
-    INDEX idx_type (alert_type)
 );
+
+CREATE INDEX IF NOT EXISTS idx_client ON alerts (client_id);
+CREATE INDEX IF NOT EXISTS idx_type ON alerts (alert_type);
 
 -- ==================== LOGS & AUDIT ====================
 
@@ -296,11 +300,12 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     action VARCHAR(50), -- create, update, delete, view
     changes JSONB,
     
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    INDEX idx_user (user_id),
-    INDEX idx_entity (entity_type, entity_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_user ON audit_logs (user_id);
+CREATE INDEX IF NOT EXISTS idx_entity ON audit_logs (entity_type, entity_id);
 
 -- ==================== RAPPORTS RÉGLEMENTAIRES ====================
 
@@ -317,20 +322,21 @@ CREATE TABLE IF NOT EXISTS compliance_reports (
     file_path VARCHAR(500),
     status VARCHAR(20) DEFAULT 'draft', -- draft, generated, sent, validated
     
-    content LONGTEXT,
+    content TEXT
     
-    INDEX idx_type (report_type)
 );
+
+CREATE INDEX IF NOT EXISTS idx_type ON compliance_reports (report_type);
 
 -- ==================== INDICES DE PERFORMANCE ====================
 
-CREATE INDEX idx_clients_email ON clients(email);
-CREATE INDEX idx_clients_status ON clients(status);
-CREATE INDEX idx_clients_loyalty ON clients(loyalty_score DESC);
-CREATE INDEX idx_contracts_client ON contracts(client_id);
-CREATE INDEX idx_prospects_stage ON prospects(stage);
-CREATE INDEX idx_appointments_start ON appointments(start_time);
-CREATE INDEX idx_documents_client ON documents(client_id);
+CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);
+CREATE INDEX IF NOT EXISTS idx_clients_loyalty ON clients(loyalty_score DESC);
+CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id);
+CREATE INDEX IF NOT EXISTS idx_prospects_stage ON prospects(stage);
+CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);
+CREATE INDEX IF NOT EXISTS idx_documents_client ON documents(client_id);
 
 -- ==================== COMMENTAIRE ====================
 -- Schéma prêt pour la phase 2: Population de données test
@@ -338,12 +344,17 @@ CREATE INDEX idx_documents_client ON documents(client_id);
 -- Phase 4: Automations
 
 -- ÉTAPE 8: Rôles et permissions
-CREATE TYPE user_role AS ENUM ('admin', 'courtier_senior', 'courtier_junior', 'assistant');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE user_role AS ENUM ('admin', 'courtier_senior', 'courtier_junior', 'assistant');
+  END IF;
+END $$;
 
-ALTER TABLE users ADD COLUMN role user_role DEFAULT 'courtier_junior';
-ALTER TABLE users ADD COLUMN permissions jsonb DEFAULT '{"read": true, "write": false, "delete": false}';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role user_role DEFAULT 'courtier_junior';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions jsonb DEFAULT '{"read": true, "write": false, "delete": false}';
 
-CREATE TABLE role_permissions (
+CREATE TABLE IF NOT EXISTS role_permissions (
   role user_role PRIMARY KEY,
   can_create_client BOOLEAN,
   can_edit_client BOOLEAN,
@@ -353,6 +364,11 @@ CREATE TABLE role_permissions (
   can_access_admin BOOLEAN
 );
 
+-- ==================== CLES ETRANGERES DIFFEREES ====================
+-- Ces references pointent vers des tables definies plus bas dans le fichier.
+-- Les declarer ici (plutot qu'en REFERENCES dans le CREATE TABLE) rend l'ordre indifferent.
+ALTER TABLE contracts ADD CONSTRAINT fk_contracts_policy_file_id FOREIGN KEY (policy_file_id) REFERENCES documents(id);
+
 INSERT INTO role_permissions VALUES
 ('admin', true, true, true, true, true, true),
 ('courtier_senior', true, true, true, true, false, false),
@@ -360,38 +376,27 @@ INSERT INTO role_permissions VALUES
 ('assistant', false, false, false, true, false, false);
 
 -- ÉTAPE 14: Gestion sinistres
-CREATE TABLE claims (
-  id SERIAL PRIMARY KEY,
-  client_id INTEGER REFERENCES clients(id),
-  claim_number VARCHAR(50) UNIQUE,
-  type VARCHAR(50),
-  description TEXT,
-  opening_date TIMESTAMP,
-  estimated_closure DATE,
-  amount DECIMAL(10,2),
-  status VARCHAR(20) DEFAULT 'open',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
-CREATE TABLE claim_exchanges (
+CREATE TABLE IF NOT EXISTS claim_exchanges (
   id SERIAL PRIMARY KEY,
   claim_id INTEGER REFERENCES claims(id),
   date TIMESTAMP,
   message TEXT,
   from_insurer BOOLEAN
 );
-CREATE TABLE client_tags (id SERIAL PRIMARY KEY, client_id INTEGER, tag VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-CREATE TABLE partners (id SERIAL PRIMARY KEY, name VARCHAR(100), specialties TEXT, commission_rate DECIMAL(5,2), contact VARCHAR(100));
-CREATE TABLE quotes (id SERIAL PRIMARY KEY, client_id INTEGER, quote_data JSONB, status VARCHAR(20), created_at TIMESTAMP);
-CREATE TABLE audit_trail (id SERIAL PRIMARY KEY, action VARCHAR(255), user_id INTEGER, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, details JSONB);
-CREATE TABLE user_alerts_config (id SERIAL PRIMARY KEY, user_id INTEGER, alert_type VARCHAR(50), enabled BOOLEAN, created_at TIMESTAMP);
-CREATE TABLE training_certifications (id SERIAL PRIMARY KEY, user_id INTEGER, certification VARCHAR(100), completion_date DATE, expiry_date DATE);
-CREATE TABLE complaints (id SERIAL PRIMARY KEY, client_id INTEGER, complaint_type VARCHAR(50), status VARCHAR(20), opening_date TIMESTAMP, closing_date TIMESTAMP, resolution TEXT);
-CREATE TABLE field_visits (id SERIAL PRIMARY KEY, courtier_id INTEGER, client_id INTEGER, scheduled_date DATE, location POINT, status VARCHAR(20));
-CREATE TABLE ab_tests (id SERIAL PRIMARY KEY, test_name VARCHAR(100), variant_a TEXT, variant_b TEXT, metric VARCHAR(50), results JSONB);
-CREATE TABLE optional_coverage (id SERIAL PRIMARY KEY, contract_id INTEGER, coverage_name VARCHAR(100), premium DECIMAL(10,2), status VARCHAR(20));
-CREATE TABLE network_reporting (id SERIAL PRIMARY KEY, period_start DATE, period_end DATE, total_revenue DECIMAL(12,2), total_clients INTEGER);
-CREATE TABLE recruitment_applications (id SERIAL PRIMARY KEY, applicant_name VARCHAR(100), email VARCHAR(100), region VARCHAR(50), application_date TIMESTAMP, status VARCHAR(20));
+
+CREATE TABLE IF NOT EXISTS client_tags (id SERIAL PRIMARY KEY, client_id INTEGER, tag VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS partners (id SERIAL PRIMARY KEY, name VARCHAR(100), specialties TEXT, commission_rate DECIMAL(5,2), contact VARCHAR(100));
+CREATE TABLE IF NOT EXISTS quotes (id SERIAL PRIMARY KEY, client_id INTEGER, quote_data JSONB, status VARCHAR(20), created_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS audit_trail (id SERIAL PRIMARY KEY, action VARCHAR(255), user_id INTEGER, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, details JSONB);
+CREATE TABLE IF NOT EXISTS user_alerts_config (id SERIAL PRIMARY KEY, user_id INTEGER, alert_type VARCHAR(50), enabled BOOLEAN, created_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS training_certifications (id SERIAL PRIMARY KEY, user_id INTEGER, certification VARCHAR(100), completion_date DATE, expiry_date DATE);
+CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, client_id INTEGER, complaint_type VARCHAR(50), status VARCHAR(20), opening_date TIMESTAMP, closing_date TIMESTAMP, resolution TEXT);
+CREATE TABLE IF NOT EXISTS field_visits (id SERIAL PRIMARY KEY, courtier_id INTEGER, client_id INTEGER, scheduled_date DATE, location POINT, status VARCHAR(20));
+CREATE TABLE IF NOT EXISTS ab_tests (id SERIAL PRIMARY KEY, test_name VARCHAR(100), variant_a TEXT, variant_b TEXT, metric VARCHAR(50), results JSONB);
+CREATE TABLE IF NOT EXISTS optional_coverage (id SERIAL PRIMARY KEY, contract_id INTEGER, coverage_name VARCHAR(100), premium DECIMAL(10,2), status VARCHAR(20));
+CREATE TABLE IF NOT EXISTS network_reporting (id SERIAL PRIMARY KEY, period_start DATE, period_end DATE, total_revenue DECIMAL(12,2), total_clients INTEGER);
+CREATE TABLE IF NOT EXISTS recruitment_applications (id SERIAL PRIMARY KEY, applicant_name VARCHAR(100), email VARCHAR(100), region VARCHAR(50), application_date TIMESTAMP, status VARCHAR(20));
 
 -- ==================== MESSAGING SYSTEM ====================
 
@@ -433,12 +438,13 @@ CREATE TABLE IF NOT EXISTS api_request_logs (
     confidence_score DECIMAL(3, 2), -- 0.0-1.0 si fallback Opus
     status VARCHAR(20) DEFAULT 'success', -- success, failed, fallback_used
     request_summary TEXT, -- 100 premiers chars de la requête
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    INDEX idx_user_date (user_id, created_at),
-    INDEX idx_model (model_used),
-    INDEX idx_request_type (request_type)
 );
+
+CREATE INDEX IF NOT EXISTS idx_user_date ON api_request_logs (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_model ON api_request_logs (model_used);
+CREATE INDEX IF NOT EXISTS idx_request_type ON api_request_logs (request_type);
 
 -- Table: Alertes de quota
 CREATE TABLE IF NOT EXISTS api_quota_alerts (
@@ -447,10 +453,11 @@ CREATE TABLE IF NOT EXISTS api_quota_alerts (
     alert_type VARCHAR(50) DEFAULT '80percent', -- 80percent, 95percent, exceeded
     alert_sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     telegram_message_id VARCHAR(255),
-    acknowledged_at TIMESTAMP,
+    acknowledged_at TIMESTAMP
     
-    INDEX idx_user_alert (user_id, alert_type)
 );
+
+CREATE INDEX IF NOT EXISTS idx_user_alert ON api_quota_alerts (user_id, alert_type);
 
 -- Table: Configuration de pricing
 CREATE TABLE IF NOT EXISTS pricing_config (
