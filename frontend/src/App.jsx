@@ -4,6 +4,9 @@ import { lazy, Suspense, useEffect } from 'react'
 
 // Public pages loaded in the main bundle
 import LoginPage from './pages/LoginPage'
+// Inscription reelle : cette page existait mais n'etait montee par aucune route.
+const AuthInscription = lazy(() => import('./components/AuthPremium'))
+const BillingOnboarding = lazy(() => import('./pages/BillingOnboarding'))
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import LandingPublic from './pages/LandingPublic'
@@ -228,7 +231,31 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}><Routes>
         {/* Routes publiques */}
         <Route path="/login" element={<NoIndex title="Connexion — COURTIA"><LoginPage /></NoIndex>} />
-        <Route path="/register" element={<NoIndex title="Créer un compte — COURTIA"><LoginPage /></NoIndex>} />
+        {/* CORRECTION 2026-09-19 : /register affichait la page de CONNEXION
+            (LoginPage ne poste que /api/auth/login). Tous les CTA « essai » de la
+            landing aboutissaient donc sur une page ou le visiteur ne pouvait pas
+            creer de compte. On monte AuthPremium, qui appelle deja
+            authStore.register -> POST /api/auth/register. */}
+        <Route path="/register" element={
+          <NoIndex title="Créer un compte — COURTIA">
+            <Suspense fallback={null}>
+              <AuthInscription mode="register" onAuthSuccess={() => { window.location.href = '/prise-en-main' }} />
+            </Suspense>
+          </NoIndex>
+        } />
+        {/* CORRECTION 2026-09-19 : Billing.jsx redirigeait vers /onboarding/billing
+            quand l'acceptation des CGV/DPA manquait, mais cette route n'existait
+            pas (boucle 400 : impossible d'accepter les conditions, donc impossible
+            de payer). La page existe deja et poste /billing/legal-acceptance. */}
+        <Route path="/onboarding/billing" element={
+          <NoIndex title="Mise en place de l'abonnement — COURTIA">
+            <Suspense fallback={null}><BillingOnboarding /></Suspense>
+          </NoIndex>
+        } />
+        {/* Retours de paiement Stripe : le backend redirige vers /billing/success et
+            /billing/cancel ; ces URL n'existaient pas dans le SPA (404 apres paiement). */}
+        <Route path="/billing/success" element={<PaiementSucces />} />
+        <Route path="/billing/cancel" element={<PaiementAnnule />} />
         <Route path="/forgot-password" element={<NoIndex title="Mot de passe oublié — COURTIA"><ForgotPasswordPage /></NoIndex>} />
         <Route path="/reset-password" element={<NoIndex title="Réinitialiser le mot de passe — COURTIA"><ResetPasswordPage /></NoIndex>} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />

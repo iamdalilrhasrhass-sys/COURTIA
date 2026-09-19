@@ -391,7 +391,13 @@ router.post('/gamified/auto-check', async (req, res) => {
     const earnedBadges = [];
 
     // Vérifier si l'utilisateur a des clients
-    const clientsRes = await pool.query('SELECT COUNT(*) as count FROM clients WHERE user_id = $1', [userId]);
+    // CORRECTION 2026-09-19 : les clients sont ecrits avec `courtier_id`
+    // (routes/clients.js:261-268). Les compter sur `user_id` renvoyait toujours 0 :
+    // l'etape « premier client » n'etait JAMAIS validee automatiquement.
+    const clientsRes = await pool.query(
+      'SELECT COUNT(*) as count FROM clients WHERE courtier_id = $1 OR user_id = $1',
+      [userId]
+    );
     if (parseInt(clientsRes.rows[0].count) > 0) {
       const upd = await pool.query(
         `UPDATE onboarding_progress SET step_create_client = true, badge_courtier_connecte = true WHERE user_id = $1 AND NOT step_create_client RETURNING *`,
@@ -401,7 +407,15 @@ router.post('/gamified/auto-check', async (req, res) => {
     }
 
     // Vérifier si l'utilisateur a des documents générés
-    const docsRes = await pool.query('SELECT COUNT(*) as count FROM documents WHERE user_id = $1 AND source = $2', [userId, 'ark_compose']);
+    // CORRECTION 2026-09-19 : la colonne `documents.source` n'existe dans AUCUN
+    // schema du depot : la requete echouait en 500 (column "source" does not exist)
+    // et l'etape « document genere » etait donc impossible a valider. Le marqueur
+    // reel d'un document genere par COURTIA est `generated_by`/`generated_at`.
+    const docsRes = await pool.query(
+      `SELECT COUNT(*) as count FROM documents
+        WHERE user_id = $1 AND (generated_by IS NOT NULL OR generated_at IS NOT NULL)`,
+      [userId]
+    );
     if (parseInt(docsRes.rows[0].count) > 0) {
       const upd = await pool.query(
         `UPDATE onboarding_progress SET step_generate_document = true, badge_maitre_docs = true WHERE user_id = $1 AND NOT step_generate_document RETURNING *`,
@@ -425,7 +439,9 @@ router.post('/gamified/auto-check', async (req, res) => {
 
     // Vérifier invitations envoyées
     const invitesRes = await pool.query(
-      `SELECT COUNT(*) as count FROM cabinet_invitations WHERE invited_by_user_id = $1`,
+      // CORRECTION 2026-09-19 : la colonne reelle est `invited_by`
+      // (migration 013_v1_members_onboarding.sql) ; `invited_by_user_id` n'existe pas.
+      `SELECT COUNT(*) as count FROM cabinet_invitations WHERE invited_by = $1`,
       [userId]
     );
     if (parseInt(invitesRes.rows[0].count) > 0) {

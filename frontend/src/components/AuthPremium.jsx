@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { useAuthStore } from '../stores/authStore'
 
-export default function Auth({ onAuthSuccess }) {
-  const [isLogin, setIsLogin] = useState(true)
+export default function Auth({ onAuthSuccess, mode = 'login' }) {
+  // `mode="register"` ouvre directement le formulaire de CREATION DE COMPTE.
+  // Constat du 19/09/2026 : cette page (qui appelle bien authStore.register)
+  // n'etait montee nulle part ; /register affichait la page de CONNEXION, donc
+  // AUCUN visiteur ne pouvait creer de compte depuis la landing.
+  const [isLogin, setIsLogin] = useState(mode !== 'register')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
