@@ -497,7 +497,9 @@ function StateD() {
   async function handleCheckout() {
     setLoading(true)
     try {
-      const res = await api.post('/financing/iobsp/reactivate')
+      // CORRECTION 2026-09-19 : cette route n'existe pas (l'audit l'a verifie) —
+      // le bouton d'abonnement ne faisait rien. La route reelle est /financing/capitia/checkout.
+      const res = await api.post('/financing/capitia/checkout')
       window.location.href = res.data.url
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erreur lors du paiement')
@@ -784,7 +786,9 @@ function StateC({ _data, onRefresh }) {
   async function handleCancel() {
     setCancelling(true)
     try {
-      await api.post('/financing/iobsp/cancel')
+      // CORRECTION 2026-09-19 : la resiliation reelle est /financing/capitia/cancel
+      // (l'ancienne route /financing/iobsp/cancel n'existe pas : le bouton etait mort).
+      await api.post('/financing/capitia/cancel')
       toast.success('Add-on ARK IA annulé. Accès actif jusqu\'à fin de période.')
       setShowCancelConfirm(false)
       if (onRefresh) onRefresh()

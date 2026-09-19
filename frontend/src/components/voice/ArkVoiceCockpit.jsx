@@ -45,7 +45,10 @@ export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
 
   const save = async () => {
     setSaving(true);
+    // CORRECTION 2026-09-19 : le serveur expose POST /voice/settings (pas PUT) :
+    // l'enregistrement echouait en silence (aucun controle de reponse).
     await fetch(`${apiBase}/voice/settings`, {
+      method: 'POST',
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(settings)
@@ -55,7 +58,14 @@ export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
 
   const testCall = async () => {
     setTestCalling(true);
-    await fetch(`${apiBase}/voice/test-call`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+    // CORRECTION 2026-09-19 : /voice/test-call n'existe pas. Le vrai appel de
+    // verification disponible est le morning brief, qui appelle le numero du
+    // courtier configure dans ses reglages.
+    const resTest = await fetch(`${apiBase}/voice/morning-brief`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+    if (!resTest.ok) {
+      const detail = await resTest.json().catch(() => ({}));
+      throw new Error(detail.error || `Appel impossible (HTTP ${resTest.status})`);
+    }
     setTestCalling(false);
   };
 
@@ -153,7 +163,17 @@ export function CallClientButton({ clientId, apiBase = '/api', authToken }) {
   const [calling, setCalling] = useState(false);
   const call = async () => {
     setCalling(true);
-    await fetch(`${apiBase}/voice/call/${clientId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+    // CORRECTION 2026-09-19 : /voice/call/:clientId n'existe pas. La route reelle
+    // est POST /voice/call-client avec { client_id, call_type }.
+    const resAppel = await fetch(`${apiBase}/voice/call-client`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: clientId, call_type: 'qualification' }),
+    });
+    if (!resAppel.ok) {
+      const detail = await resAppel.json().catch(() => ({}));
+      throw new Error(detail.error || `Appel impossible (HTTP ${resAppel.status})`);
+    }
     setCalling(false);
   };
   return (
