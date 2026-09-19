@@ -66,6 +66,8 @@ const Billing = lazy(() => import('./pages/Billing'))
 const PaiementSucces = lazy(() => import('./pages/PaiementSucces'))
 const PaiementAnnule = lazy(() => import('./pages/PaiementAnnule'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
+// Prise en main guidee : progression persistee par cabinet (voir /prise-en-main).
+const OnboardingGamified = lazy(() => import('./pages/OnboardingGamified'))
 const Partenaires = lazy(() => import('./pages/Partenaires'))
 const Comparateur = lazy(() => import('./pages/Comparateur'))
 const Equipe = lazy(() => import('./pages/Equipe'))
@@ -263,6 +265,14 @@ export default function App() {
             avec EXACTEMENT les mêmes composants que la démonstration. */}
         <Route element={<PrivateRoute><AppPrivateLayout /></PrivateRoute>}>
           {ROUTES_PRIVEES}
+          {/* Prise en main — parcours de démarrage guidé.
+              L'écran existait (pages/OnboardingGamified.jsx) et son API est
+              persistée par cabinet (/api/onboarding/gamified/*, vérifiée :
+              progression écrite en base, reprise après reconnexion, étanchéité
+              entre cabinets). Il n'était monté par AUCUNE route : il est
+              désormais accessible dans le cockpit, hors démo — la progression
+              affichée est celle du cabinet connecté, pas un exemple. */}
+          <Route path="/prise-en-main" element={<OnboardingGamified />} />
           {/* ACQUISITION COURTIA — écran interne, administrateurs uniquement.
               Monté à la racine SEULEMENT (jamais sous /demo) : il lit le
               service de capture réel, jamais des données synthétiques. */}

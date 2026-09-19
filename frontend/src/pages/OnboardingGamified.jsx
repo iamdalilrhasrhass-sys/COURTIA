@@ -7,7 +7,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Award, Sparkles, Users, Zap, FileText, Shield, UserPlus, ArrowRight } from 'lucide-react';
-import Confetti from 'react-confetti';
+// `react-confetti` n'est pas une dependance du projet : l'import faisait
+// echouer tout le build, donc cette page ne pouvait etre montee par aucune
+// route. On utilise la dependance reellement declaree (canvas-confetti).
+import confetti from 'canvas-confetti';
 
 const STEPS = [
   {
@@ -151,6 +154,8 @@ export default function OnboardingGamified() {
         if (data.newBadgesEarned?.length > 0) {
           setNewBadge(data.newBadgesEarned[0]);
           setShowConfetti(true);
+          // Duree identique a l'ancien affichage (5 s), declenchee de facon imperative.
+          confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
           setTimeout(() => setShowConfetti(false), 5000);
           fetchProgress();
         }
@@ -203,7 +208,6 @@ export default function OnboardingGamified() {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
 
       {/* Aurora Background */}
       <div style={{
