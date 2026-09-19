@@ -99,6 +99,10 @@
       "destination": "https://stylus-desire-massachusetts-latter.trycloudflare.com/api/leads/events"
     },
     {
+      "source": "/api/sales/(.*)",
+      "destination": "/api/sales/[...chemin]"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://courtia.onrender.com/api/$1"
     },
