@@ -11,12 +11,12 @@
 Courtiers ORIAS en France (~26 953 courtiers, dont >90% de TPE). Extension Suisse romande (FINMA).
 
 ## Offres
-Starter 89€/mois · Pro 199€/mois (offre centrale) · Cabinet sur devis.
+Starter 89 € HT/mois · Pro 159 € HT/mois (offre centrale) · Cabinet sur devis. (Les 199/349 CHF concernent la Suisse : voir https://courtiark.fr/ch)
 
 ## Pages clés
 - Logiciel courtier : https://courtiark.fr/fr/logiciel-courtier-assurance
-- CRM courtier : https://courtiark.fr/fr/crm-courtier-assurance
-- IA courtier : https://courtiark.fr/fr/ia-courtier-assurance
-- Comparateur : https://courtiark.fr/fr/comparateur-assurance-courtier
+- Courtier IARD : https://courtiark.fr/fr/logiciel-courtier-iard
+- Courtier sante : https://courtiark.fr/fr/logiciel-courtier-sante
+- Courtier emprunteur : https://courtiark.fr/fr/logiciel-courtier-emprunteur
 
 Généré le 2026-06-29.

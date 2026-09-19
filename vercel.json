@@ -77,6 +77,16 @@
       "source": "/ch/conformite-intermediaire-assurance-lsa-finma/",
       "destination": "/ch/conformite-intermediaire-assurance-lsa-finma",
       "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-santé",
+      "destination": "/fr/logiciel-courtier-sante",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-sant%C3%A9",
+      "destination": "/fr/logiciel-courtier-sante",
+      "permanent": true
     }
   ],
   "rewrites": [
