@@ -284,12 +284,21 @@ async function findOrganizationByStripeCustomer(customerId) {
 }
 
 async function updateCheckoutSessionStatus(sessionId, status, payload = {}) {
+  // CORRECTION 2026-09-19 (bloquant revenu) : `$1` etait utilise DEUX fois, une
+  // fois affecte a la colonne `status` (varchar) et une fois compare a la chaine
+  // 'completed'. PostgreSQL en deduisait deux types incompatibles et la requete
+  // echouait : « inconsistent types deduced for parameter $1 ». Comme cette
+  // fonction est appelee dans le traitement de checkout.session.completed, CHAQUE
+  // paiement reel se terminait en erreur 500 — l'abonnement n'etait jamais
+  // finalise et Stripe rejouait l'evenement en boucle. Le statut est desormais
+  // passe dans un parametre distinct, sans ambiguite de type.
   await pool.query(
     `UPDATE checkout_sessions
-       SET status=$1, completed_at=CASE WHEN $1='completed' THEN NOW() ELSE completed_at END,
+       SET status=$1::varchar,
+           completed_at=CASE WHEN $4::text = 'completed' THEN NOW() ELSE completed_at END,
            raw_payload_json=$2::jsonb
      WHERE provider_session_id=$3`,
-    [status, JSON.stringify(payload), sessionId]
+    [status, JSON.stringify(payload), sessionId, status]
   );
 }
 
@@ -458,8 +467,25 @@ async function handleStripeEvent(event) {
   if (type === 'invoice.paid' || type === 'invoice.payment_failed') {
     const invoice = data;
     const customerId = invoice.customer || null;
-    const organizationId = customerId ? await findOrganizationByStripeCustomer(customerId) : null;
-    if (!organizationId) return;
+    let organizationId = customerId ? await findOrganizationByStripeCustomer(customerId) : null;
+
+    // CORRECTION 2026-09-19 : cette branche resolvait l'organisation UNIQUEMENT
+    // par le client Stripe et sortait en SILENCE sinon. Un paiement recu pouvait
+    // donc ne laisser aucune trace (aucune facture, aucun statut, aucun
+    // avertissement). On retombe sur l'utilisateur des metadonnees, et on
+    // journalise franchement l'echec.
+    if (!organizationId) {
+      const userId = Number(invoice.subscription_details?.metadata?.user_id || 0) || null;
+      if (userId) {
+        const org = await billingService.getOrCreateOrganization(userId);
+        organizationId = org?.id || null;
+      }
+    }
+    if (!organizationId) {
+      logger.warn({ event_type: type, invoice_id: invoice.id, customer: customerId },
+        'stripe invoice: organisation introuvable — facture NON enregistree');
+      return;
+    }
 
     const subRow = invoice.subscription
       ? await pool.query('SELECT id FROM subscriptions WHERE provider_subscription_id=$1 LIMIT 1', [invoice.subscription])
@@ -778,13 +804,30 @@ async function stripeWebhookHandler(req, res) {
     const signature = req.headers['stripe-signature'];
     if (!signature) return res.status(400).json({ error: 'missing_signature' });
 
-    const event = stripeService.constructWebhookEvent(req.rawBody, signature);
-    const newEvent = await insertStripePaymentEventIfNew(pool, event, null, null);
-    if (!newEvent) {
+    let event;
+    try {
+      event = stripeService.constructWebhookEvent(req.rawBody, signature);
+    } catch (sigErr) {
+      return res.status(400).json({ error: 'invalid_signature' });
+    }
+
+    // CORRECTION 2026-09-19 : l'evenement etait marque « traite » AVANT d'etre
+    // traite. Si handleStripeEvent echouait ensuite, la ligne payment_events
+    // restait ecrite et les renvois de Stripe recevaient « idempotent: true » :
+    // un client ayant REELLEMENT paye pouvait ne jamais voir son abonnement
+    // active, sans aucun moyen de rattrapage. On verifie donc d'abord si
+    // l'evenement a deja ete traite, on fait le travail, et on l'enregistre
+    // seulement EN CAS DE SUCCES. En cas d'echec : 500, Stripe reessaie.
+    const dejaTraite = await pool.query(
+      'SELECT 1 FROM payment_events WHERE event_id = $1 LIMIT 1',
+      [event.id]
+    );
+    if (dejaTraite.rows.length > 0) {
       return res.status(200).json({ received: true, idempotent: true });
     }
 
     await handleStripeEvent(event);
+    await insertStripePaymentEventIfNew(pool, event, null, null);
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data?.object || {};
@@ -807,8 +850,12 @@ async function stripeWebhookHandler(req, res) {
     }
 
     return res.json({ received: true });
-  } catch (_err) {
-    return res.status(400).json({ error: 'invalid_webhook' });
+  } catch (err) {
+    // Erreur de TRAITEMENT (et non signature invalide) : on repond 500 pour que
+    // Stripe reessaie, et on n'inscrit rien au journal d'evenements.
+    logger.error({ error: err.message, stack: err.stack?.split('\n')[1] },
+      'stripe webhook: traitement en echec — Stripe doit reessayer');
+    return res.status(500).json({ error: 'webhook_processing_failed' });
   }
 }
 
