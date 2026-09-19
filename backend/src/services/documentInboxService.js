@@ -272,9 +272,10 @@ async function submitInsurance(submissionId, userId) {
   );
   if (sub.rows.length === 0) throw new Error('Soumission introuvable');
 
-  // En V1, on logge l'envoi sans envoyer réellement
+  // CORRECTION 2026-09-19 : plus de statut 'sent' sans envoi réel. On marque
+  // 'prepared' (aucune valeur métier mensongère) et on le signale à l'appelant.
   await pool.query(
-    `UPDATE insurance_submissions SET status = 'sent', sent_at = NOW(), updated_at = NOW() WHERE id = $1`,
+    `UPDATE insurance_submissions SET status = 'prepared', updated_at = NOW() WHERE id = $1`,
     [submissionId]
   );
 
@@ -284,7 +285,13 @@ async function submitInsurance(submissionId, userId) {
     [userId, JSON.stringify({ submissionId, insurerEmail: sub.rows[0].insurer_email })]
   );
 
-  return { success: true, message: 'Email préparé. L\'envoi réel sera connecté en V2.' };
+  return {
+    success: false,
+    email_sent: false,
+    status: 'prepared',
+    error: 'envoi_non_implemente',
+    message: "Soumission préparée, AUCUN envoi effectué : le canal d'envoi vers l'assureur n'est pas branché.",
+  };
 }
 
 async function deleteDocument(docId, userId) {

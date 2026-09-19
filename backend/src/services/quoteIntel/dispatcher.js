@@ -82,15 +82,16 @@ async function sendBrief(briefId, brokerId, options = {}) {
       dryRun: true
     }, 'Quote brief dry-run send')
     
-    // Marquer comme "sent" avec metadata dry-run
+    // CORRECTION 2026-09-19 : le dry-run écrivait status='sent' + sent_at, ce qui
+    // faisait compter des envois inexistants dans les KPI (sent_count, délai moyen
+    // de réponse). Le statut métier n'est plus touché : seule la trace dry-run est
+    // ajoutée aux métadonnées.
     await pool.query(
-      `UPDATE provider_quote_briefs 
-       SET status = $1, sent_at = NOW(), 
-           metadata = metadata || $2
-       WHERE id = $3`,
+      `UPDATE provider_quote_briefs
+       SET metadata = metadata || $1
+       WHERE id = $2`,
       [
-        BRIEF_STATUS.SENT,
-        JSON.stringify({ dry_run: true, simulated_at: new Date().toISOString() }),
+        JSON.stringify({ dry_run: true, simulated_at: new Date().toISOString(), email_sent: false }),
         briefId
       ]
     )

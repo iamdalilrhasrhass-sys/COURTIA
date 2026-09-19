@@ -369,7 +369,9 @@ app.use('/api/imports',         verifyToken, importsRouter)
 app.use('/api/feedback',        verifyToken, feedbackRouter)
 app.use('/api/reach',          verifyToken, reachRouter)
 app.use('/api/academy',        verifyToken, academyRouter)
-app.use('/api/document-inbox', verifyToken, documentInboxRouter)
+// Les routes /api/document-inbox/public/* doivent rester accessibles au CLIENT
+// (lien d'upload envoyé par e-mail) : c'est le routeur qui protège le reste.
+app.use('/api/document-inbox', documentInboxRouter)
 app.use('/api/browser-pilot',  verifyToken, browserPilotRouter)
 app.use('/api/extension',      verifyToken, extensionRouter)
 app.use('/api/partners',       verifyToken, partnersRouter)

@@ -10,9 +10,18 @@ const verifyToken = (req, res, next) => {
   catch (err) { res.status(401).json({ error: 'Token invalide' }); }
 };
 
+// CORRECTION 2026-09-19 : renvoyer `fallback` faisait afficher 0 client /
+// 0 prime / 0 échéance en HTTP 200 — un portefeuille vide présenté comme une
+// donnée valide, alors que la requête avait échoué. On propage désormais
+// l'erreur pour que l'écran dise « indisponible » au lieu de mentir.
 const safeQuery = async (pool, sql, params, fallback) => {
   try { const r = await pool.query(sql, params); return r.rows; }
-  catch (e) { console.warn('[dashboard] query failed:', e.message); return fallback; }
+  catch (e) {
+    console.error('[dashboard] query failed:', e.message);
+    const err = new Error(`dashboard_unavailable: ${e.message}`);
+    err.code = 'DASHBOARD_UNAVAILABLE';
+    throw err;
+  }
 };
 
 // ─── /api/dashboard/stats — Legacy KPIs (compatibilité Dashboard) ───────────

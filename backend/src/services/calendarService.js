@@ -44,13 +44,17 @@ async function createEvent(title, date, clientEmail, description, options = {}) 
 
   // Mode mock si non configuré
   if (!config.configured || !options.tokens?.access_token) {
-    console.log('[Calendar] Mode mock — API non configurée')
-    const mockId = `mock_event_${Date.now()}`
+    // CORRECTION 2026-09-19 : on renvoyait un identifiant et un lien Google
+    // fabriqués ('mock_event_...'), qui étaient ensuite écrits en base comme
+    // google_event_id — le courtier croyait le client invité, il ne l'était pas.
+    // Le rendez-vous reste créé LOCALEMENT, mais rien ne prétend venir de Google.
+    console.log('[Calendar] Google non configuré : rendez-vous local uniquement')
     return {
       configured: false,
-      mock: true,
-      eventId: mockId,
-      htmlLink: `https://calendar.google.com/calendar/event?eid=${mockId}`,
+      mock: false,
+      google_synced: false,
+      eventId: null,
+      htmlLink: null,
       title,
       date,
     }

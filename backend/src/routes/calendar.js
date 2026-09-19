@@ -65,9 +65,11 @@ router.post('/events', verifyToken, async (req, res) => {
 
     res.json({
       success: true,
-      mock: result.mock || false,
+      // `google_synced` dit la vérité : sans Google configuré, le rendez-vous
+      // n'existe que dans COURTIA (google_event_id est NULL).
+      google_synced: result.google_synced === true,
+      googleLink: result.htmlLink || null,
       event: insertRes.rows[0],
-      googleLink: result.htmlLink,
     })
   } catch (err) {
     console.error('[Calendar] create event error:', err)

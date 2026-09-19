@@ -44,7 +44,11 @@ function getUserId(req) {
 // ROUTES PROTÉGÉES (auth)
 // ═══════════════════════════════════════════════════════════════════════════
 
-router.use(verifyToken);
+// Auth sur toutes les routes SAUF /public/* : ce sont les liens envoyés au client
+// (upload de pièces, consultation de la demande), il n'a évidemment pas de jeton.
+router.use((req, res, next) =>
+  /^\/public\//.test(req.path) ? next() : verifyToken(req, res, next)
+);
 
 // GET / — liste des documents
 router.get('/', async (req, res) => {
@@ -217,16 +221,29 @@ router.get('/request/:id', async (req, res) => {
   }
 });
 
-// POST /request/:id/send — marquer comme envoyée
+// POST /request/:id/send — préparer la demande (aucun envoi réel n'est encore branché)
+//
+// CORRECTION 2026-09-19 : cette route écrivait status='sent' + sent_at alors
+// qu'aucun e-mail ni SMS n'était émis. Le statut mentait, la demande de pièces
+// alimentait les compteurs « envoyées » et le cabinet attendait des documents
+// que le client n'avait jamais été invité à fournir. Tant que le transport
+// n'est pas branché, on écrit 'prepared' et on le dit explicitement.
 router.post('/request/:id/send', async (req, res) => {
   try {
     const userId = getUserId(req);
     const result = await pool.query(
-      `UPDATE document_requests SET status = 'sent', sent_at = NOW(), updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING *`,
+      `UPDATE document_requests SET status = 'prepared', updated_at = NOW() WHERE id = $1 AND user_id = $2 RETURNING *`,
       [req.params.id, userId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'not_found' });
-    return res.json({ success: true, data: result.rows[0] });
+    return res.status(501).json({
+      success: false,
+      email_sent: false,
+      status: 'prepared',
+      error: 'envoi_non_implemente',
+      message: "La demande est prête mais aucun e-mail n'a été envoyé : le canal d'envoi n'est pas branché.",
+      data: result.rows[0],
+    });
   } catch (err) {
     console.error('[POST /api/document-inbox/request/:id/send]', err.message);
     return res.status(500).json({ error: 'server_error', message: err.message });

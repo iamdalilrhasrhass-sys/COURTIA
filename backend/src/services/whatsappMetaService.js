@@ -47,15 +47,15 @@ async function sendMessage(pool, userId, { phone, message, clientId, templateId,
     throw new Error('Numéro de téléphone invalide')
   }
 
-  // Mode mock si pas configuré
+  // CORRECTION 2026-09-19 : sans configuration WhatsApp Business, le service
+  // persistait un message 'mock_sent' et renvoyait success:true — le courtier
+  // croyait avoir relancé son client par WhatsApp. On échoue explicitement.
   if (!client) {
-    console.log('[WhatsApp Mock] Message vers', phoneClean, ':', message || templateId)
-    const mockResult = await pool.query(`
-      INSERT INTO whatsapp_messages (user_id, client_id, phone, direction, message_type, message, template_name, status, sent_at, created_at)
-      VALUES ($1, $2, $3, 'outbound', $4, $5, $6, 'mock_sent', NOW(), NOW())
-      RETURNING *
-    `, [userId, clientId || null, phoneClean, templateId ? 'template' : 'text', message, templateId || null])
-    return { success: true, mock: true, data: mockResult.rows[0] }
+    const err = new Error('whatsapp_not_configured')
+    err.code = 'configuration_required'
+    err.status = 503
+    err.message_utilisateur = "WhatsApp Business n'est pas configuré : aucun message n'a été envoyé."
+    throw err
   }
 
   try {

@@ -440,19 +440,22 @@ router.post('/clients/:id/transmit-documents',
         [clientId, brokerId, providerName, channel, JSON.stringify(documentIds), JSON.stringify(metadata)]
       )
 
-      // TODO: Implémenter envoi réel (email, API compagnie, etc.)
-      // Pour l'instant, on marque comme "sent" en simulation
+      // CORRECTION 2026-09-19 : la transmission restait 'pending' côté base mais
+      // la réponse annonçait 'sent' avec success:true — le cabinet croyait les
+      // pièces transmises à l'assureur et arrêtait de relancer. On ne ment plus :
+      // statut réel 'prepared', réponse 501 explicite.
       await pool.query(
-        `UPDATE document_transmissions SET status = 'sent', sent_at = NOW() WHERE id = $1`,
+        `UPDATE document_transmissions SET status = 'prepared', metadata = metadata || '{"envoi_non_implemente": true}'::jsonb WHERE id = $1`,
         [result.rows[0].id]
       )
 
-      res.status(201).json({
-        success: true,
+      res.status(501).json({
+        success: false,
+        email_sent: false,
         transmissionId: result.rows[0].id,
-        status: 'sent',
-        message: `${documentIds.length} document(s) transmis à ${providerName} (simulation)`,
-        note: 'Envoi réel sera implémenté en LOT ultérieur',
+        status: 'prepared',
+        error: 'envoi_non_implemente',
+        message: `Transmission préparée pour ${providerName}, AUCUN envoi effectué : le canal (e-mail compagnie) n'est pas branché.`,
       })
     } catch (err) {
       logger.error({ error: err.message }, 'transmit documents error')

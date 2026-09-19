@@ -39,13 +39,16 @@ async function executeStep({ run, prospect, step }) {
   }
 
   if (channel === 'sms') {
-    // Stub : on log dans reach_messages, l'envoi réel demande Twilio etc.
+    // CORRECTION 2026-09-19 : l'étape SMS écrivait status='sent' alors qu'aucun
+    // SMS n'est émis (pas de passerelle branchée) et comptait donc dans les KPI
+    // d'envoi. On trace 'not_implemented' et on déclare l'échec, pour que la
+    // séquence ne saute pas l'étape silencieusement.
     await pool.query(`
-      INSERT INTO reach_messages (prospect_id, channel, content, status, sent_at, user_id)
-      VALUES ($1, 'sms', $2, 'sent', NOW(), $3)
+      INSERT INTO reach_messages (prospect_id, channel, content, status, user_id)
+      VALUES ($1, 'sms', $2, 'not_implemented', $3)
       ON CONFLICT DO NOTHING
-    `, [prospect.id, bodyRendered, run.user_id]).catch(() => {})
-    return { ok: true, action: 'sms_logged' }
+    `, [prospect.id, bodyRendered, run.user_id]).catch((e) => logger.warn({ err: e.message }, 'reach sms trace failed'))
+    return { ok: false, error: 'sms_not_implemented' }
   }
 
   if (channel === 'task' || channel === 'tache') {
@@ -97,6 +100,18 @@ async function tick() {
     }
     const result = await executeStep({ run: r, prospect: p[0], step })
     if (result.ok) executed++
+
+    // CORRECTION 2026-09-19 : une étape en échec faisait quand même avancer le
+    // run (voire le clôturer 'done') — le prospect ne recevait jamais l'étape et
+    // rien ne le signalait. On repousse la prochaine tentative sans avancer.
+    if (!result.ok) {
+      await pool.query(
+        `UPDATE reach_sequence_runs SET last_action_at=NOW(), next_run_at = NOW() + ($1 || ' days')::interval WHERE id=$2`,
+        ['1', r.id]
+      )
+      logger.warn({ run_id: r.id, action: step.action, error: result.error }, 'reach step failed - run not advanced')
+      continue
+    }
 
     // Avance
     const nextIdx = stepIdx + 1

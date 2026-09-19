@@ -170,8 +170,14 @@ async function sendRelance(pool, client, etape) {
       html: config.corps_template(client),
     });
 
-    if (emailResult?.error) {
-      logger.warn({ client_id: client.id, error: emailResult.error }, 'relance email not sent');
+    // CORRECTION 2026-09-19 : sendCommercialEmail ne lève pas d'exception quand
+    // le provider est absent (skipped/erreur renvoyés dans l'objet). On testait
+    // seulement `error`, donc `success:false, skipped:true` passait pour un envoi
+    // réussi et la relance était écrite 'envoyee'. On n'accepte plus qu'un
+    // succès explicite.
+    const emailOk = emailResult?.success === true;
+    if (!emailOk) {
+      logger.warn({ client_id: client.id, resultat: emailResult }, 'relance email NOT sent');
     } else {
       logger.info({ client_id: client.id, etape }, 'relance email sent');
       result.success = true;
@@ -195,6 +201,13 @@ async function sendRelance(pool, client, etape) {
         });
         if (result.sms.success) result.success = true;
       }
+    }
+
+    // Aucun envoi confirmé : on n'écrit ni 'envoyee' ni une date de relance,
+    // sinon la relance suivante est replanifiée sur un client qui n'a rien reçu.
+    if (!result.success) {
+      result.skipped = true;
+      return result;
     }
 
     // Mettre à jour ou créer l'entrée relances
