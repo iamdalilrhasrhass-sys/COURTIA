@@ -49,6 +49,17 @@ const PLANS = {
       whatsapp: false,
       commissions: false,
       admin_costs: false,
+      // Clés réclamées par les gardes de routes (backend/src/middleware/planGuard.js).
+      // Elles manquaient du vocabulaire PLANS : les routes kanban, modèles
+      // d'e-mail, lead scoring, tableaux de bord exécutif/conformité et
+      // benchmarks répondaient 402 à TOUT LE MONDE, quel que soit le plan.
+      // Valeurs alignées sur plan_limits (migration 003d) : start, pro, elite.
+      kanban: false,
+      email_templates_ai: false,
+      lead_scoring: false,
+      benchmarks: false,
+      executive_dashboard: false,
+      compliance_dashboard: false,
     },
     limits: {
       max_clients: 3,
@@ -86,6 +97,17 @@ const PLANS = {
       whatsapp: true,
       commissions: true,
       admin_costs: true,
+      // Clés réclamées par les gardes de routes (backend/src/middleware/planGuard.js).
+      // Elles manquaient du vocabulaire PLANS : les routes kanban, modèles
+      // d'e-mail, lead scoring, tableaux de bord exécutif/conformité et
+      // benchmarks répondaient 402 à TOUT LE MONDE, quel que soit le plan.
+      // Valeurs alignées sur plan_limits (migration 003d) : start, pro, elite.
+      kanban: true,
+      email_templates_ai: true,
+      lead_scoring: true,
+      benchmarks: false,
+      executive_dashboard: true,
+      compliance_dashboard: true,
     },
     limits: {
       max_clients: 1500,
@@ -123,6 +145,17 @@ const PLANS = {
       whatsapp: true,
       commissions: true,
       admin_costs: true,
+      // Clés réclamées par les gardes de routes (backend/src/middleware/planGuard.js).
+      // Elles manquaient du vocabulaire PLANS : les routes kanban, modèles
+      // d'e-mail, lead scoring, tableaux de bord exécutif/conformité et
+      // benchmarks répondaient 402 à TOUT LE MONDE, quel que soit le plan.
+      // Valeurs alignées sur plan_limits (migration 003d) : start, pro, elite.
+      kanban: true,
+      email_templates_ai: true,
+      lead_scoring: true,
+      benchmarks: true,
+      executive_dashboard: true,
+      compliance_dashboard: true,
     },
     limits: {
       max_clients: Infinity,
@@ -162,6 +195,17 @@ const PLANS = {
       whatsapp: true,
       commissions: true,
       admin_costs: true,
+      // Clés réclamées par les gardes de routes (backend/src/middleware/planGuard.js).
+      // Elles manquaient du vocabulaire PLANS : les routes kanban, modèles
+      // d'e-mail, lead scoring, tableaux de bord exécutif/conformité et
+      // benchmarks répondaient 402 à TOUT LE MONDE, quel que soit le plan.
+      // Valeurs alignées sur plan_limits (migration 003d) : start, pro, elite.
+      kanban: true,
+      email_templates_ai: true,
+      lead_scoring: true,
+      benchmarks: true,
+      executive_dashboard: true,
+      compliance_dashboard: true,
     },
     limits: {
       max_clients: Infinity,
@@ -427,6 +471,13 @@ const FEATURE_GATES = {
   whatsapp: 'pro',
   commissions: 'pro',
   admin_costs: 'pro',
+  // Ajouts alignés sur plan_limits (003d) — sans quoi ces clés n'avaient aucun seuil.
+  kanban: 'pro',
+  email_templates_ai: 'pro',
+  lead_scoring: 'pro',
+  benchmarks: 'cabinet',
+  executive_dashboard: 'pro',
+  compliance_dashboard: 'pro',
 };
 
 const LIMIT_ALIASES = {
