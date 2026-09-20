@@ -12,16 +12,45 @@ import { Particles, ScrollGlow } from './components/vibe/VibePage'
 import ArkNeuralPulse from './components/widgets/ArkNeuralPulse'
 import { usePlanStore } from './stores/planStore'
 import { onPaywallTriggered } from './api'
+import api from './api'
+import TrialExpiredModal from './components/TrialExpiredModal'
+import { decisionEssai } from './lib/essaiUi'
 
 export default function AppPrivateLayout() {
   const navigate = useNavigate()
   const fetchPlanInfo = usePlanStore(s => s.fetchPlanInfo)
   const [paywallError, setPaywallError] = useState(null)
+  // Statut d'essai : il vient du SERVEUR (/api/billing/status → trial_state).
+  // Le bandeau et la modale de fin d'essai ne dépendent jamais d'une date
+  // calculée par le navigateur.
+  const [billingStatut, setBillingStatut] = useState(null)
+  const [paywallEssaiMasque, setPaywallEssaiMasque] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
   useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
+
+  useEffect(() => {
+    let annule = false
+    api.get('/billing/status')
+      .then((r) => { if (!annule) setBillingStatut(r.data?.status || null) })
+      .catch(() => { if (!annule) setBillingStatut(null) })
+    return () => { annule = true }
+  }, [])
+
+  // Une route métier refusée en 402 « trial_expired » ouvre la même modale que
+  // le statut : un seul discours, quelle que soit la porte d'entrée.
+  useEffect(() => {
+    return onPaywallTriggered((err) => {
+      if (err?.error === 'trial_expired') {
+        setBillingStatut((prec) => ({ ...(prec || {}), trial_state: 'TRIAL_EXPIRED', trial_end_at: err.trial_end_at || null }))
+        setPaywallEssaiMasque(false)
+      }
+    })
+  }, [])
+
+  const essai = decisionEssai(billingStatut)
 
   const handleKeyDown = useCallback((e) => {
     if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
@@ -49,8 +78,39 @@ export default function AppPrivateLayout() {
       
       <main className="flex-1 ml-0 md:ml-[240px] pt-[60px] md:pt-0 pb-[80px] md:pb-0 aurora-mobile-content-wrapper" style={{ background: '#050510', minHeight: '100vh' }}>
         <ImpersonationBanner />
+
+        {essai.bandeau && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            flexWrap: 'wrap', padding: '9px 18px',
+            background: essai.bandeau.urgence ? 'rgba(245,158,11,0.12)' : 'rgba(91,77,245,0.12)',
+            borderBottom: '1px solid ' + (essai.bandeau.urgence ? 'rgba(245,158,11,0.3)' : 'rgba(91,77,245,0.28)'),
+          }}>
+            <span style={{ fontSize: 12.5, color: essai.bandeau.urgence ? '#FCD34D' : '#C4B5FD', fontWeight: 600 }}>
+              {essai.bandeau.titre} — {essai.bandeau.texte}
+            </span>
+            <button
+              onClick={() => navigate('/billing')}
+              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}
+            >
+              Voir les offres
+            </button>
+          </div>
+        )}
+
+        {essai.etat === 'TRIAL_EXPIRED' && !essai.paywall && (
+          <div style={{ padding: '9px 18px', background: 'rgba(239,68,68,0.12)', borderBottom: '1px solid rgba(239,68,68,0.3)', fontSize: 12.5, color: '#FCA5A5', fontWeight: 600 }}>
+            Essai terminé — lecture seule. Vos données sont conservées ; choisissez un abonnement pour reprendre les modifications.
+          </div>
+        )}
+
         <Outlet />
       </main>
+      <TrialExpiredModal
+        paywall={essai.paywall && !paywallEssaiMasque ? essai.paywall : null}
+        onClose={() => setPaywallEssaiMasque(true)}
+      />
       <PaywallModal
         open={!!paywallError}
         error={paywallError}
