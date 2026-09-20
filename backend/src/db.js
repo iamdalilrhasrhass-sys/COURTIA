@@ -34,9 +34,15 @@ try {
 // =========================================
 
 
+// SSL : par défaut activé (Render/Neon exigent TLS). PGSSLMODE=disable permet de
+// faire tourner la recette QA contre une PostgreSQL locale (socket Unix), qui ne
+// parle pas TLS. Le défaut en production est inchangé.
+const sslDesactive = ['disable', 'disabled', 'false', '0', 'off']
+  .includes(String(process.env.PGSSLMODE || '').trim().toLowerCase())
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: sslDesactive ? false : { rejectUnauthorized: false }
 });
 
 pool.on('error', (err) => {
