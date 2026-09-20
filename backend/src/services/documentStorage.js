@@ -8,6 +8,7 @@
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
+const { getJwtSecret } = require('../utils/jwtSecret')
 
 // Configuration
 const { DOCUMENT_STORAGE_ROOT } = require('../lib/storagePaths')
@@ -183,8 +184,10 @@ async function remove(storagePath) {
 function signedUrl(storagePath, expiresInSec = 3600) {
   // En mode local, on retourne un token simple
   // En production avec S3/R2, cette méthode générera une vraie URL présignée
+  // SEC-012 : le secret de signature vient du helper central (refus en
+  // production sans JWT_SECRET) — plus de repli 'dev-secret' prévisible.
   const token = crypto
-    .createHmac('sha256', process.env.JWT_SECRET || 'dev-secret')
+    .createHmac('sha256', getJwtSecret())
     .update(`${storagePath}:${Math.floor(Date.now() / 1000) + expiresInSec}`)
     .digest('hex')
     .slice(0, 32)

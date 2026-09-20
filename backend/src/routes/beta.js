@@ -1,6 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const verifyToken = require('../middleware/authMiddleware');
+const { isAdminRole } = require('../constants/roles');
+
+/**
+ * SEC-006 — /stats était monté sans aucune authentification dans server.js
+ * (`app.use('/api/beta', betaRouter)`), alors qu'il exposait la liste des
+ * inscrits (e-mails + cabinets). La route exige donc elle-même un jeton valide
+ * ET un rôle administrateur : c'est le seule façon de la protéger quel que soit
+ * le point de montage.
+ */
+function requireAdmin(req, res, next) {
+  if (!isAdminRole(req.user?.role)) {
+    return res.status(403).json({ error: 'admin_required', message: 'Accès administrateur requis.' });
+  }
+  return next();
+}
 
 // POST /api/beta/register — Inscription beta privee
 router.post('/register', async (req, res) => {
@@ -54,21 +70,27 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// GET /api/beta/stats — Stats inscriptions (admin only)
-router.get('/stats', async (req, res) => {
+// GET /api/beta/stats — Stats inscriptions (admin uniquement, compteurs agrégés)
+router.get('/stats', verifyToken, requireAdmin, async (req, res) => {
   try {
     const total = await pool.query('SELECT COUNT(*) FROM beta_signups');
     const bySize = await pool.query(
       `SELECT portfolio_size, COUNT(*) as count FROM beta_signups GROUP BY portfolio_size ORDER BY count DESC`
     );
-    const recent = await pool.query(
-      `SELECT id, email, cabinet_name, created_at FROM beta_signups ORDER BY created_at DESC LIMIT 10`
+    // Agrégat uniquement : aucune adresse e-mail, aucun nom de cabinet.
+    const recentPerDay = await pool.query(
+      `SELECT DATE(created_at) as day, COUNT(*) as count
+         FROM beta_signups
+        WHERE created_at > NOW() - INTERVAL '30 days'
+        GROUP BY DATE(created_at)
+        ORDER BY day DESC
+        LIMIT 30`
     );
 
     res.json({
-      total: parseInt(total.rows[0].count),
+      total: parseInt(total.rows[0].count, 10),
       by_portfolio_size: bySize.rows,
-      recent: recent.rows
+      recent_per_day: recentPerDay.rows
     });
   } catch (err) {
     console.error('GET /api/beta/stats error:', err.message);

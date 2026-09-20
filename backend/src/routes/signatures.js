@@ -238,16 +238,29 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
 })
 
 // POST /api/signatures/webhook — Reçoit les events Yousign
+//
+// SEC-007 — auparavant la signature n'était vérifiée QUE si
+// YOUSIGN_WEBHOOK_SECRET était configuré : sans secret, n'importe qui pouvait
+// poster un événement « signed » et faire croire à une signature électronique
+// (preuve de conseil inexistante). On refuse désormais explicitement (503),
+// comme backend/src/routes/documents.js.
 router.post('/webhook', async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const rawBody = req.rawBody || JSON.stringify(req.body)
     const signature = req.headers['x-yousign-signature-256'] || req.headers['x-yousign-signature']
 
-    if (process.env.YOUSIGN_WEBHOOK_SECRET) {
-      const isValid = yousignService.verifyWebhookSignature(rawBody, signature)
-      if (!isValid) return res.status(401).json({ error: 'Invalid signature' })
+    const config = yousignService.getConfigStatus()
+    if (config.missing.includes('YOUSIGN_WEBHOOK_SECRET')) {
+      return res.status(503).json({
+        error: 'configuration_required',
+        message: 'YOUSIGN_WEBHOOK_SECRET est requis pour vérifier les webhooks Yousign.',
+        missing: ['YOUSIGN_WEBHOOK_SECRET']
+      })
     }
+
+    const isValid = yousignService.verifyWebhookSignature(rawBody, signature)
+    if (!isValid) return res.status(401).json({ error: 'Invalid signature' })
 
     const event = req.body
     const eventType = event.event_name || event.type || ''

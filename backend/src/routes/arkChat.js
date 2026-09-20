@@ -6,10 +6,15 @@
 const express = require('express')
 const router = express.Router()
 const arkChatService = require('../services/arkChatService')
+const { getJwtSecret } = require('../utils/jwtSecret')
 
 /**
  * Middleware d'authentification client portail
  * Vérifie le token JWT du client (différent du courtier)
+ *
+ * SEC-012 / SEC-015 — le secret de signature vient du helper central
+ * getJwtSecret() : plus aucun secret de repli codé en dur (en production, le
+ * helper refuse de signer/vérifier sans JWT_SECRET).
  */
 async function verifyClientToken(req, res, next) {
   const authHeader = req.headers.authorization
@@ -21,7 +26,7 @@ async function verifyClientToken(req, res, next) {
   
   try {
     const jwt = require('jsonwebtoken')
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'courtia_secret_key')
+    const decoded = jwt.verify(token, getJwtSecret())
     
     // Vérifier que c'est un token client portail
     if (!decoded.clientId) {
@@ -32,8 +37,14 @@ async function verifyClientToken(req, res, next) {
     req.portalSession = decoded
     next()
   } catch (err) {
-    // Mode démo : permettre l'accès avec un clientId en query
-    if (process.env.NODE_ENV === 'development' && req.query.clientId) {
+    // Mode démo : UNIQUEMENT hors production et sur activation explicite
+    // (ARK_CHAT_DEMO_MODE=true). Auparavant, un simple ?clientId= en
+    // développement suffisait à lire la conversation d'un client.
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      process.env.ARK_CHAT_DEMO_MODE === 'true' &&
+      req.query.clientId
+    ) {
       req.clientId = parseInt(req.query.clientId, 10)
       return next()
     }

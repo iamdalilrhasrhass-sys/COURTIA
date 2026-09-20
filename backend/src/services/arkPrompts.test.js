@@ -1,0 +1,117 @@
+/**
+ * Tests du paramètre marché des prompts ARK (point IA-016).
+ *
+ * Contrainte : pour le marché FR le comportement doit rester STRICTEMENT
+ * inchangé ; pour la Suisse, les référentiels (FINMA, LSA, nLPD), le registre
+ * (UID) et la devise (CHF) doivent remplacer les références françaises.
+ */
+const {
+  ARK_PERSONA,
+  getPrompt,
+  resoudreMarche,
+  normaliserMarche,
+  appliquerMarche,
+  chargerMarcheCabinet,
+} = require('./arkPrompts')
+
+describe('arkPrompts — résolution du marché du cabinet', () => {
+  test('le pays prime sur la langue', () => {
+    expect(resoudreMarche({ pays: 'SUISSE' })).toBe('CH')
+    expect(resoudreMarche({ pays: 'CH' })).toBe('CH')
+    expect(resoudreMarche({ pays: 'France' })).toBe('FR')
+  })
+
+  test('sans pays, une langue allemande ou italienne indique la Suisse', () => {
+    expect(resoudreMarche({ langue: 'de' })).toBe('CH')
+    expect(resoudreMarche({ langue: 'it-CH' })).toBe('CH')
+  })
+
+  test('défaut FR quand le profil est vide ou inconnu', () => {
+    expect(resoudreMarche({})).toBe('FR')
+    expect(resoudreMarche({ pays: 'Belgique' })).toBe('FR')
+    expect(resoudreMarche()).toBe('FR')
+    expect(normaliserMarche('')).toBeNull()
+  })
+})
+
+describe('arkPrompts — le marché suisse n\'évoque plus le référentiel français', () => {
+  const promptCh = getPrompt('clientBrief', 'CH').system
+
+  test('les référentiels suisses remplacent les français', () => {
+    expect(promptCh).toContain('FINMA')
+    expect(promptCh).toContain('LSA')
+    expect(promptCh).toContain('nLPD')
+    // Le corps du prompt ne doit plus désigner les référentiels français comme
+    // applicables : ils ne subsistent que dans la consigne qui les écarte.
+    expect(promptCh).not.toContain('Autorité de surveillance: ACPR')
+    expect(promptCh).not.toContain('registre unique des intermédiaires')
+    expect(promptCh).not.toMatch(/Directive Distribution Assurance/)
+    expect(promptCh).not.toMatch(/\bRGPD\b/)
+    expect(promptCh).not.toContain('La Loi Hamon et la Loi Châtel')
+    expect(promptCh).not.toMatch(/\bORIAS\b(?!, ACPR, DDA)/)
+  })
+
+  test('la devise devient le franc suisse', () => {
+    expect(promptCh).toContain('CHF')
+    expect(promptCh).not.toContain('€')
+  })
+
+  test('le bloc de contexte marché est injecté', () => {
+    expect(promptCh).toContain('=== CONTEXTE MARCHÉ ===')
+    expect(promptCh).toContain('Marché: Suisse (CH)')
+    expect(promptCh).toContain('UID')
+  })
+
+  test('un cabinet suisse peut être pris directement depuis son profil', () => {
+    const prompt = getPrompt('quoteAssistant', { market: 'CH' })
+    expect(prompt.market).toBe('CH')
+    expect(prompt.system).toContain('FINMA')
+    expect(prompt.maxTokens).toBeGreaterThan(0)
+  })
+
+  test('le persona suisse ne contredit pas ses propres consignes', () => {
+    // Les références françaises citées DANS le persona ne doivent pas être
+    // remplacées par les motifs de substitution (qui visent le corps du prompt).
+    expect(promptCh).toContain('Les référentiels français (ORIAS, ACPR, DDA) ne s\'appliquent pas')
+  })
+})
+
+describe('arkPrompts — marché FR inchangé', () => {
+  test('le prompt FR par défaut garde les référentiels français', () => {
+    const prompt = getPrompt('clientBrief')
+    expect(prompt.market).toBe('FR')
+    expect(prompt.system).toContain('ORIAS')
+    expect(prompt.system).toContain('ACPR')
+    expect(prompt.system).toContain('DDA')
+    expect(prompt.system).toContain(ARK_PERSONA)
+    expect(prompt.system).not.toContain('FINMA')
+  })
+
+  test('le JSON attendu n\'est pas altéré par l\'ajout du bloc marché', () => {
+    const prompt = getPrompt('clientBrief')
+    expect(prompt.system).toContain('"summary"')
+    expect(prompt.maxTokens).toBe(800)
+  })
+
+  test('appliquerMarche en FR n\'ajoute que le bloc de contexte', () => {
+    const rendu = appliquerMarche('Question simple.', 'FR')
+    expect(rendu).toContain('Question simple.')
+    expect(rendu).toContain('Marché: France (FR)')
+  })
+})
+
+describe('arkPrompts — lecture du profil cabinet en base', () => {
+  test('le marché est lu dans broker_profiles', async () => {
+    const pool = { query: jest.fn(async () => ({ rows: [{ pays: 'CH', langue: 'fr' }] })) }
+    await expect(chargerMarcheCabinet(pool, 4)).resolves.toBe('CH')
+    expect(pool.query.mock.calls[0][0]).toContain('broker_profiles')
+  })
+
+  test('un profil illisible retombe sur FR, sans marché inventé', async () => {
+    const pool = { query: jest.fn(async () => { throw new Error('relation absente') }) }
+    await expect(chargerMarcheCabinet(pool, 4)).resolves.toBe('FR')
+    await expect(chargerMarcheCabinet(null, 4)).resolves.toBe('FR')
+    const vide = { query: jest.fn(async () => ({ rows: [] })) }
+    await expect(chargerMarcheCabinet(vide, 4)).resolves.toBe('FR')
+  })
+})

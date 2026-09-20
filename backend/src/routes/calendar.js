@@ -5,9 +5,57 @@
 
 const express = require('express')
 const router = express.Router()
+const crypto = require('crypto')
 const calendarService = require('../services/calendarService')
 const verifyToken = require('../middleware/authMiddleware')
+const { getJwtSecret } = require('../utils/jwtSecret')
 const { captureException } = require('../sentry')
+
+// ==================== STATE OAUTH SIGNÉ (SEC-008) ====================
+//
+// Le callback OAuth Google lisait `JSON.parse(state).userId` sans aucune
+// vérification : un attaquant pouvait faire accepter SON code d'autorisation
+// en désignant la victime comme propriétaire (le refresh token Google de la
+// victime était alors remplacé). On applique le même mécanisme que
+// backend/src/routes/integrations.js : state signé HMAC + expiration.
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000
+
+function getStateSecret() {
+  return process.env.ENCRYPTION_KEY || getJwtSecret()
+}
+
+function signState(payload) {
+  const raw = Buffer.from(JSON.stringify(payload)).toString('base64url')
+  const signature = crypto
+    .createHmac('sha256', getStateSecret())
+    .update(raw)
+    .digest('base64url')
+  return `${raw}.${signature}`
+}
+
+function parseState(state) {
+  const [raw, signature] = String(state || '').split('.')
+  if (!raw || !signature) return null
+
+  const expected = crypto
+    .createHmac('sha256', getStateSecret())
+    .update(raw)
+    .digest('base64url')
+
+  const expectedBuf = Buffer.from(expected)
+  const providedBuf = Buffer.from(signature)
+  if (expectedBuf.length !== providedBuf.length) return null
+  if (!crypto.timingSafeEqual(expectedBuf, providedBuf)) return null
+
+  try {
+    const payload = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'))
+    if (!payload?.userId || !payload?.issuedAt) return null
+    if (Date.now() - Number(payload.issuedAt) > OAUTH_STATE_TTL_MS) return null
+    return payload
+  } catch (e) {
+    return null
+  }
+}
 
 // POST /api/calendar/events — Crée un événement
 router.post('/events', verifyToken, async (req, res) => {
@@ -322,7 +370,9 @@ router.put('/events/:id', verifyToken, async (req, res) => {
 router.get('/auth-url', verifyToken, (req, res) => {
   try {
     const userId = req.user?.id || req.user?.userId
-    const authUrl = calendarService.getAuthUrl(JSON.stringify({ userId }))
+    // SEC-008 : state signé (HMAC) et daté, vérifiable au retour du callback.
+    const state = signState({ userId, provider: 'google_calendar', issuedAt: Date.now() })
+    const authUrl = calendarService.getAuthUrl(state)
     res.json({ authUrl })
   } catch (err) {
     console.error('[Calendar] auth URL error:', err)
@@ -341,16 +391,14 @@ router.get('/callback', async (req, res) => {
       return res.status(400).json({ error: 'Code manquant' })
     }
 
-    const tokens = await calendarService.getTokensFromCode(code)
-
-    // Récupérer userId du state
-    let userId
-    try {
-      const stateData = JSON.parse(state || '{}')
-      userId = stateData.userId
-    } catch (e) {
-      return res.status(400).json({ error: 'State invalide' })
+    // SEC-008 : le state est vérifié AVANT tout échange de code Google.
+    const stateData = parseState(state)
+    if (!stateData) {
+      return res.status(400).json({ error: 'State invalide ou expiré' })
     }
+    const userId = stateData.userId
+
+    const tokens = await calendarService.getTokensFromCode(code)
 
     if (userId) {
       await pool.query(

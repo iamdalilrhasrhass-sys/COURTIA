@@ -1,12 +1,19 @@
 /**
  * Authentication Middleware
- * JWT token verification
+ * JWT token verification + révocation de session après changement de mot de passe
+ *
+ * SEC-016 — ce middleware est celui monté par server.js sur toutes les routes
+ * protégées : la vérification de révocation doit donc vivre ici pour être
+ * réellement effective. Un jeton émis avant `users.password_changed_at` est
+ * refusé (401) ; `password_changed_at` NULL (compte jamais réinitialisé) laisse
+ * la session intacte.
  */
 
 const jwt = require('jsonwebtoken');
 const { getJwtSecret } = require('../utils/jwtSecret');
+const { isSessionRevoked } = require('./auth');
 
-function verifyToken(req, res, next) {
+async function verifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -26,6 +33,18 @@ function verifyToken(req, res, next) {
     const token = parts[1];
 
     const decoded = jwt.verify(token, getJwtSecret());
+
+    const session = await isSessionRevoked(decoded);
+    if (session.dbError) {
+      return res.status(503).json({
+        error: 'Vérification de session indisponible'
+      });
+    }
+    if (session.revoked) {
+      return res.status(401).json({
+        error: 'Session expirée, veuillez vous reconnecter'
+      });
+    }
 
     req.user = decoded;
     next();
@@ -47,5 +66,7 @@ function verifyToken(req, res, next) {
     });
   }
 }
+
+verifyToken.verifyToken = verifyToken;
 
 module.exports = verifyToken;

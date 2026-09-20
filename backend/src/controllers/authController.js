@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const { getJwtSecret } = require('../utils/jwtSecret');
+const { isSessionRevoked } = require('../middleware/auth');
 const { trackEvent } = require('../services/analyticsService');
 const { sendEmail } = require('../services/emailService');
 const { notifierAdminSansBloquer } = require('../services/adminNotifier');
@@ -339,6 +340,52 @@ exports.changePassword = async (req, res) => {
 };
 
 // Refresh token
+//
+// SEC-009 — l'ancienne implémentation faisait `jwt.verify(token, secret,
+// { ignoreExpiration: true })` : n'importe quel jeton expiré, même vieux de
+// plusieurs mois, renouvelait indéfiniment la session. Désormais:
+//   - jeton NON expiré  -> renouvelé (comportement normal) ;
+//   - jeton expiré      -> toléré seulement dans une fenêtre de grâce COURTE
+//                          (JWT_REFRESH_GRACE_SECONDS, plafonnée à 15 min) ;
+//   - au-delà           -> 401.
+// La signature est TOUJOURS vérifiée, y compris dans la fenêtre de grâce.
+const REFRESH_GRACE_SECONDS_MAX = 15 * 60;
+
+function getRefreshGraceSeconds() {
+  const raw = Number(process.env.JWT_REFRESH_GRACE_SECONDS);
+  if (!Number.isFinite(raw) || raw < 0) return REFRESH_GRACE_SECONDS_MAX;
+  return Math.min(Math.floor(raw), REFRESH_GRACE_SECONDS_MAX);
+}
+
+function verifyRefreshToken(token) {
+  try {
+    return { decoded: jwt.verify(token, getJwtSecret()) };
+  } catch (err) {
+    if (err.name !== 'TokenExpiredError') {
+      return { error: 'invalid' };
+    }
+
+    // Jeton expiré : on revérifie la signature en ignorant seulement l'expiration,
+    // le temps de mesurer le dépassement réel.
+    let decoded;
+    try {
+      decoded = jwt.verify(token, getJwtSecret(), { ignoreExpiration: true });
+    } catch (verifyErr) {
+      return { error: 'invalid' };
+    }
+
+    const exp = Number(decoded.exp);
+    const iat = Number(decoded.iat);
+    if (!Number.isFinite(exp) || !Number.isFinite(iat)) {
+      return { error: 'invalid' };
+    }
+    if (Date.now() / 1000 > exp + getRefreshGraceSeconds()) {
+      return { error: 'expired' };
+    }
+    return { decoded, expiredWithinGrace: true };
+  }
+}
+
 exports.refresh = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -347,9 +394,28 @@ exports.refresh = async (req, res) => {
       return res.status(401).json({ error: 'Token manquant' });
     }
 
-    const decoded = jwt.verify(token, getJwtSecret(), {
-      ignoreExpiration: true
-    });
+    const resultat = verifyRefreshToken(token);
+    if (resultat.error) {
+      return res.status(401).json({
+        error: 'session_expiree',
+        message: 'Session expirée, veuillez vous reconnecter.'
+      });
+    }
+
+    const decoded = resultat.decoded;
+
+    // SEC-016 : un jeton émis avant le dernier changement de mot de passe ne
+    // peut pas être renouvelé.
+    const session = await isSessionRevoked(decoded);
+    if (session.revoked) {
+      return res.status(401).json({
+        error: 'session_revoquee',
+        message: 'Session expirée, veuillez vous reconnecter.'
+      });
+    }
+    if (session.dbError) {
+      return res.status(503).json({ error: 'Actualisation de session indisponible' });
+    }
 
     const user = await User.findById(decoded.id);
 

@@ -23,6 +23,22 @@ function generateToken() {
 }
 
 /**
+ * Empreinte SHA-256 d'un jeton de réinitialisation.
+ * Le jeton n'est JAMAIS stocké en clair : seule son empreinte est écrite en base
+ * (les jetons portail sont à usage unique et expirent en 1 h).
+ */
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex');
+}
+
+// Réponse UNIFORME de la demande de réinitialisation : même texte, même code,
+// que le compte existe ou non (anti-énumération). Aucun jeton n'y figure.
+const RESET_REQUEST_RESPONSE = {
+  success: true,
+  message: 'Si ce compte existe, un lien de réinitialisation a été envoyé'
+};
+
+/**
  * Génère un JWT pour le portail client
  */
 function generateClientJwt(account, client) {
@@ -154,7 +170,12 @@ async function login(email, password) {
 }
 
 /**
- * Demande de réinitialisation de mot de passe
+ * Demande de réinitialisation de mot de passe (route PUBLIQUE).
+ *
+ * SEC-002 — Un endpoint public ne renvoie JAMAIS le jeton : la réponse est
+ * strictement identique que le compte existe ou non (anti-énumération). Le jeton
+ * est tout de même généré, stocké (haché, usage unique, expiration 1 h) et, si
+ * un canal d'envoi est configuré, transmis par e-mail.
  */
 async function requestReset(email) {
   if (!email) {
@@ -166,12 +187,26 @@ async function requestReset(email) {
     [email.toLowerCase().trim()]
   );
 
-  // Pour sécurité, on retourne succès même si compte inexistant
+  // Compte inexistant : même réponse, aucune écriture.
   if (accountRes.rows.length === 0) {
-    return { success: true, message: 'Si ce compte existe, un lien de réinitialisation a été envoyé' };
+    return { ...RESET_REQUEST_RESPONSE };
   }
 
   const account = accountRes.rows[0];
+  const issued = await issueResetToken(account);
+
+  // L'envoi du lien reste optionnel : sans configuration e-mail, le courtier
+  // peut réémettre un lien via le chemin interne (requestResetForBroker).
+  await envoyerLienReset(account, issued.resetLink);
+
+  return { ...RESET_REQUEST_RESPONSE };
+}
+
+/**
+ * Émission du jeton de réinitialisation pour un compte donné.
+ * @returns {Promise<{resetToken: string, resetLink: string, expiresAt: Date}>}
+ */
+async function issueResetToken(account) {
   const resetToken = generateToken();
   const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
 
@@ -181,16 +216,65 @@ async function requestReset(email) {
          reset_token_expires_at = $2,
          updated_at = NOW()
      WHERE id = $3`,
-    [resetToken, expiresAt, account.id]
+    [hashResetToken(resetToken), expiresAt, account.id]
   );
 
   return {
-    success: true,
-    message: 'Si ce compte existe, un lien de réinitialisation a été envoyé',
-    // En V1 : on retourne le token pour que le courtier puisse l'envoyer manuellement
     resetToken,
-    resetLink: `/portal/reset-password?token=${resetToken}`
+    resetLink: `/portal/reset-password?token=${resetToken}`,
+    expiresAt
   };
+}
+
+/**
+ * Chemin INTERNE courtier : réémet un lien de réinitialisation pour un client du
+ * cabinet. À n'appeler QUE depuis une route authentifiée courtier — jamais depuis
+ * la route publique /portal/auth/request-reset (SEC-002).
+ */
+async function requestResetForBroker(email, brokerId) {
+  if (!email) {
+    throw new Error('Email requis');
+  }
+
+  const params = [email.toLowerCase().trim()];
+  let sql = "SELECT * FROM client_portal_accounts WHERE email = $1 AND status = 'active'";
+  if (brokerId) {
+    sql += ' AND broker_id = $2';
+    params.push(brokerId);
+  }
+
+  const accountRes = await pool.query(sql, params);
+  if (accountRes.rows.length === 0) {
+    return { success: false, error: 'account_not_found' };
+  }
+
+  const issued = await issueResetToken(accountRes.rows[0]);
+  return {
+    success: true,
+    resetToken: issued.resetToken,
+    resetLink: issued.resetLink,
+    expiresAt: issued.expiresAt
+  };
+}
+
+/**
+ * Envoi du lien de réinitialisation. Non bloquant : une configuration e-mail
+ * absente ne doit pas faire échouer la demande (et n'expose jamais le jeton).
+ */
+async function envoyerLienReset(account, resetLink) {
+  try {
+    const { sendEmail } = require('../emailService');
+    const frontendUrl = process.env.FRONTEND_URL || 'https://courtiark.fr';
+    const lien = resetLink.startsWith('http') ? resetLink : `${frontendUrl}${resetLink}`;
+    await sendEmail({
+      to: account.email,
+      subject: 'COURTIA — Réinitialisation de votre mot de passe',
+      html: `<p>Bonjour,</p><p>Un lien de réinitialisation de votre mot de passe portail COURTIA a été demandé.</p><p><a href="${lien}">Choisir un nouveau mot de passe</a> (valable 1 heure).</p><p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.</p>`,
+      text: `Réinitialisez votre mot de passe portail COURTIA : ${lien} (valable 1 heure).`
+    });
+  } catch (err) {
+    console.warn('[PortalAuth] envoi du lien de réinitialisation impossible:', err.message);
+  }
 }
 
 /**
@@ -210,7 +294,7 @@ async function resetPassword(token, newPassword) {
      WHERE reset_token = $1
        AND reset_token_expires_at > NOW()
        AND status = 'active'`,
-    [token]
+    [hashResetToken(token)]
   );
 
   if (accountRes.rows.length === 0) {
@@ -317,12 +401,15 @@ async function getAccountInfo(portalAccountId) {
 
 module.exports = {
   generateToken,
+  hashResetToken,
   activate,
   login,
   requestReset,
+  requestResetForBroker,
   resetPassword,
   verifyClientPortalToken,
   getAccountInfo,
   ACTIVATION_TOKEN_EXPIRY_HOURS,
-  RESET_TOKEN_EXPIRY_HOURS
+  RESET_TOKEN_EXPIRY_HOURS,
+  RESET_REQUEST_RESPONSE
 };

@@ -8,6 +8,86 @@ const router = express.Router();
 const pool = require('../db');
 const verifyToken = require('../middleware/authMiddleware');
 const { getAuditLogs, logAction } = require('../middleware/auditLogger');
+const { getSafeUserId, normalizeCabinetRole } = require('../services/cabinetMembershipService');
+
+// ==================== GARDE CABINET (SEC-005 / SEC-010) ====================
+//
+// Les routes de gestion des rôles s'appuyaient sur `req.user.cabinet_id`, une
+// revendication du jeton JWT : n'importe quel porteur d'un jeton valide pouvait
+// lire/modifier/supprimer les rôles et les attributions d'un AUTRE cabinet en la
+// falsifiant, et un utilisateur sans aucun rattachement `cabinet_members`
+// pouvait créer des rôles orphelins. Le cabinet est désormais RÉSOLU CÔTÉ
+// SERVEUR depuis `cabinet_members` (jamais depuis le jeton) et ces routes sont
+// réservées aux rôles owner/admin du cabinet (ou super_admin plateforme).
+
+// 'admin' est normalisé en 'manager' par le modèle cabinet.
+const ADMIN_CABINET_ROLES = new Set(['owner', 'manager']);
+
+async function requireCabinetAdmin(req, res, next) {
+  try {
+    const userId = getSafeUserId(req.user);
+    if (!userId) {
+      return res.status(401).json({ error: 'auth_required', message: 'Authentification requise.' });
+    }
+
+    const memberships = await pool.query(
+      `SELECT cabinet_id, role
+         FROM cabinet_members
+        WHERE user_id = $1 AND removed_at IS NULL
+        ORDER BY created_at ASC`,
+      [userId]
+    );
+
+    if (memberships.rows.length === 0) {
+      return res.status(403).json({
+        error: 'cabinet_required',
+        message: 'Aucun cabinet associé à ce compte : ces routes sont réservées aux membres d\'un cabinet.'
+      });
+    }
+
+    // super_admin plateforme : rattachement facultatif.
+    if (String(req.user?.role || '').toLowerCase() === 'super_admin') {
+      req.cabinetId = memberships.rows[0].cabinet_id;
+      return next();
+    }
+
+    const adminMembership = memberships.rows.find((row) => {
+      try {
+        return ADMIN_CABINET_ROLES.has(normalizeCabinetRole(row.role));
+      } catch (e) {
+        return false;
+      }
+    });
+
+    if (!adminMembership) {
+      return res.status(403).json({
+        error: 'forbidden_role',
+        message: 'Réservé aux rôles owner/admin du cabinet.'
+      });
+    }
+
+    req.cabinetId = adminMembership.cabinet_id;
+    req.cabinetMembership = adminMembership;
+    return next();
+  } catch (error) {
+    console.error('requireCabinetAdmin error:', error);
+    return res.status(500).json({ error: 'internal_error', message: error.message });
+  }
+}
+
+/**
+ * L'utilisateur cible appartient-il bien au cabinet résolu côté serveur ?
+ */
+async function isUserInCabinet(userId, cabinetId) {
+  if (!cabinetId || !Number.isFinite(Number(userId))) return false;
+  const result = await pool.query(
+    `SELECT 1 FROM cabinet_members
+      WHERE user_id = $1 AND cabinet_id = $2 AND removed_at IS NULL
+      LIMIT 1`,
+    [Number(userId), cabinetId]
+  );
+  return result.rows.length > 0;
+}
 
 // ==================== AUDIT LOGS ====================
 
@@ -129,7 +209,7 @@ router.get('/roles', verifyToken, async (req, res) => {
  * POST /api/enterprise/roles
  * Crée un rôle personnalisé
  */
-router.post('/roles', verifyToken, async (req, res) => {
+router.post('/roles', verifyToken, requireCabinetAdmin, async (req, res) => {
   try {
     const { name, description, permissions } = req.body;
     
@@ -140,7 +220,7 @@ router.post('/roles', verifyToken, async (req, res) => {
     // Vérifier que le nom n'existe pas déjà
     const existing = await pool.query(
       `SELECT id FROM enterprise_roles WHERE name = $1 AND (is_system = true OR cabinet_id = $2)`,
-      [name, req.user.cabinet_id || null]
+      [name, req.cabinetId]
     );
     
     if (existing.rows.length > 0) {
@@ -151,7 +231,7 @@ router.post('/roles', verifyToken, async (req, res) => {
       `INSERT INTO enterprise_roles (cabinet_id, name, description, permissions, is_system)
        VALUES ($1, $2, $3, $4, false)
        RETURNING *`,
-      [req.user.cabinet_id || null, name, description || '', permissions || {}]
+      [req.cabinetId, name, description || '', permissions || {}]
     );
     
     // Log audit
@@ -171,7 +251,7 @@ router.post('/roles', verifyToken, async (req, res) => {
  * PUT /api/enterprise/roles/:id
  * Modifie un rôle personnalisé
  */
-router.put('/roles/:id', verifyToken, async (req, res) => {
+router.put('/roles/:id', verifyToken, requireCabinetAdmin, async (req, res) => {
   try {
     const { name, description, permissions } = req.body;
     
@@ -188,6 +268,12 @@ router.put('/roles/:id', verifyToken, async (req, res) => {
     if (existing.rows[0].is_system) {
       return res.status(403).json({ error: 'cannot_edit_system_role', message: 'Les rôles système ne peuvent pas être modifiés' });
     }
+
+    // SEC-005 : un rôle d'un AUTRE cabinet est introuvable (pas de fuite
+    // d'existence, aucune modification possible).
+    if (Number(existing.rows[0].cabinet_id) !== Number(req.cabinetId)) {
+      return res.status(404).json({ error: 'role_not_found' });
+    }
     
     const result = await pool.query(
       `UPDATE enterprise_roles 
@@ -195,9 +281,9 @@ router.put('/roles/:id', verifyToken, async (req, res) => {
            description = COALESCE($2, description),
            permissions = COALESCE($3, permissions),
            updated_at = NOW()
-       WHERE id = $4
+       WHERE id = $4 AND cabinet_id = $5
        RETURNING *`,
-      [name, description, permissions, req.params.id]
+      [name, description, permissions, req.params.id, req.cabinetId]
     );
     
     // Log audit
@@ -218,7 +304,7 @@ router.put('/roles/:id', verifyToken, async (req, res) => {
  * DELETE /api/enterprise/roles/:id
  * Supprime un rôle personnalisé
  */
-router.delete('/roles/:id', verifyToken, async (req, res) => {
+router.delete('/roles/:id', verifyToken, requireCabinetAdmin, async (req, res) => {
   try {
     const existing = await pool.query(
       `SELECT * FROM enterprise_roles WHERE id = $1`,
@@ -232,8 +318,13 @@ router.delete('/roles/:id', verifyToken, async (req, res) => {
     if (existing.rows[0].is_system) {
       return res.status(403).json({ error: 'cannot_delete_system_role', message: 'Les rôles système ne peuvent pas être supprimés' });
     }
+
+    // SEC-005 : suppression limitée au cabinet résolu côté serveur.
+    if (Number(existing.rows[0].cabinet_id) !== Number(req.cabinetId)) {
+      return res.status(404).json({ error: 'role_not_found' });
+    }
     
-    await pool.query('DELETE FROM enterprise_roles WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM enterprise_roles WHERE id = $1 AND cabinet_id = $2', [req.params.id, req.cabinetId]);
     
     // Log audit
     await logAction(req.user.id, 'delete', 'roles', req.params.id, {
@@ -252,7 +343,7 @@ router.delete('/roles/:id', verifyToken, async (req, res) => {
  * POST /api/enterprise/users/:userId/roles
  * Assigne un rôle à un utilisateur
  */
-router.post('/users/:userId/roles', verifyToken, async (req, res) => {
+router.post('/users/:userId/roles', verifyToken, requireCabinetAdmin, async (req, res) => {
   try {
     const { role_id } = req.body;
     const targetUserId = parseInt(req.params.userId, 10);
@@ -260,15 +351,31 @@ router.post('/users/:userId/roles', verifyToken, async (req, res) => {
     if (!role_id) {
       return res.status(400).json({ error: 'missing_role_id' });
     }
+
+    // SEC-010 : l'utilisateur cible doit appartenir au cabinet résolu côté serveur.
+    if (!(await isUserInCabinet(targetUserId, req.cabinetId))) {
+      return res.status(403).json({
+        error: 'user_not_in_cabinet',
+        message: 'Cet utilisateur n\'appartient pas à votre cabinet.'
+      });
+    }
     
-    // Vérifier que le rôle existe
+    // Vérifier que le rôle existe ET qu'il est attribuable par ce cabinet
     const roleExists = await pool.query(
-      'SELECT id, name FROM enterprise_roles WHERE id = $1',
+      'SELECT id, name, cabinet_id FROM enterprise_roles WHERE id = $1',
       [role_id]
     );
     
     if (roleExists.rows.length === 0) {
       return res.status(404).json({ error: 'role_not_found' });
+    }
+
+    const roleCible = roleExists.rows[0];
+    if (roleCible.cabinet_id != null && Number(roleCible.cabinet_id) !== Number(req.cabinetId)) {
+      return res.status(403).json({
+        error: 'role_not_in_cabinet',
+        message: 'Ce rôle appartient à un autre cabinet.'
+      });
     }
     
     // Assigner le rôle (upsert)
@@ -281,7 +388,7 @@ router.post('/users/:userId/roles', verifyToken, async (req, res) => {
     
     // Log audit
     await logAction(req.user.id, 'role_change', 'users', targetUserId, {
-      newValues: { role_id, role_name: roleExists.rows[0].name },
+      newValues: { role_id, role_name: roleCible.name },
       ipAddress: req.ip
     });
     
@@ -296,8 +403,16 @@ router.post('/users/:userId/roles', verifyToken, async (req, res) => {
  * GET /api/enterprise/users/:userId/roles
  * Liste les rôles d'un utilisateur
  */
-router.get('/users/:userId/roles', verifyToken, async (req, res) => {
+router.get('/users/:userId/roles', verifyToken, requireCabinetAdmin, async (req, res) => {
   try {
+    // SEC-010 : les rôles d'un utilisateur d'un autre cabinet ne sont pas lisibles.
+    if (!(await isUserInCabinet(req.params.userId, req.cabinetId))) {
+      return res.status(403).json({
+        error: 'user_not_in_cabinet',
+        message: 'Cet utilisateur n\'appartient pas à votre cabinet.'
+      });
+    }
+
     const result = await pool.query(
       `SELECT er.*, ur.granted_at, u.email as granted_by_email
        FROM user_roles ur
@@ -318,8 +433,16 @@ router.get('/users/:userId/roles', verifyToken, async (req, res) => {
  * DELETE /api/enterprise/users/:userId/roles/:roleId
  * Retire un rôle à un utilisateur
  */
-router.delete('/users/:userId/roles/:roleId', verifyToken, async (req, res) => {
+router.delete('/users/:userId/roles/:roleId', verifyToken, requireCabinetAdmin, async (req, res) => {
   try {
+    // SEC-010 : retrait limité aux utilisateurs du cabinet résolu côté serveur.
+    if (!(await isUserInCabinet(req.params.userId, req.cabinetId))) {
+      return res.status(403).json({
+        error: 'user_not_in_cabinet',
+        message: 'Cet utilisateur n\'appartient pas à votre cabinet.'
+      });
+    }
+
     await pool.query(
       'DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2',
       [req.params.userId, req.params.roleId]

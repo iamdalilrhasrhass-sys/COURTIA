@@ -73,13 +73,18 @@ router.post('/auth/login', async (req, res) => {
 /**
  * POST /api/portal/auth/request-reset
  * Demande réinitialisation mot de passe
+ *
+ * SEC-002 — réponse UNIFORME : ni jeton, ni lien, ni indication d'existence du
+ * compte. Le jeton est généré et stocké côté serveur (haché, usage unique, 1 h).
  */
 router.post('/auth/request-reset', async (req, res) => {
   try {
     const { email } = req.body;
-    const result = await portalAuth.requestReset(email);
-    res.json(result);
+    await portalAuth.requestReset(email);
+    const { success, message } = portalAuth.RESET_REQUEST_RESPONSE;
+    res.json({ success, message });
   } catch (err) {
+    // Requête invalide (email absent) : ne dépend pas de l'existence du compte.
     res.status(400).json({ error: err.message });
   }
 });
