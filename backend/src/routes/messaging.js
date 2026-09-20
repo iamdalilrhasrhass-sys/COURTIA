@@ -25,6 +25,7 @@ const { getIMAPStatus } = require('../services/imapService');
 const { runDailyRelances } = require('../jobs/relanceScheduler');
 const { isAdminRole } = require('../constants/roles');
 const logger = require('../lib/logger');
+const secretsEntrants = require('../lib/secretsEntrants');
 
 // ─── Helper : extraire userId du JWT ────────────────────────
 function getUserId(req) {
@@ -188,8 +189,45 @@ router.get('/channels', verifyToken, (req, res) => {
 // ===================================================================
 //  POST /webhook/inbound — Webhook entrant (PUBLIC, pas d'auth)
 //  Reçoit les emails entrants et les analyse avec Claude
-// ===================================================================
+//
+//  ─────────────────────────────────────────────────────────────────
+//  DÉFAUT FERMÉ (P2 SEC-013, mesuré en production le 20/09/2026)
+//  `POST /api/messaging/webhook/inbound` répondait 200 et ENREGISTRAIT le
+//  message sans aucune authentification : n'importe qui pouvait injecter un
+//  e-mail arbitraire dans le fil d'un client, en choisissant l'expéditeur.
+//
+//  CORRECTION : signature HMAC-SHA256 sur le CORPS BRUT (`req.rawBody`, jamais
+//  `JSON.stringify(req.body)` — voir lib/secretsEntrants), en-tête
+//  `x-courtia-signature: sha256=<hex>`. Même modèle que le webhook WhatsApp de
+//  `integrations.js` (verifyMetaSignature).
+//
+//  RÈGLE : sans `MESSAGING_INBOUND_SECRET` configuré, la route répond 503 et
+//  n'appelle PAS `processInboundEmail` — donc n'écrit rien. Une signature
+//  absente ou fausse répond 401.
+//  ─────────────────────────────────────────────────────────────────
 router.post('/webhook/inbound', async (req, res) => {
+  const secret = secretsEntrants.lireSecret(secretsEntrants.SECRETS.messagerie)
+  if (!secret) {
+    return secretsEntrants.repondreSecretAbsent(
+      res,
+      'messaging_inbound_secret',
+      "Le webhook de messagerie entrante est fermé : le secret de signature (MESSAGING_INBOUND_SECRET) n'est pas configuré sur ce serveur."
+    )
+  }
+
+  const verdict = secretsEntrants.verifierSignatureHmac({
+    rawBody: req.rawBody,
+    enteteSignature: req.headers['x-courtia-signature'],
+    secret,
+  })
+  if (!verdict.valide) {
+    return res.status(401).json({
+      success: false,
+      error: 'invalid_signature',
+      message: "La signature du webhook est absente ou invalide : le message n'a pas été traité.",
+    })
+  }
+
   try {
     const { from, subject, body, attachments } = req.body;
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Activity, Clock, FileUp, GitBranch, Sparkles, Users } from 'lucide-react'
 import { adminFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 
 /**
  * Suivi des essais (interne) — /admin/essais
@@ -17,8 +18,8 @@ const COULEURS = {
   NOT_STARTED: { bg: 'rgba(148,163,184,0.12)', texte: '#CBD5E1', label: 'Sans essai' },
 }
 
-const dateFr = (v) => (v ? new Date(v).toLocaleDateString('fr-FR') : '—')
-const dateHeureFr = (v) => (v ? new Date(v).toLocaleString('fr-FR') : '—')
+const dateFr = (v) => (v ? new Date(v).toLocaleDateString(localeCourante()) : '—')
+const dateHeureFr = (v) => (v ? new Date(v).toLocaleString(localeCourante()) : '—')
 const nombre = (v) => (v === null || v === undefined ? '—' : v)
 
 export default function AdminEssais() {

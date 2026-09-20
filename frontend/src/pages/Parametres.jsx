@@ -8,7 +8,7 @@ import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
-import { fmtMontant } from '../lib/monnaie'
+import { fmtMontant, localeCourante } from '../lib/monnaie'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -852,7 +852,7 @@ export default function Parametres() {
                       </div>
 
                       <p className="mt-2 text-[11px] text-gray-500">
-                        Dernière synchro: {row.last_sync_at ? new Date(row.last_sync_at).toLocaleString('fr-FR') : 'jamais'}
+                        Dernière synchro: {row.last_sync_at ? new Date(row.last_sync_at).toLocaleString(localeCourante()) : 'jamais'}
                       </p>
                     </div>
                   )

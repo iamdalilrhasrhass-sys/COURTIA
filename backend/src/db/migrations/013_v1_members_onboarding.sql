@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS cabinets (
   address_line1 TEXT,
   postal_code TEXT,
   city TEXT,
-  country TEXT DEFAULT 'France',
+  -- Aucun pays par defaut : un cabinet suisse naissait « France » (defaut P0
+  -- CH-005). Le pays se saisit, il ne se deduit pas d'un defaut de colonne.
+  country TEXT,
   created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

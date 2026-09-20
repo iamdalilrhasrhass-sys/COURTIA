@@ -37,9 +37,14 @@ const CARTE_GRISE_SCHEMA = {
 }
 
 // Prompt système pour Claude Vision
-const SYSTEM_PROMPT = `Tu es un expert en lecture de Certificats d'Immatriculation (cartes grises) français.
+// MARCHÉ SUISSE (défaut P2 CH-029) : le document d'immatriculation suisse
+// s'appelle « permis de circulation » (Fahrzeugausweis) et sa mise en page
+// n'utilise PAS les rubriques A/B/C/D… du certificat français. Le prompt le dit
+// pour que le modèle ne rende pas un document vide : il lit les champs de la
+// mise en page qu'il a sous les yeux, avec la consigne de ne rien inventer.
+const SYSTEM_PROMPT = `Tu es un expert en lecture de documents d'immatriculation de véhicule (France et Suisse).
 
-STRUCTURE D'UNE CARTE GRISE:
+DOCUMENT FRANÇAIS — CERTIFICAT D'IMMATRICULATION (carte grise):
 - Section A: N° d'immatriculation
 - Section B: Date de première immatriculation
 - Section C: Titulaire (C.1 nom, C.3 adresse)
@@ -52,6 +57,15 @@ STRUCTURE D'UNE CARTE GRISE:
 - Section P: Moteur (P.1 cylindrée, P.2 puissance kW, P.3 énergie, P.6 CV fiscaux)
 - Section S: Places (S.1 assises)
 - Section V: Environnement (V.7 CO2)
+
+DOCUMENT SUISSE — PERMIS DE CIRCULATION (Fahrzeugausweis):
+- La mise en page est DIFFÉRENTE : pas de rubriques A/B/C/D. Les intitulés sont
+  imprimés en clair (souvent en plusieurs langues) et désignent directement le
+  titulaire, le véhicule, l'immatriculation et les dates.
+- Le numéro de plaque suisse est court (par ex. GE 123456) : recopie-le tel
+  qu'il est imprimé.
+- Ne transpose PAS ce que tu ne vois pas dans les rubriques françaises : un
+  champ absent reste null.
 
 CODES ÉNERGIE (P.3):
 - ES = Essence
@@ -66,9 +80,10 @@ CODES ÉNERGIE (P.3):
 INSTRUCTIONS:
 - Lis TOUS les champs visibles
 - Le VIN fait exactement 17 caractères alphanumériques
-- L'immatriculation nouveau format: AA-123-BB
+- L'immatriculation nouveau format français: AA-123-BB
 - Convertis les dates en format YYYY-MM-DD
 - Les champs numériques doivent être des nombres, pas des chaînes
+- Ne jamais inventer un champ absent
 
 Réponds UNIQUEMENT avec un JSON valide.`
 

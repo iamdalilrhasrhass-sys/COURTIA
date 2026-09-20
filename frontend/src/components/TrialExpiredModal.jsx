@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
 import { lignesTarifs, paiementDisponible } from '../lib/essaiUi'
+import { localeCourante } from '../lib/monnaie'
 
 /**
  * Fin d'essai (J+7) — expérience de conversion.
@@ -70,7 +71,7 @@ export default function TrialExpiredModal({ paywall, onClose, onVoirTarifs }) {
               </p>
               {paywall.finEssai && (
                 <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11.5, marginTop: 8 }}>
-                  Fin de l'essai : {new Date(paywall.finEssai).toLocaleDateString('fr-FR')}
+                  Fin de l'essai : {new Date(paywall.finEssai).toLocaleDateString(localeCourante())}
                 </p>
               )}
             </div>

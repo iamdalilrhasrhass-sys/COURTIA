@@ -20,6 +20,9 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const logger = require('../lib/logger')
+// Autorité UNIQUE de portée : un client appartient à un CABINET (jamais à
+// `clients.broker_id`, colonne que le produit n'écrit pas).
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const {
   buildBrief,
@@ -433,10 +436,21 @@ router.post('/check-pieces', async (req, res) => {
       return res.status(400).json({ error: 'provider_id requis' })
     }
     
-    // Vérifier que le client appartient au courtier
+    // Vérifier que le client appartient au CABINET de l'appelant.
+    // POURQUOI PAS `broker_id` : cette colonne de `clients` n'est jamais écrite
+    // par le produit (mesuré : 0 client sur 22 en base) — la vérification était
+    // donc TOUJOURS fausse et la route refusait 403 un client réel. La portée
+    // (cabinet de l'appelant, ou ses propres lignes s'il n'a pas de cabinet)
+    // vient de l'autorité unique : lib/porteeCabinet.
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fClients = porteeCabinet.fragment(portee, {
+      cabinet: 'clients.cabinet_id',
+      proprietaire: 'clients.courtier_id',
+      depart: 2,
+    })
     const clientCheck = await pool.query(
-      `SELECT id FROM clients WHERE id = $1 AND broker_id = $2`,
-      [targetClientId, brokerId]
+      `SELECT id FROM clients WHERE id = $1 AND ${fClients.sql}`,
+      [targetClientId, ...fClients.params]
     )
     
     if (clientCheck.rows.length === 0) {

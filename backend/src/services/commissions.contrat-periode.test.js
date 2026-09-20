@@ -25,12 +25,24 @@ jest.mock('uuid', () => ({ v4: () => '00000000-0000-4000-8000-000000000000' }));
 const { calculateCommission } = require('./commissionsAutoService');
 const { upsertCommission } = require('./commissionService');
 
+/**
+ * Faux pool à file d'attente.
+ *
+ * Les requêtes de RÉSOLUTION DU MARCHÉ (lib/marcheCabinet : `cabinet_members`,
+ * `cabinets`, `broker_profiles`) reçoivent une réponse VIDE et ne consomment donc
+ * pas les réponses mises en file pour la logique métier : « ce courtier n'a pas
+ * de cabinet ⇒ marché FR ». Les tests portent ainsi sur le calcul, pas sur la
+ * plomberie de la devise (cas CHF couvert par commissionService.devise.test.js).
+ */
+const REQUETES_MARCHE = /cabinet_members|FROM cabinets|FROM broker_profiles/
+
 function makePool(reponses = []) {
   const calls = [];
   return {
     calls,
     query: jest.fn(async (sql, params) => {
       calls.push({ sql: String(sql), params });
+      if (REQUETES_MARCHE.test(String(sql))) return { rows: [], rowCount: 0 };
       const suivante = reponses.shift();
       if (suivante instanceof Error) throw suivante;
       return suivante || { rows: [], rowCount: 0 };
@@ -123,10 +135,14 @@ describe('commissionService.upsertCommission', () => {
       period: '2026-09', insurer: 'QA Assureur', expected_amount: '120,50', received_amount: '100,00',
     });
 
-    const insert = pool.calls[1];
+    const insert = pool.calls.find(({ sql }) => sql.includes('INSERT INTO commissions'));
     expect(insert.sql).toContain('commission_amount');
     expect(insert.sql).toContain('ON CONFLICT (user_id, contract_id, period_year, period_month)');
     expect(insert.params[12]).toBe(120.5);
+    // La devise est désormais ÉCRITE (marché FR ici) : la colonne ne dépend plus
+    // du défaut de colonne 'eur' retiré par la migration 119.
+    expect(insert.sql).toContain('currency');
+    expect(insert.params).toContain('EUR');
   });
 });
 

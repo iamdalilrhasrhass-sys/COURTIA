@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import api from '../api'
 import { normaliserTaches, statistiquesTaches } from '../lib/tachesViewModel'
+import { localeCourante } from '../lib/monnaie'
 
 /**
  * Écran Tâches — adossé à la base, sans jeu de données inventé.
@@ -274,7 +275,7 @@ export default function Taches() {
                             {t.terminee ? 'Terminée' : 'À faire'}
                           </span>
                           <span style={{ fontSize: 11, color: T.textMuted }}>
-                            {t.echeance ? new Date(t.echeance).toLocaleDateString('fr-FR') : 'Sans échéance'}
+                            {t.echeance ? new Date(t.echeance).toLocaleDateString(localeCourante()) : 'Sans échéance'}
                           </span>
                         </div>
                         <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 4 }}>{t.titre}</div>

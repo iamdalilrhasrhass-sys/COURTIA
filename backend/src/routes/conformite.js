@@ -104,10 +104,21 @@ router.get('/dda/checklist/:client_id', async (req, res) => {
     const { rows } = await pool.query(`
       SELECT * FROM dda_checklists WHERE user_id = $1 AND client_id = $2
     `, [userId, clientId])
-    res.json({ ok: true, checklist: rows[0] || {
-      besoin_exprime: false, devoir_conseil: false, document_remis: false,
-      informations_marche: false, fiche_synthese: false, status: 'pending',
-    } })
+    // Le titre de la checklist suit le marché : « Checklist DDA (Directive
+    // Distribution Assurance) » est un intitulé FRANÇAIS (transposition d'une
+    // directive européenne) qui n'a pas à être affiché à un cabinet suisse, qui
+    // reçoit « Checklist de conformité du cabinet » (libellé descriptif, sans
+    // citer de directive ni d'autorité étrangère).
+    const libelles = await libellesDuCabinet(req)
+    res.json({
+      ok: true,
+      marche: libelles.marche,
+      checklist_titre: libelles.checklist_titre,
+      checklist: rows[0] || {
+        besoin_exprime: false, devoir_conseil: false, document_remis: false,
+        informations_marche: false, fiche_synthese: false, status: 'pending',
+      },
+    })
   } catch (err) {
     res.status(500).json({ error: 'fetch_failed', message: err.message })
   }
@@ -217,15 +228,37 @@ router.get('/audit-logs', async (req, res) => {
 
 /**
  * Export du registre de conformité, dans le vocabulaire du marché du cabinet.
- * Exposé sous deux chemins : `/export-acpr` (chemin historique, conservé pour
- * les intégrations françaises existantes) et `/export-registre` (nom neutre
- * utilisé par les cabinets suisses).
+ * Exposé sous deux chemins : `/export-acpr` (chemin historique, réservé aux
+ * cabinets FRANÇAIS) et `/export-registre` (nom neutre, seul chemin servi à un
+ * cabinet suisse).
+ *
+ * CORRECTION 20/09/2026 (résidus français servis à un cabinet suisse)
+ *   • un cabinet SUISSE appelant `/conformite/export-acpr` recevait un document
+ *     intitulé d'après une autorité française : la réponse est maintenant 404
+ *     `not_found` (cette procédure n'existe pas pour lui) avec le chemin du
+ *     registre de conformité. Aucun faux succès, aucune autorité étrangère ;
+ *   • le corps ne porte plus `orias_id` ni `ca_total_eur` pour un cabinet suisse
+ *     (un ORIAS et un montant « eur » n'ont pas de sens chez lui) : le montant
+ *     est neutre (`ca_total`) et la devise est explicite (`devise`).
  */
 router.get(['/export-acpr', '/export-registre'], async (req, res) => {
   try {
     const userId = uid(req)
     const year = Number(req.query.year || new Date().getFullYear())
     const libelles = await libellesDuCabinet(req)
+    const suisse = libelles.marche === 'CH'
+
+    // Une procédure française ne doit pas être servie à un cabinet suisse :
+    // le chemin qui la nomme n'existe pas pour lui (404, jamais un 200 trompeur).
+    if (suisse && req.path.endsWith('/export-acpr')) {
+      return res.status(404).json({
+        ok: false,
+        error: 'not_found',
+        marche: 'CH',
+        message: "Cet export nommé d'après une autorité française n'existe pas pour ce cabinet. Utilisez l'export du registre de conformité.",
+        route: '/conformite/export-registre',
+      })
+    }
 
     const { rows: meRows } = await pool.query(`SELECT id, email, orias_id, raison_sociale FROM users WHERE id = $1`, [userId]).catch(() => ({ rows: [] }))
     const me = meRows[0] || { email: 'n/a' }
@@ -242,9 +275,10 @@ router.get(['/export-acpr', '/export-registre'], async (req, res) => {
       SELECT COUNT(*)::int AS count, COALESCE(SUM(lifetime_value),0)::numeric AS ca FROM clients WHERE courtier_id = $1
     `, [userId]).catch(() => ({ rows: [{ count: 0, ca: 0 }] }))
 
-    res.json({
+    return res.json({
       ok: true,
       marche: libelles.marche,
+      devise: libelles.marche === 'CH' ? 'CHF' : 'EUR',
       rapport: {
         generated_at: new Date().toISOString(),
         year,
@@ -252,10 +286,17 @@ router.get(['/export-acpr', '/export-registre'], async (req, res) => {
         // ACPR » en France, « Export du registre de conformité » en Suisse.
         libelle: libelles.export.libelle,
         autorite: libelles.autorite,
-        courtier: { email: me.email, orias_id: me.orias_id || null, raison_sociale: me.raison_sociale || null },
+        // Un cabinet suisse n'a PAS d'ORIAS : le champ reste absent plutôt que
+        // de faire apparaître un identifiant français sur son registre.
+        courtier: suisse
+          ? { email: me.email, raison_sociale: me.raison_sociale || null }
+          : { email: me.email, orias_id: me.orias_id || null, raison_sociale: me.raison_sociale || null },
         clients_total: clientsTotal[0].count,
         contracts_total: contractsTotal[0].count,
-        ca_total_eur: Math.round(Number(contractsTotal[0].ca || 0)),
+        // Montant NEUTRE + devise : le nom « _eur » ne doit pas être servi à un
+        // cabinet dont la monnaie n'est pas l'euro.
+        ca_total: Math.round(Number(contractsTotal[0].ca || 0)),
+        ...(suisse ? {} : { ca_total_eur: Math.round(Number(contractsTotal[0].ca || 0)) }),
         dda: {
           conforme_count: ddaConforme[0].count,
           coverage_pct: clientsTotal[0].count ? Math.round((ddaConforme[0].count / clientsTotal[0].count) * 100) : 0,

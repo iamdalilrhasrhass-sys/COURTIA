@@ -7,6 +7,9 @@
 // status : 'connected' | 'to_verify' | 'invalid' | 'manual' | 'inactive'
 // compatibility : 0-100 (distance à l'étoile centrale — plus proche = plus compatible)
 // volume : 0-100 (taille de la planète)
+// Aucune valeur de démonstration ici : la liste par défaut est VIDE, un appelant
+// qui ne fournit rien n'obtient aucune planète (l'ancienne liste par défaut
+// citait des compagnies françaises et des scores inventés).
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -18,18 +21,17 @@ const STATUS_COLORS = {
   inactive:  { fill: '#6B7280', label: 'Inactif' },
 }
 
-const DEFAULT_PARTNERS = [
-  { id: '1', name: 'April',       status: 'connected', compatibility: 92, volume: 75, branch: 'Auto' },
-  { id: '2', name: 'Wakam',       status: 'connected', compatibility: 80, volume: 55, branch: 'Auto' },
-  { id: '3', name: 'Allianz',     status: 'to_verify', compatibility: 65, volume: 90, branch: 'Multi' },
-  { id: '4', name: 'Covéa',       status: 'manual',    compatibility: 50, volume: 40, branch: 'Santé' },
-  { id: '5', name: 'Groupama',    status: 'connected', compatibility: 72, volume: 60, branch: 'Hab.' },
-  { id: '6', name: 'MAAF',        status: 'invalid',   compatibility: 40, volume: 35, branch: 'Auto' },
-]
+const DEFAULT_PARTNERS = []
 
 export default function PartnerSolarSystem({
   partners = DEFAULT_PARTNERS,
   onPartnerClick,
+  // Libellé de la mesure portée par `compatibility`. POURQUOI un prop : ce
+  // nombre n'est jamais une « compatibilité » inventée, c'est la part RÉELLE
+  // des contrats du cabinet attribués au partenaire. Chaque appelant nomme donc
+  // sa mesure (« Part des contrats », « Contrats confiés »…) au lieu de laisser
+  // l'écran affirmer un score que personne ne calcule.
+  compatibilityLabel = 'Part des contrats',
   width = 400,
   height = 320,
 }) {
@@ -197,7 +199,7 @@ export default function PartnerSolarSystem({
         <div className="mx-3 mb-3 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{selected.name}</p>
-            <p className="text-xs text-slate-400">{selected.branch} · Compatibilité {selected.compatibility}%</p>
+            <p className="text-xs text-slate-400">{selected.branch} · {compatibilityLabel} {selected.compatibility}%</p>
           </div>
           <div className="flex items-center gap-2">
             <span

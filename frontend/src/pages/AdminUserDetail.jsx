@@ -4,6 +4,8 @@ import { ArrowLeft, Mail, Calendar, Building, FileText, CheckSquare, Shield, Clo
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
+import { libellesMarche } from '../lib/marche'
+import { paysSuisse, localeCourante } from '../lib/monnaie'
 
 const STATUS_LABELS = { active: 'Actif', trialing: 'Activation', suspended: 'Suspendu', cancelled: 'Résilié' }
 
@@ -61,7 +63,7 @@ export default function AdminUserDetail() {
           { label: 'Tâches en cours', value: metrics?.pending_tasks || 0, icon: CheckSquare },
           { label: 'Conversations ARK', value: metrics?.ark_conversations_total || 0, icon: Shield },
           { label: 'ARK (30j)', value: metrics?.ark_conversations_30d || 0, icon: Shield },
-          { label: 'Dernière activité', value: metrics?.last_ark_activity ? new Date(metrics.last_ark_activity).toLocaleDateString('fr-FR') : '—', icon: Clock },
+          { label: 'Dernière activité', value: metrics?.last_ark_activity ? new Date(metrics.last_ark_activity).toLocaleDateString(localeCourante()) : '—', icon: Clock },
         ].map((m, i) => (
           <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
@@ -78,12 +80,14 @@ export default function AdminUserDetail() {
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
           <h3 style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: '0 0 12px' }}>Profil</h3>
           <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', lineHeight: 2 }}>
-            {user.orias && <div>ORIAS : {user.orias}</div>}
+            {/* Registre de l'utilisateur consulté : « ORIAS » n'existe pas en
+                Suisse, où l'on parle du registre FINMA / IDE. */}
+            {user.orias && <div>{libellesMarche(paysSuisse(user.pays) ? 'CH' : 'FR').registre} : {user.orias}</div>}
             {user.telephone && <div>Tél : {user.telephone}</div>}
             {user.adresse && <div>Adresse : {user.adresse}</div>}
             {user.ville && <div>Ville : {user.ville}</div>}
-            <div>Inscription : {user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '—'}</div>
-            {user.trial_ends_at && <div>Fin activation : {new Date(user.trial_ends_at).toLocaleDateString('fr-FR')}</div>}
+            <div>Inscription : {user.created_at ? new Date(user.created_at).toLocaleDateString(localeCourante()) : '—'}</div>
+            {user.trial_ends_at && <div>Fin activation : {new Date(user.trial_ends_at).toLocaleDateString(localeCourante())}</div>}
             {user.stripe_customer_id && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 8 }}>Stripe : {user.stripe_customer_id}</div>}
           </div>
         </div>
@@ -93,7 +97,7 @@ export default function AdminUserDetail() {
             <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', lineHeight: 2 }}>
               <div>Score santé : <strong style={{ color: '#10b981' }}>{portfolio.health_score}</strong></div>
               <div>Note : {portfolio.grade || '—'}</div>
-              <div>Analyse : {portfolio.generated_at ? new Date(portfolio.generated_at).toLocaleDateString('fr-FR') : '—'}</div>
+              <div>Analyse : {portfolio.generated_at ? new Date(portfolio.generated_at).toLocaleDateString(localeCourante()) : '—'}</div>
             </div>
           ) : (
             <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.3)' }}>Aucune analyse de portefeuille disponible.</div>

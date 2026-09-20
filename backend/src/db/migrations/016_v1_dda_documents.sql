@@ -41,7 +41,9 @@ CREATE TABLE IF NOT EXISTS document_activity_log (
 );
 CREATE INDEX IF NOT EXISTS idx_document_activity_document ON document_activity_log(document_id, created_at DESC);
 
-ALTER TABLE cabinets ADD COLUMN IF NOT EXISTS tutelle_authority TEXT DEFAULT 'ACPR';
+-- Aucune autorite par defaut : l'ACPR n'a aucune competence hors de France et
+-- un cabinet suisse naissait sous tutelle francaise (migration 117 puis 119).
+ALTER TABLE cabinets ADD COLUMN IF NOT EXISTS tutelle_authority TEXT;
 ALTER TABLE cabinets ADD COLUMN IF NOT EXISTS dpa_signed_at TIMESTAMPTZ;
 
 INSERT INTO feature_flags (key, description, default_enabled)

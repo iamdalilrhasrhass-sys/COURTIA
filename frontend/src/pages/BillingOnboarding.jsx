@@ -1,24 +1,24 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, CreditCard, Sparkles, CalendarDays, MessageSquare, Mail, ArrowRight } from 'lucide-react'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 const BILLING_TEST_UI_ENABLED = import.meta.env.VITE_BILLING_TEST_MODE !== 'false'
 
+// POURQUOI plus AUCUN montant ici : cette page annonçait « Starter — 89 € HT /
+// mois (106,80 € TTC avec TVA 20 %) » et « Pro — 159 € HT / mois ». Ces prix
+// étaient ceux d'une grille figée : faux pour la grille réellement servie par
+// l'API, faux pour un cabinet suisse (TVA française imposée, devise euro). Le
+// bandeau est désormais construit à partir de `GET /api/billing/plans`
+// (display_price_ht / display_price_ttc / fiscal_label du marché du cabinet).
+// Si l'API ne répond pas, le bandeau ne porte AUCUN chiffre : il rappelle
+// seulement le plan choisi.
 const PLAN_COPY = {
-  starter: {
-    title: 'Starter',
-    banner: 'Starter — 89 € HT / mois (106,80 € TTC avec TVA 20 %).',
-  },
-  pro: {
-    title: 'Pro',
-    banner: 'Pro — 159 € HT / mois (190,80 € TTC avec TVA 20 %).',
-  },
-  cabinet: {
-    title: 'Cabinet',
-    banner: 'Sur devis — demande de contact.',
-  },
+  starter: { title: 'Starter' },
+  pro: { title: 'Pro' },
+  cabinet: { title: 'Cabinet' },
 }
 
 export default function BillingOnboarding() {
@@ -26,9 +26,16 @@ export default function BillingOnboarding() {
   const [params] = useSearchParams()
   const initialPlan = params.get('plan') === 'starter' ? 'starter' : params.get('plan') === 'cabinet' ? 'cabinet' : 'pro'
   const [planCode, setPlanCode] = useState(initialPlan)
+  // Libellés d'identité réglementaire du marché du cabinet : « SIRET » et
+  // « ORIAS » sont des identifiants français, une inscription FINMA / IDE ne
+  // l'est pas. Le pays par défaut suit le même marché (jamais « France » imposé).
+  const libelles = libellesMarche(marcheCourante())
+  const paysParDefaut = marcheCourante() === 'CH' ? 'Suisse' : 'France'
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [grilleServeur, setGrilleServeur] = useState(null)
+  const [mentionFiscale, setMentionFiscale] = useState(null)
   const [form, setForm] = useState({
     cabinet_name: '',
     legal_form: '',
@@ -39,7 +46,7 @@ export default function BillingOnboarding() {
     address_line1: '',
     postal_code: '',
     city: '',
-    country: 'France',
+    country: paysParDefaut,
     legal_signatory_name: '',
     legal_signatory_role: '',
   })
@@ -52,6 +59,33 @@ export default function BillingOnboarding() {
   })
 
   const plan = useMemo(() => PLAN_COPY[planCode] || PLAN_COPY.pro, [planCode])
+
+  // Grille du marché du cabinet, servie par l'API : jamais un prix recopié ici.
+  useEffect(() => {
+    let annule = false
+    api.get('/billing/plans')
+      .then((res) => {
+        if (annule) return
+        setGrilleServeur(res.data?.plans || null)
+        setMentionFiscale(res.data?.fiscal_label || null)
+      })
+      .catch(() => { if (!annule) { setGrilleServeur(null); setMentionFiscale(null) } })
+    return () => { annule = true }
+  }, [])
+
+  /**
+   * Bandeau du plan : « Pro — 199 CHF HT / mois (… TTC / mois) » construit à
+   * partir de la réponse serveur. Sans réponse, aucun montant n'est affiché.
+   */
+  const bandeauPlan = useMemo(() => {
+    const ligne = (grilleServeur || []).find((p) => p.code === planCode)
+      || (grilleServeur || []).find((p) => planCode === 'cabinet' && String(p.code).startsWith('cabinet'))
+    if (!ligne) return `${plan.title} — montant non disponible pour le moment.`
+    const ht = ligne.display_price_ht || null
+    const ttc = ligne.display_price_ttc || null
+    if (planCode === 'cabinet' && !ht) return `${ligne.name || plan.title} — sur devis.`
+    return `${ligne.name || plan.title} — ${ht || 'montant non communiqué'}${ttc ? ` (${ttc})` : ''}.`
+  }, [grilleServeur, planCode, plan.title])
 
   const toggleConsent = (key) => {
     setConsents((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -151,7 +185,7 @@ export default function BillingOnboarding() {
             </button>
           ))}
           <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.84)', fontWeight: 600, fontSize: 13 }}>
-            {plan.banner}
+            {bandeauPlan}
           </div>
         </div>
 
@@ -161,8 +195,8 @@ export default function BillingOnboarding() {
             <div style={grid2}>
               <Input label="Nom du cabinet*" value={form.cabinet_name} onChange={(v) => onChange('cabinet_name', v)} />
               <Input label="Forme juridique" value={form.legal_form} onChange={(v) => onChange('legal_form', v)} />
-              <Input label="SIRET" value={form.siret} onChange={(v) => onChange('siret', v)} />
-              <Input label="ORIAS" value={form.orias} onChange={(v) => onChange('orias', v)} />
+              <Input label={libelles.identifiantEntreprise} value={form.siret} onChange={(v) => onChange('siret', v)} />
+              <Input label={libelles.registre} value={form.orias} onChange={(v) => onChange('orias', v)} />
               <Input label="Email facturation*" value={form.billing_email} onChange={(v) => onChange('billing_email', v)} />
               <Input label="Téléphone" value={form.phone} onChange={(v) => onChange('phone', v)} />
               <Input label="Adresse" value={form.address_line1} onChange={(v) => onChange('address_line1', v)} />
@@ -185,7 +219,7 @@ export default function BillingOnboarding() {
             <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
               <Mini icon={CreditCard} text="Carte gérée exclusivement par Stripe Checkout." />
               <Mini icon={ShieldCheck} text="Aucune donnée carte stockée dans COURTIA." />
-              <Mini icon={Sparkles} text={plan.banner} />
+              <Mini icon={Sparkles} text={bandeauPlan} />
             </div>
           </section>
         </div>
@@ -199,7 +233,7 @@ export default function BillingOnboarding() {
             <StepCard
               index={1}
               title="Informations cabinet"
-              description="Profil cabinet, ORIAS, contact et facturation."
+              description="Profil cabinet, identité réglementaire, contact et facturation."
               actionLabel="Rester sur cette étape"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             />
@@ -248,7 +282,9 @@ export default function BillingOnboarding() {
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: 12, marginTop: 2 }}>
-          Prix indiqués hors taxes. TVA applicable au taux en vigueur.
+          {mentionFiscale
+            ? `${mentionFiscale} Les montants affichés proviennent de la grille de votre marché.`
+            : 'Prix hors taxes. La mention fiscale applicable s’affiche dès que la grille du marché est disponible.'}
         </p>
       </div>
     </div>

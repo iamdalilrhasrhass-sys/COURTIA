@@ -6,6 +6,7 @@ import {
   Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle
 } from 'lucide-react'
 import api from '../api'
+import { localeCourante } from '../lib/monnaie'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -238,7 +239,7 @@ export default function Documents() {
                       <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: T.cardBg, color: T.textMuted }}>{typeInfo.label}</span>
                     </td>
                     <td style={{ padding: '10px 12px', color: T.textSecondary }}>{d.lieA}</td>
-                    <td style={{ padding: '10px 12px', color: T.textMuted }}>{d.date ? new Date(d.date).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td style={{ padding: '10px 12px', color: T.textMuted }}>{d.date ? new Date(d.date).toLocaleDateString(localeCourante()) : '—'}</td>
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
                     </td>

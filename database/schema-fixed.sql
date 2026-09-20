@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS clients (
     address VARCHAR(255),
     postal_code VARCHAR(10),
     city VARCHAR(100),
-    country VARCHAR(100) DEFAULT 'France',
+    country VARCHAR(100),
     type VARCHAR(20),
     company_name VARCHAR(255),
     siret VARCHAR(20),

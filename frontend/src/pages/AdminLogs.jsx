@@ -3,6 +3,7 @@ import { FileText, Shield, Clock } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 
 export default function AdminLogs() {
   const [logs, setLogs] = useState([])
@@ -55,7 +56,7 @@ export default function AdminLogs() {
                       <td style={{ padding: '12px 18px', color: 'rgba(255,255,255,0.5)', fontSize: 11.5 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Clock size={11} />
-                          {log.started_at ? new Date(log.started_at).toLocaleString('fr-FR') : '—'}
+                          {log.started_at ? new Date(log.started_at).toLocaleString(localeCourante()) : '—'}
                         </div>
                       </td>
                       <td style={{ padding: '12px 18px', color: '#fff', fontSize: 12 }}>{log.admin_email || '—'}</td>

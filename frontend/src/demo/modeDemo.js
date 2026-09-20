@@ -20,7 +20,9 @@
    ========================================================================== */
 
 import api from '../api'
+import { configurerContexte } from '../lib/monnaie'
 import { repondre } from './reponsesDemo'
+import { marcheDemo } from './deviseDemo'
 
 const PREFIXE_DEMO = '/demo'
 
@@ -70,6 +72,21 @@ function reponseJson(donnees, statut = 200) {
 export function installerDemo() {
   if (installe || typeof window === 'undefined') return
   installe = true
+
+  /* ------------------------------------------------------------- devise
+     P1 CH-020/021 : la démonstration affichait des euros à tout visiteur.
+     Les composants RÉELS formatent leurs montants avec `lib/monnaie.js`, dont le
+     contexte se lit normalement depuis le profil du cabinet (`GET /api/auth/me`).
+     En démo il n'y a pas de cabinet : on configure donc ce contexte avec le
+     MARCHÉ DU VISITEUR (override → ?market= → pays détecté → FR) — un visiteur
+     suisse voit « 1'234.50 CHF », un visiteur français voit exactement ce qu'il
+     voyait avant. */
+  try {
+    configurerContexte({ pays: marcheDemo() === 'CH' ? 'CH' : 'FR' })
+  } catch {
+    // Contexte de devise indisponible : les montants restent formatés par défaut
+    // (EUR / fr-FR), jamais dans une devise inventée.
+  }
 
   /* ---------------------------------------------------------------- axios
      On remplace l'adaptateur : la requête n'atteint jamais le réseau, la

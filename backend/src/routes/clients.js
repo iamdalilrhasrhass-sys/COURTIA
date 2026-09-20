@@ -10,7 +10,11 @@ const { requireUnderLimit } = require('../middleware/planGuard');
 const { getUserPlanInfo } = require('../services/planService');
 const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
 const { listClientInteractions } = require('../services/integrationsStore');
-const porteeCabinet = require('../lib/porteeCabinet');
+const porteeCabinet = require('../lib/porteeCabinet')
+// MARCHÉ DU CABINET : source unique des personas et du bloc de marché. Un cabinet
+// suisse ne doit jamais recevoir le référentiel français (ORIAS/ACPR/DDA) — ni
+// dans une conversation ARK, ni dans un prompt de plan d'action.
+const { personaDuMarche, construireBlocMarche, chargerMarcheCabinet } = require('../services/arkPrompts');
 const cabinetMembershipService = require('../services/cabinetMembershipService');
 // Bloc unique des définitions d'indicateurs (contrat, prime, échéance) : la
 // « prime annuelle d'un client » doit être le même calcul que la « prime
@@ -53,8 +57,28 @@ function filtreClients(portee, { depart = 1, ecriture = false, alias = 'clients'
  * reçoit le 404 du routeur, plus jamais une erreur de base).
  */
 function identifiantClient(valeur) {
-  const texte = String(valeur ?? '').trim();
-  return /^\d+$/.test(texte) ? Number(texte) : null;
+  const texte = String(valeur ?? '').trim()
+  return /^\d+$/.test(texte) ? Number(texte) : null
+}
+
+/**
+ * Persona du marché pour le PROMPT D'UN PLAN D'ACTION, sans ligne d'un AUTRE
+ * marché.
+ *
+ * POURQUOI CE FILTRE : la persona partagée (services/arkPrompts) est écrite pour
+ * une conversation. Pour un cabinet hors de France elle nomme les référentiels
+ * français dans sa seule ligne d'écart (« Les référentiels français (ORIAS,
+ * ACPR, DDA) ne s'appliquent pas ») et y cite « en français » comme langue de
+ * réponse. Ces deux lignes, utiles en conversation, n'ont rien à faire dans un
+ * prompt de plan d'action : elles remettent ORIAS et ACPR sous les yeux du modèle
+ * sur un dossier suisse. On les retire ; le bloc de marché
+ * (construireBlocMarche) porte déjà le registre et l'autorité RÉELS du cabinet.
+ * Le marché français, lui, garde sa persona complète.
+ */
+function personaPlanAction(marche) {
+  const persona = personaDuMarche(marche)
+  if (String(marche || 'FR').toUpperCase() === 'FR') return persona
+  return persona.split('\n').filter((ligne) => !/français/i.test(ligne)).join('\n')
 }
 
 /**
@@ -143,10 +167,21 @@ const SELECT_LISTE_CLIENTS = `SELECT
         notes, created_at, company_name, type as segment,
         city, postal_code, silent_alert, last_contact, loyalty_score, lifetime_value,
         (
+          -- « contracts_count » = contrats ACTIFS du client (nom historique lu par
+          -- lib/clientViewModel.js). La notion jumelle est publiée juste à côté,
+          -- sous contrats_total : TOUTES les lignes de nature contrat, résiliés
+          -- compris. Un devis v1 resté dans quotes ('envoye'/'brouillon') n'est
+          -- compté ni dans l'un ni dans l'autre : c'est un devis, pas un contrat
+          -- (voir les deux notions en tête de dashboard.js).
           SELECT COUNT(*)::int
           FROM quotes q
           WHERE q.client_id = clients.id AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
         ) AS contracts_count,
+        (
+          SELECT COUNT(*)::int
+          FROM quotes q
+          WHERE q.client_id = clients.id AND COALESCE(q.status, '') NOT IN ${kpi.STATUTS_DEVIS_V1}
+        ) AS contrats_total,
         (
           -- « Prime annuelle du client » = somme de la prime de ses contrats
           -- ACTIFS, avec l'expression de prime définie UNE fois (kpi.PRIME_CONTRAT :
@@ -637,6 +672,10 @@ router.get('/:id/contrats', async (req, res) => {
        FROM quotes q
        JOIN clients c ON q.client_id = c.id AND ${f.sql}
        WHERE q.client_id = $1
+         -- Un devis v1 resté dans quotes ('envoye'/'brouillon') n'est PAS un
+         -- contrat : il ne doit pas apparaître dans la liste des contrats du
+         -- client (même frontière que kpi.NATURE_CONTRAT).
+         AND COALESCE(q.status, '') NOT IN ${kpi.STATUTS_DEVIS_V1}
        ORDER BY ${kpi.ECHEANCE_CONTRAT} ASC NULLS LAST`,
       [req.params.id, ...f.params]
     )
@@ -689,6 +728,8 @@ router.get('/:id/interactions', async (req, res) => {
         `SELECT id, status, quote_data, created_at
          FROM quotes
          WHERE client_id = $1
+           -- L'historique du client ne présente pas un devis v1 comme un contrat.
+           AND COALESCE(status, '') NOT IN ${kpi.STATUTS_DEVIS_V1}
          ORDER BY created_at DESC
          LIMIT 30`,
         [clientId]
@@ -1033,7 +1074,20 @@ router.get('/:id/ark-action-plan', async (req, res) => {
     // Vérifier le plan (Elite uniquement)
     const planInfo = await getUserPlanInfo(courtierId);
     const plan     = planInfo?.plan || 'start';
-    const hasFeature = planInfo?.limits?.features?.client_ark_action_plan === true;
+    // La source de vérité des droits est la table plan_limits (migration 003b).
+    // Certains chemins de planService n'exposent PAS `limits.features`, et la
+    // garde répondait alors 402 à TOUT LE MONDE — le plan d'action ARK, fonction
+    // centrale, était inaccessible même à un cabinet abonné. On lit donc la clé
+    // dans limits.features quand elle existe, sinon dans le référentiel du plan ;
+    // et si l'information est introuvable sur les deux, on n'invente pas un refus
+    // (le refus était le défaut) : on laisse passer en le journalisant.
+    const limiteExplicite = planInfo?.limits?.features?.client_ark_action_plan;
+    const referentielPlan = planInfo?.features?.client_ark_action_plan;
+    const hasFeature = limiteExplicite === true
+      || (limiteExplicite === undefined && referentielPlan !== false);
+    if (limiteExplicite === undefined && referentielPlan === undefined) {
+      console.warn('[plan] client_ark_action_plan : droit introuvable dans le plan, accès laissé ouvert', { plan })
+    }
 
     if (!hasFeature) {
       return res.status(402).json({
@@ -1066,7 +1120,29 @@ router.get('/:id/ark-action-plan', async (req, res) => {
       `- ${d.label} : ${d.score}/100 (${d.reason}) — ${d.impact}`
     ).join('\n');
 
-    const prompt = `Tu es ARK, expert en courtage d'assurance français. Analyse ce client et génère un plan d'action personnalisé.
+    // La valeur client est une ESTIMATION sur les seules primes renseignées :
+    // elle ne doit jamais être présentée au modèle comme une mesure, ni
+    // fabriquée quand aucune prime n'est connue (défaut P2 — 600 €/contrat
+    // inventés par portfolioAnalyzer).
+    const valeurClient = breakdown.client_value_estimate || {}
+    const ligneValeurClient = (valeurClient.min === null || valeurClient.min === undefined)
+      ? 'VALEUR CLIENT ESTIMÉE : non estimable (aucune prime renseignée dans le dossier)'
+      : `VALEUR CLIENT ESTIMÉE (estimation, primes renseignées uniquement${valeurClient.contrats_sans_prime_renseignee ? `, ${valeurClient.contrats_sans_prime_renseignee} contrat(s) sans prime` : ''}) : ${valeurClient.min}–${valeurClient.max} LTV (${valeurClient.label})`
+
+    // ── MARCHÉ DU CABINET — correction 20/09/2026 (défaut P1) ───────────────
+    // CE QUI ÉTAIT FAIT : le prompt commençait par « Tu es ARK, expert en
+    // courtage d'assurance français. » ÉCRIT EN DUR. Un cabinet suisse recevait
+    // donc de son propre assistant un référentiel qui n'est pas le sien (DDA,
+    // ORIAS, ACPR, loi Hamon) et des consignes en euros — un plan d'action
+    // fondé sur la mauvaise réglementation.
+    // RÈGLE (la même que routes/ark.js) : le marché se lit UNE fois depuis le
+    // CABINET — lib/marcheCabinet, via chargerMarcheCabinet — jamais depuis la
+    // fiche de la personne connectée, et la persona vient de la source unique
+    // (services/arkPrompts). Le bloc de marché rappelle autorité, registre et
+    // devise réels du cabinet.
+    const marche = await chargerMarcheCabinet(poolModule, courtierId)
+
+    const prompt = `${personaPlanAction(marche)} Analyse ce client et génère un plan d'action personnalisé.
 
 CLIENT :
 - Nom : ${client.first_name || ''} ${client.last_name || ''}
@@ -1084,7 +1160,7 @@ SCORE POTENTIEL : ${breakdown.potential_score}/100
 DIMENSIONS :
 ${dimLines}
 
-VALEUR CLIENT ESTIMÉE : ${breakdown.client_value_estimate.min}–${breakdown.client_value_estimate.max}€ LTV (${breakdown.client_value_estimate.label})
+VALEUR CLIENT ESTIMÉE : ${ligneValeurClient}
 
 Génère exactement 5 actions concrètes et prioritaires pour améliorer ce score. Chaque action doit être réaliste, spécifique à ce profil, et inclure un message de contact (email ou SMS).
 
@@ -1109,13 +1185,25 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
   "projected_score": <score estimé si toutes les actions faites>,
   "time_to_100": "<estimation ex: 30 jours | 3 mois | 6 mois>",
   "coaching_summary": "<max 200 chars — synthèse ARK pour le courtier>"
-}`;
+}${construireBlocMarche(marche)}`;
 
+    // ── PROJECTION : QUI L'A CALCULÉE ? — correction 20/09/2026 ─────────────
+    // `projected_score` valait `breakdown.potential_score`, un score HEURISTIQUE
+    // calculé en interne (« score actuel + points récupérables ») : il était
+    // donc rendu à l'écran comme la projection ARK, y compris sans clé API et
+    // après un échec de parsing du modèle. Un score que personne n'a calculé ne
+    // doit pas porter le nom d'une analyse. On publie donc :
+    //   • `projected_score` : celui rendu par l'IA, sinon `null` (pas de mesure) ;
+    //   • `potential_score_heuristique` : le calcul interne, nommé pour ce qu'il est ;
+    //   • `projected_score_source` : 'ia' | 'indisponible'.
     let result = {
       actions:          [],
-      projected_score:  breakdown.potential_score,
-      time_to_100:      'Non estimable',
-      coaching_summary: 'Analyse ARK non disponible (clé API manquante).',
+      projected_score:  null,
+      projected_score_source: 'indisponible',
+      time_to_100:      null,
+      coaching_summary: process.env.ANTHROPIC_API_KEY
+        ? 'Analyse ARK indisponible : le modèle n\'a pas renvoyé de plan exploitable.'
+        : 'Analyse ARK non disponible (clé API manquante).',
     };
 
     if (process.env.ANTHROPIC_API_KEY) {
@@ -1131,9 +1219,10 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
 
       try {
         const parsed = JSON.parse(cleaned);
-        result = { ...result, ...parsed };
+        result = { ...result, ...parsed, projected_score_source: parsed.projected_score != null ? 'ia' : 'indisponible' };
       } catch (parseErr) {
         console.error('[clients/ark-action-plan] Erreur JSON Opus:', parseErr.message);
+        result.coaching_summary = 'Analyse ARK indisponible : réponse du modèle illisible.'
       }
     }
 
@@ -1142,6 +1231,9 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
       current_score:   breakdown.score,
       current_grade:   breakdown.grade,
       ltv:             breakdown.client_value_estimate,
+      // Score potentiel = calcul interne (score actuel + points récupérables).
+      // Il est publié sous son vrai nom, jamais sous celui d'une projection ARK.
+      potential_score_heuristique: breakdown.potential_score,
       breakdown_short: breakdown.breakdown.map(d => ({
         dim: d.dim, score: d.score, points_lost: d.points_lost
       })),

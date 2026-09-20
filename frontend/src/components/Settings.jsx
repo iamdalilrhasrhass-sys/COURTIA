@@ -237,7 +237,9 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-2">SIRET</label>
+            {/* Identifiant d'entreprise neutre : « SIRET » est français, « IDE /
+                UID » (CHE-xxx.xxx.xxx) suisse. Le même champ sert aux deux. */}
+            <label className="block text-sm font-bold mb-2">N° d'identification (SIRET / IDE)</label>
             <input
               type="text"
               name="siret"
@@ -248,7 +250,9 @@ export default function Settings() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Code NAF</label>
+            {/* « NAF » est une nomenclature française : intitulé neutre pour ne
+                pas l'imposer à un cabinet suisse. */}
+            <label className="block text-sm font-bold mb-2">Code d'activité (NAF / équivalent)</label>
             <input
               type="text"
               name="naf"

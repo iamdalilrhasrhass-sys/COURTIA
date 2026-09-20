@@ -22,6 +22,17 @@
  *      de prime et publie le nom lu par la liste Clients (`prime_annuelle_total`) ;
  *   5. l'absence de mesure n'est pas un zéro : sans aucune donnée, les moyennes
  *      et les taux valent `null` (jamais 0, jamais un « 75 » de repli).
+ *
+ * MISE À JOUR DU 20/09/2026 — ARBITRAGE « contrats actifs » / « tous les contrats »
+ * Ce test distinguait mal les deux notions de contrat, ce qui laissait passer le
+ * « 3 contrats » d'une base à 2 contrats + 1 devis v1. Les attendus portent
+ * désormais les deux noms, sur les trois écrans :
+ *   • contrat.total  = TOUTES les lignes de `quotes` de nature contrat
+ *                      (le jeu ci-dessous en porte 3 : 2 actifs + 1 résilié) ;
+ *   • contrat.actifs = celles au statut 'actif'/'active' (2 ici) ;
+ *   • devis          = `devis_wizard` (2) + devis v1 restés dans `quotes` (1) = 3.
+ * Les primes ne portent que sur les contrats ACTIFS : 1 450,50 + 890,00 = 2 340,50
+ * pour les contrats, et 1 234,50 + 3 210,75 + 777,00 = 5 222,25 pour les devis.
  */
 jest.mock('../db', () => ({ query: jest.fn() }));
 jest.mock('../middleware/planGuard', () => ({
@@ -51,21 +62,31 @@ const CAB_A = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
 // ── Jeu de données CONNU (les attendus sont posés à la main, pas recopiés) ───
 const CLIENTS = { total: 7, actifs: 3, prospects: 4, nouveaux: 2 };
+// 3 lignes de nature contrat : 2 ACTIVES + 1 RÉSILIÉE (prime 999 999, hors
+// portefeuille). `actifs` porte les contrats en cours, `prime_totale` ne somme
+// que ceux-là, `prime_totale_tous` existe pour l'audit.
 const CONTRATS = {
-  total: 2, prime_totale: '2340.50', contrats_avec_prime: 2,
-  nouveaux: 1, echeances_30j: 1, echeances_90j: 2,
+  total: 3, actifs: 2,
+  prime_totale: '2340.50', prime_totale_tous: '1002339.50',
+  contrats_avec_prime: 2, nouveaux: 1, echeances_30j: 1, echeances_90j: 2,
 };
 const DEVIS = {
   total: 2, envoyes: 1, signes: 1, en_preparation: 0, refuses: 0, expires: 0,
   nouveaux: 2, prime_cents: '444525', devis_avec_prime: 2,
 };
+// Devis v1 resté dans `quotes` (statut 'envoye') : un DEVIS, jamais un contrat.
+const DEVIS_V1 = { total: 1, prime_v1: '777.00', devis_avec_prime: 1, envoyes: 1, nouveaux: 1 };
 const TACHES = { total: 3, en_retard: 1 };
 
 // Attendus calculés à la main :
-//   prime des contrats   = 1450.50 + 890.00            = 2340.50
-//   montant des devis    = 123450 + 321075 centimes    = 4445.25
+//   prime des contrats ACTIFS = 1450.50 + 890.00            = 2340.50
+//   primes de tous les contrats (audit) = 2340.50 + 999999  = 1002339.50
+//   devis = 2 (devis_wizard) + 1 (devis v1)                 = 3
+//   montant des devis = 123450 + 321075 centimes + 777.00   = 5222.25
 const PRIME_CONTRATS_ATTENDUE = 2340.50;
-const PRIME_DEVIS_ATTENDUE = 4445.25;
+const PRIME_CONTRATS_TOUS_ATTENDUE = 1002339.50;
+const DEVIS_TOTAL_ATTENDU = 3;
+const PRIME_DEVIS_ATTENDUE = 5222.25;
 
 describe('cohérence des indicateurs entre les trois écrans', () => {
   let server;
@@ -88,6 +109,7 @@ describe('cohérence des indicateurs entre les trois écrans', () => {
     const s = String(sql);
     // Marqueurs uniques : l'ordre compte (« AS nouveaux » est présent dans
     // plusieurs requêtes canoniques).
+    if (/AS prime_v1/.test(s)) return { rows: [DEVIS_V1] };
     if (/AS contrats_avec_prime/.test(s)) return { rows: [CONTRATS] };
     if (/AS prime_cents/.test(s)) return { rows: [DEVIS] };
     if (/AS en_retard/.test(s)) return { rows: [TACHES] };
@@ -146,23 +168,38 @@ describe('cohérence des indicateurs entre les trois écrans', () => {
     expect(overview.kpis.clients.total).toBe(CLIENTS.total);
     expect(executive.data.clients_count).toBe(CLIENTS.total);
 
-    // Contrats ACTIFS : 2 — et non 0 (table `contracts` vide) ni 3 (devis comptés)
-    expect(stats.contratsActifs).toBe(CONTRATS.total);
+    // Contrats : LES DEUX NOTIONS — total = toutes les lignes de nature contrat
+    // (3 = 2 actifs + 1 résilié), actifs = contrats en cours (2). Et non 0 (table
+    // `contracts` vide) ni 4 (devis v1 compté avec les contrats).
+    expect(stats.contratsTotal).toBe(CONTRATS.total);
+    expect(stats.contratsActifs).toBe(CONTRATS.actifs);
     expect(overview.kpis.contracts.total).toBe(CONTRATS.total);
-    expect(executive.data.contracts_count).toBe(CONTRATS.total);
+    expect(overview.kpis.contracts.actifs).toBe(CONTRATS.actifs);
+    expect(executive.data.contracts_total).toBe(CONTRATS.total);
+    expect(executive.data.contracts_actifs).toBe(CONTRATS.actifs);
+    // Alias historique de `contracts_actifs` : même valeur, jamais un autre chiffre.
+    expect(executive.data.contracts_count).toBe(CONTRATS.actifs);
 
-    // Devis : 2
-    expect(stats.devisTotal).toBe(DEVIS.total);
-    expect(overview.kpis.devis.total).toBe(DEVIS.total);
-    expect(overview.kpis.quotes.total).toBe(DEVIS.total);
-    expect(executive.data.devis_count).toBe(DEVIS.total);
+    // Devis : 2 devis_wizard + 1 devis v1 resté dans `quotes` = 3
+    expect(stats.devisTotal).toBe(DEVIS_TOTAL_ATTENDU);
+    expect(overview.kpis.devis.total).toBe(DEVIS_TOTAL_ATTENDU);
+    expect(overview.kpis.quotes.total).toBe(DEVIS_TOTAL_ATTENDU);
+    // Alias déprécié = MÊME objet que le nom juste.
+    expect(overview.kpis.quotes).toEqual(overview.kpis.devis);
+    expect(executive.data.devis_count).toBe(DEVIS_TOTAL_ATTENDU);
+    expect(stats.devis.dontV1).toBe(DEVIS_V1.total);
 
-    // Somme des primes de contrats : 2 340,50 (un seul calcul, trois écrans)
+    // Somme des primes de contrats : 2 340,50 (un seul calcul, trois écrans) —
+    // le contrat résilié n'y entre pas.
     expect(stats.primeTotale).toBe(PRIME_CONTRATS_ATTENDUE);
     expect(overview.kpis.contracts.totalValue).toBe(PRIME_CONTRATS_ATTENDUE);
     expect(executive.data.ca_estimated).toBe(PRIME_CONTRATS_ATTENDUE);
+    // Valeur d'audit : elle, les inclut — et reste distincte.
+    expect(stats.primeTotaleTous).toBe(PRIME_CONTRATS_TOUS_ATTENDUE);
+    expect(overview.kpis.contracts.totalValueTous).toBe(PRIME_CONTRATS_TOUS_ATTENDUE);
+    expect(overview.kpis.contracts.totalValueTous).not.toBe(overview.kpis.contracts.totalValue);
 
-    // Somme des montants de devis : 4 445,25
+    // Somme des montants de devis : 4 445,25 + 777,00 = 5 222,25
     expect(stats.devisPrimeTotale).toBe(PRIME_DEVIS_ATTENDUE);
     expect(overview.kpis.devis.totalValue).toBe(PRIME_DEVIS_ATTENDUE);
     expect(executive.data.devis_prime_totale).toBe(PRIME_DEVIS_ATTENDUE);
@@ -251,9 +288,17 @@ describe('cohérence des indicateurs entre les trois écrans', () => {
     expect(executive.data.portfolio_health_score).toBeNull();
 
     // Sommes et comptages : 0 est ici une VALEUR exacte (il n'y a aucune ligne).
+    // Les DEUX notions de contrat valent 0 quand il n'y a aucune ligne.
+    expect(executive.data.contracts_total).toBe(0);
+    expect(executive.data.contracts_actifs).toBe(0);
     expect(executive.data.contracts_count).toBe(0);
+    expect(stats.contratsTotal).toBe(0);
+    expect(stats.contratsActifs).toBe(0);
+    expect(overview.kpis.contracts.total).toBe(0);
+    expect(overview.kpis.contracts.actifs).toBe(0);
     expect(executive.data.ca_estimated).toBe(0);
     expect(stats.devisTotal).toBe(0);
+    expect(overview.kpis.devis.total).toBe(0);
     expect(overview.kpis.taches.enRetard).toBe(0);
   });
 

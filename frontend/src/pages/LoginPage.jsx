@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api'
 import Logo from '../components/Logo'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 
@@ -441,6 +442,11 @@ const Bubble = ({ className }) => (
 )
 
 export default function Login() {
+  // Marché du visiteur : un cabinet suisse ne doit lire ni « Courtiers ORIAS »
+  // ni un exemple d'adresse en @email.fr sur l'écran de connexion. La valeur
+  // vient du marché détecté (fuseau, ?market=, override stocké) — jamais d'un
+  // littéral français posé par défaut.
+  const libelles = libellesMarche(marcheCourante())
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -508,7 +514,7 @@ export default function Login() {
                 <Logo size={48} dark={true} withText={true} textSize={18} />
               </div>
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:'10px', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:12 }}>
-                CRM · IA Native · Courtiers ORIAS
+                CRM · IA Native · {libelles.courtiers}
               </p>
               <h2 style={{ color:'#fff', fontSize:'19px', fontWeight:500, lineHeight:1.38, marginBottom:8 }}>
                 Votre portefeuille, analysé en temps réel.
@@ -563,7 +569,7 @@ export default function Login() {
                   <path d="M2 7l10 6 10-6"/>
                 </svg>
                 <input id="email" type="email" autoComplete="email" required value={email}
-                  onChange={e => setEmail(e.target.value)} placeholder="votre@email.fr" />
+                  onChange={e => setEmail(e.target.value)} placeholder={libelles.email} />
               </div>
 
               <div className="field-wrap">

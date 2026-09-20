@@ -12,6 +12,49 @@ const {
   journaliserErreurIa,
 } = require('../iaErreurs')
 const pool = require('../../db')
+const porteeCabinet = require('../../lib/porteeCabinet')
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  RÉSOLUTION DU CLIENT PAR LA PORTÉE DU CABINET — et non par `broker_id`
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * POURQUOI CETTE FONCTION (défaut P1 reproduit en production le 20/09/2026)
+ * Toute la génération de documents de conformité résolvait le client par
+ *     `SELECT … FROM clients WHERE id = $1 AND broker_id = $2`
+ * Or le produit n'écrit JAMAIS `clients.broker_id` : il renseigne `courtier_id`
+ * (le courtier en charge du dossier) et `cabinet_id` (le cabinet propriétaire).
+ * Mesure sur la base réelle : 22 clients sur 22 portent `cabinet_id` et
+ * `courtier_id`, 0 sur 22 portent `broker_id` (NULL). La condition était donc
+ * TOUJOURS fausse : `POST /api/compose/devoir-conseil` répondait 500
+ * « Client non trouvé ou accès non autorisé » pour un client RÉEL, quel que soit
+ * le cabinet, et aucun devoir de conseil ne pouvait être produit.
+ *
+ * La seule autorité sur « ce dossier est-il le mien ? » est `lib/porteeCabinet`
+ * (cabinet de l'appelant, ou ses propres lignes s'il n'a pas de cabinet). Cette
+ * fonction est le point d'entrée UNIQUE des services de composition : plus aucune
+ * requête de ce dossier ne filtre sur `broker_id`.
+ *
+ * @param {number} clientId       identifiant du dossier
+ * @param {number} utilisateurId  identifiant de l'utilisateur authentifié (JWT)
+ * @returns {Promise<object>} la ligne `clients` si elle est dans la portée
+ * @throws {Error} « Client non trouvé ou accès non autorisé » sinon — un dossier
+ *         hors portée n'est jamais distingué d'un dossier inexistant (404/500
+ *         identiques), aucune fuite d'existence.
+ */
+async function resoudreClientAutorise(clientId, utilisateurId) {
+  const portee = await porteeCabinet.resoudrePortee(pool, { user: { id: utilisateurId } })
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'clients.cabinet_id',
+    proprietaire: 'clients.courtier_id',
+    depart: 2,
+  })
+  const res = await pool.query(`SELECT * FROM clients WHERE id = $1 AND ${f.sql}`, [clientId, ...f.params])
+  if (res.rows.length === 0) {
+    throw new Error('Client non trouvé ou accès non autorisé')
+  }
+  return res.rows[0]
+}
 
 /**
  * FAIL-CLOSED — pourquoi cette fonction existe.
@@ -193,15 +236,19 @@ const SCHEMAS = {
  * @returns {Promise<Object>} Besoins structurés
  */
 async function extractNeedsFromClient(clientId, brokerId) {
-  // Récupérer données client
+  // Portée du CABINET (jamais `broker_id`, colonne que le produit n'écrit pas :
+  // cf. resoudreClientAutorise ci-dessus). Le client est résolu AVANT la requête
+  // d'analyse — un dossier hors portée ne fait lire ni contrats ni notes.
+  await resoudreClientAutorise(clientId, brokerId)
+
   const clientRes = await pool.query(
     `SELECT c.*, 
             json_agg(DISTINCT jsonb_build_object('type', ct.type_contrat, 'compagnie', ct.compagnie, 'prime', ct.prime_annuelle)) FILTER (WHERE ct.id IS NOT NULL) AS contracts
      FROM clients c
      LEFT JOIN contracts ct ON ct.client_id = c.id
-     WHERE c.id = $1 AND c.broker_id = $2
+     WHERE c.id = $1
      GROUP BY c.id`,
-    [clientId, brokerId]
+    [clientId]
   )
   
   if (clientRes.rows.length === 0) {
@@ -278,6 +325,12 @@ Extrais: besoins prioritaires, situation résumée, objectifs de protection, con
  * @returns {Promise<Object>} Recommandation structurée
  */
 async function buildRecommendation({ clientId, brokerId, needs, availableQuotes = [] }) {
+  // Portée du CABINET : le client est résolu (et refusé s'il est hors portée)
+  // AVANT toute lecture de devis. L'ancienne requête filtrait sur
+  // `q.broker_id = $2` — colonne renseignée sur 7 devis réels sur 23 — et la
+  // fiche client sur `clients.broker_id`, jamais écrite (défaut P1).
+  const client = await resoudreClientAutorise(clientId, brokerId)
+
   // Si pas de quotes fournis, les récupérer
   let quotes = availableQuotes
   if (quotes.length === 0) {
@@ -285,19 +338,12 @@ async function buildRecommendation({ clientId, brokerId, needs, availableQuotes 
       `SELECT q.*, ip.name AS provider_name, ip.logo_url
        FROM quotes q
        LEFT JOIN insurance_providers ip ON ip.id = q.provider_id
-       WHERE q.client_id = $1 AND q.broker_id = $2 AND q.status != 'rejected'
+       WHERE q.client_id = $1 AND q.status != 'rejected'
        ORDER BY q.created_at DESC`,
-      [clientId, brokerId]
+      [clientId]
     )
     quotes = quotesRes.rows
   }
-  
-  // Récupérer client pour contexte
-  const clientRes = await pool.query(
-    'SELECT * FROM clients WHERE id = $1 AND broker_id = $2',
-    [clientId, brokerId]
-  )
-  const client = clientRes.rows[0] || {}
   
   const context = {
     client: {
@@ -448,6 +494,7 @@ Complète les champs manquants (garanties, exclusions, conditions) de manière r
 }
 
 module.exports = {
+  resoudreClientAutorise,
   extractNeedsFromClient,
   buildRecommendation,
   generateIpidContent,

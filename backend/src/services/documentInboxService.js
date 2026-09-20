@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const pool = require('../db');
 
 const { DOCUMENTS_UPLOAD_DIR, REPO_ROOT, ensureDir } = require('../lib/storagePaths');
+const { hachageJeton, clauseJetonRecherche } = require('../lib/jetons');
 
 // Chemin dérivé de la racine du dépôt (surchargeable par DOCUMENT_UPLOAD_DIR).
 const UPLOAD_DIR = DOCUMENTS_UPLOAD_DIR;
@@ -62,27 +63,66 @@ function computeChecksum(buffer) {
 }
 
 // ── Catégories de documents ────────────────────────────────────────────
-
+//
+// MARCHÉ SUISSE (défaut P2 CH-029) : les libellés et les mots-clés étaient
+// purement FRANÇAIS — « KBIS », « RCS », « RIB », « carte verte ». Un cabinet
+// suisse déposait un « extrait du registre du commerce (RC) », un « permis de
+// circulation » ou un document ne portant qu'un IBAN : rien de tout cela n'était
+// reconnu, et la pièce tombait dans « Autre » (donc comptée comme manquante dans
+// la checklist du dossier). Les CLÉS de catégorie ne changent PAS (des documents
+// déjà classés les portent en base) : seuls le libellé affiché et les mots-clés
+// reconnus sont complétés, de façon ADDITIVE.
 const DOCUMENT_CATEGORIES = {
-  carte_grise: { label: 'Carte grise', keywords: ['carte grise', 'certificat d\'immatriculation', 'carte verte'] },
+  carte_grise: {
+    label: 'Carte grise / permis de circulation',
+    keywords: ['carte grise', 'certificat d\'immatriculation', 'carte verte', 'permis de circulation'],
+  },
   permis: { label: 'Permis de conduire', keywords: ['permis de conduire', 'driving license'] },
-  piece_identite: { label: 'Pièce d\'identité', keywords: ['carte nationale', 'passeport', 'identité', 'titre d\'identité'] },
-  rib: { label: 'RIB', keywords: ['rib', 'relevé d\'identité', 'iban', 'bic'] },
+  piece_identite: {
+    label: 'Pièce d\'identité',
+    keywords: ['carte nationale', 'passeport', 'identité', 'titre d\'identité',
+      'carte d\'identité suisse', 'permis de séjour'],
+  },
+  rib: { label: 'RIB / IBAN', keywords: ['rib', 'relevé d\'identité', 'iban', 'bic', 'coordonnées bancaires'] },
   justificatif_domicile: { label: 'Justificatif de domicile', keywords: ['justificatif de domicile', 'facture', 'quittance'] },
   releve_information: { label: 'Relevé d\'information', keywords: ['relevé d\'information', 'bonus', 'malus', 'sinistre'] },
-  kbis: { label: 'KBIS', keywords: ['kbis', 'extrait kbis', 'rcs'] },
+  kbis: {
+    label: 'Extrait du registre du commerce (RC) / Kbis',
+    keywords: ['kbis', 'extrait kbis', 'rcs', 'registre du commerce', 'extrait rc', 'extrait du registre'],
+  },
   contrat_signe: { label: 'Contrat signé', keywords: ['contrat signé', 'police d\'assurance'] },
   devis: { label: 'Devis', keywords: ['devis', 'proposition', 'tarif'] },
   mandat: { label: 'Mandat', keywords: ['mandat', 'mandat de courtage'] },
   autre: { label: 'Autre', keywords: [] }
 };
 
+/**
+ * Normalise un texte pour la COMPARAISON : minuscules, sans accent, séparateurs
+ * (`_`, `-`, `.`) ramenés à l'espace.
+ *
+ * POURQUOI (défaut P2 CH-029) : la comparaison était un `includes` brut sur le
+ * nom de fichier en minuscules. « carte_identite_suisse.pdf » ne contenait donc
+ * ni « carte d'identité suisse » (accents et espaces) ni même « identité »
+ * (accent) : la pièce tombait dans « Autre ». Les mots-clés et le nom de fichier
+ * passent maintenant par la MÊME normalisation, ce qui rend la reconnaissance
+ * insensible aux accents et aux séparateurs — sans changer les clés de catégorie.
+ */
+function normaliserPourComparaison(texte) {
+  return String(texte || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[-_.]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function guessCategory(fileName) {
-  const lower = fileName.toLowerCase();
+  const lower = normaliserPourComparaison(fileName);
   for (const [key, cat] of Object.entries(DOCUMENT_CATEGORIES)) {
     if (key === 'autre') continue;
     for (const kw of cat.keywords) {
-      if (lower.includes(kw)) return key;
+      if (lower.includes(normaliserPourComparaison(kw))) return key;
     }
   }
   return 'autre';
@@ -149,7 +189,9 @@ async function createDocumentRequest(userId, clientId, requiredDocs, message, re
     `INSERT INTO document_requests (user_id, client_id, token, required_docs, message, expires_at, status, recipient_email)
      VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)
      RETURNING *`,
-    [userId, clientId, token, JSON.stringify(requiredDocs), message || '', expiresAt, recipientEmail || null]
+    // P3 SEC-027 : seul le HACHAGE est stocké ; la variable locale `token` reste
+    // le jeton en clair renvoyé au cabinet pour construire le lien.
+    [userId, clientId, hachageJeton(token), JSON.stringify(requiredDocs), message || '', expiresAt, recipientEmail || null]
   );
 
   // Create or update checklist
@@ -188,9 +230,12 @@ async function createDocumentRequest(userId, clientId, requiredDocs, message, re
 }
 
 async function processPublicUpload(token, file) {
+  // Recherche par HACHAGE (correctif P3 SEC-027) : le jeton en clair présenté par
+  // le client est haché avant d'être comparé à la colonne.
+  const jeton = clauseJetonRecherche('token', token, 1);
   const requestResult = await pool.query(
-    `SELECT * FROM document_requests WHERE token = $1 AND status IN ('pending', 'partial', 'sent') AND expires_at > NOW()`,
-    [token]
+    `SELECT * FROM document_requests WHERE ${jeton.sql} AND status IN ('pending', 'partial', 'sent') AND expires_at > NOW()`,
+    jeton.params
   );
   if (requestResult.rows.length === 0) {
     throw new Error('Lien invalide ou expiré');

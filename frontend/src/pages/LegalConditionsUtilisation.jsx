@@ -27,7 +27,7 @@ export default function LegalConditionsUtilisation() {
           </p>
           <p>
             COURTIA vise à structurer, tracer et prioriser les actions métier. Il ne garantit pas à lui seul
-            la conformité réglementaire complète (DDA, devoir de conseil, obligations contractuelles).
+            la conformité réglementaire complète (conformité des documents, devoir de conseil, obligations contractuelles).
           </p>
           <p>
             Cette page constitue une base opérationnelle destinée aux premiers clients et doit être validée juridiquement

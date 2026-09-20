@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 import { formatNomClient } from '../utils/format'
+import { localeCourante } from '../lib/monnaie'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -69,7 +70,7 @@ export default function Dashboard() {
     },
     {
       label: 'Prime portefeuille/an',
-      value: `${(dashboardStats.portfolioPremium || 0).toLocaleString('fr-FR')}€`,
+      value: `${(dashboardStats.portfolioPremium || 0).toLocaleString(localeCourante())}€`,
       icon: DollarSign,
       color: 'from-indigo-500 to-blue-500'
     },

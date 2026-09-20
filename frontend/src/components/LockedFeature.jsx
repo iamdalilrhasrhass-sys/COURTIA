@@ -17,7 +17,7 @@ const PLAN_CONFIG = {
     badge: { bg: '#f5f3ff', color: '#7c3aed', label: 'Elite' },
     btnBg: '#7c3aed',
     benefits: [
-      'Tableau de bord conformité DDA complet',
+      'Tableau de bord conformité complet',
       'Accès illimité à toutes les fonctions IA',
       'Support dédié et onboarding personnalisé',
     ],

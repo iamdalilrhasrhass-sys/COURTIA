@@ -75,7 +75,8 @@ CREATE TABLE IF NOT EXISTS accounting_entries (
   date_let DATE,
   valid_date DATE,
   montant_devise DECIMAL(15,2),
-  idevise VARCHAR(3) DEFAULT 'EUR',
+  -- Devise de l'ecriture, ecrite par fecService : plus d'euro par defaut.
+  idevise VARCHAR(3),
   source_type VARCHAR(50),
   source_id INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

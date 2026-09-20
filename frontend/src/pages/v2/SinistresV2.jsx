@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, Plus, Calendar, FileText, CheckCircle, XCircle, Clock, ChevronRight, Search, Filter, User, Car, Home, Heart, Shield, Sparkles } from 'lucide-react'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 const CLAIM_TYPES = {
   auto_collision: { label: 'Auto - Collision', icon: Car, color: '#EF4444' },
@@ -123,9 +124,9 @@ export default function SinistresV2() {
                     <StatusIcon size={14} />
                     {statusInfo.label}
                   </div>
-                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>{new Date(claim.opened_at).toLocaleDateString('fr-FR')}</div>
+                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>{new Date(claim.opened_at).toLocaleDateString(localeCourante())}</div>
                 </div>
-                {claim.amount && <div style={{ fontWeight: 600, color: '#0F172A', fontSize: 16 }}>{Number(claim.amount).toLocaleString('fr-FR')} EUR</div>}
+                {claim.amount && <div style={{ fontWeight: 600, color: '#0F172A', fontSize: 16 }}>{Number(claim.amount).toLocaleString(localeCourante())} EUR</div>}
                 <ChevronRight size={20} color="#CBD5E1" />
               </motion.div>
             )

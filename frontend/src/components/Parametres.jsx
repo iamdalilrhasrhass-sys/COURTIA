@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
+import { libellesMarche, marcheCourante } from '../lib/marche'
+import { localeCourante } from '../lib/monnaie'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -24,19 +26,23 @@ export default function Parametres() {
 
   const fetchProfile = async () => {
     try {
-      // Mock profile data - replace with real API endpoint
-      const mockProfile = {
-        first_name: 'Dalil',
-        last_name: 'Rhasrhass',
-        email: 'dalil@courtia.com',
-        cabinet: 'Courtia Assurance',
-        orias: 'FR123456789',
-        telephone: '+33612345678',
-        plan: 'Premium',
+      /* POURQUOI ce profil est vide : ce bloc installait un « mock profile »
+         (Dalil Rhasrhass, ORIAS « FR123456789 », téléphone en +33) présenté
+         comme le profil du cabinet. Un cabinet suisse y lisait donc une
+         identité et un registre français inventés. Un profil inconnu reste
+         vide ; seuls les champs renvoyés par l'API remplissent ce formulaire. */
+      const profilVide = {
+        first_name: '',
+        last_name: '',
+        email: '',
+        cabinet: '',
+        orias: '',
+        telephone: '',
+        plan: '',
         created_at: '2026-03-01'
       }
-      setProfile(mockProfile)
-      setFormData(mockProfile)
+      setProfile(profilVide)
+      setFormData(profilVide)
       setLoading(false)
     } catch (err) {
       console.error('Error fetching profile:', err)
@@ -129,7 +135,9 @@ export default function Parametres() {
 
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
             <div>
-              <label style={{fontSize:'12px',fontWeight:600,color:'#666',display:'block',marginBottom:'6px'}}>Numéro ORIAS</label>
+              {/* Registre du marché : « Numéro ORIAS » ne vaut que pour la
+                  France ; en Suisse c'est le registre FINMA / l'IDE. */}
+              <label style={{fontSize:'12px',fontWeight:600,color:'#666',display:'block',marginBottom:'6px'}}>{libellesMarche(marcheCourante()).registre}</label>
               <input 
                 type='text'
                 value={formData.orias}
@@ -168,7 +176,7 @@ export default function Parametres() {
             </span>
           </div>
           <div style={{marginTop:'16px',paddingTop:'16px',borderTop:'0.5px solid #e5e7eb'}}>
-            <p style={{fontSize:'12px',color:'#666'}}>Inscription : {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('fr-FR') : 'N/A'}</p>
+            <p style={{fontSize:'12px',color:'#666'}}>Inscription : {profile?.created_at ? new Date(profile.created_at).toLocaleDateString(localeCourante()) : 'N/A'}</p>
           </div>
         </div>
         <div style={{marginTop:'16px'}}>

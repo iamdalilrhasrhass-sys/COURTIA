@@ -1,3 +1,5 @@
+import { localeCourante } from './monnaie'
+
 const EMPTY = '—'
 
 const STATUS_LABELS = {
@@ -47,7 +49,7 @@ export function formatDateFr(value) {
   if (!value) return EMPTY
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return EMPTY
-  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return date.toLocaleDateString(localeCourante(), { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 export function formatRelativeDays(value) {

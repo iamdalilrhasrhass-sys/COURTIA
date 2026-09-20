@@ -1,4 +1,5 @@
 /* ============================================================================
+import { localeCourante } from './monnaie'
    COURTIA — Mise en forme de la lecture commerciale (fonctions PURES)
    ----------------------------------------------------------------------------
    Tout ce qui décide de ce qui est AFFICHÉ vit ici, et seulement ici :
@@ -181,14 +182,14 @@ export function formatDate(valeur) {
   if (!valeur) return NON_MESURE
   const d = new Date(valeur)
   if (Number.isNaN(d.getTime())) return NON_MESURE
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString(localeCourante(), { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export function formatDateHeure(valeur) {
   if (!valeur) return NON_MESURE
   const d = new Date(valeur)
   if (Number.isNaN(d.getTime())) return NON_MESURE
-  return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString(localeCourante(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 /** Texte affiché pour un champ potentiellement vide. Jamais « N/A » inventé. */

@@ -25,8 +25,13 @@ const TYPE_PATTERNS = {
     content: ['IBAN', 'BIC', 'RIB', 'SWIFT', 'DOMICILIATION', 'TITULAIRE DU COMPTE', 'CODE BANQUE', 'CODE GUICHET']
   },
   [DOCUMENT_TYPES.CARTE_GRISE]: {
-    filename: [/carte.*grise/i, /certificat.*immatriculation/i, /ci_/i, /cg_/i],
-    content: ['CERTIFICAT D\'IMMATRICULATION', 'CARTE GRISE', 'PUISSANCE FISCALE', 'N° D\'IMMATRICULATION', 'TYPE MINE', 'GENRE', 'ENERGIE', 'DATE DE PREMIÈRE IMMATRICULATION']
+    // « Permis de circulation » / « Fahrzeugausweis » : noms du document
+    // d'immatriculation en SUISSE. Sans ces marqueurs, la carte grise suisse
+    // d'un cabinet suisse n'était pas reconnue (défaut P2 CH-029).
+    filename: [/carte.*grise/i, /certificat.*immatriculation/i, /ci_/i, /cg_/i,
+      /permis.*circulation/i, /fahrzeugausweis/i],
+    content: ['CERTIFICAT D\'IMMATRICULATION', 'CARTE GRISE', 'PUISSANCE FISCALE', 'N° D\'IMMATRICULATION', 'TYPE MINE', 'GENRE', 'ENERGIE', 'DATE DE PREMIÈRE IMMATRICULATION',
+      'PERMIS DE CIRCULATION', 'FAHRZEUGAUSWEIS', 'HALTER', 'TITULAIRE']
   },
   [DOCUMENT_TYPES.RELEVE_INFORMATION]: {
     filename: [/relev[eé].*info/i, /ri_/i, /bonus.*malus/i],
@@ -37,8 +42,14 @@ const TYPE_PATTERNS = {
     content: ['ATTESTATION D\'ASSURANCE', 'CARTE VERTE', 'GARANTIES', 'RESPONSABILITÉ CIVILE', 'PÉRIODE DE VALIDITÉ', 'COMPAGNIE D\'ASSURANCE']
   },
   [DOCUMENT_TYPES.PIECE_IDENTITE]: {
-    filename: [/cni/i, /carte.*identit[eé]/i, /passeport/i, /permis/i, /id_/i],
-    content: ['CARTE NATIONALE D\'IDENTITÉ', 'PASSEPORT', 'RÉPUBLIQUE FRANÇAISE', 'NOM', 'PRÉNOM', 'DATE DE NAISSANCE', 'NATIONALITÉ']
+    // Pièces SUISSES ajoutées (défaut P2 CH-028/CH-029) : carte d'identité
+    // (Confédération), permis/titre de séjour. Sans ces marqueurs, une pièce
+    // d'identité suisse n'était pas reconnue comme telle.
+    filename: [/cni/i, /carte.*identit[eé]/i, /passeport/i, /permis/i, /id_/i,
+      /piece.*identite/i, /permis.*sejour/i],
+    content: ['CARTE NATIONALE D\'IDENTITÉ', 'PASSEPORT', 'RÉPUBLIQUE FRANÇAISE', 'NOM', 'PRÉNOM', 'DATE DE NAISSANCE', 'NATIONALITÉ',
+      'CONFÉDÉRATION SUISSE', 'SCHWEIZERISCHE EIDGENOSSENSCHAFT', 'CARTE D\'IDENTITÉ SUISSE',
+      'PERMIS DE SÉJOUR', 'AUTORISATION DE SÉJOUR']
   },
   [DOCUMENT_TYPES.JUSTIF_DOMICILE]: {
     filename: [/justif.*domicile/i, /facture/i, /edf/i, /engie/i, /eau/i, /taxe/i, /quittance/i],

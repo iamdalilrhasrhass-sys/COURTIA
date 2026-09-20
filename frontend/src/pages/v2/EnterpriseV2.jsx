@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, ScrollText, Users, Key, RefreshCw, Search, Filter, Calendar, ChevronRight, Plus, Trash2, Check, Lock, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 // Styles Aurora
 const auroraStyles = {
@@ -279,7 +280,7 @@ function AuditLogsTab({ logs, loading, searchQuery, setSearchQuery, dateFilter, 
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
-                      {new Date(log.createdAt).toLocaleString('fr-FR', {
+                      {new Date(log.createdAt).toLocaleString(localeCourante(), {
                         day: '2-digit',
                         month: '2-digit',
                         hour: '2-digit',
@@ -700,14 +701,14 @@ function NewRoleModal({ onClose, onCreate }) {
 
 // Mock data
 const mockAuditLogs = [
-  { id: 1, action: 'clients.create', userEmail: 'jean@cabinet.fr', resourceId: '1234', ipAddress: '192.168.1.42', createdAt: '2026-05-11T10:30:00Z' },
-  { id: 2, action: 'contracts.sign', userEmail: 'marie@cabinet.fr', resourceId: '5678', ipAddress: '192.168.1.43', createdAt: '2026-05-11T09:45:00Z' },
-  { id: 3, action: 'documents.upload', userEmail: 'jean@cabinet.fr', resourceId: 'doc-001', ipAddress: '192.168.1.42', createdAt: '2026-05-11T09:15:00Z' },
-  { id: 4, action: 'commissions.reconcile', userEmail: 'admin@cabinet.fr', resourceId: 'batch-2026-05', ipAddress: '192.168.1.1', createdAt: '2026-05-10T18:00:00Z' },
-  { id: 5, action: 'api_keys.create', userEmail: 'admin@cabinet.fr', resourceId: 'key-prod', ipAddress: '192.168.1.1', createdAt: '2026-05-10T16:30:00Z' },
-  { id: 6, action: 'clients.update', userEmail: 'marie@cabinet.fr', resourceId: '1234', ipAddress: '192.168.1.43', createdAt: '2026-05-10T14:20:00Z' },
-  { id: 7, action: 'documents.view', userEmail: 'stagiaire@cabinet.fr', resourceId: 'doc-002', ipAddress: '192.168.1.50', createdAt: '2026-05-10T11:00:00Z' },
-  { id: 8, action: 'users.role_change', userEmail: 'admin@cabinet.fr', resourceId: 'user-15', ipAddress: '192.168.1.1', createdAt: '2026-05-09T17:30:00Z' },
+  { id: 1, action: 'clients.create', userEmail: 'jean@exemple.com', resourceId: '1234', ipAddress: '192.168.1.42', createdAt: '2026-05-11T10:30:00Z' },
+  { id: 2, action: 'contracts.sign', userEmail: 'marie@exemple.com', resourceId: '5678', ipAddress: '192.168.1.43', createdAt: '2026-05-11T09:45:00Z' },
+  { id: 3, action: 'documents.upload', userEmail: 'jean@exemple.com', resourceId: 'doc-001', ipAddress: '192.168.1.42', createdAt: '2026-05-11T09:15:00Z' },
+  { id: 4, action: 'commissions.reconcile', userEmail: 'admin@exemple.com', resourceId: 'batch-2026-05', ipAddress: '192.168.1.1', createdAt: '2026-05-10T18:00:00Z' },
+  { id: 5, action: 'api_keys.create', userEmail: 'admin@exemple.com', resourceId: 'key-prod', ipAddress: '192.168.1.1', createdAt: '2026-05-10T16:30:00Z' },
+  { id: 6, action: 'clients.update', userEmail: 'marie@exemple.com', resourceId: '1234', ipAddress: '192.168.1.43', createdAt: '2026-05-10T14:20:00Z' },
+  { id: 7, action: 'documents.view', userEmail: 'stagiaire@exemple.com', resourceId: 'doc-002', ipAddress: '192.168.1.50', createdAt: '2026-05-10T11:00:00Z' },
+  { id: 8, action: 'users.role_change', userEmail: 'admin@exemple.com', resourceId: 'user-15', ipAddress: '192.168.1.1', createdAt: '2026-05-09T17:30:00Z' },
 ]
 
 const mockRoles = [

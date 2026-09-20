@@ -6,7 +6,7 @@ import {
   User, AlertTriangle, Clock, Target, FileText, Loader, CheckCircle
 } from 'lucide-react'
 import api from '../api'
-import { fmtMontant } from '../lib/monnaie'
+import { fmtMontant, localeCourante } from '../lib/monnaie'
 import DeviseIcone from '../components/DeviseIcone'
 import useDevise from '../components/useDevise'
 
@@ -215,7 +215,7 @@ export default function Relances() {
                   <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 11, color: T.textSecondary, flexWrap: 'wrap' }}>
                     {r.produit && <span><FileText size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{r.produit}</span>}
                     {r.potentiel > 0 && <span style={{ color: T.success }}><DeviseIcone size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{fmtEur(r.potentiel)}</span>}
-                    {r.dernierContact && <span><Clock size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{new Date(r.dernierContact).toLocaleDateString('fr-FR')}</span>}
+                    {r.dernierContact && <span><Clock size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{new Date(r.dernierContact).toLocaleDateString(localeCourante())}</span>}
                   </div>
                 </div>
               </div>

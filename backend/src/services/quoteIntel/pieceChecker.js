@@ -11,19 +11,36 @@ const logger = require('../../lib/logger')
 /**
  * Mapping des types de documents (normalisation)
  * Clé = type stocké en base, Valeur = variations possibles
+ *
+ * MARCHÉ SUISSE (défaut P2 CH-028/CH-029) : le vocabulaire ne connaissait que
+ * les pièces françaises — « KBIS / RCS » pour l'entreprise, « RIB » pour le
+ * compte bancaire, CNI/titre de séjour pour l'identité. Un cabinet suisse
+ * présentait donc un « extrait du registre du commerce (RC) » que la
+ * normalisation ne reconnaissait pas, et la pièce apparaissait MANQUANTE alors
+ * qu'elle était fournie. Les alias ci-dessous sont ADDITIFS : ils n'enlèvent
+ * rien au vocabulaire français, et le type canonique stocké en base ne change
+ * pas (seules les façons de l'écrire sont complétées).
  */
 const DOCUMENT_TYPE_ALIASES = {
-  carte_grise: ['carte_grise', 'cg', 'certificat_immatriculation', 'carte-grise'],
+  carte_grise: ['carte_grise', 'cg', 'certificat_immatriculation', 'carte-grise',
+    // Suisse : le document d'immatriculation s'appelle « permis de circulation »
+    'permis_de_circulation', 'permis_circulation', 'permis-circulation'],
   releve_information: ['releve_information', 'ri', 'releve_info', 'relevé_information'],
-  piece_identite: ['piece_identite', 'cni', 'passeport', 'carte_identite', 'id', 'identite'],
+  piece_identite: ['piece_identite', 'cni', 'passeport', 'carte_identite', 'id', 'identite',
+    // Suisse : carte d'identité (Confédération) et titres de séjour
+    'carte_identite_suisse', 'carte_d_identite', 'carte_identite_ch',
+    'permis_sejour', 'permis_de_sejour', 'titre_sejour', 'carte_sejour'],
   justif_domicile: ['justif_domicile', 'justificatif_domicile', 'facture_edf', 'attestation_hebergement'],
-  permis_conduire: ['permis_conduire', 'permis', 'driving_license'],
+  permis_conduire: ['permis_conduire', 'permis', 'driving_license', 'permis_de_conduire'],
   attestation_secu: ['attestation_secu', 'carte_vitale', 'attestation_securite_sociale', 'ameli'],
   bulletins_salaire: ['bulletins_salaire', 'fiches_paie', 'bulletin_salaire', 'fiche_paie'],
   questionnaire_sante: ['questionnaire_sante', 'questionnaire_medical', 'declaration_sante'],
   avis_imposition: ['avis_imposition', 'avis_impot', 'declaration_revenus'],
-  kbis: ['kbis', 'extrait_kbis', 'k-bis'],
-  rib: ['rib', 'releve_identite_bancaire', 'iban'],
+  // France : KBIS / RCS. Suisse : extrait du registre du commerce (RC).
+  kbis: ['kbis', 'extrait_kbis', 'k-bis', 'rcs', 'rc',
+    'extrait_rc', 'registre_du_commerce', 'extrait_registre_commerce', 'registre_commerce'],
+  // France : RIB. Suisse : IBAN / coordonnées bancaires.
+  rib: ['rib', 'releve_identite_bancaire', 'iban', 'coordonnees_bancaires', 'compte_bancaire'],
   offre_pret: ['offre_pret', 'offre_de_pret', 'proposition_pret'],
   tableau_amortissement: ['tableau_amortissement', 'echeancier_pret'],
   bail: ['bail', 'contrat_location', 'contrat_bail'],
@@ -198,21 +215,28 @@ async function checkPieces(options) {
 }
 
 /**
- * Retourne un label lisible pour un type de document
+ * Retourne un label lisible pour un type de document.
+ *
+ * Les libellés nomment le document des DEUX marchés servis : « Extrait du
+ * registre du commerce (RC) » pour la Suisse et « Kbis » pour la France (le
+ * type canonique reste `kbis` pour ne pas casser les documents déjà classés),
+ * « RIB / IBAN » pour le compte bancaire, « Permis de circulation (carte
+ * grise) » pour l'immatriculation. Un cabinet suisse ne doit pas lire
+ * « Extrait Kbis » comme le seul nom possible de SA pièce (défaut P2 CH-029).
  */
 function getDocumentLabel(normalizedType) {
   const labels = {
-    carte_grise: 'Carte grise',
+    carte_grise: 'Permis de circulation (carte grise)',
     releve_information: 'Relevé d\'information',
-    piece_identite: 'Pièce d\'identité',
+    piece_identite: 'Pièce d\'identité (CNI, carte d\'identité suisse, permis de séjour)',
     justif_domicile: 'Justificatif de domicile',
     permis_conduire: 'Permis de conduire',
     attestation_secu: 'Attestation Sécurité Sociale',
     bulletins_salaire: 'Bulletins de salaire',
     questionnaire_sante: 'Questionnaire de santé',
     avis_imposition: 'Avis d\'imposition',
-    kbis: 'Extrait Kbis',
-    rib: 'RIB',
+    kbis: 'Extrait du registre du commerce (RC) / Kbis',
+    rib: 'RIB / IBAN (relevé d\'identité bancaire)',
     offre_pret: 'Offre de prêt',
     tableau_amortissement: 'Tableau d\'amortissement',
     bail: 'Bail / Contrat de location',

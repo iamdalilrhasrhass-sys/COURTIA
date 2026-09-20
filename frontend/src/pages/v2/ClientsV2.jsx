@@ -14,6 +14,7 @@ import {
   AuroraTooltip,
   useToast,
 } from '../../components/aurora';
+import { localeCourante } from '../../lib/monnaie'
 
 const mockClients = [
   { id: 1, name: 'Marie Dupont', phone: '06 12 34 56 78', email: 'marie.dupont@email.com', products: ['Auto', 'MRH'], lastContact: '2026-05-08', status: 'active', score: 85 },
@@ -216,7 +217,7 @@ export function ClientsV2() {
                       </div>
                     </td>
                     <td style={styles.td}>
-                      {new Date(client.lastContact).toLocaleDateString('fr-FR')}
+                      {new Date(client.lastContact).toLocaleDateString(localeCourante())}
                     </td>
                     <td style={styles.td}>
                       <AuroraBadge variant={statusConfig[client.status].variant} size="sm">

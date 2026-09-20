@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS commissions (
   period_month INTEGER NOT NULL CHECK (period_month BETWEEN 1 AND 12),
   expected_amount_cents BIGINT NOT NULL DEFAULT 0,
   received_amount_cents BIGINT NOT NULL DEFAULT 0,
-  currency TEXT NOT NULL DEFAULT 'eur',
+  -- Devise ecrite par le code depuis le marche du CABINET (CHF/EUR,
+  -- lib/marcheCabinet) : plus de 'eur' par defaut (defaut P1 CH-013).
+  currency TEXT,
   status TEXT NOT NULL DEFAULT 'expected',
   apporteur_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   apporteur_share_bps INTEGER NOT NULL DEFAULT 0 CHECK (apporteur_share_bps BETWEEN 0 AND 10000),

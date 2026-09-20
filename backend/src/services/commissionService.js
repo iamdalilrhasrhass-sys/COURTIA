@@ -1,5 +1,43 @@
 const porteeCabinet = require('../lib/porteeCabinet')
+const marcheCabinet = require('../lib/marcheCabinet')
 const { analyserErreurEntree } = require('../middleware/erreursEntree')
+
+/**
+ * Devise du CABINET (CHF en Suisse, EUR en France) — repli 'EUR'.
+ *
+ * POURQUOI CE CHAMP (P3 « D-22 », mesuré le 20/09/2026) : les montants de
+ * commissions étaient rendus sous les noms `expected_amount_eur` /
+ * `received_amount_eur`, y compris à un cabinet suisse : le nom du champ
+ * affirme une devise qui n'est pas la sienne. Les colonnes de la base gardent
+ * leur nom historique (renommer une colonne de production pour un suffixe serait
+ * un risque sans bénéfice), mais l'API sert désormais la devise RÉELLE du
+ * cabinet et des noms de champs NEUTRES (`expected_amount`, `received_amount`)
+ * que tout écran peut utiliser sans supposer l'euro. Les noms historiques sont
+ * conservés : des écrans les lisent encore, et une plateforme qui affiche
+ * « CHF » à un cabinet suisse ne ment pas — la valeur n'est pas convertie.
+ *
+ * Depuis le correctif CH-013 (20/09/2026), la même devise est ÉCRITE dans
+ * `commissions.currency` à chaque enregistrement : la colonne ne portait plus
+ * de valeur utile (le défaut de colonne 'eur' la remplissait pour tout le
+ * monde, y compris pour un cabinet suisse). Écrire la devise du cabinet rend la
+ * ligne exploitable par un export comptable ou une reprise de données sans
+ * supposer l'euro. La devise n'est jamais CONVERTIE : seul le libellé change.
+ */
+async function deviseDuCabinet(pool, user) {
+  try {
+    const uid = Number(user?.id || user?.userId || 0)
+    if (!uid || !pool) return 'EUR'
+    const verdict = await marcheCabinet.marcheUtilisateur(uid, (sql, params) => pool.query(sql, params))
+    return verdict && verdict.devise ? verdict.devise : 'EUR'
+  } catch (_err) {
+    return 'EUR'
+  }
+}
+
+/** Code devise stocké en base ('CHF' / 'EUR'), dérivé de la devise servie. */
+function deviseEnBase(devise) {
+  return String(devise || 'EUR').trim().toUpperCase() === 'CHF' ? 'CHF' : 'EUR'
+}
 
 const COMMISSION_STATUSES = new Set(['expected', 'partial', 'paid', 'overdue', 'cancelled'])
 
@@ -187,13 +225,31 @@ function canSeeAllCommissions(user = {}) {
   return ['super_admin', 'admin', 'owner', 'manager'].includes(role)
 }
 
-function mapCommissionRow(row = {}) {
+/**
+ * Forme d'une ligne de commission servie à l'API.
+ *
+ * `devise` est la devise RÉELLE du cabinet (CHF ou EUR), passée par l'appelant :
+ *   • `expected_amount` / `received_amount` — noms NEUTRES, à utiliser par tout
+ *     nouvel écran (aucune devise affirmée dans le nom du champ) ;
+ *   • `expected_amount_eur` / `received_amount_eur` — noms HISTORIQUES conservés
+ *     parce que des écrans les lisent encore. La VALEUR n'est jamais convertie :
+ *     un cabinet suisse reçoit le même nombre, avec `devise: 'CHF'`, donc un nom
+ *     de champ historique ne peut pas faire afficher une somme fausse.
+ *   • `currency` — reflète la colonne quand elle est renseignée, sinon la devise
+ *     du cabinet : une ligne écrite avant ce correctif (colonne NULL) ne doit pas
+ *     faire croire à une devise inconnue alors que le cabinet est connu.
+ */
+function mapCommissionRow(row = {}, devise = null) {
+  const deviseLigne = devise || row.currency || null
   return {
     ...row,
     expected_amount_cents: Number.parseInt(row.expected_amount_cents || 0, 10),
     received_amount_cents: Number.parseInt(row.received_amount_cents || 0, 10),
+    expected_amount: centsToEuros(row.expected_amount_cents),
+    received_amount: centsToEuros(row.received_amount_cents),
     expected_amount_eur: centsToEuros(row.expected_amount_cents),
     received_amount_eur: centsToEuros(row.received_amount_cents),
+    ...(deviseLigne ? { devise: String(deviseLigne).toUpperCase() } : {}),
   }
 }
 
@@ -247,9 +303,18 @@ async function upsertCommission(pool, user, contractId, input = {}, portee = nul
   // par le code : l'insertion échouait en 23502 « null value in column
   // commission_amount » (la migration 114 lui donne en plus un DEFAULT 0 pour
   // les chemins qui ne la connaissent pas). On y écrit le montant attendu, en
-  // euros, pour que la colonne historique reste cohérente avec les colonnes
-  // `*_amount_cents`.
+  // unité de la devise du cabinet, pour que la colonne historique reste cohérente
+  // avec les colonnes `*_amount_cents`.
   const montantAttenduEuros = centsToEuros(payload.expected_amount_cents)
+  // ───────────────────────────────────────────────────────────────────────────
+  // DEVISE (défaut P1 CH-013) : `currency` valait 'eur' par DÉFAUT DE COLONNE,
+  // pour tous les cabinets. Une commission d'un cabinet suisse était donc
+  // stockée en euros — faux dès qu'un export, une reprise de données ou un
+  // écran lit la colonne. On écrit la devise RÉELLE du cabinet
+  // (lib/marcheCabinet : CHF en Suisse, EUR en France). Aucune conversion de
+  // montant n'est faite : on nomme la devise, on ne transforme pas les nombres.
+  // ───────────────────────────────────────────────────────────────────────────
+  const devise = deviseEnBase(await deviseDuCabinet(pool, user))
   const result = await pool.query(
     `INSERT INTO commissions (
        user_id, contract_id, insurer, period_year, period_month,
@@ -257,12 +322,13 @@ async function upsertCommission(pool, user, contractId, input = {}, portee = nul
        apporteur_user_id, apporteur_share_bps, notes, cabinet_id,
        commission_amount, created_at, updated_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'eur', $8, $9, $10, $11, $12, $13, NOW(), NOW())
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $14, $8, $9, $10, $11, $12, $13, NOW(), NOW())
      ON CONFLICT (user_id, contract_id, period_year, period_month)
      DO UPDATE SET
        insurer = EXCLUDED.insurer,
        expected_amount_cents = EXCLUDED.expected_amount_cents,
        received_amount_cents = EXCLUDED.received_amount_cents,
+       currency = EXCLUDED.currency,
        status = EXCLUDED.status,
        apporteur_user_id = EXCLUDED.apporteur_user_id,
        apporteur_share_bps = EXCLUDED.apporteur_share_bps,
@@ -285,9 +351,10 @@ async function upsertCommission(pool, user, contractId, input = {}, portee = nul
       // Cabinet propriétaire (NULL pour un cabinet mono-utilisateur).
       portee ? porteeCabinet.cabinetPourCreation(portee) : null,
       montantAttenduEuros,
+      devise,
     ]
   )
-  return mapCommissionRow(result.rows[0])
+  return mapCommissionRow(result.rows[0], devise)
 }
 
 async function listCommissions(pool, user, filters = {}, portee = null) {
@@ -353,7 +420,11 @@ async function listCommissions(pool, user, filters = {}, portee = null) {
      LIMIT 500`,
     params
   )
-  return result.rows.map(mapCommissionRow)
+  // Devise du CABINET (jamais celle du développeur) : chaque ligne porte
+  // `devise` + les noms neutres `expected_amount` / `received_amount`, en plus
+  // des noms historiques `*_amount_eur` que des écrans lisent encore (P1 CH-013).
+  const devise = await deviseDuCabinet(pool, user)
+  return result.rows.map((row) => mapCommissionRow(row, devise))
 }
 
 async function getCommissionStats(pool, user, filters = {}, portee = null) {
@@ -432,14 +503,20 @@ async function getCommissionStats(pool, user, filters = {}, portee = null) {
     byBroker.set(brokerKey, broker)
   }
 
+  // Noms NEUTRES + noms historiques : voir le commentaire de `deviseDuCabinet`.
   const withEuros = (row) => ({
     ...row,
+    expected_amount: centsToEuros(row.expected_amount_cents),
+    received_amount: centsToEuros(row.received_amount_cents),
     expected_amount_eur: centsToEuros(row.expected_amount_cents),
     received_amount_eur: centsToEuros(row.received_amount_cents),
   })
 
+  const devise = await deviseDuCabinet(pool, user)
+
   return {
     year,
+    devise,
     totals: withEuros(totals),
     by_month: Array.from(byMonth.values()).sort((a, b) => a.month - b.month).map(withEuros),
     by_insurer: Array.from(byInsurer.values()).sort((a, b) => b.received_amount_cents - a.received_amount_cents).map(withEuros),
@@ -551,6 +628,8 @@ module.exports = {
   normalizePeriod,
   eurosToCents,
   centsToEuros,
+  deviseDuCabinet,
+  deviseEnBase,
   normalizeCommissionPayload,
   parseCommissionCsv,
   upsertCommission,

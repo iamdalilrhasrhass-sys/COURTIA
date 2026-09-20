@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { Phone, PhoneCall, Settings, Clock, Volume2, Loader2, Sparkles } from 'lucide-react';
+import { localeCourante } from '../../lib/monnaie'
 
 const T = {
   bg: '#050510',
@@ -142,7 +143,7 @@ export default function ArkVoiceCockpit({ apiBase = '/api', authToken }) {
                 <PhoneCall size={14} color={call.status === 'completed' ? T.success : T.danger} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, color: T.text, fontWeight: 500 }}>{call.client_name || 'Client'}</div>
-                  <div style={{ fontSize: 10, color: T.textMuted }}>{call.duration || '--'} · {call.created_at ? new Date(call.created_at).toLocaleDateString('fr-FR') : '--'}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{call.duration || '--'} · {call.created_at ? new Date(call.created_at).toLocaleDateString(localeCourante()) : '--'}</div>
                 </div>
                 <span style={{
                   fontSize: 10, padding: '2px 8px', borderRadius: 99,

@@ -4,6 +4,7 @@
  */
 
 const { google } = require('googleapis')
+const { fuseauDuMarche } = require('../lib/marcheCabinet')
 
 function getConfigStatus() {
   const missing = []
@@ -66,16 +67,19 @@ async function createEvent(title, date, clientEmail, description, options = {}) 
     const startDate = new Date(date)
     const endDate = new Date(startDate.getTime() + (options.durationMinutes || 60) * 60 * 1000)
 
+    // Fuseau du MARCHÉ du cabinet (plus jamais « Europe/Paris » en dur pour
+    // tout le monde) : l'appelant passe son marché, sinon la France.
+    const timeZone = options.timeZone || fuseauDuMarche(options.marche)
     const event = {
       summary: title,
       description: description || '',
       start: {
         dateTime: startDate.toISOString(),
-        timeZone: 'Europe/Paris',
+        timeZone,
       },
       end: {
         dateTime: endDate.toISOString(),
-        timeZone: 'Europe/Paris',
+        timeZone,
       },
       location: options.location || '',
       reminders: {
@@ -206,13 +210,15 @@ async function updateEvent(eventId, updates, options = {}) {
     const calendar = getCalendarClient(options.tokens)
 
     const event = {}
+    // Même règle que la création : le fuseau vient du marché du cabinet.
+    const timeZone = options.timeZone || fuseauDuMarche(options.marche)
     if (updates.title) event.summary = updates.title
     if (updates.description) event.description = updates.description
     if (updates.date) {
       const startDate = new Date(updates.date)
       const endDate = new Date(startDate.getTime() + (updates.durationMinutes || 60) * 60 * 1000)
-      event.start = { dateTime: startDate.toISOString(), timeZone: 'Europe/Paris' }
-      event.end = { dateTime: endDate.toISOString(), timeZone: 'Europe/Paris' }
+      event.start = { dateTime: startDate.toISOString(), timeZone }
+      event.end = { dateTime: endDate.toISOString(), timeZone }
     }
     if (updates.location) event.location = updates.location
 

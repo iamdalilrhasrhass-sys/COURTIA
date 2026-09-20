@@ -6,12 +6,31 @@
  * avant la date limite ou après, résiliation possible 20j après réception.
  * 
  * Action courtier : relance obligatoire 60-75 jours avant échéance.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * MARCHÉS OÙ CE DÉTECTEUR S'APPLIQUE : LA FRANCE UNIQUEMENT (défaut P1 CH-016)
+ * ────────────────────────────────────────────────────────────────────────────
+ * La loi Chatel (loi n° 2005-67) est une loi FRANÇAISE : elle impose à
+ * l'ASSUREUR français d'informer l'assuré au moins deux mois avant l'échéance.
+ * Elle était exécutée pour tous les cabinets, donc aussi pour un cabinet
+ * suisse, qui recevait un signal « Préavis Chatel : relance à envoyer avant le
+ * … » présentant cette obligation comme la sienne. Ce n'est pas son droit.
+ *
+ * Règle DÉSACTIVÉE hors de France et SIGNALÉE comme telle dans le compte rendu
+ * du run (`detectors/index.js`) : jamais retirée en silence, jamais remplacée
+ * par une règle suisse inventée.
+ * NB : le détecteur `echeance` (échéance à venir) reste actif sur tous les
+ * marchés — il ne cite aucune loi, il rappelle une date.
  */
 
 module.exports = {
   code: 'chatel',
   name: 'Préavis Chatel - Relance obligatoire',
   severity: 'high',
+  // Marchés où la règle a un sens juridique. Liste ABSENTE = tous les marchés.
+  marches: ['FR'],
+  motifHorsMarche:
+    "La loi Chatel est une loi française : elle n'est pas appliquée hors du marché français.",
   
   /**
    * Détecte les contrats avec échéance dans 60-75 jours

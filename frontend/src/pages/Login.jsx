@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api'
 import { primeSessionUserCache } from '../api/sessionUser'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -441,6 +442,9 @@ const Bubble = ({ className }) => (
 )
 
 export default function Login() {
+  // Même règle que LoginPage : l'écran ne nomme un registre français que sur
+  // le marché français. (fichier non routé — la page servie est LoginPage.)
+  const libelles = libellesMarche(marcheCourante())
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -505,7 +509,7 @@ export default function Login() {
                 <span style={{ color:'#fff', fontSize:'13.5px', fontWeight:600, letterSpacing:'0.12em' }}>COURTIA</span>
               </div>
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:'10px', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:12 }}>
-                CRM · IA Native · Courtiers ORIAS
+                CRM · IA Native · {libelles.courtiers}
               </p>
               <h2 style={{ color:'#fff', fontSize:'19px', fontWeight:500, lineHeight:1.38, marginBottom:8 }}>
                 Votre portefeuille, analysé en temps réel.
@@ -556,7 +560,7 @@ export default function Login() {
                   <path d="M2 7l10 6 10-6"/>
                 </svg>
                 <input id="email" type="email" autoComplete="email" required value={email}
-                  onChange={e => setEmail(e.target.value)} placeholder="votre@email.fr" />
+                  onChange={e => setEmail(e.target.value)} placeholder={libelles.email} />
               </div>
 
               <div className="field-wrap">

@@ -355,14 +355,22 @@ export default function App() {
         <Route path="/billing/cancel" element={<PaiementAnnule />} />
         <Route path="/forgot-password" element={<NoIndex title="Mot de passe oublié — COURTIA"><ForgotPasswordPage /></NoIndex>} />
         <Route path="/reset-password" element={<NoIndex title="Réinitialiser le mot de passe — COURTIA"><ResetPasswordPage /></NoIndex>} />
+        {/* /connexion : l'URL française de la page de connexion répondait le 404
+            du SPA. Elle mène désormais à /login — l'écran unique de connexion,
+            dont les libellés suivent le marché du visiteur (lib/marche.js). */}
+        <Route path="/connexion" element={<Navigate to="/login" replace />} />
         {/* Le lien d'invitation d'un collaborateur (page Équipe) pointait vers
             /invite/<jeton> alors qu'aucune route n'existait : la première
             personne invitée tombait sur un 404. */}
         <Route path="/invite/:token" element={<NoIndex title="Invitation — COURTIA"><InviteAccept /></NoIndex>} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
-        <Route path="/design-system" element={<NoIndex title="Design system — COURTIA"><DesignSystem /></NoIndex>} />
-        <Route path="/vibe" element={<NoIndex title="Vibe — COURTIA"><VibePage /></NoIndex>} />
+        {/* POURQUOI ces deux routes ne sont plus publiques : /design-system
+            servait à quiconque la galerie de composants interne (et des chiffres
+            d'exemple : 247 clients, 1 842 contrats), /vibe un écran d'ambiance
+            d'atelier. Aucun visiteur n'a à voir l'outillage interne : elles sont
+            désormais montées dans le cockpit privé, derrière la garde
+            administrateur (voir plus bas). */}
         <Route path="/fonctionnalites" element={<FonctionnalitesPublic />} />
         {/* Pages marketing publiques qui portent le formulaire de demande de démo.
             /demo-public est le pendant marketing de /demo (cockpit de démonstration,
@@ -424,6 +432,12 @@ export default function App() {
           <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/users/:id" element={<AdminRoute><AdminUserDetail /></AdminRoute>} />
+          {/* OUTILLAGE INTERNE — galerie de composants et écran d'ambiance.
+              Ils étaient servis publiquement (sans authentification) et
+              affichaient des chiffres d'exemple. Gardés ici : accessibles
+              seulement à une session administrateur. */}
+          <Route path="/design-system" element={<AdminRoute><DesignSystem /></AdminRoute>} />
+          <Route path="/vibe" element={<AdminRoute><VibePage /></AdminRoute>} />
         </Route>
 
         {/* Démonstration — mêmes pages, mêmes composants que le cockpit réel */}

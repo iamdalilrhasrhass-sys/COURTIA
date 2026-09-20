@@ -9,6 +9,28 @@
  */
 
 const { runAllDetectors, getDetectorsList } = require('./detectors')
+const marcheCabinet = require('../../lib/marcheCabinet')
+
+/**
+ * Marché du CABINET du courtier, résolu par `lib/marcheCabinet` (cabinet →
+ * référent → profil mono-utilisateur). POURQUOI (défaut P1 CH-016) : les
+ * détecteurs `hamon` et `chatel` appliquent des lois FRANÇAISES et étaient
+ * exécutés pour tous les cabinets. Le runner est le seul endroit qui connaît
+ * `brokerId` ET la base : c'est donc ici, une fois par run, que le marché est
+ * résolu puis transmis aux détecteurs (jamais relu par chaque règle).
+ * Une panne de lecture retombe sur 'FR' — le comportement historique, jamais un
+ * marché plus large.
+ */
+async function marcheDuCourtier(brokerId, pool) {
+  try {
+    const verdict = await marcheCabinet.marcheUtilisateur(
+      brokerId, (sql, params) => pool.query(sql, params)
+    )
+    return (verdict && verdict.marche) || 'FR'
+  } catch (_err) {
+    return 'FR'
+  }
+}
 
 /**
  * Exécute ARK Watch pour un courtier
@@ -33,12 +55,14 @@ async function runArkWatch(brokerId, pool, options = {}) {
       `, [brokerId, runType])
       runId = runResult.rows[0].id
     }
-    
-    // 2. Exécuter tous les détecteurs
+
+    // 2. Marché du cabinet, puis exécution des détecteurs applicables
+    const marche = options.marche || await marcheDuCourtier(brokerId, pool)
     const detectionResult = await runAllDetectors(brokerId, pool, {
       detectorsFilter,
       timeout: 55000,
-      continueOnError: true
+      continueOnError: true,
+      marche
     })
     
     // 3. Insérer les signaux en bulk
@@ -112,6 +136,10 @@ async function runArkWatch(brokerId, pool, options = {}) {
       success: true,
       runId,
       brokerId,
+      // Marché du cabinet : le compte rendu doit dire QUELLES règles ont
+      // tourné, et lesquelles ne s'appliquent pas à ce marché (P1 CH-016).
+      marche: detectionResult.marche,
+      detectorsDesactives: detectionResult.desactives,
       signalsDetected: detectionResult.signals.length,
       signalsInserted,
       duplicatesSkipped: detectionResult.signals.length - signalsInserted,
@@ -191,6 +219,8 @@ async function runAllBrokers(pool, options = {}) {
       
       results.byBroker[broker.id] = {
         success: runResult.success,
+        marche: runResult.marche,
+        detectorsDesactives: (runResult.detectorsDesactives || []).map((d) => d.code),
         signalsDetected: runResult.signalsDetected || 0,
         signalsInserted: runResult.signalsInserted || 0,
         duration_ms: runResult.duration_ms

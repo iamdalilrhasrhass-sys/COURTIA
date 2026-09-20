@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, MapPin, User, Plus, ChevronRight, Video, Phone } from 'lucide-react';
 import { AuroraCard, AuroraButton, AuroraSkeleton, useToast } from './aurora';
+import { localeCourante } from '../lib/monnaie'
 
 const EVENT_TYPES = {
   rdv: { label: 'RDV', color: '#6366f1', icon: Calendar },
@@ -47,7 +48,7 @@ export default function CalendarWidget({ maxEvents = 5, showHeader = true }) {
   }, []);
 
   const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return new Date(date).toLocaleTimeString(localeCourante(), { hour: '2-digit', minute: '2-digit' });
   };
 
   const isNow = (event) => {

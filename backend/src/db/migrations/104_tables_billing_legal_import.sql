@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS organization_profiles (
   address_line1 VARCHAR(255),
   postal_code VARCHAR(20),
   city VARCHAR(120),
-  country VARCHAR(120) DEFAULT 'France',
+  -- Aucun pays par defaut (defaut P0 CH-005).
+  country VARCHAR(120),
   legal_signatory_name VARCHAR(255),
   legal_signatory_role VARCHAR(255),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -67,7 +68,8 @@ CREATE TABLE IF NOT EXISTS billing_plans (
   code VARCHAR(32) NOT NULL UNIQUE,
   display_name VARCHAR(120) NOT NULL,
   price_amount_cents INTEGER,
-  currency VARCHAR(8) NOT NULL DEFAULT 'EUR',
+  -- Devise ECRITE offre par offre (grille CHF en Suisse, EUR en France).
+  currency VARCHAR(8),
   interval VARCHAR(16) NOT NULL DEFAULT 'month',
   stripe_price_id_test VARCHAR(128),
   stripe_price_id_live VARCHAR(128),
@@ -172,7 +174,8 @@ CREATE TABLE IF NOT EXISTS invoices (
   provider_invoice_id VARCHAR(128),
   status VARCHAR(64),
   amount_cents INTEGER,
-  currency VARCHAR(8) DEFAULT 'EUR',
+  -- Devise ecrite a la creation de la facture : plus d'euro par defaut.
+  currency VARCHAR(8),
   invoice_url TEXT,
   paid_at TIMESTAMPTZ,
   due_at TIMESTAMPTZ,

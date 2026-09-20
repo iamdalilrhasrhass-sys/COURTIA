@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
+import { localeCourante } from '../lib/monnaie'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -311,7 +312,7 @@ export default function Contrats() {
                   <td style={{padding:'12px 16px',fontSize:'13px'}}>
                     {contrat.date_echeance && (
                       <div>
-                        {new Date(contrat.date_echeance).toLocaleDateString('fr-FR')}
+                        {new Date(contrat.date_echeance).toLocaleDateString(localeCourante())}
                         {Math.ceil((new Date(contrat.date_echeance) - new Date()) / (1000 * 60 * 60 * 24)) < 30 && (
                           <AlertCircle size={14} style={{display:'inline',marginLeft:'6px',color:'#f59e0b'}} />
                         )}

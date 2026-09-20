@@ -3,6 +3,7 @@ import { CreditCard, TrendingUp, AlertTriangle } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 
 export default function AdminSubscriptions() {
   const [data, setData] = useState(null)
@@ -115,8 +116,8 @@ export default function AdminSubscriptions() {
                     <td style={td}>{row.email}</td>
                     <td style={td}>{row.plan_code || 'starter'}</td>
                     <td style={td}>{row.subscription_status || 'not_started'}</td>
-                    <td style={td}>{row.trial_end_at ? new Date(row.trial_end_at).toLocaleDateString('fr-FR') : '—'}</td>
-                    <td style={td}>{row.last_legal_acceptance_at ? new Date(row.last_legal_acceptance_at).toLocaleString('fr-FR') : '—'}</td>
+                    <td style={td}>{row.trial_end_at ? new Date(row.trial_end_at).toLocaleDateString(localeCourante()) : '—'}</td>
+                    <td style={td}>{row.last_legal_acceptance_at ? new Date(row.last_legal_acceptance_at).toLocaleString(localeCourante()) : '—'}</td>
                     <td style={td}>{row.stripe_customer_id_masked || '—'}</td>
                   </tr>
                 ))}

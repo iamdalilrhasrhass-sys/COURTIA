@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../api'
+import { localeCourante } from '../lib/monnaie'
 
 export default function ReachDashboard() {
   const [audiences, setAudiences] = useState([])
@@ -73,7 +74,7 @@ export default function ReachDashboard() {
             type="text"
             value={newAudienceName}
             onChange={e => setNewAudienceName(e.target.value)}
-            placeholder="Nom de l'audience (ex: Courtiers ORIAS Paris)"
+            placeholder="Nom de l'audience (ex : courtiers auto région lyonnaise)"
             className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm"
           />
           <button onClick={createAudience} className="px-6 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700">
@@ -93,7 +94,7 @@ export default function ReachDashboard() {
               <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-semibold text-sm">{a.name}</p>
-                  <p className="text-xs text-gray-400">Créée le {new Date(a.created_at).toLocaleDateString('fr-FR')}</p>
+                  <p className="text-xs text-gray-400">Créée le {new Date(a.created_at).toLocaleDateString(localeCourante())}</p>
                 </div>
               </div>
             ))}

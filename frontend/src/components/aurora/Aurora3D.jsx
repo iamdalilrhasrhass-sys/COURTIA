@@ -310,7 +310,7 @@ export function MobileCockpitCard({ modules = [], title = "Vos priorités, sans 
     { name: 'Clients', status: '8 actifs', color: '#8fe7ff' },
     { name: 'Contrats', status: '3 échéances', color: '#a986ff' },
     { name: 'Relances', status: '4 à faire', color: '#ff9a55' },
-    { name: 'DDA', status: '1 incomplet', color: '#ff65bb' },
+    { name: 'Conformité', status: '1 incomplet', color: '#ff65bb' },
   ]
   const items = modules.length > 0 ? modules : defaultModules
   return (

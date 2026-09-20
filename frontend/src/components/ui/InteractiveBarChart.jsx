@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { fmtMontant } from '../../lib/monnaie'
 
-const defaultFormat = v =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+// Devise du cabinet (lib/monnaie) : le format par défaut n'impose plus l'euro.
+const defaultFormat = v => fmtMontant(v, { maximumFractionDigits: 0 })
 
 /**
  * Bar chart interactif avec tooltip, sélection au clic et mini-card détail.

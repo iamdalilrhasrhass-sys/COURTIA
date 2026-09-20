@@ -1,20 +1,72 @@
 /**
  * Routes Comptabilité / FEC
  * LOT 22 — Export comptable format DGFIP
+ *
+ * ════════════════════════════════════════════════════════════════════════════
+ * L'EXPORT COMPTABLE EST UN ARTEFACT FRANÇAIS — IL EST RÉSERVÉ AU MARCHÉ FR
+ * ════════════════════════════════════════════════════════════════════════════
+ * POURQUOI (défaut P1 CH-017, mesuré le 20/09/2026 sur un cabinet suisse)
+ * `GET /api/accounting/fec` répondait 200 AVEC l'en-tête FEC
+ * (`JournalCode|JournalLib|EcritureNum|…|Idevise`) à un cabinet établi en
+ * Suisse. Or le FEC (« fichier des écritures comptables ») est un format
+ * NORMÉ PAR L'ADMINISTRATION FISCALE FRANÇAISE (DGFiP) : il n'a aucune
+ * existence en Suisse, aucun logiciel comptable suisse ne l'attend, et servir
+ * un fichier vide portant cette en-tête laisse croire que l'export est correct.
+ * C'est un faux succès : l'écran affiche « export généré », le cabinet dépose
+ * un fichier qui n'a aucune valeur chez lui.
+ *
+ * CORRECTIF RETENU : REFUSER PROPREMENT plutôt qu'inventer.
+ * La route répond 501 (non implémenté) avec un message PRODUIT : elle dit que
+ * l'export comptable est un format français, qu'aucun export équivalent n'est
+ * disponible pour ce cabinet, et que rien n'a été produit. Nous n'inventons
+ * AUCUN équivalent suisse (aucun format « FEC suisse » n'est validé) : une
+ * fonctionnalité qui n'existe pas doit se voir, pas se simuler.
+ * Le marché français garde EXACTEMENT son comportement : 200 + fichier FEC.
+ *
+ * La même règle s'applique à `POST /generate-from-commissions`, qui écrit des
+ * écritures dans le PLAN COMPTABLE FRANÇAIS (journaux VE/…, comptes 411/701) :
+ * générer ces écritures pour un cabinet suisse produirait un grand livre faux.
  */
 
 const express = require('express')
 const router = express.Router()
 const verifyToken = require('../middleware/authMiddleware')
 const fecService = require('../services/fecService')
+const marcheCabinet = require('../lib/marcheCabinet')
 
 router.use(verifyToken)
+
+/** Marché du CABINET appelant (jamais celui de la personne connectée). */
+async function marcheDuCabinetAppelant(req, res) {
+  const pool = req.app.locals.pool
+  const userId = req.user.id || req.user.userId
+  const verdict = await marcheCabinet.marcheUtilisateur(userId, (sql, params) => pool.query(sql, params))
+  const marche = (verdict && verdict.marche) || 'FR'
+  if (marche === 'FR') return 'FR'
+
+  // Message PRODUIT : il nomme le format, dit pourquoi il ne s'applique pas, et
+  // affirme qu'aucun fichier n'a été produit (aucun « export généré » mensonger).
+  res.status(501).json({
+    error: 'export_comptable_indisponible_marche',
+    marche,
+    format: 'FEC',
+    message:
+      "L'export comptable COURTIA est le FEC (fichier des écritures comptables), "
+      + "un format de l'administration fiscale française. Il ne s'applique pas à un "
+      + "cabinet établi hors de France et aucun export équivalent n'est disponible "
+      + "pour votre marché : aucun fichier n'a été généré.",
+    alternative:
+      "Vos commissions restent exportables depuis l'écran Commissions.",
+  })
+  return null
+}
 
 /**
  * Génère et télécharge le fichier FEC
  */
 router.get('/fec', async (req, res) => {
   try {
+    if (!(await marcheDuCabinetAppelant(req, res))) return
     const userId = req.user.id || req.user.userId
     const { start, end, year } = req.query
 
@@ -78,9 +130,11 @@ router.get('/balance/:year', async (req, res) => {
 
 /**
  * Génère les écritures comptables depuis les commissions
+ * (plan comptable FRANÇAIS : réservé au marché FR — voir l'en-tête du fichier)
  */
 router.post('/generate-from-commissions', async (req, res) => {
   try {
+    if (!(await marcheDuCabinetAppelant(req, res))) return
     const userId = req.user.id || req.user.userId
     const { startDate, endDate } = req.body
 
@@ -138,6 +192,11 @@ router.get('/entries', async (req, res) => {
     res.json({ 
       data: result.rows.map(r => ({
         ...r,
+        // Noms NEUTRES (devise non affirmée) en plus des noms historiques
+        // `*_eur` : un cabinet suisse lit des montants en CHF sous un nom qui
+        // n'affirme pas l'euro. Valeurs identiques, aucune conversion.
+        debit: fecService.centsToEuros ? fecService.centsToEuros(r.debit_cents) : r.debit_cents / 100,
+        credit: fecService.centsToEuros ? fecService.centsToEuros(r.credit_cents) : r.credit_cents / 100,
         debit_eur: fecService.centsToEuros ? fecService.centsToEuros(r.debit_cents) : r.debit_cents / 100,
         credit_eur: fecService.centsToEuros ? fecService.centsToEuros(r.credit_cents) : r.credit_cents / 100
       })),

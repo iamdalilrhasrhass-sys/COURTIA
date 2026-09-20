@@ -63,7 +63,7 @@ export default function Pricing() {
         'ARK IA avancée',
         'Automations custom',
         'Multi-utilisateurs',
-        'Rapports DDA/RGPD/ACPR',
+        'Rapports de conformité',
         'Analyses avancées',
         'Webhooks & API complète',
         'Support 24/7 dédié',

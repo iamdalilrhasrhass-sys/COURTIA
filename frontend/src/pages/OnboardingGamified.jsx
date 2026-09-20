@@ -35,7 +35,7 @@ const STEPS = [
     key: 'generate_document',
     icon: FileText,
     title: 'Générez votre premier document',
-    description: 'Utilisez ARK Compose pour créer un document DDA, IPID ou Devoir de Conseil',
+    description: 'Utilisez ARK Compose pour créer un document de conformité, IPID ou Devoir de Conseil',
     badge: { name: 'Maître des Docs', emoji: '📄' },
     action: { label: 'Ouvrir les documents', route: '/documents' },
     color: '#10b981',

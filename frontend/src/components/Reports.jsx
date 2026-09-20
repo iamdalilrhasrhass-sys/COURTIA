@@ -1,27 +1,43 @@
 import { Download, BarChart3 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { marcheCourante } from '../lib/marche'
 
-const monthlyData = [
-  { month: 'Jan', dda: 12, rgpd: 8, acpr: 5 },
-  { month: 'Fév', dda: 15, rgpd: 10, acpr: 7 },
-  { month: 'Mar', dda: 18, rgpd: 14, acpr: 9 },
-  { month: 'Avr', dda: 22, rgpd: 18, acpr: 11 },
-  { month: 'Mai', dda: 25, rgpd: 20, acpr: 13 },
-  { month: 'Juin', dda: 28, rgpd: 25, acpr: 15 }
-]
+/**
+ * Types de rapport proposés, par marché.
+ *
+ * POURQUOI : l'écran annonçait « ACPR » (autorité de supervision française,
+ * sans compétence en Suisse) à tous les cabinets. La liste suit maintenant le
+ * marché du cabinet ; la colonne suisse reprend le cadre déjà déclaré pour le
+ * marché CH dans market/marketContext.js (« LSA · FINMA · nLPD ») — elle
+ * n'ajoute aucune affirmation réglementaire nouvelle.
+ */
+const RAPPORTS_PAR_MARCHE = {
+  FR: [
+    { title: 'DDA', subtitle: 'Directive sur la Distribution d’Assurances', color: 'from-blue-500' },
+    { title: 'RGPD', subtitle: 'Règlement Général de Protection des Données', color: 'from-green-500' },
+    { title: 'ACPR', subtitle: 'Autorité de Contrôle Prudentiel', color: 'from-purple-500' },
+  ],
+  CH: [
+    { title: 'LSA', subtitle: 'Loi sur le contrat d’assurance', color: 'from-blue-500' },
+    { title: 'nLPD', subtitle: 'Loi fédérale sur la protection des données', color: 'from-green-500' },
+    { title: 'Registre', subtitle: 'Registre de conformité du cabinet', color: 'from-purple-500' },
+  ],
+}
 
 export default function Reports() {
+  const market = marcheCourante()
+  const reports = RAPPORTS_PAR_MARCHE[market === 'CH' ? 'CH' : 'FR']
+  // Aucun historique de conformité n'est fourni par l'API ici : l'écran ne
+  // fabrique donc ni courbe ni « rapports récents ». Il dit ce qu'il sait.
+  const historique = []
+
   return (
     <div className="ml-64 p-8">
       <h2 className="text-4xl font-black text-gradient mb-8">Rapports et Conformité</h2>
 
       {/* Report Cards */}
       <div className="grid grid-cols-3 gap-6 mb-8">
-        {[
-          { title: 'DDA', subtitle: 'Directive sur la Distribution d\'Assurances', color: 'from-blue-500' },
-          { title: 'RGPD', subtitle: 'Règlement Général de Protection des Données', color: 'from-green-500' },
-          { title: 'ACPR', subtitle: 'Autorité de Contrôle Prudentiel', color: 'from-purple-500' }
-        ].map((report, idx) => (
+        {reports.map((report, idx) => (
           <div key={idx} className={`glass p-6 rounded-lg gradient-blue-cyan bg-gradient-to-br ${report.color}`}>
             <p className="text-lg font-bold text-white mb-2">{report.title}</p>
             <p className="text-sm text-slate-200 mb-4">{report.subtitle}</p>
@@ -39,48 +55,44 @@ export default function Reports() {
           <BarChart3 size={24} />
           Conformité globale
         </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={monthlyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.2)" />
-            <XAxis dataKey="month" stroke="#cbd5e1" />
-            <YAxis stroke="#cbd5e1" />
-            <Tooltip
-              contentStyle={{
-                background: 'rgba(30, 41, 59, 0.9)',
-                border: '1px solid rgba(59, 130, 246, 0.3)'
-              }}
-              labelStyle={{ color: '#06b6d4' }}
-            />
-            <Legend />
-            <Bar dataKey="dda" fill="#3b82f6" name="DDA" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="rgpd" fill="#06b6d4" name="RGPD" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="acpr" fill="#10b981" name="ACPR" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {historique.length === 0 ? (
+          <p className="text-sm text-slate-400" style={{ padding: '24px 0' }}>
+            Aucune donnée de conformité sur la période : le graphique s'affichera dès que des
+            audits réels existeront. Aucune valeur n'est estimée ni affichée par défaut.
+          </p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={historique}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.2)" />
+              <XAxis dataKey="mois" stroke="#cbd5e1" />
+              <YAxis stroke="#cbd5e1" />
+              <Tooltip
+                contentStyle={{
+                  background: 'rgba(30, 41, 59, 0.9)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
+                }}
+                labelStyle={{ color: '#06b6d4' }}
+              />
+              <Legend />
+              <Bar dataKey="audits" fill="#3b82f6" name="Audits" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Recent Reports */}
       <div className="glass p-6 rounded-lg">
         <h3 className="text-xl font-bold text-cyan mb-4">Rapports récents</h3>
         <div className="space-y-3">
-          {[
-            { date: '2026-03-26', name: 'Rapport DDA Mars 2026', status: '✓ Compliant' },
-            { date: '2026-03-20', name: 'Audit RGPD Trimestriel', status: '✓ Valide' },
-            { date: '2026-03-15', name: 'Rapport ACPR Annuel', status: '✓ Approuvé' }
-          ].map((report, idx) => (
-            <div key={idx} className="bg-dark-3 p-4 rounded-lg flex justify-between items-center">
-              <div>
-                <p className="font-bold">{report.name}</p>
-                <p className="text-sm text-slate-500">{report.date}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-green-400 text-sm font-bold">{report.status}</span>
-                <button className="text-cyan hover:opacity-80">
-                  <Download size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
+          {/* Les trois lignes de démonstration (dont « 2026-03-15 · Rapport ACPR
+              Annuel · ✓ Approuvé ») ont été supprimées : un cabinet neuf voyait
+              des rapports qu'il n'avait jamais produits, approuvés par une
+              autorité étrangère. Un état vide est moins flatteur, il est vrai. */}
+          {historique.length === 0 ? (
+            <p className="text-sm text-slate-400" style={{ padding: '12px 0' }}>
+              Aucun rapport produit pour l'instant. Vos rapports apparaîtront ici une fois générés.
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

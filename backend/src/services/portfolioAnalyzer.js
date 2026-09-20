@@ -893,21 +893,50 @@ function calcClientGrowth(data) {
   };
 }
 
-/** Estimation de la valeur client (LTV sur 5 ans, €). */
+/**
+ * Estimation de la valeur client (LTV sur 5 ans).
+ *
+ * CORRECTION 20/09/2026 — PLUS AUCUNE PRIME INVENTÉE.
+ * La version précédente remplaçait toute prime manquante ou nulle par
+ * `600` €/contrat (« sinon 600€/contrat par défaut »), puis présentait le
+ * résultat comme la « VALEUR CLIENT ESTIMÉE » du dossier, jusque dans le prompt
+ * envoyé au modèle. Deux contrats sans prime renseignée fabriquaient donc
+ * 1 200 € de valeur client. On ne somme DÉSORMAIS que les primes réellement
+ * renseignées ; le nombre de contrats dont la prime est inconnue est publié à
+ * côté, et l'estimation est étiquetée `estimee` pour ne jamais être lue comme
+ * une mesure.
+ */
 function estimateClientLTV(data, score) {
   const activeQuotes = data.quotes.filter(q =>
     ['actif', 'active'].includes((q.status || '').toLowerCase())
   );
 
-  // Somme des primes annuelles renseignées, sinon 600€/contrat par défaut
-  const annualPremium = activeQuotes.reduce((sum, q) => {
-    const p = parseFloat(q.prime_annuelle || 0);
-    return sum + (isNaN(p) || p === 0 ? 600 : p);
-  }, 0);
+  const primesConnues = activeQuotes
+    .map(q => parseFloat(q.prime_annuelle))
+    .filter(p => Number.isFinite(p) && p > 0)
+
+  const contratsSansPrime = activeQuotes.length - primesConnues.length
+  const annualPremium = primesConnues.reduce((sum, p) => sum + p, 0)
 
   // Probabilité de rétention sur 5 ans selon le score
-  const retentionFactor = score >= 80 ? 4.2 : score >= 60 ? 3.5 : score >= 40 ? 2.5 : 1.5;
-  const ltv = Math.round(annualPremium * retentionFactor);
+  const retentionFactor = score >= 80 ? 4.2 : score >= 60 ? 3.5 : score >= 40 ? 2.5 : 1.5
+
+  if (annualPremium <= 0) {
+    // Aucune prime renseignée : il n'y a RIEN à estimer. On rend `null`
+    // (absence de mesure) plutôt qu'un montant issu d'un forfait inventé.
+    return {
+      min: null,
+      max: null,
+      label: 'Non estimable — aucune prime renseignée',
+      annual_premium: null,
+      source: 'estimee',
+      contrats_actifs: activeQuotes.length,
+      contrats_sans_prime_renseignee: contratsSansPrime,
+      methode: 'somme des primes annuelles renseignées × facteur de rétention (5 ans)',
+    }
+  }
+
+  const ltv = Math.round(annualPremium * retentionFactor)
 
   const label = score >= 80 ? 'Fort LTV'
     : score >= 60 ? 'LTV moyen'
@@ -919,7 +948,14 @@ function estimateClientLTV(data, score) {
     max:   Math.round(ltv * 1.15),
     label,
     annual_premium: Math.round(annualPremium),
-  };
+    // Étiquettes de vérité : le chiffre est une ESTIMATION, et il ne couvre que
+    // les contrats dont la prime est connue.
+    source: 'estimee',
+    contrats_actifs: activeQuotes.length,
+    contrats_sans_prime_renseignee: contratsSansPrime,
+    estimation_partielle: contratsSansPrime > 0,
+    methode: 'somme des primes annuelles renseignées × facteur de rétention (5 ans)',
+  }
 }
 
 // ─── calculateClientScore ─────────────────────────────────────────────────
@@ -1034,4 +1070,7 @@ module.exports = {
   scoreToRange,
   calculateClientScore,
   getClientScoreBreakdown,
+  // Exportée pour la non-régression : l'invariant « aucune prime inventée » doit
+  // être vérifiable directement (défaut P2 du 20/09/2026).
+  estimateClientLTV,
 };

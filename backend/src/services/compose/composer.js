@@ -10,11 +10,15 @@ const fs = require('fs').promises
 const crypto = require('crypto')
 const pool = require('../../db')
 const logger = require('../../lib/logger')
+// Le réseau d'autorisation UNIQUE : un dossier appartient à un CABINET (et non à
+// la colonne `broker_id`, jamais écrite par le produit).
+const porteeCabinet = require('../../lib/porteeCabinet')
 
 const { generateIpid } = require('./templates/ipidTemplate')
 const { generateDda } = require('./templates/ddaTemplate')
 const { generateDevoirConseil } = require('./templates/devoirConseilTemplate')
 const { 
+  resoudreClientAutorise,
   extractNeedsFromClient, 
   buildRecommendation, 
   generateIpidContent, 
@@ -103,31 +107,42 @@ function resoudreMarche(row = {}) {
 }
 
 /**
- * Récupère les données client
+ * Récupère les données client — DANS LA PORTÉE DU CABINET DE L'APPELANT.
+ *
+ * POURQUOI (défaut P1 reproduit le 20/09/2026) : cette fonction interrogeait
+ * `clients WHERE id = $1 AND broker_id = $2`. `clients.broker_id` n'est JAMAIS
+ * écrit par le produit (mesuré : 0 client sur 22 en base ; l'identité du dossier
+ * est portée par `courtier_id` + `cabinet_id`), donc la condition était toujours
+ * fausse et `POST /api/compose/devoir-conseil` répondait 500 « Client non trouvé
+ * ou accès non autorisé » pour TOUT client réel. La résolution passe désormais
+ * par l'autorité unique de portée : lib/porteeCabinet (voir composeAi).
  */
 async function getClientData(clientId, brokerId) {
-  const res = await pool.query(
-    'SELECT * FROM clients WHERE id = $1 AND broker_id = $2',
-    [clientId, brokerId]
-  )
-  
-  if (res.rows.length === 0) {
-    throw new Error('Client non trouvé ou accès non autorisé')
-  }
-  
-  return res.rows[0]
+  return resoudreClientAutorise(clientId, brokerId)
 }
 
 /**
- * Récupère les données d'un devis
+ * Récupère les données d'un devis — le devis d'un client DANS LA PORTÉE.
+ *
+ * POURQUOI : le filtre était `q.broker_id = $2`, colonne renseignée sur 7 devis
+ * sur 23 (même famille de défaut que la fiche client). La portée est portée par
+ * le CLIENT (`quotes.client_id → clients.courtier_id / cabinet_id`) : un devis
+ * n'est lisible que si son dossier l'est.
  */
 async function getQuoteData(quoteId, brokerId) {
+  const portee = await porteeCabinet.resoudrePortee(pool, { user: { id: brokerId } })
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 2,
+  })
   const res = await pool.query(
     `SELECT q.*, ip.name AS provider_name, ip.logo_url
      FROM quotes q
+     JOIN clients c ON c.id = q.client_id
      LEFT JOIN insurance_providers ip ON ip.id = q.provider_id
-     WHERE q.id = $1 AND q.broker_id = $2`,
-    [quoteId, brokerId]
+     WHERE q.id = $1 AND ${f.sql}`,
+    [quoteId, ...f.params]
   )
   
   if (res.rows.length === 0) {

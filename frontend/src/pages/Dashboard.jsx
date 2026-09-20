@@ -14,7 +14,7 @@ import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyState
 import DeviseIcone from '../components/DeviseIcone'
 import useDevise from '../components/useDevise'
 import { libelleSante, variation } from '../lib/cockpitTendances'
-import { fmtMontant, fmtNombre } from '../lib/monnaie'
+import { fmtMontant, fmtNombre, fmtDate, fmtDateLongue } from '../lib/monnaie'
 import { BubbleCMini } from '../design/BubbleC'
 import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
 import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
@@ -273,7 +273,7 @@ function construireActivite(clients, contrats) {
   return items
     .sort((a, b) => b.ts - a.ts)
     .slice(0, 6)
-    .map((i) => ({ ...i, when: new Date(i.ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) }))
+    .map((i) => ({ ...i, when: fmtDate(i.ts, { day: 'numeric', month: 'short' }) }))
 }
 
 /** Suggestions ARK : uniquement des constats dérivables des dossiers chargés. */
@@ -335,26 +335,47 @@ export default function Dashboard() {
   const [opportunites, setOpportunites] = useState([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState({ first_name: '', last_name: '' })
+  // Échecs d'appel : POURQUOI un état dédié — l'ancien code remplaçait chaque
+  // erreur par un tableau vide (`.catch(() => ({ data: [] }))`). Une panne
+  // serveur devenait donc un cabinet « à 0 client, 0 contrat, 0 prime », sans
+  // le moindre signe d'échec. Ici, la panne est nommée et l'écran propose de
+  // réessayer, au lieu d'afficher des zéros qui ne sont pas mesurés.
+  const [erreursChargement, setErreursChargement] = useState([])
 
   const loadAllData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const [statsRes, userRes, clientsRes, contratsRes, devisRes, oppRes] = await Promise.all([
-        api.get('/dashboard/stats').catch(() => ({ data: null })),
-        getSessionUser().then(u => ({ data: u || {} })).catch(() => ({ data: {} })),
-        api.get('/clients?limit=300').catch(() => ({ data: [] })),
-        api.get('/contrats').catch(() => ({ data: [] })),
-        api.get('/devis').catch(() => ({ data: [] })),
-        api.get('/opportunites').catch(() => ({ data: [] })),
-      ])
-      setStats(statsRes.data || null)
-      setUser(userRes.data || {})
-      setClients(normalizeRows(clientsRes.data))
-      setContrats(normalizeRows(contratsRes.data))
-      setDevis(normalizeRows(devisRes.data))
-      setOpportunites(normalizeRows(oppRes.data))
-    } catch (_) { /* silent */ }
-    finally { setLoading(false) }
+    setLoading(true)
+    setErreursChargement([])
+    const [statsR, userR, clientsR, contratsR, devisR, oppR] = await Promise.allSettled([
+      api.get('/dashboard/stats'),
+      getSessionUser(),
+      api.get('/clients?limit=300'),
+      api.get('/contrats'),
+      api.get('/devis'),
+      api.get('/opportunites'),
+    ])
+
+    const echecs = []
+    const lire = (resultat, libelle, repli) => {
+      if (resultat.status === 'fulfilled') return resultat.value
+      echecs.push(libelle)
+      return repli
+    }
+
+    const statsRes = lire(statsR, 'indicateurs (/api/dashboard/stats)', { data: null })
+    const userRes = lire(userR, 'profil', null)
+    const clientsRes = lire(clientsR, 'clients (/api/clients)', { data: [] })
+    const contratsRes = lire(contratsR, 'contrats (/api/contrats)', { data: [] })
+    const devisRes = lire(devisR, 'devis (/api/devis)', { data: [] })
+    const oppRes = lire(oppR, 'opportunités (/api/opportunites)', { data: [] })
+
+    setStats(statsRes?.data || null)
+    setUser(userRes || {})
+    setClients(normalizeRows(clientsRes?.data))
+    setContrats(normalizeRows(contratsRes?.data))
+    setDevis(normalizeRows(devisRes?.data))
+    setOpportunites(normalizeRows(oppRes?.data))
+    setErreursChargement(echecs)
+    setLoading(false)
   }, [])
 
   useEffect(() => { loadAllData() }, [loadAllData])
@@ -387,7 +408,8 @@ export default function Dashboard() {
   const tendanceSante = libelleSante(metrics.healthScore, aDesDonnees)
 
   const userName = user?.first_name || user?.firstName || ''
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  // Date longue dans la locale du cabinet (fr-CH en Suisse) : lib/monnaie.js.
+  const today = fmtDateLongue(new Date(), { weekday: 'long', day: 'numeric', month: 'long' })
 
   /* Blocs du cockpit : calculés sur les dossiers chargés (aucune liste d'exemple). */
   const priorites = useMemo(() => construirePriorites(contrats, clients), [contrats, clients])
@@ -474,6 +496,38 @@ export default function Dashboard() {
         {/* SectionGlow — halo lumineux en haut du dashboard */}
         <SectionGlow color="#8fe7ff" style={{ top: -10 }} />
 
+        {/* BANDEAU D'ÉCHEC — une panne d'API ne doit jamais ressembler à un
+            cabinet vide : sans ce bandeau, l'écran affichait « 0 client,
+            0 contrat, 0 prime » alors que rien n'avait pu être lu. */}
+        {erreursChargement.length > 0 && (
+          <div style={{
+            marginBottom: 18, padding: '12px 16px', borderRadius: 12,
+            background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.32)',
+            color: '#FCA5A5', fontSize: 12.5, lineHeight: 1.5,
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          }}>
+            <AlertTriangle size={16} />
+            <span style={{ flex: 1, minWidth: 240 }}>
+              Données indisponibles : {erreursChargement.join(', ')}. Les compteurs concernés ne sont pas mesurés —
+              ils ne sont pas remplacés par des zéros.
+            </span>
+            <button
+              type="button"
+              onClick={loadAllData}
+              disabled={loading}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '7px 12px', borderRadius: 8,
+                cursor: loading ? 'default' : 'pointer',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)',
+                color: '#fff', fontSize: 12, fontWeight: 700,
+              }}
+            >
+              <Sparkles size={13} /> {loading ? 'Chargement…' : 'Réessayer'}
+            </button>
+          </div>
+        )}
+
         {/* HEADER cockpit */}
         <header style={{ marginBottom: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div>
@@ -524,7 +578,9 @@ export default function Dashboard() {
             <CockpitMetricCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)} icon={DeviseIcone} color="#22C55E" trend={null} />
           </PriorityHalo>
           <PriorityHalo color="#8B5CF6" intensity={0.7}>
-            <CockpitMetricCard label="Score santé" value={`${metrics.healthScore}%`} icon={Heart} color="#8B5CF6" trend={tendanceSante} />
+            {/* Score santé : sans client ni contrat, aucune mesure n'existe.
+                Afficher « 0 % » laisserait croire à un score mesuré nul. */}
+            <CockpitMetricCard label="Score santé" value={aDesDonnees ? `${metrics.healthScore}%` : '—'} icon={Heart} color="#8B5CF6" trend={tendanceSante} />
           </PriorityHalo>
         </VibeStagger>
         </VibeScrollSection>

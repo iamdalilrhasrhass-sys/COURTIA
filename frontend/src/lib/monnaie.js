@@ -175,3 +175,68 @@ export function fmtNombre(valeur) {
   if (nombre === null) return VALEUR_ABSENTE
   return formateur(contexteEffectif().locale, {}).format(nombre)
 }
+
+/* ─── Dates ─────────────────────────────────────────────────────────────────
+   POURQUOI ici : le frontend formatait ses dates en `toLocaleDateString('fr-FR')`
+   un peu partout (~40 fichiers). Pour un cabinet suisse, « 12/03/2026 » pouvait
+   passer, mais les formats longs (« mercredi 12 mars 2026 », heures, mois) sont
+   ceux du marché du cabinet : un courtier suisse lit « 12 mars 2026 » dans les
+   conventions de fr-CH. La locale vient donc du MÊME contexte que la devise
+   (`lib/monnaie.js`), configuré depuis le profil réel (`GET /api/auth/me`).
+   Profil inconnu → fr-FR : le comportement historique est conservé.
+
+   Une date absente ou invalide vaut '—' : on n'affiche jamais la date du jour
+   ni une date inventée à la place d'une date manquante.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const cacheDates = new Map()
+
+function dateOuNull(valeur) {
+  if (valeur === null || valeur === undefined || valeur === '') return null
+  const d = valeur instanceof Date ? valeur : new Date(valeur)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+function formateurDate(options) {
+  const locale = contexteEffectif().locale
+  const cle = `${locale}|${JSON.stringify(options || {})}`
+  let instance = cacheDates.get(cle)
+  if (!instance) {
+    instance = new Intl.DateTimeFormat(locale, options)
+    cacheDates.set(cle, instance)
+  }
+  return instance
+}
+
+/**
+ * Date courte au format du marché du cabinet (fr-CH en Suisse, fr-FR sinon).
+ * @param {string|number|Date|null|undefined} valeur
+ * @param {Intl.DateTimeFormatOptions} [options] remplace le format par défaut
+ */
+export function fmtDate(valeur, options) {
+  const date = dateOuNull(valeur)
+  if (!date) return VALEUR_ABSENTE
+  return formateurDate(options || { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
+}
+
+/** Date longue (« mercredi 12 mars 2026 ») selon la locale du cabinet. */
+export function fmtDateLongue(valeur, options) {
+  const date = dateOuNull(valeur)
+  if (!date) return VALEUR_ABSENTE
+  return formateurDate(options || { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+}
+
+/** Heure (HH:MM) selon la locale du cabinet. */
+export function fmtHeure(valeur) {
+  const date = dateOuNull(valeur)
+  if (!date) return VALEUR_ABSENTE
+  return formateurDate({ hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+/** Date + heure selon la locale du cabinet. */
+export function fmtDateHeure(valeur) {
+  const date = dateOuNull(valeur)
+  if (!date) return VALEUR_ABSENTE
+  return formateurDate({ dateStyle: 'short', timeStyle: 'short' }).format(date)
+}
+

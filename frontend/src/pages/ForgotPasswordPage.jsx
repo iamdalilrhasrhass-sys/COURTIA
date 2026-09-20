@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom'
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import { AUTH_STYLES } from './authStyles'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 export default function ForgotPasswordPage() {
+  // Exemple d'adresse selon le marché du visiteur (jamais @email.fr imposé).
+  const libelles = libellesMarche(marcheCourante())
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -60,7 +63,7 @@ export default function ForgotPasswordPage() {
                     <input
                       className="auth-input"
                       type="email"
-                      placeholder="votre@email.fr"
+                      placeholder={libelles.email}
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       required

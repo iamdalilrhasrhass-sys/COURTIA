@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion'
 import { Clock, ArrowRight } from 'lucide-react'
+import { localeCourante, fmtMontant } from '../lib/monnaie'
 
 // Helpers
-const fmtEur = (v) => (v === null || v === undefined) ? '—' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v))
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+// Devise du cabinet (lib/monnaie) : plus d'euro forcé sur un cabinet suisse.
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString(localeCourante(), { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 const ContratStatusBadge = ({ status }) => {
   const s = (status || '').toLowerCase()

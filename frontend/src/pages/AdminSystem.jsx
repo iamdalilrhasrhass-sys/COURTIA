@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Activity, Server, Database, Globe, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import { adminFetch, publicApiFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 // Base d'API canonique : même origine (Vercel) → /api, qui relaie vers le backend.
 // L'ancienne constante `https://api.courtiark.fr` pointait un hôte dont le
 // certificat est invalide : elle a été retirée (aucun appel ne doit l'utiliser).
@@ -93,7 +94,7 @@ export default function AdminSystem() {
               {detail?.ok === true ? (
                 <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
                   {detail.data && <div>Version : {detail.data.version || detail.data.api || '—'}</div>}
-                  {detail.data?.timestamp && <div>Horodatage : {new Date(detail.data.timestamp).toLocaleString('fr-FR')}</div>}
+                  {detail.data?.timestamp && <div>Horodatage : {new Date(detail.data.timestamp).toLocaleString(localeCourante())}</div>}
                   {detail.url && <div>URL : {detail.url}</div>}
                   {detail.note && <div>{detail.note}</div>}
                   <div style={{ marginTop: 6, color: '#10b981', fontWeight: 500 }}>✓ Opérationnel</div>

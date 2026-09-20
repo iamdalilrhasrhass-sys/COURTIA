@@ -4,6 +4,7 @@ import { Search, Filter, ChevronRight } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 
 const STATUS_LABELS = { active: 'Actif', trialing: 'Activation', suspended: 'Suspendu', cancelled: 'Résilié' }
 const STATUS_COLORS = { active: '#10b981', trialing: '#3b82f6', suspended: '#ef4444', cancelled: '#6b7280' }
@@ -102,7 +103,7 @@ export default function AdminUsers() {
                       </span>
                     </td>
                     <td style={{ padding: '12px 18px', color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
-                      {u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—'}
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString(localeCourante()) : '—'}
                     </td>
                     <td style={{ padding: '12px 18px', textAlign: 'right' }}>
                       <Link to={`/admin/users/${u.id}`} style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>

@@ -7,16 +7,34 @@ const express = require('express')
 const router = express.Router()
 const verifyToken = require('../middleware/authMiddleware')
 const whatsappService = require('../services/whatsappMetaService')
+const secretsEntrants = require('../lib/secretsEntrants')
 
 // Webhook verification (GET) - Public pour Meta
+//
+// DÉFAUT FERMÉ (P2 SEC-014, mesuré en production le 20/09/2026) : le jeton de
+// vérification avait une valeur par défaut ÉCRITE EN DUR et PUBLIQUE
+// ('courtia_whatsapp_verify'). Le GET renvoyait donc le challenge à quiconque
+// connaissait le dépôt — c'est-à-dire que l'abonnement du webhook pouvait être
+// détourné vers un endpoint tiers.
+//
+// RÈGLE : sans `WHATSAPP_WEBHOOK_VERIFY_TOKEN` (ou l'ancien nom
+// `WHATSAPP_VERIFY_TOKEN`) configuré, on répond 503 ; il n'existe AUCUNE valeur
+// par défaut. Jeton faux → 403.
 router.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode']
   const token = req.query['hub.verify_token']
   const challenge = req.query['hub.challenge']
 
-  const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'courtia_whatsapp_verify'
+  const attendu = secretsEntrants.lireSecret(secretsEntrants.SECRETS.whatsappVerification)
+  if (!attendu) {
+    return secretsEntrants.repondreSecretAbsent(
+      res,
+      'whatsapp_webhook_verify_token',
+      "La vérification du webhook WhatsApp est fermée : le jeton (WHATSAPP_WEBHOOK_VERIFY_TOKEN) n'est pas configuré sur ce serveur."
+    )
+  }
 
-  if (mode === 'subscribe' && token === verifyToken) {
+  if (mode === 'subscribe' && secretsEntrants.verifierSecretSimple({ secret: attendu, fourni: token }).valide) {
     console.log('[WhatsApp] Webhook vérifié')
     return res.status(200).send(challenge)
   }
@@ -25,10 +43,38 @@ router.get('/webhook', (req, res) => {
 })
 
 // Webhook events (POST) - Public pour Meta
+//
+// DÉFAUT FERMÉ (P2 SEC-014) : la signature était vérifiée dans le SERVICE sur
+// `JSON.stringify(body)` (services/whatsappMetaService.js:142). Une signature
+// recalculée sur une mise en forme réécrite ne prouve rien sur les octets reçus.
+// La vérification se fait désormais ICI, sur `req.rawBody` (corps brut conservé
+// par `server.js`), AVANT d'appeler le service : sans secret configuré → 503,
+// signature absente ou fausse → 403, et dans les deux cas rien n'est traité.
 router.post('/webhook', async (req, res) => {
+  const secret = secretsEntrants.lireSecret(secretsEntrants.SECRETS.whatsappSignature)
+  if (!secret) {
+    return secretsEntrants.repondreSecretAbsent(
+      res,
+      'whatsapp_app_secret',
+      "Le webhook WhatsApp est fermé : le secret d'application Meta (WHATSAPP_APP_SECRET) n'est pas configuré sur ce serveur."
+    )
+  }
+
+  const verdict = secretsEntrants.verifierSignatureHmac({
+    rawBody: req.rawBody,
+    enteteSignature: req.headers['x-hub-signature-256'],
+    secret,
+  })
+  if (!verdict.valide) {
+    return res.status(403).json({ success: false, error: 'whatsapp_signature_invalid', raison: verdict.raison })
+  }
+
   try {
-    const signature = req.headers['x-hub-signature-256']
-    const result = await whatsappService.handleWebhook(req.app.locals.pool, req.body, signature)
+    // La signature est déjà vérifiée sur les octets bruts : on la transmet au
+    // service pour qu'il ne refasse pas un calcul sur du JSON reconstruit.
+    const result = await whatsappService.handleWebhook(req.app.locals.pool, req.body, {
+      signatureVerifiee: true,
+    })
     res.json({ success: true, ...result })
   } catch (err) {
     console.error('[WhatsApp Webhook] Erreur:', err.message)

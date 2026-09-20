@@ -24,7 +24,9 @@ CREATE TABLE IF NOT EXISTS billing_invoices (
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   amount_due_cents INTEGER NOT NULL DEFAULT 0,
   amount_paid_cents INTEGER NOT NULL DEFAULT 0,
-  currency TEXT NOT NULL DEFAULT 'eur',
+  -- Devise ecrite explicitement par le code (CHF en Suisse, EUR en France) :
+  -- plus de 'eur' par defaut (defaut P1 CH-013).
+  currency TEXT,
   status TEXT NOT NULL DEFAULT 'draft',
   hosted_invoice_url TEXT,
   pdf_url TEXT,

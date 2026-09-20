@@ -19,6 +19,11 @@ import {
   AuroraSectionTitle,
   useToast,
 } from '../../components/aurora';
+// Montants dans la devise RÉELLE du cabinet (CHF en Suisse) et « — » pour une
+// valeur absente : l'ancien formateur local de cette page forçait la devise euro
+// et transformait « prime non renseignée » en « 0 » — deux faux chiffres.
+import useDevise from '../../components/useDevise';
+import { fmtMontant, fmtNombre, VALEUR_ABSENTE, localeCourante } from '../../lib/monnaie';
 
 const PERIODS = [
   { value: '7d', label: '7 jours' },
@@ -53,7 +58,18 @@ export default function ReportingV2() {
         fetch('/api/reporting/revenue/forecast', { headers }),
       ]);
 
-      if (ovRes.ok) setOverview((await ovRes.json()).kpis);
+      if (ovRes.ok) {
+        const corps = await ovRes.json();
+        setOverview(corps.kpis);
+        // L'API ANNONCE ses dépréciations (`kpis.quotes` → `kpis.devis`) : on les
+        // remonte en console au lieu de lire silencieusement une clé condamnée.
+        if (Array.isArray(corps.deprecations) && corps.deprecations.length) {
+          console.info(
+            '[ReportingV2] clés dépréciées :',
+            corps.deprecations.map((d) => `${d.champ} → ${d.remplace_par}`).join(', ')
+          );
+        }
+      }
       if (evRes.ok) setEvolution((await evRes.json()).evolution || []);
       if (prodRes.ok) setProducts((await prodRes.json()).products || []);
       if (arkRes.ok) setArkPerf(await arkRes.json());
@@ -90,7 +106,21 @@ export default function ReportingV2() {
     }
   };
 
-  const formatCurrency = (val) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val || 0);
+  // Devise du cabinet : l'écran se re-rend quand le profil réel arrive (sans ce
+  // hook, un cabinet suisse restait affiché en euros jusqu'au rechargement).
+  useDevise();
+
+  // MONTANTS — `fmtMontant` (lib/monnaie.js) : devise du cabinet (CHF en Suisse),
+  // et « — » quand la valeur est absente. Un montant non renseigné n'est pas un 0.
+  const formatCurrency = (val) => fmtMontant(val, { maximumFractionDigits: 0 });
+
+  // DEVIS — la clé juste est `devis`. Repli sur `quotes` le temps de la
+  // dépréciation ANNONCÉE par l'API : face à un serveur antérieur, l'écran
+  // affiche les mêmes chiffres au lieu de « 0 » (aucune divergence possible,
+  // l'API garantit que les deux clés portent le même objet).
+  const devis = overview?.devis ?? overview?.quotes ?? null;
+  // Aucune mesure (aucun devis) ⇒ « — » ; le taux n'est jamais un 0 inventé.
+  const formatTaux = (valeur) => (valeur === null || valeur === undefined ? VALEUR_ABSENTE : `${valeur} %`);
 
   return (
     <div style={{ padding: 'var(--aurora-space-6)', maxWidth: 1400, margin: '0 auto' }}>
@@ -133,20 +163,39 @@ export default function ReportingV2() {
         </div>
       ) : (
         <>
-          {/* KPIs principaux */}
+          {/* KPIs principaux — CHAQUE CARTE DIT CE QU'ELLE COMPTE.
+              « contrats actifs » et « contrats (toutes lignes) » sont deux
+              notions distinctes (arbitrage du 20/09/2026, voir dashboard.js), et
+              les devis se lisent sous la clé `devis` — jamais sous `quotes`, dont
+              le nom disait « contrats » alors qu'il contenait des devis. */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--aurora-space-4)', marginBottom: 'var(--aurora-space-6)' }}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
               <AuroraStat
                 label="Clients"
-                value={overview?.clients?.total || 0}
-                trend={overview?.clients?.new > 0 ? { value: overview.clients.new, direction: 'up', label: 'nouveaux' } : undefined}
+                value={fmtNombre(overview?.clients?.total ?? null)}
                 icon={Users}
                 color="indigo"
               />
             </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+              <AuroraStat
+                label="Contrats actifs"
+                value={fmtNombre(overview?.contracts?.actifs ?? null)}
+                icon={FileText}
+                color="violet"
+              />
+            </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <AuroraStat
-                label="Prime annuelle totale"
+                label="Contrats (toutes lignes, résiliés compris)"
+                value={fmtNombre(overview?.contracts?.total ?? null)}
+                icon={FileText}
+                color="cyan"
+              />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <AuroraStat
+                label="Prime annuelle des contrats actifs"
                 value={formatCurrency(overview?.contracts?.totalValue)}
                 icon={TrendingUp}
                 color="cyan"
@@ -154,8 +203,16 @@ export default function ReportingV2() {
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <AuroraStat
-                label="Taux de conversion devis"
-                value={`${overview?.quotes?.conversionRate || 0}%`}
+                label="Devis"
+                value={fmtNombre(devis?.total ?? null)}
+                icon={FileText}
+                color="emerald"
+              />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <AuroraStat
+                label="Taux de conversion devis (signés / devis)"
+                value={formatTaux(devis?.conversionRate)}
                 icon={FileText}
                 color="emerald"
               />
@@ -163,7 +220,9 @@ export default function ReportingV2() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
               <AuroraStat
                 label="Score ARK moyen"
-                value={`${overview?.ark?.avgScore || 75}/100`}
+                value={overview?.ark?.avgScore === null || overview?.ark?.avgScore === undefined
+                  ? VALEUR_ABSENTE
+                  : `${overview.ark.avgScore} / 100`}
                 icon={Zap}
                 color="violet"
               />
@@ -188,14 +247,14 @@ export default function ReportingV2() {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                       <XAxis
                         dataKey="date"
-                        tickFormatter={(d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                        tickFormatter={(d) => new Date(d).toLocaleDateString(localeCourante(), { day: '2-digit', month: 'short' })}
                         stroke="rgba(255,255,255,0.4)"
                         fontSize={11}
                       />
                       <YAxis stroke="rgba(255,255,255,0.4)" fontSize={11} />
                       <Tooltip
                         contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}
-                        labelFormatter={(d) => new Date(d).toLocaleDateString('fr-FR')}
+                        labelFormatter={(d) => new Date(d).toLocaleDateString(localeCourante())}
                       />
                       <Area type="monotone" dataKey="cumulative" stroke="#6366f1" fill="url(#colorClients)" strokeWidth={2} name="Clients totaux" />
                       <Line type="monotone" dataKey="new" stroke="#22d3ee" strokeWidth={2} dot={false} name="Nouveaux" />
@@ -279,7 +338,7 @@ export default function ReportingV2() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: 'var(--aurora-text-secondary)' }}>Actions complétées</span>
-                      <span style={{ color: '#10b981' }}>{arkPerf.actions?.completionRate || 0}%</span>
+                      <span style={{ color: '#10b981' }}>{formatTaux(arkPerf.actions?.completionRate)}</span>
                     </div>
                     <div style={{ height: 1, background: 'var(--aurora-border)', margin: 'var(--aurora-space-2) 0' }} />
                     <div style={{ fontSize: 12, color: 'var(--aurora-text-tertiary)' }}>Distribution des scores clients</div>

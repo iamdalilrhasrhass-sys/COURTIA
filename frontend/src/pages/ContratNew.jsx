@@ -150,7 +150,7 @@ export default function ContratNew() {
               </Field>
               <Field label="Compagnie">
                 <input
-                  value={form.compagnie} onChange={set('compagnie')} placeholder="Ex : Aurora Assurances, Novalia Courtage"
+                  value={form.compagnie} onChange={set('compagnie')} placeholder="Nom de la compagnie d'assurance"
                   onFocus={focus} onBlur={blur} style={inputStyle}
                 />
               </Field>

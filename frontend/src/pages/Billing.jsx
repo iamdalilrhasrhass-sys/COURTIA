@@ -9,7 +9,7 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import GlassCard from '../components/ui/GlassCard'
 import StatusPill from '../components/ui/StatusPill'
-import { fmtMontant } from '../lib/monnaie'
+import { fmtMontant, fmtDate } from '../lib/monnaie'
 
 const PLAN_ICON = {
   starter: CreditCard,
@@ -221,9 +221,14 @@ function PlanCard({ plan, selected, loading, onSelect }) {
 
       <div className="mt-4">
         <div className="text-3xl font-black tracking-tight text-white">
-          {contactOnly ? 'Sur devis' : fmtMontant(plan.price, { maximumFractionDigits: 0 })}
+          {contactOnly
+            ? 'Sur devis'
+            : (plan.display_price_ht || fmtMontant(plan.price, { maximumFractionDigits: 0 }))}
         </div>
-        {!contactOnly && <div className="text-sm text-white/50">HT / mois</div>}
+        {/* `display_price_ht` vient du serveur et porte DÉJÀ « HT / mois » avec la
+            devise du marché du cabinet (CHF en Suisse, EUR en France) : on ne
+            rajoute la mention que lorsqu'on est retombé sur le montant nu. */}
+        {!contactOnly && !plan.display_price_ht && <div className="text-sm text-white/50">HT / mois</div>}
       </div>
 
       <ul className="mt-5 flex-1 space-y-2 text-sm text-white/65">
@@ -253,7 +258,8 @@ function Info({ label, value }) {
 
 function formatDate(value) {
   if (!value) return '—'
-  return new Date(value).toLocaleDateString('fr-FR', {
+  // Locale du cabinet (fr-CH en Suisse, fr-FR sinon) : lib/monnaie.js.
+  return fmtDate(value, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -269,7 +275,9 @@ function planSummary(code) {
 
 function planFeatures(code) {
   if (code === 'starter') return ['1 utilisateur', '200 clients', 'Dashboard, clients, contrats, tâches', 'Rapports essentiels']
-  if (code === 'pro') return ['3 utilisateurs', '1 500 clients', 'ARK + Morning Brief', 'Gmail, Agenda, documents DDA']
+  // « documents DDA » est un intitulé du marché français : ici on décrit la
+  // fonction sans sigle national, pour qu'un cabinet suisse lise la même offre.
+  if (code === 'pro') return ['3 utilisateurs', '1 500 clients', 'ARK + Morning Brief', 'Gmail, Agenda, documents de conformité']
   if (code === 'cabinet') return ['10 utilisateurs', 'Clients illimités', 'Commissions et reporting avancé', 'WhatsApp et support prioritaire']
   return ['Multi-cabinet', 'Accompagnement dédié', 'Intégrations avancées', 'Support prioritaire']
 }

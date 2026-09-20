@@ -107,6 +107,13 @@ async function runTask(task) {
 
   const session = {
     taskId,
+    // PROPRIÉTAIRE de la session. POURQUOI (P2 SEC-011, mesuré en production le
+    // 20/09/2026) : aucune session ne portait d'utilisateur, `listSessions`
+    // renvoyait TOUTES les sessions à TOUS les cabinets et `getSession` n'avait
+    // aucun contrôle de propriétaire. Le Browser Pilot d'un cabinet était donc
+    // lisible — captures d'écran et journaux d'exécution compris — par les
+    // autres cabinets, et approuvable par eux.
+    userId: Number.isFinite(Number(task.userId)) && Number(task.userId) > 0 ? Number(task.userId) : null,
     status: 'running',
     logs: [`[${new Date().toISOString()}] Tâche créée (dry-run: ${dryRun})`],
     screenshots: [],
@@ -164,6 +171,16 @@ async function runTask(task) {
     const page = await context.newPage();
     const logLines = [];
     const screenshotPaths = [];
+
+    // COMPTAGE RÉEL DES ACTIONS — correction 20/09/2026.
+    // `actionsExecuted` valait `actions.length`, c'est-à-dire le nombre
+    // d'actions PRÉVUES : une tâche interrompue au 2ᵉ pas sur 10 (timeout,
+    // sélecteur introuvable) rapportait « 10 actions exécutées ». On compte
+    // désormais les actions réellement abouties et on expose les autres.
+    let actionsExecuted = 0;
+    let actionsEchouees = 0;
+    let actionsIgnorees = 0;
+    let interrompu = false;
 
     page.on('console', msg => {
       logLines.push(`[console] ${msg.type()}: ${msg.text()}`);
@@ -251,20 +268,25 @@ async function runTask(task) {
           screenshotPaths.push(ssPath);
         }
 
+        actionsExecuted += 1;
+
       } catch (actionErr) {
         logLines.push(`[${i}] ERREUR: ${actionErr.message}`);
         const ssPath = path.join(taskDir, `ss_${i}_error.png`);
         try { await page.screenshot({ path: ssPath }); screenshotPaths.push(ssPath); } catch {}
 
         if (!action.optional) {
+          actionsEchouees += 1;
           throw new Error(`Action ${i} (${action.type}) échouée: ${actionErr.message}`);
         }
+        actionsIgnorees += 1;
         logLines.push(`[${i}] Action optionnelle ignorée`);
       }
 
       // Check total duration
       if (Date.now() - new Date(session.startedAt).getTime() > MAX_TASK_DURATION) {
         logLines.push(`[${i}] TÂCHE INTERROMPUE — durée maximale dépassée`);
+        interrompu = true;
         break;
       }
     }
@@ -275,8 +297,18 @@ async function runTask(task) {
     screenshotPaths.push(finalSs);
     logLines.push('[final] Screenshot final');
 
-    session.status = 'completed';
-    session.result = { actionsExecuted: actions.length, pageTitle: await page.title(), pageUrl: page.url() };
+    session.status = interrompu ? 'partial' : 'completed';
+    session.result = {
+      // Chiffres RÉELS : ce qui a été exécuté, échoué, ignoré, et prévu.
+      actionsExecuted,
+      actionsFailed: actionsEchouees,
+      actionsSkipped: actionsIgnorees,
+      actionsPlanned: actions.length,
+      interrupted: interrompu,
+      ranAllPlannedActions: actionsExecuted === actions.length,
+      pageTitle: await page.title(),
+      pageUrl: page.url(),
+    };
 
     if (session.lastExtracted) {
       session.result.extracted = session.lastExtracted.substring(0, 5000);
@@ -290,7 +322,18 @@ async function runTask(task) {
 
   } catch (err) {
     session.status = 'failed';
-    session.error = err.message;
+    // ── NAVIGATEUR ABSENT : LE DIRE, PAS SEULEMENT ÉCHOUER ──────────────────
+    // POURQUOI : en production, Playwright était installé sans son Chromium
+    // (« Executable doesn't exist at /opt/render/.cache/ms-playwright/… ») et
+    // l'erreur brute du lancement était la seule explication donnée. Le
+    // navigateur est désormais installé au déploiement (voir render.yaml,
+    // `npm run playwright:install`) ; si l'installation a échoué, le message
+    // doit nommer la cause réelle pour que l'exploitant sache quoi corriger —
+    // sans jamais inventer une exécution.
+    const navigateurAbsent = /Executable doesn't exist|playwright install|browserType\.launch/i.test(String(err && err.message))
+    session.error = navigateurAbsent
+      ? "Navigateur Chromium absent sur le serveur : le navigateur n'a pas été installé au déploiement. Aucune action n'a été exécutée."
+      : err.message
     if (browser) {
       try { await browser.close(); } catch {}
     }
@@ -302,10 +345,15 @@ async function runTask(task) {
 
 /**
  * Approuver une tâche en dry-run pour exécution
+ *
+ * L'approbation REPREND le propriétaire de la session d'origine : une session
+ * ne change jamais de cabinet en cours de route (sinon approuver la tâche d'un
+ * autre la ferait exécuter pour le compte de l'approbateur).
  */
-async function approveAndRun(taskId, modifiedActions) {
+async function approveAndRun(taskId, modifiedActions, userId = null) {
   const session = activeSessions.get(taskId);
   if (!session) throw new Error('Session introuvable');
+  if (userId !== null && session.userId !== Number(userId)) throw new Error('Session introuvable');
   if (session.status !== 'needs_approval') throw new Error(`Statut invalide: ${session.status}`);
 
   // Nettoyer l'ancienne session
@@ -315,6 +363,7 @@ async function approveAndRun(taskId, modifiedActions) {
   const actions = modifiedActions || session.dryRunPlan;
   return runTask({
     taskId: generateTaskId(),
+    userId: session.userId,
     actions,
     dryRun: false,
     headless: true,
@@ -323,25 +372,73 @@ async function approveAndRun(taskId, modifiedActions) {
 
 /**
  * Obtenir l'état d'une session
+ * @param {string} taskId
+ * @param {number|null} userId propriétaire exigé ; `undefined` = pas de contrôle
+ *        (usage interne aux tests uniquement)
  */
-function getSession(taskId) {
-  return activeSessions.get(taskId) || null;
+function getSession(taskId, userId = undefined) {
+  const session = activeSessions.get(taskId) || null;
+  if (!session) return null;
+  if (userId === undefined) return session;
+  // Fail-closed : une session sans propriétaire n'est visible de personne.
+  if (session.userId === null || session.userId !== Number(userId)) return null;
+  return session;
 }
 
 /**
- * Lister les sessions récentes
+ * Lister les sessions récentes D'UN utilisateur.
+ *
+ * POURQUOI le paramètre `userId` est OBLIGATOIRE : c'est exactement l'oubli qui
+ * a produit la fuite inter-cabinets. Un appel sans propriétaire ne renvoie RIEN
+ * (fail-closed) au lieu de tout renvoyer.
  */
-function listSessions(limit = 20) {
-  const sessions = Array.from(activeSessions.values());
+function listSessions(limit = 20, userId = null) {
+  const proprietaire = Number(userId);
+  if (!Number.isFinite(proprietaire) || proprietaire <= 0) return [];
+  const sessions = Array.from(activeSessions.values())
+    .filter((s) => s.userId === proprietaire);
   sessions.sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
   return sessions.slice(0, limit).map(s => ({
     taskId: s.taskId,
     status: s.status,
     startedAt: s.startedAt,
     completedAt: s.completedAt,
-    actionsCount: s.dryRunPlan?.length || s.result?.actionsExecuted || 0,
+    // `actionsCount` valait `dryRunPlan.length || actionsExecuted` : une tâche
+    // « completed » annonçait donc le nombre d'actions PRÉVUES. Les deux
+    // notions sont désormais distinctes et nommées (correction 20/09/2026).
+    actionsCount: s.result?.actionsExecuted ?? (s.dryRunPlan?.length || 0),
+    actionsPlanned: s.dryRunPlan?.length ?? s.result?.actionsPlanned ?? null,
     error: s.error,
   }));
+}
+
+/**
+ * Annulation d'une tâche — correction 20/09/2026.
+ *
+ * POURQUOI ELLE EXISTE : `DELETE /api/browser-pilot/task/:id` répondait
+ * `{success: true, message: 'Tâche supprimée'}` sans RIEN supprimer — la ligne
+ * restait dans `activeSessions` et réapparaissait aussitôt dans la liste et
+ * dans `GET /task/:id`. Cette fonction est la seule à retirer la session et
+ * rend `false` quand il n'y avait rien à retirer, pour que la route puisse
+ * répondre 404 au lieu d'annoncer une suppression qui n'a pas eu lieu.
+ *
+ * Limite assumée et DITE : une action Playwright déjà en cours ne peut pas être
+ * interrompue ; la session est retirée et le navigateur se ferme seul.
+ *
+ * @returns {boolean} vrai si une session a réellement été retirée
+ */
+function cancelSession(taskId, userId = undefined) {
+  const session = activeSessions.get(taskId);
+  if (!session) return false;
+  // Isolation : un utilisateur ne peut annuler que sa propre tâche.
+  if (userId !== undefined && userId !== null && session.userId !== Number(userId)) return false;
+  if (session.status === 'running') {
+    session.status = 'cancelled';
+    session.logs = (session.logs || []).concat(
+      `[${new Date().toISOString()}] ANNULÉE par l'utilisateur (session retirée, le navigateur en cours se ferme seul)`
+    );
+  }
+  return activeSessions.delete(taskId);
 }
 
 /**
@@ -356,13 +453,16 @@ function cleanupOldSessions(maxAge = 3600000) {
   }
 }
 
-// Nettoyage périodique toutes les heures
-setInterval(() => cleanupOldSessions(), 3600000);
+// Nettoyage périodique toutes les heures.
+// `.unref()` : ce minuteur ne doit pas maintenir le processus en vie (sinon une
+// suite de tests qui importe ce service ne rend jamais la main).
+setInterval(() => cleanupOldSessions(), 3600000).unref?.()
 
 module.exports = {
   runTask,
   approveAndRun,
   getSession,
   listSessions,
+  cancelSession,
   URL_ALLOWLIST,
 };

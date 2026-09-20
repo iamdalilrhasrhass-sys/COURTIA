@@ -6,6 +6,7 @@ import {
   ArrowUp, ArrowDown, MessageSquare, Users, Briefcase, Gauge, ChevronDown,
   Gem, Heart, Globe, Bell, Info, Download
 } from 'lucide-react'
+import { localeCourante } from '../lib/monnaie'
 
 // ═══════════════════════════════════════════════════════════════
 // AURORA DARK TOKENS
@@ -177,7 +178,7 @@ function FicheClientSection() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{fmtEur(c.prime)}</div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>Éch. {new Date(c.echeance).toLocaleDateString('fr-FR')}</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>Éch. {new Date(c.echeance).toLocaleDateString(localeCourante())}</div>
               </div>
             </div>
           ))}

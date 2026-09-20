@@ -5,7 +5,23 @@ services:
     runtime: node
     region: frankfurt
     plan: starter
-    buildCommand: cd backend && npm install
+    # ── POURQUOI L'INSTALLATION DU NAVIGATEUR EST ICI (défaut P1 corrigé) ─────
+    # `npm install` installe le paquet Playwright mais PAS son Chromium. En
+    # production, ARK Browser Pilot échouait donc à chaque exécution avec
+    # « Executable doesn't exist at /opt/render/.cache/ms-playwright/… » : la
+    # fonctionnalité était inutilisable.
+    #   • L'installation se fait au DÉPLOIEMENT (et non au démarrage) : elle est
+    #     mise en cache avec le reste du build, n'ajoute ni latence ni dépendance
+    #     réseau au démarrage, et un échec est visible dans le journal de build.
+    #   • `npm run playwright:install` tente `playwright install chromium`, puis
+    #     retente avec `--with-deps` (paquets système).
+    #   • Le `|| echo` est DÉLIBÉRÉ (solution la moins risquée) : Browser Pilot est
+    #     une fonctionnalité optionnelle ; l'échec de l'installation de son
+    #     navigateur ne doit JAMAIS empêcher le déploiement du CRM. L'échec reste
+    #     écrit dans le journal de build, et la fonctionnalité répond alors un
+    #     message explicite (« Navigateur Chromium absent sur le serveur ») au lieu
+    #     d'un faux succès.
+    buildCommand: 'cd backend && npm install && (npm run playwright:install || echo "ATTENTION build : Chromium non installe, ARK Browser Pilot restera indisponible")'
     startCommand: cd backend && node server.js
     healthCheckPath: /api/health
     autoDeploy: false

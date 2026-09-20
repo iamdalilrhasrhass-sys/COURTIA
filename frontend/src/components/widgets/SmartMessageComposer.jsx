@@ -46,7 +46,11 @@ function substituteVars(text, dossier, client) {
     .replace(/{{prix}}/g, dossier?.recommendedPrice ?? '...')
 }
 
-const DEFAULT_CLIENT = { prenom: 'Jean', nom: 'Dupont', phone: '+33612345678', email: 'jean.dupont@email.fr' }
+/* POURQUOI ces coordonnées sont vides : ce « client de démonstration » portait
+   un téléphone en +33 et une adresse en @email.fr, affichés quand le composant
+   était monté sans client réel — un fait français présenté comme une donnée du
+   cabinet. Un client absent reste vide : l'écran n'invente ni numéro ni email. */
+const DEFAULT_CLIENT = { prenom: 'Jean', nom: 'Dupont', phone: '', email: '' }
 const DEFAULT_DOSSIER = {
   branchCode: 'Auto',
   readinessReport: { missingRequiredDocuments: ['Relevé d\'information', 'Justificatif domicile'] },

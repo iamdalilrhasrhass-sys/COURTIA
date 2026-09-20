@@ -6,6 +6,74 @@
   <meta name="description" content="COURTIA — Le CRM intelligent pensé pour les courtiers en assurance. Centralisez, structurez, développez votre portefeuille avec ARK, votre IA native." />
   <title>COURTIA — CRM intelligent pour courtiers en assurance</title>
 
+  <!-- ═══ MARCHÉ DU VISITEUR (défauts P1 CH-020/CH-021) ═════════════════════
+       POURQUOI CE SCRIPT : cette page statique servait à TOUT visiteur la grille
+       tarifaire française, sa taxe, et une présentation du marché français comme
+       s'il était le seul. Un visiteur suisse y lisait donc une devise et une
+       fiscalité qui ne sont pas les siennes. La règle de marché du
+       produit est appliquée ici AUSSI, AVANT tout rendu : override explicite du
+       visiteur → paramètre ?market=/?marche= → fuseau horaire détecté
+       (Europe/Zurich = Suisse) → France par défaut. Un visiteur du marché suisse
+       est envoyé sur la page suisse existante (/ch/ : grille CHF, TVA suisse,
+       FINMA/LSA), qui est SA page ; un visiteur français garde exactement la
+       page qu'il voyait avant. Rien n'est inventé, rien n'est caché.
+       ═════════════════════════════════════════════════════════════════════ -->
+  <meta name="courtia-marche" content="redirection-marche-suisse" />
+  <script>
+    (function () {
+      var CIBLE_SUISSE = '/ch/';
+      var COOKIE = 'courtia_market_override';
+
+      /** Override explicite posé par le produit (cookie courtia_market_override). */
+      function marcheDuCookie() {
+        try {
+          var brut = '; ' + document.cookie;
+          var morceau = brut.split('; ' + COOKIE + '=');
+          if (morceau.length < 2) return null;
+          var valeur = decodeURIComponent(morceau.pop().split(';').shift() || '').toUpperCase();
+          return (valeur === 'CH' || valeur === 'FR') ? valeur : null;
+        } catch (e) { return null; }
+      }
+
+      /** Override stocké côté navigateur (même clé que le produit). */
+      function marcheDuStockage() {
+        try {
+          var valeur = String(localStorage.getItem(COOKIE) || '').toUpperCase();
+          return (valeur === 'CH' || valeur === 'FR') ? valeur : null;
+        } catch (e) { return null; }
+      }
+
+      /** Override passé en paramètre : ?market=CH ou ?marche=CH. */
+      function marcheDuParametre() {
+        try {
+          var q = new URLSearchParams(window.location.search);
+          var p = q.get('market') || q.get('marche') || q.get('country');
+          var valeur = p ? String(p).toUpperCase() : '';
+          return (valeur === 'CH' || valeur === 'FR') ? valeur : null;
+        } catch (e) { return null; }
+      }
+
+      /** Pays porté par le document (déploiement géo) puis fuseau horaire. */
+      function marcheDuPays() {
+        try {
+          var pays = (document.documentElement.dataset.country || '').toUpperCase();
+          if (pays === 'CH' || pays === 'FR') return pays;
+        } catch (e) { /* ignore */ }
+        try {
+          var fuseau = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          if (fuseau.indexOf('Zurich') >= 0 || fuseau.indexOf('Geneva') >= 0) return 'CH';
+          if (fuseau.indexOf('Paris') >= 0) return 'FR';
+        } catch (e) { /* ignore */ }
+        return null;
+      }
+
+      var marche = marcheDuParametre() || marcheDuCookie() || marcheDuStockage() || marcheDuPays();
+      if (marche === 'CH' && window.location.pathname.indexOf('/ch/') !== 0) {
+        window.location.replace(CIBLE_SUISSE);
+      }
+    })();
+  </script>
+
   <!-- Google Fonts : Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -92,7 +160,7 @@
     <div class="hero-content">
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        IA native pour courtiers ORIAS
+        IA native pour courtiers en assurance
       </div>
 
       <h1 class="hero-title">
@@ -129,13 +197,13 @@
   <section class="stats-bar" id="produit">
     <div class="stats-inner">
       <div class="stat-item">
-        <div class="stat-number">32 000</div>
-        <div class="stat-label">Courtiers ORIAS ciblés</div>
+        <div class="stat-number">FR&nbsp;+&nbsp;CH</div>
+        <div class="stat-label">Deux marchés servis</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div class="stat-number">0 €</div>
-        <div class="stat-label">De frais d'installation</div>
+        <div class="stat-number">0</div>
+        <div class="stat-label">Frais d'installation</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
@@ -200,8 +268,8 @@
 
         <div class="feature-card">
           <div class="feature-icon">📋</div>
-          <h3 class="feature-title">Conformité DDA/RGPD</h3>
-          <p class="feature-desc">Base de connaissance réglementaire consultable. ARK répond à vos questions ORIAS, DDA, RGPD en quelques secondes.</p>
+          <h3 class="feature-title">Conformité réglementaire</h3>
+          <p class="feature-desc">Base de connaissance réglementaire consultable. ARK répond à vos questions sur les référentiels de votre marché — ORIAS, DDA et RGPD en France, registre FINMA, LSA et nLPD en Suisse — en quelques secondes.</p>
         </div>
 
       </div>
@@ -264,8 +332,8 @@
           <div class="plan-name">Starter</div>
           <div class="plan-tagline">Pour structurer les premiers suivis</div>
           <div class="plan-price">
-            <span class="price-amount">89€</span>
-            <span class="price-period"> HT/mois</span>
+            <span class="price-amount">89 €</span>
+            <span class="price-period"> HT/mois — grille France</span>
           </div>
           <ul class="plan-features">
             <li>✓ Jusqu'à 100 clients</li>
@@ -283,8 +351,8 @@
           <div class="plan-name">Pro</div>
           <div class="plan-tagline">Pour cabinet en croissance</div>
           <div class="plan-price">
-            <span class="price-amount">199€</span>
-            <span class="price-period"> HT/mois</span>
+            <span class="price-amount">199 €</span>
+            <span class="price-period"> HT/mois — grille France</span>
           </div>
           <ul class="plan-features">
             <li>✓ Jusqu'à 500 clients</li>
@@ -319,7 +387,11 @@
 
       </div>
 
-      <p class="pricing-note">Tous les prix HT. TVA 20% applicable. Engagement mensuel, résiliable à tout moment.</p>
+      <!-- La grille affichée ci-dessus est celle de la FRANCE (euros, TVA française).
+           Un cabinet établi en Suisse reçoit la grille en francs suisses : les prix
+           suisses ne sont PAS affichés ici, ils le sont sur la page suisse — c'est la
+           règle d'une seule devise par marché (P1 CH-020/CH-021). -->
+      <p class="pricing-note">Prix hors taxes de la grille France (TVA française en sus). Grille <a href="/ch/tarifs-logiciel-courtier-chf">Suisse en francs suisses (CHF)</a> pour un cabinet établi en Suisse. Engagement mensuel, résiliable à tout moment.</p>
     </div>
   </section>
 
@@ -353,7 +425,7 @@
         </svg>
         <span>COURTIA</span>
       </div>
-      <p class="footer-tagline">Construit pour les 32 000 courtiers ORIAS de France.</p>
+      <p class="footer-tagline">Construit pour les courtiers d'assurance, en France et en Suisse.</p>
       <p class="footer-legal">© 2026 COURTIA — Tous droits réservés · contact@courtia.fr</p>
     </div>
   </footer>

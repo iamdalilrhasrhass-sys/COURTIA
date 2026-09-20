@@ -3,8 +3,12 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Sparkles, Send, CheckCircle, ArrowRight, User, Building2, FileText, BarChart3 } from 'lucide-react'
 import api from '../api'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 export default function Beta() {
+  // Page d'inscription : le registre demandé suit le marché du visiteur
+  // (« ORIAS » en France, registre FINMA / IDE en Suisse).
+  const libelles = libellesMarche(marcheCourante())
   const [form, setForm] = useState({ email: '', cabinet_name: '', orias: '', portfolio_size: '' })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -72,7 +76,7 @@ export default function Beta() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 500, marginBottom: 8, color: '#94A3B8' }}>
                   <User size={14} /> Email professionnel *
                 </label>
-                <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="vous@cabinet.fr" required style={{ width: '100%', padding: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'white', fontSize: 14 }} />
+                <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder={libelles.emailPro} required style={{ width: '100%', padding: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'white', fontSize: 14 }} />
               </div>
               <div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 500, marginBottom: 8, color: '#94A3B8' }}>
@@ -85,7 +89,7 @@ export default function Beta() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 28 }}>
               <div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 500, marginBottom: 8, color: '#94A3B8' }}>
-                  <FileText size={14} /> Numero ORIAS
+                  <FileText size={14} /> {libelles.registre}
                 </label>
                 <input type="text" value={form.orias} onChange={e => setForm({ ...form, orias: e.target.value })} placeholder="12 345 678" style={{ width: '100%', padding: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'white', fontSize: 14 }} />
               </div>

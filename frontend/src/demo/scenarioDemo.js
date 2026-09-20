@@ -18,6 +18,16 @@
    Documents, Opportunités, Prospection, Rapports, Partenaires) sont exclus du
    parcours automatique et documentés comme tels.
    ========================================================================== */
+/* ─── Devise de la démonstration (P1 CH-020) ────────────────────────────
+   Les montants de la narration ne sont plus écrits en euros : ils suivent le
+   MARCHÉ DU VISITEUR (deviseDemo.js). Un visiteur français lit « 39 810 € »
+   exactement comme avant ; un visiteur suisse lit « 39 810 CHF ». Aucun montant
+   n'est converti : seule la devise affichée change.
+   ────────────────────────────────────────────────────────────────────── */
+import { montantDemo } from './deviseDemo'
+
+/** Montant de la narration, dans la devise du marché du visiteur. */
+const m = (valeur) => montantDemo(valeur, undefined, { maximumFractionDigits: 0 })
 
 export const CHAPITRES = [
   { id: 'cabinet',   titre: 'Mon cabinet',      sous: 'Le cockpit au réveil' },
@@ -35,7 +45,7 @@ export const ETAPES = [
     route: '/demo/dashboard', chapitre: 'cabinet',
     cible: { sel: 'main' },
     titre: 'Votre cabinet, ce matin',
-    texte: 'Huit clients suivis, quinze contrats, 39 810 € de primes gérées. COURTIA lit ce qui existe déjà dans votre portefeuille — vous ne saisissez rien.',
+    texte: `Huit clients suivis, quinze contrats, ${m(39810)} de primes gérées. COURTIA lit ce qui existe déjà dans votre portefeuille — vous ne saisissez rien.`,
     tenue: 4100,
   },
   {
@@ -102,7 +112,7 @@ export const ETAPES = [
     route: '/demo/clients/2003', chapitre: 'dossier',
     cible: { texte: 'ARK INSIGHT' },
     titre: 'Un dossier client, en entier',
-    texte: 'Batilog SA : deux contrats, 16 700 € de primes suivies, ses échéances, son historique. ARK résume le dossier et propose la prochaine action.',
+    texte: 'Batilog SA : deux contrats, ${m(16700)} de primes suivies, ses échéances, son historique. ARK résume le dossier et propose la prochaine action.',
     tenue: 4600,
   },
   {
@@ -125,7 +135,7 @@ export const ETAPES = [
     route: '/demo/relances', chapitre: 'relances',
     cible: { texte: 'URGENTES' },
     titre: 'Qui relancer, aujourd’hui',
-    texte: 'Sept relances en attente, quatre urgentes, 8 400 € de potentiel. COURTIA les classe à votre place, par ancienneté réelle.',
+    texte: 'Sept relances en attente, quatre urgentes, ${m(8400)} de potentiel. COURTIA les classe à votre place, par ancienneté réelle.',
     tenue: 4100,
   },
   {
@@ -161,7 +171,7 @@ export const ETAPES = [
     route: '/demo/commissions', chapitre: 'pilotage',
     cible: { texte: 'ATTENDU' },
     titre: 'Et l’argent qui rentre vraiment',
-    texte: '4 777 € de commissions attendues, 2 240 € encaissées, ce qui reste à suivre — par compagnie et par apporteur.',
+    texte: '${m(4777)} de commissions attendues, ${m(2240)} encaissées, ce qui reste à suivre — par compagnie et par apporteur.',
     tenue: 3400,
   },
   /* --- EXPLORER --- */

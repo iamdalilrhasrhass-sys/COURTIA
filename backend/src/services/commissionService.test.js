@@ -7,12 +7,25 @@ const {
   getCommissionStats,
 } = require('./commissionService')
 
+/**
+ * Faux pool à file d'attente.
+ *
+ * POURQUOI LE FILTRE « MARCHÉ » : `upsertCommission` résout désormais la devise
+ * du CABINET (lib/marcheCabinet → `cabinet_members`, `cabinets`,
+ * `broker_profiles`) avant d'écrire. Ces lectures ne doivent PAS consommer les
+ * réponses mises en file pour la logique métier du test : elles reçoivent une
+ * réponse vide (« ce courtier n'a pas de cabinet ⇒ marché FR »), et le test
+ * reste centré sur l'upsert.
+ */
+const REQUETES_MARCHE = /cabinet_members|FROM cabinets|FROM broker_profiles/
+
 function makePool(rowsByCall = []) {
   const calls = []
   return {
     calls,
     query: jest.fn(async (sql, params) => {
       calls.push({ sql, params })
+      if (REQUETES_MARCHE.test(sql)) return { rows: [], rowCount: 0 }
       const next = rowsByCall.shift()
       if (next instanceof Error) throw next
       return next || { rows: [], rowCount: 0 }
@@ -86,10 +99,20 @@ describe('commissionService', () => {
     })
 
     expect(row).toMatchObject({ id: 3, contract_id: 42, expected_amount_eur: 120.5, received_amount_eur: 100 })
-    expect(pool.query).toHaveBeenCalledTimes(2)
+    // Noms NEUTRES servis en plus des noms historiques (P1 CH-013).
+    expect(row).toMatchObject({ expected_amount: 120.5, received_amount: 100 })
+    // Devise du cabinet écrite dans la colonne : plus de défaut 'eur' (marché FR
+    // ici, donc EUR — le cas CHF est couvert par commissionService.devise.test.js).
+    expect(row.devise).toBe('EUR')
+    const requetesMetier = pool.calls.map((c) => c.sql)
+    expect(requetesMetier.filter((sql) => sql.includes('JOIN clients'))).toHaveLength(1)
+    expect(requetesMetier.filter((sql) => sql.includes('ON CONFLICT'))).toHaveLength(1)
     expect(pool.calls[0].sql).toContain('JOIN clients')
     expect(pool.calls[0].params).toEqual([42, 99])
-    expect(pool.calls[1].sql).toContain('ON CONFLICT')
+    const insertion = pool.calls.find((c) => c.sql.includes('ON CONFLICT'))
+    // La devise fait partie de l'INSERT (paramètre lié, plus de 'eur' en dur).
+    expect(insertion.params).toContain('EUR')
+    expect(insertion.sql).not.toContain("'eur'")
   })
 
   it('aggregates yearly commission stats for cockpit reporting', async () => {

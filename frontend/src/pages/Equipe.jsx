@@ -9,6 +9,8 @@ import Badge from '../components/ui/Badge'
 import StatusPill from '../components/ui/StatusPill'
 import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
+import { libellesMarche, marcheCourante } from '../lib/marche'
+import { localeCourante } from '../lib/monnaie'
 
 const ROLE_OPTIONS = [
   { value: 'owner', label: 'Owner' },
@@ -27,6 +29,8 @@ const ROLE_COPY = {
 }
 
 export default function Equipe() {
+  // Exemple d'adresse du marché du cabinet (jamais @cabinet.fr en Suisse).
+  const libelles = libellesMarche(marcheCourante())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [data, setData] = useState(null)
@@ -135,7 +139,7 @@ export default function Equipe() {
           ) : (
             <form onSubmit={submitInvite} style={{ display: 'grid', gap: 14 }}>
               <Field label="Email professionnel">
-                <Input id="invite-email" type="email" value={invite.email} onChange={(e) => setInvite((v) => ({ ...v, email: e.target.value }))} placeholder="collaborateur@cabinet.fr" required />
+                <Input id="invite-email" type="email" value={invite.email} onChange={(e) => setInvite((v) => ({ ...v, email: e.target.value }))} placeholder={libelles.emailCollaborateur} required />
               </Field>
               <Field label="Rôle cabinet">
                 <select className="courtia-input courtia-select" value={invite.role} onChange={(e) => setInvite((v) => ({ ...v, role: e.target.value }))}>
@@ -228,7 +232,7 @@ function fullName(member) {
 
 function formatDate(value) {
   if (!value) return '—'
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(value))
+  return new Intl.DateTimeFormat(localeCourante(), { dateStyle: 'medium' }).format(new Date(value))
 }
 
 const pageStyle = { position: 'relative', minHeight: '100vh', padding: '40px clamp(16px, 4vw, 48px)', color: 'var(--c-text-primary)', overflow: 'hidden' }

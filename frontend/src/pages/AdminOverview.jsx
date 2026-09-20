@@ -3,6 +3,7 @@ import { Users, TrendingUp, DollarSign, Activity, AlertTriangle, Sparkles } from
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { adminFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 
 export default function AdminOverview() {
   const [data, setData] = useState(null)
@@ -34,7 +35,7 @@ export default function AdminOverview() {
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Vue d'ensemble</h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-          Données actualisées — {new Date(data.generated_at).toLocaleString('fr-FR')}
+          Données actualisées — {new Date(data.generated_at).toLocaleString(localeCourante())}
         </p>
       </div>
 

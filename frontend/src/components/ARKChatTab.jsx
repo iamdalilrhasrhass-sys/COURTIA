@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Sparkles, Bot, User, Trash2, Target, FileText, BarChart2, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
+import { localeCourante } from '../lib/monnaie'
 
-const fmtTime = (d) => d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+const fmtTime = (d) => d ? new Date(d).toLocaleTimeString(localeCourante(), { hour: '2-digit', minute: '2-digit' }) : '';
 
 // Formatage markdown amélioré (gras, italique, listes, blocs de code simples)
 const formatContent = (text) => {

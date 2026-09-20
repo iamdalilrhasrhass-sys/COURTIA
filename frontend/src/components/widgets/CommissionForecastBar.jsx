@@ -2,40 +2,38 @@
 // Barres de commissions (données réelles + prédiction ARK 3 mois).
 // Props :
 //   data {Array} — [{month, amount, type: 'real'|'forecast', confidence?}]
-//   currency {'EUR'} — devise
 //   onBarClick {function({month, amount})}
+//
+// POURQUOI plus de données par défaut : le composant générait une série de
+// 12 mois avec `Math.random()` (montants ~1 800, « prévision ARK ») quand
+// l'appelant ne fournissait rien. Un graphique de commissions qui s'invente
+// lui-même ses montants est un faux succès : sans `data`, il n'affiche
+// désormais RIEN (et le dit), plutôt qu'une courbe fabriquée.
 //
 // Note : ne nécessite pas Recharts. Pure SVG.
 
 import { useState } from 'react'
-
-const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
-
-const now = new Date()
-function generateDefaultData() {
-  return Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - 9 + i, 1)
-    const m = d.getMonth()
-    const isForecast = d > now
-    const base = 1800 + Math.sin(i * 0.7) * 600 + Math.random() * 400
-    return {
-      month: `${MONTHS_FR[m]} ${d.getFullYear().toString().slice(2)}`,
-      amount: isForecast ? base * 1.1 : base,
-      type: isForecast ? 'forecast' : 'real',
-      confidence: isForecast ? Math.round(70 + Math.random() * 20) : 100,
-      annotation: i === 7 ? 'Renouvellements PRO' : i === 10 ? 'Prévision campagne Auto' : null,
-    }
-  })
-}
+import { fmtMontant } from '../../lib/monnaie'
 
 export default function CommissionForecastBar({
-  data = generateDefaultData(),
-  currency = 'EUR',
+  data = [],
   onBarClick,
   width = 560,
   height = 240,
 }) {
   const [hovered, setHovered] = useState(null)
+
+  // Aucune série mesurée : état vide honnête, aucun montant affiché.
+  if (!data.length) {
+    return (
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Commissions 12 mois</p>
+        <p className="mt-2 text-xs text-slate-400">
+          Aucune commission mesurée sur 12 mois : aucun graphique d&apos;exemple n&apos;est affiché.
+        </p>
+      </div>
+    )
+  }
 
   const maxAmount = Math.max(...data.map(d => d.amount))
   const chartH = height - 60
@@ -46,7 +44,8 @@ export default function CommissionForecastBar({
   const totalReal = data.filter(d => d.type === 'real').reduce((s, d) => s + d.amount, 0)
   const totalForecast = data.filter(d => d.type === 'forecast').reduce((s, d) => s + d.amount, 0)
 
-  const fmt = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency, minimumFractionDigits: 0 }).format(Math.round(n))
+  // Devise du cabinet (CHF en Suisse, EUR sinon) — lib/monnaie.
+  const fmt = (n) => fmtMontant(n, { maximumFractionDigits: 0 })
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">

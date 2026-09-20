@@ -4,6 +4,7 @@ import { useClientStore } from '../stores/clientStore'
 import { useAuthStore } from '../stores/authStore'
 import ContractModal from './ContractModal'
 import { callArkAI } from '../services/arkService'
+import { localeCourante } from '../lib/monnaie'
 
 function ScoreBar({ score, colorClass }) {
   return (
@@ -234,7 +235,7 @@ export default function ClientDetail() {
                       <p className="font-bold">{c.type}</p>
                       <p className="text-xs text-slate-500">{c.company} · N°{c.number}</p>
                       <p className="text-sm text-slate-500">
-                        Expire: {c.end_date ? new Date(c.end_date).toLocaleDateString('fr-FR') : 'N/A'}
+                        Expire: {c.end_date ? new Date(c.end_date).toLocaleDateString(localeCourante()) : 'N/A'}
                       </p>
                     </div>
                     <p className="font-bold text-cyan">

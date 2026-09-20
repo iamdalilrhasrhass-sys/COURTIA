@@ -88,7 +88,7 @@ export function SecurityPublic() {
         { icon: Server, title: 'Hébergement & services', text: 'Infrastructure Vercel / Render, backups et exploitation documentée dans les runbooks production.' },
         { icon: Activity, title: 'Observabilité', text: 'Sentry, logs structurés et redaction PII pour diagnostiquer sans divulguer de données inutiles.' },
         { icon: UserCheck, title: 'Responsabilité humaine', text: 'ARK assiste le courtier, mais ne remplace jamais la décision professionnelle ni le devoir de conseil.' },
-        { icon: Archive, title: 'Traçabilité', text: 'Audit log, documents DDA, statuts et historique d’actions pour garder une trace exploitable.' },
+        { icon: Archive, title: 'Traçabilité', text: 'Audit log, documents de conformité, statuts et historique d’actions pour garder une trace exploitable.' },
       ]} />
       <section className="mk-section">
         <h2 className="mk-section-title">Sous-traitants techniques</h2>
@@ -115,7 +115,7 @@ export function RgpdPublic() {
         icon={Scale}
       />
       <InfoGrid items={[
-        { icon: FileText, title: 'Finalités explicites', text: 'Gestion client, contrats, tâches, documents DDA, intégrations choisies, assistance ARK et support.' },
+        { icon: FileText, title: 'Finalités explicites', text: 'Gestion client, contrats, tâches, documents de conformité, intégrations choisies, assistance ARK et support.' },
         { icon: Lock, title: 'Collecte minimale', text: 'Pas d’aspiration massive d’emails ou d’agenda sans consentement et configuration explicite du cabinet.' },
         { icon: Archive, title: 'Export & suppression', text: 'Les exports RGPD et demandes de suppression sont traités selon le rôle et le périmètre cabinet.' },
         { icon: UserCheck, title: 'Droits des personnes', text: 'Accès, rectification, opposition, limitation, portabilité et suppression selon les cas applicables.' },
@@ -133,7 +133,9 @@ export function RgpdPublic() {
               <tr><td>Google Agenda</td><td>Préparation RDV et Morning Brief</td><td>OAuth explicite</td></tr>
               <tr><td>Gmail / Outlook</td><td>Historique et relances email</td><td>OAuth explicite</td></tr>
               <tr><td>WhatsApp Business</td><td>Conversations et relances</td><td>Configuration Meta</td></tr>
-              <tr><td>Documents DDA</td><td>Traçabilité conseil</td><td>Génération utilisateur</td></tr>
+              {/* « DDA » est un intitulé du marché français : la page publique
+                  décrit la donnée sans sigle national. */}
+              <tr><td>Documents de conformité</td><td>Traçabilité conseil</td><td>Génération utilisateur</td></tr>
             </tbody>
           </table>
         </div>
@@ -146,9 +148,13 @@ export function RgpdPublic() {
 }
 
 export function ChangelogPublic() {
+  // POURQUOI ce contenu est réécrit : la page publique annonçait des jalons
+  // d'atelier interne (« Closeout », « Smoke prod vert », « Growth playbook »,
+  // « Landing Aurora restaurée »). Un courtier qui découvre COURTIA y lisait le
+  // vocabulaire de l'équipe technique, pas ce qui a été livré pour lui.
   const releases = [
-    { version: 'V1 Launch', date: 'Mai 2026', items: ['Fondations sécurité et feature flags', 'Onboarding cabinet', 'Billing Stripe prêt', 'Google/Gmail/Calendar prêts', 'Documents DDA', 'Yousign', 'Commissions', 'WhatsApp Business', 'ARK V1 proactif', 'Notifications et Cmd+K'] },
-    { version: 'Closeout', date: 'Mai 2026', items: ['Landing Aurora restaurée', 'Smoke prod vert', 'Vidéos et docs marketing', 'Growth playbook', 'Routes import et intégrations prêtes'] },
+    { version: 'Version 1', date: 'Mai 2026', items: ['Sécurité et contrôle des accès', 'Mise en place du cabinet', 'Abonnement et paiement en ligne', 'Agendas et messagerie connectés', 'Documents de conformité', 'Signature électronique', 'Suivi des commissions', 'Assistant ARK', 'Notifications et recherche rapide'] },
+    { version: 'Consolidation', date: 'Mai 2026', items: ['Page d’accueil repensée', 'Qualité vérifiée en production', 'Guides et vidéos produit', 'Import de portefeuille', 'Connexions partenaires'] },
   ]
   return (
     <MarketingShell activePath="/changelog">
@@ -178,9 +184,9 @@ export function ChangelogPublic() {
 
 export function RoadmapPublic() {
   const lanes = [
-    { title: 'Now', text: 'Stabiliser la V1, smoke prod, retours bêta, activation progressive des cabinets pilotes.' },
-    { title: 'Next', text: 'Approfondir ARK, automatiser imports, enrichir DDA, finaliser vérifications OAuth/Meta.' },
-    { title: 'Later', text: 'Cabinet multi-utilisateurs, webhooks Make/Zapier, reporting avancé, intégrations téléphonie.' },
+    { title: 'Now', text: 'Consolider la V1, qualité vérifiée en production, retours des cabinets pilotes et ouverture progressive.' },
+    { title: 'Next', text: 'Approfondir ARK, automatiser les imports, enrichir les documents de conformité, finaliser les connexions externes.' },
+    { title: 'Later', text: 'Cabinet multi-utilisateurs, webhooks, reporting avancé, intégrations téléphonie.' },
   ]
   return (
     <MarketingShell activePath="/roadmap">

@@ -47,7 +47,17 @@ router.get('/', async (req, res) => {
   try {
     const portee = await porteeDe(req)
     const rows = await listCommissions(req.app.locals.pool, req.user, req.query, portee)
-    res.json({ data: rows, total: rows.length })
+    // DEVISE DU CABINET (P1 CH-013) : `GET /api/commissions` servait des montants
+    // sous les seuls noms `expected_amount_eur` / `received_amount_eur`, y
+    // compris à un cabinet suisse. Le nom du champ affirmait une devise fausse,
+    // et rien dans la réponse ne permettait à un écran de savoir laquelle
+    // afficher. La réponse porte donc la devise RÉELLE du cabinet
+    // (lib/marcheCabinet) en plus des noms neutres `expected_amount` /
+    // `received_amount` présents sur chaque ligne. Les noms historiques sont
+    // CONSERVÉS : des écrans les lisent encore, et la valeur n'est pas convertie
+    // — seule la devise affichée change.
+    const devise = rows.find((ligne) => ligne.devise)?.devise || null
+    res.json({ data: rows, total: rows.length, ...(devise ? { devise } : {}) })
   } catch (err) {
     res.status(err.statusCode || 500).json({
       error: err.message || 'commissions_unavailable',

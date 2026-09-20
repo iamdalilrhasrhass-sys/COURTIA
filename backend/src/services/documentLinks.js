@@ -7,6 +7,7 @@
 
 const crypto = require('crypto')
 const pool = require('../db')
+const { hachageJeton, clauseJetonRecherche } = require('../lib/jetons')
 
 // Configuration
 const TOKEN_LENGTH = 32 // 32 caractères URL-safe
@@ -48,12 +49,17 @@ async function createDocumentRequest({ clientId, brokerId, requestedTypes = [], 
   const hours = Math.min(expiresInHours, MAX_EXPIRY_DAYS * 24)
   const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000)
 
+  // CORRECTION 20/09/2026 (P3 SEC-027) : seul le HACHAGE est écrit en base.
+  // Le jeton EN CLAIR n'existe que dans la valeur de retour de cette fonction
+  // (et dans le lien envoyé au client) — jamais dans une colonne. Une lecture de
+  // la base ne donne donc plus le pouvoir de déposer des pièces dans le dossier
+  // d'un client au nom de ce client.
   // Créer la demande
   const result = await pool.query(
     `INSERT INTO document_requests (client_id, broker_id, token, requested_types, expires_at, notes)
      VALUES ($1, $2, $3, $4::jsonb, $5, $6)
-     RETURNING id, token, status, expires_at, created_at`,
-    [clientId, brokerId, token, JSON.stringify(requestedTypes), expiresAt, notes]
+     RETURNING id, status, expires_at, created_at`,
+    [clientId, brokerId, hachageJeton(token), JSON.stringify(requestedTypes), expiresAt, notes]
   )
 
   const request = result.rows[0]
@@ -74,7 +80,10 @@ async function createDocumentRequest({ clientId, brokerId, requestedTypes = [], 
 
   return {
     id: request.id,
-    token: request.token,
+    // On renvoie le jeton EN CLAIR (variable locale) : c'est lui qui construit
+    // l'URL. `request.token` contient désormais le hachage et ne doit jamais
+    // sortir du serveur.
+    token,
     url,
     status: request.status,
     expiresAt: request.expires_at,
@@ -93,14 +102,17 @@ async function validateToken(token) {
     return { valid: false, error: 'Token invalide', code: 'INVALID_TOKEN' }
   }
 
+  // Recherche par HACHAGE (nouveaux jetons), avec tolérance pour les liens
+  // émis avant le correctif (jeton en clair) — voir lib/jetons.
+  const jeton = clauseJetonRecherche('dr.token', token, 1)
   const result = await pool.query(
     `SELECT dr.*, c.first_name, c.last_name, c.email, c.phone,
             u.full_name as broker_name, u.email as broker_email
      FROM document_requests dr
      JOIN clients c ON c.id = dr.client_id
      LEFT JOIN users u ON u.id = dr.broker_id
-     WHERE dr.token = $1`,
-    [token]
+     WHERE ${jeton.sql}`,
+    jeton.params
   )
 
   if (result.rows.length === 0) {

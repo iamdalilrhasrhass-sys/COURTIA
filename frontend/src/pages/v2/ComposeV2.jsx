@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, FileCheck, Shield, Sparkles, Download, Eye, Clock, User } from 'lucide-react';
 import { AuroraPageHeader, AuroraCard, AuroraButton, AuroraSelect, AuroraBadge, AuroraSkeleton, AuroraEmptyState, AuroraDialog, useToast } from '../../components/aurora';
+import { localeCourante } from '../../lib/monnaie'
 
 const API_BASE = '/api';
 const getToken = () => localStorage.getItem('token');
 
 const docTypes = [
   { id: 'ipid', label: 'IPID', description: "Document d'information produit", icon: FileText, color: '#3b82f6' },
-  { id: 'dda', label: 'DDA', description: 'Devoir de conseil', icon: FileCheck, color: '#22c55e' },
+  { id: 'dda', label: 'Devoir de conseil', description: 'Traçabilité du conseil', icon: FileCheck, color: '#22c55e' },
   { id: 'dc', label: 'Document Contractuel', description: 'Conditions particulières', icon: Shield, color: '#a855f7' },
 ];
 
@@ -81,7 +82,7 @@ export function ComposeV2() {
           {documents.map((doc, i) => (
             <motion.div key={doc.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--aurora-space-3)', padding: 'var(--aurora-space-3)', background: 'var(--aurora-bg-card)', border: '1px solid var(--aurora-border-subtle)', borderRadius: 'var(--aurora-radius-md)' }} whileHover={{ background: 'var(--aurora-bg-hover)' }}>
               <FileText size={20} style={{ color: 'var(--aurora-accent)' }} />
-              <div style={{ flex: 1 }}><div style={{ fontWeight: 500 }}>{doc.type?.toUpperCase()} - {doc.clientName || 'Client'}</div><div style={{ fontSize: 'var(--aurora-font-xs)', color: 'var(--aurora-text-muted)' }}><Clock size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />{new Date(doc.createdAt).toLocaleDateString('fr-FR')}</div></div>
+              <div style={{ flex: 1 }}><div style={{ fontWeight: 500 }}>{doc.type?.toUpperCase()} - {doc.clientName || 'Client'}</div><div style={{ fontSize: 'var(--aurora-font-xs)', color: 'var(--aurora-text-muted)' }}><Clock size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />{new Date(doc.createdAt).toLocaleDateString(localeCourante())}</div></div>
               <AuroraButton variant="ghost" size="sm" onClick={() => setPreviewDoc(doc)}><Eye size={16} /></AuroraButton>
               <AuroraButton variant="ghost" size="sm"><Download size={16} /></AuroraButton>
             </motion.div>

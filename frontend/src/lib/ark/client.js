@@ -3,6 +3,7 @@ import * as prompts from './prompts.js'
 import { validateArkResponse } from './schema.js'
 import { arkCache } from './cache.js'
 import { buildApiUrl } from '../../api/sessionPolicy'
+import { localeCourante } from '../lib/monnaie'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 function getToken() { return localStorage.getItem('courtia_token') || localStorage.getItem('token') }
@@ -18,7 +19,7 @@ export function buildArkContext(client, scores, contrats) {
   const top3contrats = (contrats || [])
     .filter(c => (c.statut || c.status || '').toLowerCase() === 'actif')
     .slice(0, 3)
-    .map(c => `${c.type_contrat || '?'} ${c.prime_annuelle ? c.prime_annuelle + '€' : ''} éch:${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'NC'}`)
+    .map(c => `${c.type_contrat || '?'} ${c.prime_annuelle ? c.prime_annuelle + '€' : ''} éch:${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString(localeCourante()) : 'NC'}`)
     .join(', ')
 
   const top3raisons = (scores?.raisons || []).slice(0, 3).join(' | ')

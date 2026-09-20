@@ -25,6 +25,7 @@ const { incrementUsage } = require('../services/planService')
 const { trackEvent } = require('../services/analyticsService')
 const { isFeatureEnabled } = require('../lib/featureFlags')
 const {
+  DDA_DOCUMENT_TYPES,
   normalizeDocumentType,
   getDocumentDefinition,
   validateDdaReadiness,
@@ -466,6 +467,9 @@ async function sendDocumentToYousign(req, res) {
     })
   }
 
+  // Marché du CABINET : il décide du fuseau de la demande de signature
+  // (auparavant « Europe/Paris » en dur, y compris pour un cabinet suisse).
+  const marcheSignature = await marcheCabinet.marcheDeLaRequete(req, (sql, params) => pool.query(sql, params))
   const signature = await createSignatureRequest({
     document: {
       id: documentRow.id,
@@ -475,7 +479,7 @@ async function sendDocumentToYousign(req, res) {
       content: documentRow.content,
     },
     signer,
-  })
+  }, null, null, { marche: marcheSignature ? marcheSignature.marche : 'FR', timeZone: marcheSignature ? marcheSignature.fuseau : undefined })
 
   const fMaj = filtreDocuments(portee, { depart: 3, ecriture: true })
   await pool.query(
@@ -751,18 +755,36 @@ router.get('/', async (req, res) => {
 // POST /api/documents/generate — générer un PDF
 router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) => {
   try {
-    const requestedType = normalizeDocumentType(req.body?.type || req.body?.document_type || req.body?.template)
+    // ─────────────────────────────────────────────────────────────────────────
+    // « TYPE » EST ACCEPTÉ SUR TOUTES LES VALEURS ANNONCÉES (Red Team P2 #5)
+    //
+    // Le message d'erreur listait « Valeurs acceptées : attestation_assurance,
+    // proposition_commerciale, courrier_resiliation » alors que la route
+    // n'acceptait ces trois valeurs QUE sous la clé héritée `template` : les
+    // trois valeurs annoncées étaient exactement celles qui répondaient 400, et
+    // l'appelant qui suivait le message ne pouvait pas aboutir. La clé `type`
+    // (et son alias `document_type`) est donc honorée pour les documents de
+    // conformité ET pour les trois modèles client — et le message, quand rien
+    // ne correspond, liste les deux familles qu'il accepte réellement.
+    // ─────────────────────────────────────────────────────────────────────────
+    const corps = req.body || {}
+    const valeurType = corps.type ?? corps.document_type ?? corps.template
+    const requestedType = normalizeDocumentType(valeurType)
     if (requestedType) {
       return await generateDdaDocument(req, res, requestedType)
     }
 
     const courtier_id = req.user.userId
-    const { template, client_id, data } = req.body
+    const { client_id, data } = corps
+    // `type: "attestation_assurance"` désigne le même document que
+    // `template: "attestation_assurance"`.
+    const template = corps.template
+      || (VALID_TEMPLATES.includes(String(valeurType || '')) ? String(valeurType) : null)
 
-    if (!template || !VALID_TEMPLATES.includes(template)) {
+    if (!template) {
       return res.status(400).json({
         error: 'validation_error',
-        message: `Template invalide. Valeurs acceptées : ${VALID_TEMPLATES.join(', ')}`
+        message: `Document invalide. Valeurs acceptées : ${[...VALID_TEMPLATES, ...DDA_DOCUMENT_TYPES].join(', ')}`
       })
     }
 
@@ -771,6 +793,30 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
         error: 'validation_error',
         message: 'client_id est requis'
       })
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // UNE PROPOSITION COMMERCIALE SANS OFFRE NE S'ANNONCE PAS COMME GÉNÉRÉE
+    // (Red Team P2 #9, mesuré le 20/09/2026)
+    //
+    // `{"template":"proposition_commerciale","client_id":92}` produisait un PDF
+    // de 3 lignes (« Objet : Proposition d'assurance personnalisée ») avec un
+    // HTTP 201 : le courtier croyait avoir envoyé une proposition à son client,
+    // le document ne contenait aucun produit, aucune prime, aucune garantie.
+    // Une proposition sans offre chiffrée n'a aucune valeur : elle est refusée
+    // en 400 en nommant ce qu'il faut renseigner, et rien n'est écrit.
+    // ─────────────────────────────────────────────────────────────────────────
+    if (template === 'proposition_commerciale') {
+      const offre = [data?.produit, data?.prime_annuelle, data?.garanties, data?.description]
+        .map((valeur) => String(valeur ?? '').trim())
+        .filter((valeur) => valeur !== '')
+      if (offre.length === 0) {
+        return res.status(400).json({
+          error: 'offre_manquante',
+          message: "Une proposition commerciale doit contenir au moins un élément d'offre : produit, prime annuelle, garanties ou description. Aucun document n'a été généré.",
+          champs_attendus: ['produit', 'prime_annuelle', 'garanties', 'description'],
+        })
+      }
     }
 
     // Récupérer le client — portée CABINET (le dossier du collègue est légitime)

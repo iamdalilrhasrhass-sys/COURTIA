@@ -6,6 +6,7 @@ import {
   FileText, ChevronRight, X, MessageSquare
 } from 'lucide-react'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 const TEMPLATES = [
   { key: 'relance_echeance', label: 'Rappel échéance', icon: Calendar, color: '#F59E0B' },
@@ -222,7 +223,7 @@ export default function WhatsAppV2() {
                       {conv.last_message_preview || 'Aucun message'}
                     </div>
                     <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
-                      {conv.last_message_at ? new Date(conv.last_message_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
+                      {conv.last_message_at ? new Date(conv.last_message_at).toLocaleString(localeCourante(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
                       {conv.window_open && <span style={{ marginLeft: 8, color: '#10B981' }}>● Fenêtre 24h</span>}
                     </div>
                   </div>
@@ -295,7 +296,7 @@ export default function WhatsAppV2() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 4 }}>
                         <span style={{ fontSize: 11, color: '#64748B' }}>
-                          {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(msg.created_at).toLocaleTimeString(localeCourante(), { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         {isOutbound && <StatusIcon size={14} color={statusColor} />}
                       </div>

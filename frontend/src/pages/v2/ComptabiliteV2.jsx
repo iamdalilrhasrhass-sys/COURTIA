@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 const MONTHS = ['', 'Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
 
@@ -148,7 +149,7 @@ export default function ComptabiliteV2() {
                 <TrendingUp size={20} color="#10B981" />
               </div>
               <div style={{ fontSize: 28, fontWeight: 700, color: '#10B981' }}>
-                {summary?.totals?.produits_eur?.toLocaleString('fr-FR')} €
+                {summary?.totals?.produits_eur?.toLocaleString(localeCourante())} €
               </div>
               <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
                 Commissions encaissées
@@ -166,7 +167,7 @@ export default function ComptabiliteV2() {
                 <TrendingDown size={20} color="#EF4444" />
               </div>
               <div style={{ fontSize: 28, fontWeight: 700, color: '#EF4444' }}>
-                {summary?.totals?.charges_eur?.toLocaleString('fr-FR')} €
+                {summary?.totals?.charges_eur?.toLocaleString(localeCourante())} €
               </div>
               <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
                 Frais déductibles
@@ -191,7 +192,7 @@ export default function ComptabiliteV2() {
                 <Euro size={20} />
               </div>
               <div style={{ fontSize: 28, fontWeight: 700 }}>
-                {resultatPositif ? '+' : ''}{summary?.totals?.resultat_net_eur?.toLocaleString('fr-FR')} €
+                {resultatPositif ? '+' : ''}{summary?.totals?.resultat_net_eur?.toLocaleString(localeCourante())} €
               </div>
               <div style={{ fontSize: 12, opacity: 0.9, marginTop: 4 }}>
                 {resultatPositif ? 'Bénéfice' : 'Déficit'}
@@ -238,7 +239,7 @@ export default function ComptabiliteV2() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tickFormatter={v => `${v}€`} tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value) => [`${value?.toLocaleString('fr-FR')} €`]} />
+                  <Tooltip formatter={(value) => [`${value?.toLocaleString(localeCourante())} €`]} />
                   <Legend />
                   <Area type="monotone" dataKey="Produits" stroke="#10B981" fill="url(#colorProduits)" strokeWidth={2} />
                   <Area type="monotone" dataKey="Charges" stroke="#EF4444" fill="url(#colorCharges)" strokeWidth={2} />
@@ -277,7 +278,7 @@ export default function ComptabiliteV2() {
                         <span style={{ fontWeight: 500, color: '#0F172A', fontSize: 14 }}>{ins.insurer}</span>
                       </div>
                       <div style={{ fontSize: 20, fontWeight: 700, color: '#10B981' }}>
-                        {ins.total_eur?.toLocaleString('fr-FR')} €
+                        {ins.total_eur?.toLocaleString(localeCourante())} €
                       </div>
                       <div style={{ marginTop: 8 }}>
                         <div style={{ height: 4, background: '#E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
@@ -330,7 +331,7 @@ export default function ComptabiliteV2() {
                     <tr key={entry.id} style={{ borderTop: '1px solid #F1F5F9' }}>
                       <td style={{ padding: 12, fontSize: 13, color: '#64748B' }}>{entry.ecriture_num}</td>
                       <td style={{ padding: 12, fontSize: 13 }}>
-                        {new Date(entry.ecriture_date).toLocaleDateString('fr-FR')}
+                        {new Date(entry.ecriture_date).toLocaleDateString(localeCourante())}
                       </td>
                       <td style={{ padding: 12, fontSize: 13 }}>
                         <span style={{ padding: '2px 8px', background: '#F0F9FF', color: '#0369A1', borderRadius: 4, fontSize: 11 }}>
@@ -342,10 +343,10 @@ export default function ComptabiliteV2() {
                         {entry.ecriture_lib}
                       </td>
                       <td style={{ padding: 12, fontSize: 13, textAlign: 'right', fontWeight: entry.debit_eur > 0 ? 500 : 400, color: entry.debit_eur > 0 ? '#0F172A' : '#94A3B8' }}>
-                        {entry.debit_eur > 0 ? `${entry.debit_eur?.toLocaleString('fr-FR')} €` : '-'}
+                        {entry.debit_eur > 0 ? `${entry.debit_eur?.toLocaleString(localeCourante())} €` : '-'}
                       </td>
                       <td style={{ padding: 12, fontSize: 13, textAlign: 'right', fontWeight: entry.credit_eur > 0 ? 500 : 400, color: entry.credit_eur > 0 ? '#10B981' : '#94A3B8' }}>
-                        {entry.credit_eur > 0 ? `${entry.credit_eur?.toLocaleString('fr-FR')} €` : '-'}
+                        {entry.credit_eur > 0 ? `${entry.credit_eur?.toLocaleString(localeCourante())} €` : '-'}
                       </td>
                     </tr>
                   ))}

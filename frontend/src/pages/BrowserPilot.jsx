@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useBrowserPilotStore from '../stores/browserPilotStore'
+import { localeCourante } from '../lib/monnaie'
 
 const ACTION_CONFIG = {
   navigate: { icon: Globe, label: 'Navigation', color: '#3B82F6' },
@@ -522,7 +523,7 @@ export default function BrowserPilot() {
 
 function formatDate(d) {
   if (!d) return ''
-  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(d).toLocaleDateString(localeCourante(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 // Shield icon for the URL safety notice

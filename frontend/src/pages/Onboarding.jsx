@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { marcheCourante } from '../lib/marche'
 import { Upload, FileSpreadsheet, Database, CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, ArrowRight, Smartphone, Mail, Clock, Settings, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -309,7 +310,7 @@ export default function Onboarding() {
                 {/* WhatsApp number */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Numéro WhatsApp du cabinet</label>
-                  <input type="text" value={config.whatsappNumber} onChange={e => setConfig(prev => ({ ...prev, whatsappNumber: e.target.value }))} placeholder="+336XXXXXXXX" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors" />
+                  <input type="text" value={config.whatsappNumber} onChange={e => setConfig(prev => ({ ...prev, whatsappNumber: e.target.value }))} placeholder={marcheCourante() === 'CH' ? '+4179XXXXXXXX' : '+336XXXXXXXX'} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors" />
                 </div>
 
                 <button onClick={handleFinish} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors mt-4">

@@ -60,9 +60,14 @@ export function DesignSystem() {
         <AuroraBadge variant="accent">Accent</AuroraBadge>
       </Section>
 
-      <Section title="Stats">
-        <AuroraStat label="Clients" value={247} previousValue={231} icon={User} />
-        <AuroraStat label="Contrats" value={1842} previousValue={1900} icon={FileText} />
+      <Section title="Stats — aucun chiffre réel affiché">
+        {/* POURQUOI des tirets : cette galerie est un catalogue de composants,
+            pas un écran de données. Elle montrait « 247 clients » et « 1 842
+            contrats », des chiffres qui n'existent pas et qui étaient pourtant
+            servis par une route alors publique. Un composant de statistique se
+            démontre aussi bien sans inventer un portefeuille. */}
+        <AuroraStat label="Clients (exemple)" value="—" icon={User} />
+        <AuroraStat label="Contrats (exemple)" value="—" icon={FileText} />
         <AuroraStat label="Loading" loading />
       </Section>
 

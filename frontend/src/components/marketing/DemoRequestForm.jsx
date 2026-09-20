@@ -11,6 +11,7 @@ import {
   readWindowContext,
   resolveRedirect,
 } from '../../lib/leadCapture'
+import { libellesMarche, marcheCourante } from '../../lib/marche'
 
 const TEAM_SIZES = [
   '1',
@@ -39,6 +40,10 @@ const INITIAL_FORM = {
 }
 
 export default function DemoRequestForm({ compact = false }) {
+  // Formulaire public : le marché est détecté (fuseau, ?market=, override
+  // stocké) pour ne pas imposer un exemple d'adresse ou de numéro français à
+  // un prospect suisse.
+  const libelles = libellesMarche(marcheCourante())
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL_FORM)
   const [loading, setLoading] = useState(false)
@@ -153,7 +158,7 @@ export default function DemoRequestForm({ compact = false }) {
         </label>
         <label>
           Email professionnel *
-          <input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} placeholder="nom@cabinet.fr" required />
+          <input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} placeholder={libelles.emailPro} required />
         </label>
         <label>
           Téléphone (optionnel)

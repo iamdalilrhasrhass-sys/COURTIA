@@ -54,6 +54,24 @@
 const { marcheDepuis, devise: deviseDuMarche, symbole } = require('./devise')
 
 /**
+ * FUSEAU HORAIRE DU MARCHÉ.
+ * POURQUOI : un rendez-vous poussé dans Google Calendar avec `timeZone:
+ * 'Europe/Paris'` en dur portait une référence française pour TOUS les cabinets
+ * (relevé : une tâche/rencontre d'un cabinet suisse à `Europe/Paris`). Paris et
+ * Zurich partagent le même décalage UTC, donc aucune heure n'était fausse — mais
+ * afficher « Paris » à un cabinet suisse est une référence étrangère gratuite,
+ * et un futur marché à décalage différent deviendrait une vraie erreur d'heure.
+ * Une seule source, comme le reste du marché.
+ */
+const FUSEAUX = Object.freeze({ FR: 'Europe/Paris', CH: 'Europe/Zurich' })
+
+/** Fuseau horaire d'un marché (`FR` par défaut : comportement historique). */
+function fuseauDuMarche(marche) {
+  const code = String(marche || '').toUpperCase() === 'CH' ? 'CH' : 'FR'
+  return FUSEAUX[code]
+}
+
+/**
  * Pool par défaut, chargé À L'APPEL et jamais à l'import.
  * POURQUOI : `src/db.js` appelle `process.exit(1)` quand DATABASE_URL est absente.
  * Un `require` en tête de fichier rendrait ce module — décision PURE, sans accès
@@ -147,6 +165,7 @@ function verdict(marche, { cabinetId = null, pays = '', source = '', nom = '' } 
     marche: code,
     devise: deviseDuMarche(code),
     symbole: symbole(code),
+    fuseau: FUSEAUX[code],
     pays: texte(pays) || (code === 'CH' ? 'CH' : 'FR'),
     cabinet_id: cabinetId,
     nom: nom || '',
@@ -458,6 +477,8 @@ async function mettreAJourIdentiteCabinet(cabinetId, champs = {}, options = {}) 
 
 module.exports = {
   NOM_CABINET_PLACEHOLDER,
+  FUSEAUX,
+  fuseauDuMarche,
   COLONNES_CABINET,
   COLONNES_CABINET_MINIMALES,
   CHAMPS_CABINET_PAR_CHAMP_PROFIL,

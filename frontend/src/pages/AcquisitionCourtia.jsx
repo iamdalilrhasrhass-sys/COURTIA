@@ -49,9 +49,9 @@ const T = {
 }
 
 const PERIMETRES = [
-  { cle: 'production', libelle: 'Production (QA exclu)', includeQa: false, environment: undefined },
-  { cle: 'tous', libelle: 'Tous environnements (QA inclus)', includeQa: true, environment: undefined },
-  { cle: 'qa', libelle: 'QA / test uniquement', includeQa: true, environment: 'qa' },
+  { cle: 'production', libelle: 'Production (données de test exclues)', includeQa: false, environment: undefined },
+  { cle: 'tous', libelle: 'Tous les périmètres (données de test incluses)', includeQa: true, environment: undefined },
+  { cle: 'qa', libelle: 'Données de test uniquement', includeQa: true, environment: 'qa' },
 ]
 
 const LIMITE = 25
@@ -193,7 +193,7 @@ export default function AcquisitionCourtia() {
                 ACQUISITION COURTIA
               </h1>
               <p style={{ margin: 0, fontSize: 12.5, color: T.textSecondary }}>
-                Leads réellement captés par <code style={{ color: T.info }}>POST /api/leads/demo-request</code>, lus depuis
+                Demandes de démo réellement captées par le formulaire du site public, lues depuis
                 le service de capture ({filtre.libelle}). Aucun chiffre n'est estimé : ce qui n'est pas mesuré est écrit « non mesuré ».
               </p>
             </div>
@@ -285,7 +285,7 @@ export default function AcquisitionCourtia() {
           titre="FUNNEL — visiteur → client"
           sousTitre={funnel
             ? `Périmètre : ${funnel.environment} · mesure ouverte le ${ouVide(formatDateHeure(funnel.mesure_depuis))} · seuil HOT LEAD : ${funnel.seuil_hot_lead}/100`
-            : 'Agrégats du service de capture (GET /api/sales/funnel)'}
+            : 'Agrégats des demandes de démo réellement captées'}
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(158px, 1fr))', gap: 10 }}>
             {etapes.map((e) => (
@@ -331,7 +331,7 @@ export default function AcquisitionCourtia() {
           )}
           {!chargement && !scores.length && (
             <p style={{ margin: 0, fontSize: 12.5, color: T.textSecondary }}>
-              Aucun lead dans ce périmètre : aucun score à expliquer. (Basculez le périmètre sur « Tous environnements (QA inclus) »
+              Aucun lead dans ce périmètre : aucun score à expliquer. (Basculez le périmètre sur « Tous les périmètres (données de test incluses) »
               pour voir les leads de test, ou partagez la page publique pour recevoir une vraie demande.)
             </p>
           )}
@@ -389,7 +389,7 @@ export default function AcquisitionCourtia() {
                       {etiquetteQualification(lead.qualification)}
                     </Badge>
                     <Badge ton={lead.environment === 'production' ? 'info' : 'echec'}>
-                      {lead.environment === 'production' ? 'production' : `environnement ${lead.environment}`}
+                      {lead.environment === 'production' ? 'production' : `environnement ${lead.environment === 'qa' ? 'de test' : lead.environment}`}
                     </Badge>
                     {lead.environment !== 'production' && (
                       <span style={{ fontSize: 10, color: '#fca5a5', fontWeight: 700 }}>test — ne pas contacter</span>
@@ -471,7 +471,7 @@ export default function AcquisitionCourtia() {
                       {erreur
                         ? 'Aucune donnée affichée : la lecture a échoué (voir le bandeau ci-dessus).'
                         : filtre.cle === 'production'
-                          ? "Aucun lead commercial en base pour l'instant (les leads de test sont en environnement « qa » et exclus ici). Sélectionnez « Tous environnements (QA inclus) » pour les voir, ou attendez la première demande réelle."
+                          ? "Aucune demande de démo enregistrée pour l'instant (les demandes de test sont exclues ici). Sélectionnez « Tous les périmètres (données de test incluses) » pour les voir, ou attendez la première demande réelle."
                           : 'Aucun lead pour ces filtres.'}
                     </td>
                   </tr>
@@ -503,8 +503,8 @@ export default function AcquisitionCourtia() {
         {/* PIED — traçabilité de la lecture */}
         <footer style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', fontSize: 11, color: T.textMuted }}>
           <span><Sun size={11} /> {luA ? `Données lues à ${formatDateHeure(luA.toISOString())}` : 'données non lues'}</span>
-          <span>Service : GET /api/sales/leads · /api/sales/funnel</span>
-          <span>Leads de test (environment « qa ») exclus par défaut</span>
+          <span>Source : demandes de démo réellement captées</span>
+          <span>Demandes de test exclues par défaut</span>
           <a href="/morning-brief" style={{ color: T.ark, textDecoration: 'none' }}>Voir le Morning Brief →</a>
         </footer>
       </div>

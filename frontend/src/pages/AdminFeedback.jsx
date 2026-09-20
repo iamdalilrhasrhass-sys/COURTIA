@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { MessageCircle, RefreshCw } from 'lucide-react'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import { publicApiFetch } from '../lib/adminApi'
+import { localeCourante } from '../lib/monnaie'
 
 const statusLabels = {
   new: 'Nouveau',
@@ -76,7 +77,7 @@ export default function AdminFeedback() {
                   </div>
                   <p style={{ margin: 0, color: '#fff', fontSize: 14, lineHeight: 1.55 }}>{item.message}</p>
                   <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.42)', fontSize: 12 }}>
-                    {item.email || `Utilisateur #${item.user_id}`} · {new Date(item.created_at).toLocaleString('fr-FR')}
+                    {item.email || `Utilisateur #${item.user_id}`} · {new Date(item.created_at).toLocaleString(localeCourante())}
                   </p>
                 </div>
                 <select

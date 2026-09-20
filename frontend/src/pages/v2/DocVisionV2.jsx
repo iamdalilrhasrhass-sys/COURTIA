@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileSearch, Upload, Eye, Download, CheckCircle, AlertCircle, Clock, Filter } from 'lucide-react';
 import { AuroraPageHeader, AuroraCard, AuroraButton, AuroraBadge, AuroraSkeleton, AuroraEmptyState, AuroraSelect, AuroraDialog, AuroraTabs, useToast } from '../../components/aurora';
+import { localeCourante } from '../../lib/monnaie'
 
 const API_BASE = '/api';
 const getToken = () => localStorage.getItem('token');
@@ -48,7 +49,7 @@ export function DocVisionV2() {
                 </div>
                 <h4 style={{ margin: '0 0 var(--aurora-space-1)', fontWeight: 600 }}>{doc.filename || doc.name || 'Document'}</h4>
                 <div style={{ fontSize: 'var(--aurora-font-xs)', color: 'var(--aurora-text-muted)', marginBottom: 'var(--aurora-space-3)' }}>
-                  <span style={{ textTransform: 'uppercase' }}>{doc.type || 'autre'}</span> • {new Date(doc.createdAt || Date.now()).toLocaleDateString('fr-FR')}
+                  <span style={{ textTransform: 'uppercase' }}>{doc.type || 'autre'}</span> • {new Date(doc.createdAt || Date.now()).toLocaleDateString(localeCourante())}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {Object.keys(doc.extracted || doc.data || {}).slice(0, 3).map(k => <AuroraBadge key={k} size="sm">{k}</AuroraBadge>)}

@@ -15,17 +15,57 @@
  * les fichiers modifiables à reporting.js / analytics.js / dashboard.js /
  * clients.js ; les trois autres routeurs l'importent via `require('./dashboard').kpi`.)
  *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * DEUX NOTIONS, DEUX NOMS — ARBITRAGE DU 20/09/2026 (« contrats actifs » / « tous »)
+ *
+ * MESURE DU DÉFAUT : le mot « contrat » servait à TROIS mesures selon l'écran —
+ * 2 sur /api/dashboard/stats (« contrats actifs »), 3 sur une base où un devis v1
+ * traînait dans `quotes` (« toutes les lignes »), 4 sur /api/analytics/executive
+ * (contrats + devis), et la recette attendait encore autre chose. Un écran ne se
+ * trompait pas seul : le mot était ambigu, donc chaque route l'avait résolu à sa
+ * façon. L'arbitrage retenu nomme les deux notions et les expose PARTOUT :
+ *
+ *   contrats.total   = TOUTES les lignes de `quotes` de NATURE contrat — résilié,
+ *                      expiré, suspendu, annulé compris. C'est la réponse à
+ *                      « combien de contrats ce cabinet a-t-il eus ? ».
+ *   contrats.actifs  = les seules lignes au statut 'actif'/'active'. C'est la
+ *                      réponse à « combien de contrats sont en cours ? » et la
+ *                      base de la somme des primes du portefeuille.
+ *   devis.total      = `devis_wizard` PLUS les devis v1 restés dans `quotes`.
+ *
+ * Les deux notions existent désormais sous le même nom dans les trois écrans :
+ * /api/dashboard/stats (`contratsTotal`, `contratsActifs`, `devisTotal`),
+ * /api/reporting/overview (`kpis.contracts.total`, `.actifs`, `kpis.devis`) et
+ * /api/analytics/executive (`data.contracts_total`, `data.contracts_actifs`,
+ * `data.devis_count`). Elles ne peuvent plus diverger : les trois routes lisent
+ * les MÊMES requêtes canoniques (ci-dessous) et assemblent les nombres avec les
+ * MÊMES fonctions (`agregerContrats`, `agregerDevis`) — aucune n'a le droit de
+ * recompter un contrat à la main.
+ *
+ * « SOMME DES PRIMES » — deux valeurs, jamais confondues :
+ *   • primeTotale = somme des primes des contrats ACTIFS = la mesure de
+ *     portefeuille (celle affichée comme chiffre d'affaires).
+ *   • primeTotaleTous = somme des primes de TOUTES les lignes de nature contrat
+ *     (résiliés compris). Elle n'existe QUE pour l'audit (traçabilité, contrôle
+ *     des écarts) : une prime résiliée n'est pas encaissée, l'afficher comme
+ *     chiffre d'affaires serait un faux chiffre.
+ * ═════════════════════════════════════════════════════════════════════════════
+ *
  * DÉFINITIONS RETENUES — chaque indicateur n'a qu'un sens, valable partout
  *  1. CLIENT : ligne de `clients` du cabinet (cabinet_id) ou, pour un compte sans
  *     cabinet, créée par lui (courtier_id) — portée de lib/porteeCabinet.js.
  *     « prospect » = status 'prospect' ; « actif » = status 'actif'.
- *  2. CONTRAT : ligne de `quotes` au statut 'actif' ('active' toléré). `quotes` est
- *     la SEULE table de contrats réellement écrite (POST /api/contrats, PUT
- *     /api/contrats/:id, alias /api/contracts). Les tables `contracts` et
- *     `contrats` existent mais restent VIDES : les lire annonce 0 contrat sur une
- *     base pleine.
- *  3. DEVIS : ligne de `devis_wizard` (POST /api/devis/wizard/init). Un devis n'est
- *     PAS un contrat : les additionner donnait 3 « contrats » pour 2 contrats + 1 devis.
+ *  2. CONTRAT : ligne de `quotes` de NATURE contrat (voir NATURE_CONTRAT : les
+ *     statuts 'envoye'/'brouillon' sont des devis v1, pas des contrats), quel que
+ *     soit son statut pour `contrats.total`, au statut 'actif'/'active' pour
+ *     `contrats.actifs`. `quotes` est la SEULE table de contrats réellement
+ *     écrite (POST /api/contrats, PUT /api/contrats/:id, alias /api/contracts).
+ *     Les tables `contracts` et `contrats` existent mais restent VIDES : les
+ *     lire annonce 0 contrat sur une base pleine.
+ *  3. DEVIS : ligne de `devis_wizard` (POST /api/devis/wizard/init) PLUS les devis
+ *     v1 restés dans `quotes` (statuts 'envoye'/'brouillon', écrits par l'ancien
+ *     parcours). Un devis n'est PAS un contrat : les additionner donnait
+ *     3 « contrats » pour 2 contrats + 1 devis.
  *  4. PRIME ANNUELLE d'un contrat : la donnée la plus récente d'abord — colonne
  *     `prime_annuelle`, puis `quote_data->>'prime_annuelle'` (ce qu'écrit
  *     POST /api/contrats), puis les colonnes historiques `premium` / `amount`.
@@ -79,9 +119,41 @@ const safeQuery = async (pool, sql, params) => {
 const STATUTS_CONTRAT_ACTIF = "('actif', 'active')";
 
 /**
- * Prime annuelle d'un contrat, alias `q` sur `quotes`.
+ * Statuts d'une ligne de `quotes` qui EST un contrat sans être actif : le contrat
+ * a existé (ou attend une validation) — il compte dans `contrats.total`, jamais
+ * dans `contrats.actifs`, et sa prime n'entre PAS dans la somme du portefeuille.
+ * (Liste = statuts de contrat acceptés à l'écriture par POST /api/contrats, moins
+ * les deux statuts de devis v1 ci-dessous.)
+ */
+const STATUTS_CONTRAT_INACTIF = "('en_attente', 'resilie', 'expire', 'suspendu', 'annule')";
+
+/**
+ * Statuts des DEVIS v1 restés dans `quotes` — la frontière entre les deux notions.
+ *
+ * POURQUOI : l'ancien parcours de devis écrivait ses devis dans la table `quotes`
+ * avec le statut 'envoye' ('brouillon' avant envoi). Une telle ligne n'est PAS un
+ * contrat ; la compter comme telle est ce qui faisait afficher « 3 contrats »
+ * pour 2 contrats + 1 devis. Ces statuts sont donc exclus de `contrats.*` et
+ * comptés dans `devis.*` (voir requeteDevisV1).
+ */
+const STATUTS_DEVIS_V1 = "('envoye', 'brouillon')";
+
+/**
+ * Prédicat SQL : « cette ligne de `quotes` est un CONTRAT » (et non un devis v1).
+ * Il ne filtre PAS le statut actif/inactif : c'est la définition de `contrats.total`.
+ * Le statut ABSENT (NULL) est traité comme un contrat de nature inconnue — il
+ * apparaît donc dans `contrats.total` (visible par l'audit) mais jamais dans
+ * `contrats.actifs`. POURQUOI ne pas l'exclure : une ligne de nature inconnue
+ * n'est pas un devis v1, et la faire disparaître de partout serait un trou muet.
+ */
+const NATURE_CONTRAT = `COALESCE(q.status, '') NOT IN ${STATUTS_DEVIS_V1}`;
+
+/**
+ * Prime annuelle d'une ligne de `quotes`, alias `q`.
  * L'ordre est celui des écritures réelles : la colonne d'abord (imports),
  * puis le JSON posé par POST /api/contrats, puis les colonnes historiques.
+ * Sert aussi bien à un contrat qu'à un devis v1 resté dans `quotes` : dans les
+ * deux cas c'est « la prime portée par cette ligne », lue de la même façon.
  */
 const PRIME_CONTRAT =
   // `montantSur` (lib/montants.js) ne caste la valeur JSON QUE si elle a la
@@ -157,21 +229,68 @@ function requeteClientsParStatut(portee, { depart = 1, alias = 'c' } = {}) {
   };
 }
 
-/** CONTRATS ACTIFS — nombre, prime annuelle, échéances à 30/90 jours. */
-function requeteContratsActifs(portee, { jours = 30, depart = 1, alias = 'c' } = {}) {
+/**
+ * CONTRATS — LES DEUX NOTIONS DANS UNE SEULE REQUÊTE (donc un seul SQL, une
+ * seule définition pour les trois écrans) :
+ *   total            = toutes les lignes de `quotes` de nature contrat ;
+ *   actifs           = celles au statut 'actif'/'active' ;
+ *   prime_totale     = somme des primes des contrats ACTIFS (mesure du portefeuille) ;
+ *   prime_totale_tous= somme des primes de TOUTES les lignes de nature contrat
+ *                      (résiliés compris) — audit seulement, jamais affichée
+ *                      comme chiffre d'affaires ;
+ *   echeances/nouveaux = contrats ACTIFS uniquement (un résilié n'échoit plus).
+ * Les deux compteurs viennent de la MÊME passe SQL : ils ne peuvent pas se
+ * contredire, et aucune route n'a besoin de recompter.
+ */
+function requeteContrats(portee, { jours = 30, depart = 1, alias = 'c' } = {}) {
   const f = porteeClients(portee, { depart, alias });
   return {
     sql: `SELECT
         COUNT(*)::int AS total,
-        COALESCE(SUM(${PRIME_CONTRAT}), 0)::numeric AS prime_totale,
-        COUNT(${PRIME_CONTRAT})::int AS contrats_avec_prime,
-        COUNT(*) FILTER (WHERE q.created_at >= NOW() - $${f.suivant}::interval)::int AS nouveaux,
-        COUNT(*) FILTER (WHERE ${ECHEANCE_CONTRAT} BETWEEN NOW() AND NOW() + INTERVAL '30 days')::int AS echeances_30j,
-        COUNT(*) FILTER (WHERE ${ECHEANCE_CONTRAT} BETWEEN NOW() AND NOW() + INTERVAL '90 days')::int AS echeances_90j
+        COUNT(*) FILTER (WHERE q.status IN ${STATUTS_CONTRAT_ACTIF})::int AS actifs,
+        COALESCE(SUM(${PRIME_CONTRAT}) FILTER (WHERE q.status IN ${STATUTS_CONTRAT_ACTIF}), 0)::numeric AS prime_totale,
+        COALESCE(SUM(${PRIME_CONTRAT}), 0)::numeric AS prime_totale_tous,
+        COUNT(${PRIME_CONTRAT}) FILTER (WHERE q.status IN ${STATUTS_CONTRAT_ACTIF})::int AS contrats_avec_prime,
+        COUNT(*) FILTER (WHERE q.created_at >= NOW() - $${f.suivant}::interval
+                           AND q.status IN ${STATUTS_CONTRAT_ACTIF})::int AS nouveaux,
+        COUNT(*) FILTER (WHERE ${ECHEANCE_CONTRAT} BETWEEN NOW() AND NOW() + INTERVAL '30 days'
+                           AND q.status IN ${STATUTS_CONTRAT_ACTIF})::int AS echeances_30j,
+        COUNT(*) FILTER (WHERE ${ECHEANCE_CONTRAT} BETWEEN NOW() AND NOW() + INTERVAL '90 days'
+                           AND q.status IN ${STATUTS_CONTRAT_ACTIF})::int AS echeances_90j
       FROM quotes q
       JOIN clients ${alias} ON ${alias}.id = q.client_id
       WHERE ${f.sql}
-        AND q.status IN ${STATUTS_CONTRAT_ACTIF}`,
+        AND ${NATURE_CONTRAT}`,
+    params: [...f.params, `${jours} days`],
+  };
+}
+
+/**
+ * Ancien nom conservé À DESSEIN : c'est exactement le même SQL (aucune copie),
+ * pour ne pas casser les appelants et pour que les tests de cohérence continuent
+ * de désigner la requête canonique des contrats.
+ */
+const requeteContratsActifs = requeteContrats;
+
+/**
+ * DEVIS v1 — les devis restés dans `quotes` (statuts 'envoye'/'brouillon').
+ * Ils sont comptés (et leur prime sommée) AVEC les devis de `devis_wizard` :
+ * c'est `agregerDevis` qui assemble les deux sources, jamais une route à la main.
+ * Portée : celle du CLIENT de la ligne (comme un contrat, qui pend d'un client).
+ */
+function requeteDevisV1(portee, { jours = 30, depart = 1, alias = 'c' } = {}) {
+  const f = porteeClients(portee, { depart, alias });
+  return {
+    sql: `SELECT
+        COUNT(*)::int AS total,
+        COALESCE(SUM(${PRIME_CONTRAT}), 0)::numeric AS prime_v1,
+        COUNT(${PRIME_CONTRAT})::int AS devis_avec_prime,
+        COUNT(*) FILTER (WHERE q.status = 'envoye')::int AS envoyes,
+        COUNT(*) FILTER (WHERE q.created_at >= NOW() - $${f.suivant}::interval)::int AS nouveaux
+      FROM quotes q
+      JOIN clients ${alias} ON ${alias}.id = q.client_id
+      WHERE ${f.sql}
+        AND COALESCE(q.status, '') IN ${STATUTS_DEVIS_V1}`,
     params: [...f.params, `${jours} days`],
   };
 }
@@ -220,8 +339,68 @@ const centsVersMontant = (cents) => Number((Number(cents || 0) / 100).toFixed(2)
 const taux = (numerateur, denominateur) =>
   denominateur > 0 ? Math.round((numerateur / denominateur) * 100) : null;
 
+/** Entier sûr depuis une colonne SQL (jamais NaN, jamais undefined). */
+const entier = (valeur) => parseInt(valeur, 10) || 0;
+
+/** Montant sûr depuis une colonne SQL. */
+const nombre = (valeur) => parseFloat(valeur) || 0;
+
+/**
+ * Assemble les CONTRATS à partir de la SEULE ligne de `requeteContrats`.
+ * POURQUOI une fonction et non du code dans chaque route : c'est ici que
+ * `total` (toutes lignes de nature contrat) et `actifs` (statut actif) sont
+ * nommés une fois pour toutes. Une route qui voudrait « juste recompter »
+ * devrait contourner cette fonction — c'est visible en revue.
+ */
+function agregerContrats(ligne = {}) {
+  return {
+    total: entier(ligne.total),          // toutes les lignes de nature contrat
+    actifs: entier(ligne.actifs),        // statut 'actif' / 'active'
+    primeTotale: nombre(ligne.prime_totale),            // contrats ACTIFS
+    primeTotaleTous: nombre(ligne.prime_totale_tous),   // audit : résiliés compris
+    avecPrime: entier(ligne.contrats_avec_prime),
+    nouveaux: entier(ligne.nouveaux),
+    echeances30j: entier(ligne.echeances_30j),
+    echeances90j: entier(ligne.echeances_90j),
+  };
+}
+
+/**
+ * Assemble les DEVIS des DEUX sources : `devis_wizard` (parcours actuel) et les
+ * devis v1 restés dans `quotes` (statuts 'envoye'/'brouillon').
+ *
+ * POURQUOI (arbitrage du 20/09/2026) : ces lignes de `quotes` ne sont pas des
+ * contrats ; avant, elles étaient soit comptées comme contrats (3 « contrats »
+ * pour 2 contrats + 1 devis), soit ignorées. Elles sont ici comptées comme
+ * DEVIS, montant compris — et `dontV1` publie leur part pour que l'audit puisse
+ * le vérifier sans relire la base.
+ * Un devis refusé ou expiré reste un devis (compté dans `total`) : il n'est
+ * simplement pas « signé », donc pas converti.
+ */
+function agregerDevis(wizard = {}, v1 = {}) {
+  const total = entier(wizard.total) + entier(v1.total);
+  const signes = entier(wizard.signes);
+  return {
+    total,
+    totalValue: Number((centsVersMontant(wizard.prime_cents) + nombre(v1.prime_v1)).toFixed(2)),
+    avecPrime: entier(wizard.devis_avec_prime) + entier(v1.devis_avec_prime),
+    signes,
+    envoyes: entier(wizard.envoyes) + entier(v1.envoyes),
+    enPreparation: entier(wizard.en_preparation),
+    refuses: entier(wizard.refuses),
+    expires: entier(wizard.expires),
+    nouveaux: entier(wizard.nouveaux) + entier(v1.nouveaux),
+    dontV1: entier(v1.total),
+    // Aucun devis ⇒ le taux n'existe pas : null (« pas de mesure »), pas 0 %.
+    conversionRate: taux(signes, total),
+  };
+}
+
 const kpi = {
   STATUTS_CONTRAT_ACTIF,
+  STATUTS_CONTRAT_INACTIF,
+  STATUTS_DEVIS_V1,
+  NATURE_CONTRAT,
   PRIME_CONTRAT,
   ECHEANCE_CONTRAT,
   porteeClients,
@@ -229,9 +408,13 @@ const kpi = {
   porteeTaches,
   requeteClients,
   requeteClientsParStatut,
+  requeteContrats,
   requeteContratsActifs,
   requeteDevis,
+  requeteDevisV1,
   requeteTaches,
+  agregerContrats,
+  agregerDevis,
   centsVersMontant,
   taux,
 };
@@ -244,15 +427,18 @@ router.get('/stats', verifyToken, async (req, res) => {
     const portee = await porteeCabinet.resoudrePortee(pool, req);
 
     const qClients = requeteClients(portee, { jours: 30 });
-    const qContrats = requeteContratsActifs(portee, { jours: 30 });
+    const qContrats = requeteContrats(portee, { jours: 30 });
     const qDevis = requeteDevis(portee, { jours: 30 });
+    // Les devis v1 restés dans `quotes` sont comptés AVEC les devis : c'est la
+    // deuxième source de l'indicateur « devis » (voir agregerDevis).
+    const qDevisV1 = requeteDevisV1(portee, { jours: 30 });
     const qTaches = requeteTaches(portee);
 
     // Une seule requête par indicateur (voir le bloc de définitions), plus les
     // listes/ventilations de l'écran. Toutes les requêtes partagent la MÊME
     // portée cabinet : c'est ce qui garantit que les trois écrans comptent la
     // même chose.
-    const [r1, r2, rContrats, rCommissions, r6, r7, r8, r9, r10, rClientsStatut, rTaches, rDevis] =
+    const [r1, r2, rContrats, rCommissions, r6, r7, r8, r9, r10, rClientsStatut, rTaches, rDevis, rDevisV1] =
       await Promise.all([
         pool.query(qClients.sql, qClients.params),
         // Moyenne des scores de risque : null si le cabinet n'a aucun client
@@ -291,14 +477,17 @@ router.get('/stats', verifyToken, async (req, res) => {
         pool.query(requeteClientsParStatut(portee).sql, requeteClientsParStatut(portee).params),
         pool.query(qTaches.sql, qTaches.params),
         pool.query(qDevis.sql, qDevis.params),
+        pool.query(qDevisV1.sql, qDevisV1.params),
       ]);
 
     const c = r1.rows[0] || {};
     const total = Number(c.total || 0);
     const actifs = Number(c.actifs || 0);
     const prospects = Number(c.prospects || 0);
-    const contrats = rContrats.rows[0] || {};
-    const devis = rDevis.rows[0] || {};
+    // LES DEUX NOTIONS, assemblées par les fonctions PARTAGÉES : le cockpit ne
+    // peut plus nommer « contrats » autre chose que les deux autres écrans.
+    const contrats = agregerContrats(rContrats.rows[0]);
+    const devis = agregerDevis(rDevis.rows[0], rDevisV1.rows[0]);
     const taches = rTaches.rows[0] || {};
 
     const clientsParStatut = rClientsStatut.rows.reduce((a, r) => { if (r.status) a[r.status] = parseInt(r.count, 10); return a; }, {});
@@ -309,20 +498,29 @@ router.get('/stats', verifyToken, async (req, res) => {
       totalClients: total,
       clientsActifs: actifs,
       clientsProspects: prospects,
-      // Contrats ACTIFS (`quotes`), jamais la table `contracts` (jamais écrite).
-      contratsActifs: Number(contrats.total || 0),
-      primeTotale: Number(contrats.prime_totale || 0),
+      // CONTRATS — les deux notions, nommées :
+      //   contratsTotal = toutes les lignes de nature contrat (résiliés compris) ;
+      //   contratsActifs = statut 'actif'/'active' (base de la prime du portefeuille).
+      contratsTotal: contrats.total,
+      contratsActifs: contrats.actifs,
+      contrats: contrats,
+      primeTotale: contrats.primeTotale,
+      // Audit seulement : primes des contrats résiliés/expirés comprises.
+      primeTotaleTous: contrats.primeTotaleTous,
       // Champ dédié : combien de contrats portaient réellement une prime.
-      contratsAvecPrime: Number(contrats.contrats_avec_prime || 0),
-      contratsUrgents: Number(contrats.echeances_30j || 0),
-      contratsEcheance90j: Number(contrats.echeances_90j || 0),
-      // Devis (`devis_wizard`) — un devis n'est pas un contrat.
-      devisTotal: Number(devis.total || 0),
-      devisEnAttente: Number(devis.envoyes || 0),
-      devisSignes: Number(devis.signes || 0),
-      devisEnPreparation: Number(devis.en_preparation || 0),
-      devisPrimeTotale: centsVersMontant(devis.prime_cents),
-      devisAvecPrime: Number(devis.devis_avec_prime || 0),
+      contratsAvecPrime: contrats.avecPrime,
+      contratsUrgents: contrats.echeances30j,
+      contratsEcheance90j: contrats.echeances90j,
+      // DEVIS (`devis_wizard` + devis v1 restés dans `quotes`) — un devis n'est
+      // pas un contrat. Les clés historiques restent, elles pointent sur les
+      // mêmes nombres (aucun écran ne peut plus lire autre chose).
+      devisTotal: devis.total,
+      devis: devis,
+      devisEnAttente: devis.envoyes,
+      devisSignes: devis.signes,
+      devisEnPreparation: devis.enPreparation,
+      devisPrimeTotale: devis.totalValue,
+      devisAvecPrime: devis.avecPrime,
       // Tâches (`appointments`) — « en retard » : échéance passée, non terminée.
       tachesTotal: Number(taches.total || 0),
       tachesEnRetard: Number(taches.en_retard || 0),
@@ -355,18 +553,20 @@ router.get('/summary', verifyToken, async (req, res) => {
   const portee = await porteeCabinet.resoudrePortee(pool, req);
 
   const qClients = requeteClients(portee, { jours: 30 });
-  const qContrats = requeteContratsActifs(portee, { jours: 30 });
+  const qContrats = requeteContrats(portee, { jours: 30 });
   const qDevis = requeteDevis(portee, { jours: 30 });
+  const qDevisV1 = requeteDevisV1(portee, { jours: 30 });
 
   // `safeQuery` propage l'erreur (200 + zéros serait un mensonge : voir plus haut).
   const clientsRows = await safeQuery(pool, qClients.sql, qClients.params);
   const c = clientsRows[0] || {};
 
   const contratsRows = await safeQuery(pool, qContrats.sql, qContrats.params);
-  const k = contratsRows[0] || {};
+  const k = agregerContrats(contratsRows[0]);
 
   const devisRows = await safeQuery(pool, qDevis.sql, qDevis.params);
-  const d = devisRows[0] || {};
+  const devisV1Rows = await safeQuery(pool, qDevisV1.sql, qDevisV1.params);
+  const d = agregerDevis(devisRows[0], devisV1Rows[0]);
 
   // Score portefeuille basé sur rétention + diversification + activité récente
   const total = Number(c.total || 0);
@@ -387,18 +587,21 @@ router.get('/summary', verifyToken, async (req, res) => {
       clients_actifs: actifs,
       clients_total: total,
       clients_prospects: Number(c.prospects || 0),
-      contrats_actifs: Number(k.total || 0),
-      prime_totale: Number(k.prime_totale || 0),
-      contrats_avec_prime: Number(k.contrats_avec_prime || 0),
-      echeances_30j: Number(k.echeances_30j || 0),
-      // « Devis en attente » = devis envoyés/ouverts au client, sans réponse.
-      // Avant : `quotes WHERE status='envoye'` — une table et un statut que les
-      // devis n'utilisent pas (ils vivent dans `devis_wizard`) : le compteur
-      // restait donc toujours à 0.
-      devis_total: Number(d.total || 0),
-      devis_en_attente: Number(d.envoyes || 0),
-      devis_signes: Number(d.signes || 0),
-      devis_prime_totale: centsVersMontant(d.prime_cents),
+      // Contrats : LES DEUX NOTIONS (contrats_total = toutes les lignes de nature
+      // contrat, contrats_actifs = statut actif) — mêmes fonctions partagées que
+      // les autres écrans.
+      contrats_total: k.total,
+      contrats_actifs: k.actifs,
+      prime_totale: k.primeTotale,
+      prime_totale_tous: k.primeTotaleTous,
+      contrats_avec_prime: k.avecPrime,
+      echeances_30j: k.echeances30j,
+      // Devis : `devis_wizard` + devis v1 restés dans `quotes`.
+      devis_total: d.total,
+      devis_dont_v1: d.dontV1,
+      devis_en_attente: d.envoyes,
+      devis_signes: d.signes,
+      devis_prime_totale: d.totalValue,
       health_score: healthScore,
       delta_clients_30j: Number(c.nouveaux || 0),
     },

@@ -4,6 +4,7 @@ import { Plus, Clock, X, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
 import { EmptyStateAurora } from '../components/aurora/Aurora3D'
+import { localeCourante } from '../lib/monnaie'
 
 const KANBAN_COLUMNS = [
   { id: 'a_faire', title: 'À faire', headerColor: 'text-slate-700', bgColor: 'bg-slate-50/30', borderColor: 'border-slate-300/60' },
@@ -27,7 +28,7 @@ const fmtDate = (d) => {
   if (daysDiff < 0) color = 'text-red-600 font-semibold'
   else if (daysDiff <= 2) color = 'text-amber-600 font-semibold'
 
-  return <div className={`flex items-center gap-1.5 text-xs ${color}`}><Clock size={12} />{new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</div>
+  return <div className={`flex items-center gap-1.5 text-xs ${color}`}><Clock size={12} />{new Date(d).toLocaleDateString(localeCourante(), { day: '2-digit', month: 'short' })}</div>
 }
 
 const cardVariants = {

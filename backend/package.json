@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "test": "jest",
     "migrate": "node scripts/migrate.js",
+    "playwright:install": "npx playwright install chromium || npx playwright install --with-deps chromium",
     "qa:preview-smoke": "node scripts/preview-smoke-playwright.js",
     "qa:prod-smoke": "PROD_URL=https://app.courtiark.fr node scripts/preview-smoke-playwright.js"
   },

@@ -49,7 +49,23 @@ const METHODES_ECRITURE = Object.freeze(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 /**
  * Préfixes PUBLICS (ou authentifiés autrement qu'par un jeton utilisateur) :
- * la garde de rôle ne s'y applique pas. Chaque entrée est un choix explicite :
+ * la garde de rôle ne s'y applique pas.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * CORRECTION DU 20/09/2026 (P3 SEC-022, mesuré en production)
+ * Un compte de cabinet en LECTURE SEULE créait un ÉVÉNEMENT via
+ * `POST /api/calendar/events` → 200, alors que 20 autres routes d'écriture lui
+ * répondaient 403. La cause n'était pas la garde globale — elle était bien
+ * « on refuse par défaut » — mais cette liste : `/api/calendar` y figurait en
+ * entier, pour une seule route réellement publique (le callback OAuth Google).
+ * Un préfixe de deux segments exemptait donc TOUT l'agenda du contrôle de rôle.
+ *
+ * RÈGLE TENUE ICI : chaque entrée ne couvre QUE ce qui est réellement appelé par
+ * un tiers non authentifié. Un point d'entrée public est désormais nommé jusqu'à
+ * la route (`/api/calendar/callback`, `/api/whatsapp/webhook`…), jamais par
+ * famille (`/api/calendar`). Une route d'écriture ajoutée demain dans une famille
+ * existante est donc protégée sans que personne n'y pense.
+ * ────────────────────────────────────────────────────────────────────────────
  *   * /api/auth, /api/invite, /api/beta, /api/leads  → inscription, invitation,
  *     demande de démo : aucun cabinet n'existe encore au moment de l'appel ;
  *   * /api/webhooks, /api/stripe, /api/billing       → webhooks entrants des
@@ -57,9 +73,9 @@ const METHODES_ECRITURE = Object.freeze(['POST', 'PUT', 'PATCH', 'DELETE'])
  *     pour sortir du mode lecture seule : y répondre 403 enfermerait le cabinet) ;
  *   * /api/portal, /api/ark-chat                     → espace CLIENT (jeton de
  *     portail, pas de cabinet) ;
- *   * /api/document-inbox/public, /api/signatures/webhook, /api/calendar,
- *     /api/whatsapp, /api/public                     → liens et callbacks
- *     destinés à des tiers non authentifiés.
+ *   * les liens et callbacks destinés à des tiers non authentifiés : dépôt
+ *     public de pièces, webhook de signature, callback OAuth de l'agenda,
+ *     webhooks WhatsApp / téléphonie / messagerie.
  */
 const PREFIXES_PUBLICS = Object.freeze([
   '/api/auth',
@@ -73,8 +89,13 @@ const PREFIXES_PUBLICS = Object.freeze([
   '/api/ark-chat',
   '/api/document-inbox/public',
   '/api/signatures/webhook',
-  '/api/calendar',
-  '/api/whatsapp',
+  // L'agenda n'est PLUS exempté en bloc : seule sa route de retour OAuth l'est
+  // (c'est Google qui l'appelle, sans jeton d'utilisateur).
+  '/api/calendar/callback',
+  '/api/whatsapp/webhook',
+  // Webhook d'appels (Vapi) : appelé par l'opérateur, secret en en-tête.
+  '/api/voice/webhook',
+  '/api/messaging/webhook',
   '/api/public',
 ])
 

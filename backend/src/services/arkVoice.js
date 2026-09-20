@@ -8,9 +8,14 @@
 
 const axios = require('axios');
 const pool = require('../db');
+const logger = require('../lib/logger');
 // arkBrief est optionnel (module jamais versionné) — dégradation propre si absent
 let arkBrief = null;
 try { arkBrief = require('./arkBrief'); } catch (_) { arkBrief = null; }
+
+// État de la colonne de provenance du coût : null = pas encore vérifiée.
+// (Voir handleWebhook : `cost_source` distingue un coût mesuré d'un coût inconnu.)
+let colonneCostSource = null;
 
 const VAPI_BASE = 'https://api.vapi.ai';
 const VAPI_KEY = process.env.VAPI_API_KEY;
@@ -200,7 +205,38 @@ async function handleWebhook(payload) {
     const transcript = message.transcript || '';
     const summary = message.summary || '';
     const duration = message.durationSeconds || 0;
-    const cost = (duration / 60) * 0.09;
+
+    // ── COÛT RÉEL, JAMAIS UN FORFAIT PRÉSENTÉ COMME MESURE ────────────────
+    // Correction 20/09/2026. Le coût était TOUJOURS écrit comme
+    // `(duration / 60) * 0,09` € — un tarif forfaitaire codé en dur — dans une
+    // colonne (`cost_eur`) que l'écran ARK Voice somme et compare au budget
+    // quotidien du cabinet. Un coût estimé y devenait donc un coût réel, et
+    // l'utilisateur ne pouvait pas le distinguer.
+    // Désormais : on écrit le coût ANNONCÉ PAR LE FOURNISSEUR quand il existe
+    // (`message.cost` / `costBreakdown.total`) ; sinon on écrit NULL — donc
+    // « inconnu », jamais 0 ni un forfait — et on conserve l'estimation locale
+    // sous l'étiquette explicite `estimee_forfaitaire`.
+    const coutFournisseur = Number(message.cost ?? message.costBreakdown?.total ?? NaN)
+    const coutMesure = Number.isFinite(coutFournisseur) && coutFournisseur > 0
+      ? Number(coutFournisseur.toFixed(4))
+      : null
+    const estimationForfaitaire = Number(((duration / 60) * 0.09).toFixed(4))
+    const costSource = coutMesure !== null ? 'fournisseur' : 'inconnu'
+    const estimationConservee = coutMesure === null ? estimationForfaitaire : null
+
+    // Colonne `cost_source` ajoutée à la demande (idempotent, une seule fois par
+    // processus) : sans elle, l'étiquette de provenance du coût n'est pas
+    // persistée et un coût NULL resterait indéchiffrable.
+    if (colonneCostSource === null) {
+      try {
+        await pool.query(`ALTER TABLE voice_calls ADD COLUMN IF NOT EXISTS cost_source VARCHAR(20)`)
+        await pool.query(`ALTER TABLE voice_calls ADD COLUMN IF NOT EXISTS cost_estimated_eur NUMERIC(10,4)`)
+        colonneCostSource = true
+      } catch (err) {
+        colonneCostSource = false
+        logger.warn({ error: err.message }, 'voice_calls : colonnes de provenance du coût indisponibles')
+      }
+    }
 
     // Extraction intent par IA
     let intent = null;
@@ -238,12 +274,25 @@ ${transcript.slice(0, 6000)}`
       }
     }
 
-    await pool.query(`
-      UPDATE voice_calls SET status='completed', transcript=$1, ai_summary=$2,
-        duration_seconds=$3, cost_eur=$4, intent_extracted=$5, next_actions=$6,
-        recording_url=$7, ended_at=NOW()
-      WHERE vapi_call_id=$8
-    `, [transcript, summary, duration, cost, intent, JSON.stringify(nextActions), message.recordingUrl, vapiCallId]);
+    // `cost_eur` reste NULL quand le fournisseur ne l'annonce pas : un coût
+    // inconnu s'écrit « inconnu », jamais un forfait. L'estimation locale est
+    // rangée à part, sous une colonne dont le nom dit qu'elle est estimée.
+    if (colonneCostSource === true) {
+      await pool.query(`
+        UPDATE voice_calls SET status='completed', transcript=$1, ai_summary=$2,
+          duration_seconds=$3, cost_eur=$4, cost_source=$5, cost_estimated_eur=$6,
+          intent_extracted=$7, next_actions=$8,
+          recording_url=$9, ended_at=NOW()
+        WHERE vapi_call_id=$10
+      `, [transcript, summary, duration, coutMesure, costSource, estimationConservee, intent, JSON.stringify(nextActions), message.recordingUrl, vapiCallId]);
+    } else {
+      await pool.query(`
+        UPDATE voice_calls SET status='completed', transcript=$1, ai_summary=$2,
+          duration_seconds=$3, cost_eur=$4, intent_extracted=$5, next_actions=$6,
+          recording_url=$7, ended_at=NOW()
+        WHERE vapi_call_id=$8
+      `, [transcript, summary, duration, coutMesure, intent, JSON.stringify(nextActions), message.recordingUrl, vapiCallId]);
+    }
 
     // Auto-création des prochaines actions sur fiche client
     if (nextActions && Array.isArray(nextActions)) {

@@ -11,6 +11,7 @@ const multer = require('multer')
 const rateLimit = require('express-rate-limit')
 const pool = require('../db')
 const verifyToken = require('../middleware/authMiddleware')
+const porteeCabinet = require('../lib/porteeCabinet')
 const documentStorage = require('../services/documentStorage')
 const documentAnalysis = require('../services/documentAnalysis')
 const documentLinks = require('../services/documentLinks')
@@ -43,34 +44,102 @@ const publicLimiter = rateLimit({
 })
 
 // ============================================================================
-// MIDDLEWARE : Vérifie que le client appartient au broker
+// MIDDLEWARE : Vérifie que le client appartient au CABINET de l'appelant
+//
+// DÉFAUT FERMÉ (P3 SEC-023, mesuré en production le 20/09/2026)
+// Ce contrôle filtrait sur `clients.user_id` — une colonne de propriété
+// CONCURRENTE de `clients.courtier_id`, jamais renseignée par la création d'un
+// client (routes/clients.js écrit `courtier_id`). Résultat : la comparaison
+// était TOUJOURS fausse, et l'upload documentaire par client répondait 403 pour
+// tout le monde, y compris au cabinet propriétaire du dossier. La fonction
+// « déposez les pièces de ce client » était donc morte.
+//
+// Deux colonnes de propriété ne peuvent pas coexister sans qu'une des deux
+// mente. La portée est désormais résolue par `lib/porteeCabinet` — seule
+// autorité : appartenance par `clients.cabinet_id`, avec repli sur
+// `clients.courtier_id` pour les lignes créées avant le rattachement au cabinet
+// (aucune donnée existante ne disparaît).
+//
+// Une ressource HORS CABINET répond 404 (et non 403) : elle n'existe pas pour
+// l'appelant, elle ne lui est pas simplement interdite.
 // ============================================================================
+
+async function porteeDocuments(req) {
+  return porteeCabinet.resoudrePortee(req.app?.locals?.pool || pool, req)
+}
+
+/** Clause SQL de portée sur la table `clients` (alias `c`). */
+function fragmentClients(portee, depart) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart,
+  })
+}
 
 async function verifyClientOwnership(req, res, next) {
   try {
     const clientId = parseInt(req.params.id || req.params.clientId)
     const brokerId = req.user?.id || req.user?.userId
+    const userId = Number(brokerId)
 
-    if (!clientId || !brokerId) {
+    if (!clientId || !Number.isFinite(userId) || userId <= 0) {
       return res.status(400).json({ error: 'Client ID ou authentification manquante' })
     }
 
+    const portee = await porteeDocuments(req)
+    const f = fragmentClients(portee, 2)
     const result = await pool.query(
-      `SELECT id FROM clients WHERE id = $1 AND user_id = $2`,
-      [clientId, brokerId]
+      `SELECT c.id, c.courtier_id, c.cabinet_id FROM clients c WHERE c.id = $1 AND ${f.sql}`,
+      [clientId, ...f.params]
     )
 
     if (result.rows.length === 0) {
-      return res.status(403).json({ error: 'Ce client ne vous appartient pas' })
+      // Hors cabinet : 404, jamais un 403 qui confirmerait l'existence du dossier.
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' })
     }
 
     req.clientId = clientId
+    req.clientLigne = result.rows[0]
     req.brokerId = brokerId
+    // Cabinet réel du client : c'est lui qui est estampillé sur les documents,
+    // pas le cabinet « courant » de l'appelant (un collaborateur peut appartenir
+    // à plusieurs cabinets).
+    req.cabinetId = result.rows[0].cabinet_id || portee.cabinetId || null
     next()
   } catch (err) {
     logger.error({ error: err.message }, 'verifyClientOwnership error')
     res.status(500).json({ error: 'Erreur vérification client' })
   }
+}
+
+/**
+ * Propriété d'un DOCUMENT : le document appartient à l'appelant si son client
+ * appartient à un cabinet de l'appelant. Un seul chemin de résolution pour les
+ * quatre routes (téléchargement, suppression, analyse) — avant ce correctif,
+ * chacune comparait `clients.user_id`, colonne jamais renseignée, et répondait
+ * donc 403 au cabinet propriétaire lui-même.
+ */
+async function chargerDocumentAutorise(req, res) {
+  const documentId = parseInt(req.params.id)
+  if (!Number.isFinite(documentId) || documentId <= 0) {
+    res.status(400).json({ error: 'Identifiant de document invalide' })
+    return null
+  }
+  const portee = await porteeDocuments(req)
+  const f = fragmentClients(portee, 2)
+  const result = await pool.query(
+    `SELECT cd.*, c.courtier_id, c.cabinet_id
+       FROM client_documents cd
+       JOIN clients c ON c.id = cd.client_id
+      WHERE cd.id = $1 AND cd.deleted_at IS NULL AND ${f.sql}`,
+    [documentId, ...f.params]
+  )
+  if (result.rows.length === 0) {
+    res.status(404).json({ error: 'not_found', message: 'Document introuvable.' })
+    return null
+  }
+  return { documentId, doc: result.rows[0] }
 }
 
 // ============================================================================
@@ -174,26 +243,36 @@ router.get('/clients/:id/documents',
       const { clientId } = req
       const { type, status } = req.query
 
+      // Portée CABINET sur la liste : une ligne ne sort que si son client
+      // appartient à un cabinet de l'appelant (même autorité que l'upload).
+      const portee = await porteeDocuments(req)
+      const f = porteeCabinet.fragment(portee, {
+        cabinet: 'c.cabinet_id',
+        proprietaire: 'c.courtier_id',
+        depart: 2,
+      })
+
       let query = `
-        SELECT id, document_type, original_filename, mime_type, file_size_bytes,
-               status, source, analysis_status, analysis_result, uploaded_at, analyzed_at
-        FROM client_documents
-        WHERE client_id = $1 AND deleted_at IS NULL
+        SELECT cd.id, cd.document_type, cd.original_filename, cd.mime_type, cd.file_size_bytes,
+               cd.status, cd.source, cd.analysis_status, cd.analysis_result, cd.uploaded_at, cd.analyzed_at
+        FROM client_documents cd
+        JOIN clients c ON c.id = cd.client_id
+        WHERE cd.client_id = $1 AND cd.deleted_at IS NULL AND ${f.sql}
       `
-      const params = [clientId]
-      let paramIndex = 2
+      const params = [clientId, ...f.params]
+      let paramIndex = f.suivant
 
       if (type) {
-        query += ` AND document_type = $${paramIndex++}`
+        query += ` AND cd.document_type = $${paramIndex++}`
         params.push(type)
       }
 
       if (status) {
-        query += ` AND status = $${paramIndex++}`
+        query += ` AND cd.status = $${paramIndex++}`
         params.push(status)
       }
 
-      query += ' ORDER BY uploaded_at DESC'
+      query += ' ORDER BY cd.uploaded_at DESC'
 
       const result = await pool.query(query, params)
 
@@ -229,27 +308,10 @@ router.get('/documents/:id',
   verifyToken,
   async (req, res) => {
     try {
-      const documentId = parseInt(req.params.id)
-      const brokerId = req.user?.id || req.user?.userId
-
-      // Vérifier ownership via client
-      const docResult = await pool.query(
-        `SELECT cd.*, c.user_id
-         FROM client_documents cd
-         JOIN clients c ON c.id = cd.client_id
-         WHERE cd.id = $1 AND cd.deleted_at IS NULL`,
-        [documentId]
-      )
-
-      if (docResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Document introuvable' })
-      }
-
-      const doc = docResult.rows[0]
-
-      if (doc.user_id !== brokerId) {
-        return res.status(403).json({ error: 'Accès non autorisé à ce document' })
-      }
+      // Résolution par la PORTÉE CABINET (voir chargerDocumentAutorise).
+      const trouve = await chargerDocumentAutorise(req, res)
+      if (!trouve) return
+      const { doc } = trouve
 
       // Stream le fichier
       const stream = documentStorage.getStream(doc.storage_path)
@@ -271,25 +333,9 @@ router.delete('/documents/:id',
   verifyToken,
   async (req, res) => {
     try {
-      const documentId = parseInt(req.params.id)
-      const brokerId = req.user?.id || req.user?.userId
-
-      // Vérifier ownership
-      const docResult = await pool.query(
-        `SELECT cd.id, c.user_id
-         FROM client_documents cd
-         JOIN clients c ON c.id = cd.client_id
-         WHERE cd.id = $1 AND cd.deleted_at IS NULL`,
-        [documentId]
-      )
-
-      if (docResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Document introuvable' })
-      }
-
-      if (docResult.rows[0].user_id !== brokerId) {
-        return res.status(403).json({ error: 'Accès non autorisé' })
-      }
+      const trouve = await chargerDocumentAutorise(req, res)
+      if (!trouve) return
+      const { documentId } = trouve
 
       // Soft delete
       await pool.query(
@@ -313,27 +359,9 @@ router.post('/documents/:id/analyze',
   verifyToken,
   async (req, res) => {
     try {
-      const documentId = parseInt(req.params.id)
-      const brokerId = req.user?.id || req.user?.userId
-
-      // Vérifier ownership et récupérer doc
-      const docResult = await pool.query(
-        `SELECT cd.*, c.user_id
-         FROM client_documents cd
-         JOIN clients c ON c.id = cd.client_id
-         WHERE cd.id = $1 AND cd.deleted_at IS NULL`,
-        [documentId]
-      )
-
-      if (docResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Document introuvable' })
-      }
-
-      const doc = docResult.rows[0]
-
-      if (doc.user_id !== brokerId) {
-        return res.status(403).json({ error: 'Accès non autorisé' })
-      }
+      const trouve = await chargerDocumentAutorise(req, res)
+      if (!trouve) return
+      const { documentId, doc } = trouve
 
       // Mettre à jour statut
       await pool.query(

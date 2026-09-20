@@ -1,10 +1,11 @@
 export default function Topbar({ title, subtitle, action }) {
+import { localeCourante } from '../lib/monnaie'
   const user = (() => {
     try { return JSON.parse(localStorage.getItem('user') || '{}') }
     catch { return {} }
   })()
   const initial = (user.firstName || user.first_name || user.email || 'U')[0].toUpperCase()
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const today = new Date().toLocaleDateString(localeCourante(), { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
     <div style={{

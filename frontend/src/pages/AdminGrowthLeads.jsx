@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Filter, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react'
 import { buildApiUrl, getAuthToken } from '../api/sessionPolicy'
+import { localeCourante } from '../lib/monnaie'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -244,7 +245,7 @@ export default function AdminGrowthLeads() {
                     <span style={{ background: s.bg, color: s.color, borderRadius: 999, padding: '4px 8px', fontSize: 11, fontWeight: 700 }}>{s.label}</span>
                   </td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)', fontSize: 12 }}>
-                    {row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR') : '—'}
+                    {row.created_at ? new Date(row.created_at).toLocaleDateString(localeCourante()) : '—'}
                   </td>
                   <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

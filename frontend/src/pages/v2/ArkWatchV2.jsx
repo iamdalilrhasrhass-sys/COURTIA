@@ -13,6 +13,7 @@ import {
   AuroraDivider,
   useToast,
 } from '../../components/aurora';
+import { localeCourante } from '../../lib/monnaie'
 
 const mockSignals = [
   { id: 1, type: 'hamon', title: 'Loi Hamon - Opportunité résiliation', description: 'Client Marie Dupont - Contrat auto concurrent éligible depuis 14 mois', client: 'Marie Dupont', value: 1200, severity: 'high', action: 'Proposer devis comparatif', createdAt: '2026-05-11T08:30:00' },
@@ -131,7 +132,7 @@ export function ArkWatchV2() {
         ) : (
           <>
             <AuroraStat value={stats.total} label="Total signaux" icon={Radar} />
-            <AuroraStat value={`${stats.value.toLocaleString('fr-FR')} €`} label="Valeur estimée" icon={Euro} trend={8.5} />
+            <AuroraStat value={`${stats.value.toLocaleString(localeCourante())} €`} label="Valeur estimée" icon={Euro} trend={8.5} />
             <AuroraStat value={stats.high} label="Urgents" icon={AlertTriangle} />
             <AuroraStat value={stats.medium} label="Importants" icon={Clock} />
           </>
@@ -208,7 +209,7 @@ export function ArkWatchV2() {
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
                             <div style={{ fontWeight: 700, fontSize: 'var(--aurora-text-lg)', color: 'var(--aurora-emerald)', marginBottom: 'var(--aurora-space-2)' }}>
-                              {signal.value.toLocaleString('fr-FR')} €
+                              {signal.value.toLocaleString(localeCourante())} €
                             </div>
                             <div style={{ display: 'flex', gap: 'var(--aurora-space-2)' }}>
                               <AuroraButton size="sm" variant="ghost" icon={Check} onClick={() => handleSignalAction('acknowledge', signal)}>Acquitter</AuroraButton>

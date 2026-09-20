@@ -11,6 +11,7 @@ import {
   AuroraSectionTitle,
   useToast,
 } from '../../components/aurora';
+import { localeCourante } from '../../lib/monnaie'
 
 const mockSignals = [
   { id: 1, type: 'hamon', title: 'Loi Hamon - Résiliation possible', description: 'Client Dupont Marie - Contrat auto éligible résiliation', priority: 'high', value: 1200 },
@@ -28,7 +29,7 @@ const priorityColors = { high: 'rose', medium: 'amber', low: 'cyan' };
 const priorityLabels = { high: 'Urgent', medium: 'Important', low: 'Info' };
 
 const formatDate = () => {
-  return new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date().toLocaleDateString(localeCourante(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 export function DashboardV2() {
@@ -136,7 +137,7 @@ export function DashboardV2() {
                   <p style={{ margin: 0, fontSize: 'var(--aurora-text-sm)', color: 'var(--aurora-text-muted)' }}>{signal.description}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 600, color: 'var(--aurora-emerald)' }}>{signal.value.toLocaleString('fr-FR')} €</div>
+                  <div style={{ fontWeight: 600, color: 'var(--aurora-emerald)' }}>{signal.value.toLocaleString(localeCourante())} €</div>
                   <div style={{ fontSize: 'var(--aurora-text-xs)', color: 'var(--aurora-text-muted)' }}>valeur estimée</div>
                 </div>
                 <ArrowRight size={18} style={{ color: 'var(--aurora-text-muted)' }} />

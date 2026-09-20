@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Calendar, Plus, Clock, MapPin, X, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useClientStore } from '../stores/clientStore'
+import { libellesMarche, marcheCourante } from '../lib/marche'
+import { localeCourante } from '../lib/monnaie'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -18,6 +20,9 @@ const TYPE_LABELS = {
 }
 
 export default function CalendarView() {
+  // Fuseau par défaut du marché du cabinet : un rendez-vous d'un cabinet suisse
+  // ne doit pas être posé en « Europe/Paris » par défaut.
+  const fuseauCabinet = libellesMarche(marcheCourante()).fuseauHoraire
   const token = useAuthStore((state) => state.token)
   const clients = useClientStore((state) => state.clients)
   const [appointments, setAppointments] = useState([])
@@ -30,7 +35,7 @@ export default function CalendarView() {
     description: '',
     start_time: '',
     end_time: '',
-    timezone: 'Europe/Paris',
+    timezone: fuseauCabinet,
     type: 'meeting'
   })
 
@@ -80,7 +85,7 @@ export default function CalendarView() {
           description: '',
           start_time: '',
           end_time: '',
-          timezone: 'Europe/Paris',
+          timezone: fuseauCabinet,
           type: 'meeting'
         })
         setSelectedClient(null)
@@ -113,7 +118,7 @@ export default function CalendarView() {
       description: apt.description || '',
       start_time: apt.start_time,
       end_time: apt.end_time,
-      timezone: apt.timezone || 'Europe/Paris',
+      timezone: apt.timezone || fuseauCabinet,
       type: apt.type || 'meeting'
     })
     setShowModal(true)
@@ -209,7 +214,7 @@ export default function CalendarView() {
               description: '',
               start_time: '',
               end_time: '',
-              timezone: 'Europe/Paris',
+              timezone: fuseauCabinet,
               type: 'meeting'
             })
             setShowModal(true)
@@ -228,7 +233,7 @@ export default function CalendarView() {
             <ChevronLeft size={20} />
           </button>
           <h2 className="text-2xl font-bold text-cyan">
-            {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+            {currentDate.toLocaleDateString(localeCourante(), { month: 'long', year: 'numeric' })}
           </h2>
           <button onClick={nextMonth} className="btn-secondary">
             <ChevronRight size={20} />
@@ -270,7 +275,7 @@ export default function CalendarView() {
                       <div className="flex gap-4 mt-2 text-xs text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Clock size={14} />
-                          {startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          {startTime.toLocaleTimeString(localeCourante(), { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString(localeCourante(), { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         <span className={`px-2 py-1 rounded text-xs ${TYPE_COLORS[apt.type] || TYPE_COLORS.meeting}`}>
                           {TYPE_LABELS[apt.type]}

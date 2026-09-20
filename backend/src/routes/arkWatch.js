@@ -20,12 +20,31 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const logger = require('../lib/logger')
+const marcheCabinet = require('../lib/marcheCabinet')
 const {
   runArkWatch,
   getSignalStats,
   generateMorningBrief,
   getDetectorsList
 } = require('../services/arkWatch')
+
+/**
+ * Marché du CABINET du courtier connecté (lib/marcheCabinet). POURQUOI : la
+ * liste des détecteurs doit dire au cabinet quelles règles s'appliquent
+ * RÉELLEMENT chez lui — sinon `/api/ark-watch/detectors` annoncerait « Loi
+ * Hamon » et « Préavis Chatel » ACTIFS à un cabinet suisse, alors que le runner
+ * ne les exécute plus (défaut P1 CH-016).
+ */
+async function marcheDuCabinet(req) {
+  try {
+    const verdict = await marcheCabinet.marcheUtilisateur(
+      req.user.id || req.user.userId, (sql, params) => pool.query(sql, params)
+    )
+    return (verdict && verdict.marche) || 'FR'
+  } catch (_err) {
+    return 'FR'
+  }
+}
 
 // =============================================================================
 // GET /api/ark-watch/signals — Liste des signaux
@@ -350,8 +369,11 @@ router.get('/runs', async (req, res) => {
 
 router.get('/detectors', async (req, res) => {
   try {
-    const detectors = getDetectorsList()
-    res.json({ detectors })
+    // Marché du cabinet : la liste dit quelles règles sont réellement exécutées
+    // pour CE cabinet (un détecteur de loi française est `actif: false` en CH).
+    const marche = await marcheDuCabinet(req)
+    const detectors = getDetectorsList(marche)
+    res.json({ detectors, marche })
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur', details: err.message })
   }

@@ -91,7 +91,7 @@ function KPICard({ icon: Icon, title, value, format = 'number', loading, color, 
             fontWeight: 700,
             color: '#0a0a0a',
             margin: 0,
-            fontFamily: 'Arial, sans-serif',
+            fontFamily: 'var(--c-font-body, Inter, sans-serif)',
             letterSpacing: '-0.02em',
           }}>
             <AnimatedNumber value={value} format={format} />
@@ -187,7 +187,7 @@ function MiniLineChart({ data = [], color = '#2563eb', height = 180 }) {
             fill="rgba(0,0,0,0.35)"
             fontSize="4"
             fontWeight="500"
-            fontFamily="Arial, sans-serif"
+            fontFamily="var(--c-font-body, Inter, sans-serif)"
           >
             {d.month}
           </text>
@@ -339,10 +339,10 @@ export default function AnalyticsExecutive() {
           transition={{ duration: 0.4 }}
           style={{ marginBottom: 28 }}
         >
-          <h1 className="ae-title" style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 28, color: '#0a0a0a', margin: 0 }}>
+          <h1 className="ae-title" style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 28, color: 'var(--c-text-primary, #f4f6ff)', margin: 0 }}>
             Analyses dirigeants
           </h1>
-          <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>
+          <p style={{ fontSize: 13, color: 'var(--c-text-secondary, rgba(244,246,255,0.72))', marginTop: 4 }}>
             Vue d'ensemble et indicateurs clés de votre portefeuille.
           </p>
         </motion.div>
@@ -368,7 +368,7 @@ export default function AnalyticsExecutive() {
           {/* Monthly evolution chart */}
           <BubbleCard hover={false} padding={24}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
+              <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
                 Évolution mensuelle du CA
               </h3>
               {serieCa.length > 1
@@ -388,7 +388,7 @@ export default function AnalyticsExecutive() {
             {/* Product repartition — mesurée, ou déclarée non mesurée */}
             <BubbleCard hover={false} padding={24}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-                <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
+                <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
                   Répartition par type de produit
                 </h3>
                 {repartitionProduits.length > 0 && (
@@ -409,7 +409,7 @@ export default function AnalyticsExecutive() {
 
             {/* Activité hebdomadaire — aucune source de mesure : on le dit */}
             <BubbleCard hover={false} padding={24}>
-              <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
+              <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
                 Activité hebdomadaire
               </h3>
               {/* L'ancien écran dessinait ici une grille de 35 cases colorées par
@@ -427,7 +427,7 @@ export default function AnalyticsExecutive() {
         {/* Fallback if no data */}
         {!loading && !stats && (
           <BubbleCard hover={false} padding={40} style={{ marginTop: 24, textAlign: 'center' }}>
-            <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 8 }}>
+            <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 8 }}>
               Données non disponibles
             </h3>
             <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', margin: 0 }}>

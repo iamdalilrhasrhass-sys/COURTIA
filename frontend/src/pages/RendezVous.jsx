@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import api from '../api'
 import { normaliserTaches } from '../lib/tachesViewModel'
+import { localeCourante } from '../lib/monnaie'
 
 /**
  * Écran Rendez-vous — adossé à l'agenda réel du cabinet, sans jeu de données inventé.
@@ -45,14 +46,14 @@ function libelleJour(iso) {
   demain.setDate(demain.getDate() + 1)
   if (iso === jourLocal(demain)) return 'Demain'
   const d = new Date(`${iso}T12:00:00`)
-  return new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(d)
+  return new Intl.DateTimeFormat(localeCourante(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d)
 }
 
 function heureFr(valeur) {
   if (!valeur) return '—'
   const d = new Date(valeur)
   if (Number.isNaN(d.getTime())) return '—'
-  return new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(d)
+  return new Intl.DateTimeFormat(localeCourante(), { hour: '2-digit', minute: '2-digit' }).format(d)
 }
 
 function KpiCard({ icon: Icon, title, value, accent }) {

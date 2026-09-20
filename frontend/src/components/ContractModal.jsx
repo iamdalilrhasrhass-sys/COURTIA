@@ -1,10 +1,14 @@
 import { X } from 'lucide-react'
 import { useState } from 'react'
+import { symboleCourant } from '../lib/monnaie'
 
 export default function ContractModal({ clientId, onClose, onAdd }) {
   const [formData, setFormData] = useState({
     contract_type: 'auto',
-    company: 'AXA',
+    // POURQUOI vide : le formulaire pré-remplissait « AXA », un assureur imposé
+    // à un cabinet qui n'a peut-être aucun contrat avec lui. Le courtier saisit
+    // la compagnie réelle de son portefeuille.
+    company: '',
     premium: '',
     startDate: '',
     endDate: '',
@@ -81,7 +85,7 @@ export default function ContractModal({ clientId, onClose, onAdd }) {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Prime annuelle (€) *</label>
+            <label className="block text-sm font-bold mb-2">Prime annuelle ({symboleCourant()}) *</label>
             <input
               type="number"
               name="premium"

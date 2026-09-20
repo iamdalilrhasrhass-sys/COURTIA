@@ -6,6 +6,40 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, ShieldCheck, ShieldAlert, ShieldX, Download, RefreshCw, Loader2, AlertTriangle, FileText, Sparkles } from 'lucide-react';
+import { marcheCabinet, marchePublic } from '../../lib/marche';
+
+/**
+ * Référentiel affiché, par marché.
+ *
+ * POURQUOI : le composant est partagé (cockpit cabinet français ET suisse) et
+ * annonçait en dur « dossiers en risque élevé/critique ACPR ». Un cabinet
+ * suisse lisait donc une autorité de supervision française qui n'a aucune
+ * compétence en Suisse. Le libellé suit maintenant le marché du cabinet.
+ *
+ * Le marché CH ne reçoit AUCUNE autorité nommée : on ne remplace pas « ACPR »
+ * par « FINMA », on retire la mention — on n'invente pas un référentiel suisse.
+ * Les intitulés français restent strictement inchangés pour la France.
+ */
+const REFERENTIELS = {
+  FR: {
+    titre: 'Conformité DDA',
+    sousTitre: 'Directive Distribution Assurance — Audit automatique ARK',
+    autorite: 'ACPR',
+    prefixeRapport: 'DDA',
+  },
+  CH: {
+    titre: 'Conformité courtage',
+    sousTitre: 'Audit automatique ARK',
+    autorite: null,
+    prefixeRapport: 'Conformite',
+  },
+};
+
+/** Marché effectif : prop explicite > profil du cabinet > détection publique. */
+function referentielMarche(market) {
+  const marche = market || marcheCabinet() || marchePublic();
+  return REFERENTIELS[marche === 'CH' ? 'CH' : 'FR'];
+}
 
 const T = {
   bg: '#050510',
@@ -35,10 +69,12 @@ const LEVELS = {
   non_conforme: { color: 'danger', icon: ShieldX, label: 'Non conforme' }
 };
 
-export default function DDACompliance({ apiBase = '/api', authToken }) {
+export default function DDACompliance({ apiBase = '/api', authToken, market }) {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [auditing, setAuditing] = useState(false);
+  // Référentiel du marché du cabinet : jamais français par défaut.
+  const referentiel = referentielMarche(market);
 
   const load = async () => {
     setLoading(true);
@@ -84,8 +120,8 @@ export default function DDACompliance({ apiBase = '/api', authToken }) {
               <Shield size={22} color="#fff" />
             </div>
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: 0 }}>Conformité DDA</h2>
-              <p style={{ fontSize: 11, color: T.textMuted, margin: '2px 0 0 0' }}>Directive Distribution Assurance — Audit automatique ARK</p>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: 0 }}>{referentiel.titre}</h2>
+              <p style={{ fontSize: 11, color: T.textMuted, margin: '2px 0 0 0' }}>{referentiel.sousTitre}</p>
             </div>
           </div>
           <button onClick={batchAudit} disabled={auditing} style={{
@@ -123,7 +159,9 @@ export default function DDACompliance({ apiBase = '/api', authToken }) {
         {parseInt(stats.at_risk || 0) > 0 && (
           <div style={{ marginTop: 14, borderRadius: 10, background: T.dangerBg, border: `1px solid ${T.dangerBorder}`, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <AlertTriangle size={18} color={T.danger} style={{ flexShrink: 0 }} />
-            <div style={{ fontSize: 12, color: T.textSecondary }}><strong style={{ color: T.danger }}>{stats.at_risk}</strong> dossiers en risque élevé/critique ACPR — à corriger en priorité</div>
+            {/* L'autorité n'est nommée que si le marché en a une : en Suisse on
+                écrit « dossiers en risque élevé/critique », sans sigle. */}
+            <div style={{ fontSize: 12, color: T.textSecondary }}><strong style={{ color: T.danger }}>{stats.at_risk}</strong> dossiers en risque élevé/critique{referentiel.autorite ? ` ${referentiel.autorite}` : ''} — à corriger en priorité</div>
           </div>
         )}
       </div>
@@ -137,7 +175,7 @@ export default function DDACompliance({ apiBase = '/api', authToken }) {
           <p style={{ fontSize: 12, color: T.textMuted, textAlign: 'center', padding: 20 }}>Aucun audit pour l'instant — lance un audit batch</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {dashboard.worst.map(audit => <ClientAuditRow key={audit.client_id} audit={audit} apiBase={apiBase} authToken={authToken} onRefresh={load} />)}
+            {dashboard.worst.map(audit => <ClientAuditRow key={audit.client_id} audit={audit} apiBase={apiBase} authToken={authToken} onRefresh={load} referentiel={referentiel} />)}
           </div>
         )}
       </div>
@@ -145,14 +183,14 @@ export default function DDACompliance({ apiBase = '/api', authToken }) {
   );
 }
 
-function ClientAuditRow({ audit, apiBase, authToken, onRefresh }) {
+function ClientAuditRow({ audit, apiBase, authToken, onRefresh, referentiel = REFERENTIELS.FR }) {
   const [reAuditing, setReAuditing] = useState(false);
   const level = LEVELS[audit.compliance_level] || LEVELS.non_conforme;
   const Icon = level.icon;
   const ct = colorTokens[level.color];
 
   const reAudit = async (e) => { e.stopPropagation(); setReAuditing(true); await fetch(`${apiBase}/dda/audit/${audit.client_id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } }); setReAuditing(false); onRefresh(); };
-  const downloadReport = async (e) => { e.stopPropagation(); const r = await fetch(`${apiBase}/dda/report/${audit.client_id}`, { headers: { 'Authorization': `Bearer ${authToken}` } }); if (r.ok) { const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `DDA_${audit.client_name}.pdf`; a.click(); URL.revokeObjectURL(u); } };
+  const downloadReport = async (e) => { e.stopPropagation(); const r = await fetch(`${apiBase}/dda/report/${audit.client_id}`, { headers: { 'Authorization': `Bearer ${authToken}` } }); if (r.ok) { const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `${referentiel.prefixeRapport}_${audit.client_name}.pdf`; a.click(); URL.revokeObjectURL(u); } };
   const missing = typeof audit.missing_items === 'string' ? JSON.parse(audit.missing_items) : (audit.missing_items || []);
 
   return (
@@ -211,7 +249,8 @@ export function DDABadge({ clientId, apiBase = '/api', authToken }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: ct.bg, border: `1px solid ${ct.border}` }}>
       <Icon size={14} color={ct.text} />
-      <span style={{ fontSize: 11, fontWeight: 600, color: ct.text }}>DDA {audit.global_score}/100</span>
+      {/* Sigle du marché : « DDA » ne s'affiche que pour un cabinet français. */}
+      <span style={{ fontSize: 11, fontWeight: 600, color: ct.text }}>{referentielMarche().prefixeRapport} {audit.global_score}/100</span>
       <span style={{ fontSize: 9, fontWeight: 600, color: ct.text, opacity: 0.7, textTransform: 'uppercase' }}>{level.label}</span>
     </div>
   );

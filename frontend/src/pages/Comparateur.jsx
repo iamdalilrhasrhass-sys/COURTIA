@@ -9,6 +9,7 @@ import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
 import toast from 'react-hot-toast'
+import { fmtMontant } from '../lib/monnaie'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
@@ -24,7 +25,8 @@ const NIVEAUX = [
   { key: 'premium',   label: 'Premium',   desc: 'Couverture maximale' },
 ]
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0)
+// Devise du cabinet (lib/monnaie) : le comparateur affichait des euros en dur.
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const inputStyle = {
   width: '100%', padding: '10px 12px', borderRadius: 8,

@@ -1,12 +1,12 @@
+import { fmtMontant } from './monnaie'
+
 export function formatCommissionCurrency(value) {
   if (value === null || value === undefined || value === '') return '—'
   const num = Number(value)
   if (!Number.isFinite(num)) return '—'
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(num).replace(/\u00a0/g, ' ')
+  // Devise du CABINET (CHF en Suisse, EUR sinon) : cet utilitaire forçait
+  // l'euro et affichait donc « 1 200 € » dans un cabinet suisse.
+  return fmtMontant(num, { maximumFractionDigits: 0 })
 }
 
 export function centsToEuros(cents) {

@@ -3,6 +3,7 @@
  * Intégration Yousign pour IPID, DDA, Devoir de conseil
  */
 
+const marcheCabinet = require('../lib/marcheCabinet')
 const express = require('express')
 const router = express.Router()
 const yousignService = require('../services/yousignService')
@@ -40,11 +41,17 @@ router.post('/create', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Document requis' })
     }
 
+    const marcheSignature = await marcheCabinet.marcheDeLaRequete(
+      req, (sql, params) => (req.app?.locals?.pool || pool).query(sql, params)
+    )
     const result = await yousignService.createSignatureRequest(
       documentContent || documentPath,
       signerEmail,
       signerName || 'Client',
-      { title: documentTitle, phone }
+      // Fuseau du marché du cabinet (jamais « Europe/Paris » imposé à un
+      // cabinet suisse) : la demande de signature suit le cabinet.
+      { title: documentTitle, phone, marche: marcheSignature ? marcheSignature.marche : 'FR',
+        timeZone: marcheSignature ? marcheSignature.fuseau : undefined }
     )
 
     // CORRECTION 2026-09-19 : on ne crée plus de demande de signature quand le

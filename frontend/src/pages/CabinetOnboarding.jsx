@@ -9,12 +9,13 @@ import Badge from '../components/ui/Badge'
 import StatusPill from '../components/ui/StatusPill'
 import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 const STEP_META = {
   profile: {
     icon: Building2,
     title: 'Profil cabinet',
-    subtitle: 'Identité, ville, ORIAS et socle de conformité.',
+    subtitle: 'Identité, ville et socle de conformité.',
   },
   import: {
     icon: FileSpreadsheet,
@@ -133,18 +134,22 @@ export default function CabinetOnboarding() {
               <ShieldCheck size={20} color="var(--c-aurora-cyan)" />
               <div>
                 <h2 style={h2Style}>1. Profil cabinet</h2>
-                <p style={mutedStyle}>Ces données alimenteront les futurs documents DDA et la conformité cabinet.</p>
+                {/* « DDA » est un intitulé français ; la phrase décrit la même
+                    finalité pour les deux marchés. */}
+                <p style={mutedStyle}>Ces données alimenteront les futurs documents de conformité et le socle réglementaire du cabinet.</p>
               </div>
             </div>
             <div style={formGridStyle}>
               <Field label="Nom du cabinet">
                 <Input value={profile.cabinet_name} onChange={(e) => setProfile((v) => ({ ...v, cabinet_name: e.target.value }))} placeholder="Cabinet Dupont Assurances" />
               </Field>
-              <Field label="ORIAS">
+              {/* Registre du marché du cabinet : ORIAS en France, registre
+                  FINMA / IDE en Suisse. */}
+              <Field label={libellesMarche(marcheCourante()).registre}>
                 <Input value={profile.orias_number} onChange={(e) => setProfile((v) => ({ ...v, orias_number: e.target.value }))} placeholder="07000000" />
               </Field>
               <Field label="Ville">
-                <Input value={profile.city} onChange={(e) => setProfile((v) => ({ ...v, city: e.target.value }))} placeholder="Paris" />
+                <Input value={profile.city} onChange={(e) => setProfile((v) => ({ ...v, city: e.target.value }))} placeholder="Ville" />
               </Field>
             </div>
             <Button onClick={() => completeStep('profile', profile)} disabled={savingStep === 'profile'}>

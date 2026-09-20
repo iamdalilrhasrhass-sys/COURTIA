@@ -9,6 +9,7 @@ import Badge from '../components/ui/Badge'
 import StatusPill from '../components/ui/StatusPill'
 import EmptyState from '../components/ui/EmptyState'
 import CourtiaMiniLogo from '../components/brand/CourtiaMiniLogo'
+import { localeCourante } from '../lib/monnaie'
 
 export default function InviteAccept() {
   const { token } = useParams()
@@ -97,7 +98,7 @@ export default function InviteAccept() {
 
 function formatDate(value) {
   if (!value) return '—'
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(value))
+  return new Intl.DateTimeFormat(localeCourante(), { dateStyle: 'medium' }).format(new Date(value))
 }
 
 const pageStyle = { minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--c-text-primary)', padding: 18, position: 'relative' }

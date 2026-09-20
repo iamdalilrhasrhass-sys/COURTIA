@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { UserPlus, Target, MapPin, TrendingUp, Zap, Search, CalendarDays } from 'lucide-react'
 import api from '../api'
-import { fmtMontant } from '../lib/monnaie'
+import { fmtMontant, localeCourante } from '../lib/monnaie'
 
 /* Aucun jeu de données d'exemple : cet écran affichait six entreprises inventées
    (Entreprise Lambert, Clinique Vétérinaire du Parc, SARL Dupuis Transport…)
@@ -193,7 +193,7 @@ export default function Prospection() {
                   </td>
                   {/* Un potentiel absent reste « — » : jamais un 0 €. */}
                   <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#22C55E' }}>
-                    {Number.isFinite(potentiel) ? `${potentiel.toLocaleString('fr-FR')} CHF` : '—'}
+                    {Number.isFinite(potentiel) ? `${potentiel.toLocaleString(localeCourante())} CHF` : '—'}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: s.bg, color: s.text }}>

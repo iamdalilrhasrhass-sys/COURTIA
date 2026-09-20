@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const pool = require('../db');
+const { hachageJeton } = require('../lib/jetons');
 
 class User {
   static async create(email, password, firstName, lastName, role = 'broker') {
@@ -50,27 +51,50 @@ class User {
   }
 
   // --- Password reset ---
+  //
+  // DÉFAUT FERMÉ (P3 SEC-027, mesuré en production le 20/09/2026)
+  // `password_reset_token` était écrit EN CLAIR dans `users`. Une lecture de la
+  // base — sauvegarde, dump, accès en lecture d'un prestataire, injection SQL
+  // ailleurs — donnait donc le pouvoir de réinitialiser (et donc de prendre) le
+  // mot de passe de N'IMPORTE QUEL compte, pendant toute la durée de validité du
+  // jeton. Une entrée de `users` suffisait à prendre la main sur un cabinet.
+  //
+  // CORRECTION : seul le HACHAGE SHA-256 du jeton est stocké (lib/jetons.js).
+  // L'API de ce modèle ne change pas : l'appelant reçoit toujours le jeton en
+  // clair (c'est lui, et lui seul, qui part dans l'e-mail), et le jeton présenté
+  // est haché avant la comparaison. Aucun appelant n'a donc à être modifié, et
+  // aucun chemin ne peut contourner le hachage par oubli.
 
   static async setResetToken(email, token, expiresAt) {
+    const empreinte = hachageJeton(token);
+    if (!empreinte) {
+      // Un jeton trop court n'a pas l'entropie d'un jeton : on refuse de
+      // l'enregistrer plutôt que de stocker un secret devinable.
+      throw new Error('jeton_reinitialisation_invalide');
+    }
     const result = await pool.query(
       `UPDATE users SET password_reset_token = $1, password_reset_expires = $2
        WHERE email = $3
        RETURNING id, email`,
-      [token, expiresAt, email]
-    );
-    return result.rows[0] || null;
+      [empreinte, expiresAt, email]
+    )
+    return result.rows[0] || null
   }
 
   static async findByResetToken(token) {
+    const empreinte = hachageJeton(token);
+    if (!empreinte) return null
     const result = await pool.query(
       `SELECT id, email, password_reset_expires FROM users
        WHERE password_reset_token = $1`,
-      [token]
-    );
-    return result.rows[0] || null;
+      [empreinte]
+    )
+    return result.rows[0] || null
   }
 
   static async resetPassword(token, newPassword) {
+    const empreinte = hachageJeton(token);
+    if (!empreinte) return null
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     // SEC-016 : un mot de passe réinitialisé doit invalider les sessions
     // ouvertes avec l'ancien mot de passe (password_changed_at testé par
@@ -80,9 +104,9 @@ class User {
                         password_changed_at = NOW(), updated_at = NOW()
        WHERE password_reset_token = $2
        RETURNING id, email`,
-      [hashedPassword, token]
-    );
-    return result.rows[0] || null;
+      [hashedPassword, empreinte]
+    )
+    return result.rows[0] || null
   }
 
   // --- Essai : invitation puis activation ---

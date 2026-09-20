@@ -1,15 +1,41 @@
-import React from 'react'
+/* ============================================================================
+   COURTIA — Écran « Rapports »
+   ----------------------------------------------------------------------------
+   POURQUOI cette réécriture : cet écran était ENTIÈREMENT fabriqué. Il gardait
+   en constantes des chiffres de démonstration (124 clients actifs, 312 contrats,
+   312 400 de primes, « 38 % contre 58 % », « Dubois SCP », les compagnies
+   « Aurora Assurances » / « Helios Protection »…) et n'appelait AUCUNE API. Un
+   cabinet suisse sans un seul client y lisait donc un portefeuille inventé —
+   reproduit en production le 20/09/2026.
+
+   RÈGLE de cet écran désormais : chaque valeur affichée vient d'une API réelle
+   du cabinet ; une mesure absente vaut « — » ou une phrase qui dit qu'elle n'est
+   pas mesurée. Aucune constante de démonstration, aucune prose d'analyse
+   inventée, aucun nom de compagnie d'exemple.
+
+   SOURCES (les mêmes en démonstration, qui les remplace par ses données
+   synthétiques — voir demo/reponsesDemo.js) :
+     • GET /api/dashboard/stats → clients, contrats, primes, devis, tâches,
+       commissions du mois, score de risque moyen, répartition par statut,
+       répartition par produit, primes des 6 derniers mois ;
+     • GET /api/clients         → lignes clients réelles (score de risque,
+       prochaine échéance, dernier contact) pour le panneau « à risque » ;
+     • GET /api/opportunites    → opportunités réellement détectées.
+
+   Les dates suivent la locale du cabinet (lib/monnaie.js : fr-CH en Suisse).
+   ========================================================================== */
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  TrendingUp, TrendingDown, AlertTriangle, Zap, Sparkles,
-  FileText, Users, Euro, Target, Shield, BarChart3, Calendar,
-  ChevronRight, PieChart, Activity, ArrowUp, ArrowDown, Clock,
-  CheckCircle2, XCircle, Lightbulb, Layers
+  TrendingUp, AlertTriangle, Zap, Sparkles, FileText, Users, Euro, Target,
+  Shield, BarChart3, PieChart, Activity, ArrowUp, ArrowDown, Clock,
+  Lightbulb, RefreshCw, CheckCircle2,
 } from 'lucide-react'
-import CommissionForecastBar from '../components/widgets/CommissionForecastBar'
-import { fmtMontant, fmtNombre } from '../lib/monnaie'
+import api from '../api'
+import { fmtMontant, fmtNombre, fmtDate } from '../lib/monnaie'
 
-// ─── Aurora Dark Theme Tokens ──────────────────────────────────────────────
+// ─── Jetons de thème (inchangés : design system COURTIA) ───────────────────
 const T = {
   bg: '#050510',
   cardBg: 'rgba(255,255,255,0.03)',
@@ -18,6 +44,7 @@ const T = {
   text: '#FFFFFF',
   textSecondary: '#9CA3AF',
   textMuted: '#6B7280',
+  textDim: '#4B5563',
   accent: '#5B4DF5',
   accentBg: 'rgba(91,77,245,0.08)',
   accentBorder: 'rgba(91,77,245,0.20)',
@@ -35,93 +62,24 @@ const T = {
   dangerBorder: 'rgba(239,68,68,0.15)',
 }
 
-// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
-const fmtEur = function(v) {
-  return fmtMontant(v, { maximumFractionDigits: 0 })
-}
-const fmtNum = function(v) {
-  return fmtNombre(v)
-}
-const fmtPct = function(v) {
-  return Number(v || 0).toFixed(1) + ' %'
-}
+// Devise et locale centrales du cabinet (CHF + fr-CH en Suisse, EUR + fr-FR sinon).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
+const fmtNum = (v) => fmtNombre(v)
+const NON_MESURE = '—'
 
-// ─── Fictional Data ─────────────────────────────────────────────────────────
-const KPI_DATA = {
-  clientsActifs: 124,
-  contratsActifs: 312,
-  primesSuivies: 312400,
-  devisEnCours: 42,
-  tauxTransformation: 20,
-  relancesEnRetard: 18,
-  opportunites: 12,
-  portefeuilleARisque: 9,
+/** Nombre exploitable, sinon null (« pas de mesure ») — jamais 0 par défaut. */
+function nombreOuNull(v) {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
 }
 
-const PORTFOLIO_HEALTH = {
-  scoreGlobal: 72,
-  distribution: [
-    { niveau: 'Excellente santé', pct: 48, count: 152, couleur: T.success },
-    { niveau: 'Surveillance', pct: 31, count: 97, couleur: T.warning },
-    { niveau: 'À risque', pct: 12, count: 38, couleur: T.danger },
-    { niveau: 'Critique', pct: 9, count: 25, couleur: '#F97316' },
-  ],
-  interpretation: 'Votre portefeuille affiche une santé globale satisfaisante avec un score de 72/100. ARK a identifié 9 clients en situation de risque nécessitant une attention prioritaire. La concentration sur les produits Auto (38 %) expose votre cabinet à la volatilité du marché automobile.',
+function libelleDate(valeur) {
+  return valeur ? fmtDate(valeur) : NON_MESURE
 }
-
-const PERF_MENSUELLE = [
-  { mois: 'Jan', devis: 38, contrats: 18, taux: 47 },
-  { mois: 'Fév', devis: 42, contrats: 22, taux: 52 },
-  { mois: 'Mar', devis: 35, contrats: 16, taux: 46 },
-  { mois: 'Avr', devis: 48, contrats: 28, taux: 58 },
-  { mois: 'Mai', devis: 40, contrats: 15, taux: 38 },
-]
-const PERF_EVOLUTION = { devisVar: -16.7, contratsVar: -46.4, tauxVar: -34.5 }
-
-const REPARTITION_PRODUITS = [
-  { produit: 'Auto Multirisque', compagnie: 'Aurora Assurances', contrats: 118, prime: 142600, pct: 38 },
-  { produit: 'MRH Confort', compagnie: 'Helios Protection', contrats: 72, prime: 58600, pct: 23 },
-  { produit: 'Santé Premium', compagnie: 'Novalia Courtage', contrats: 48, prime: 67300, pct: 15 },
-  { produit: 'Prévoyance Cadre', compagnie: 'Atlas Assurances', contrats: 31, prime: 22300, pct: 10 },
-  { produit: 'RC Professionnelle', compagnie: 'Serenis Risk', contrats: 24, prime: 18400, pct: 8 },
-  { produit: 'Protection Juridique', compagnie: 'Oria Garanties', contrats: 12, prime: 3200, pct: 4 },
-  { produit: 'Flotte Auto', compagnie: 'Nivalis Pro', contrats: 7, prime: 12400, pct: 2 },
-]
-
-const CLIENTS_A_RISQUE = [
-  { client: 'Leroy Marie', compagnie: 'Aurora Assurances', produit: 'Habitation Confort', scoreRisque: 85, prime: 680, raison: 'Aucune interaction depuis 52 jours. Contrat à échéance dans 38 jours sans devis de renouvellement.' },
-  { client: 'Karim Benali', compagnie: 'Helios Protection', produit: 'Auto Multirisque', scoreRisque: 78, prime: 1100, raison: 'Sinistre déclaré en mars, mécontentement latent. Score NPS en baisse.' },
-  { client: 'Moreau Éric', compagnie: 'Serenis Risk', produit: 'RC Professionnelle', scoreRisque: 74, prime: 2400, raison: 'Échéance à J-21, pas de réponse aux 2 relances envoyées.' },
-  { client: 'Petit Philippe', compagnie: 'Atlas Assurances', produit: 'Prévoyance Cadre', scoreRisque: 71, prime: 890, raison: 'Réclamation en cours sur indemnisation. Risque de résiliation.' },
-  { client: 'Dubois SCP', compagnie: 'Nivalis Pro', produit: 'Flotte Auto', scoreRisque: 68, prime: 3500, raison: 'Baisse de sinistralité mais concurrence agressive sur le segment.' },
-]
-
-const OPPORTUNITES_ARK = [
-  { client: 'Dupont SAS', potentiel: 12400, description: 'Flotte Auto + RC Pro + Protection juridique. Client mono-produit avec fort potentiel multi-équipement.', probabilite: 72 },
-  { client: 'Martin Sophie', potentiel: 5200, description: 'Non équipée Prévoyance — 2 contrats actifs. Profil cadre supérieur avec besoins identifiés.', probabilite: 68 },
-  { client: 'Garcia Anne', potentiel: 3400, description: 'Multi-équipement Santé + MRH. Client mono-produit Santé, éligible MRH.', probabilite: 65 },
-  { client: 'Bernard Luc', potentiel: 2800, description: 'Devis Auto #312 sans réponse depuis deux semaines. Fort potentiel de conversion.', probabilite: 55 },
-  { client: 'Roux Camille', potentiel: 1800, description: 'Extension garanties Habitation. Contrat de base depuis 3 ans, marge de progression.', probabilite: 48 },
-]
-
-const EVOLUTION_DEVIS_CONTRATS = [
-  { mois: 'Déc', devis: 36, contrats: 20 },
-  { mois: 'Jan', devis: 38, contrats: 18 },
-  { mois: 'Fév', devis: 42, contrats: 22 },
-  { mois: 'Mar', devis: 35, contrats: 16 },
-  { mois: 'Avr', devis: 48, contrats: 28 },
-  { mois: 'Mai', devis: 40, contrats: 15 },
-]
 
 // ─── KPI Card ───────────────────────────────────────────────────────────────
-function KpiCard(_a) {
-  var icon = _a.icon
-  var title = _a.title
-  var value = _a.value
-  var accent = _a.accent
-  var subtitle = _a.subtitle
-  var trend = _a.trend
-  var Icon = icon
+function KpiCard({ icon: Icon, title, value, accent, subtitle }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -132,8 +90,8 @@ function KpiCard(_a) {
         borderRadius: 12, padding: '16px 18px', flex: 1, minWidth: 155,
         transition: 'all 0.2s',
       }}
-      onMouseEnter={function(e) { e.currentTarget.style.background = T.cardHover; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
-      onMouseLeave={function(e) { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.cardBorder }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = T.cardHover; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.cardBorder }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</span>
@@ -142,25 +100,17 @@ function KpiCard(_a) {
         </div>
       </div>
       <div style={{ fontSize: 22, fontWeight: 800, color: T.text }}>{value}</div>
-      <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-        {trend && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: trend > 0 ? T.success : T.danger, display: 'flex', alignItems: 'center', gap: 2 }}>
-            {trend > 0 ? React.createElement(ArrowUp, { size: 10 }) : React.createElement(ArrowDown, { size: 10 })}
-            {Math.abs(trend)}%
-          </span>
-        )}
-        {subtitle && <span style={{ fontSize: 11, fontWeight: 500, color: T.textMuted }}>{subtitle}</span>}
-      </div>
+      {subtitle && (
+        <div style={{ marginTop: 4 }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: T.textMuted }}>{subtitle}</span>
+        </div>
+      )}
     </motion.div>
   )
 }
 
 // ─── Section Header ─────────────────────────────────────────────────────────
-function SectionHeader(_a) {
-  var icon = _a.icon
-  var title = _a.title
-  var badge = _a.badge
-  var Icon = icon
+function SectionHeader({ icon: Icon, title, badge }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
       <div style={{ width: 36, height: 36, borderRadius: 10, background: T.arkBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -176,12 +126,8 @@ function SectionHeader(_a) {
   )
 }
 
-// ─── Simple Bar (horizontal progress bar) ───────────────────────────────────
-function HorizontalBar(_a) {
-  var label = _a.label
-  var pct = _a.pct
-  var count = _a.count
-  var couleur = _a.couleur
+// ─── Barre horizontale ──────────────────────────────────────────────────────
+function HorizontalBar({ label, pct, count, couleur }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -193,7 +139,7 @@ function HorizontalBar(_a) {
       <div style={{ height: 6, background: 'rgba(255,255,255,0.04)', borderRadius: 3, overflow: 'hidden' }}>
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: pct + '%' }}
+          animate={{ width: Math.max(0, Math.min(100, pct)) + '%' }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
           style={{ height: '100%', borderRadius: 3, background: couleur }}
         />
@@ -202,16 +148,14 @@ function HorizontalBar(_a) {
   )
 }
 
-// ─── Simple Vertical Bar Chart ──────────────────────────────────────────────
-function BarChartSimple(_a) {
-  var data = _a.data
-  var height = _a.height
-  var maxVal = 0
-  data.forEach(function(d) {
-    if (d.devis > maxVal) maxVal = d.devis
-    if (d.contrats > maxVal) maxVal = d.contrats
-  })
-  var chartHeight = height || 180
+// ─── Histogramme mensuel (une seule série : la valeur mesurée) ──────────────
+function BarChartMensuel({ data, height = 180 }) {
+  const valeurs = data.map((d) => Number(d.valeur) || 0)
+  const maxVal = Math.max(...valeurs, 0)
+  const chartHeight = height || 180
+  if (!data.length || maxVal <= 0) {
+    return <CarteNonMesure>Aucune prime mensuelle enregistrée : l&apos;histogramme reste vide.</CarteNonMesure>
+  }
   return (
     <div style={{
       width: '100%', height: chartHeight,
@@ -219,71 +163,18 @@ function BarChartSimple(_a) {
       border: '1px solid rgba(255,255,255,0.03)',
       padding: '12px 8px 4px', position: 'relative', overflow: 'hidden',
     }}>
-      {/* Grid lines subtiles */}
-      {[0.25, 0.5, 0.75, 1].map(function(pct) {
-        return <div key={pct} style={{
-          position: 'absolute', left: 0, right: 0,
-          bottom: 20 + (chartHeight - 28) * pct,
-          height: 1, background: 'rgba(255,255,255,0.03)',
-        }} />
-      })}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: chartHeight - 24, paddingBottom: 20 }}>
-        {data.map(function(d, i) {
-          var devisH = (d.devis / maxVal) * (chartHeight - 36)
-          var contratsH = (d.contrats / maxVal) * (chartHeight - 36)
-          return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: chartHeight - 36 }}>
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: devisH }}
-                  transition={{ duration: 0.6, delay: i * 0.06 }}
-                  style={{ width: 14, borderRadius: '4px 4px 0 0', background: 'linear-gradient(180deg, rgba(139,92,246,0.7) 0%, rgba(139,92,246,0.35) 100%)', boxShadow: '0 0 8px rgba(139,92,246,0.15)' }}
-                />
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: contratsH }}
-                  transition={{ duration: 0.6, delay: i * 0.06 + 0.1 }}
-                  style={{ width: 14, borderRadius: '4px 4px 0 0', background: 'linear-gradient(180deg, rgba(34,197,94,0.7) 0%, rgba(34,197,94,0.35) 100%)', boxShadow: '0 0 8px rgba(34,197,94,0.12)' }}
-                />
-              </div>
-              <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 600 }}>{d.mois}</span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ─── Vertical Bar Single ────────────────────────────────────────────────────
-function BarChartVertical(_a) {
-  var data = _a.data
-  var height = _a.height
-  var maxVal = 0
-  data.forEach(function(d) {
-    if (d.valeur > maxVal) maxVal = d.valeur
-  })
-  var chartHeight = height || 200
-  return (
-    <div style={{
-      width: '100%', height: chartHeight,
-      background: 'rgba(255,255,255,0.015)', borderRadius: 12,
-      border: '1px solid rgba(255,255,255,0.03)',
-      padding: '12px 8px 4px', position: 'relative', overflow: 'hidden',
-    }}>
-      {[0.25, 0.5, 0.75, 1].map(function(pct) {
-        return <div key={pct} style={{
+      {[0.25, 0.5, 0.75, 1].map((pct) => (
+        <div key={pct} style={{
           position: 'absolute', left: 0, right: 0,
           bottom: 24 + (chartHeight - 32) * pct,
           height: 1, background: 'rgba(255,255,255,0.03)',
         }} />
-      })}
+      ))}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: chartHeight - 24, paddingBottom: 24 }}>
-        {data.map(function(d, i) {
-          var barH = (d.valeur / maxVal) * (chartHeight - 40)
+        {data.map((d, i) => {
+          const barH = (Number(d.valeur) / maxVal) * (chartHeight - 40)
           return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div key={d.label + i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <span style={{ fontSize: 10, fontWeight: 600, color: T.textSecondary }}>{fmtEur(d.valeur)}</span>
               <motion.div
                 initial={{ height: 0 }}
@@ -304,584 +195,494 @@ function BarChartVertical(_a) {
   )
 }
 
-// ─── Mini Line Trend ────────────────────────────────────────────────────────
-function MiniTrend(_a) {
-  var data = _a.data
-  var accessor = _a.accessor
-  var color = _a.color
-  var height = _a.height || 40
-  var vals = data.map(function(d) { return accessor(d) })
-  var maxV = Math.max.apply(null, vals)
-  var minV = Math.min.apply(null, vals)
-  var range = maxV - minV || 1
-  var w = 100
-  var h = height
-  var points = vals.map(function(v, i) {
-    var x = (i / (vals.length - 1)) * w
-    var y = h - ((v - minV) / range) * (h - 4) - 2
-    return x.toFixed(1) + ',' + y.toFixed(1)
-  }).join(' ')
-  return (
-    <svg width={w} height={h} style={{ overflow: 'visible' }}>
-      <polyline
-        fill="none"
-        stroke={color || T.ark}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points}
-      />
-    </svg>
-  )
-}
-
-// ─── ARK Insight Banner ─────────────────────────────────────────────────────
-function ArkInsightBanner() {
+// ─── Encadré « non mesuré » ─────────────────────────────────────────────────
+function CarteNonMesure({ children }) {
   return (
     <div style={{
-      background: 'linear-gradient(135deg, ' + T.arkBg + ' 0%, rgba(91,77,245,0.04) 100%)',
-      border: '1px solid ' + T.arkBorder,
-      borderRadius: 14, padding: '18px 22px', marginBottom: 24,
-      display: 'flex', alignItems: 'flex-start', gap: 14,
+      background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.10)',
+      borderRadius: 10, padding: '14px 16px',
+      fontSize: 12.5, color: T.textSecondary, lineHeight: 1.6,
     }}>
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(139,92,246,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Sparkles size={20} color={T.ark} />
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.ark, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          Analyse ARK du mois
-        </div>
-        <p style={{ fontSize: 13, color: T.textSecondary, margin: '0 0 6px', lineHeight: 1.6 }}>
-          Votre taux de transformation devis baisse ce mois-ci (38 % contre 58 % en avril). ARK recommande de prioriser les 5 devis sans réponse. Par ailleurs, 9 clients présentent un score de risque élevé — une action préventive pourrait sauvegarder jusqu'à {fmtEur(8570)} de primes annuelles.
-        </p>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, color: T.danger, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <AlertTriangle size={11} /> 5 devis sans réponse
-          </span>
-          <span style={{ fontSize: 11, color: T.warning, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Clock size={11} /> 9 clients à risque
-          </span>
-          <span style={{ fontSize: 11, color: T.success, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Target size={11} /> 12 opportunités détectées
-          </span>
-        </div>
-      </div>
+      {children}
     </div>
   )
 }
 
-// ─── Score Gauge Circle ─────────────────────────────────────────────────────
-function ScoreGauge(_a) {
-  var score = _a.score
-  var size = _a.size || 100
-  var strokeW = (size / 100) * 6
-  var r = (size / 2) - strokeW
-  var circ = 2 * Math.PI * r
-  var offset = circ - (score / 100) * circ
-  var scoreColor = score >= 80 ? T.success : score >= 50 ? T.warning : T.danger
-  var statusLabel = score >= 80 ? 'Sain' : score >= 50 ? 'Surveillé' : 'Fragile'
+// ─── Bandeau d'échec (une panne ne devient jamais un « 0 ») ─────────────────
+function BoutonReessayer({ onClick, chargement }) {
   return (
-    <div style={{ position: 'relative', width: size, height: size }}>
-      <svg viewBox={'0 0 ' + size + ' ' + size} style={{ width: size, height: size, transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeW} />
-        <motion.circle
-          cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke={scoreColor} strokeWidth={strokeW}
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-        />
-      </svg>
-      <div style={{
-        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontSize: size * 0.28, fontWeight: 800, color: T.text, lineHeight: 1 }}>{score}</span>
-        <span style={{ fontSize: size * 0.11, fontWeight: 600, color: scoreColor, marginTop: 2 }}>{statusLabel}</span>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={chargement}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '7px 12px', borderRadius: 8, cursor: chargement ? 'default' : 'pointer',
+        background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
+        color: '#fff', fontSize: 12, fontWeight: 700,
+      }}
+    >
+      <RefreshCw size={13} /> {chargement ? 'Chargement…' : 'Réessayer'}
+    </button>
+  )
+}
+
+// ─── Carte « section » : même habillage pour les panneaux ───────────────────
+function Carte({ delay = 0, children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      style={{ background: T.cardBg, border: '1px solid ' + T.cardBorder, borderRadius: 16, padding: '18px 20px' }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ─── Bloc chiffre « Devis » ─────────────────────────────────────────────────
+function BlocChiffre({ label, valeur, couleur, rendu }) {
+  const inconnu = valeur === null || valeur === undefined
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid ' + T.cardBorder, borderRadius: 10, padding: '12px 14px' }}>
+      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: inconnu ? T.textMuted : couleur }}>
+        {inconnu ? NON_MESURE : (rendu ? rendu(valeur) : fmtNum(valeur))}
       </div>
     </div>
   )
 }
 
-// ─── Main Rapports Component ────────────────────────────────────────────────
+// ─── Écran ──────────────────────────────────────────────────────────────────
 export default function Rapports() {
+  const [stats, setStats] = useState(null)
+  const [clients, setClients] = useState([])
+  const [opportunites, setOpportunites] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [erreur, setErreur] = useState(null)
+  const [sourcesPartielles, setSourcesPartielles] = useState([])
+  // Les opportunités ont-elles pu être LUES ? Un tableau vide renvoyé par l'API
+  // est une mesure (« 0 opportunité ») ; une requête en échec, non (« — »).
+  const [opportunitesLues, setOpportunitesLues] = useState(false)
+
+  const charger = useCallback(async () => {
+    setChargement(true)
+    setErreur(null)
+    setSourcesPartielles([])
+
+    // `allSettled` : une source qui tombe n'efface pas les deux autres, et son
+    // échec est ANNONCÉ. Avant, chaque échec était remplacé par un tableau vide :
+    // une panne s'affichait comme un portefeuille à zéro.
+    const [statsR, clientsR, oppR] = await Promise.allSettled([
+      api.get('/dashboard/stats'),
+      api.get('/clients?limit=300'),
+      api.get('/opportunites?limit=20'),
+    ])
+
+    const partielles = []
+    if (statsR.status === 'fulfilled') {
+      setStats(statsR.value?.data || null)
+    } else {
+      setStats(null)
+      partielles.push('indicateurs du cabinet (/api/dashboard/stats)')
+    }
+
+    if (clientsR.status === 'fulfilled') {
+      const brut = clientsR.value?.data
+      setClients(Array.isArray(brut) ? brut : (brut?.data || []))
+    } else {
+      setClients([])
+      partielles.push('liste des clients (/api/clients)')
+    }
+
+    if (oppR.status === 'fulfilled') {
+      const brut = oppR.value?.data
+      setOpportunites(Array.isArray(brut) ? brut : (brut?.opportunites || brut?.data || []))
+      setOpportunitesLues(true)
+    } else {
+      setOpportunites([])
+      setOpportunitesLues(false)
+      partielles.push('opportunités (/api/opportunites)')
+    }
+
+    if (partielles.length === 3) {
+      setErreur("Aucune donnée du cabinet n'a pu être chargée. Aucun chiffre n'est affiché à la place : réessayez.")
+    } else {
+      setSourcesPartielles(partielles)
+    }
+    setChargement(false)
+  }, [])
+
+  useEffect(() => { charger() }, [charger])
+
+  // ── Valeurs mesurées (null = non mesuré, jamais 0 par défaut) ────────────
+  const mesures = useMemo(() => {
+    const clientsTotal = nombreOuNull(stats?.totalClients)
+    const clientsActifs = nombreOuNull(stats?.clientsActifs)
+    const contratsActifs = nombreOuNull(stats?.contratsActifs)
+    const primesSuivies = nombreOuNull(stats?.primeTotale)
+    const devisTotal = nombreOuNull(stats?.devisTotal)
+    const devisSignes = nombreOuNull(stats?.devisSignes)
+    const devisEnvoyes = nombreOuNull(stats?.devisEnAttente)
+    const tachesEnRetard = nombreOuNull(stats?.tachesEnRetard)
+    const opportunitesTotal = opportunitesLues
+      ? opportunites.length
+      : nombreOuNull(stats?.opportunites)
+    const scoreRisqueMoyen = nombreOuNull(stats?.scoreRisqueMoyen)
+    const commissionsMois = nombreOuNull(stats?.commissionsMois)
+    const commissionsEnregistrees = nombreOuNull(stats?.commissionsMoisEnregistrees)
+
+    // Taux de conversion devis = devis SIGNÉS / devis. Aucun devis ⇒ pas de
+    // mesure : null, jamais 0 % (qui laisserait croire à un échec mesuré).
+    const tauxConversion = (devisTotal && devisTotal > 0 && devisSignes !== null)
+      ? Math.round((devisSignes / devisTotal) * 1000) / 10
+      : null
+
+    return {
+      clientsTotal, clientsActifs, contratsActifs, primesSuivies,
+      devisTotal, devisSignes, devisEnvoyes, tachesEnRetard,
+      opportunitesTotal, scoreRisqueMoyen, tauxConversion,
+      // Une commission n'est affichée que si la table en porte réellement une.
+      commissionsMois: commissionsEnregistrees ? commissionsMois : null,
+    }
+  }, [stats, opportunites, opportunitesLues])
+
+  // Répartition des clients par statut (mesurée, portée cabinet).
+  const repartitionStatuts = useMemo(() => {
+    const map = stats?.clientsParStatut || {}
+    const entrees = Object.entries(map)
+      .filter(([, n]) => Number(n) > 0)
+      .map(([statut, n]) => ({ statut, count: Number(n) }))
+      .sort((a, b) => b.count - a.count)
+    const total = entrees.reduce((t, e) => t + e.count, 0)
+    return { entrees, total }
+  }, [stats])
+
+  // Répartition des contrats actifs par produit (mesurée).
+  const repartitionProduits = useMemo(() => {
+    const lignes = Array.isArray(stats?.typesContrats) ? stats.typesContrats : []
+    const totalPrimes = lignes.reduce((t, l) => t + (Number(l.total_primes) || 0), 0)
+    return {
+      lignes: lignes.map((l) => ({
+        type: l.type || 'Type non renseigné',
+        count: Number(l.count) || 0,
+        prime: Number(l.total_primes) || 0,
+        pct: totalPrimes > 0 ? Math.round(((Number(l.total_primes) || 0) / totalPrimes) * 100) : 0,
+      })),
+      totalPrimes,
+    }
+  }, [stats])
+
+  // Primes des 6 derniers mois (mesurées) pour l'histogramme.
+  const serieMensuelle = useMemo(() => {
+    const lignes = Array.isArray(stats?.revenus6Mois) ? stats.revenus6Mois : []
+    return lignes
+      .filter((l) => l && (l.mois || l.revenue !== undefined))
+      .map((l) => ({ label: String(l.mois || '').trim() || NON_MESURE, valeur: Number(l.revenue) || 0 }))
+  }, [stats])
+
+  // Clients au score de risque le plus élevé (lignes réelles, tri réel).
+  const clientsARisque = useMemo(() => {
+    return clients
+      .map((c) => ({
+        id: c.id,
+        nom: c.company_name || `${c.nom || c.last_name || ''} ${c.prenom || c.first_name || ''}`.trim() || c.email || 'Client sans nom',
+        statut: c.statut || c.status || null,
+        score: nombreOuNull(c.score_risque ?? c.risk_score),
+        prime: nombreOuNull(c.prime_totale ?? c.prime_annuelle_total),
+        echeance: c.next_echeance || null,
+        dernierContact: c.last_contact || null,
+      }))
+      .filter((c) => c.score !== null && c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+  }, [clients])
+
+  const aDesMesures = Object.values(mesures).some((v) => v !== null && v !== undefined && v !== 0)
+    || repartitionProduits.lignes.length > 0
+    || clientsARisque.length > 0
+    || serieMensuelle.length > 0
+
   return (
-    <div style={{ minHeight: '100vh', color: T.text, position: 'relative', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      {/* HALO EFFECTS */}
+    <div style={{ minHeight: '100vh', color: T.text, position: 'relative', fontFamily: 'var(--c-font-body, Inter, system-ui, sans-serif)' }}>
       <div style={{ position: 'fixed', width: 700, height: 700, background: 'radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)', top: -250, left: -200, pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'fixed', width: 500, height: 500, background: 'radial-gradient(circle, rgba(91,77,245,0.04) 0%, transparent 70%)', bottom: -150, right: -150, pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '28px 24px 60px' }}>
 
-        {/* ── HEADER ── */}
-        <div style={{ marginBottom: 28 }}>
+        {/* ── EN-TÊTE ── */}
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <BarChart3 size={16} color={T.ark} />
             <span style={{ fontSize: 13, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Rapports</span>
           </div>
           <h1 style={{ fontSize: 30, fontWeight: 800, margin: '0 0 4px', color: T.text, letterSpacing: '-0.02em' }}>Rapports</h1>
-          <p style={{ fontSize: 14, color: T.textMuted, margin: 0 }}>Pilotez la performance de votre cabinet avec les analyses ARK.</p>
+          <p style={{ fontSize: 14, color: T.textMuted, margin: 0 }}>
+            Indicateurs mesurés sur les données de votre cabinet. Une mesure absente s&apos;affiche « — ».
+          </p>
         </div>
 
-        {/* ── AVERTISSEMENT D'HONNÊTETÉ ──
-            Cette page est encore un modèle : ses chiffres (clients, contrats,
-            primes, graphiques) sont des EXEMPLES de démonstration et ne
-            proviennent d'AUCUNE donnée du cabinet. Elle doit être branchée sur
-            les flux réels ou masquée avant une mise en production commerciale. */}
-        <div style={{
-          marginBottom: 20, padding: '12px 16px', borderRadius: 10,
-          background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
-          color: '#FCD34D', fontSize: 12.5, lineHeight: 1.5,
-        }}>
-          <strong>Module en préparation.</strong> Les chiffres affichés sur cette page sont des
-          exemples de démonstration et ne correspondent pas aux données de votre cabinet.
-          Les indicateurs réellement mesurés se trouvent dans le Cockpit et dans Analyses dirigeants.
-        </div>
-
-        {/* ── ARK INSIGHT BANNER ── */}
-        <ArkInsightBanner />
-
-        {/* ── KPI GRID ── */}
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-          <KpiCard icon={Users} title="Clients actifs" value={fmtNum(KPI_DATA.clientsActifs)} accent="#7C3AED" subtitle="portefeuille" />
-          <KpiCard icon={FileText} title="Contrats actifs" value={fmtNum(KPI_DATA.contratsActifs)} accent="#8B5CF6" subtitle="en cours" />
-          <KpiCard icon={Euro} title="Primes suivies" value={fmtEur(KPI_DATA.primesSuivies)} accent="#22C55E" subtitle="total annuel" />
-          <KpiCard icon={Target} title="Devis en cours" value={fmtNum(KPI_DATA.devisEnCours)} accent="#3B82F6" subtitle="à convertir" />
-          <KpiCard icon={TrendingUp} title="Taux transformation" value={fmtPct(KPI_DATA.tauxTransformation)} accent="#F59E0B" trend={PERF_EVOLUTION.tauxVar} />
-          <KpiCard icon={Clock} title="Relances en retard" value={fmtNum(KPI_DATA.relancesEnRetard)} accent="#EF4444" subtitle="actions requises" />
-          <KpiCard icon={Lightbulb} title="Opportunités" value={fmtNum(KPI_DATA.opportunites)} accent={T.ark} subtitle="détectées ARK" />
-          <KpiCard icon={AlertTriangle} title="Portefeuille à risque" value={fmtNum(KPI_DATA.portefeuilleARisque)} accent="#F97316" subtitle="clients" />
-        </div>
-
-        {/* ── ROW 1: Santé du portefeuille + Performance commerciale ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-          {/* Santé du portefeuille */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{
-              background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '18px 20px',
-            }}
-          >
-            <SectionHeader icon={Shield} title="Santé du portefeuille" badge={'Score ' + PORTFOLIO_HEALTH.scoreGlobal + '/100'} />
-            <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 20 }}>
-              <ScoreGauge score={PORTFOLIO_HEALTH.scoreGlobal} size={110} />
-              <div style={{ flex: 1 }}>
-                {PORTFOLIO_HEALTH.distribution.map(function(d) {
-                  return React.createElement(HorizontalBar, { key: d.niveau, label: d.niveau, pct: d.pct, count: d.count, couleur: d.couleur })
-                })}
-              </div>
-            </div>
-            <div style={{
-              background: T.arkBg, border: '1px solid ' + T.arkBorder,
-              borderRadius: 10, padding: '12px 16px',
-            }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <Zap size={14} color={T.ark} style={{ marginTop: 1, flexShrink: 0 }} />
-                <p style={{ fontSize: 12, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
-                  {PORTFOLIO_HEALTH.interpretation}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Performance commerciale */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            style={{
-              background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '18px 20px',
-            }}
-          >
-            <SectionHeader icon={TrendingUp} title="Performance commerciale" badge="Mensuelle" />
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-              <div style={{
-                background: T.successBg, border: '1px solid ' + T.successBorder,
-                borderRadius: 10, padding: '12px 16px', flex: 1,
-              }}>
-                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Devis émis</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: T.success }}>{PERF_MENSUELLE[4].devis}</div>
-                <div style={{ fontSize: 11, color: T.success, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  Devis
-                </div>
-              </div>
-              <div style={{
-                background: T.warningBg, border: '1px solid ' + T.warningBorder,
-                borderRadius: 10, padding: '12px 16px', flex: 1,
-              }}>
-                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contrats signés</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: T.warning }}>{PERF_MENSUELLE[4].contrats}</div>
-                <div style={{ fontSize: 11, color: T.warning, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  Contrats
-                </div>
-              </div>
-              <div style={{
-                background: T.arkBg, border: '1px solid ' + T.arkBorder,
-                borderRadius: 10, padding: '12px 16px', flex: 1,
-              }}>
-                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Taux de transf.</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: T.ark }}>{PERF_MENSUELLE[4].taux}%</div>
-                <div style={{ fontSize: 11, color: PERF_EVOLUTION.tauxVar < 0 ? T.danger : T.success, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {PERF_EVOLUTION.tauxVar < 0 ? React.createElement(ArrowDown, { size: 10 }) : React.createElement(ArrowUp, { size: 10 })}
-                  {Math.abs(PERF_EVOLUTION.tauxVar)}% vs mois précédent
-                </div>
-              </div>
-            </div>
-            {/* Mini bar chart for monthly performance */}
-            <BarChartSimple data={PERF_MENSUELLE} height={140} />
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(139,92,246,0.5)' }} />
-                <span style={{ fontSize: 11, color: T.textMuted }}>Devis</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: T.success }} />
-                <span style={{ fontSize: 11, color: T.textMuted }}>Contrats</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── ROW 2: Répartition contrats + Évolution ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-          {/* Répartition contrats par produit */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            style={{
-              background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '18px 20px',
-            }}
-          >
-            <SectionHeader icon={PieChart} title="Répartition contrats par produit" badge={REPARTITION_PRODUITS.length + ' produits'} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {REPARTITION_PRODUITS.map(function(p, i) {
-                return (
-                  <motion.div
-                    key={p.produit}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.2 + i * 0.05 }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
-                      borderBottom: i < REPARTITION_PRODUITS.length - 1 ? '1px solid ' + T.cardBorder : 'none',
-                    }}
-                  >
-                    <div style={{
-                      width: 8, height: 8, borderRadius: '50%',
-                      background: ['#8B5CF6', '#22C55E', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'][i],
-                      flexShrink: 0,
-                    }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.produit}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{p.compagnie} · {p.contrats} contrats</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{fmtEur(p.prime)}</div>
-                      <div style={{ fontSize: 10, fontWeight: 600, color: T.ark }}>{p.pct}%</div>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </motion.div>
-
-          {/* Évolution devis / contrats */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            style={{
-              background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '18px 20px',
-            }}
-          >
-            <SectionHeader icon={Activity} title="Évolution devis / contrats" badge="6 mois" />
-            <BarChartSimple data={EVOLUTION_DEVIS_CONTRATS} height={160} />
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(139,92,246,0.5)' }} />
-                <span style={{ fontSize: 11, color: T.textMuted }}>Devis</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: T.success }} />
-                <span style={{ fontSize: 11, color: T.textMuted }}>Contrats</span>
-              </div>
-            </div>
-            <div style={{
-              background: T.arkBg, border: '1px solid ' + T.arkBorder,
-              borderRadius: 10, padding: '12px 16px', marginTop: 16,
-            }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <Zap size={14} color={T.ark} style={{ marginTop: 1, flexShrink: 0 }} />
-                <p style={{ fontSize: 12, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
-                  <strong style={{ color: T.danger }}>Baisse de 46 %</strong> des contrats signés en mai par rapport à avril. Le taux de transformation chute à 38 %. ARK suggère d'analyser les devis sans réponse et d'intensifier les relances ciblées.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── ROW 3: Clients à risque + Opportunités ARK ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-          {/* Clients à risque */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            style={{
-              background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '18px 20px',
-            }}
-          >
-            <SectionHeader icon={AlertTriangle} title="Clients à risque" badge={'Top ' + CLIENTS_A_RISQUE.length} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {CLIENTS_A_RISQUE.map(function(c, i) {
-                var riskColor = c.scoreRisque >= 80 ? T.danger : c.scoreRisque >= 70 ? T.warning : '#F97316'
-                return (
-                  <motion.div
-                    key={c.client}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 + i * 0.05 }}
-                    style={{
-                      background: 'rgba(239,68,68,0.03)',
-                      border: '1px solid ' + T.dangerBorder,
-                      borderLeft: '3px solid ' + riskColor,
-                      borderRadius: 10, padding: '12px 14px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{c.client}</span>
-                        <span style={{
-                          padding: '1px 7px', borderRadius: 4, fontSize: 10, fontWeight: 600,
-                          background: riskColor + '18', color: riskColor,
-                        }}>
-                          Score {c.scoreRisque}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: T.textSecondary }}>{fmtEur(c.prime)}</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>
-                      {c.compagnie} · {c.produit}
-                    </div>
-                    <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
-                      {c.raison}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </motion.div>
-
-          {/* Opportunités ARK */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-            style={{
-              background: T.cardBg, border: '1px solid ' + T.cardBorder,
-              borderRadius: 16, padding: '18px 20px',
-            }}
-          >
-            <SectionHeader icon={Lightbulb} title="Opportunités ARK détectées" badge={OPPORTUNITES_ARK.length + ' pistes'} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {OPPORTUNITES_ARK.map(function(o, i) {
-                return (
-                  <motion.div
-                    key={o.client}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.5 + i * 0.05 }}
-                    style={{
-                      background: 'rgba(34,197,94,0.03)',
-                      border: '1px solid ' + T.successBorder,
-                      borderLeft: '3px solid ' + T.success,
-                      borderRadius: 10, padding: '12px 14px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{o.client}</span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: T.success }}>+{fmtEur(o.potentiel)}</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5, marginBottom: 6 }}>
-                      {o.description}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 2, width: o.probabilite + '%', background: 'linear-gradient(90deg, ' + T.success + ', ' + T.ark + ')' }} />
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: T.textMuted }}>{o.probabilite}% probabilité</span>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── Recommandations stratégiques ARK ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
-          style={{
-            background: 'linear-gradient(135deg, ' + T.arkBg + ' 0%, rgba(91,77,245,0.04) 100%)',
-            border: '1px solid ' + T.arkBorder,
-            borderRadius: 16, padding: '24px 28px', marginBottom: 24,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(139,92,246,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={20} color={T.ark} />
-            </div>
-            <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: T.text, margin: 0 }}>Recommandations stratégiques ARK</h2>
-              <p style={{ fontSize: 12, color: T.textMuted, margin: '2px 0 0' }}>Analyse exécutive du portefeuille — Mai 2026</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            {/* En hausse */}
-            <div style={{
-              background: T.successBg, border: '1px solid ' + T.successBorder,
-              borderRadius: 12, padding: '16px 18px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(34,197,94,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingUp size={14} color={T.success} />
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.success, textTransform: 'uppercase', letterSpacing: '0.04em' }}>En hausse</span>
-              </div>
-              <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Primes suivies :</strong> progression du portefeuille grâce aux nouveaux contrats Helios Protection et Aurora Assurances.
-                </li>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Multi-équipement :</strong> 3 opportunités à fort potentiel détectées chez Dupont SAS, Martin Sophie et Garcia Anne.
-                </li>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Fidélisation :</strong> les clients Novalia Courtage affichent un taux de rétention de 94 % sur 12 mois.
-                </li>
-              </ul>
-            </div>
-
-            {/* En baisse */}
-            <div style={{
-              background: T.dangerBg, border: '1px solid ' + T.dangerBorder,
-              borderRadius: 12, padding: '16px 18px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingDown size={14} color={T.danger} />
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.danger, textTransform: 'uppercase', letterSpacing: '0.04em' }}>En baisse</span>
-              </div>
-              <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Taux de transformation :</strong> chute de 34,5 % ce mois-ci. 5 devis sans réponse identifiés.
-                </li>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Contrats signés :</strong> baisse de 46 % en mai (15 contrats contre 28 en avril).
-                </li>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Relances en retard :</strong> 18 relances non traitées, exposant le cabinet à un risque de perte de primes.
-                </li>
-              </ul>
-            </div>
-
-            {/* À risque */}
-            <div style={{
-              background: T.warningBg, border: '1px solid ' + T.warningBorder,
-              borderRadius: 12, padding: '16px 18px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(245,158,11,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertTriangle size={14} color={T.warning} />
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.warning, textTransform: 'uppercase', letterSpacing: '0.04em' }}>À risque</span>
-              </div>
-              <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>9 clients critiques :</strong> Leroy Marie, Karim Benali et Moreau Éric nécessitent une intervention immédiate.
-                </li>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Concentration Auto :</strong> 38 % du portefeuille exposé au marché automobile. Diversification recommandée vers Santé et Prévoyance.
-                </li>
-                <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Échéances imminentes :</strong> 3 contrats à moins de 30 jours sans devis de renouvellement — risque de perte de {fmtEur(8700)}.
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* ARK Action Plan */}
+        {erreur && (
           <div style={{
-            marginTop: 20, padding: '16px 20px',
-            background: 'rgba(139,92,246,0.06)',
-            border: '1px solid ' + T.arkBorder,
-            borderRadius: 12,
+            marginBottom: 20, padding: '12px 16px', borderRadius: 10,
+            background: T.dangerBg, border: '1px solid ' + T.dangerBorder,
+            color: '#FCA5A5', fontSize: 12.5, lineHeight: 1.5,
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Zap size={15} color={T.ark} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Plan d'action prioritaire ARK</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: 6, background: T.danger + '18',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  fontSize: 12, fontWeight: 700, color: T.danger,
-                }}>1</div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>Relancer les 5 devis sans réponse</div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>Potentiel de conversion estimé à {fmtEur(4200)}. Délai recommandé : 48h.</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: 6, background: T.warning + '18',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  fontSize: 12, fontWeight: 700, color: T.warning,
-                }}>2</div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>Contacter les 3 clients à échéance imminente</div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>Moreau Éric, Martin Conseil, Dubois SCP. Sauvegarde potentielle : {fmtEur(8700)}.</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: 6, background: T.success + '18',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  fontSize: 12, fontWeight: 700, color: T.success,
-                }}>3</div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>Proposer multi-équipement aux 3 meilleures cibles</div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>Dupont SAS, Martin Sophie, Garcia Anne. Potentiel additionnel : {fmtEur(21000)}.</div>
-                </div>
-              </div>
-            </div>
+            <AlertTriangle size={15} />
+            <span style={{ flex: 1, minWidth: 220 }}>{erreur}</span>
+            <BoutonReessayer onClick={charger} chargement={chargement} />
           </div>
-        </motion.div>
+        )}
 
-        {/* Commission Forecast */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.6 }}
-          style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: '18px 20px', marginBottom: 24 }}>
-          <SectionHeader icon={Euro} title="Prévisions commissions" badge="12 mois" />
-          <CommissionForecastBar onBarClick={({ month, amount }) => console.log('Month:', month, amount)} />
-        </motion.div>
+        {!erreur && sourcesPartielles.length > 0 && (
+          <div style={{
+            marginBottom: 20, padding: '12px 16px', borderRadius: 10,
+            background: T.warningBg, border: '1px solid ' + T.warningBorder,
+            color: '#FCD34D', fontSize: 12.5, lineHeight: 1.5,
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          }}>
+            <AlertTriangle size={15} />
+            <span style={{ flex: 1, minWidth: 220 }}>
+              Source indisponible : {sourcesPartielles.join(', ')}. Les indicateurs concernés affichent « — » au lieu d&apos;un zéro.
+            </span>
+            <BoutonReessayer onClick={charger} chargement={chargement} />
+          </div>
+        )}
 
-        {/* ── Footer note ── */}
-        <div style={{ textAlign: 'center', paddingTop: 8 }}>
+        {!erreur && (
+          <>
+            {/* ── KPI MESURÉS ── */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+              <KpiCard icon={Users} title="Clients actifs" value={mesures.clientsActifs === null ? NON_MESURE : fmtNum(mesures.clientsActifs)} accent="#7C3AED" subtitle={mesures.clientsTotal === null ? 'total non mesuré' : `sur ${fmtNum(mesures.clientsTotal)} clients`} />
+              <KpiCard icon={FileText} title="Contrats actifs" value={mesures.contratsActifs === null ? NON_MESURE : fmtNum(mesures.contratsActifs)} accent="#8B5CF6" subtitle="en cours" />
+              <KpiCard icon={Euro} title="Primes suivies" value={mesures.primesSuivies === null ? NON_MESURE : fmtEur(mesures.primesSuivies)} accent="#22C55E" subtitle="contrats actifs" />
+              <KpiCard icon={Target} title="Devis enregistrés" value={mesures.devisTotal === null ? NON_MESURE : fmtNum(mesures.devisTotal)} accent="#3B82F6" subtitle={mesures.devisEnvoyes === null ? 'envoyés non mesurés' : `${fmtNum(mesures.devisEnvoyes)} envoyés`} />
+              <KpiCard icon={TrendingUp} title="Taux de conversion devis" value={mesures.tauxConversion === null ? NON_MESURE : mesures.tauxConversion.toFixed(1) + ' %'} accent="#F59E0B" subtitle="devis signés / devis" />
+              <KpiCard icon={Clock} title="Tâches en retard" value={mesures.tachesEnRetard === null ? NON_MESURE : fmtNum(mesures.tachesEnRetard)} accent="#EF4444" subtitle="actions requises" />
+              <KpiCard icon={Lightbulb} title="Opportunités" value={mesures.opportunitesTotal === null ? NON_MESURE : fmtNum(mesures.opportunitesTotal)} accent={T.ark} subtitle="détectées" />
+              <KpiCard icon={Euro} title="Commissions du mois" value={mesures.commissionsMois === null ? NON_MESURE : fmtEur(mesures.commissionsMois)} accent="#06B6D4" subtitle={mesures.commissionsMois === null ? 'aucune enregistrée' : 'enregistrées'} />
+            </div>
+
+            {/* ── Répartition clients + primes mensuelles ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              <Carte>
+                <SectionHeader icon={Shield} title="Clients par statut" badge={repartitionStatuts.total ? fmtNum(repartitionStatuts.total) + ' clients' : 'non mesuré'} />
+                {repartitionStatuts.entrees.length > 0 ? (
+                  repartitionStatuts.entrees.map((e) => (
+                    <HorizontalBar
+                      key={e.statut}
+                      label={e.statut}
+                      count={fmtNum(e.count)}
+                      pct={repartitionStatuts.total ? Math.round((e.count / repartitionStatuts.total) * 100) : 0}
+                      couleur={T.ark}
+                    />
+                  ))
+                ) : (
+                  <CarteNonMesure>
+                    Aucun client enregistré pour ce cabinet : il n&apos;y a aucune répartition à afficher.
+                    Aucune répartition d&apos;exemple n&apos;est présentée.
+                  </CarteNonMesure>
+                )}
+                {mesures.scoreRisqueMoyen !== null && (
+                  <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: T.textSecondary }}>
+                    <Zap size={13} color={T.ark} />
+                    Score de risque moyen mesuré : <strong style={{ color: T.text }}>{fmtNum(mesures.scoreRisqueMoyen)}/100</strong>
+                  </div>
+                )}
+              </Carte>
+
+              <Carte delay={0.1}>
+                <SectionHeader icon={Activity} title="Primes des contrats actifs par mois" badge={serieMensuelle.length ? serieMensuelle.length + ' mois' : 'non mesuré'} />
+                <BarChartMensuel data={serieMensuelle} height={200} />
+              </Carte>
+            </div>
+
+            {/* ── Répartition produits + devis ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              <Carte delay={0.15}>
+                <SectionHeader icon={PieChart} title="Répartition des contrats actifs par produit" badge={repartitionProduits.lignes.length ? repartitionProduits.lignes.length + ' produits' : 'non mesuré'} />
+                {repartitionProduits.lignes.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {repartitionProduits.lignes.map((p, i) => (
+                      <div key={p.type + i} style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+                        borderBottom: i < repartitionProduits.lignes.length - 1 ? '1px solid ' + T.cardBorder : 'none',
+                      }}>
+                        <div style={{
+                          width: 8, height: 8, borderRadius: '50%',
+                          background: ['#8B5CF6', '#22C55E', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'][i % 7],
+                          flexShrink: 0,
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.type}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{fmtNum(p.count)} contrat(s)</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{fmtEur(p.prime)}</div>
+                          <div style={{ fontSize: 10, fontWeight: 600, color: T.ark }}>{p.pct}% des primes</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <CarteNonMesure>
+                    Aucun contrat actif enregistré : aucune répartition par produit ne peut être calculée.
+                  </CarteNonMesure>
+                )}
+              </Carte>
+
+              <Carte delay={0.2}>
+                <SectionHeader icon={Target} title="Devis" badge={mesures.devisTotal === null ? 'non mesuré' : fmtNum(mesures.devisTotal) + ' devis'} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <BlocChiffre label="Devis enregistrés" valeur={mesures.devisTotal} couleur={T.accent} />
+                  <BlocChiffre label="Devis envoyés" valeur={mesures.devisEnvoyes} couleur={T.warning} />
+                  <BlocChiffre label="Devis signés" valeur={mesures.devisSignes} couleur={T.success} />
+                  <BlocChiffre
+                    label="Taux de conversion"
+                    valeur={mesures.tauxConversion}
+                    couleur={T.ark}
+                    rendu={(v) => v.toFixed(1) + ' %'}
+                  />
+                </div>
+                {mesures.devisTotal === null && (
+                  <div style={{ marginTop: 14 }}>
+                    <CarteNonMesure>
+                      Les devis ne sont pas mesurables pour l&apos;instant : l&apos;indicateur n&apos;est pas remplacé par un chiffre, il reste « — ».
+                    </CarteNonMesure>
+                  </div>
+                )}
+              </Carte>
+            </div>
+
+            {/* ── Clients à risque + opportunités ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              <Carte delay={0.25}>
+                <SectionHeader icon={AlertTriangle} title="Clients au score de risque le plus élevé" badge={clientsARisque.length ? 'Top ' + clientsARisque.length : 'non mesuré'} />
+                {clientsARisque.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {clientsARisque.map((c) => {
+                      const couleur = c.score >= 80 ? T.danger : c.score >= 70 ? T.warning : '#F97316'
+                      return (
+                        <div key={c.id} style={{
+                          background: 'rgba(239,68,68,0.03)',
+                          border: '1px solid ' + T.dangerBorder,
+                          borderLeft: '3px solid ' + couleur,
+                          borderRadius: 10, padding: '12px 14px',
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nom}</span>
+                              <span style={{ padding: '1px 7px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: couleur + '18', color: couleur, flexShrink: 0 }}>
+                                Score {fmtNum(c.score)}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: T.textSecondary, flexShrink: 0 }}>
+                              {c.prime === null ? NON_MESURE : fmtEur(c.prime)}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>
+                            {c.statut ? `Statut : ${c.statut}` : 'Statut non renseigné'}
+                            {' · '}
+                            {c.dernierContact ? `Dernier contact : ${libelleDate(c.dernierContact)}` : 'Dernier contact non renseigné'}
+                            {' · '}
+                            {c.echeance ? `Prochaine échéance : ${libelleDate(c.echeance)}` : 'Aucune échéance enregistrée'}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <CarteNonMesure>
+                    Aucun client ne porte de score de risque enregistré : aucune liste n&apos;est affichée.
+                  </CarteNonMesure>
+                )}
+              </Carte>
+
+              <Carte delay={0.3}>
+                <SectionHeader icon={Lightbulb} title="Opportunités détectées" badge={opportunites.length ? opportunites.length + ' pistes' : 'non mesuré'} />
+                {opportunites.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {opportunites.slice(0, 6).map((o, i) => {
+                      const score = nombreOuNull(o.score)
+                      return (
+                        <div key={o.id ?? i} style={{
+                          background: 'rgba(34,197,94,0.03)',
+                          border: '1px solid ' + T.successBorder,
+                          borderLeft: '3px solid ' + T.success,
+                          borderRadius: 10, padding: '12px 14px',
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 8 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {o.client_name || o.client || 'Client non renseigné'}
+                            </span>
+                            {score !== null && <span style={{ fontSize: 12, fontWeight: 800, color: T.success, flexShrink: 0 }}>{fmtNum(score)}/100</span>}
+                          </div>
+                          <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
+                            {o.product_target ? `Produit cible : ${o.product_target}` : 'Produit cible non renseigné'}
+                            {o.product_current ? ` · actuel : ${o.product_current}` : ''}
+                          </div>
+                          <div style={{ fontSize: 10.5, color: T.textMuted, marginTop: 4 }}>
+                            Montant estimé : non mesuré par COURTIA (aucun calcul réel ne remplace l&apos;estimation historique).
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <CarteNonMesure>
+                    Aucune opportunité enregistrée pour ce cabinet : rien n&apos;est affiché.
+                  </CarteNonMesure>
+                )}
+              </Carte>
+            </div>
+
+            {/* ── CE QUE L'ÉCRAN NE MESURE PAS (dit explicitement) ── */}
+            <Carte delay={0.35}>
+              <SectionHeader icon={Sparkles} title="Ce que COURTIA ne mesure pas encore" badge="aucune valeur d'exemple" />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
+                {[
+                  ['Prévisions de commissions', "elles demandent une série de commissions réellement enregistrées ; l'écran Commissions les présente."],
+                  ['Taux de résiliation et satisfaction client', "aucune mesure n'existe côté données : aucune valeur n'est affichée à la place."],
+                  ['Analyse rédigée du mois', "ARK ne produit pas ici de commentaire non étayé : seuls les indicateurs mesurés ci-dessus sont affichés."],
+                ].map(([titre, texte]) => (
+                  <div key={titre} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <CheckCircle2 size={14} color={T.ark} style={{ marginTop: 2, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>{titre}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{texte}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Carte>
+
+            {/* État vide honnête : cabinet réellement sans données mesurables */}
+            {!chargement && !aDesMesures && (
+              <div style={{ marginTop: 24 }}>
+                <Carte>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Sparkles size={18} color={T.ark} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Aucune donnée à rapporter pour le moment</div>
+                      <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>
+                        Votre cabinet ne contient encore aucun client, contrat ou devis : cet écran ne peut donc rien mesurer.
+                        Il se remplira dès la première donnée enregistrée.
+                      </div>
+                    </div>
+                  </div>
+                </Carte>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── SOURCES ── */}
+        <div style={{ textAlign: 'center', paddingTop: 20 }}>
           <p style={{ fontSize: 11, color: T.textMuted, margin: 0 }}>
-            Données mises à jour en temps réel · Analyses générées par ARK · Courtia
+            Chiffres issus des données de votre cabinet (/api/dashboard/stats, /api/clients, /api/opportunites) ·
+            mise à jour au chargement de la page · COURTIA
           </p>
         </div>
 

@@ -223,7 +223,14 @@ async function ensureArkBudget(pool, userId) {
 }
 
 async function chargeArkRun(pool, { userId, feature, model = LIGHT_MODEL, inputTokens = 0, outputTokens = 0, latencyMs = null, status = 'success', error = null }) {
-  const cost = computeCostMicroEur(model, inputTokens, outputTokens)
+  // AUCUNE FACTURATION SANS CONSOMMATION MESURÉE — correction 20/09/2026.
+  // `computeCostMicroEur` renvoie un minimum de 1 micro-euro : un appel IA
+  // journalisé avec 0 jeton (sonde échouée, repli local) faisait donc payer au
+  // cabinet une dépense qui n'a pas eu lieu. Un run dont AUCUN jeton n'a été
+  // renvoyé par le fournisseur n'est pas facturé et ne peut pas, à lui seul,
+  // déclencher le plafond mensuel ARK.
+  const jetonsMesures = (Number(inputTokens) || 0) + (Number(outputTokens) || 0)
+  const cost = jetonsMesures > 0 ? computeCostMicroEur(model, inputTokens, outputTokens) : 0
   const result = await pool.query(
     `INSERT INTO ark_runs (user_id, feature, model, input_tokens, output_tokens, cost_micro_eur, latency_ms, status, error, created_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
@@ -231,13 +238,15 @@ async function chargeArkRun(pool, { userId, feature, model = LIGHT_MODEL, inputT
     [userId, feature, model, inputTokens, outputTokens, cost, latencyMs, status, error]
   )
   await ensureArkBudget(pool, userId)
-  await pool.query(
-    `UPDATE ark_budgets
-     SET current_spend_micro_eur = current_spend_micro_eur + $2,
-         paused = CASE WHEN current_spend_micro_eur + $2 >= hard_cap_micro_eur THEN true ELSE paused END
-     WHERE user_id = $1`,
-    [userId, cost]
-  )
+  if (cost > 0) {
+    await pool.query(
+      `UPDATE ark_budgets
+       SET current_spend_micro_eur = current_spend_micro_eur + $2,
+           paused = CASE WHEN current_spend_micro_eur + $2 >= hard_cap_micro_eur THEN true ELSE paused END
+       WHERE user_id = $1`,
+      [userId, cost]
+    )
+  }
   return result.rows[0]
 }
 
@@ -355,25 +364,62 @@ async function buildAndStoreMorningBrief(pool, userId) {
   const context = await loadArkContext(pool, userId)
   const cards = buildFallbackMorningBrief(context)
 
-  // LLM hook ready: keep deterministic fallback unless Anthropic is configured.
+  // ── SONDE LLM : LE MODE SE DÉDUIT DE LA RÉUSSITE RÉELLE ──────────────────
+  // Correction 20/09/2026 (défaut IA-008). Avant, `source` valait
+  // 'llm_ready_with_deterministic_cards' dès que `ANTHROPIC_API_KEY` était
+  // PRÉSENTE, même quand la sonde échouait (clé invalide, quota, réseau) : le
+  // cockpit annonçait un mode LLM opérationnel qui ne fonctionnait pas.
+  // Et la sonde était FACTURÉE avec des jetons inventés (50 en entrée, 5 en
+  // sortie) au lieu des jetons réellement renvoyés par le fournisseur.
+  // Désormais : la sonde ne facture que `usage.input_tokens`/`usage.output_tokens`
+  // réellement rendus, et une sonde en échec laisse le mode en repli local.
+  const sonde = {
+    tentee: Boolean(process.env.ANTHROPIC_API_KEY),
+    reussie: false,
+    modele: null,
+    jetons_entree: 0,
+    jetons_sortie: 0,
+    erreur: null,
+  }
+  let source = 'deterministic_fallback'
+
   if (process.env.ANTHROPIC_API_KEY) {
     try {
       const startedAt = Date.now()
       const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-      await anthropic.messages.create({
+      const reponse = await anthropic.messages.create({
         model: DEFAULT_MODEL,
         max_tokens: 20,
         messages: [{ role: 'user', content: 'Réponds uniquement: OK' }],
       })
-      await chargeArkRun(pool, { userId, feature: 'morning_brief', model: DEFAULT_MODEL, inputTokens: 50, outputTokens: 5, latencyMs: Date.now() - startedAt })
+      const jetonsEntree = Number(reponse?.usage?.input_tokens) || 0
+      const jetonsSortie = Number(reponse?.usage?.output_tokens) || 0
+      sonde.reussie = true
+      sonde.modele = reponse?.model || DEFAULT_MODEL
+      sonde.jetons_entree = jetonsEntree
+      sonde.jetons_sortie = jetonsSortie
+      await chargeArkRun(pool, {
+        userId,
+        feature: 'morning_brief',
+        model: sonde.modele,
+        inputTokens: jetonsEntree,
+        outputTokens: jetonsSortie,
+        latencyMs: Date.now() - startedAt,
+        status: jetonsEntree + jetonsSortie > 0 ? 'success' : 'success_sans_usage',
+      })
+      source = 'llm_ready_with_deterministic_cards'
     } catch (err) {
+      sonde.reussie = false
+      sonde.erreur = String(err.message || 'sonde_llm_echec')
       logger.warn({ error: err.message, user_id: userId }, 'ark llm probe failed, fallback cards kept')
-      await chargeArkRun(pool, { userId, feature: 'morning_brief', model: DEFAULT_MODEL, status: 'fallback', error: err.message })
+      // Aucun jeton rendu : coût nul, aucun débit du budget ARK.
+      await chargeArkRun(pool, { userId, feature: 'morning_brief', model: DEFAULT_MODEL, status: 'sonde_echec', error: err.message })
+      source = 'deterministic_fallback'
     }
   }
 
   const saved = await saveRecommendations(pool, userId, cards)
-  return { cards: saved, source: process.env.ANTHROPIC_API_KEY ? 'llm_ready_with_deterministic_cards' : 'deterministic_fallback' }
+  return { cards: saved, source, llm_probe: sonde }
 }
 
 function rewriteFallback(text, mode = 'rephrase') {

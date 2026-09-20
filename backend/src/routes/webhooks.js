@@ -1,5 +1,6 @@
 const express = require('express')
 const { verifyToken } = require('../middleware/auth')
+const secretsEntrants = require('../lib/secretsEntrants')
 
 const router = express.Router()
 
@@ -23,15 +24,32 @@ async function ensureAutomationEventsTable(pool) {
 }
 
 // POST /api/webhooks/incoming
-// Endpoint public pour Make/Zapier/Webhook entrants (protection optionnelle via secret)
+// Endpoint public pour Make/Zapier/Webhook entrants.
+//
+// DÉFAUT FERMÉ (P3 SEC-019, mesuré en production le 20/09/2026) : sans
+// `WEBHOOK_INCOMING_SECRET` configuré, « la protection est optionnelle » et
+// l'appel répondait 200 en insérant TROIS lignes réelles dans
+// `automation_webhook_events`. Un point d'entrée public qui écrit en base sans
+// aucune authentification est une porte ouverte sur l'espace de travail du
+// cabinet (données injectées, automatisations déclenchées).
+//
+// RÈGLE : le secret est OBLIGATOIRE. Absent ⇒ 503 explicite, et RIEN n'est
+// écrit (le contrôle a lieu avant toute requête SQL). Présent mais faux ⇒ 401.
 router.post('/incoming', async (req, res) => {
   try {
-    const expectedSecret = String(process.env.WEBHOOK_INCOMING_SECRET || '').trim()
-    if (expectedSecret) {
-      const provided = String(req.headers['x-courtia-webhook-secret'] || '').trim()
-      if (!provided || provided !== expectedSecret) {
-        return res.status(401).json({ error: 'invalid_webhook_secret' })
-      }
+    const expectedSecret = secretsEntrants.lireSecret(secretsEntrants.SECRETS.webhookEntrant)
+    if (!expectedSecret) {
+      // Aucune ligne insérée : on refuse AVANT de toucher la base.
+      return secretsEntrants.repondreSecretAbsent(
+        res,
+        'webhook_incoming_secret',
+        "Le webhook entrant est fermé : le secret partagé (WEBHOOK_INCOMING_SECRET) n'est pas configuré sur ce serveur."
+      )
+    }
+
+    const provided = String(req.headers['x-courtia-webhook-secret'] || '').trim()
+    if (!secretsEntrants.verifierSecretSimple({ secret: expectedSecret, fourni: provided }).valide) {
+      return res.status(401).json({ error: 'invalid_webhook_secret' })
     }
 
     const pool = req.app.locals.pool

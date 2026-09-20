@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Store, Check, X, RefreshCw, ExternalLink, Search, Filter, Zap, Clock, Settings, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 // Styles Aurora
 const auroraStyles = {
@@ -461,7 +462,7 @@ function ConnectorCard({ connector, onInstall, onUninstall, onSync, syncing, com
 
       {connector.installed && connector.lastSyncAt && (
         <div style={{ marginBottom: 16, color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-          Dernière sync: {new Date(connector.lastSyncAt).toLocaleString('fr-FR')}
+          Dernière sync: {new Date(connector.lastSyncAt).toLocaleString(localeCourante())}
         </div>
       )}
 

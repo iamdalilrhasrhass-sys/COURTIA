@@ -3,6 +3,7 @@
  * LOT 20 — Intégration complète avec API v3
  */
 
+const { fuseauDuMarche } = require('../lib/marcheCabinet')
 const crypto = require('crypto')
 const axios = require('axios')
 const FormData = require('form-data')
@@ -135,10 +136,16 @@ async function createSignatureRequest(documentPathOrObj, signerEmailOrObj, signe
   const webhookUrl = options.webhookUrl || process.env.YOUSIGN_WEBHOOK_URL || `${process.env.API_URL || 'https://api.courtiark.fr'}/api/signatures/webhook`
 
   // 1. Créer la demande de signature
+  // FUSEAU DU MARCHÉ (correction 20/09/2026) : la demande de signature était
+  // horodatée « Europe/Paris » pour TOUS les cabinets, y compris suisses. Le
+  // fuseau vient désormais du marché du cabinet quand l'appelant le fournit
+  // (`options.timeZone` / `options.marche`), avec la France en repli : aucune
+  // référence étrangère n'est imposée au cabinet.
+  const timeZone = options.timeZone || fuseauDuMarche(options.marche)
   const requestRes = await client.post('/signature_requests', {
     name: title,
     delivery_mode: 'email',
-    timezone: 'Europe/Paris',
+    timezone: timeZone,
     ordered_signers: false,
     reminder_settings: {
       interval_in_days: 3,

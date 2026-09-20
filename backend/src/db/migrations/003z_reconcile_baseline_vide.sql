@@ -52,7 +52,8 @@ BEGIN
     ALTER TABLE commissions ADD COLUMN IF NOT EXISTS period_month INTEGER CHECK (period_month BETWEEN 1 AND 12);
     ALTER TABLE commissions ADD COLUMN IF NOT EXISTS expected_amount_cents BIGINT DEFAULT 0;
     ALTER TABLE commissions ADD COLUMN IF NOT EXISTS received_amount_cents BIGINT DEFAULT 0;
-    ALTER TABLE commissions ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'eur';
+    -- Devise ecrite par le code (marche du cabinet) : plus de 'eur' par defaut.
+    ALTER TABLE commissions ADD COLUMN IF NOT EXISTS currency TEXT;
     ALTER TABLE commissions ADD COLUMN IF NOT EXISTS apporteur_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
     ALTER TABLE commissions ADD COLUMN IF NOT EXISTS apporteur_share_bps INTEGER DEFAULT 0 CHECK (apporteur_share_bps BETWEEN 0 AND 10000);
     ALTER TABLE commissions ADD COLUMN IF NOT EXISTS notes TEXT;

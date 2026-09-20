@@ -1,4 +1,5 @@
 import { CalendarDays, MessageSquare, Mail, ListChecks, FileText, Bot, Clock3 } from 'lucide-react'
+import { localeCourante } from '../lib/monnaie'
 
 const PROVIDER_META = {
   google_calendar: { label: 'Google Agenda', icon: CalendarDays, color: '#2563eb' },
@@ -15,7 +16,7 @@ function formatDate(value) {
   try {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return 'Date inconnue'
-    return date.toLocaleString('fr-FR', {
+    return date.toLocaleString(localeCourante(), {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',

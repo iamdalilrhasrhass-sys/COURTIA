@@ -433,9 +433,14 @@ router.post('/public/upload/:token', (req, res, next) => {
 router.get('/public/request/:token', async (req, res) => {
   try {
     const { token } = req.params;
+    // Recherche par HACHAGE du jeton (correctif P3 SEC-027, 20/09/2026) : les
+    // jetons créés depuis ce correctif ne sont plus stockés en clair. La
+    // tolérance pour l'ancienne forme ne concerne que les liens déjà envoyés,
+    // qui expirent en 72 heures.
+    const jeton = clauseJetonRecherche('token', token, 1);
     const result = await pool.query(
-      `SELECT id, client_id, required_docs, message, expires_at, status FROM document_requests WHERE token = $1`,
-      [token]
+      `SELECT id, client_id, required_docs, message, expires_at, status FROM document_requests WHERE ${jeton.sql}`,
+      jeton.params
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'not_found', message: 'Lien invalide' });
 

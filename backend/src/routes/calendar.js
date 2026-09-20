@@ -6,6 +6,7 @@
 const express = require('express')
 const router = express.Router()
 const crypto = require('crypto')
+const marcheCabinet = require('../lib/marcheCabinet')
 const calendarService = require('../services/calendarService')
 const verifyToken = require('../middleware/authMiddleware')
 const { getJwtSecret } = require('../utils/jwtSecret')
@@ -85,11 +86,17 @@ router.post('/events', verifyToken, async (req, res) => {
       email = clientRes.rows[0]?.email
     }
 
+    // Marché du CABINET : il décide du fuseau horaire poussé à Google Calendar
+    // (un cabinet suisse ne se voit plus attribuer « Europe/Paris »).
+    const marche = await marcheCabinet.marcheDeLaRequete(req, (sql, params) => pool.query(sql, params))
+
     // Créer l'événement Google Calendar
     const result = await calendarService.createEvent(title, date, email, description, {
       tokens,
       location,
       durationMinutes,
+      marche: marche ? marche.marche : 'FR',
+      timeZone: marche ? marche.fuseau : undefined,
     })
 
     // Sauvegarder en base
@@ -295,8 +302,19 @@ router.delete('/events/:id', verifyToken, async (req, res) => {
       }
     }
 
-    // Supprimer de la base
-    await pool.query('DELETE FROM calendar_events WHERE id = $1', [id])
+    // Supprimer de la base — PORTÉE DANS LA REQUÊTE (P4 SEC-029, mesuré le
+    // 20/09/2026 : les écritures par identifiant n'étaient pas bornées). Le
+    // contrôle de propriété ci-dessus est conservé, mais l'écriture porte
+    // désormais elle-même sa portée : un `WHERE id = $1` nu reste juste tant que
+    // le code au-dessus n'est pas modifié — il suffit d'une refonte pour que la
+    // vérification saute. La requête, elle, ne peut pas l'oublier.
+    const supprime = await pool.query(
+      'DELETE FROM calendar_events WHERE id = $1 AND user_id = $2 RETURNING id',
+      [id, userId]
+    )
+    if (supprime.rowCount === 0) {
+      return res.status(404).json({ error: 'Événement non trouvé' })
+    }
 
     res.json({ success: true })
   } catch (err) {
@@ -345,7 +363,9 @@ router.put('/events/:id', verifyToken, async (req, res) => {
       }
     }
 
-    // Mettre à jour en base
+    // Mettre à jour en base — PORTÉE DANS LA REQUÊTE (P4 SEC-029) : l'écriture
+    // est bornée à l'événement DE CET UTILISATEUR, dans la requête elle-même et
+    // non plus seulement par la lecture qui la précède.
     const updateRes = await pool.query(
       `UPDATE calendar_events
        SET title = COALESCE($1, title),
@@ -353,10 +373,14 @@ router.put('/events/:id', verifyToken, async (req, res) => {
            description = COALESCE($3, description),
            location = COALESCE($4, location),
            updated_at = NOW()
-       WHERE id = $5
+       WHERE id = $5 AND user_id = $6
        RETURNING *`,
-      [title, date ? new Date(date) : null, description, location, id]
+      [title, date ? new Date(date) : null, description, location, id, userId]
     )
+
+    if (updateRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Événement non trouvé' })
+    }
 
     res.json({ success: true, event: updateRes.rows[0] })
   } catch (err) {

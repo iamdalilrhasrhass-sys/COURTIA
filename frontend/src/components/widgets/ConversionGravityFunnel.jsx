@@ -161,7 +161,13 @@ export default function ConversionGravityFunnel({
 
         {/* Conversion arrows */}
         {stages.slice(0, -1).map((_, i) => {
-          const rate = Math.round((stages[i+1].count / stages[i].count) * 100)
+          // POURQUOI la garde : sans palier source (count = 0), le rapport
+          // affichait « → NaN% » — un nombre cassé, donc un faux succès de
+          // mesure. Un taux qui n'a pas de dénominateur reste « — ».
+          const source = Number(stages[i].count) || 0
+          const rate = source > 0
+            ? Math.round(((Number(stages[i + 1].count) || 0) / source) * 100)
+            : null
           const x = 20 + (i + 0.5) * ((width - 40) / stages.length) + barW / 2
           return (
             <div
@@ -176,7 +182,7 @@ export default function ConversionGravityFunnel({
                 whiteSpace: 'nowrap',
               }}
             >
-              → {rate}%
+              → {rate === null ? '—' : `${rate}%`}
             </div>
           )
         })}

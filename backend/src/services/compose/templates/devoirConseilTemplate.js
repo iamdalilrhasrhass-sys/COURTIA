@@ -54,7 +54,11 @@ async function generateDevoirConseil(data) {
     doc.on('error', reject)
 
     // Page 1
-    drawConseilHeader(doc, broker, client)
+    // `withArkAnalysis` dit si une analyse ARK accompagne RÉELLEMENT le
+    // document : sans elle, ni l'en-tête ni la section 5 n'ont le droit
+    // d'attribuer ce document à l'IA (défaut IA-017).
+    const withArkAnalysis = Boolean(String(aiReasoning || '').trim())
+    drawConseilHeader(doc, broker, client, withArkAnalysis)
     drawSection1ClientInfo(doc, client)
     drawSection2Needs(doc, needs)
     
@@ -74,7 +78,7 @@ async function generateDevoirConseil(data) {
   })
 }
 
-function drawConseilHeader(doc, broker, client) {
+function drawConseilHeader(doc, broker, client, withArkAnalysis = false) {
   // Bandeau titre
   doc.rect(0, 0, 595, 80).fill(COLORS.dark)
   
@@ -90,11 +94,19 @@ function drawConseilHeader(doc, broker, client) {
        ? 'Recommandation personnalisée remise au client'
        : 'Recommandation personnalisée — Article L520-1 Code des assurances', 50, 52)
   
-  // Badge IA
-  doc.rect(450, 20, 95, 40).fill(COLORS.primary)
+  // Badge ARK — correction 20/09/2026 (défaut IA-017).
+  // Le badge « Généré par ARK IA » était imprimé sur TOUS les documents, y
+  // compris ceux sans aucune analyse ARK : un document rédigé à la main
+  // portait la signature de l'IA. Le badge n'est posé que si une analyse ARK
+  // est réellement jointe ; sinon le document se déclare pour ce qu'il est,
+  // un projet à valider.
+  const badge = withArkAnalysis
+    ? { ligne1: 'Généré par', ligne2: 'ARK IA' }
+    : { ligne1: 'Projet à', ligne2: 'VALIDER' }
+  doc.rect(450, 20, 95, 40).fill(withArkAnalysis ? COLORS.primary : COLORS.warning)
   doc.fillColor(COLORS.white).fontSize(9)
-     .text('Généré par', 460, 28)
-     .fontSize(14).text('ARK IA', 465, 42)
+     .text(badge.ligne1, 460, 28)
+     .fontSize(withArkAnalysis ? 14 : 11).text(badge.ligne2, 460, 42)
   
   doc.moveDown(3)
 }
@@ -303,8 +315,12 @@ function drawSection4Alternatives(doc, alternatives, broker) {
   let itemY = y + 30
   
   if (!alternatives || alternatives.length === 0) {
+    // POURQUOI cette formulation : l'ancienne ligne affirmait « Aucune
+    // alternative comparable n'a été identifiée sur le marché » — une
+    // comparaison de marché qui n'avait pas eu lieu. On dit seulement que le
+    // dossier n'en contient aucune.
     doc.fillColor(COLORS.text).fontSize(9)
-       .text('Aucune alternative comparable n\'a été identifiée sur le marché.', 50, itemY)
+       .text('Aucune alternative n\'est renseignée dans ce dossier.', 50, itemY)
     return
   }
   
@@ -338,22 +354,42 @@ function drawSection5Reasoning(doc, aiReasoning, recommendation) {
   
   doc.moveTo(50, y + 18).lineTo(545, y + 18).stroke(COLORS.lightBg)
   
-  // Badge IA
+  // MENTION DE VALIDATION — correction 20/09/2026 (défaut IA-017).
+  // Ce document imprimait TOUJOURS « Cette analyse a été générée par ARK, … et
+  // validée par votre courtier », même sans la moindre analyse ARK et sans
+  // qu'aucun courtier n'ait validé quoi que ce soit. C'est une attestation de
+  // validation qui n'a pas eu lieu, imprimée sur une pièce du dossier de
+  // souscription remise au client. On n'écrit plus que ce qui est vrai :
+  //   • analyse ARK réellement jointe → le document est attribué à ARK et se
+  //     déclare « projet à valider par votre courtier » (jamais « validée ») ;
+  //   • raisonnement fourni par le cabinet → attribué au cabinet, sans ARK ;
+  //   • rien → on le dit, au lieu de fabriquer un raisonnement de repli.
+  const texteArk = String(aiReasoning || '').trim()
+  const texteCabinet = String((recommendation && recommendation.detailed_reasoning) || '').trim()
+  const reasoning = texteArk || texteCabinet
+
+  const badge = texteArk
+    ? `🤖 Analyse générée par ARK, l'intelligence artificielle de COURTIA. Projet à valider par votre courtier avant remise au client.`
+    : (texteCabinet
+      ? `Argumentaire établi par votre cabinet. Aucune analyse automatisée ARK n'est jointe à ce document.`
+      : `Aucune analyse automatisée ARK n'est jointe à ce document : le raisonnement n'a pas été produit.`)
+
   doc.rect(50, y + 30, 495, 30).fill(COLORS.primary).fillOpacity(0.1)
   doc.fillOpacity(1)
   doc.fillColor(COLORS.primary).fontSize(9)
-     .text('🤖 Cette analyse a été générée par ARK, l\'intelligence artificielle de COURTIA, et validée par votre courtier.', 60, y + 40, { width: 475 })
+     .text(badge, 60, y + 40, { width: 475 })
   
-  let itemY = y + 75
-  
-  const reasoning = aiReasoning || recommendation.detailed_reasoning || 
-    'Cette recommandation est basée sur l\'analyse de votre situation personnelle, ' +
-    'de vos besoins exprimés et des offres disponibles sur le marché. ' +
-    'Elle tient compte de votre budget, de votre profil de risque et de vos objectifs de protection. ' +
-    'Le produit recommandé offre le meilleur équilibre entre couverture et coût.'
+  const itemY = y + 75
   
   doc.fillColor(COLORS.text).fontSize(9)
-     .text(reasoning, 50, itemY, { width: 495, align: 'justify' })
+  if (reasoning) {
+    doc.text(reasoning, 50, itemY, { width: 495, align: 'justify' })
+  } else {
+    // Aucun texte de repli fabriqué : un raisonnement inventé dans un devoir de
+    // conseil est un motif de non-conformité, pas une commodité d'affichage.
+    doc.fillColor(COLORS.warning)
+       .text('Le raisonnement de la recommandation doit être saisi par le courtier avant remise au client.', 50, itemY, { width: 495 })
+  }
 }
 
 function drawSection6Signature(doc, client, broker, generatedAt) {
@@ -412,4 +448,8 @@ function drawConseilFooter(doc, broker, generatedAt) {
   doc.text('Ce document doit être conservé par le client. Il fait partie intégrante du dossier de souscription.', 50, y + 20)
 }
 
-module.exports = { generateDevoirConseil, COLORS }
+// Les deux fonctions de rendu sont exportées pour que la recette et les tests
+// de non-régression puissent LIRE, sur un « doc » instrumenté, les mentions
+// réellement imprimées (défaut IA-017 : une mention de validation qui n'a pas eu
+// lieu était impossible à vérifier autrement, le PDF étant compressé).
+module.exports = { generateDevoirConseil, COLORS, drawConseilHeader, drawSection5Reasoning }

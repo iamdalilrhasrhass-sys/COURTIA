@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 const MONTHS = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
@@ -171,7 +172,7 @@ export default function CommissionsV2() {
               <TrendingUp size={20} color="#F59E0B" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: '#0F172A' }}>
-              {stats.totals.expected_amount_eur?.toLocaleString('fr-FR')} €
+              {stats.totals.expected_amount_eur?.toLocaleString(localeCourante())} €
             </div>
           </motion.div>
 
@@ -181,7 +182,7 @@ export default function CommissionsV2() {
               <Coins size={20} color="#10B981" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: '#10B981' }}>
-              {stats.totals.received_amount_eur?.toLocaleString('fr-FR')} €
+              {stats.totals.received_amount_eur?.toLocaleString(localeCourante())} €
             </div>
           </motion.div>
 
@@ -193,7 +194,7 @@ export default function CommissionsV2() {
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: (stats.totals.received_amount_eur - stats.totals.expected_amount_eur) >= 0 ? '#10B981' : '#EF4444' }}>
               {(stats.totals.received_amount_eur - stats.totals.expected_amount_eur) >= 0 ? '+' : ''}
-              {(stats.totals.received_amount_eur - stats.totals.expected_amount_eur).toLocaleString('fr-FR')} €
+              {(stats.totals.received_amount_eur - stats.totals.expected_amount_eur).toLocaleString(localeCourante())} €
             </div>
           </motion.div>
 
@@ -218,7 +219,7 @@ export default function CommissionsV2() {
               <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tickFormatter={v => `${v}€`} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value) => [`${value?.toLocaleString('fr-FR')} €`]} />
+              <Tooltip formatter={(value) => [`${value?.toLocaleString(localeCourante())} €`]} />
               <Legend />
               <Bar dataKey="Attendu" fill="#F59E0B" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Reçu" fill="#10B981" radius={[4, 4, 0, 0]} />
@@ -289,13 +290,13 @@ export default function CommissionsV2() {
                       {com.client_prenom} {com.client_nom}
                     </td>
                     <td style={{ padding: 16, fontSize: 14, textAlign: 'right', fontWeight: 500 }}>
-                      {com.expected_amount_eur?.toLocaleString('fr-FR')} €
+                      {com.expected_amount_eur?.toLocaleString(localeCourante())} €
                     </td>
                     <td style={{ padding: 16, fontSize: 14, textAlign: 'right', fontWeight: 600, color: '#10B981' }}>
-                      {com.received_amount_eur?.toLocaleString('fr-FR')} €
+                      {com.received_amount_eur?.toLocaleString(localeCourante())} €
                       {variance !== 0 && (
                         <span style={{ fontSize: 11, color: variance > 0 ? '#10B981' : '#EF4444', marginLeft: 6 }}>
-                          ({variance > 0 ? '+' : ''}{variance.toLocaleString('fr-FR')})
+                          ({variance > 0 ? '+' : ''}{variance.toLocaleString(localeCourante())})
                         </span>
                       )}
                     </td>
@@ -332,7 +333,7 @@ export default function CommissionsV2() {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: 12, color: '#64748B' }}>Reçu</div>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: '#10B981' }}>{ins.received_amount_eur?.toLocaleString('fr-FR')} €</div>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: '#10B981' }}>{ins.received_amount_eur?.toLocaleString(localeCourante())} €</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 12, color: '#64748B' }}>Commissions</div>

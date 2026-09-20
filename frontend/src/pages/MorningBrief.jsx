@@ -13,7 +13,7 @@ import { getAuthToken } from '../api/sessionPolicy'
 import { computeDailyPriorities } from '../lib/priorities'
 import { blocsResume, NON_MESURE } from '../lib/salesViewModel'
 import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
-import { fmtMontant, fmtNombre } from '../lib/monnaie'
+import { fmtMontant, fmtNombre, localeCourante } from '../lib/monnaie'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const T = {
@@ -41,7 +41,7 @@ function getGreeting() {
 }
 
 function formatDate() {
-  return new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date().toLocaleDateString(localeCourante(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 // Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).

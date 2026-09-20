@@ -1,8 +1,18 @@
 // ============================================================
 // /srv/courtia/backend/src/services/ddaAudit.js
-// KILLER FEATURE #9 — DDA Auto-Audit
-// Vérifie la conformité Directive Distribution Assurance pour chaque dossier
-// Génère un PDF horodaté exportable (ACPR-ready)
+// KILLER FEATURE #9 — Auto-audit de conformité du dossier client
+//
+// VOCABULAIRE RÉGLEMENTAIRE = MARCHÉ DU CABINET (correction 20/09/2026)
+// Ce module traitait tout cabinet comme français : le prompt demandait un
+// « expert conformité DDA assurance courtage France », la recommandation
+// attendue s'appelait `risque_acpr` et le PDF portait « Ne se substitue pas à
+// un audit ACPR formel ». Un cabinet suisse recevait donc, sur un endpoint
+// backend, une autorité (ACPR) et une procédure (directive DDA transposée en
+// droit français) qui n'ont aucune compétence chez lui. Le marché est maintenant
+// résolu par la règle unique du produit (`lib/marcheCabinet`) et le vocabulaire
+// en découle : aucun régulateur étranger n'est nommé pour la Suisse, et AUCUNE
+// obligation suisse n'est inventée pour autant (on reste descriptif : « le
+// référentiel du cabinet »).
 // ============================================================
 
 const PDFDocument = require('pdfkit');
@@ -10,16 +20,71 @@ const fs = require('fs');
 const path = require('path');
 const OpenAI = require('openai');
 const pool = require('../db');
+const marcheCabinet = require('../lib/marcheCabinet');
+const porteeCabinet = require('../lib/porteeCabinet');
 
 const { clientIA } = require('../lib/aiClient')
 const deepseek = clientIA(OpenAI, { apiKeyVar: 'DEEPSEEK_API_KEY', baseURL: 'https://api.deepseek.com' })
 
 const { DDA_REPORTS_DIR, ensureDir } = require('../lib/storagePaths');
 
-// Chemin dérivé de la racine du dépôt (surchargeable par DDA_REPORTS_DIR).
-// La création est faite à l'usage, pas au chargement : un dossier non
-// inscriptible ne doit jamais empêcher le serveur de démarrer.
+/** Nom de fichier / dossier historique du module (conservé : rien à migrer). */
 const REPORTS_DIR = DDA_REPORTS_DIR;
+
+/**
+ * VOCABULAIRE DE L'AUDIT SELON LE MARCHÉ DU CABINET — fonction PURE (testée).
+ *
+ * Pourquoi une fonction plutôt qu'un `if` dispersé : le même mot (« ACPR »,
+ * « DDA ») apparaissait dans le prompt IA, dans le contrat JSON rendu à l'écran
+ * et dans le pied du PDF. Corriger un seul de ces trois endroits laisse le
+ * défaut visible ailleurs — c'est exactement ce qui s'était produit sur l'écran
+ * de conformité. Une seule source, trois usages.
+ *
+ * @param {'FR'|'CH'|string} marche
+ */
+function vocabulaireAudit(marche = 'FR') {
+  const code = String(marche || 'FR').toUpperCase() === 'CH' ? 'CH' : 'FR'
+  if (code === 'CH') {
+    return {
+      marche: 'CH',
+      autorite: 'FINMA',
+      // Aucune directive ni autorité françaises : le dossier est décrit pour ce
+      // qu'il est (le dossier de conformité du cabinet), sans prétendre à un
+      // dépôt officiel ni citer une obligation d'un autre pays.
+      titre_rapport: 'Rapport de conformité du dossier client',
+      role_expert: "Tu es expert en conformité du courtage d'assurances pour un cabinet établi en Suisse.",
+      // Le contrat de la réponse ne doit pas être nommé d'après une autorité
+      // française : un écran qui lit `risque_acpr` afficherait un risque ACPR.
+      cle_risque: 'risque_controle',
+      libelle_risque: 'risque en cas de contrôle du cabinet',
+      locale: 'fr-CH',
+      mention_legale: "Document de travail interne du cabinet. Aucun référentiel d'un autre pays ne s'applique, et aucune obligation au-delà du registre du cabinet n'est présumée.",
+    }
+  }
+  return {
+    marche: 'FR',
+    autorite: 'ACPR',
+    titre_rapport: 'Rapport de conformité DDA',
+    role_expert: "Tu es expert conformité DDA assurance courtage France.",
+    cle_risque: 'risque_acpr',
+    libelle_risque: 'risque si contrôle ACPR',
+    locale: 'fr-FR',
+    mention_legale: "Document à valeur indicative pour la traçabilité interne du courtier. Ne se substitue pas à un audit ACPR formel.",
+  }
+}
+
+/**
+ * Marché du CABINET de l'utilisateur (repli France si illisible : le
+ * comportement historique, jamais un référentiel étranger).
+ */
+async function marcheDeLUtilisateur(userId) {
+  try {
+    const verdict = await marcheCabinet.marcheUtilisateur(userId, (sql, params) => pool.query(sql, params))
+    return verdict && verdict.marche === 'CH' ? 'CH' : 'FR'
+  } catch (_err) {
+    return 'FR'
+  }
+}
 
 // 9 checks DDA exigibles
 const DDA_CHECKS = [
@@ -34,9 +99,24 @@ const DDA_CHECKS = [
   { id: 'historique_horodate', label: 'Historique d\'échanges horodaté complet', weight: 10, required: false }
 ];
 
-async function loadDossierContext(clientId, pool) {
+/**
+ * Charge le dossier d'un client POUR LE CABINET DE L'APPELANT.
+ *
+ * POURQUOI LA PORTÉE ICI (défaut trouvé le 20/09/2026) : cette fonction
+ * chargeait `clients WHERE id=$1` SANS aucun contrôle d'appartenance. Le
+ * gestionnaire d'audit recevait bien un `userId`, mais ne s'en servait que pour
+ * ÉCRIRE l'audit : n'importe quel compte authentifié pouvait donc faire lire et
+ * résumer le dossier d'un client d'un AUTRE cabinet en devinant son identifiant
+ * (le « cloisonnement par identifiant direct » que la Red Team n'avait pas
+ * éprouvé sur cette route). La ressource est maintenant filtrée par la portée
+ * cabinet : hors périmètre, elle n'existe pas (404).
+ */
+async function loadDossierContext(clientId, pool, portee = null) {
+  const fClient = portee
+    ? porteeCabinet.fragment(portee, { cabinet: 'clients.cabinet_id', proprietaire: 'clients.courtier_id', depart: 2 })
+    : { sql: '1 = 1', params: [] };
   const [client, documents, opportunites, contrats, devis, relances, conformiteFields] = await Promise.all([
-    pool.query(`SELECT * FROM clients WHERE id=$1`, [clientId]),
+    pool.query(`SELECT * FROM clients WHERE id=$1 AND ${fClient.sql}`, [clientId, ...fClient.params]),
     pool.query(`SELECT document_type, status, uploaded_at FROM client_documents WHERE client_id=$1`, [clientId]),
     pool.query(`SELECT * FROM opportunites WHERE client_id=$1`, [clientId]),
     pool.query(`SELECT * FROM contrats WHERE client_id=$1`, [clientId]).catch(() => ({ rows: [] })),
@@ -177,13 +257,15 @@ function computeScore(checks) {
   return { score, level, risk, missing, red_flags: redFlags };
 }
 
-async function generateRecommendations(ctx, checks, scoreResult) {
+async function generateRecommendations(ctx, checks, scoreResult, marche = 'FR') {
   if (scoreResult.missing.length === 0) return ['Dossier conforme — aucun écart majeur.'];
 
+  const vocab = vocabulaireAudit(marche);
+
   try {
-    const prompt = `Tu es expert conformité DDA assurance courtage France.
+    const prompt = `${vocab.role_expert}
 Client : ${ctx.client.last_name} ${ctx.client.first_name || ''} — ${ctx.client.type}
-Score conformité : ${scoreResult.score}/100 (${scoreResult.level})
+Score conformité du dossier : ${scoreResult.score}/100 (${scoreResult.level})
 
 POINTS NON CONFORMES :
 ${scoreResult.missing.map((m, i) => `${i + 1}. ${m.check} → ${m.detail}`).join('\n')}
@@ -194,7 +276,7 @@ JSON STRICT :
     "5 recommandations courtes, actionnables, priorisées, max 15 mots chacune"
   ],
   "urgence_globale": "haute|moyenne|basse",
-  "risque_acpr": "string courte décrivant le risque si contrôle ACPR"
+  "${vocab.cle_risque}": "string courte décrivant le ${vocab.libelle_risque}"
 }`;
     const c = await deepseek.chat.completions.create({
       model: 'deepseek-chat',
@@ -205,11 +287,18 @@ JSON STRICT :
     });
     return JSON.parse(c.choices[0].message.content);
   } catch (e) {
-    return { recommendations: scoreResult.missing.map(m => `Compléter : ${m.check}`), urgence_globale: 'moyenne', risque_acpr: 'Risque modéré' };
+    // Repli SANS moteur IA : il ne cite aucune autorité (la clé de risque suit
+    // le marché du cabinet, comme la réponse du modèle).
+    return {
+      recommendations: scoreResult.missing.map(m => `Compléter : ${m.check}`),
+      urgence_globale: 'moyenne',
+      [vocab.cle_risque]: 'Risque modéré',
+    };
   }
 }
 
-async function generatePdfReport(clientId, audit, ctx) {
+async function generatePdfReport(clientId, audit, ctx, marche = 'FR') {
+  const vocab = vocabulaireAudit(marche);
   if (!ensureDir(REPORTS_DIR)) {
     throw new Error(`Dossier des rapports DDA indisponible : ${REPORTS_DIR}`);
   }
@@ -228,8 +317,8 @@ async function generatePdfReport(clientId, audit, ctx) {
   // Header
   doc.fillColor(navy).rect(0, 0, 595, 90).fill();
   doc.fillColor('white').fontSize(22).text('COURTIA', 50, 28, { continued: true })
-     .fillColor(cyan).text(' — Rapport de conformité DDA', { continued: false });
-  doc.fillColor('white').fontSize(10).text(`Généré le ${new Date().toLocaleString('fr-FR')}`, 50, 60);
+     .fillColor(cyan).text(` — ${vocab.titre_rapport}`, { continued: false });
+  doc.fillColor('white').fontSize(10).text(`Généré le ${new Date().toLocaleString(vocab.locale)}`, 50, 60);
 
   // Client info
   doc.fillColor(navy).fontSize(14).text('Client analysé', 50, 110);
@@ -272,9 +361,11 @@ async function generatePdfReport(clientId, audit, ctx) {
     y += 22;
   });
 
-  // Footer
+  // Footer — la mention légale suit le marché du cabinet : un document suisse
+  // ne cite pas une autorité française (défaut mesuré : « Ne se substitue pas à
+  // un audit ACPR formel » sur le rapport d'un cabinet suisse).
   doc.fontSize(8).fillColor('#94A3B8').text(
-    `COURTIA — Rapport conformité DDA généré automatiquement le ${new Date().toLocaleString('fr-FR')} — Document à valeur indicative pour la traçabilité interne du courtier. Ne se substitue pas à un audit ACPR formel.`,
+    `COURTIA — ${vocab.titre_rapport} généré automatiquement le ${new Date().toLocaleString(vocab.locale)} — ${vocab.mention_legale}`,
     50, 770, { width: 495, align: 'center' }
   );
 
@@ -282,17 +373,45 @@ async function generatePdfReport(clientId, audit, ctx) {
   return filepath;
 }
 
-async function auditClient(clientId, userId) {
-  const ctx = await loadDossierContext(clientId, pool);
-  if (!ctx.client) throw new Error('Client introuvable');
+/**
+ * Audit de conformité d'un dossier client.
+ *
+ * @param {number} clientId identifiant du client
+ * @param {number} userId utilisateur qui demande l'audit
+ * @param {{pool?: object, portee?: object, req?: object}} [options]
+ *        `portee` (ou `req`, résolu via `lib/porteeCabinet`) restreint le
+ *        dossier au CABINET de l'appelant. Sans portée fournie, on la résout :
+ *        une lecture ne doit jamais pouvoir sortir du cabinet par omission.
+ * @throws {Error & {statut?: number}} `statut: 404` si le dossier n'est pas
+ *         dans le cabinet de l'appelant (la route traduit en 404, pas en 500).
+ */
+async function auditClient(clientId, userId, options = {}) {
+  const poolUtilise = options.pool || pool;
+  const portee = options.portee
+    || (options.req ? await porteeCabinet.resoudrePortee(poolUtilise, options.req) : null);
+
+  const ctx = await loadDossierContext(clientId, poolUtilise, portee);
+  if (!ctx.client) {
+    const err = new Error('Client introuvable');
+    err.statut = 404;
+    throw err;
+  }
+
+  // Le vocabulaire du rapport suit le marché du CABINET (jamais une autorité
+  // étrangère servie au cabinet) : FINMA en Suisse, ACPR en France.
+  const marche = await marcheDeLUtilisateur(userId);
+  const vocab = vocabulaireAudit(marche);
 
   const checks = evaluateChecks(ctx);
   const scoreResult = computeScore(checks);
-  const recommendations = await generateRecommendations(ctx, checks, scoreResult);
+  const recommendations = await generateRecommendations(ctx, checks, scoreResult, marche);
 
   const audit = {
     client_id: clientId,
     user_id: userId,
+    marche: vocab.marche,
+    autorite_referente: vocab.autorite,
+    referentiel: vocab.titre_rapport,
     global_score: scoreResult.score,
     compliance_level: scoreResult.level,
     risk_level: scoreResult.risk,
@@ -302,10 +421,10 @@ async function auditClient(clientId, userId) {
     recommendations
   };
 
-  const pdfPath = await generatePdfReport(clientId, audit, ctx);
+  const pdfPath = await generatePdfReport(clientId, audit, ctx, marche);
   audit.report_pdf_path = pdfPath;
 
-  await pool.query(`
+  await poolUtilise.query(`
     INSERT INTO dda_audits (client_id, user_id, global_score, compliance_level, risk_level, checks, missing_items, red_flags, recommendations, report_pdf_path, audited_at)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
     ON CONFLICT (client_id) DO UPDATE SET
@@ -314,7 +433,7 @@ async function auditClient(clientId, userId) {
       JSON.stringify(audit.checks), JSON.stringify(audit.missing_items), JSON.stringify(audit.red_flags),
       JSON.stringify(audit.recommendations), pdfPath]);
 
-  await pool.query(`
+  await poolUtilise.query(`
     INSERT INTO dda_audit_history (client_id, user_id, score, compliance_level, snapshot, audited_at)
     VALUES ($1,$2,$3,$4,$5,NOW())
   `, [clientId, userId, audit.global_score, audit.compliance_level, JSON.stringify({ checks: audit.checks, missing: audit.missing_items })]);
@@ -322,36 +441,72 @@ async function auditClient(clientId, userId) {
   return audit;
 }
 
-async function batchAudit(userId) {
-  const clients = await pool.query(`SELECT id FROM clients WHERE courtier_id=$1 AND status='actif'`, [userId]);
+/**
+ * Audit en lot des clients ACTIFS DU CABINET.
+ * POURQUOI LA PORTÉE : la sélection était `clients WHERE courtier_id=$1` — un
+ * collègue lançant l'audit de masse ne traitait donc AUCUN dossier du cabinet
+ * (et le propriétaire n'en traitait qu'une partie après avoir invité quelqu'un).
+ */
+async function batchAudit(userId, options = {}) {
+  const poolUtilise = options.pool || pool;
+  const portee = options.portee
+    || (options.req ? await porteeCabinet.resoudrePortee(poolUtilise, options.req) : null);
+  const f = portee
+    ? porteeCabinet.fragment(portee, { cabinet: 'clients.cabinet_id', proprietaire: 'clients.courtier_id', depart: 1 })
+    : { sql: 'clients.courtier_id = $1', params: [userId] };
+
+  const clients = await poolUtilise.query(`SELECT id FROM clients WHERE ${f.sql} AND status='actif'`, f.params);
   const results = [];
   for (let i = 0; i < clients.rows.length; i += 3) {
     const batch = clients.rows.slice(i, i + 3);
-    const audited = await Promise.all(batch.map(c => auditClient(c.id, userId).catch(() => null)));
+    const audited = await Promise.all(batch.map(c => auditClient(c.id, userId, { ...options, pool: poolUtilise, portee }).catch(() => null)));
     results.push(...audited.filter(Boolean));
   }
   return { audited_count: results.length, average_score: Math.round(results.reduce((s, a) => s + a.global_score, 0) / Math.max(results.length, 1)) };
 }
 
-async function getAuditDashboard(userId) {
-  const r = await pool.query(`
+/**
+ * Tableau de bord des audits du CABINET de l'appelant.
+ * POURQUOI LA PORTÉE : le comptage était `dda_audits WHERE user_id=$1` — le
+ * collaborateur qui venait de lancer l'audit d'un dossier voyait 0 audit, et le
+ * propriétaire ne voyait pas ceux de son équipe. La portée passe par le CLIENT
+ * audité (`clients.cabinet_id`), seule ancre du tenant.
+ */
+async function getAuditDashboard(userId, options = {}) {
+  const poolUtilise = options.pool || pool;
+  const portee = options.portee
+    || (options.req ? await porteeCabinet.resoudrePortee(poolUtilise, options.req) : null);
+  const f = portee
+    ? porteeCabinet.fragment(portee, { cabinet: 'c.cabinet_id', proprietaire: 'c.courtier_id', depart: 2 })
+    : { sql: 'c.courtier_id = $2', params: [userId] };
+  const filtreCabinet = `(da.user_id = $1 OR ${f.sql})`;
+
+  const r = await poolUtilise.query(`
     SELECT
       COUNT(*) total,
-      COUNT(*) FILTER (WHERE compliance_level='conforme') conforme,
-      COUNT(*) FILTER (WHERE compliance_level='partiel') partiel,
-      COUNT(*) FILTER (WHERE compliance_level='non_conforme') non_conforme,
-      AVG(global_score)::int avg_score,
-      COUNT(*) FILTER (WHERE risk_level IN ('eleve','critique')) at_risk
-    FROM dda_audits WHERE user_id=$1
-  `, [userId]);
+      COUNT(*) FILTER (WHERE da.compliance_level='conforme') conforme,
+      COUNT(*) FILTER (WHERE da.compliance_level='partiel') partiel,
+      COUNT(*) FILTER (WHERE da.compliance_level='non_conforme') non_conforme,
+      AVG(da.global_score)::int avg_score,
+      COUNT(*) FILTER (WHERE da.risk_level IN ('eleve','critique')) at_risk
+    FROM dda_audits da LEFT JOIN clients c ON c.id = da.client_id
+    WHERE ${filtreCabinet}
+  `, [userId, ...f.params]);
 
-  const worst = await pool.query(`
+  const worst = await poolUtilise.query(`
     SELECT da.*, c.last_name||' '||COALESCE(c.first_name,'') client_name
-    FROM dda_audits da JOIN clients c ON c.id=da.client_id
-    WHERE da.user_id=$1 ORDER BY da.global_score ASC LIMIT 10
-  `, [userId]);
+    FROM dda_audits da LEFT JOIN clients c ON c.id=da.client_id
+    WHERE ${filtreCabinet} ORDER BY da.global_score ASC LIMIT 10
+  `, [userId, ...f.params]);
 
-  return { stats: r.rows[0], worst: worst.rows };
+  return { stats: r.rows[0], worst: worst.rows, marche: await marcheDeLUtilisateur(userId) };
 }
 
-module.exports = { auditClient, batchAudit, getAuditDashboard, generatePdfReport };
+module.exports = {
+  auditClient,
+  batchAudit,
+  getAuditDashboard,
+  generatePdfReport,
+  vocabulaireAudit,
+  marcheDeLUtilisateur,
+};

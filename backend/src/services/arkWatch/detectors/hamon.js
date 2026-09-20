@@ -5,12 +5,33 @@
  * à tout moment après 1 an sans frais ni pénalités.
  * 
  * Opportunité : renégociation ou changement compagnie.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * MARCHÉS OÙ CE DÉTECTEUR S'APPLIQUE : LA FRANCE UNIQUEMENT (défaut P1 CH-016)
+ * ────────────────────────────────────────────────────────────────────────────
+ * La loi Hamon est une loi FRANÇAISE. Elle n'a aucune existence en Suisse :
+ * elle y était pourtant exécutée pour tous les cabinets, et un cabinet suisse
+ * recevait donc des signaux « Loi Hamon : Auto résiliable (3 ans) » qui
+ * affirment un droit de résiliation qu'il ne peut pas invoquer. Un signal faux
+ * coûte plus cher qu'un signal absent : le courtier appelle un client sur un
+ * fondement inexistant.
+ *
+ * Nous DÉSACTIVONS la règle hors de France et NOUS LE DISONS (voir
+ * `detectors/index.js` : le détecteur apparaît « désactivé hors marché » dans
+ * le compte rendu du run — il n'est jamais retiré en silence).
+ * AUCUNE règle suisse de remplacement n'est inventée ici : la résiliation en
+ * droit suisse ne se résume pas à un seuil d'ancienneté, et un équivalent non
+ * validé serait exactement le défaut qu'on corrige.
  */
 
 module.exports = {
   code: 'hamon',
   name: 'Loi Hamon - Résiliation possible',
   severity: 'high',
+  // Marchés où la règle a un sens juridique. Liste ABSENTE = tous les marchés.
+  marches: ['FR'],
+  motifHorsMarche:
+    "La loi Hamon est une loi française : elle n'est pas appliquée hors du marché français.",
   
   /**
    * Détecte les contrats éligibles à la Loi Hamon

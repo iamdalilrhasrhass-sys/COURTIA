@@ -19,6 +19,10 @@ const pool = require('../db')
 // tomber la lecture du portefeuille par l'assistant (lib/montants.js).
 const { montantSur } = require('../lib/montants')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
+// Portée CABINET (le dossier appartient au cabinet, pas à la colonne
+// `broker_id` — jamais écrite par le produit) : autorité unique de l'autorisation.
+const porteeCabinet = require('../lib/porteeCabinet')
+const marcheCabinet = require('../lib/marcheCabinet')
 const {
   buildAndStoreMorningBrief,
   chargeArkRun,
@@ -30,7 +34,7 @@ const {
 // LOT 3: Services ARK Anthropic Claude
 const { callArk, callArkLight, callArkStructured, checkRateLimit } = require('../services/arkEngine')
 const { getClientContext, getPortfolioContext, getMorningBriefContext, getMessageContext, getComplianceContext } = require('../services/arkContext')
-const { getPrompt, PROMPTS } = require('../services/arkPrompts')
+const { getPrompt, PROMPTS, MARCHES, personaDuMarche, construireBlocMarche, chargerMarcheCabinet } = require('../services/arkPrompts')
 
 // Initialisation client DeepSeek (compatible OpenAI SDK)
 const { clientIA } = require('../lib/aiClient')
@@ -91,6 +95,22 @@ function verifierResultatIa(res, result, contexte = {}, { structureRequise = tru
 
 function getCurrentUserId(req) {
   return Number(req.user?.userId || req.user?.id || 0)
+}
+
+/**
+ * MARCHÉ DU CABINET POUR CETTE REQUÊTE — correction 20/09/2026 (défaut P0).
+ *
+ * POURQUOI CE HELPER
+ * Les huit routes IA de ce fichier appelaient `getPrompt('…')` SANS argument :
+ * le marché valait donc toujours 'FR' et l'assistant ARK se présentait à un
+ * cabinet suisse comme « expert en courtage d'assurance français » (DDA, ORIAS,
+ * ACPR, loi Hamon, primes en €) — référentiels qui ne s'appliquent pas à lui et
+ * registre qu'il ne possède pas. Le marché se lit UNE fois par requête, depuis
+ * le CABINET (lib/marcheCabinet : cabinet → référent → profil si compte sans
+ * cabinet), jamais depuis la fiche de la personne connectée.
+ */
+async function marcheDeLaRequete(req, userId) {
+  return chargerMarcheCabinet(req.app.locals.pool || pool, userId)
 }
 
 function normalizeRecommendation(row = {}) {
@@ -222,19 +242,29 @@ router.post('/rewrite', proactiveGuard, async (req, res) => {
     const text = String(req.body?.text || '').trim()
     const mode = String(req.body?.mode || 'rephrase')
     if (!text) return res.status(400).json({ error: 'text_required', message: 'Texte requis.' })
+
+    // VÉRITÉ DE LA FACTURATION — correction 20/09/2026 (défaut IA-009).
+    // Cette route n'appelle AUCUN modèle : elle applique `rewriteFallback`, une
+    // transformation locale déterministe. Elle était pourtant journalisée dans
+    // `ark_runs` avec le modèle `ARK_LIGHT_MODEL`, un statut
+    // « llm_ready_fallback_text » et des jetons DEVINÉS (length/4) — donc
+    // facturés au cabinet ; le plafond mensuel ARK pouvait être atteint sans
+    // qu'aucune requête IA n'ait été émise. On journalise désormais la vérité :
+    // modèle 'local', statut 'local_fallback', ZÉRO jeton, coût nul.
     const rewritten = rewriteFallback(text, mode)
     await chargeArkRun(req.app.locals.pool || pool, {
       userId,
       feature: `rewrite.${mode}`,
-      model: process.env.ARK_LIGHT_MODEL || 'local-fallback',
-      inputTokens: Math.ceil(text.length / 4),
-      outputTokens: Math.ceil(rewritten.length / 4),
-      status: process.env.ANTHROPIC_API_KEY ? 'llm_ready_fallback_text' : 'local_fallback',
+      model: 'local',
+      inputTokens: 0,
+      outputTokens: 0,
+      status: 'local_fallback',
     })
     res.json({
       text: rewritten,
       mode,
-      source: process.env.ANTHROPIC_API_KEY ? 'llm_ready_with_local_fallback' : 'local_fallback',
+      source: 'local_fallback',
+      ia_appelee: false,
       configuration_required: !process.env.ANTHROPIC_API_KEY,
     })
   } catch (err) {
@@ -258,32 +288,47 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
       return res.status(400).json({ error: 'Message vide ou manquant' })
     }
 
-    // Auto-fetch contrats et tâches si clientData est présent
-    if (clientData && clientData.id) {
-      const pool = require('../db')
-      if (!Array.isArray(clientData.contrats)) {
-        try {
-          const contratsRes = await pool.query(
-            `SELECT quote_data->>'type_contrat' as type, quote_data->>'compagnie' as compagnie, ${montantSur('quotes')} as prime_annuelle, status as statut, (CASE WHEN quote_data->>'date_echeance' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (quote_data->>'date_echeance')::date END) as date_echeance FROM quotes WHERE client_id = $1`,
-            [clientData.id]
-          )
-          clientData.contrats = contratsRes.rows || []
-        } catch (e) {
-          logger.warn({ error: e.message }, 'ark autofetch contracts failed')
-          clientData.contrats = []
-        }
-      }
-      if (!Array.isArray(clientData.taches)) {
-        try {
-          const tachesRes = await pool.query(
-            `SELECT titre, statut, priorite, echeance FROM taches WHERE client_id = $1 AND statut != 'terminee' ORDER BY echeance ASC NULLS LAST LIMIT 5`,
-            [clientData.id]
-          )
-          clientData.taches = tachesRes.rows || []
-        } catch (e) {
-          logger.warn({ error: e.message }, 'ark autofetch tasks failed')
-          clientData.taches = []
-        }
+    // ────────────────────────────────────────────────────────────────────────
+    // PORTÉE DU DOSSIER — correction P1 SEC-004 (défaut mesuré le 20/09/2026)
+    //
+    // DÉFAUT : `req.body.clientData` venait de l'APPELANT et les requêtes
+    // d'autocomplétion ne portaient AUCUNE condition d'appartenance
+    // (`WHERE client_id = $1`). Un appelant qui connaissait l'identifiant d'un
+    // client d'un AUTRE cabinet faisait donc lire ses contrats et ses tâches, qui
+    // partaient dans le prompt ARK — et cette lecture avait lieu AVANT le
+    // contrôle de configuration IA, donc même sans clé IA.
+    //
+    // RÈGLE APPLIQUÉE : le corps de la requête ne fournit plus qu'un IDENTIFIANT,
+    // jamais des données. L'identifiant doit être résolu DANS LA PORTÉE de
+    // l'appelant (lib/porteeCabinet : le cabinet de l'utilisateur, ou ses propres
+    // lignes s'il n'a pas de cabinet). Hors portée ⇒ 404, AVANT toute lecture de
+    // contrat ou de tâche : aucune donnée d'un autre cabinet n'est atteignable.
+    // ────────────────────────────────────────────────────────────────────────
+    const clientIdDemande = Number.parseInt(clientData && clientData.id, 10)
+    const clientId = Number.isFinite(clientIdDemande) && clientIdDemande > 0 ? clientIdDemande : null
+    let ficheClient = null
+    let porteeDossier = null
+
+    if (clientId) {
+      // Portée de l'appelant, résolue UNE fois pour toute la requête.
+      porteeDossier = await porteeCabinet.resoudrePortee(pool, req)
+      const fClient = porteeCabinet.fragment(porteeDossier, {
+        cabinet: 'c.cabinet_id',
+        proprietaire: 'c.courtier_id',
+        depart: 2,
+      })
+      const ficheRes = await pool.query(
+        `SELECT c.* FROM clients c WHERE c.id = $1 AND ${fClient.sql} LIMIT 1`,
+        [clientId, ...fClient.params]
+      )
+      ficheClient = ficheRes.rows[0] || null
+      if (!ficheClient) {
+        // Même réponse pour « inexistant » et « d'un autre cabinet » : la route
+        // ne révèle pas l'existence d'un dossier qu'elle ne peut pas ouvrir.
+        return res.status(404).json({
+          error: 'client_introuvable',
+          message: "Ce client n'appartient pas à votre cabinet.",
+        })
       }
     }
 
@@ -292,61 +337,87 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
     }
 
     // Construire le prompt système selon le contexte
+    // Le marché est lu depuis le CABINET une seule fois, et sert à la fois au
+    // persona et à la devise des montants affichés au modèle.
+    const marche = await marcheDeLaRequete(req, getCurrentUserId(req) || Number(req.user?.userId || req.user?.id || 0))
+    const devise = (MARCHES[marche] || MARCHES.FR).devise
     const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     let systemPrompt
-    if (clientData && (clientData.id || clientData.nom)) {
-      // Fetch auto contrats + tâches si pas déjà fournis
-      if (clientData.id && !clientData.contrats) {
-        try {
-          const pool = req.app.locals.pool
-          const contratsResult = await pool.query(
-            `SELECT 
-              q.status,
-              q.quote_data->>'type_contrat' as type_contrat,
-              q.quote_data->>'compagnie' as compagnie,
-              ${montantSur('q')} as prime_annuelle,
-              q.quote_data->>'date_echeance' as date_echeance
-            FROM quotes q 
-            WHERE q.client_id = $1`,
-            [clientData.id]
-          )
-          clientData.contrats = contratsResult.rows
-          
-          const tachesResult = await pool.query(
-            "SELECT titre as title, priorite as priority, statut as status, echeance as due_date FROM taches WHERE client_id = $1 AND statut != 'terminee' ORDER BY echeance ASC LIMIT 5",
-            [clientData.id]
-          )
-          clientData.taches_actives = tachesResult.rows
-        } catch (fetchErr) {
-          logger.warn({ error: fetchErr.message }, 'ark client context fetch failed')
-        }
+    if (ficheClient) {
+      // Contrats et tâches lus SOUS PORTÉE (jamais depuis le corps de requête) :
+      // `client_id = $1` est TOUJOURS accompagné du fragment de portée cabinet,
+      // qui joint `clients c`. Le dossier d'un autre cabinet a déjà été refusé
+      // (404) ci-dessus, et la clause SQL le re-vérifie : la lecture ne peut pas
+      // atteindre une ligne hors périmètre.
+      const fQuotes = porteeCabinet.fragment(porteeDossier, {
+        cabinet: 'c.cabinet_id',
+        proprietaire: 'c.courtier_id',
+        depart: 2,
+      })
+      let contrats = []
+      try {
+        const contratsResult = await pool.query(
+          `SELECT 
+            q.status,
+            q.quote_data->>'type_contrat' as type_contrat,
+            q.quote_data->>'compagnie' as compagnie,
+            ${montantSur('q')} as prime_annuelle,
+            q.quote_data->>'date_echeance' as date_echeance
+          FROM quotes q
+          JOIN clients c ON c.id = q.client_id
+          WHERE q.client_id = $1 AND ${fQuotes.sql} /* portée cabinet */`,
+          [clientId, ...fQuotes.params]
+        )
+        contrats = contratsResult.rows || []
+      } catch (fetchErr) {
+        logger.warn({ error: fetchErr.message }, 'ark client context fetch failed')
+      }
+
+      const fTaches = porteeCabinet.fragment(porteeDossier, {
+        cabinet: 'c.cabinet_id',
+        proprietaire: 'c.courtier_id',
+        depart: 2,
+      })
+      let tachesActives = []
+      try {
+        const tachesResult = await pool.query(
+          `SELECT t.titre as title, t.priorite as priority, t.statut as status, t.echeance as due_date
+           FROM taches t
+           JOIN clients c ON c.id = t.client_id
+           WHERE t.client_id = $1 AND ${fTaches.sql} /* portée cabinet */
+           ORDER BY t.echeance ASC LIMIT 5`,
+          [clientId, ...fTaches.params]
+        )
+        tachesActives = tachesResult.rows || []
+      } catch (fetchErr) {
+        logger.warn({ error: fetchErr.message }, 'ark autofetch tasks failed')
       }
 
       // Lister les contrats actifs du client si disponibles
-      const contratsActifs = Array.isArray(clientData.contrats)
-        ? clientData.contrats.filter(c => (c.status || c.statut || '').toLowerCase() === 'actif')
+      const contratsActifs = Array.isArray(contrats)
+        ? contrats.filter(c => (c.status || c.statut || '').toLowerCase() === 'actif')
         : []
       const contratsStr = contratsActifs.length > 0
-        ? contratsActifs.map(c => `  • ${c.type_contrat || c.type} chez ${c.compagnie || 'N/A'} — prime ${c.prime_annuelle ? c.prime_annuelle + '€' : 'N/A'} — échéance ${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}`).join('\\n')
+        ? contratsActifs.map(c => `  • ${c.type_contrat || c.type} chez ${c.compagnie || 'N/A'} — prime ${c.prime_annuelle ? c.prime_annuelle + devise : 'N/A'} — échéance ${c.date_echeance ? new Date(c.date_echeance).toLocaleDateString('fr-FR') : 'N/A'}`).join('\\n')
         : '  Aucun contrat actif renseigné'
 
-      const tachesStr = Array.isArray(clientData.taches_actives) && clientData.taches_actives.length > 0
-        ? clientData.taches_actives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\\n')
+      const tachesStr = Array.isArray(tachesActives) && tachesActives.length > 0
+        ? tachesActives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\\n')
         : '  Aucune tâche active'
 
-      const scoreRisque = clientData.risk_score || clientData.score_risque || 'NC'
+      const scoreRisque = ficheClient.risk_score || ficheClient.score_risque || 'NC'
       
-      systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert en courtage d'assurance français (DDA, ORIAS, Loi Hamon, Loi Châtel). Date : ${today}
+      systemPrompt = `${personaDuMarche(marche)} Date : ${today}
 
 ═══ FICHE CLIENT ═══
-Nom : ${clientData.prenom || clientData.first_name || ''} ${clientData.nom || clientData.last_name || ''}
-Email : ${clientData.email || 'NC'}
-Téléphone : ${clientData.phone || clientData.telephone || 'NC'}
-Statut : ${clientData.statut || clientData.status || 'NC'}
-Segment : ${clientData.segment || 'NC'}
+Nom : ${ficheClient.prenom || ficheClient.first_name || ''} ${ficheClient.nom || ficheClient.last_name || ''}
+Email : ${ficheClient.email || 'NC'}
+Téléphone : ${ficheClient.phone || ficheClient.telephone || 'NC'}
+Statut : ${ficheClient.statut || ficheClient.status || 'NC'}
+Segment : ${ficheClient.segment || 'NC'}
 Score de risque : ${scoreRisque}/100
-Profession : ${clientData.profession || 'NC'}
-Adresse : ${clientData.address || clientData.adresse || 'NC'}
+Profession : ${ficheClient.profession || 'NC'}
+Adresse : ${ficheClient.address || ficheClient.adresse || 'NC'}
 
 ═══ CONTRATS ACTIFS ═══
 ${contratsStr}
@@ -360,13 +431,17 @@ Maximum 3 points, maximum 3 actions. Pas de markdown, pas de texte hors JSON.
 
 Si le message ne demande pas de JSON : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.`
     } else {
-      systemPrompt = `Tu es ARK, conseiller IA COURTIA, expert assurance française. Date : ${today}
-Expertise : portefeuille, cross-sell, fidélisation, réglementation DDA/ORIAS/Loi Hamon.
+      systemPrompt = `${personaDuMarche(marche)} Date : ${today}
 
 RÈGLE ABSOLUE : Si le message contient une instruction JSON, réponds UNIQUEMENT en JSON valide :
 {"resume":"...","points":["...","...","..."],"actions":[{"label":"...","priorite":"haute|moyenne|basse","impact":"..."}]}
 Sinon : réponds en français, ton expert et direct, 150 mots max, orienté action concrète avec chiffres/références réglementaires quand pertinent. Utilise des listes courtes avec tirets si utile.`
     }
+
+    // Le référentiel réglementaire et la devise du marché sont rappelés
+    // explicitement : sans ce bloc, le persona seul laisse le modèle produire
+    // un montant en € pour un cabinet suisse.
+    systemPrompt += construireBlocMarche(marche)
 
     // Construire l'historique pour l'API DeepSeek
     const messages = [
@@ -395,13 +470,15 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
       ? response.choices[0].message.content 
       : 'Aucune réponse générée'
 
-    // Sauvegarder dans ark_conversations si client présent
-    if (clientData && clientData.id) {
+    // Sauvegarder dans ark_conversations si un dossier a été résolu DANS LA
+    // PORTÉE (l'identifiant vient du corps, mais il a déjà été validé : écrire
+    // une conversation sur un `client_id` non validé créerait une ligne dans le
+    // dossier d'un autre cabinet).
+    if (ficheClient && clientId) {
       try {
-        const pool = require('../db')
         const existing = await pool.query(
           'SELECT id, messages FROM ark_conversations WHERE client_id = $1 ORDER BY created_at DESC LIMIT 1',
-          [clientData.id]
+          [clientId]
         )
 
         const timestamp = new Date().toISOString()
@@ -420,7 +497,7 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
         } else {
           await pool.query(
             'INSERT INTO ark_conversations (client_id, messages, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
-            [clientData.id, JSON.stringify(newMsg)]
+            [clientId, JSON.stringify(newMsg)]
           )
         }
       } catch (saveErr) {
@@ -659,7 +736,7 @@ router.post('/actions', verifyToken, async (req, res) => {
 
     logger.info({ userId, action, params }, 'ARK action requested')
 
-    const prompt = getPrompt('actions')
+    const prompt = getPrompt('actions', await marcheDeLaRequete(req, userId))
     const result = await callArk({
       system: prompt.system,
       user: `Action demandée: ${action}\nParamètres: ${JSON.stringify(params)}\nContexte page: ${JSON.stringify(context)}`,
@@ -711,7 +788,7 @@ router.get('/client/:id/brief', verifyToken, async (req, res) => {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
 
-    const prompt = getPrompt('clientBrief')
+    const prompt = getPrompt('clientBrief', await marcheDeLaRequete(req, userId))
     const result = await callArkLight({
       system: prompt.system,
       user: `Génère un brief pour ce client.`,
@@ -767,7 +844,7 @@ router.get('/client/:id/next-best-actions', verifyToken, async (req, res) => {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
 
-    const prompt = getPrompt('nextBestActions')
+    const prompt = getPrompt('nextBestActions', await marcheDeLaRequete(req, userId))
     const result = await callArk({
       system: prompt.system,
       user: `Calcule les 5 meilleures actions pour ce client. Priorise selon urgence, valeur et probabilité de succès.`,
@@ -851,7 +928,7 @@ router.post('/client/:id/quote-assistant', verifyToken, async (req, res) => {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
 
-    const prompt = getPrompt('quoteAssistant')
+    const prompt = getPrompt('quoteAssistant', await marcheDeLaRequete(req, userId))
     const userMessage = `Aide-moi à préparer un devis pour ce client.
 Type de produit souhaité: ${productType || 'Non spécifié'}
 Besoins exprimés: ${needs || 'À déterminer'}
@@ -919,7 +996,7 @@ router.post('/compliance-check', verifyToken, async (req, res) => {
       }
     }
 
-    const prompt = getPrompt('complianceCheck')
+    const prompt = getPrompt('complianceCheck', await marcheDeLaRequete(req, userId))
     const result = await callArk({
       system: prompt.system,
       user: parsedClientId
@@ -969,7 +1046,7 @@ router.get('/portfolio-health', verifyToken, async (req, res) => {
 
     const portfolioContext = await getPortfolioContext(userId)
 
-    const prompt = getPrompt('portfolioHealth')
+    const prompt = getPrompt('portfolioHealth', await marcheDeLaRequete(req, userId))
     const result = await callArk({
       system: prompt.system,
       user: `Analyse la santé de mon portefeuille et génère un rapport.`,
@@ -1025,7 +1102,7 @@ router.post('/generate', verifyToken, async (req, res) => {
       }
     }
 
-    const prompt = getPrompt('generateMessage')
+    const prompt = getPrompt('generateMessage', await marcheDeLaRequete(req, userId))
     const userMessage = `Génère un message ${messageChannel.toUpperCase()} pour ce client.
 Intent: ${intent || 'relance'}
 Ton souhaité: ${tone || 'professionnel'}
@@ -1167,7 +1244,7 @@ router.get('/client/:id/recommendations', verifyToken, async (req, res) => {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
 
-    const prompt = getPrompt('recommendations')
+    const prompt = getPrompt('recommendations', await marcheDeLaRequete(req, userId))
     const result = await callArk({
       system: prompt.system,
       user: `Analyse ce client et détecte les opportunités de cross-sell et upsell.`,
@@ -1217,6 +1294,15 @@ router.get('/priorities', verifyToken, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit || '8', 10), 20)
     const items = []
 
+    // DÉGRADATION VISIBLE — pourquoi ce tableau.
+    // Les trois blocs ci-dessous avalaient leur erreur SQL (`catch` → simple
+    // avertissement) et la route répondait 200 comme si la journée était vide :
+    // une panne de base devenait « rien à faire aujourd'hui ». Le courtier agit
+    // sur cette liste. On publie donc `degraded: true` et la liste des blocs en
+    // échec dès qu'un seul bloc ne peut pas être lu — la liste reste servie pour
+    // ce qui a réellement été lu, mais elle ne prétend plus être complète.
+    const blocsEnEchec = []
+
     // 1) Recommandations ARK actives non traitées
     try {
       const recos = await pool.query(
@@ -1240,9 +1326,18 @@ router.get('/priorities', verifyToken, async (req, res) => {
           at: r.created_at,
         })
       }
-    } catch (e) { logger.warn({ err: e }, 'ARK priorities — recos query failed') }
+    } catch (e) {
+      logger.warn({ err: e }, 'ARK priorities — recos query failed')
+      blocsEnEchec.push('recommandations')
+    }
 
     // 2) Échéances proches (≤30j) via quotes
+    // La devise est celle du CABINET (un cabinet suisse lit des CHF, jamais des
+    // €) : elle vient de l'autorité unique lib/marcheCabinet, comme ailleurs.
+    const marcheDuCabinet = await marcheCabinet.marcheUtilisateur(userId, {
+      query: (sql, params) => pool.query(sql, params),
+    })
+    const symbole = marcheDuCabinet.symbole
     if (items.length < limit) {
       try {
         const ech = await pool.query(
@@ -1264,14 +1359,17 @@ router.get('/priorities', verifyToken, async (req, res) => {
             level: e.jours <= 14 ? 'urgent' : 'haut',
             score: 70 - Math.max(0, Math.min(30, e.jours||0)),
             title: `Renouvellement ${produit} — ${name}`,
-            rationale: `J-${e.jours} • ${Number(e.quote_data?.prime_annuelle || 0).toLocaleString('fr-FR')}€`,
+            rationale: `J-${e.jours} • ${Number(e.quote_data?.prime_annuelle || 0).toLocaleString('fr-FR')}${symbole}`,
             client_id: e.client_id,
             cta: 'Préparer',
             source: 'echeance',
             at: new Date().toISOString(),
           })
         }
-      } catch (e) { logger.warn({ err: e }, 'ARK priorities — echeances query failed') }
+      } catch (e) {
+        logger.warn({ err: e }, 'ARK priorities — echeances query failed')
+        blocsEnEchec.push('échéances')
+      }
     }
 
     // 3) Clients silencieux >45j
@@ -1299,10 +1397,20 @@ router.get('/priorities', verifyToken, async (req, res) => {
             at: new Date().toISOString(),
           })
         }
-      } catch (e) { logger.warn({ err: e }, 'ARK priorities — silencieux query failed') }
+      } catch (e) {
+        logger.warn({ err: e }, 'ARK priorities — silencieux query failed')
+        blocsEnEchec.push('clients silencieux')
+      }
     }
 
-    res.json({ generated_at: new Date().toISOString(), priorities: items.slice(0, limit) })
+    res.json({
+      generated_at: new Date().toISOString(),
+      priorities: items.slice(0, limit),
+      // `degraded: true` : la liste est PARTIELLE. L'écran doit le dire au lieu
+      // d'afficher une journée vide comme si tout allait bien.
+      degraded: blocsEnEchec.length > 0,
+      degraded_blocs: blocsEnEchec,
+    })
   } catch (err) {
     logger.error({ err }, 'ARK priorities failed')
     res.status(500).json({ error: 'ark_priorities_failed', message: err.message })
@@ -1314,46 +1422,51 @@ router.get('/priorities', verifyToken, async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────
 router.get('/clients/:id/insight', verifyToken, async (req, res) => {
   try {
-    const userId = getCurrentUserId(req)
+    // Portée CABINET : le dossier doit appartenir au cabinet de l'appelant.
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const userId = portee.userId || getCurrentUserId(req)
     const clientId = parseInt(req.params.id, 10)
     if (!Number.isFinite(clientId)) return res.status(400).json({ error: 'invalid_client_id' })
 
-    let client = null
-    let contracts = []
-    let recos = []
-
-    try {
-      const cli = await pool.query(
-        `SELECT id, first_name, last_name, type, status, risk_score, loyalty_score, last_contact, silent_alert, lifetime_value
-         FROM clients WHERE id=$1 AND courtier_id=$2`, [clientId, userId])
-      client = cli.rows[0] || null
-    } catch (_) {}
-
-    try {
-      const ct = await pool.query(
-        `SELECT id, status, quote_data,
-                EXTRACT(DAY FROM NULLIF(quote_data->>'date_echeance','')::date - NOW())::int AS jours
-         FROM quotes WHERE client_id=$1 AND status='actif'`, [clientId])
-      contracts = ct.rows || []
-    } catch (_) {}
-
-    try {
-      const rc = await pool.query(
-        `SELECT id, kind, priority, title, rationale, suggested_action
-         FROM ark_recommendations
-         WHERE user_id=$1 AND client_id=$2 AND acted_on_at IS NULL AND dismissed_at IS NULL
-         ORDER BY priority DESC, created_at DESC LIMIT 5`, [userId, clientId])
-      recos = rc.rows || []
-    } catch (_) {}
-
+    // La fiche est résolue DANS LA PORTÉE.
+    // POURQUOI : la route répondait 200 avec le titre INVENTÉ « Profil client à
+    // enrichir » pour un identifiant inexistant — ou appartenant à un AUTRE
+    // cabinet — et trois `catch (_) {}` transformaient toute erreur SQL en
+    // « portefeuille vide » (donc en un titre rassurant mais faux). Un dossier
+    // hors portée est désormais un 404, une panne SQL remonte telle quelle, et
+    // aucun titre n'est fabriqué.
+    const fClients = porteeCabinet.fragment(portee, {
+      cabinet: 'clients.cabinet_id',
+      proprietaire: 'clients.courtier_id',
+      depart: 2,
+    })
+    const cli = await pool.query(
+      `SELECT id, first_name, last_name, type, status, risk_score, loyalty_score, last_contact, silent_alert, lifetime_value
+       FROM clients WHERE id=$1 AND ${fClients.sql}`,
+      [clientId, ...fClients.params]
+    )
+    const client = cli.rows[0] || null
     if (!client) {
-      return res.json({
-        client_id: clientId,
-        headline: 'Profil client à enrichir',
-        recommendations: [],
-        signals: [],
+      return res.status(404).json({
+        error: 'client_introuvable',
+        message: "Ce client n'appartient pas à votre cabinet.",
       })
     }
+
+    const ct = await pool.query(
+      `SELECT id, status, quote_data,
+              EXTRACT(DAY FROM NULLIF(quote_data->>'date_echeance','')::date - NOW())::int AS jours
+       FROM quotes WHERE client_id=$1 AND status='actif'`, [clientId]
+    )
+    const contracts = ct.rows || []
+
+    const rc = await pool.query(
+      `SELECT id, kind, priority, title, rationale, suggested_action
+       FROM ark_recommendations
+       WHERE user_id=$1 AND client_id=$2 AND acted_on_at IS NULL AND dismissed_at IS NULL
+       ORDER BY priority DESC, created_at DESC LIMIT 5`, [userId, clientId]
+    )
+    const recos = rc.rows || []
 
     const signals = []
     if (client.silent_alert) signals.push({ kind: 'silent', level: 'high', label: 'Client silencieux détecté' })

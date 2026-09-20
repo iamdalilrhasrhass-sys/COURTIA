@@ -5,7 +5,7 @@ const express = require('express');
 const authController = require('../controllers/authController');
 const verifyToken = require('../middleware/authMiddleware');
 const { verifyToken: verifyTokenMiddleware } = require('../middleware/auth');
-const { loginLimiter, meLimiter } = require('../middleware/rateLimit');
+const { loginLimiter, meLimiter, forgotPasswordLimiter, resetPasswordLimiter, refreshLimiter, googleAuthLimiter } = require('../middleware/rateLimit');
 const User = require('../models/User');
 const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
@@ -60,8 +60,10 @@ async function lireCabinet(userId) {
 // Public
 router.post('/register', authController.register);
 router.post('/login', loginLimiter, authController.login);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password', authController.resetPassword);
+// Limiteurs ajoutés le 20/09/2026 (P3 SEC-018) : ces deux routes n'étaient
+// bornées par rien, et c'est par elles qu'on force un mot de passe.
+router.post('/forgot-password', forgotPasswordLimiter, authController.forgotPassword);
+router.post('/reset-password', resetPasswordLimiter, authController.resetPassword);
 
 /**
  * POST /api/auth/logout — Déconnexion réellement enregistrée côté serveur.
@@ -77,7 +79,7 @@ router.post('/logout', verifyTokenMiddleware, authController.logout);
 
 // Protected
 router.post('/verify', verifyToken, authController.verify);
-router.post('/refresh', authController.refresh);
+router.post('/refresh', refreshLimiter, authController.refresh);
 
 // Changement de mot de passe par le titulaire (Paramètres > Sécurité).
 // Route protégée : l'ancien mot de passe est exigé, l'ancien devient inopérant.
@@ -332,8 +334,13 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
 
 /**
  * POST /api/auth/google — Authentification via Google
+ *
+ * P4 SEC-031 : cette route CRÉE un compte (`User.create`) sans passer par
+ * l'inscription, et n'était bornée par AUCUN limiteur. Elle est donc la voie la
+ * plus directe pour fabriquer des comptes en série. Le limiteur par IP la ramène
+ * au rang des autres routes d'authentification.
  */
-router.post('/google', async (req, res) => {
+router.post('/google', googleAuthLimiter, async (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     return res.status(503).json({ error: 'Connexion Google indisponible. Utilisez votre email et votre mot de passe.' });

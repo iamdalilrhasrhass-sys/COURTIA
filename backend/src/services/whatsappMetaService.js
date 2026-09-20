@@ -9,7 +9,6 @@ const {
   sanitizeWhatsappPhone,
   getWhatsappTemplates,
   getWhatsappTemplate,
-  verifyMetaSignature,
   parseWhatsappWebhookMessages,
   isWhatsappWindowOpen
 } = require('./whatsappBusinessService')
@@ -134,18 +133,27 @@ async function sendTemplate(pool, userId, { phone, templateId, variables, client
 
 /**
  * Traite les webhooks entrants Meta
+ *
+ * CORRECTION 20/09/2026 (P2 SEC-014) : ce service vérifiait lui-même la
+ * signature sur `JSON.stringify(body)`. Deux défauts :
+ *   1. la signature calculée sur du JSON RECONSTRUIT ne prouve rien sur les
+ *      octets réellement reçus (espaces, ordre des clés, échappement) ;
+ *   2. quand `WHATSAPP_APP_SECRET` était absent, `verifyMetaSignature` renvoyait
+ *      `configured: false` et le contrôle n'avait PAS lieu : le webhook
+ *      acceptait tout le monde par défaut.
+ * La vérification se fait désormais dans la ROUTE, sur `req.rawBody`, avant
+ * d'arriver ici. Ce service ne vérifie donc plus rien lui-même — mais il
+ * REFUSE toujours d'être appelé sans preuve : sans le marqueur explicite
+ * `signatureVerifiee`, il s'arrête, pour qu'un futur appelant ne réintroduise
+ * pas silencieusement le défaut.
+ *
+ * @param {object} preuve `{ signatureVerifiee: true }` posé par la route après
+ *        une vérification HMAC réussie sur le corps brut.
  */
-async function handleWebhook(pool, body, signature) {
-  // Vérifier la signature si configurée
-  if (process.env.WHATSAPP_APP_SECRET) {
-    const check = verifyMetaSignature({
-      rawBody: JSON.stringify(body),
-      signatureHeader: signature,
-      appSecret: process.env.WHATSAPP_APP_SECRET
-    })
-    if (check.configured && !check.valid) {
-      throw new Error('Signature webhook invalide')
-    }
+async function handleWebhook(pool, body, preuve) {
+  const signatureVerifiee = preuve === true || (preuve && preuve.signatureVerifiee === true)
+  if (!signatureVerifiee) {
+    throw new Error('Signature webhook non vérifiée : le traitement est refusé')
   }
 
   const messages = parseWhatsappWebhookMessages(body)

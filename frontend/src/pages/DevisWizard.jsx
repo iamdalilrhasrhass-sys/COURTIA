@@ -15,6 +15,7 @@ import { AuroraPageHeader } from '../components/aurora/AuroraPageHeader'
 import { AuroraCard } from '../components/aurora/AuroraCard'
 import { AuroraButton } from '../components/aurora/AuroraButton'
 import { AuroraBadge } from '../components/aurora/AuroraBadge'
+import { fmtMontant } from '../lib/monnaie'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
@@ -39,7 +40,8 @@ const PRESETS = [
   { key: 'sur_mesure',label: 'Sur-mesure',desc: 'Personnalisé garantie par garantie',      color: T.warning },
 ]
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v) || 0)
+// Devise du cabinet (lib/monnaie) : un devis suisse s'affiche en CHF.
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const inputStyle = {
   width: '100%', padding: '10px 14px', borderRadius: 8,

@@ -14,6 +14,7 @@
    démo quand l'API réelle évolue.
    ========================================================================== */
 
+import { deviseDemo, montantDemo } from './deviseDemo'
 import {
   CABINET, CLIENTS, CONTRATS_DETAIL, TACHES, DOCUMENTS, OPPORTUNITES,
   PROSPECTS, MESSAGES, RENDEZ_VOUS, clientDetail, contratParId,
@@ -161,7 +162,10 @@ function _repondreBrut(methode, cheminBrut, corps) {
      elle ne peut donc pas être exposée sur une preview publique. Le VRAI
      composant (components/ark/ArkBubbleV2.jsx) est utilisé tel quel. */
   if (_fin(_c, '/ark/chat') && _M === 'POST') {
-    const eur = (n) => `${Number(n || 0).toLocaleString('fr-FR')} €`
+    // Montant dans la devise du MARCHÉ DU VISITEUR (P1 CH-020) : la console ARK
+    // de la démonstration affichait « € » à tout le monde, y compris à un
+    // visiteur suisse. Le formatage vient de `deviseDemo.js`.
+    const eur = (n) => montantDemo(n, undefined, { maximumFractionDigits: 0 })
     const nomDe = (o) => o.nomClient || (o.client ? `${o.client.prenom || ''} ${o.client.nom || ''}`.trim() : '') || '—'
     const retard = TACHES.filter((t) => t.echeance < 0)
     const manquants = DOCUMENTS.filter((d) => d.statut === 'attendu')
@@ -451,8 +455,14 @@ const ligneCommission = (contrat, decalageAnnee, index) => {
     period_month: (index % 12) + 1,
     expected_amount_eur: attendu,
     received_amount_eur: etat.recu,
+    // Noms NEUTRES servis par l'API réelle en plus des noms historiques
+    // (backend/src/services/commissionService.js) : la démo en fait autant.
+    expected_amount: attendu,
+    received_amount: etat.recu,
     status: etat.status,
-    currency: 'EUR',
+    // DEVISE DU MARCHÉ DU VISITEUR (P1 CH-013/CH-020) : la démonstration annonçait
+    // `EUR` en dur, donc des euros à un visiteur suisse.
+    currency: deviseDemo(),
   }
 }
 
@@ -476,7 +486,8 @@ const grouperCommissions = (lignes, cle) => {
 }
 
 /** Primes annuelles du portefeuille : le « CA annuel » du cabinet dans cette démo
- *  (cohérent avec `statsPortefeuille().primes` de /dashboard/stats : 39 810 €). */
+ *  (cohérent avec `statsPortefeuille().primes` de /dashboard/stats : 39 810 — montant
+ *  affiché dans la devise du marché du visiteur). */
 const primesPortefeuille = () => CONTRATS_DETAIL.reduce((total, c) => total + c.prime, 0)
 
 /* ---------------------------------------------------------------- objectifs */
@@ -557,7 +568,7 @@ if (chemin === '/commissions/dashboard') {
     .sort((a, b) => a.month_number - b.month_number)
   return { statut: 200, donnees: {
     year: ANNEE_COURANTE,
-    currency: 'EUR',
+    currency: deviseDemo(),
     total_eur: by_product.reduce((total, r) => total + r.commission_eur, 0),
     total_received_eur: lignes.reduce((total, l) => total + l.received_amount_eur, 0),
     by_product,
@@ -598,7 +609,7 @@ if (chemin === '/commissions/stats' && M === 'GET') {
     return acc
   }, { expected_amount_eur: 0, received_amount_eur: 0, count: 0 })
   totals.pending_amount_eur = totals.expected_amount_eur - totals.received_amount_eur
-  return { statut: 200, donnees: { year: annee, currency: 'EUR', totals, by_month, by_insurer, by_broker, by_status } }
+  return { statut: 200, donnees: { year: annee, currency: deviseDemo(), devise: deviseDemo(), totals, by_month, by_insurer, by_broker, by_status } }
 }
 
 if (chemin === '/commissions/import' && M === 'POST') {

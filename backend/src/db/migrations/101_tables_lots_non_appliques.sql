@@ -438,7 +438,8 @@ CREATE TABLE IF NOT EXISTS broker_profile_settings (
   address TEXT,
   postal_code VARCHAR(10),
   city VARCHAR(100),
-  country VARCHAR(50) DEFAULT 'France',
+  -- Aucun pays par defaut (defaut P0 CH-005 : un profil suisse naissait francais).
+  country VARCHAR(50),
   phone VARCHAR(30),
   email VARCHAR(200),
   website VARCHAR(200),
@@ -450,8 +451,10 @@ CREATE TABLE IF NOT EXISTS broker_profile_settings (
   complaints_handling TEXT,
   
   -- Autorité de tutelle
-  supervisor_name VARCHAR(200) DEFAULT 'ACPR',
-  supervisor_address TEXT DEFAULT '4 place de Budapest CS 92459 75436 Paris cedex 09',
+  -- Autorite de tutelle REELLE, saisie : ni ACPR ni adresse parisienne par defaut
+  -- (l'ACPR n'a aucune competence en Suisse).
+  supervisor_name VARCHAR(200),
+  supervisor_address TEXT,
   
   -- Assurance RCP
   rcp_insurer VARCHAR(200),

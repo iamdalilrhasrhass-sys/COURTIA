@@ -18,6 +18,10 @@ const { MODELE_LEGER } = require('./iaModeles');
 const { journaliserErreurIa } = require('./iaErreurs');
 
 // --- Messages Table (auto-create if not exists) ---
+// `analyse_source` (défaut IA-014) dit D'OÙ vient l'analyse : 'ia' (le modèle a
+// réellement classé le message) ou 'regex' (repli local par mots-clés). Sans
+// cette colonne, un message contenant « go » était enregistré comme analysé par
+// l'IA avec une confiance de 0,7 et faisait passer le client en « signé ».
 const CREATE_MESSAGES_TABLE = `
   CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
@@ -29,10 +33,17 @@ const CREATE_MESSAGES_TABLE = `
     analyse_type VARCHAR(30),                          -- accord, refus, piece_jointe, question, autre
     analyse_confiance DECIMAL(3,2),                    -- 0.00 à 1.00
     analyse_resume TEXT,
+    analyse_source VARCHAR(10),                        -- 'ia' ou 'regex'
     action_effectuee VARCHAR(50),
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
+`;
+
+// Colonne ajoutée aux tables `messages` DÉJÀ créées (installation existante) :
+// `CREATE TABLE IF NOT EXISTS` n'ajoute rien à une table présente.
+const ALTER_MESSAGES_SOURCE = `
+  ALTER TABLE messages ADD COLUMN IF NOT EXISTS analyse_source VARCHAR(10);
 `;
 
 // --- Helper: Ensure messages table exists ---
@@ -41,6 +52,7 @@ async function ensureMessagesTable(pool) {
   if (tableEnsured) return;
   try {
     await pool.query(CREATE_MESSAGES_TABLE);
+    await pool.query(ALTER_MESSAGES_SOURCE);
     tableEnsured = true;
   } catch (err) {
     console.error('[inboundProcessor] Cannot create messages table:', err.message);
@@ -78,7 +90,8 @@ Réponds avec ce JSON exact :
 async function analyzeWithClaude(from, subject, body) {
   // Aucune clé IA configurée : on dégrade vers l'analyse par mots-clés au lieu
   // de laisser « Missing credentials » remonter (le client n'a jamais à voir
-  // l'erreur du fournisseur).
+  // l'erreur du fournisseur). L'analyse est alors marquée `source: 'regex'` :
+  // elle n'est PAS une analyse IA et ne doit pas être présentée comme telle.
   if (!process.env.ANTHROPIC_API_KEY) return fallbackAnalysis(subject, body);
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -108,40 +121,83 @@ async function analyzeWithClaude(from, subject, body) {
       resume: parsed.resume || '',
       action_suggeree: parsed.action_suggeree || '',
       intention: parsed.intention_principale || '',
+      source: 'ia',
     };
   } catch (err) {
     // Détail côté serveur uniquement, jamais renvoyé au client.
     journaliserErreurIa(err, { route: 'inboundProcessor', etape: 'analyse' });
-    // Fallback simple sans IA
+    // Fallback simple sans IA — et DIT comme tel (`source: 'regex'`).
     return fallbackAnalysis(subject, body);
   }
 }
 
 // --- Fallback sans IA (si Claude échoue) ---
+// Toute analyse rendue par cette fonction porte `source: 'regex'` : c'est une
+// heuristique de mots-clés, pas une lecture du message par un modèle.
 function fallbackAnalysis(subject, body) {
   const text = (subject + ' ' + body).toLowerCase();
+  const marque = (analyse) => ({ ...analyse, source: 'regex' });
 
   if (/accord|accepte|ok pour|je prends|je valide|bon pour|go|allons-y|signé/i.test(text)) {
-    return { type: 'accord', confiance: 0.7, resume: 'Le client semble accepter', action_suggeree: 'Vérifier et finaliser le contrat', intention: 'acceptation' };
+    return marque({ type: 'accord', confiance: 0.7, resume: 'Le client semble accepter', action_suggeree: 'Vérifier et finaliser le contrat', intention: 'acceptation' });
   }
   if (/refus|non merci|pas intéressé|trop cher|je décline|je passe|annuler/i.test(text)) {
-    return { type: 'refus', confiance: 0.7, resume: 'Le client semble refuser', action_suggeree: 'Contacter le client pour comprendre son refus', intention: 'refus' };
+    return marque({ type: 'refus', confiance: 0.7, resume: 'Le client semble refuser', action_suggeree: 'Contacter le client pour comprendre son refus', intention: 'refus' });
   }
   if (/pj|pièce jointe|ci-joint|joint|document|justificatif|scan|fichier|voici|je vous envoie/i.test(text)) {
-    return { type: 'piece_jointe', confiance: 0.65, resume: 'Le client envoie un document', action_suggeree: 'Vérifier les pièces jointes et compléter le dossier', intention: 'envoi_document' };
+    return marque({ type: 'piece_jointe', confiance: 0.65, resume: 'Le client envoie un document', action_suggeree: 'Vérifier les pièces jointes et compléter le dossier', intention: 'envoi_document' });
   }
   if (/\?|question|comment|pourquoi|quand|combien|quelle|quel|pouvez-vous/i.test(text)) {
-    return { type: 'question', confiance: 0.6, resume: 'Le client pose une question', action_suggeree: 'Répondre à la question du client', intention: 'question' };
+    return marque({ type: 'question', confiance: 0.6, resume: 'Le client pose une question', action_suggeree: 'Répondre à la question du client', intention: 'question' });
   }
   if (/absence|bureau|automatique|accusé|réception|out of office|vacances|spam|pub|newsletter/i.test(text)) {
-    return { type: 'hors_sujet', confiance: 0.8, resume: 'Réponse automatique ou spam', action_suggeree: 'Ignorer', intention: 'auto_reply' };
+    return marque({ type: 'hors_sujet', confiance: 0.8, resume: 'Réponse automatique ou spam', action_suggeree: 'Ignorer', intention: 'auto_reply' });
   }
 
-  return { type: 'autre', confiance: 0.3, resume: 'Non classifié', action_suggeree: 'Lecture manuelle recommandée', intention: 'inconnu' };
+  return marque({ type: 'autre', confiance: 0.3, resume: 'Non classifié', action_suggeree: 'Lecture manuelle recommandée', intention: 'inconnu' });
+}
+
+/**
+ * Seuil de confiance exigé pour qu'une analyse IA modifie le STATUT DU CLIENT.
+ * Une classification erronée ferait passer un prospect en « signé » (défaut
+ * IA-014 mesuré en production : `{subject:'ok go'}` → `{type:'accord',
+ * confiance:0.7}` → statut client « signe »).
+ */
+const SEUIL_CONFIANCE_STATUT = 0.75;
+
+/**
+ * Décide si l'analyse autorise un changement de statut client.
+ *
+ * POURQUOI CE GARDE-FOU
+ * Le repli local (regex) n'est pas une analyse : l'autoriser à écrire le statut
+ * d'un client, c'est laisser une correspondance de mots-clés modifier le
+ * portefeuille du cabinet. Le statut ne change donc QUE sur une analyse
+ * réellement produite par l'IA (`source === 'ia'`) et suffisamment confiante.
+ *
+ * @returns {{autorise: boolean, motif: string}}
+ */
+function peutChangerStatutClient(analysis = {}) {
+  if (analysis.source !== 'ia') {
+    return { autorise: false, motif: 'analyse_locale_regex_non_autorisee_a_ecrire' }
+  }
+  const confiance = Number(analysis.confiance)
+  if (!Number.isFinite(confiance) || confiance < SEUIL_CONFIANCE_STATUT) {
+    return { autorise: false, motif: 'confiance_ia_insuffisante' }
+  }
+  return { autorise: true, motif: 'analyse_ia_confiante' }
 }
 
 // --- Mise à jour du statut client selon le type de réponse ---
 async function updateClientStatus(pool, clientId, analysis) {
+  const verdict = peutChangerStatutClient(analysis)
+  if (!verdict.autorise) {
+    logger.info(
+      { client_id: clientId, source: analysis.source, confiance: analysis.confiance, motif: verdict.motif },
+      'inbound client status NOT updated'
+    )
+    return { statut: null, motif: verdict.motif }
+  }
+
   const statusMap = {
     accord: 'signe',
     refus: 'perdu',
@@ -152,7 +208,7 @@ async function updateClientStatus(pool, clientId, analysis) {
   };
 
   const newStatus = statusMap[analysis.type];
-  if (!newStatus) return null;
+  if (!newStatus) return { statut: null, motif: 'type_sans_effet_sur_le_statut' };
 
   try {
     await pool.query(
@@ -160,10 +216,10 @@ async function updateClientStatus(pool, clientId, analysis) {
       [newStatus, clientId]
     );
     logger.info({ client_id: clientId, status: newStatus, type: analysis.type }, 'inbound client status updated');
-    return newStatus;
+    return { statut: newStatus, motif: 'statut_modifie' };
   } catch (err) {
     logger.warn({ error: err.message, client_id: clientId }, 'inbound client status update failed');
-    return null;
+    return { statut: null, motif: 'ecriture_statut_echec' };
   }
 }
 
@@ -171,8 +227,8 @@ async function updateClientStatus(pool, clientId, analysis) {
 async function saveMessage(pool, { clientId, from, subject, body, analysis, action }) {
   try {
     await pool.query(
-      `INSERT INTO messages (client_id, direction, canal, sujet, corps, analyse_type, analyse_confiance, analyse_resume, action_effectuee)
-       VALUES ($1, 'in', 'email', $2, $3, $4, $5, $6, $7)`,
+      `INSERT INTO messages (client_id, direction, canal, sujet, corps, analyse_type, analyse_confiance, analyse_resume, analyse_source, action_effectuee)
+       VALUES ($1, 'in', 'email', $2, $3, $4, $5, $6, $7, $8)`,
       [
         clientId,
         subject,
@@ -180,6 +236,7 @@ async function saveMessage(pool, { clientId, from, subject, body, analysis, acti
         analysis.type,
         analysis.confiance,
         analysis.resume,
+        analysis.source || 'inconnue',
         action,
       ]
     );
@@ -223,7 +280,9 @@ async function processInboundEmail(pool, { from, subject, body, attachments }) {
     client_id: null,
     client_nom: null,
     analyse: null,
+    analyse_source: null,
     action: 'none',
+    motif_statut: null,
     statut_precedent: null,
     statut_nouveau: null,
     message_sauvegarde: false,
@@ -247,16 +306,23 @@ async function processInboundEmail(pool, { from, subject, body, attachments }) {
       logger.info({}, 'inbound sender not matched to client');
     }
 
-    // 3. Analyser le contenu avec Claude Haiku
+    // 3. Analyser le contenu (IA si disponible, repli regex sinon — la source
+    //    est CONSERVÉE : c'est elle qui décide si le statut client peut changer).
     const analysis = await analyzeWithClaude(from, subject, body);
     result.analyse = analysis;
+    result.analyse_source = analysis.source || 'inconnue';
 
-    // 4. Mettre à jour le statut du client si trouvé
+    // 4. Mettre à jour le statut du client si trouvé.
+    //    Une analyse `regex` ne modifie JAMAIS le statut : elle n'est qu'une
+    //    indication de lecture, pas une mesure.
     if (client && analysis.type !== 'hors_sujet') {
-      const newStatus = await updateClientStatus(pool, client.id, analysis);
-      if (newStatus) {
-        result.statut_nouveau = newStatus;
+      const verdict = await updateClientStatus(pool, client.id, analysis);
+      result.motif_statut = verdict.motif;
+      if (verdict.statut) {
+        result.statut_nouveau = verdict.statut;
         result.action = 'status_updated';
+      } else if (verdict.motif) {
+        result.action = 'status_non_modifie';
       }
     }
 
@@ -304,4 +370,4 @@ async function processInboundEmail(pool, { from, subject, body, attachments }) {
   return result;
 }
 
-module.exports = { processInboundEmail, findClientByEmail };
+module.exports = { processInboundEmail, findClientByEmail, fallbackAnalysis, peutChangerStatutClient, SEUIL_CONFIANCE_STATUT };

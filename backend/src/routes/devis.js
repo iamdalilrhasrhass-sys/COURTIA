@@ -35,8 +35,67 @@ const porteeCabinet = require('../lib/porteeCabinet')
 // Règle UNIQUE des montants : refus explicite à l'écriture (non numérique,
 // négatif, au-delà du plafond) — partagée avec les contrats (lib/montants.js).
 const { montantOuNull, erreurMontant } = require('../lib/montants')
+const {
+  estErreurIa,
+  repondreIaIndisponible,
+  repondreIaNonConfiguree,
+  journaliserErreurIa,
+} = require('../services/iaErreurs')
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// VÉRITÉ DES RÉPONSES IA DU DEVIS — correction 20/09/2026 (défaut IA-010)
+//
+// MESURÉ EN PRODUCTION : `POST /api/devis/19/ai-prepare` répondait 500 (erreur
+// brute du fournisseur) et, quand le moteur IA ne rendait aucun JSON
+// exploitable, les trois routes répondaient 200 `{success: true, preparation:
+// null}` / `{recommendation: null}` / `{proposal: null}` — et ÉCRIVAIENT ce
+// `null` dans `quote_requests.metadata` (`ai_preparation: null`,
+// `ai_prepared_at: <date du jour>`), c'est-à-dire un dossier marqué « préparé
+// par ARK » alors qu'aucune préparation n'avait eu lieu.
+//
+// Règle appliquée ici, identique à /api/ark (routes/ark.js) : `success: true`
+// EXIGE un contenu réel ; sinon 503 `ia_indisponible` (ou `configuration_required`
+// quand aucun moteur n'est branché), et AUCUNE écriture en base.
+// ═════════════════════════════════════════════════════════════════════════════
+const MESSAGE_IA_DEVIS_INEXPLOITABLE =
+  "L'assistant IA n'a pas renvoyé de résultat exploitable : le devis n'a pas été préparé. Réessayez dans quelques instants."
+
+/** 503 « réponse IA inexploitable » — jamais un 200 `success:true` vide. */
+function refuserResultatDevisInexploitable(res, contexte = {}) {
+  journaliserErreurIa(new Error('réponse IA sans contenu exploitable'), {
+    ...contexte,
+    motif: 'reponse_ia_inexploitable',
+  })
+  return res.status(503).json({ error: 'ia_indisponible', message: MESSAGE_IA_DEVIS_INEXPLOITABLE })
+}
+
+/** Traduit `result.error` en 503 produit, sans clé API ni erreur fournisseur. */
+function repondreErreurMoteurIaDevis(res, result, contexte = {}) {
+  if (result?.error === 'configuration_required') return repondreIaNonConfiguree(res, contexte)
+  return repondreIaIndisponible(res, new Error(String(result?.error || 'ia_indisponible')), contexte)
+}
+
+/** Contrôle commun avant tout succès : un JSON `structured` non nul est exigé. */
+function verifierResultatDevisIa(res, result, contexte = {}) {
+  if (result?.error) return repondreErreurMoteurIaDevis(res, result, contexte)
+  if (result?.structured === null || result?.structured === undefined) {
+    return refuserResultatDevisInexploitable(res, contexte)
+  }
+  return null
+}
+
+/** Erreur de route IA du devis : 503 lisible, jamais 500 avec l'erreur brute. */
+function repondreErreurIaDevis(res, err, contexte = {}) {
+  if (estErreurIa(err)) return repondreIaIndisponible(res, err, contexte)
+  if (/configuration/i.test(String(err?.message || ''))) return repondreIaNonConfiguree(res, contexte)
+  logger.error({ err, ...contexte }, 'Devis IA — erreur inattendue')
+  return res.status(500).json({
+    error: 'ark_devis_indisponible',
+    message: "L'assistant ARK du devis est momentanément indisponible.",
+  })
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES DEVIS : LE CABINET
@@ -781,6 +840,10 @@ Génère la checklist documents et les questions client.`,
       route: 'devis-ai-prepare'
     })
 
+    // Aucun succès, et surtout AUCUNE écriture « ai_prepared_at », sans contenu.
+    const refus = verifierResultatDevisIa(res, arkResponse, { route: 'devis_ai_prepare', devis_id: devisId })
+    if (refus) return refus
+
     // Sauvegarder dans metadata
     await pool.query(`
       UPDATE quote_requests 
@@ -796,7 +859,7 @@ Génère la checklist documents et les questions client.`,
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/devis/:id/ai-prepare error')
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    return repondreErreurIaDevis(res, err, { route: 'devis_ai_prepare', devis_id: req.params.id })
   }
 })
 
@@ -860,6 +923,10 @@ Recommande la meilleure offre avec argumentaire.`,
       route: 'devis-ai-recommendation'
     })
 
+    // Aucune recommandation enregistrée sans recommandation réelle.
+    const refus = verifierResultatDevisIa(res, arkResponse, { route: 'devis_ai_recommendation', devis_id: devisId })
+    if (refus) return refus
+
     // Sauvegarder dans metadata
     await pool.query(`
       UPDATE quote_requests 
@@ -876,7 +943,7 @@ Recommande la meilleure offre avec argumentaire.`,
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/devis/:id/ai-recommendation error')
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    return repondreErreurIaDevis(res, err, { route: 'devis_ai_recommendation', devis_id: req.params.id })
   }
 })
 
@@ -956,6 +1023,10 @@ Offre sélectionnée:
       route: 'devis-generate-proposal'
     })
 
+    // Aucune proposition enregistrée sans proposition réelle.
+    const refus = verifierResultatDevisIa(res, arkResponse, { route: 'devis_generate_proposal', devis_id: devisId })
+    if (refus) return refus
+
     // Sauvegarder dans metadata
     await pool.query(`
       UPDATE quote_requests 
@@ -976,7 +1047,7 @@ Offre sélectionnée:
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/devis/:id/generate-proposal error')
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    return repondreErreurIaDevis(res, err, { route: 'devis_generate_proposal', devis_id: req.params.id })
   }
 })
 

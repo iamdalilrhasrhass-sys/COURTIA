@@ -16,11 +16,27 @@
  * même chiffre partout, et une définition ne peut plus dériver sur un seul écran.
  *
  * DÉFINITIONS (détaillées en tête de dashboard.js)
- *  • contrat = ligne de `quotes` au statut 'actif' ; devis = ligne de `devis_wizard`.
+ *  • DEUX NOTIONS de contrat, nommées explicitement (arbitrage du 20/09/2026) :
+ *    `kpis.contracts.total` = toutes les lignes de `quotes` de nature contrat
+ *    (résilié/expiré/suspendu/annulé compris), `kpis.contracts.actifs` = celles
+ *    au statut 'actif'/'active'. Un devis v1 resté dans `quotes` (statut
+ *    'envoye'/'brouillon') n'est ni l'un ni l'autre : c'est un DEVIS.
+ *  • devis = `devis_wizard` + les devis v1 restés dans `quotes`.
  *  • prime d'un contrat = colonne `prime_annuelle`, sinon quote_data->>'prime_annuelle',
  *    sinon `premium`/`amount` ; prime d'un devis = total_premium_cents / 100.
  *  • moyenne/taux sans dénominateur ⇒ `null` (pas de mesure), jamais 0 ni une
  *    valeur de repli inventée (l'ancien score ARK « par défaut 75 »).
+ *
+ * CLÉ `quotes` DES RÉPONSES — DÉPRÉCIÉE, PAS SUPPRIMÉE (arbitrage du 20/09/2026)
+ * POURQUOI : `kpis.quotes` a toujours contenu des DEVIS, jamais des contrats. Le
+ * nom disait « contrats », la valeur disait « devis » : l'écran Reporting en
+ * tirait son « Taux de conversion devis », et la recette de cohérence ne pouvait
+ * pas savoir quoi comparer (elle attendait des contrats, lisait des devis).
+ * Décision : les devis sont exposés sous `kpis.devis` (nom juste) ; `kpis.quotes`
+ * reste un ALIAS du MÊME objet pendant une version, annoncé comme déprécié dans
+ * la réponse (`deprecations`) et par les en-têtes HTTP `Deprecation`/`Warning`.
+ * Aucun écran ne peut lire deux chiffres différents sous les deux noms : c'est
+ * le même objet, sérialisé une fois.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -70,17 +86,21 @@ router.get('/overview', verifyToken, async (req, res) => {
 
     // Une requête par indicateur, définie UNE fois (bloc `kpi` de dashboard.js).
     const qClients = kpi.requeteClients(portee, { jours: days })
-    const qContrats = kpi.requeteContratsActifs(portee, { jours: days })
+    const qContrats = kpi.requeteContrats(portee, { jours: days })
     const qDevis = kpi.requeteDevis(portee, { jours: days })
+    // Les devis v1 restés dans `quotes` ('envoye'/'brouillon') sont des DEVIS :
+    // ils rejoignent le compteur `devis` et ne sont jamais comptés en contrats.
+    const qDevisV1 = kpi.requeteDevisV1(portee, { jours: days })
     const qTaches = kpi.requeteTaches(portee)
     const fOpp = porteeCabinet.fragment(portee, {
       cabinet: 'opportunities.cabinet_id', proprietaire: 'opportunities.user_id', depart: 1,
     })
 
-    const [clientsRes, contractsRes, quotesRes, tachesRes, oppRes, arkRes, signaturesRes] = await Promise.all([
+    const [clientsRes, contractsRes, quotesRes, devisV1Res, tachesRes, oppRes, arkRes, signaturesRes] = await Promise.all([
       pool.query(qClients.sql, qClients.params),
       pool.query(qContrats.sql, qContrats.params),
       pool.query(qDevis.sql, qDevis.params),
+      pool.query(qDevisV1.sql, qDevisV1.params),
       pool.query(qTaches.sql, qTaches.params),
       pool.query(`
         SELECT
@@ -105,40 +125,67 @@ router.get('/overview', verifyToken, async (req, res) => {
     ])
 
     const clients = clientsRes.rows[0] || {}
-    const contracts = contractsRes.rows[0] || {}
-    const devis = quotesRes.rows[0] || {}
+    // CONTRATS et DEVIS sont assemblés par les fonctions PARTAGÉES de dashboard.js :
+    // les trois écrans ne peuvent plus calculer ces nombres chacun de leur côté.
+    const contrats = kpi.agregerContrats(contractsRes.rows[0])
+    const devis = kpi.agregerDevis(quotesRes.rows[0], devisV1Res.rows[0])
     const taches = tachesRes.rows[0] || {}
     const opportunities = oppRes.rows[0] || {}
     const arkMetrics = arkRes.rows[0] || {}
     const signatures = signaturesRes.rows[0] || {}
 
-    const totalDevis = parseInt(devis.total, 10) || 0
-    const devisSignes = parseInt(devis.signes, 10) || 0
-
-    // Le bloc « devis » porte deux noms : `devis` (sens réel) et `quotes`
-    // (clé historique lue par l'écran Reporting — « Taux de conversion devis »).
-    // Les deux objets sont IDENTIQUES : aucun écran ne peut plus lire autre chose.
+    // Le bloc « devis » porte DEUX noms dans la réponse :
+    //   `devis`  — le nom juste (devis_wizard + devis v1 restés dans `quotes`) ;
+    //   `quotes` — alias HISTORIQUE conservé une version, parce que l'écran
+    //              Reporting Avancé le lisait pour son « Taux de conversion
+    //              devis ». Son nom dit « contrats » alors qu'il contient des
+    //              DEVIS : c'est précisément ce qui a fait échouer la recette de
+    //              cohérence. Les deux clés portent le MÊME objet — impossible
+    //              d'y lire deux chiffres différents — et la dépréciation est
+    //              annoncée dans la réponse (champ `deprecations`) ET par les
+    //              en-têtes HTTP `Deprecation` / `Warning`.
     const blocDevis = {
-      total: totalDevis,
-      totalValue: kpi.centsVersMontant(devis.prime_cents),
+      total: devis.total,
+      totalValue: devis.totalValue,
       // Champ dédié : combien de devis portaient réellement un montant.
-      avecMontant: parseInt(devis.devis_avec_prime, 10) || 0,
-      won: devisSignes,
-      signed: devisSignes,
-      sent: parseInt(devis.envoyes, 10) || 0,
-      draft: parseInt(devis.en_preparation, 10) || 0,
-      refused: parseInt(devis.refuses, 10) || 0,
-      new: parseInt(devis.nouveaux, 10) || 0,
+      avecMontant: devis.avecPrime,
+      // Dont devis v1 restés dans `quotes` : publié pour que l'audit vérifie sans
+      // relire la base que les devis ne sont pas (ou plus) comptés en contrats.
+      dontV1: devis.dontV1,
+      won: devis.signes,
+      signed: devis.signes,
+      sent: devis.envoyes,
+      draft: devis.enPreparation,
+      refused: devis.refuses,
+      new: devis.nouveaux,
       // Aucun devis ⇒ le taux n'existe pas : null (« pas de mesure »), pas 0 %.
-      conversionRate: kpi.taux(devisSignes, totalDevis),
+      conversionRate: devis.conversionRate,
     }
+
+    // Annonce de dépréciation, lisible par un client HTTP : que remplacer, par
+    // quoi, et quand la clé disparaîtra. Une clé dépréciée sans annonce est une
+    // clé que personne ne peut cesser d'utiliser.
+    const deprecations = [{
+      champ: 'kpis.quotes',
+      remplace_par: 'kpis.devis',
+      depuis: '2026-09-20',
+      retrait_prevu: 'version suivante (2026-10)',
+      raison: "la clé `quotes` a toujours contenu des DEVIS, jamais des contrats : son nom induisait en erreur et faisait afficher un taux de conversion calculé sur la mauvaise population",
+    }]
+
+    res.set('Deprecation', 'true')
+    res.set('Warning', '299 - "kpis.quotes est déprécié : utiliser kpis.devis"')
 
     res.json({
       period,
+      deprecations,
       definitions: {
-        contrat: "ligne de la table quotes au statut 'actif' (seule table de contrats réellement écrite)",
-        devis: 'ligne de la table devis_wizard (un devis n’est pas un contrat)',
-        prime: 'colonne prime_annuelle, sinon quote_data->>\'prime_annuelle\', sinon premium/amount',
+        // Les deux notions de contrat, nommées comme dans les deux autres écrans.
+        'contrats.total': "toutes les lignes de `quotes` de nature contrat, résilié/expiré/suspendu/annulé compris ; un devis v1 resté dans `quotes` (statut 'envoye'/'brouillon') n'est PAS un contrat",
+        'contrats.actifs': "lignes de `quotes` au statut 'actif'/'active' : contrats en cours, base de la prime du portefeuille",
+        'contrats.totalValue': 'somme des primes des contrats ACTIFS (colonne prime_annuelle, sinon quote_data->>\'prime_annuelle\', sinon premium/amount)',
+        'contrats.totalValueTous': 'somme des primes de TOUTES les lignes de nature contrat (résiliés compris) — audit seulement, jamais le chiffre d\'affaires',
+        devis: "lignes de `devis_wizard` PLUS les devis v1 restés dans `quotes` (un devis n'est pas un contrat)",
         client: 'ligne de la table clients rattachée au cabinet (ou à l’utilisateur sans cabinet)',
       },
       kpis: {
@@ -149,16 +196,20 @@ router.get('/overview', verifyToken, async (req, res) => {
           prospects: parseInt(clients.prospects, 10) || 0,
         },
         contracts: {
-          total: parseInt(contracts.total, 10) || 0,
-          totalValue: parseFloat(contracts.prime_totale) || 0,
+          // LES DEUX NOTIONS (voir definitions ci-dessus).
+          total: contrats.total,
+          actifs: contrats.actifs,
+          totalValue: contrats.primeTotale,
+          totalValueTous: contrats.primeTotaleTous,
           // Champ dédié : « 0 CHF de prime » et « prime non renseignée » ne sont
           // pas la même chose — ce compteur dit combien de contrats portaient la mesure.
-          contratsAvecPrime: parseInt(contracts.contrats_avec_prime, 10) || 0,
-          new: parseInt(contracts.nouveaux, 10) || 0,
-          expiring30d: parseInt(contracts.echeances_30j, 10) || 0,
-          expiring90d: parseInt(contracts.echeances_90j, 10) || 0,
+          contratsAvecPrime: contrats.avecPrime,
+          new: contrats.nouveaux,
+          expiring30d: contrats.echeances30j,
+          expiring90d: contrats.echeances90j,
         },
         devis: blocDevis,
+        // ALIAS DÉPRÉCIÉ — même objet, conservé une version (voir `deprecations`).
         quotes: blocDevis,
         taches: {
           total: parseInt(taches.total, 10) || 0,

@@ -12,9 +12,19 @@
  * (dont les devis de l'époque) et annonçait donc 3 « contrats » là où
  * /api/dashboard/stats en annonçait 2 et /api/reporting/overview 0 (il lisait la
  * table `contracts`, jamais écrite). Les requêtes viennent désormais du bloc
- * unique de définitions de `dashboard.js` (`require('./dashboard').kpi`) :
- * contrat = `quotes` au statut 'actif', devis = `devis_wizard`, prime définie
- * une seule fois. Aucun écran ne peut plus répondre autre chose.
+ * unique de définitions de `dashboard.js` (`require('./dashboard').kpi`) et les
+ * nombres sont assemblés par ses fonctions (`kpi.agregerContrats`,
+ * `kpi.agregerDevis`) : aucun écran ne peut plus répondre autre chose.
+ *
+ * LES DEUX NOTIONS Y SONT NOMMÉES COMME AILLEURS (arbitrage du 20/09/2026) :
+ *   data.contracts_total  = toutes les lignes de `quotes` de nature contrat
+ *                           (résilié/expiré/suspendu/annulé compris) ;
+ *   data.contracts_actifs = celles au statut 'actif'/'active' (base de
+ *                           `ca_estimated`) ;
+ *   data.devis_count      = `devis_wizard` + devis v1 restés dans `quotes`.
+ * `data.contracts_count` reste publié comme ALIAS HISTORIQUE de `contracts_actifs`
+ * (c'est la valeur que cette route affichait déjà) : une intégration ne peut pas
+ * être surprise, et le nom ambigu est doublé par les deux noms explicites.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -34,13 +44,17 @@ router.get('/executive', requireFeature('executive_dashboard'), async (req, res)
     const portee = await porteeCabinet.resoudrePortee(pool, req)
 
     const qClients = kpi.requeteClients(portee, { jours: 30 })
-    const qContrats = kpi.requeteContratsActifs(portee, { jours: 30 })
+    const qContrats = kpi.requeteContrats(portee, { jours: 30 })
     const qDevis = kpi.requeteDevis(portee, { jours: 30 })
+    // Deuxième source des devis : les devis v1 restés dans `quotes`
+    // ('envoye'/'brouillon') — ils ne sont pas des contrats (agregerDevis).
+    const qDevisV1 = kpi.requeteDevisV1(portee, { jours: 30 })
 
-    const [clientsRes, contratsRes, devisRes, portfolioResult] = await Promise.all([
+    const [clientsRes, contratsRes, devisRes, devisV1Res, portfolioResult] = await Promise.all([
       pool.query(qClients.sql, qClients.params),
       pool.query(qContrats.sql, qContrats.params),
       pool.query(qDevis.sql, qDevis.params),
+      pool.query(qDevisV1.sql, qDevisV1.params),
       pool.query(
         `SELECT health_score, created_at
          FROM portfolio_insights
@@ -52,14 +66,15 @@ router.get('/executive', requireFeature('executive_dashboard'), async (req, res)
     ])
 
     const clients = clientsRes.rows[0] || {}
-    const contrats = contratsRes.rows[0] || {}
-    const devis = devisRes.rows[0] || {}
+    // LES DEUX NOTIONS, assemblées par les fonctions PARTAGÉES (dashboard.js) :
+    // contrat total (toutes lignes de nature contrat) et contrats actifs.
+    const contrats = kpi.agregerContrats(contratsRes.rows[0])
+    const devis = kpi.agregerDevis(devisRes.rows[0], devisV1Res.rows[0])
 
     const clients_count = parseInt(clients.total, 10) || 0
     const new_clients_30d = parseInt(clients.nouveaux, 10) || 0
     // Clients du portefeuille (hors prospects) : base du taux de croissance.
     const clients_actifs = parseInt(clients.actifs, 10) || 0
-    const contrats_count = parseInt(contrats.total, 10) || 0
 
     // Taux de croissance 30 jours : nouveaux clients de la période rapportés aux
     // clients présents AVANT la période. Sans historique, aucune mesure possible
@@ -71,25 +86,36 @@ router.get('/executive', requireFeature('executive_dashboard'), async (req, res)
       success: true,
       definitions: {
         clients_count: 'toutes les lignes de `clients` du cabinet (prospects compris)',
-        contracts_count: "lignes de `quotes` au statut 'actif' (la table `contracts` n'est jamais écrite)",
-        devis_count: 'lignes de `devis_wizard` du cabinet (un devis n’est pas un contrat)',
-        ca_estimated: 'somme des primes annuelles des contrats actifs (colonne prime_annuelle, sinon quote_data)',
+        // LES DEUX NOTIONS DE CONTRAT — nommées ici exactement comme ailleurs.
+        contracts_total: "toutes les lignes de `quotes` de nature contrat (résilié, expiré, suspendu, annulé compris) ; un devis v1 resté dans `quotes` (statut 'envoye'/'brouillon') n'est PAS un contrat",
+        contracts_actifs: "lignes de `quotes` au statut 'actif'/'active' : contrats en cours, base de la prime du portefeuille",
+        devis_count: "lignes de `devis_wizard` PLUS les devis v1 restés dans `quotes` (un devis n'est pas un contrat)",
+        ca_estimated: 'somme des primes annuelles des contrats ACTIFS (colonne prime_annuelle, sinon quote_data)',
       },
       data: {
-        ca_estimated: parseFloat(contrats.prime_totale) || 0,
+        ca_estimated: contrats.primeTotale,
+        // Audit seulement : primes des contrats résiliés/expirés comprises.
+        ca_estimated_tous: contrats.primeTotaleTous,
         // Champ dédié : contrats qui portaient réellement une prime.
-        ca_contrats_avec_prime: parseInt(contrats.contrats_avec_prime, 10) || 0,
+        ca_contrats_avec_prime: contrats.avecPrime,
         clients_count,
         clients_actifs,
         clients_prospects: parseInt(clients.prospects, 10) || 0,
-        contracts_count: contrats_count,
+        // Contrats : les DEUX notions, plus `contracts_count` (alias historique
+        // lu par les intégrations : « contrats en portefeuille » = actifs).
+        contracts_total: contrats.total,
+        contracts_actifs: contrats.actifs,
+        contracts_count: contrats.actifs,
+        contracts: contrats,
         new_clients_30d,
-        new_contracts_30d: parseInt(contrats.nouveaux, 10) || 0,
+        new_contracts_30d: contrats.nouveaux,
         // Devis : mêmes chiffres que /api/dashboard/stats et /api/reporting/overview.
-        devis_count: parseInt(devis.total, 10) || 0,
-        devis_signes: parseInt(devis.signes, 10) || 0,
-        devis_en_attente: parseInt(devis.envoyes, 10) || 0,
-        devis_prime_totale: kpi.centsVersMontant(devis.prime_cents),
+        devis_count: devis.total,
+        devis_dont_v1: devis.dontV1,
+        devis_signes: devis.signes,
+        devis_en_attente: devis.envoyes,
+        devis_prime_totale: devis.totalValue,
+        devis: devis,
         portfolio_health_score: portfolioResult.rows.length > 0
           ? portfolioResult.rows[0].health_score
           : null,

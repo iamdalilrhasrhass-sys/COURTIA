@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Key, Book, Webhook, Code, Copy, Check, Plus, Trash2, Eye, EyeOff, RefreshCw, ExternalLink, Terminal } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api'
+import { localeCourante } from '../../lib/monnaie'
 
 // Styles Aurora
 const auroraStyles = {
@@ -295,7 +296,7 @@ function ApiKeysTab({ keys, loading, onCreateKey, onRevokeKey, copyToClipboard, 
                   <div style={{ display: 'flex', gap: 8 }}>
                     {key.lastUsedAt && (
                       <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-                        Dernière utilisation: {new Date(key.lastUsedAt).toLocaleDateString('fr-FR')}
+                        Dernière utilisation: {new Date(key.lastUsedAt).toLocaleDateString(localeCourante())}
                       </span>
                     )}
                     {!key.revokedAt && (

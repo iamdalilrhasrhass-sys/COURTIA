@@ -4,7 +4,7 @@
  */
 
 const { v4: uuidv4 } = require('uuid')
-const { eurosToCents, centsToEuros, normalizePeriod } = require('./commissionService')
+const { eurosToCents, centsToEuros, normalizePeriod, deviseEnBase, deviseDuCabinet } = require('./commissionService')
 const porteeCabinet = require('../lib/porteeCabinet')
 const { generateEntriesFromCommissions } = require('./fecService')
 const { generatePDF } = require('./pdfService')
@@ -153,23 +153,32 @@ async function calculateCommission(pool, userId, contractId, period, portee = nu
   // Enregistrer ou mettre à jour la commission.
   // `commission_amount` (colonne d'origine NOT NULL, jamais alimentée par le
   // code) recevait NULL → 23502 « null value in column commission_amount » ;
-  // elle est désormais écrite en euros, comme les colonnes `*_amount_cents`.
+  // elle est désormais écrite, comme les colonnes `*_amount_cents`.
+  //
+  // DEVISE (défaut P1 CH-013) : cette insertion-là omettait `currency` et
+  // s'appuyait donc sur le DÉFAUT DE COLONNE 'eur' — un cabinet suisse voyait
+  // ses commissions calculées automatiquement naître en euros. Depuis que la
+  // migration 119 a retiré ce défaut, la colonne serait NULL : on écrit donc la
+  // devise du CABINET (lib/marcheCabinet) comme le fait `commissionService`.
+  const devise = deviseEnBase(await deviseDuCabinet(pool, { id: userId }))
   const result = await pool.query(`
     INSERT INTO commissions (
       user_id, contract_id, insurer, period_year, period_month,
       expected_amount_cents, received_amount_cents, status, rule_id,
-      commission_amount, cabinet_id, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, 0, 'expected', $7, $8, $9, NOW(), NOW())
+      commission_amount, cabinet_id, currency, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, 0, 'expected', $7, $8, $9, $10, NOW(), NOW())
     ON CONFLICT (user_id, contract_id, period_year, period_month) DO UPDATE SET
       expected_amount_cents = EXCLUDED.expected_amount_cents,
       rule_id = EXCLUDED.rule_id,
       commission_amount = EXCLUDED.commission_amount,
+      currency = EXCLUDED.currency,
       updated_at = NOW()
     RETURNING *
   `, [
     userId, contractId, company || 'Non renseigné', year, month, expectedAmountCents, rule?.id || null,
     centsToEuros(expectedAmountCents),
     portee ? porteeCabinet.cabinetPourCreation(portee) : null,
+    devise,
   ])
 
   return {

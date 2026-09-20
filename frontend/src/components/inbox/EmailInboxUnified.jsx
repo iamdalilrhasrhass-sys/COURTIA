@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { Mail, RefreshCw, Loader2, MessageSquare, ThumbsUp, AlertTriangle, X, Sparkles, Settings, CheckCheck, ChevronRight } from 'lucide-react';
+import { localeCourante } from '../../lib/monnaie'
 
 const T = {
   bg: '#050510',
@@ -132,7 +133,7 @@ export default function EmailInboxUnified({ apiBase = '/api', authToken }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{email.from_name || email.from}</span>
-                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 'auto', flexShrink: 0 }}>{email.date ? new Date(email.date).toLocaleDateString('fr-FR') : '--'}</span>
+                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 'auto', flexShrink: 0 }}>{email.date ? new Date(email.date).toLocaleDateString(localeCourante()) : '--'}</span>
                     </div>
                     <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email.subject}</div>
                     {selected === i && (

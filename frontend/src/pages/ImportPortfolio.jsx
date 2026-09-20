@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Upload, Database, CheckCircle2, AlertTriangle, RefreshCw, Download, TableProperties, Users, Sparkles, ListTodo } from 'lucide-react'
 import api from '../api'
 import AuroraPageHeader from '../components/brand/AuroraPageHeader'
+import { libellesMarche, marcheCourante } from '../lib/marche'
 
 const FIELD_OPTIONS = [
   ['prenom', 'Prénom client'],
@@ -16,7 +17,10 @@ const FIELD_OPTIONS = [
   ['statut', 'Statut client'],
   ['notes', 'Notes'],
   ['societe', 'Société'],
-  ['siret', 'SIRET'],
+  // Libellé neutre : « SIRET » est un identifiant français, « IDE / UID » un
+  // identifiant suisse. Le champ importé porte la même donnée dans les deux
+  // marchés, seul l'intitulé change — on n'impose donc ni l'un ni l'autre.
+  ['siret', "Identifiant entreprise (SIRET / IDE)"],
   ['type_contrat', 'Type contrat'],
   ['compagnie', 'Compagnie'],
   ['numero_contrat', 'Numéro contrat'],
@@ -28,9 +32,16 @@ const FIELD_OPTIONS = [
   ['date_rappel', 'Date rappel'],
 ]
 
-const CSV_TEMPLATE = [
+// Modèle CSV d'exemple : POURQUOI il est construit à la volée — la ligne
+// d'exemple portait une adresse française (« 12 rue Exemple », « Paris »,
+// « 75008 »), un mobile français (« 06 12 34 56 78 ») et la compagnie
+// « Aurora Assurances », qui n'existe pas. Un cabinet suisse devait donc
+// effacer ces valeurs-là. L'indicatif et le domaine e-mail suivent maintenant
+// le marché du cabinet (lib/marche.js) et la compagnie reste un intitulé à
+// remplacer, jamais un nom inventé.
+const modeleCsv = (libelles) => [
   ['prenom', 'nom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'type_client', 'statut', 'notes', 'compagnie', 'type_contrat', 'prime_annuelle', 'date_echeance'],
-  ['Sophie', 'Martin', 'sophie.martin@example.com', '06 12 34 56 78', '12 rue Exemple', 'Paris', '75008', 'particulier', 'prospect', 'Client à appeler', 'Aurora Assurances', 'Auto', '720', '2026-12-31'],
+  ['Sophie', 'Martin', 'sophie.martin@example.com', `${libelles.indicatif} 00 000 00 00`, 'Rue de l’Exemple 1', 'Ville', '00000', 'particulier', 'prospect', 'Client à appeler', 'Nom de votre compagnie', 'Auto', '720', '2026-12-31'],
 ]
 
 export default function ImportPortfolio() {
@@ -49,7 +60,8 @@ export default function ImportPortfolio() {
   const [error, setError] = useState('')
 
   function downloadTemplate() {
-    const csv = CSV_TEMPLATE.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+    // Modèle localisé sur le marché du cabinet (indicatif, domaine e-mail).
+    const csv = modeleCsv(libellesMarche(marcheCourante())).map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')

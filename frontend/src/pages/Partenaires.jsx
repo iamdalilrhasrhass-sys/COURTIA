@@ -1,22 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { HeartHandshake, Building, Euro, TrendingUp, Zap, ArrowUpRight, Globe } from 'lucide-react'
 import api from '../api'
 import PartnerSolarSystem from '../components/widgets/PartnerSolarSystem'
+import { fmtMontant, fmtNombre } from '../lib/monnaie'
 
-const DEMO_PARTENAIRES = [
-  { id: 1, nom: 'Gan Assurances', type: 'Compagnie', contrats: 34, commission: 28600, tendance: '+12%', logo: 'G' },
-  { id: 2, nom: 'Novalia Courtage', type: 'Compagnie', contrats: 28, commission: 22400, tendance: '+8%', logo: 'NC' },
-  { id: 3, nom: 'Aurora Assurances', type: 'Compagnie', contrats: 22, commission: 18100, tendance: '+5%', logo: 'AU' },
-  { id: 4, nom: 'Helios Protection', type: 'Compagnie', contrats: 19, commission: 15300, tendance: '+14%', logo: 'HP' },
-  { id: 5, nom: 'MAIF', type: 'Compagnie', contrats: 15, commission: 12100, tendance: '+3%', logo: 'M' },
-  { id: 6, nom: 'Serenis Risk', type: 'Compagnie', contrats: 12, commission: 9800, tendance: '-2%', logo: 'SR' },
-]
-
-const DEMO_APPORTEURS = [
-  { id: 101, nom: 'Agence Immobilière Bonnefoy', type: 'Apporteur', clients: 8, commission: 4200, tendance: '+25%' },
-  { id: 102, nom: 'Expert Comptable Moreau', type: 'Apporteur', clients: 5, commission: 3100, tendance: '+10%' },
-  { id: 103, nom: 'Garage Auto Prestige', type: 'Apporteur', clients: 6, commission: 2800, tendance: '+18%' },
-]
+// Aucune liste de démonstration ici : les anciennes constantes DEMO_PARTENAIRES
+// (Gan Assurances, Novalia Courtage, Aurora Assurances, Helios Protection, MAIF,
+// Serenis Risk…) et DEMO_APPORTEURS affichaient des compagnies et des montants
+// de commission qui ne venaient d'aucune donnée du cabinet. Tout vient de
+// `GET /api/partners`. Un cabinet vide voit une liste vide, pas un exemple.
 
 /* ─── Adaptation de /partners ────────────────────────────────────────────────
    GET /partners (backend/src/routes/partners.js) répond
@@ -83,6 +75,7 @@ const versCompagnie = (p) => ({
   contrats: nombreContrats(p),
   commission: nombre(p.commission),
   tendance: String(p.tendance ?? ''),
+  statut: p.statut ?? null,
   logo: initiales(p.nom),
 })
 
@@ -98,6 +91,7 @@ const versApporteur = (p) => ({
   contrats: nombreContrats(p),
   commission: nombre(p.commission),
   tendance: String(p.tendance ?? ''),
+  statut: p.statut ?? null,
 })
 
 /** Répartit les partenaires de l'API dans les deux listes de l'écran. */
@@ -110,15 +104,29 @@ const repartirPartenaires = (partenaires) => partenaires.reduce((acc, p) => {
 /** Somme un champ numérique sur une liste de lignes (0 si la liste est vide). */
 const somme = (liste, valeur) => liste.reduce((total, ligne) => total + valeur(ligne), 0)
 
-/** Contrats portés par une ligne : `contrats` côté API, `clients` pour le repli
- *  DEMO_APPORTEURS qui ne porte que ce champ-là. */
+/** Contrats portés par une ligne : champ `contrats` de l'API (0 si inconnu). */
 const contratsLigne = (ligne) => nombre(ligne?.contrats ?? ligne?.clients)
 /* PARTENAIRES-ADAPT-FIN */
 
+/**
+ * Statut affiché dans le système solaire, dérivé du statut RÉEL en base
+ * (`partners.statut`). Un statut non renseigné donne « manuel » — et la légende
+ * sous le widget dit exactement cela : on ne prétend pas qu'une connexion a été
+ * vérifiée quand elle ne l'a pas été.
+ */
+function statutSolaire(statut) {
+  const s = String(statut || '').toLowerCase()
+  if (['actif', 'active', 'connected', 'connecte'].includes(s)) return 'connected'
+  if (['inactif', 'inactive', 'archive'].includes(s)) return 'inactive'
+  if (['invalide', 'invalid', 'erreur'].includes(s)) return 'invalid'
+  if (['a_verifier', 'a verifier', 'to_verify'].includes(s)) return 'to_verify'
+  return 'manual'
+}
+
 export default function Partenaires() {
-  // Les constantes DEMO_* restent la valeur INITIALE : si /partners ne répond
-  // rien (ou échoue), l'écran garde exactement son rendu de démonstration.
-  // Aucun partenaire d'exemple en attendant la réponse de l'API.
+  // Aucun partenaire d'exemple : les listes démarrent VIDE et ne se remplissent
+  // que de la réponse de `/api/partners`. Un cabinet sans partenaire voit une
+  // page vide honnête, jamais des compagnies de démonstration.
   const [partenaires, setPartenaires] = useState([])
   const [apporteurs, setApporteurs] = useState([])
 
@@ -130,14 +138,14 @@ export default function Partenaires() {
       const liste = Array.isArray(data)
         ? data
         : [data?.partners, data?.data, data?.donnees].find(Array.isArray) || []
-      // Réponse vide ou illisible : les constantes DEMO_* restent affichées.
+      // Réponse vide ou illisible : on garde les listes vides (déjà l'état initial).
       if (liste.length === 0) return
       const { compagnies, apporteurs: apporteursApi } = repartirPartenaires(liste)
       // Les DEUX listes viennent de la réponse : aucune n'est complétée par une
       // constante de démonstration, les KPI restent donc égaux aux listes.
       setPartenaires(compagnies)
       setApporteurs(apporteursApi)
-    } catch { /* repli : les constantes DEMO_* sont conservées */ }
+    } catch { /* repli : les listes restent vides, aucune donnée inventée */ }
   }, [])
 
   useEffect(() => { chargerPartenaires() }, [chargerPartenaires])
@@ -145,6 +153,36 @@ export default function Partenaires() {
   // KPI CALCULÉS depuis les deux listes affichées : aucune valeur figée.
   const totalCommissions = somme([...partenaires, ...apporteurs], (ligne) => nombre(ligne.commission))
   const totalContrats = somme([...partenaires, ...apporteurs], contratsLigne)
+
+  // Répartition RÉELLE des contrats entre partenaires : sert de mesure au
+  // système solaire (taille = part des contrats, distance = part des contrats
+  // également, nommée comme telle dans la légende du widget). Aucun aléatoire :
+  // les anciennes valeurs `Math.random()` changeaient à chaque rendu et
+  // prétendaient mesurer une « compatibilité ».
+  const ecosysteme = useMemo(() => {
+    const lignes = [...partenaires, ...apporteurs].filter((p) => contratsLigne(p) > 0)
+    const plusGros = Math.max(1, ...lignes.map(contratsLigne))
+    return lignes.map((p) => ({
+      id: String(p.id),
+      name: p.nom,
+      status: statutSolaire(p.statut),
+      // Part des contrats du cabinet attribués à ce partenaire (0-100).
+      compatibility: totalContrats > 0 ? Math.round((contratsLigne(p) / totalContrats) * 100) : 0,
+      // Volume relatif au partenaire le plus important (0-100).
+      volume: Math.round((contratsLigne(p) / plusGros) * 100),
+      branch: `${contratsLigne(p)} contrat(s)`,
+    }))
+  }, [partenaires, apporteurs, totalContrats])
+
+  // Plus gros partenaire en nombre de contrats : constat calculé, pas une
+  // croissance « +14 % » inventée comme dans l'ancien commentaire ARK (il
+  // citait « Helios Protection » et l'apporteur « Agence Bonnefoy », qui ne
+  // venaient d'aucune donnée).
+  const plusGrosPartenaire = useMemo(() => {
+    const lignes = [...partenaires, ...apporteurs].filter((p) => contratsLigne(p) > 0)
+    if (!lignes.length) return null
+    return lignes.reduce((best, p) => (contratsLigne(p) > contratsLigne(best) ? p : best))
+  }, [partenaires, apporteurs])
 
   return (
     <div style={{ padding: 32, minHeight: '100vh' }}>
@@ -158,8 +196,8 @@ export default function Partenaires() {
         {[
           { label: 'Compagnies', value: partenaires.length, icon: Building, accent: '#5B4DF5' },
           { label: 'Apporteurs', value: apporteurs.length, icon: HeartHandshake, accent: '#22C55E' },
-          { label: 'Commissions', value: `${totalCommissions.toLocaleString('fr-FR')} €`, icon: Euro, accent: '#F59E0B' },
-          { label: 'Contrats générés', value: totalContrats.toLocaleString('fr-FR'), icon: TrendingUp, accent: '#3B82F6' },
+          { label: 'Commissions', value: fmtMontant(totalCommissions, { maximumFractionDigits: 0 }), icon: Euro, accent: '#F59E0B' },
+          { label: 'Contrats générés', value: fmtNombre(totalContrats), icon: TrendingUp, accent: '#3B82F6' },
         ].map((kpi, i) => (
           <div key={i} style={{
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
@@ -177,14 +215,23 @@ export default function Partenaires() {
       {/* Partner Solar System — Vue écosystème */}
       <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>Écosystème partenaires</h2>
-        <PartnerSolarSystem
-          partners={partenaires.map(p => ({
-            id: String(p.id), name: p.nom,
-            status: 'connected', compatibility: Math.floor(50 + Math.random() * 45), volume: Math.floor(20 + (p.contrats / 34) * 60),
-            branch: p.type
-          }))}
-          onPartnerClick={(p) => console.log('Partner:', p)}
-        />
+        {ecosysteme.length > 0 ? (
+          <>
+            <PartnerSolarSystem
+              partners={ecosysteme}
+              compatibilityLabel="Part des contrats"
+              onPartnerClick={(p) => console.log('Partner:', p)}
+            />
+            <p style={{ fontSize: 11, color: '#6B7280', margin: '10px 0 0' }}>
+              Taille et distance : part réelle des contrats rattachés à chaque partenaire.
+              Statut « Manuel » = statut non renseigné dans votre base (aucune connexion n&apos;est supposée).
+            </p>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: '#6B7280', margin: 0 }}>
+            Aucun partenaire avec des contrats rattachés : l&apos;écosystème s&apos;affichera dès le premier contrat relié à une compagnie.
+          </p>
+        )}
       </div>
 
       {/* Compagnies */}
@@ -224,17 +271,25 @@ export default function Partenaires() {
                 </div>
                 <div>
                   <span style={{ fontSize: 10, color: '#6B7280', display: 'block' }}>Commission</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{c.commission.toLocaleString('fr-FR')} €</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{fmtMontant(c.commission, { maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
               <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 600,
-                  color: c.tendance.startsWith('+') ? '#22C55E' : '#EF4444',
-                }}>
-                  {c.tendance}
-                </span>
-                <ArrowUpRight size={12} color={c.tendance.startsWith('+') ? '#22C55E' : '#EF4444'} />
+                {c.tendance ? (
+                  <>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: c.tendance.startsWith('+') ? '#22C55E' : '#EF4444',
+                    }}>
+                      {c.tendance}
+                    </span>
+                    <ArrowUpRight size={12} color={c.tendance.startsWith('+') ? '#22C55E' : '#EF4444'} />
+                  </>
+                ) : (
+                  // Tendance non renseignée par l'API : « — » plutôt qu'une flèche
+                  // rouge qui laisserait croire à une baisse mesurée.
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6B7280' }}>Tendance : —</span>
+                )}
               </div>
             </div>
           ))}
@@ -266,9 +321,11 @@ export default function Partenaires() {
                   <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{a.nom}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{a.type}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{a.clients}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{a.commission.toLocaleString('fr-FR')} €</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{fmtMontant(a.commission, { maximumFractionDigits: 0 })}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13 }}>
-                    <span style={{ color: a.tendance.startsWith('+') ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{a.tendance}</span>
+                    {a.tendance
+                      ? <span style={{ color: a.tendance.startsWith('+') ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{a.tendance}</span>
+                      : <span style={{ color: '#6B7280' }}>—</span>}
                   </td>
                 </tr>
               ))}
@@ -284,7 +341,16 @@ export default function Partenaires() {
       }}>
         <Zap size={16} color="#8B5CF6" />
         <p style={{ fontSize: 13, color: '#c4b5fd', margin: 0 }}>
-          <strong style={{ color: '#a78bfa' }}>ARK</strong> — Helios Protection affiche la plus forte croissance (+14%). L'apporteur "Agence Bonnefoy" est en forte progression (+25%). Opportunité de renforcer le partenariat.
+          {plusGrosPartenaire
+            ? <>
+                <strong style={{ color: '#a78bfa' }}>ARK</strong> — {plusGrosPartenaire.nom} concentre le plus grand nombre de contrats
+                rattachés ({fmtNombre(contratsLigne(plusGrosPartenaire))}). Aucune progression n&apos;est affichée :
+                COURTIA ne mesure pas encore la tendance d&apos;un partenaire d&apos;un mois sur l&apos;autre.
+              </>
+            : <>
+                <strong style={{ color: '#a78bfa' }}>ARK</strong> — aucun partenaire avec des contrats rattachés :
+                il n&apos;y a rien à analyser pour le moment.
+              </>}
         </p>
       </div>
     </div>

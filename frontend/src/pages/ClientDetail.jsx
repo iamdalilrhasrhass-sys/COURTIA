@@ -21,6 +21,7 @@ import {
   normalizeTask,
 } from '../lib/clientViewModel'
 import { fmtMontant, paysSuisse, contexteCourant } from '../lib/monnaie'
+import { localeCourante } from '../lib/monnaie'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -155,7 +156,7 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, n
         {identiteSuisse && (
           <InfoRow icon={MapPin} label="Canton" value={client.canton || '—'} />
         )}
-        <InfoRow icon={Calendar} label="Client depuis"   value={new Date(client.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} />
+        <InfoRow icon={Calendar} label="Client depuis"   value={new Date(client.created_at).toLocaleDateString(localeCourante(), { day: '2-digit', month: 'long', year: 'numeric' })} />
         {/* Une date de contact inconnue reste inconnue : l'ancien écran laissait
             les composants de secours afficher « il y a 0 jours » (aucun contact
             n'avait pourtant eu lieu). */}

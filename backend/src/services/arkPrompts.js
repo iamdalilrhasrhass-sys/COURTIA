@@ -544,6 +544,26 @@ Schéma de réponse:
 }
 
 /**
+ * Persona du marché, à utiliser par les appelants qui construisent leur propre
+ * prompt système (ex. le chat ARK) : ils doivent parler le référentiel du
+ * CABINET, pas celui de la France.
+ *
+ * POURQUOI CETTE FONCTION EXISTE (défaut P0 mesuré le 20/09/2026)
+ * `POST /api/ark/chat` et les huit routes ARK écrivaient en dur « expert en
+ * courtage d'assurance français (DDA, ORIAS, Loi Hamon, Loi Châtel) ». Un
+ * cabinet suisse recevait donc une réponse fausse au regard de sa
+ * réglementation (FINMA, LSA, nLPD) et de sa devise (CHF) : l'assistant
+ * invoquait un registre qu'il n'a pas et un droit qui ne s'applique pas.
+ *
+ * @param {'FR'|'CH'|string} market
+ * @returns {string} persona système du marché (défaut : France)
+ */
+function personaDuMarche(market = 'FR') {
+  const m = MARCHES[String(market || '').toUpperCase()] || MARCHES.FR
+  return m.persona
+}
+
+/**
  * Récupère le prompt pour une route donnée, adapté au marché du cabinet.
  *
  * @param {string} route - Nom de la route
@@ -581,5 +601,6 @@ module.exports = {
   normaliserMarche,
   construireBlocMarche,
   appliquerMarche,
+  personaDuMarche,
   chargerMarcheCabinet,
 }

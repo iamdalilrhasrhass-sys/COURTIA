@@ -14,17 +14,20 @@ import toast from 'react-hot-toast'
 import api from '../api'
 import PageTransition from '../components/ui/PageTransition'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
+import { libellesMarche, marcheCourante } from '../lib/marche'
+import { localeCourante, fmtMontant } from '../lib/monnaie'
 
 // ─── Utilitaires ───────────────────────────────────────────────────────────────
 
 function fmtDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(d).toLocaleDateString(localeCourante(), { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function fmtCurrency(v) {
   if (v == null || v === '') return '—'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+  // Devise du cabinet : le simulateur suit le marché (lib/monnaie).
+  return fmtMontant(v, { maximumFractionDigits: 0 })
 }
 
 // ─── Skeleton shimmer ──────────────────────────────────────────────────────────
@@ -69,7 +72,13 @@ function CapitiaHeader({ stateBadge }) {
           }}>ADD-ON</span>
         </div>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: 0, fontWeight: 500 }}>
-          Module Financement pour courtiers IOBSP
+          {/* Le module de financement repose sur un statut d'intermédiaire
+              bancaire propre au marché FRANÇAIS. Un cabinet suisse ne doit pas
+              lire ici le nom d'un statut qu'il n'exerce pas : le sous-titre
+              suit donc son marché. */}
+          {marcheCourante() === 'CH'
+            ? 'Module Financement — non disponible sur votre marché'
+            : 'Module Financement pour courtiers IOBSP'}
         </p>
       </div>
       {stateBadge}
@@ -88,6 +97,13 @@ function StateA({ onSuccess }) {
   const [experience, setExperience] = useState('')
   const [loading, setLoading] = useState(false)
   const fileRef = useRef()
+
+  // Le dossier IOBSP est un dispositif du marché FRANÇAIS (statut
+  // d'intermédiaire en opérations de banque, enregistré à l'ORIAS, et
+  // certification DDA). Demander un numéro ORIAS à un cabinet suisse serait un
+  // fait français imposé de travers : sur ce marché on n'affiche donc ni le
+  // champ, ni le sigle, et on explique pourquoi.
+  const marcheSuisse = marcheCourante() === 'CH'
 
   const oriasValid = /^\d{8}$/.test(orias)
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)
@@ -189,7 +205,18 @@ function StateA({ onSuccess }) {
         </h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-          {/* ORIAS */}
+          {/* ORIAS — registre français : affiché sur le marché FR uniquement. */}
+          {marcheSuisse ? (
+            <p style={{
+              fontSize: 12.5, color: '#374151', background: '#f8fafc',
+              border: '0.5px solid #e5e7eb', borderRadius: 10,
+              padding: '12px 14px', margin: 0, lineHeight: 1.55,
+            }}>
+              Le dossier de candidature IOBSP dépend d'un statut d'intermédiaire bancaire
+              propre au marché français : aucun numéro d'enregistrement n'est demandé ici
+              pour un cabinet suisse, et le dossier ne peut pas être déposé depuis ce marché.
+            </p>
+          ) : (
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>
               Numéro ORIAS IOBSP (8 chiffres) *
@@ -212,6 +239,7 @@ function StateA({ onSuccess }) {
               <p style={{ fontSize: 11, color: '#ef4444', margin: '4px 0 0' }}>8 chiffres requis</p>
             )}
           </div>
+          )}
 
           {/* Email de contact */}
           <div>
@@ -222,7 +250,7 @@ function StateA({ onSuccess }) {
               type="email"
               value={contactEmail}
               onChange={e => setContactEmail(e.target.value)}
-              placeholder="vous@cabinet.fr"
+              placeholder={libellesMarche(marcheCourante()).emailPro}
               onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)' }}
               onBlur={e => { e.currentTarget.style.borderColor = contactEmail.length > 0 && !emailValid ? '#ef4444' : '#e5e7eb'; e.currentTarget.style.boxShadow = 'none' }}
               style={{
@@ -1028,6 +1056,14 @@ export default function Capitia() {
 
   const effectiveState = forceStateA ? 'A' : stateKey
 
+  // POURQUOI ce court-circuit : le module de financement est un dispositif du
+  // marché FRANÇAIS (dossier d'intermédiaire bancaire, registre ORIAS, mention
+  // DDA). Un cabinet suisse n'a ni ce statut ni ce registre : plutôt que de lui
+  // présenter un formulaire et des libellés réglementaires étrangers, l'écran
+  // dit honnêtement que le module n'existe pas sur son marché. Aucun dossier
+  // n'est déposé en son nom, aucune donnée n'est pré-remplie.
+  const marcheSuisse = marcheCourante() === 'CH'
+
   return (
     <PageTransition>
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'Arial, sans-serif' }}>
@@ -1053,7 +1089,28 @@ export default function Capitia() {
 
       <CapitiaHeader stateBadge={loading ? <Shimmer w={80} h={28} r={20} /> : stateBadge} />
 
-      {loading ? (
+      {marcheSuisse ? (
+        <div className="ca-container" style={{ maxWidth: 760, margin: '0 auto', padding: '32px 32px' }}>
+          <div style={{
+            background: 'white', border: '0.5px solid #e8e6e0', borderRadius: 16,
+            padding: '28px 28px', display: 'flex', flexDirection: 'column', gap: 12,
+          }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#080808', margin: 0 }}>
+              Ce module n’est pas proposé sur votre marché
+            </h1>
+            <p style={{ fontSize: 13.5, color: '#4b5563', margin: 0, lineHeight: 1.6 }}>
+              Le module de financement repose sur un statut d’intermédiaire bancaire enregistré
+              auprès du régulateur français. Un cabinet suisse n’exerce pas ce statut : aucun
+              dossier de candidature n’est donc affiché ni demandé ici, et aucune donnée de
+              votre cabinet n’est utilisée pour en pré-remplir un.
+            </p>
+            <p style={{ fontSize: 13.5, color: '#4b5563', margin: 0, lineHeight: 1.6 }}>
+              Vos modules réellement disponibles — clients, contrats, devis, commissions,
+              conformité, ARK — restent accessibles depuis le cockpit.
+            </p>
+          </div>
+        </div>
+      ) : loading ? (
         <div className="ca-loading-container" style={{ maxWidth: 640, margin: '48px auto', padding: '0 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Shimmer h={120} r={14} />
           <Shimmer h={200} r={14} />

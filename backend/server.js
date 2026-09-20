@@ -37,16 +37,46 @@ const envCorsOrigins = String(process.env.CORS_ORIGIN || '')
   .map((v) => v.trim())
   .filter(Boolean)
 const corsOrigins = Array.from(new Set([...defaultCorsOrigins, ...envCorsOrigins]))
+// ─────────────────────────────────────────────────────────────────────────────
+// CORPS BRUT CONSERVÉ : la liste des points d'entrée qui vérifient une signature
+// HMAC. Chaque entrée correspond à un `verifierSignatureHmac` réel dans le code.
+// Un point d'entrée absent de cette liste ne peut PAS vérifier une signature de
+// façon fiable — c'est pourquoi elle est énumérée ici, en un seul endroit.
+// ─────────────────────────────────────────────────────────────────────────────
+const CHEMIN_AVEC_CORPS_BRUT = Object.freeze([
+  '/api/stripe/webhook',
+  '/api/billing/webhook',
+  '/api/billing/stripe-webhook',
+  '/api/documents/yousign/webhook',
+  '/api/integrations/whatsapp/webhook',
+  // Mesure du 20/09/2026 : signature calculée sur du JSON reconstruit.
+  '/api/whatsapp/webhook',
+  // Point d'entrée public sans signature (secret partagé) mais qui doit, lui
+  // aussi, pouvoir être authentifié sur les octets reçus.
+  '/api/messaging/webhook/inbound',
+  '/api/webhooks/incoming',
+  '/api/voice/webhook',
+])
+
 app.use(cors({ origin: corsOrigins, credentials: true }))
 app.use(express.json({
-  // We need the raw body for Stripe webhook verification
+  // Le CORPS BRUT est nécessaire dès qu'un point d'entrée public vérifie une
+  // signature HMAC : la signature porte sur les OCTETS reçus, jamais sur un
+  // objet JSON reconstruit (JSON.stringify réordonne les clés, normalise les
+  // espaces et l'échappement des accents — une signature calculée là-dessus
+  // valide une mise en forme que l'appelant a choisie).
+  //
+  // POURQUOI cette liste a été ÉTENDUE (mesure du 20/09/2026) : le webhook
+  // WhatsApp calculait sa signature sur `JSON.stringify(body)`
+  // (services/whatsappMetaService.js:142) et `req.rawBody` n'était conservé que
+  // pour quatre préfixes, dont AUCUN de ceux qui vérifient réellement une
+  // signature. Les nouveaux points d'entrée (messagerie, WhatsApp, téléphonie,
+  // webhooks génériques) sont donc ajoutés ici — sans quoi leur vérification de
+  // signature serait impossible ou mensongère.
   verify: (req, res, buf) => {
+    const chemin = String(req.originalUrl || '')
     if (
-      req.originalUrl.startsWith('/api/stripe/webhook') ||
-      req.originalUrl.startsWith('/api/billing/webhook') ||
-      req.originalUrl.startsWith('/api/billing/stripe-webhook') ||
-      req.originalUrl.startsWith('/api/documents/yousign/webhook') ||
-      req.originalUrl.startsWith('/api/integrations/whatsapp/webhook')
+      CHEMIN_AVEC_CORPS_BRUT.some((prefixe) => chemin.startsWith(prefixe))
     ) {
       req.rawBody = buf
     }
@@ -79,6 +109,14 @@ const { traduireErreursEntree } = require('./src/middleware/erreursEntree')
 const { creerGardeEcritureRole } = require('./src/middleware/gardeEcritureRole')
 app.use('/api', traduireErreursEntree)
 app.use('/api', creerGardeEcritureRole(pool))
+
+// 3. `journaliserEcritures` : toutes les ÉCRITURES sous /api laissent une trace
+//    dans `audit_logs` (append-only, garantie posée en base par la migration
+//    119). Avant, `audit_logs` contenait 0 ligne et le middleware n'était monté
+//    nulle part (P3 SEC-024, mesuré le 20/09/2026). Monté ici, il couvre toutes
+//    les routes par construction : aucune route ajoutée demain n'y échappe.
+const { journaliserEcritures } = require('./src/middleware/auditLogger')
+app.use('/api', journaliserEcritures(pool))
 
 if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
   app.use((req, res, next) => {
@@ -446,6 +484,21 @@ app.use('/api/opportunites', verifyToken, opportunitesRouter)
 
 // LOT 7 — ARK Watch (surveillance proactive, protected)
 app.use('/api/ark-watch',    verifyToken, arkWatchRouter)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEBHOOK PUBLIC DE TÉLÉPHONIE — MONTÉ **AVANT** LE PRÉFIXE PROTÉGÉ
+//
+// POURQUOI CETTE POSITION (P1 IA-018, mesuré en production le 20/09/2026)
+// `app.use('/api/voice', verifyToken, voiceRouter)` capture TOUT `/api/voice/*`,
+// y compris `/api/voice/webhook`, et répondait 401 « En-tête d'authentification
+// manquant » à l'opérateur d'appels : le webhook public écrit dans
+// killerFeatures2.js était INATTEIGNABLE (4 lignes plus bas, jamais exécutées).
+// Express évalue les montages dans l'ordre de déclaration : celui du webhook est
+// donc placé ici, avant le préfixe protégé. Sans secret configuré il répond 503
+// (jamais un secret par défaut) ; avec un secret configuré, un en-tête faux
+// répond 401.
+// ─────────────────────────────────────────────────────────────────────────────
+app.use('/api/voice/webhook', require('./src/routes/killerFeatures2').webhookVoicePublic)
 app.use('/api/voice',        verifyToken, voiceRouter)
 
 // LOT 8 — ARK Compose (génération documents conformité, protected)

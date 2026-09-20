@@ -28,7 +28,11 @@ export default function PaywallModal({ open, error, onClose, onUpgrade }) {
       return `Vous avez atteint votre limite de ${error.limit_type || 'ressources'} (${error.current_usage}/${error.max_usage}). Passez au plan supérieur pour continuer.`
     }
     if (error.error === 'capitia_addon_inactive') {
-      return 'Activez CAPITIA pour 49€/mois et accédez au module financement IOBSP.'
+      // POURQUOI plus de prix ici : la phrase annonçait « 49€/mois », un montant
+      // codé en dur qui ne vient d'aucune grille servie par l'API. Le prix d'un
+      // add-on doit être lu côté serveur ; en attendant, le message n'en annonce
+      // aucun.
+      return 'Activez l’add-on CAPITIA pour accéder au module financement. Le tarif en vigueur est indiqué dans Abonnement.'
     }
     return error.message || 'Passez au plan supérieur pour accéder à cette fonctionnalité.'
   }

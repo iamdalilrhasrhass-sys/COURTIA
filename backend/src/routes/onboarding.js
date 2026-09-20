@@ -1,5 +1,7 @@
 const express = require('express');
 const { verifyToken } = require('../middleware/auth');
+const { requireRole } = require('../middleware/cabinetAccess');
+const { exigerEcritureCabinet } = require('../middleware/gardeEcritureRole');
 const pool = require('../db');
 const cabinetMembershipService = require('../services/cabinetMembershipService');
 const { logAudit } = require('../lib/audit');
@@ -93,7 +95,32 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/step', async (req, res) => {
+/**
+ * Rôle exigé pour l'étape « profil cabinet ».
+ *
+ * POURQUOI (P3 SEC-021, mesuré en production le 20/09/2026) : `POST
+ * /api/onboarding/step` n'exigeait AUCUN rôle. Un compte au rôle `broker` —
+ * commercial, pas direction — ÉCRIVAIT le nom du cabinet, son numéro ORIAS et
+ * sa ville (`UPDATE cabinets SET name = …, orias_number = …, city = …`), valeurs
+ * confirmées modifiées en base. Le nom et l'identité réglementaire du cabinet
+ * sont une donnée d'ENTREPRISE partagée par tous ses membres : seule la
+ * direction (`owner`, `manager`) peut la fixer.
+ *
+ * Les autres étapes (import, Google, première fiche, premier brief) ne touchent
+ * pas à l'identité du cabinet et restent ouvertes à tout rôle qui a le droit
+ * d'écrire — la garde globale `/api` refuse déjà `assistant` et `viewer` (403).
+ *
+ * Le contrôle est fait AVANT toute écriture : un refus n'a laissé aucune trace.
+ */
+const ETAPES_IDENTITE_CABINET = Object.freeze(['profile'])
+
+function exigerRoleIdentiteCabinet(req, res, next) {
+  const step = String((req.body && req.body.step) || '')
+  if (!ETAPES_IDENTITE_CABINET.includes(step)) return next()
+  return requireRole('owner', 'manager')(req, res, next)
+}
+
+router.post('/step', exigerRoleIdentiteCabinet, exigerEcritureCabinet(pool, 'modifier l’identité du cabinet'), async (req, res) => {
   try {
     const { step, payload = {} } = req.body || {};
     const { membership, cabinetId } = await getCabinetContext(req);

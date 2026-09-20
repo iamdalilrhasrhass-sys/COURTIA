@@ -15,6 +15,7 @@ import {
   AuroraEmptyState,
   useToast,
 } from '../../components/aurora';
+import { localeCourante } from '../../lib/monnaie'
 
 const STATUS_CONFIG = {
   sent_to_sign: { label: 'En attente', color: 'amber', icon: Clock },
@@ -246,7 +247,7 @@ export default function SignaturesV2() {
                       <AuroraBadge color={config.color}>{config.label}</AuroraBadge>
 
                       <div style={{ fontSize: 12, color: 'var(--aurora-text-tertiary)' }}>
-                        {new Date(sig.created_at).toLocaleDateString('fr-FR')}
+                        {new Date(sig.created_at).toLocaleDateString(localeCourante())}
                       </div>
 
                       <div style={{ display: 'flex', gap: 'var(--aurora-space-2)' }}>

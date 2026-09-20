@@ -5,6 +5,7 @@
  */
 
 const pool = require('../db')
+const marcheCabinet = require('../lib/marcheCabinet')
 
 // ──────────────────────────────────────────────────────────────────────────
 // CHURN PREDICTOR
@@ -250,7 +251,11 @@ async function computeCrossSellMatrix(userId) {
       type: c.type,
       souscrits,
       opportunities,
-      total_opportunity_eur: opportunities.filter(o => o.status !== 'owned').reduce((s, o) => s + o.estimated_eur, 0),
+      // Un total n'est PAS 0 quand aucun montant n'est connu : `null` dit
+      // « non mesuré » (un 0 serait un chiffre inventé), `total_opportunity`
+      // est le nom NEUTRE (la devise du cabinet est servie à la racine).
+      total_opportunity_eur: totalOpportunite(opportunities),
+      total_opportunity: totalOpportunite(opportunities),
     }
   })
 
@@ -270,15 +275,52 @@ async function computeCrossSellMatrix(userId) {
     }
   }
 
+  const devise = await deviseDuCabinet(userId)
+
   return {
     products: PRODUITS_CATALOG,
     clients: matrix,
+    devise,
     // CORRECTION 2026-09-19 : cette somme additionnait des montants inventes par
     // hachage. Sans tarif de reference dans les dossiers, le potentiel est INCONNU.
-    total_potential_eur: null,
-    total_potential_eur_source: 'indisponible — aucun tarif de reference dans les dossiers charges',
+    // Le nom NEUTRE est servi à tous ; le nom historique « _eur » n'est conservé
+    // que pour un cabinet dont la devise est réellement l'euro (P3 « D-22 »).
+    total_potential: null,
+    total_potential_source: 'indisponible — aucun tarif de reference dans les dossiers charges',
+    ...(devise === 'EUR' ? {
+      total_potential_eur: null,
+      total_potential_eur_source: 'indisponible — aucun tarif de reference dans les dossiers charges',
+    } : {}),
     computed_at: new Date().toISOString(),
   }
+}
+
+/**
+ * Devise du CABINET (CHF en Suisse, EUR en France) — repli 'EUR'.
+ * Même règle que partout ailleurs (`lib/marcheCabinet`) : la monnaie
+ * caractérise l'entreprise, pas la personne connectée.
+ */
+async function deviseDuCabinet(userId) {
+  try {
+    const verdict = await marcheCabinet.marcheUtilisateur(userId, (sql, params) => pool.query(sql, params))
+    return verdict && verdict.devise ? verdict.devise : 'EUR'
+  } catch (_err) {
+    return 'EUR';
+  }
+}
+
+/**
+ * Total des opportunités NON souscrites.
+ * Renvoie `null` (et non 0) dès qu'AUCUN montant n'est connu : afficher « 0 »
+ * là où la donnée manque serait un chiffre inventé.
+ */
+function totalOpportunite(opportunities = []) {
+  const valeurs = opportunities
+    .filter((o) => o.status !== 'owned')
+    .map((o) => o.estimated_eur)
+    .filter((v) => typeof v === 'number' && Number.isFinite(v));
+  if (valeurs.length === 0) return null;
+  return valeurs.reduce((somme, v) => somme + v, 0);
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -345,6 +387,14 @@ async function computeRenewalOptimizations(userId) {
         premium: currentPremium === null ? 'absent_du_dossier' : 'quote_data.prime_annuelle',
         echeance: data.date_echeance ? 'quote_data.date_echeance' : 'derivee (creation + 12 mois)',
       },
+      // ── UNE DATE DÉDUITE N'EST PAS UNE DATE DU DOSSIER ────────────────────
+      // POURQUOI ce booléen (défaut P3 signalé le 20/09/2026) : `echeance_date`
+      // vaut `created_at + 12 mois` quand le dossier ne porte AUCUNE échéance.
+      // L'étiquette existait (data_source.echeance, ci-dessus) mais un affichage
+      // peut la manquer et présenter la valeur comme une date réelle. Le drapeau
+      // est explicite et sans ambiguïté : à `true`, l'écran doit écrire
+      // « échéance estimée (déduite de la date de création) », jamais une date nue.
+      echeance_estimee: !data.date_echeance,
       echeance_date: echeance.toISOString().slice(0, 10),
       days_to_echeance: daysToEcheance,
       rationale,

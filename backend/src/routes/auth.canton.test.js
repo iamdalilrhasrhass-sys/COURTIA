@@ -22,10 +22,26 @@ jest.mock('../middleware/auth', () => ({
   verifyToken: (req, _res, next) => { req.user = { id: 7, userId: 7, role: 'broker' }; next() },
   verifyTokenMiddleware: (req, _res, next) => { req.user = { id: 7, userId: 7, role: 'broker' }; next() },
 }))
-jest.mock('../middleware/rateLimit', () => ({
-  loginLimiter: (_req, _res, next) => next(),
-  meLimiter: (_req, _res, next) => next(),
-}))
+jest.mock('../middleware/rateLimit', () => {
+  // Tous les limiteurs sont neutralisés : ce test porte sur le canton, pas sur
+  // les plafonds. Le mock est construit par énumération EXPLICITE des noms
+  // exportés au moment de l'écriture — un limiteur ajouté aux routes sans être
+  // ajouté ici ferait échouer le `require('./auth')` avec un « callback
+  // Undefined », ce qui est exactement le signal souhaité.
+  const passe = (_req, _res, next) => next()
+  return {
+    loginLimiter: passe,
+    meLimiter: passe,
+    forgotPasswordLimiter: passe,
+    resetPasswordLimiter: passe,
+    refreshLimiter: passe,
+    googleAuthLimiter: passe,
+    apiLimiter: passe,
+    healthLimiter: passe,
+    arkLimiter: passe,
+    getClientIp: () => '127.0.0.1',
+  }
+})
 
 const express = require('express')
 const pool = require('../db')
