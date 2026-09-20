@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Upload, Search, X, Check, Sparkles, Shield, Zap,
-  Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle
+  Clock, File, FileImage, FileSpreadsheet, AlertTriangle, XCircle
 } from 'lucide-react'
 import api from '../api'
 import { localeCourante } from '../lib/monnaie'
+import useSessionCabinet from '../components/useSessionCabinet'
+import MentionLectureSeule from '../components/MentionLectureSeule'
+import FonctionIndisponible from '../components/FonctionIndisponible'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -74,6 +77,9 @@ function KpiCard({ icon: Icon, title, value, accent }) {
 
 export default function Documents() {
   const navigate = useNavigate()
+  // Rôle de la session : un rôle en lecture seule ne reçoit AUCUNE action
+  // d'écriture (« Ajouter » déposait un document). Voir useSessionCabinet.
+  const { lectureSeule, role } = useSessionCabinet()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Tous')
   const [showUpload, setShowUpload] = useState(false)
@@ -149,11 +155,29 @@ export default function Documents() {
             <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Documents</h1>
             <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Centralisez les pièces liées à vos clients, contrats et devis.</p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setShowUpload(true)} style={btnStyle(T.accent)}><Upload size={13} /> Ajouter</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* « Ajouter » retire du DOM pour un rôle en lecture seule : proposer
+                un formulaire d'écriture à un compte qui n'a pas le droit
+                d'écrire était le défaut mesuré (QA adverse n° 2). */}
+            {!lectureSeule && (
+              <button onClick={() => setShowUpload(true)} style={btnStyle(T.accent)}><Upload size={13} /> Ajouter</button>
+            )}
             <button onClick={() => navigate('/morning-brief')} style={btnStyle(T.ark)}><Zap size={13} /> Analyse ARK</button>
           </div>
         </div>
+
+        {lectureSeule && (
+          <MentionLectureSeule
+            role={role}
+            action="déposer un document"
+            title="Documents — accès en lecture seule"
+            surface="sombre"
+            style={{ marginBottom: 16 }}
+          >
+            La liste ci-dessous reste consultable. Aucun dépôt ni modification n&apos;est possible
+            avec ce rôle.
+          </MentionLectureSeule>
+        )}
 
         {/* KPIs — tous calculés depuis GET /api/documents */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -211,7 +235,7 @@ export default function Documents() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid ' + T.cardBorder }}>
-                {['Document', 'Client', 'Type', 'Associé à', 'Date', 'Statut', ''].map(h => (
+                {['Document', 'Client', 'Type', 'Associé à', 'Date', 'Statut'].map(h => (
                   <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: T.textMuted, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>{h}</th>
                 ))}
               </tr>
@@ -243,19 +267,27 @@ export default function Documents() {
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
                     </td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={e => e.stopPropagation()} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><Eye size={14} color={T.textMuted} /></button>
-                        <button onClick={e => e.stopPropagation()} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><Download size={14} color={T.textMuted} /></button>
-                        <button onClick={e => e.stopPropagation()} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><Sparkles size={14} color={T.ark} /></button>
-                      </div>
-                    </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
         </div>
+
+        {/* ACTIONS PAR DOCUMENT — ÉTAT HONNÊTE, SANS BOUTON NI COMPTEUR
+            POURQUOI (défaut P3 mesuré le 20/09/2026, QA adverse n° 2) : trois
+            icônes par ligne (aperçu, téléchargement, analyse ARK) étaient
+            affichées sans être branchées, et l'analyse documentaire ARK répond
+            501 « fonctionnalité non implémentée » côté serveur. Un bouton qui
+            produit une erreur technique — ou qui ne fait rien — est un faux
+            affichage : il est retiré, et l'écran dit ce qui n'existe pas. Aucun
+            compteur (« 0 analyse ») ne vient suggérer une mesure inexistante. */}
+        <FonctionIndisponible titre="Actions par document (aperçu, téléchargement, analyse ARK)" style={{ marginTop: 14 }}>
+          L&apos;aperçu et le téléchargement d&apos;une pièce, ainsi que l&apos;analyse
+          documentaire ARK (OCR et lecture des contrats), ne sont pas installés dans cette
+          version : aucun bouton ne les propose, rien n&apos;est lancé depuis cet écran et
+          aucun compteur ne les annonce.
+        </FonctionIndisponible>
 
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: T.textMuted }}>

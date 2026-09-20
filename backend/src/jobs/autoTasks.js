@@ -3,6 +3,11 @@
  * Aucun appel IA. Déclenchement manuel via POST /api/taches/auto-generate.
  */
 
+// Marché du cabinet : source unique du fuseau horaire des tâches créées ici
+// (voir lib/marcheCabinet — FUSEAUX / fuseauDuMarche).
+const marcheCabinet = require('../lib/marcheCabinet')
+const { FUSEAUX } = marcheCabinet
+
 const RULES = [
   {
     key: 'renouvellement_urgent',
@@ -105,6 +110,17 @@ const CLIENT_RULES = [
 async function generateAutoTasks(pool, courtierId) {
   const created = []
 
+  // FUSEAU DU MARCHÉ DU CABINET (correctif 20/09/2026, migration 123) : la
+  // colonne `appointments.timezone` n'a plus de valeur par défaut française. Le
+  // fuseau est donc résolu UNE fois par exécution depuis le marché du cabinet.
+  let timezone = FUSEAUX.FR
+  try {
+    const marche = await marcheCabinet.marcheUtilisateur(courtierId, pool)
+    timezone = marcheCabinet.fuseauDuMarche(marche?.marche)
+  } catch (_err) {
+    timezone = FUSEAUX.FR
+  }
+
   const [clientsRes, contratsRes, tachesRes] = await Promise.all([
     pool.query(`
       SELECT
@@ -146,9 +162,9 @@ async function generateAutoTasks(pool, courtierId) {
         const task = rule.check(client, contrat, tachesClient)
         if (!task) continue
         const res = await pool.query(
-          `INSERT INTO appointments (title, description, client_id, start_time, status, user_id, created_at)
-           VALUES ($1, $2, $3, $4, 'a_faire', $5, NOW()) RETURNING *`,
-          [task.titre, task.description, client.id, task.echeance, courtierId]
+          `INSERT INTO appointments (title, description, client_id, start_time, status, user_id, timezone, created_at)
+           VALUES ($1, $2, $3, $4, 'a_faire', $5, $6, NOW()) RETURNING *`,
+          [task.titre, task.description, client.id, task.echeance, courtierId, timezone]
         )
         created.push(res.rows[0])
       }
@@ -159,9 +175,9 @@ async function generateAutoTasks(pool, courtierId) {
       const task = rule.check(client, contratsClient, tachesClient)
       if (!task) continue
       const res = await pool.query(
-        `INSERT INTO appointments (title, description, client_id, start_time, status, user_id, created_at)
-         VALUES ($1, $2, $3, $4, 'a_faire', $5, NOW()) RETURNING *`,
-        [task.titre, task.description, client.id, task.echeance, courtierId]
+        `INSERT INTO appointments (title, description, client_id, start_time, status, user_id, timezone, created_at)
+         VALUES ($1, $2, $3, $4, 'a_faire', $5, $6, NOW()) RETURNING *`,
+        [task.titre, task.description, client.id, task.echeance, courtierId, timezone]
       )
       created.push(res.rows[0])
     }

@@ -6,6 +6,50 @@ const porteeCabinet = require('../lib/porteeCabinet');
 // Validation de FORME (date réellement existante) : une échéance impossible
 // était acceptée puis refusée par PostgreSQL → 500 SQL au lieu d'un 400.
 const { dateValide } = require('../services/validationEntree');
+// MARCHÉ DU CABINET : le fuseau d'une tâche est celui du marché du cabinet qui
+// la crée. Un cabinet suisse ne doit pas porter une référence française.
+const marcheCabinet = require('../lib/marcheCabinet');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LONGUEURS — LA ROUTE REFUSE AVANT LA BASE, ET LE DIT (P2, deuxième QA adverse)
+//
+// DÉFAUT MESURÉ (20/09/2026) : `POST /api/taches` avec un titre de 256 caractères
+// répondait
+//   500 {"error":"task_create_failed","message":"Création de tâche impossible
+//        pour le moment."}
+// alors que 255 caractères passaient. Deux causes cumulées :
+//   1. `appointments.title` EST `VARCHAR(255)` — au-delà, PostgreSQL refuse
+//      (SQLSTATE 22001) ;
+//   2. le `catch` de la route remplace le message SQL par un message produit,
+//      donc le middleware `traduireErreursEntree` (qui réécrit une entrée
+//      invalide en 400 à partir du message PostgreSQL) ne peut plus reconnaître
+//      la cause : le courtier lisait « impossible » sans savoir quel champ
+//      corriger.
+// La validation est donc faite ICI, avant la base, avec la limite réelle de la
+// colonne (255) et une limite PRODUIT annoncée pour la description (`TEXT` en
+// base, non bornée : 5 000 caractères — au-delà ce n'est plus une description).
+// Le motif de réponse est celui du reste du produit : 400 `champ_trop_long`.
+// ─────────────────────────────────────────────────────────────────────────────
+const LIMITE_TITRE_TACHE = 255;        // appointments.title VARCHAR(255)
+const LIMITE_DESCRIPTION_TACHE = 5000; // limite produit (colonne TEXT, non bornée)
+
+/** 400 `champ_trop_long` nommant le champ et sa limite, ou `null` si tout va bien. */
+function refuserTropLong(res, champs) {
+  for (const { nom, valeur, limite } of champs) {
+    if (typeof valeur !== 'string') continue;
+    if (valeur.length > limite) {
+      res.status(400).json({
+        error: 'champ_trop_long',
+        message: `Le champ « ${nom} » ne peut pas dépasser ${limite} caractères (${valeur.length} reçus).`,
+        champs: [nom],
+        limite,
+        limite_max: limite,
+      });
+      return true;
+    }
+  }
+  return false;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES TÂCHES / RENDEZ-VOUS (`appointments`) : LE CABINET
@@ -110,6 +154,12 @@ router.post('/', verifyToken, async (req, res) => {
     if (!titreNettoye) {
       return res.status(400).json({ error: 'validation_error', message: 'Le titre de la tâche est obligatoire.', champs: ['titre'] });
     }
+    // Longueurs : refus EXPLICITE (400) avant la base — la limite du titre est
+    // celle de la colonne réelle, celle de la description est annoncée.
+    if (refuserTropLong(res, [
+      { nom: 'titre', valeur: titreNettoye, limite: LIMITE_TITRE_TACHE },
+      { nom: 'description', valeur: description, limite: LIMITE_DESCRIPTION_TACHE },
+    ])) return;
     if (!echeance) {
       return res.status(400).json({
         error: 'validation_error',
@@ -128,6 +178,27 @@ router.post('/', verifyToken, async (req, res) => {
         message: "L'échéance transmise n'existe pas (jour ou heure invalide). Format attendu : AAAA-MM-JJ ou AAAA-MM-JJTHH:MM.",
         champs: ['echeance'],
       });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FUSEAU DE LA TÂCHE = CELUI DU MARCHÉ DU CABINET (P2, 20/09/2026)
+    //
+    // DÉFAUT MESURÉ : `appointments.timezone` portait encore
+    // `DEFAULT 'Europe/Paris'` en base ; tous les writers OMETTAIENT la colonne,
+    // donc le défaut décidait — une tâche créée par un cabinet suisse était
+    // estampillée « Europe/Paris » (une référence française sur une donnée
+    // suisse). La migration 123 retire ce défaut ; le fuseau est désormais
+    // ÉCRIT ici depuis `lib/marcheCabinet` (source unique du marché : cabinet →
+    // référent → profil mono-utilisateur → France). Aucune valeur n'est inventée:
+    // si le marché est illisible, on retombe sur le fuseau français historique,
+    // exactement l'ancien comportement.
+    // ─────────────────────────────────────────────────────────────────────────
+    let fuseau = marcheCabinet.FUSEAUX.FR
+    try {
+      const marche = await marcheCabinet.marcheUtilisateur(userId, pool)
+      fuseau = marcheCabinet.fuseauDuMarche(marche?.marche)
+    } catch (errMarche) {
+      console.warn('POST /api/taches : marché du cabinet illisible, fuseau FR conservé :', errMarche.message)
     }
 
     // Vérifier que le client appartient au CABINET (null en portée mono).
@@ -150,10 +221,10 @@ router.post('/', verifyToken, async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO appointments
-       (title, description, client_id, start_time, status, user_id, organizer_id, cabinet_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $6, $7, NOW()) RETURNING *`,
+       (title, description, client_id, start_time, status, user_id, organizer_id, cabinet_id, timezone, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, NOW()) RETURNING *`,
       [titreNettoye, description || null, client_id || null, echeance, statut || 'a_faire', userId,
-       porteeCabinet.cabinetPourCreation(portee)]
+       porteeCabinet.cabinetPourCreation(portee), fuseau]
     );
 
     res.status(201).json(result.rows[0]);
@@ -178,6 +249,14 @@ router.put('/:id', verifyToken, async (req, res) => {
     const { titre, description, statut, echeance } = req.body;
     const portee = await porteeCabinet.resoudrePortee(pool, req);
     if (porteeCabinet.refuserEcriture(portee, res, 'modifier une tâche')) return;
+
+    // Mêmes longueurs qu'à la création : une modification ne doit pas non plus
+    // produire un 500 SQL (titre > 255) ni un message que le middleware d'entrée
+    // ne peut plus reconnaître (le catch de la route réécrit la cause).
+    if (refuserTropLong(res, [
+      { nom: 'titre', valeur: typeof titre === 'string' ? titre.trim() : titre, limite: LIMITE_TITRE_TACHE },
+      { nom: 'description', valeur: description, limite: LIMITE_DESCRIPTION_TACHE },
+    ])) return;
 
     // Même règle que pour la création : une échéance qui n'existe pas est
     // refusée en 400 (jamais un 500 SQL, jamais une date inventée).

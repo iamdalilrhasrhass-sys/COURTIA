@@ -86,27 +86,103 @@ router.get('/objectifs/current', async (req, res) => {
   }
 })
 
+// Cibles reconnues par cette route. Toute autre clé est REFUSÉE (400) : avant ce
+// correctif, `{"annee":2026,"ca_cible":250000}` répondait 200 `ok:true` alors que
+// rien de demandé n'était enregistré (les cibles étaient même remises à 0).
+const CIBLES_OBJECTIF = Object.freeze([
+  'ca_target_cents',
+  'new_clients_target',
+  'new_contracts_target',
+  'commissions_target_cents',
+])
+const CLES_ACCEPTEES_OBJECTIF = Object.freeze(['year', ...CIBLES_OBJECTIF])
+
 router.post('/objectifs/set', async (req, res) => {
   try {
     const userId = uid(req)
-    const year = req.body.year || new Date().getFullYear()
-    const { ca_target_cents = 0, new_clients_target = 0, new_contracts_target = 0, commissions_target_cents = 0 } = req.body || {}
+    const corps = req.body || {}
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // P3 — UN CHAMP INCONNU N'EST JAMAIS IGNORÉ EN SILENCE (mesuré le 20/09/2026)
+    //
+    // DÉFAUT 1 : tous les champs hors des quatre cibles étaient ignorés sans un
+    // mot, et la route répondait `200 {ok:true}`. Un appelant qui envoyait
+    // `{"annee":2026,"ca_cible":250000,"clients_cible":40}` croyait avoir fixé
+    // 250 000 de CA : la base contenait 0. Une réponse de succès pour une
+    // écriture qui n'a pas eu lieu est un faux succès.
+    // DÉFAUT 2 : les champs ABSENTS étaient écrits à 0 (`EXCLUDED`), donc une
+    // mise à jour partielle (« change seulement la cible de CA ») remettait les
+    // trois autres cibles à zéro.
+    //
+    // CORRECTIF : 400 nommant les champs non reconnus et la liste des noms
+    // acceptés ; et l'écriture ne touche QUE les cibles réellement transmises.
+    // ─────────────────────────────────────────────────────────────────────────
+    const clesInconnues = Object.keys(corps).filter((cle) => !CLES_ACCEPTEES_OBJECTIF.includes(cle))
+    if (clesInconnues.length > 0) {
+      return res.status(400).json({
+        error: 'champ_inconnu',
+        message: `Champ(s) non reconnu(s) : ${clesInconnues.join(', ')}. `
+          + `Noms acceptés : ${CLES_ACCEPTEES_OBJECTIF.join(', ')}. Aucune cible n'a été enregistrée.`,
+        champs: clesInconnues,
+        champs_acceptes: [...CLES_ACCEPTEES_OBJECTIF],
+      })
+    }
+
+    const anneeBrute = corps.year
+    const year = anneeBrute === undefined || anneeBrute === null || anneeBrute === ''
+      ? new Date().getFullYear()
+      : Number.parseInt(anneeBrute, 10)
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) {
+      return res.status(400).json({
+        error: 'annee_invalide',
+        message: "L'année transmise n'est pas valide (attendue entre 2000 et 2100). Aucune cible n'a été enregistrée.",
+        champs: ['year'],
+      })
+    }
+
+    const colonnes = CIBLES_OBJECTIF.filter((colonne) => corps[colonne] !== undefined)
+    if (colonnes.length === 0) {
+      return res.status(400).json({
+        error: 'aucune_cible',
+        message: `Aucune cible transmise. Noms acceptés : ${CIBLES_OBJECTIF.join(', ')}.`,
+        champs_acceptes: [...CIBLES_OBJECTIF],
+      })
+    }
+
+    const valeurs = []
+    for (const colonne of colonnes) {
+      const valeur = Number(corps[colonne])
+      if (!Number.isFinite(valeur) || valeur < 0) {
+        return res.status(400).json({
+          error: 'valeur_invalide',
+          message: `La cible « ${colonne} » doit être un nombre positif ou nul. Aucune cible n'a été enregistrée.`,
+          champs: [colonne],
+        })
+      }
+      valeurs.push(Math.round(valeur))
+    }
+
+    // Seules les colonnes transmises figurent dans l'INSERT et dans le UPDATE :
+    // une cible absente du corps de la requête n'est jamais remise à zéro.
+    const emplacements = colonnes.map((_, index) => `$${index + 3}`).join(', ')
+    const majPartielle = colonnes.map((colonne) => `${colonne} = EXCLUDED.${colonne}`).join(',\n          ')
 
     const { rows } = await pool.query(`
-      INSERT INTO objectifs (user_id, year, ca_target_cents, new_clients_target, new_contracts_target, commissions_target_cents)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO objectifs (user_id, year, ${colonnes.join(', ')})
+      VALUES ($1, $2, ${emplacements})
       ON CONFLICT (user_id, year) DO UPDATE
-      SET ca_target_cents = EXCLUDED.ca_target_cents,
-          new_clients_target = EXCLUDED.new_clients_target,
-          new_contracts_target = EXCLUDED.new_contracts_target,
-          commissions_target_cents = EXCLUDED.commissions_target_cents,
+      SET ${majPartielle},
           updated_at = NOW()
       RETURNING *
-    `, [userId, year, ca_target_cents, new_clients_target, new_contracts_target, commissions_target_cents])
+    `, [userId, year, ...valeurs])
 
-    res.json({ ok: true, objectif: rows[0] })
+    res.json({ ok: true, objectif: rows[0], cibles_mises_a_jour: colonnes })
   } catch (err) {
-    res.status(500).json({ error: 'set_failed', message: err.message })
+    // Aucun message SQL brut dans la réponse.
+    res.status(500).json({
+      error: 'set_failed',
+      message: "L'enregistrement des objectifs a échoué. Aucune cible n'a été modifiée.",
+    })
   }
 })
 

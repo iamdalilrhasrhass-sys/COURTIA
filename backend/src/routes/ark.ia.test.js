@@ -182,14 +182,19 @@ describe('routes IA ARK — jamais de succès sans contenu, jamais d’erreur br
     expect(corpsTexte.data.summary).toBe(REPONSE_INEXPLOITABLE.text)
   })
 
-  test('documents-analysis : 501 explicite, plus de success:true « pending_implementation »', async () => {
+  test('documents-analysis : refus explicite « fonctionnalité non souscrite », plus de success:true « pending_implementation »', async () => {
     const res = await fetch(`${origin}/api/ark/client/201/documents-analysis`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documents: [{ type: 'contrat' }] }),
     })
     const corps = await res.json()
-    expect(res.status).toBe(501)
+    // 403 (et non plus 501) depuis le 20/09/2026 : la deuxième QA adverse relève
+    // que « non implémenté » est un 5xx nu sur un point d'entrée du produit. Le
+    // refus reste EXPLICITE, porte un message produit, et la propriété que ce
+    // test protège est inchangée : jamais de `success: true` pour une analyse
+    // qui n'a pas eu lieu.
+    expect(res.status).toBe(403)
     expect(corps.success).toBeUndefined()
-    expect(corps.error).toBe('fonctionnalite_non_implementee')
+    expect(corps.error).toBe('fonctionnalite_non_souscrite')
     expect(JSON.stringify(corps)).not.toMatch(/pending_implementation|LOT 4|expectedCapabilities/)
   })
 })

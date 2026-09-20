@@ -101,11 +101,31 @@ module.exports = async function handler(req, res) {
       headers: { Accept: 'application/json', Authorization: `Bearer ${jeton}` },
     }, DELAI_LECTURE_MS)
     const corps = await reponse.text()
+    // Un 5xx du service de capture n'est PAS relayé tel quel : son corps peut
+    // contenir une trace technique, et un écran ne sait pas quoi en faire.
+    // (Défaut relevé le 20/09/2026 : /api/sales/summary répondait un 5xx nu et
+    // /morning-brief affichait une erreur sans explication.)
+    if (reponse.status >= 500) {
+      return refus(res, 503, {
+        error: 'capture_indisponible',
+        message: "Le service de lecture commerciale a répondu une erreur : la lecture est momentanément "
+          + "indisponible. Aucun chiffre n'est affiché à la place.",
+      })
+    }
     res.status(reponse.status)
     res.setHeader('Content-Type', reponse.headers.get('content-type') || 'application/json; charset=utf-8')
     res.setHeader('Cache-Control', 'no-store')
     return res.send(corps)
   } catch (e) {
-    return refus(res, 502, { error: 'capture_injoignable' })
+    // JAMAIS UN 502 NU (deuxième QA adverse, mesuré le 20/09/2026) : le relais
+    // répondait `502 {"error":"capture_injoignable"}` — un code d'infrastructure
+    // sans message, relevé sur `/api/sales/summary` et compté dans les 5xx de
+    // l'écran /morning-brief. On répond désormais 503 AVEC un message produit,
+    // en conservant le code `capture_injoignable` que le client sait traduire.
+    return refus(res, 503, {
+      error: 'capture_injoignable',
+      message: "La lecture commerciale est momentanément indisponible : le service de capture n'a pas "
+        + 'répondu. Réessayez dans quelques instants.',
+    })
   }
 }

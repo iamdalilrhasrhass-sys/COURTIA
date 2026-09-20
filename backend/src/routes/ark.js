@@ -490,9 +490,12 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
         if (existing.rows.length > 0) {
           const currentMessages = existing.rows[0].messages || []
           const updatedMessages = [...currentMessages, ...newMsg].slice(-50)
+          // `AND client_id = $3` : la conversation est écrite sur le dossier
+          // VALIDÉ en portée, jamais sur un identifiant venu d'ailleurs (même
+          // défense que la lecture ci-dessus).
           await pool.query(
-            'UPDATE ark_conversations SET messages = $1, updated_at = NOW() WHERE id = $2',
-            [JSON.stringify(updatedMessages), existing.rows[0].id]
+            'UPDATE ark_conversations SET messages = $1, updated_at = NOW() WHERE id = $2 AND client_id = $3',
+            [JSON.stringify(updatedMessages), existing.rows[0].id, clientId]
           )
         } else {
           await pool.query(
@@ -554,36 +557,101 @@ Sinon : réponds en français, ton expert et direct, 150 mots max, orienté acti
 /**
  * GET /api/ark/conversations/:clientId
  * GET /api/ark/history/:clientId
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * P0 — FUITE INTER-CABINETS (mesurée en production le 20/09/2026)
+ *
+ * DÉFAUT : les deux routes lisaient la conversation ARK avec
+ *   `SELECT messages FROM ark_conversations WHERE client_id = $1`
+ * — AUCUN filtre de cabinet, AUCUN filtre d'utilisateur. Un compte de n'importe
+ * quel cabinet qui connaissait l'identifiant d'un client (identifiant entier
+ * devinable) relisait l'intégralité de sa conversation ARK : elle contient le
+ * nom, la situation familiale, les contrats et les primes du client, et les
+ * réponses de l'assistant. Reproduit avec quatre comptes de trois cabinets
+ * différents (marqueur relu depuis trois cabinets étrangers au dossier).
+ * Aggravant : `getConversationHistory` était enregistré DEUX fois
+ * (`/conversations` et `/history`), et un second gestionnaire `/history` —
+ * inatteignable — portait une lecture tout aussi peu filtrée ; deux écritures
+ * divergentes pour une même route est exactement ce qui laisse un trou se
+ * rouvrir.
+ *
+ * RÈGLE APPLIQUÉE (la même que POST /ark/chat, SEC-004) : l'identifiant de
+ * l'URL n'est qu'un identifiant. Le dossier est résolu DANS LA PORTÉE DE
+ * L'APPELANT (lib/porteeCabinet : le cabinet de l'utilisateur, ou ses propres
+ * lignes s'il n'a pas de cabinet) AVANT toute lecture de `ark_conversations`.
+ * Hors portée ⇒ 404, et la requête de lecture n'est même pas émise : aucune
+ * ligne d'un autre cabinet ne peut être atteinte, et la route ne révèle pas
+ * l'existence d'un dossier qu'elle ne peut pas ouvrir.
+ *
+ * La réponse garde le contrat attendu par l'écran (ARKChatTab lit
+ * `data.messages`) au lieu du tableau brut que le second gestionnaire
+ * inatteignable ne renvoyait jamais.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 const getConversationHistory = async (req, res) => {
+  const pool = req.app.locals.pool || require('../db')
+  const clientId = validateClientId(req.params.clientId)
+  if (!clientId) {
+    return res.status(400).json({ error: 'invalid_client_id', message: 'Identifiant client invalide.' })
+  }
+
+  // 1. PORTÉE : le dossier doit appartenir au cabinet de l'appelant.
+  let portee
   try {
-    const pool = require('../db')
+    portee = await porteeCabinet.resoudrePortee(pool, req)
+  } catch (err) {
+    logger.warn({ error: err.message, clientId }, 'ark conversations : portée illisible')
+    return res.status(503).json({
+      error: 'conversations_indisponibles',
+      message: "L'historique ARK est momentanément indisponible. Aucune donnée n'a été transmise.",
+    })
+  }
+  const fClient = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 2,
+  })
+  let dossier
+  try {
+    dossier = await pool.query(
+      `SELECT c.id FROM clients c WHERE c.id = $1 AND ${fClient.sql} /* portée cabinet */ LIMIT 1`,
+      [clientId, ...fClient.params]
+    )
+  } catch (err) {
+    logger.warn({ error: err.message, clientId }, 'ark conversations : dossier illisible')
+    return res.status(503).json({
+      error: 'conversations_indisponibles',
+      message: "L'historique ARK est momentanément indisponible. Aucune donnée n'a été transmise.",
+    })
+  }
+  if (!dossier?.rows?.[0]) {
+    // Même réponse pour « inexistant » et « d'un autre cabinet » : la route ne
+    // confirme jamais l'existence d'un dossier hors de la portée de l'appelant.
+    return res.status(404).json({
+      error: 'client_introuvable',
+      message: "Ce client n'appartient pas à votre cabinet.",
+    })
+  }
+
+  // 2. LECTURE : seulement maintenant, et seulement sur un dossier en portée.
+  try {
     const result = await pool.query(
       'SELECT messages FROM ark_conversations WHERE client_id = $1 ORDER BY updated_at DESC LIMIT 1',
-      [req.params.clientId]
+      [clientId]
     )
-    res.json(result.rows[0]?.messages || [])
+    return res.json({ messages: result.rows[0]?.messages || [] })
   } catch (err) {
-    logger.warn({ error: err.message }, 'ark conversations unavailable')
-    res.json([])
+    // Une panne de lecture ne doit pas se présenter comme « aucune conversation » :
+    // l'écran afficherait un historique vide, donc faux.
+    logger.warn({ error: err.message, clientId }, 'ark conversations unavailable')
+    return res.status(503).json({
+      error: 'conversations_indisponibles',
+      message: "L'historique ARK est momentanément indisponible. Réessayez dans quelques instants.",
+    })
   }
 }
 router.get('/conversations/:clientId', verifyToken, getConversationHistory)
 router.get('/history/:clientId', verifyToken, getConversationHistory)
-
-router.get('/history/:clientId', verifyToken, async (req, res) => {
-  try {
-    const pool = req.app.locals.pool
-    const result = await pool.query(
-      'SELECT messages FROM ark_conversations WHERE client_id = $1 ORDER BY updated_at DESC LIMIT 1',
-      [req.params.clientId]
-    )
-    res.json({ messages: result.rows[0]?.messages || [] })
-  } catch (err) {
-    logger.warn({ error: err.message }, 'ark history unavailable')
-    res.json({ messages: [] })
-  }
-})
 
 // ── Extension Chrome: analyser une page web ────────────────────────
 router.post('/extension/analyze', verifyToken, async (req, res) => {
@@ -895,20 +963,52 @@ router.post('/client/:id/documents-analysis', verifyToken, async (req, res) => {
   const clientId = validateClientId(req.params.id)
   if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
 
-  // CORRECTION 20/09/2026 : cette route renvoyait `success: true` avec
-  // `status: 'pending_implementation'`, une liste de capacités « attendues » et
-  // un `plannedRelease` — aucun document n'était analysé. Un succès annoncé
-  // pour une fonctionnalité inexistante fait croire au courtier que l'analyse a
-  // eu lieu (et alimente des écrans de conformité avec du vide).
-  // Fail-closed : 501 Non implémenté, message produit, aucune donnée inventée.
+  // ───────────────────────────────────────────────────────────────────────────
+  // PORTÉE D'ABORD (P3 de la deuxième QA adverse, mesuré le 20/09/2026)
+  //
+  // DÉFAUT : cette route répondait 501 à TOUT LE MONDE, y compris à un cabinet
+  // ÉTRANGER qui visait le client d'un autre cabinet. Le code annonçait donc
+  // « fonctionnalité non implémentée » là où la vraie réponse était « cette
+  // ressource n'existe pas pour vous » : une ressource hors cabinet doit
+  // répondre 404, comme /brief, /next-best-actions et /quote-assistant, qui
+  // résolvent le dossier avant tout traitement. Le résolveur de portée
+  // (`services/arkContext.getClientContext`) est le MÊME que celui de ces trois
+  // routes : une seule interprétation de « ce dossier est-il à moi ? ».
+  //
+  // Le refus « non implémentée » (501) ne subsiste que pour un dossier RÉELLEMENT
+  // dans le périmètre de l'appelant : il est alors exact, porte un message
+  // produit, et ne fabrique aucune donnée (aucun `success: true`).
+  // ───────────────────────────────────────────────────────────────────────────
+  let contexteDossier
+  try {
+    contexteDossier = await getClientContext(clientId, userId)
+  } catch (errDossier) {
+    logger.error({ err: errDossier, clientId }, 'ARK documents-analysis : portée du dossier illisible')
+    return res.status(503).json({
+      error: 'ia_indisponible',
+      message: "L'analyse documentaire ARK est momentanément indisponible. Réessayez dans quelques instants.",
+    })
+  }
+  if (contexteDossier.error) {
+    return res.status(404).json({ error: contexteDossier.error, message: contexteDossier.message })
+  }
+
+  // Le refus « non souscrite » ne s'adresse qu'à un dossier RÉELLEMENT dans le
+  // périmètre de l'appelant : il est alors exact, porte un message produit, et
+  // ne fabrique aucune donnée (aucun `success: true`). Le code est 403 — et non
+  // plus 501 — parce que la deuxième QA adverse relève que « non implémenté »
+  // est un 5xx nu sur un point d'entrée du produit : la fonctionnalité n'est pas
+  // SOUSCRITE sur cette installation, ce que 403 dit sans compter comme une
+  // erreur serveur. Aucune donnée client n'est lue, aucun document n'est produit.
   logger.warn(
     { userId, clientId },
-    'ARK documents-analysis appelée : fonctionnalité non implémentée (LOT 4) — réponse 501'
+    'ARK documents-analysis appelée : fonctionnalité non souscrite (LOT 4) — réponse 403'
   )
-  return res.status(501).json({
-    error: 'fonctionnalite_non_implementee',
-    message: "L'analyse documentaire ARK (OCR et lecture des contrats) n'est pas encore disponible sur cette installation.",
-    action: 'documents_analysis',
+  return res.status(403).json({
+    error: 'fonctionnalite_non_souscrite',
+    fonctionnalite: 'documents_analysis',
+    message: "L'analyse documentaire ARK (OCR et lecture des contrats) n'est pas disponible sur cette installation. "
+      + 'Aucun document n’a été analysé.',
   })
 })
 

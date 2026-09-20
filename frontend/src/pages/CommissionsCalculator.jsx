@@ -25,6 +25,7 @@ import api from '../api'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { fmtMontant, symboleCourant } from '../lib/monnaie'
+import FonctionIndisponible from '../components/FonctionIndisponible'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
@@ -226,7 +227,8 @@ export default function CommissionsCalculator() {
             color: T.text, margin: 0, lineHeight: 1.15,
           }}>Calculateur de commissions</h1>
           <p style={{ fontSize: 13, color: T.textSecondary, margin: '6px 0 0' }}>
-            Calcul sur les barèmes réellement enregistrés pour votre cabinet.
+            Calcul sur les barèmes réellement enregistrés pour votre cabinet. Le catalogue
+            d&apos;exemple livré avec le produit n&apos;alimente aucun calcul ni aucun export.
           </p>
         </header>
 
@@ -419,6 +421,19 @@ export default function CommissionsCalculator() {
             </div>
           </>
         )}
+
+        {/* RELEVÉ MENSUEL EN PDF — ÉTAT HONNÊTE, SANS BOUTON NI COMPTEUR
+            POURQUOI (défaut P3 mesuré le 20/09/2026, QA adverse n° 2) : la route
+            serveur `GET /api/commissions/statement/:annee/:mois/pdf` répond 501
+            « non implémenté ». Aucun bouton de cet écran ne l'appelle, et aucun
+            compteur (« 0 relevé ») ne vient suggérer une mesure qui n'existe
+            pas : l'écran dit simplement que la fonction n'est pas installée. */}
+        <FonctionIndisponible titre="Relevé mensuel de commissions (PDF)" style={{ marginTop: 16 }}>
+          La production par COURTIA d&apos;un relevé mensuel téléchargeable n&apos;est pas
+          installée dans cette version : aucun bouton ne le propose ici. Le calcul affiché
+          ci-dessus reste celui de votre écran, et l&apos;export CSV/PDF du calcul en cours
+          reste disponible.
+        </FonctionIndisponible>
 
       </main>
     </div>

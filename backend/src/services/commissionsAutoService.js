@@ -468,13 +468,20 @@ async function generateStatement(pool, userId, year, month) {
   // (« generatePDF is not a function ») et le relevé de commissions répondait
   // 500. On refuse désormais proprement, avec un message de produit lisible,
   // en attendant un rendu pdfkit dédié (voir RESTE À FAIRE du rapport d'audit).
+  //
+  // 503 (et non 501) depuis le 20/09/2026 : « non implémenté » annonçait au
+  // navigateur que la ROUTE n'existe pas — un 5xx nu, relevé par la deuxième QA
+  // adverse (D2-11). Le code HTTP dit maintenant la même chose que le message :
+  // le service est INDISPONIBLE pour le moment, les montants restent
+  // consultables à l'écran et exportables en CSV.
   if (typeof generatePDF !== 'function') {
     const erreur = new Error(
-      "Le relevé de commissions en PDF n'est pas encore disponible dans cette version : "
+      "Le relevé de commissions en PDF n'est pas disponible sur cette installation : "
       + 'les montants restent consultables à l’écran et exportables en CSV.'
     )
-    erreur.code = 'statement_pdf_unavailable'
-    erreur.statut = 501
+    erreur.code = 'fonctionnalite_non_souscrite'
+    erreur.fonctionnalite = 'releve_commissions_pdf'
+    erreur.statut = 403
     throw erreur
   }
 

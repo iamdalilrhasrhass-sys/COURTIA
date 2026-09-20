@@ -68,14 +68,36 @@ const METHODES_ECRITURE = Object.freeze(['POST', 'PUT', 'PATCH', 'DELETE'])
  * ────────────────────────────────────────────────────────────────────────────
  *   * /api/auth, /api/invite, /api/beta, /api/leads  → inscription, invitation,
  *     demande de démo : aucun cabinet n'existe encore au moment de l'appel ;
- *   * /api/webhooks, /api/stripe, /api/billing       → webhooks entrants des
- *     fournisseurs et parcours de paiement (un ESSAI EXPIRÉ doit pouvoir payer
- *     pour sortir du mode lecture seule : y répondre 403 enfermerait le cabinet) ;
+ *   * les WEBHOOKS de facturation (et eux seuls) → un tiers non authentifié
+ *     appelle ces points d'entrée (Stripe) ; ils portent leur propre
+ *     vérification de signature. Voir la correction P1 ci-dessous ;
  *   * /api/portal, /api/ark-chat                     → espace CLIENT (jeton de
  *     portail, pas de cabinet) ;
  *   * les liens et callbacks destinés à des tiers non authentifiés : dépôt
  *     public de pièces, webhook de signature, callback OAuth de l'agenda,
  *     webhooks WhatsApp / téléphonie / messagerie.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * CORRECTION DU 20/09/2026 (P1, mesuré en production — deuxième QA adverse)
+ * Un compte de cabinet en LECTURE SEULE (`assistant`) modifiait l'IDENTITÉ DE
+ * FACTURATION du cabinet :
+ *   POST /api/billing/onboarding  → 200, `organization_profiles` réécrit
+ *   (nom, forme juridique, SIRET, ORIAS, adresse, signataire légal).
+ * Cause : `/api/billing` ET `/api/stripe` étaient exemptés EN ENTIER — même
+ * faute que `/api/calendar` avant elle : un préfixe de famille ouvrait toutes
+ * les routes d'écriture de la famille. `/api/stripe` est le MÊME routeur que
+ * `/api/billing` (`routes/stripe.js` réexporte `routes/billing.js`) : les deux
+ * exemptions devaient donc tomber ensemble.
+ *
+ * RÈGLE TENUE : seules les routes réellement appelées par un tiers NON
+ * AUTHENTIFIÉ sont exemptées, nommées jusqu'à la route. Pour la facturation, ce
+ * sont exactement les quatre chemins de webhook (`/api/billing/webhook`,
+ * `/api/billing/stripe-webhook` et leurs alias `/api/stripe/...`), qui
+ * vérifient la signature Stripe. Tout le reste de `/api/billing`
+ * (`onboarding`, `legal-acceptance`, `checkout`, `portal`, `cancel-trial`…)
+ * repasse sous la garde de rôle : un `assistant`/`viewer` reçoit 403
+ * `lecture_seule`, sans aucune écriture.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 const PREFIXES_PUBLICS = Object.freeze([
   '/api/auth',
@@ -83,8 +105,13 @@ const PREFIXES_PUBLICS = Object.freeze([
   '/api/beta',
   '/api/leads',
   '/api/webhooks',
-  '/api/stripe',
-  '/api/billing',
+  // Webhooks de facturation — appelés par Stripe, jamais par un utilisateur :
+  // signature vérifiée par le routeur. Aucun autre chemin de facturation n'est
+  // exempté (voir la correction P1 ci-dessus).
+  '/api/billing/webhook',
+  '/api/billing/stripe-webhook',
+  '/api/stripe/webhook',
+  '/api/stripe/stripe-webhook',
   '/api/portal',
   '/api/ark-chat',
   '/api/document-inbox/public',

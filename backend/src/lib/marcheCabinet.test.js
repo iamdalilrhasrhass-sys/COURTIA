@@ -314,3 +314,40 @@ describe('mettreAJourIdentiteCabinet — l’écriture va sur le CABINET', () =>
     expect(resultat.motif).toMatch(/écriture refusée/);
   });
 });
+
+/**
+ * LECTEUR FOURNI SOUS FORME D'OBJET — LA MÉTHODE DOIT ÊTRE RE-LIÉE À SON OBJET.
+ *
+ * POURQUOI CE TEST (défaut mesuré par `qa_108_rt2_backend.py` le 20/09/2026)
+ * Un appelant qui passait un VRAI pool `pg` (`marcheUtilisateur(userId, pool)`)
+ * recevait silencieusement le marché FRANÇAIS : la forme `{ query }` rendait la
+ * méthode détachée de son objet, et `pg.Pool.query` a besoin de son `this` pour
+ * ouvrir une connexion. L'erreur était absorbée par les replis de ce module —
+ * aucun message, et une tâche d'un cabinet suisse estampillée « Europe/Paris ».
+ *
+ * Le faux lecteur ci-dessous se comporte comme un pool réel : `query` refuse
+ * d'être appelée détachée. Toute régression de `lecteur()` fait échouer ce test.
+ */
+describe('marcheCabinet — un lecteur par OBJET est re-lié à son objet', () => {
+  test('un pool qui exige son `this` rend bien le marché du cabinet (CH)', async () => {
+    const appartenances = { 53: [{ cabinet_id: CAB_CH, role: 'owner' }] }
+    const cabinets = { [CAB_CH]: CABINET_CH_RENSEIGNE }
+    const pool = {
+      nom: 'pool-simule',
+      async query(sql, params) {
+        // Un `this` perdu (appel détaché) lève, exactement comme `pg.Pool`.
+        if (this !== pool) throw new TypeError('le pool a perdu son contexte')
+        const texte = String(sql)
+        if (texte.includes('FROM cabinets')) return { rows: cabinets[params[0]] ? [cabinets[params[0]]] : [] }
+        if (texte.includes('FROM cabinet_members') && texte.includes('JOIN broker_profiles')) return { rows: [] }
+        if (texte.includes('FROM cabinet_members')) return { rows: appartenances[params[0]] || [] }
+        return { rows: [] }
+      },
+    }
+
+    const verdict = await marcheCabinet.marcheUtilisateur(53, pool)
+    expect(verdict.marche).toBe('CH')
+    expect(verdict.devise).toBe('CHF')
+    expect(verdict.fuseau).toBe('Europe/Zurich')
+  })
+})

@@ -109,14 +109,34 @@ const COLONNES_REFERENT = `user_id, cabinet, cabinet_name, telephone, adresse, v
 /**
  * Lecteur SQL. Accepte, dans cet ordre : une FONCTION `query` (usage interne),
  * un objet `{ query }` (tests, transaction, pool local), et à défaut le pool du
- * module `../db`. Tolérer les deux formes évite le piège qui a réellement été
- * rencontré : une fonction exportée appelée SANS second argument lançait
+ * module `../db`.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * CORRECTION DU 20/09/2026 — LE LECTEUR PAR OBJET DOIT ÊTRE RE-LIÉ
+ *
+ * DÉFAUT MESURÉ (preuve `qa_108_rt2_backend.py`, tâche d'un cabinet suisse) :
+ * un appelant qui passait un VRAI pool `pg` (`marcheUtilisateur(userId, pool)`)
+ * obtenait silencieusement le marché FRANÇAIS. Cause : la forme `{ query }`
+ * rendait la méthode DÉTACHÉE de son objet (`return source.query`) ; pour
+ * `pg.Pool`, `query` a besoin de son `this` (elle ouvre une connexion) — l'appel
+ * levait donc une TypeError que chaque lecture de ce module rattrape, si bien
+ * que la résolution retombait sur « aucun cabinet » puis sur la France. Aucun
+ * message nulle part : une tâche suisse était estampillée « Europe/Paris ».
+ *
+ * La forme par objet est donc RE-LIÉE ici (`(sql, params) => source.query(...)`)
+ * pour que la lecture annoncée comme supportée le soit réellement, quel que soit
+ * le lecteur fourni (pool, transaction, client `pg`).
+ * ───────────────────────────────────────────────────────────────────────────
+ *
+ * Tolérer les deux formes évite le piège qui a réellement été rencontré : une
+ * fonction exportée appelée SANS second argument lançait
  * `query is not a function`, l'erreur était absorbée par le repli, et
  * l'appelant croyait que l'utilisateur n'avait pas de cabinet.
  */
 function lecteur(source) {
   if (typeof source === 'function') return source
-  if (source && typeof source.query === 'function') return source.query
+  // Méthode re-liée à son objet : `pool.query` détaché d'un pool `pg` échoue.
+  if (source && typeof source.query === 'function') return (sql, params) => source.query(sql, params)
   return (sql, params) => poolParDefaut().query(sql, params)
 }
 

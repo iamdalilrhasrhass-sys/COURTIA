@@ -15,6 +15,10 @@ const porteeCabinet = require('../lib/porteeCabinet')
 // suisse ne doit jamais recevoir le référentiel français (ORIAS/ACPR/DDA) — ni
 // dans une conversation ARK, ni dans un prompt de plan d'action.
 const { personaDuMarche, construireBlocMarche, chargerMarcheCabinet } = require('../services/arkPrompts');
+// CONTRAT D'ERREUR IA UNIQUE : une panne du moteur IA (clé refusée, quota,
+// modèle absent) devient 503 `ia_indisponible` / `configuration_required` avec
+// un message produit — jamais le corps d'erreur du fournisseur.
+const { repondreIaIndisponible, estErreurIa } = require('../services/iaErreurs');
 const cabinetMembershipService = require('../services/cabinetMembershipService');
 // Bloc unique des définitions d'indicateurs (contrat, prime, échéance) : la
 // « prime annuelle d'un client » doit être le même calcul que la « prime
@@ -36,6 +40,28 @@ const Anthropic = require('@anthropic-ai/sdk');
 // Un utilisateur sans cabinet garde exactement l'ancien comportement : il ne
 // voit que ses propres lignes (voir lib/porteeCabinet.js).
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOMENCLATURE DES STATUTS CLIENT (P3, mesuré le 20/09/2026)
+//
+// Un statut « zzz » accepté en 201 devenait une catégorie dans /rapports. La
+// liste ci-dessous est celle QUE LE PRODUIT PROPOSE (écran /clients/new :
+// prospect / actif / résilié) COMPLÉTÉE des statuts réels lus par les écrans et
+// les libellés (clientViewModel.js : à risque, silencieux, inactif, perdu).
+// Aucune valeur n'est inventée : tout ce qui n'y figure pas est refusé.
+// ─────────────────────────────────────────────────────────────────────────────
+const STATUTS_CLIENT = Object.freeze([
+  'prospect', 'actif', 'inactif', 'silencieux', 'a_risque', 'perdu', 'resilie',
+])
+
+/** Statut comparable : minuscules, sans accent (`résilié` → `resilie`). */
+function normaliserStatut(valeur) {
+  return String(valeur ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
 
 // Portée SQL sur la table `clients` (lecture OU écriture selon `ecriture`).
 // `alias` permet de réutiliser la même portée dans une jointure (`c`, `cli`…).
@@ -835,6 +861,71 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
       });
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // VALIDATION DE L'IDENTITÉ COMMERCIALE (P3, mesuré le 20/09/2026)
+    //
+    // DÉFAUT 1 : `POST /api/clients {"email":"pas-un-email"}` → 201, l'e-mail
+    // invalide était stocké tel quel (et servirait ensuite de destinataire).
+    // DÉFAUT 2 : `{"statut":"zzz"}` → 201, puis « zzz » apparaissait comme une
+    // catégorie à part entière dans /rapports (« Clients par statut … zzz 1 ») :
+    // une valeur qu'aucun écran n'a jamais proposée devenait une statistique.
+    // RÈGLE : l'e-mail doit être conforme, le statut doit appartenir à la
+    // NOMENCLATURE DU PRODUIT (celle des écrans : ClientNew.jsx et les libellés
+    // de clientViewModel.js). Toute autre valeur est refusée en 400 avec la liste
+    // des valeurs admises — on n'invente aucune catégorie, on ne « corrige » pas
+    // la saisie en silence.
+    // ─────────────────────────────────────────────────────────────────────────
+    const emailNettoye = typeof email === 'string' ? email.trim() : '';
+    if (emailNettoye && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailNettoye)) {
+      return res.status(400).json({
+        error: 'email_invalide',
+        message: `« ${emailNettoye} » n'est pas une adresse e-mail valide. Aucun client n'a été créé.`,
+        champs: ['email'],
+      });
+    }
+
+    const statutNettoye = typeof statut === 'string' ? statut.trim() : '';
+    if (statutNettoye && !STATUTS_CLIENT.includes(normaliserStatut(statutNettoye))) {
+      return res.status(400).json({
+        error: 'statut_inconnu',
+        message: `Le statut « ${statutNettoye} » ne fait pas partie de la nomenclature. `
+          + `Valeurs admises : ${STATUTS_CLIENT.join(', ')}. Aucun client n'a été créé.`,
+        champs: ['statut'],
+        statuts_acceptes: [...STATUTS_CLIENT],
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // DOUBLE SOUMISSION (P3, mesuré le 20/09/2026) : deux clics sur « Créer le
+    // client » créaient DEUX dossiers identiques (même cabinet, même e-mail).
+    // Garde simple et EXPLICITE : un dossier du même cabinet portant déjà cet
+    // e-mail répond 409 avec l'identifiant du dossier existant — le courtier sait
+    // quoi faire (ouvrir le dossier), rien n'est bloqué en silence et aucune
+    // donnée n'est inventée. La garde ne s'applique qu'à un e-mail renseigné.
+    // ─────────────────────────────────────────────────────────────────────────
+    if (emailNettoye) {
+      try {
+        const existant = await pool.query(
+          `SELECT id, first_name, last_name FROM clients
+            WHERE lower(email) = lower($1) AND cabinet_id IS NOT DISTINCT FROM $2
+            LIMIT 1`,
+          [emailNettoye, porteeCabinet.cabinetPourCreation(portee)]
+        );
+        if (existant.rows[0]) {
+          return res.status(409).json({
+            error: 'client_deja_existant',
+            message: `Un client de votre cabinet porte déjà l'e-mail ${emailNettoye} (dossier ${existant.rows[0].id}). `
+              + "Aucun doublon n'a été créé.",
+            client_id: existant.rows[0].id,
+          });
+        }
+      } catch (errDoublon) {
+        // La garde anti-doublon ne doit pas empêcher la création : on journalise
+        // et on continue (elle est une commodité, pas une contrainte de données).
+        console.warn('POST /api/clients : détection de doublon indisponible :', errDoublon.message);
+      }
+    }
+
     // Parser les champs numériques (le frontend peut les envoyer en string)
     const bonus_malus        = parseFloat(req.body.bonus_malus) || 1.0;
     const annees_permis      = parseInt(req.body.annees_permis, 10) || 0;
@@ -857,7 +948,7 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW(), NOW())
       RETURNING *`,
       [
-        prenom, nom, email, telephone, adresse, statut || 'prospect', segment || 'particulier',
+        prenom, nom, emailNettoye || email, telephone, adresse, statutNettoye || 'prospect', segment || 'particulier',
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
         postal_code, city, civility, country,
@@ -912,6 +1003,28 @@ router.put('/:id', async (req, res) => {
       notes, zone_geographique, profession, situation_familiale,
       postal_code, city, civility, country
     } = req.body;
+
+    // Mêmes contrôles qu'à la création (P3) : une modification ne doit pas
+    // introduire un e-mail non conforme ni un statut hors nomenclature — sinon
+    // le défaut se rouvre par le PUT.
+    const emailModif = typeof email === 'string' ? email.trim() : '';
+    if (emailModif && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailModif)) {
+      return res.status(400).json({
+        error: 'email_invalide',
+        message: `« ${emailModif} » n'est pas une adresse e-mail valide. Aucune modification n'a été enregistrée.`,
+        champs: ['email'],
+      });
+    }
+    const statutModif = typeof statut === 'string' ? statut.trim() : '';
+    if (statutModif && !STATUTS_CLIENT.includes(normaliserStatut(statutModif))) {
+      return res.status(400).json({
+        error: 'statut_inconnu',
+        message: `Le statut « ${statutModif} » ne fait pas partie de la nomenclature. `
+          + `Valeurs admises : ${STATUTS_CLIENT.join(', ')}. Aucune modification n'a été enregistrée.`,
+        champs: ['statut'],
+        statuts_acceptes: [...STATUTS_CLIENT],
+      });
+    }
 
     // Parser les champs numériques (le frontend peut les envoyer en string)
     const bonus_malus        = parseFloat(req.body.bonus_malus) || 1.0;
@@ -1208,11 +1321,35 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
 
     if (process.env.ANTHROPIC_API_KEY) {
       const anthropic  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-      const response   = await anthropic.messages.create({
-        model:      'claude-haiku-4-5',
-        max_tokens: 2500,
-        messages:   [{ role: 'user', content: prompt }],
-      });
+      // ───────────────────────────────────────────────────────────────────────
+      // AUCUN CORPS D'ERREUR DU FOURNISSEUR NE DOIT SORTIR (P1, mesuré le
+      // 20/09/2026 — deuxième QA adverse).
+      //
+      // DÉFAUT : l'appel au modèle n'était pas protégé ici, et le `catch` de la
+      // route répondait `res.status(500).json({ error: err.message })`. Avec une
+      // clé refusée, `err.message` de l'SDK Anthropic EST le corps brut du
+      // fournisseur : la réponse HTTP était
+      //   500 {"error":"401 {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",
+      //        \"message\":\"invalid x-api-key\"},\"request_id\":\"req_011Cf…\"}"}
+      // — état du compte, type d'erreur interne et identifiant de requête du
+      // fournisseur exposés au navigateur, et un 500 là où le produit annonce
+      // ailleurs 503 `ia_indisponible` (comparer : /api/ark/client/:id/brief).
+      //
+      // RÈGLE : une panne du moteur IA devient le MÊME contrat d'erreur que les
+      // autres routes IA du produit — 503 `ia_indisponible` (ou
+      // `configuration_required`), message produit, détail JOURNALISÉ côté
+      // serveur seulement (services/iaErreurs).
+      // ───────────────────────────────────────────────────────────────────────
+      let response
+      try {
+        response = await anthropic.messages.create({
+          model:      'claude-haiku-4-5',
+          max_tokens: 2500,
+          messages:   [{ role: 'user', content: prompt }],
+        });
+      } catch (errIa) {
+        return repondreIaIndisponible(res, errIa, { route: 'client_ark_action_plan', clientId });
+      }
 
       const rawText = response.content?.[0]?.text || '{}';
       const cleaned = rawText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
@@ -1242,8 +1379,19 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
     });
 
   } catch (err) {
+    // Le corps d'erreur d'un fournisseur ne sort JAMAIS par ce `catch` : on
+    // journalise le détail côté serveur et on répond un message produit. Un
+    // `err.message` de SDK (« 401 {"type":"error",...} ») ou un message SQL
+    // finissait tel quel dans la réponse HTTP de cette route (P1 et P2 de la
+    // deuxième QA adverse).
     console.error('GET /api/clients/:id/ark-action-plan error:', err.message);
-    res.status(500).json({ error: err.message });
+    if (estErreurIa(err) || estErreurIa({ code: err && err.code })) {
+      return repondreIaIndisponible(res, err, { route: 'client_ark_action_plan' });
+    }
+    return res.status(500).json({
+      error: 'ark_action_plan_failed',
+      message: "Le plan d'action ARK est momentanément indisponible. Aucune donnée n'a été modifiée.",
+    });
   }
 });
 

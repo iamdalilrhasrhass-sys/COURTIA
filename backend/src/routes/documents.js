@@ -776,6 +776,22 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
 
     const courtier_id = req.user.userId
     const { client_id, data } = corps
+    // ─────────────────────────────────────────────────────────────────────────
+    // LES CHAMPS D'OFFRE SONT ACCEPTÉS AUX DEUX EMPLACEMENTS (P3, 20/09/2026)
+    //
+    // Le message d'erreur annonçait « produit, prime annuelle, garanties ou
+    // description » — à la RACINE — alors que la route ne les lisait que sous
+    // `data` : un appel strictement conforme au message échouait en 400
+    // `offre_manquante` (défaut relevé par les deux QA). L'API lit désormais les
+    // deux emplacements (la racine complète `data`, jamais l'inverse), et le
+    // message nomme explicitement le conteneur pour qu'il n'y ait plus
+    // d'ambiguïté.
+    // ─────────────────────────────────────────────────────────────────────────
+    const CHAMPS_OFFRE = ['produit', 'prime_annuelle', 'garanties', 'description']
+    const donnees = { ...(data && typeof data === 'object' && !Array.isArray(data) ? data : {}) }
+    for (const champ of CHAMPS_OFFRE) {
+      if (donnees[champ] === undefined && corps[champ] !== undefined) donnees[champ] = corps[champ]
+    }
     // `type: "attestation_assurance"` désigne le même document que
     // `template: "attestation_assurance"`.
     const template = corps.template
@@ -807,14 +823,16 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
     // en 400 en nommant ce qu'il faut renseigner, et rien n'est écrit.
     // ─────────────────────────────────────────────────────────────────────────
     if (template === 'proposition_commerciale') {
-      const offre = [data?.produit, data?.prime_annuelle, data?.garanties, data?.description]
-        .map((valeur) => String(valeur ?? '').trim())
+      const offre = CHAMPS_OFFRE
+        .map((champ) => String(donnees?.[champ] ?? '').trim())
         .filter((valeur) => valeur !== '')
       if (offre.length === 0) {
         return res.status(400).json({
           error: 'offre_manquante',
-          message: "Une proposition commerciale doit contenir au moins un élément d'offre : produit, prime annuelle, garanties ou description. Aucun document n'a été généré.",
-          champs_attendus: ['produit', 'prime_annuelle', 'garanties', 'description'],
+          message: "Une proposition commerciale doit contenir au moins un élément d'offre : produit, prime annuelle, "
+            + "garanties ou description — à la racine de la requête ou sous `data`. Aucun document n'a été généré.",
+          champs_attendus: CHAMPS_OFFRE,
+          emplacements_acceptes: ['racine', "data"],
         })
       }
     }
@@ -867,7 +885,7 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
     courtier.registre_numero = identiteCabinet.registre_numero || ''
     courtier.cabinet_nom = identiteCabinet.nom || ''
     const donneesPdf = {
-      ...(data || {}),
+      ...donnees,
       marche: identiteCabinet.marche,
       devise: identiteCabinet.devise,
     }
@@ -892,7 +910,7 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
         template,
         docId,
         pdf_url,
-        data ? JSON.stringify(data) : null
+        Object.keys(donnees).length > 0 ? JSON.stringify(donnees) : null
       ]
     )
 
@@ -1233,8 +1251,34 @@ router.get('/client/:clientId', async (req, res) => {
   try {
     const { clientId } = req.params
     const portee = await porteeCabinet.resoudrePortee(pool, req)
-    // Portée CABINET : les index du dossier sont visibles par tout le cabinet.
-    const fClient = filtreClientsDocuments(portee, { depart: 2 })
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // P2 — 500 SQL ET 500 À UN CABINET ÉTRANGER (mesuré le 20/09/2026)
+    //
+    // DÉFAUT 1 : `filtreClientsDocuments` produisait la clause avec l'alias par
+    // DÉFAUT (« clients ») alors que la requête joint `clients c` : PostgreSQL
+    // refusait la requête —
+    //   500 {"error":"server_error","message":"invalid reference to FROM-clause
+    //        entry for table \"clients\""}
+    // — l'écran « documents d'un client » était cassé pour TOUT LE MONDE, et le
+    // message brut du moteur SQL partait au navigateur.
+    // DÉFAUT 2 : le même 500 (donc aucune information de portée) était renvoyé à
+    // un cabinet ÉTRANGER, qui doit recevoir 404 : une ressource hors cabinet
+    // n'existe pas pour l'appelant.
+    //
+    // CORRECTIF : le dossier est résolu DANS LA PORTÉE (alias `c` réellement
+    // joint) AVANT toute lecture d'index ; hors portée ⇒ 404 ; aucun fragment
+    // SQL, nom de table ou message du moteur ne figure dans la réponse.
+    // ─────────────────────────────────────────────────────────────────────────
+    const fClient = filtreClientsDocuments(portee, { depart: 2, alias: 'c' })
+    const dossier = await pool.query(
+      `SELECT c.id FROM clients c WHERE c.id = $1 AND ${fClient.sql} /* portée cabinet */ LIMIT 1`,
+      [clientId, ...fClient.params]
+    ).catch(() => ({ rows: [] }))
+    if (!dossier.rows[0]) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' })
+    }
+
     const result = await pool.query(
       `SELECT di.*
          FROM documents_indexes di
@@ -1246,7 +1290,10 @@ router.get('/client/:clientId', async (req, res) => {
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     logger.error({ error: err.message, client_id: req.params?.clientId }, 'documents client index list failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({
+      error: 'server_error',
+      message: 'Les documents de ce client sont momentanément indisponibles. Réessayez dans quelques instants.',
+    })
   }
 })
 

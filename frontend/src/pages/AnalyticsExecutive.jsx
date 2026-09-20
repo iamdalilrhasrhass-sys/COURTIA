@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, useMotionValue, animate } from 'framer-motion'
-import { TrendingUp, Users, FileText, Percent, Star, CheckSquare } from 'lucide-react'
+import { TrendingUp, Users, FileText, Percent, Star, CheckSquare, Target } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
@@ -14,8 +14,16 @@ function formatValeur(v, format) {
   if (!Number.isFinite(v)) return '—'
   // Devise du cabinet : CHF en Suisse, EUR sinon.
   if (format === 'currency') return fmtMontant(v, { maximumFractionDigits: 0 })
-  if (format === 'percent') return `${v.toFixed(1)}%`
+  // Pourcentage dans les conventions du cabinet (fr-CH / fr-FR) : « 12,4 % ».
+  if (format === 'percent') return `${fmtNombre(Number(v.toFixed(1)))} %`
   return fmtNombre(Math.round(v))
+}
+
+/** Nombre exploitable, sinon `null` (« pas de mesure »). Jamais 0 par défaut. */
+function nombreFini(v) {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
 }
 
 function AnimatedNumber({ value, format = 'number' }) {
@@ -55,7 +63,9 @@ function AnimatedNumber({ value, format = 'number' }) {
 }
 
 // ─── KPI Bubble Card ─────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, title, value, format = 'number', loading, color, index }) {
+// `subtitle` porte la DÉFINITION de la mesure (numérateur / dénominateur) :
+// un intitulé seul ne suffit pas à savoir ce qui est mesuré (voir D2-07).
+function KPICard({ icon: Icon, title, subtitle, value, format = 'number', loading, color, index }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -96,6 +106,9 @@ function KPICard({ icon: Icon, title, value, format = 'number', loading, color, 
           }}>
             <AnimatedNumber value={value} format={format} />
           </p>
+        )}
+        {subtitle && (
+          <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.42)', margin: '6px 0 0', lineHeight: 1.45 }}>{subtitle}</p>
         )}
       </BubbleCard>
     </motion.div>
@@ -307,11 +320,37 @@ export default function AnalyticsExecutive() {
       }))
   }, [stats])
 
-  const activeClients = stats?.clientsParStatut?.actif || 0
-  const prospects = stats?.clientsParStatut?.prospect || 0
-  const _conversionRate = (activeClients + prospects > 0)
-    ? (activeClients / (activeClients + prospects)) * 100
-    : 0
+  // ── DEUX MESURES DISTINCTES, DEUX NOMS DISTINCTS ──────────────────────────
+  // POURQUOI (défaut P2 mesuré en production le 20/09/2026, QA adverse n° 2) :
+  // cet écran affichait « Taux de conversion 88.0 % » pour un cabinet à ZÉRO
+  // devis, alors que /rapports affichait « TAUX DE CONVERSION DEVIS — » pour le
+  // même mot. Le chiffre venait de `dashboard.stats.tauxConversion`, calculé
+  // clients actifs / (clients actifs + prospects) : une AUTRE définition que
+  // celle annoncée, et un courtier pouvait comprendre que 88 % de ses devis
+  // avaient abouti.
+  //   • « Taux de conversion devis » = devis signés / devis — le MÊME calcul que
+  //     /rapports (mêmes clés de l'API, même nom, un seul sens) ;
+  //   • « Part des clients actifs » = clients actifs / (actifs + prospects) —
+  //     mesure réelle, mais nommée pour ce qu'elle est.
+  // Aucun taux sans dénominateur : sans devis enregistré (ou sans client), la
+  // valeur est `null` et l'écran affiche « — », jamais 0 %.
+  const clientsParStatut = stats?.clientsParStatut || {}
+  // La carte `clientsParStatut` ne contient QUE les statuts présents (GROUP BY) :
+  // un statut absent vaut 0 client, pas « non mesuré ». En revanche, si la carte
+  // elle-même n'est pas servie par l'API, il n'y a aucune mesure : `null`.
+  const statutsConnus = stats?.clientsParStatut && typeof stats.clientsParStatut === 'object'
+  const clientsActifsCabinet = statutsConnus ? (nombreFini(clientsParStatut.actif) ?? 0) : null
+  const prospectsCabinet = statutsConnus ? (nombreFini(clientsParStatut.prospect) ?? 0) : null
+  const baseActifs = statutsConnus ? clientsActifsCabinet + prospectsCabinet : 0
+  const partClientsActifs = (baseActifs > 0 && clientsActifsCabinet !== null)
+    ? (clientsActifsCabinet / baseActifs) * 100
+    : null
+
+  const devisTotal = nombreFini(stats?.devisTotal)
+  const devisSignes = nombreFini(stats?.devisSignes)
+  const tauxConversionDevis = (devisTotal !== null && devisTotal > 0 && devisSignes !== null)
+    ? (devisSignes / devisTotal) * 100
+    : null
 
   // KPI — uniquement des mesures réelles (POST /api/dashboard/stats le jour où
   // l'indicateur est calculé). Les indicateurs que le produit ne mesure pas
@@ -322,7 +361,22 @@ export default function AnalyticsExecutive() {
     { title: 'Taux résiliation', value: null, format: 'vide', icon: Percent, color: '#dc2626' },
     { title: 'Score de satisfaction', value: null, format: 'vide', icon: Star, color: '#f59e0b' },
     { title: 'Primes annuelles suivies', value: stats?.primeTotale ?? null, format: 'currency', icon: TrendingUp, color: '#10b981' },
-    { title: 'Taux de conversion', value: stats?.tauxConversion ?? null, format: 'percent', icon: Users, color: '#2563eb' },
+    {
+      title: 'Taux de conversion devis',
+      subtitle: devisTotal === null
+        ? 'devis signés / devis — dénominateur non mesuré'
+        : devisTotal > 0
+          ? 'devis signés / devis'
+          : 'devis signés / devis — aucun devis enregistré',
+      value: tauxConversionDevis, format: 'percent', icon: Target, color: '#0ea5e9',
+    },
+    {
+      title: 'Part des clients actifs',
+      subtitle: baseActifs > 0
+        ? 'clients actifs / (clients actifs + prospects)'
+        : 'clients actifs / (clients actifs + prospects) — aucun client actif ni prospect',
+      value: partClientsActifs, format: 'percent', icon: Users, color: '#2563eb',
+    },
     { title: 'Contrats actifs', value: stats?.contratsActifs ?? null, format: 'number', icon: FileText, color: '#7c3aed' },
     { title: 'Clients au portefeuille', value: stats?.totalClients ?? null, format: 'number', icon: CheckSquare, color: '#ec4899' },
   ]
@@ -354,6 +408,7 @@ export default function AnalyticsExecutive() {
               key={kpi.title}
               icon={kpi.icon}
               title={kpi.title}
+              subtitle={kpi.subtitle}
               value={kpi.value}
               format={kpi.format}
               loading={false}

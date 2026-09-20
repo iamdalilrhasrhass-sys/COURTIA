@@ -1,12 +1,15 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, User, UserCheck, ChevronDown, Bot, Check, Briefcase, Heart, Users, Gem } from 'lucide-react'
+import { ArrowLeft, User, UserCheck, ChevronDown, Bot, Check, Briefcase, Heart, Users, Gem, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import api from '../api'
-import { computeScores } from '../lib/scoring'
-import { paysSuisse, contexteCourant } from '../lib/monnaie'
+import { paysSuisse, paysFrance } from '../lib/monnaie'
+import useSessionCabinet from '../components/useSessionCabinet'
+import MentionLectureSeule from '../components/MentionLectureSeule'
+import { messageErreurApi, erreurLectureSeule } from '../lib/messageErreur'
+import { messageLectureSeule } from '../lib/roleSession'
 
 /* ─── Adresses : la bonne source selon le pays ────────────────────────────────
    POURQUOI : l'auto-complétion interrogeait TOUJOURS la Base Adresse Nationale
@@ -51,50 +54,47 @@ function suggestionsSuisse(resultats = []) {
 const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-blue-300 focus:border-[#2563eb] outline-none transition-all"
 const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
 
-function ScoreGauge({ score = 0, label, color = '#2563eb' }) {
-  const size = 60, strokeWidth = 5
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference - (score / 100) * circumference
+/* ─── Aperçu du profil ARK : AUCUN SCORE AVANT QUE LE CLIENT EXISTE ──────────
+   POURQUOI (défaut P2 mesuré en production le 20/09/2026, QA adverse n° 2) :
+   cet encadré appelait le calcul de scores de `lib/scoring` sur un formulaire
+   TOTALEMENT VIDE et affichait quatre scores — 30 RISQUE · 35 FIDÉLITÉ ·
+   35 OPPORTUNITÉ · 40 RÉTENTION — identiques à la saisie de données près
+   (captures rt2-nouveau-client-scores-ark-vide.png / -rempli.png). Ces valeurs
+   sortaient des replis du calcul (base 20/40/25/20, « aucun contrat actif ») :
+   aucun chiffre du cabinet ne les adossait, et le courtier pouvait croire à une
+   mesure du profil qu'il venait de saisir.
 
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-          <circle cx={size/2} cy={size/2} r={radius} stroke="#e5e7eb" strokeWidth={strokeWidth} fill="none" />
-          <motion.circle
-            cx={size/2} cy={size/2} r={radius} stroke={color} strokeWidth={strokeWidth}
-            fill="none" strokeDasharray={circumference} strokeLinecap="round"
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-base font-bold" style={{ color }}>{Math.round(score)}</span>
-        </div>
-      </div>
-      <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
-    </div>
-  )
-}
-
-function ArkScorePreview({ clientData }) {
-  const scores = useMemo(() => computeScores(clientData, []), [clientData])
-  if (!scores) return null
+   MAINTENANT : un score ARK n'est affiché que lorsqu'il est calculable sur des
+   données réelles (client enregistré, contrats chargés). Sur ce formulaire, il
+   n'y a rien à mesurer : l'encadré l'annonce explicitement (« non mesuré ») et
+   explique où les scores apparaîtront. Aucun cadran, aucun chiffre. */
+function ApercuProfilArk({ isEditMode }) {
   return (
     <div className="sticky top-8 w-full md:w-64 hidden md:block">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <Bot size={18} className="text-blue-600" />
           <h4 className="text-sm font-bold text-gray-800">Aperçu du profil ARK</h4>
         </div>
-        <div className="grid grid-cols-2 gap-y-4">
-          <ScoreGauge score={scores.risque} label="Risque" color={scores.risque >= 70 ? '#ef4444' : scores.risque >= 40 ? '#f59e0b' : '#22c55e'} />
-          <ScoreGauge score={scores.fidelite} label="Fidélité" color="#2563eb" />
-          <ScoreGauge score={scores.opportunite} label="Opportunité" color="#8b5cf6" />
-          <ScoreGauge score={scores.retention} label="Rétention" color="#14b8a6" />
-        </div>
+        {/* Styles en ligne : la coque sombre de l'application remappe les
+            classes de couleur Tailwind — un badge en `text-gray-500` sur
+            `bg-gray-100` devenait invisible sur la carte blanche. */}
+        <span
+          className="inline-flex items-center rounded-md"
+          style={{
+            background: '#eef1f5', color: '#4b5563', padding: '2px 8px',
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+          }}
+        >
+          non mesuré
+        </span>
+        <p className="text-xs text-gray-500 leading-relaxed mt-2">
+          Les scores ARK (risque, fidélité, opportunité, rétention) se calculent à partir des
+          données réelles du dossier : contrats enregistrés, sinistres, ancienneté, échéances.
+          {isEditMode
+            ? " Ils ne sont pas calculés sur cet écran de modification — ils s'affichent sur la fiche du client."
+            : " Aucun score n'est affiché avant la création : ils apparaîtront sur la fiche du client, une fois son contrat enregistré."}
+        </p>
       </div>
     </div>
   )
@@ -131,11 +131,30 @@ export default function ClientNew() {
   const [isEditMode] = useState(!!id)
   const [showInsurance, setShowInsurance] = useState(false)
   const [addressSuggestions, setAddressSuggestions] = useState([])
-  // Pays du CABINET (profil de session) : un cabinet suisse saisit des adresses
-  // suisses par défaut. Il sert de repli tant que le pays du client n'est pas
-  // choisi, et n'écrase jamais un pays explicitement sélectionné.
-  const cabinetSuisse = paysSuisse(contexteCourant().pays)
-  const [dialCode, setDialCode] = useState(cabinetSuisse ? '+41' : '+33') // +33 FR / +41 CH
+
+  // ── Marché du CABINET et droits d'écriture de la session ───────────────────
+  // POURQUOI un hook (défaut P3 mesuré le 20/09/2026, QA adverse n° 2) : le pays
+  // et le rôle étaient lus AU PREMIER RENDU. Le profil de connexion ne porte ni
+  // `pays` ni `cabinet_role` : en accès direct (lien profond), l'écran restait
+  // sur le bloc d'adresse FRANÇAIS pendant au moins 9 s sans jamais se
+  // re-rendre. `useSessionCabinet` re-rend l'écran dès que le profil réel arrive
+  // et demande lui-même ce profil s'il manque.
+  const {
+    suisse: cabinetSuisse,
+    france: cabinetFrance,
+    connu: marcheConnu,
+    lectureSeule,
+    droitsInconnus,
+    role,
+  } = useSessionCabinet()
+
+  // Indicatif : AUCUN indicatif national n'est présélectionné avant de connaître
+  // le marché du cabinet ('' = pas encore déterminé). Un choix explicite du
+  // courtier (`+33` / `+41`) n'est jamais écrasé.
+  const [dialCode, setDialCode] = useState('')
+  useEffect(() => {
+    setDialCode((actuel) => actuel || (marcheConnu ? (cabinetSuisse ? '+41' : cabinetFrance ? '+33' : '') : ''))
+  }, [marcheConnu, cabinetSuisse, cabinetFrance])
 
   const [form, setForm] = useState({
     prenom: '', nom: '', email: '', telephone: '',
@@ -145,10 +164,13 @@ export default function ClientNew() {
     zone_geographique: '', situation_familiale: '', profession: '', notes: ''
   })
 
-  // Le pays qui pilote l'auto-complétion d'adresse : celui du client s'il est
-  // renseigné, sinon celui du cabinet.
-  const paysAdresse = form.country || (cabinetSuisse ? 'Suisse' : 'France')
-  const adresseEnSuisse = paysSuisse(paysAdresse)
+  // ── Source d'auto-complétion de l'adresse ─────────────────────────────────
+  // Le pays du CLIENT s'il est renseigné, sinon celui du CABINET — et AUCUNE
+  // source tant que le marché du cabinet est inconnu. On ne propose donc jamais
+  // un référentiel national avant de savoir de quel marché il s'agit.
+  const paysEffectif = form.country || (marcheConnu ? (cabinetSuisse ? 'Suisse' : cabinetFrance ? 'France' : '') : '')
+  const sourceAdresse = paysSuisse(paysEffectif) ? 'CH' : paysFrance(paysEffectif) ? 'FR' : null
+  const adresseEnSuisse = sourceAdresse === 'CH'
 
   useEffect(() => {
     if (id) {
@@ -161,12 +183,17 @@ export default function ClientNew() {
   }, [id])
 
   useEffect(() => {
+    // Aucune source nationale n'est interrogée tant que le marché est inconnu :
+    // la liste reste vide et la saisie manuelle reste possible. Une fois le
+    // marché résolu, l'effet se relance (dépendance `sourceAdresse`) — c'est ce
+    // qui remplace l'ancien bloc français figé pendant 9 s en accès direct.
+    if (!sourceAdresse) { setAddressSuggestions([]); return }
     if (form.adresse.length < 3) { setAddressSuggestions([]); return }
     // Le délai est plus long côté suisse : la politique d'usage de Nominatim
     // demande au plus une requête par seconde. La source française supporte 300 ms.
-    const delai = adresseEnSuisse ? 700 : 300
+    const delai = sourceAdresse === 'CH' ? 700 : 300
     const handler = setTimeout(() => {
-      if (adresseEnSuisse) {
+      if (sourceAdresse === 'CH') {
         axios.get(ADRESSE_SUISSE, {
           params: {
             q: form.adresse,
@@ -187,16 +214,20 @@ export default function ClientNew() {
         .catch(() => setAddressSuggestions([]))
     }, delai)
     return () => clearTimeout(handler)
-  }, [form.adresse, adresseEnSuisse])
+  }, [form.adresse, sourceAdresse])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  // Normalise en E.164 selon l'indicatif choisi (+33 FR / +41 CH)
+  // Normalise en E.164 selon l'indicatif choisi (+33 FR / +41 CH).
+  // Aucun indicatif connu ⇒ le numéro est transmis tel qu'il a été saisi :
+  // on n'invente ni `+33` ni `+41` (l'ancien code, avec un indicatif vide,
+  // produisait « 06… » → « 6… », un numéro tronqué).
   const normalizeTelephone = (raw, dial = dialCode) => {
     if (!raw) return raw
     let p = String(raw).replace(/[\s.\-()]/g, '')
     if (p.startsWith('+')) return p
     if (p.startsWith('00')) return '+' + p.slice(2)
+    if (!dial) return p
     if (p.startsWith('0')) return dial + p.slice(1)   // 06… → +336…  /  079… → +4179…
     if (/^\d{6,}$/.test(p)) return dial + p
     return p
@@ -229,7 +260,14 @@ export default function ClientNew() {
       toast.success(`Client ${isEditMode ? 'mis à jour' : 'créé'} !`)
       setTimeout(() => navigate(isEditMode ? `/clients/${id}` : `/clients/${data.id}`), 1200)
     } catch (err) {
-      toast.error(err.response?.data?.error || `Erreur lors de la ${isEditMode ? 'mise à jour' : 'création'}`)
+      // Le message RÉDIGÉ de l'API, jamais son code technique. Avant ce
+      // correctif, `err.response.data.error` affichait « lecture_seule » pendant
+      // plusieurs secondes alors que l'API rédigeait la phrase complète
+      // (QA adverse n° 2, défaut P3). Le refus d'un rôle en lecture seule garde
+      // la formulation de l'API.
+      toast.error(erreurLectureSeule(err)
+        ? messageLectureSeule(err.response?.data?.role || role, isEditMode ? 'modifier un client' : 'créer un client')
+        : messageErreurApi(err, `Erreur lors de la ${isEditMode ? 'mise à jour' : 'création'}`))
       setSubmitState('idle')
     } finally {
       setLoading(false)
@@ -237,6 +275,48 @@ export default function ClientNew() {
   }
 
   if (pageLoading) return <div className="flex justify-center items-center h-screen bg-gray-50"><div className="w-8 h-8 border-4 border-gray-200 border-t-[#2563eb] rounded-full animate-spin" /></div>
+
+  // ── Aucun formulaire d'écriture pour un rôle en lecture seule ──────────────
+  // POURQUOI : l'assistant (cabinet_role « assistant ») voyait le formulaire
+  // complet et le bouton « Créer le client » actif. L'écran annonce désormais ce
+  // que le rôle permet, avec les mots de l'API, et n'expose aucune écriture.
+  // Tant que le rôle de cabinet n'est PAS connu (profil de connexion incomplet),
+  // aucun formulaire n'est présenté non plus : on ne décide pas sur une
+  // supposition, et on dit que la vérification est en cours.
+  if (lectureSeule || droitsInconnus) {
+    return (
+      <div className="min-h-screen font-sans p-4 md:p-8">
+        <header className="max-w-3xl mx-auto mb-6">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors mb-4"><ArrowLeft size={16} /> Retour</button>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">{isEditMode ? 'Modifier le client' : 'Nouveau client'}</h1>
+        </header>
+        <div className="max-w-3xl mx-auto">
+          {lectureSeule ? (
+            <MentionLectureSeule
+              role={role}
+              action={isEditMode ? 'modifier un client' : 'créer un client'}
+              title="Création de client — accès en lecture seule"
+            >
+              Les informations du cabinet restent consultables depuis « Clients ». Aucun formulaire
+              de saisie n'est affiché ici, et rien n'a été enregistré.
+            </MentionLectureSeule>
+          ) : (
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 flex items-start gap-3">
+              <ShieldAlert size={18} className="text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-gray-800">Vérification de vos droits d&apos;écriture…</p>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Le rôle de votre compte dans le cabinet n&apos;est pas encore connu : le
+                  formulaire de création s&apos;ouvrira dès que vos droits seront confirmés
+                  par la session. Aucun droit n&apos;est supposé en attendant.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen font-sans p-4 md:p-8">
@@ -263,16 +343,21 @@ export default function ClientNew() {
                   <div><label className={labelClass}>Prénom *</label><input value={form.prenom} onChange={e => set('prenom', e.target.value)} required className={inputClass} /></div>
                   <div><label className={labelClass}>Nom *</label><input value={form.nom} onChange={e => set('nom', e.target.value)} required className={inputClass} /></div>
                   <div><label className={labelClass}>Email</label><input type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputClass} /></div>
-                  <div><label className={labelClass}>Téléphone</label><div className="relative flex"><select value={dialCode} onChange={e => setDialCode(e.target.value)} className="px-2 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-300"><option value="+33">🇫🇷 +33</option><option value="+41">🇨🇭 +41</option></select><input type="tel" value={form.telephone} onChange={e => set('telephone', e.target.value)} placeholder="6 12 34 56 78" className={`${inputClass} rounded-l-none`} /></div></div>
+                  <div><label className={labelClass}>Téléphone</label><div className="relative flex"><select value={dialCode} onChange={e => setDialCode(e.target.value)} className="px-2 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-300"><option value="">{marcheConnu ? 'Indicatif' : 'Indicatif (marché en cours de lecture)'}</option><option value="+33">🇫🇷 +33</option><option value="+41">🇨🇭 +41</option></select><input type="tel" value={form.telephone} onChange={e => set('telephone', e.target.value)} placeholder={adresseEnSuisse ? '79 123 45 67' : cabinetFrance ? '6 12 34 56 78' : 'Numéro'} className={`${inputClass} rounded-l-none`} /></div></div>
                 </div>
                 <div className="mt-4 relative">
                   <label className={labelClass}>Adresse</label>
                   <input value={form.adresse} onChange={e => set('adresse', e.target.value)} className={inputClass}
-                    placeholder={adresseEnSuisse ? 'Rue, NPA, localité (Suisse)' : 'N°, rue'} />
+                    placeholder={adresseEnSuisse ? 'Rue, NPA, localité (Suisse)' : cabinetFrance ? 'N°, rue' : 'Adresse'} />
                   <p className="text-[10px] text-gray-400 mt-1">
+                    {/* Aucune source nationale n'est annoncée avant de connaître le
+                        marché du cabinet : ni la BAN française, ni OpenStreetMap
+                        suisse. L'écran ne « propose » donc rien d'inventé. */}
                     Suggestions : {adresseEnSuisse
                       ? 'adresses suisses (OpenStreetMap, NPA + canton)'
-                      : 'Base Adresse Nationale française'} — saisie manuelle toujours possible.
+                      : cabinetFrance
+                        ? 'Base Adresse Nationale française'
+                        : 'aucune tant que le marché du cabinet n’est pas connu'} — saisie manuelle toujours possible.
                   </p>
                   <AnimatePresence>
                     {addressSuggestions.length > 0 && (
@@ -293,7 +378,7 @@ export default function ClientNew() {
                       <option value="Suisse">Suisse</option>
                     </select>
                   </div>
-                  <div><label className={labelClass}>{adresseEnSuisse ? 'NPA' : 'Code Postal'}</label><input value={form.postal_code} onChange={e => set('postal_code', e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>{adresseEnSuisse ? 'NPA' : cabinetFrance ? 'Code Postal' : 'Code postal / NPA'}</label><input value={form.postal_code} onChange={e => set('postal_code', e.target.value)} className={inputClass} /></div>
                   <div><label className={labelClass}>Ville</label><input value={form.city} onChange={e => set('city', e.target.value)} className={inputClass} /></div>
                 </div>
                 <div className="mt-6"><label className={labelClass}>Statut</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -342,7 +427,7 @@ export default function ClientNew() {
             </motion.button>
           </div>
         </form>
-        <ArkScorePreview clientData={form} />
+        <ApercuProfilArk isEditMode={isEditMode} />
       </div>
     </div>
   )

@@ -25,6 +25,14 @@ const CLES_PROFIL_STOCKE = ['courtia_user', 'user']
 // sont acceptés par tolérance : un profil reste un profil.
 const PAYS_SUISSES = new Set(['CH', 'CHE', 'SUISSE', 'SWITZERLAND', 'SCHWEIZ', 'SVIZZERA', 'SVIZRA'])
 
+// Même tolérance côté France. POURQUOI une détection distincte de « non suisse » :
+// l'auto-complétion d'adresse de /clients/new doit interroger la Base Adresse
+// Nationale FRANÇAISE uniquement pour un cabinet français (QA adverse n° 2 :
+// un cabinet suisse recevait « Suggestions : Base Adresse Nationale française »
+// et des adresses françaises). Un marché tiers n'est donc PAS traité comme la
+// France : l'écran ne propose alors aucune source nationale.
+const PAYS_FRANCAIS = new Set(['FR', 'FRA', 'FRANCE'])
+
 const DEVISE_SUISSE = 'CHF'
 const LOCALE_SUISSE = 'fr-CH'
 const DEVISE_DEFAUT = 'EUR'
@@ -43,6 +51,14 @@ function normaliserPays(pays) {
 /** Vrai pour un pays/canton suisse reconnu (`'CH'`, `'Suisse'`, …). */
 export function paysSuisse(pays) {
   return PAYS_SUISSES.has(normaliserPays(pays))
+}
+
+/**
+ * Vrai pour la France (`'FR'`, `'France'`). Distinct de « non suisse » : la
+ * Base Adresse Nationale française n'est proposée qu'à un cabinet français.
+ */
+export function paysFrance(pays) {
+  return PAYS_FRANCAIS.has(normaliserPays(pays))
 }
 
 function contextePour(pays, langue) {

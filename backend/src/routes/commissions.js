@@ -228,12 +228,17 @@ router.get('/statement/:year/:month/pdf', async (req, res) => {
     res.send(result.pdf)
   } catch (err) {
     console.error('[Commissions PDF] Erreur:', err.message)
-    const statut = err.statut || (err.code === 'statement_pdf_unavailable' ? 501 : 500)
-    res.status(statut).json({
+    // Jamais de 501 « non implémenté » nu (P2 « D2-11 ») : la deuxième QA adverse
+    // relève qu'un 501 sur un point d'entrée du produit compte comme une erreur
+    // serveur. Le relevé indisponible répond 403 « fonctionnalité non souscrite »,
+    // avec le message du produit — jamais un message d'infrastructure.
+    const nonSouscrit = err.code === 'fonctionnalite_non_souscrite'
+    res.status(nonSouscrit ? 403 : (err.statut || 500)).json({
       error: err.code || 'statement_failed',
-      message: statut === 501
+      ...(nonSouscrit ? { fonctionnalite: err.fonctionnalite || 'releve_commissions_pdf' } : {}),
+      message: nonSouscrit
         ? err.message
-        : 'Le relevé de commissions est momentanément indisponible.',
+        : 'Le relevé de commissions est momentanément indisponible. Réessayez dans quelques instants.',
     })
   }
 })
@@ -258,19 +263,28 @@ const {
  * Les lignes de portée plateforme (user_id et cabinet_id NULL) sont le
  * catalogue d'exemple : elles ne comptent jamais comme un taux du cabinet.
  */
-async function chercherBaremeCabinet(pool, user, compagnie, produit) {
+async function chercherBaremeCabinet(pool, user, compagnie, produit, portee = null) {
   const userId = user?.id || user?.userId || null
-  const cabinetId = user?.cabinetId || user?.cabinet_id || null
+  // Cabinet de la PORTÉE (lib/porteeCabinet) : un barème saisi par un collègue
+  // du même cabinet est un taux du cabinet. On retombe sur la colonne du profil
+  // si la portée n'a pas été transmise.
+  const cabinetId = portee?.cabinetId || user?.cabinetId || user?.cabinet_id || null
   if (!pool || (!userId && !cabinetId)) return null
   try {
+    // Clause construite explicitement : `(cabinet_id = NULL OR …)` ne filtrerait
+    // rien du tout (piège classique du NULL en SQL).
+    const conditions = []
+    const params = [compagnie, produit]
+    if (cabinetId) { params.push(cabinetId); conditions.push(`cabinet_id = $${params.length}`) }
+    if (userId) { params.push(userId); conditions.push(`user_id = $${params.length}`) }
     const { rows } = await pool.query(
       `SELECT rate_percent, rate_recurring_percent, user_id, cabinet_id
          FROM commission_baremes
         WHERE is_active = true AND compagnie = $1 AND produit = $2
-          AND (($3::int IS NOT NULL AND user_id = $3) OR ($4::int IS NOT NULL AND cabinet_id = $4))
+          AND (${conditions.join(' OR ')})
         ORDER BY rate_percent DESC
         LIMIT 1`,
-      [compagnie, produit, userId, cabinetId]
+      params
     )
     return rows[0] || null
   } catch (_) {
@@ -300,26 +314,64 @@ async function chercherRegleCabinet(pool, userId, compagnie, produit) {
 router.get('/baremes', async (req, res) => {
   try {
     const pool = req.app.locals.pool
-    let rows = []
+    const portee = await porteeDe(req)
+    const userId = req.user?.id || req.user?.userId || null
+    const cabinetId = portee?.cabinetId || null
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // P3 — L'API NE PRÉSENTE PAS DES BARÈMES D'EXEMPLE COMME CEUX DU CABINET
+    // (mesuré le 20/09/2026 : 80 lignes servies à un cabinet qui n'en avait aucun)
+    //
+    // DÉFAUT : la route ne servait QUE les lignes de portée plateforme
+    // (`user_id IS NULL AND cabinet_id IS NULL`) — le catalogue d'exemple livré
+    // avec le produit, nommant huit assureurs qui n'existent pas (Oria, Novalia,
+    // Solenys, Atlas, Aurora, Serenis, Helios, Nivalis) — et JAMAIS les barèmes
+    // du cabinet, après avoir été lus pourtant dans la même table. Les 80 lignes
+    // partaient avec `source: 'exemple_a_configurer'` mais sans aucune marque par
+    // ligne : un client d'API ne pouvait pas distinguer un taux du cabinet d'un
+    // taux inventé.
+    //
+    // CORRECTIF : deux blocs EXPLICITEMENT séparés —
+    //   • les barèmes DU CABINET (`cabinet_id`/`user_id` de la portée), `exemple: false` ;
+    //   • le catalogue d'exemple, TOUJOURS marqué `exemple: true` ligne par ligne.
+    // Aucun barème d'exemple n'est utilisé pour un calcul : `/calculator` n'accepte
+    // un taux d'exemple que si l'appelant le demande (`exemple: true`), et
+    // `chercherBaremeCabinet` ne lit que les lignes du cabinet.
+    // ─────────────────────────────────────────────────────────────────────────
+    let baremesCabinet = []
+    try {
+      const conditions = []
+      const params = []
+      if (cabinetId) { params.push(cabinetId); conditions.push(`cabinet_id = $${params.length}`) }
+      if (userId) { params.push(userId); conditions.push(`user_id = $${params.length}`) }
+      if (conditions.length > 0) {
+        const r = await pool.query(
+          `SELECT compagnie, produit, rate_percent, rate_recurring_percent
+             FROM commission_baremes
+            WHERE is_active = true AND (${conditions.join(' OR ')})
+            ORDER BY compagnie, produit`,
+          params
+        )
+        baremesCabinet = (r.rows || []).map((ligne) => ({ ...ligne, exemple: false }))
+      }
+    } catch (_) {
+      baremesCabinet = []
+    }
+
+    let exemples = []
     try {
       const r = await pool.query(
         `SELECT compagnie, produit, rate_percent, rate_recurring_percent
-         FROM commission_baremes
-         WHERE is_active = true AND user_id IS NULL AND cabinet_id IS NULL
-         ORDER BY compagnie, produit`
+           FROM commission_baremes
+           WHERE is_active = true AND user_id IS NULL AND cabinet_id IS NULL
+           ORDER BY compagnie, produit`
       )
-      rows = r.rows || []
+      exemples = r.rows || []
     } catch (_) {
-      rows = []
+      exemples = []
     }
-
-    // Les lignes « plateforme » (user_id et cabinet_id NULL) proviennent du
-    // catalogue d'EXEMPLE livré avec le produit (compagnies et taux qui ne
-    // correspondent à aucun barème réel). Elles sont servies, mais étiquetées :
-    // un cabinet doit savoir que ces taux ne sont pas les siens.
-    let source = rows.length ? 'exemple_plateforme_a_configurer' : 'cabinet'
-    if (!rows.length) {
-      rows = Object.entries(BAREMES_EXEMPLE).flatMap(([compagnie, produits]) =>
+    if (exemples.length === 0) {
+      exemples = Object.entries(BAREMES_EXEMPLE).flatMap(([compagnie, produits]) =>
         Object.entries(produits).map(([produit, rate]) => ({
           compagnie,
           produit,
@@ -327,24 +379,37 @@ router.get('/baremes', async (req, res) => {
           rate_recurring_percent: Number((rate * 0.6).toFixed(1)),
         }))
       )
-      source = 'exemple_a_configurer'
     }
+    const exemplesMarques = exemples.map((ligne) => ({ ...ligne, exemple: true, calculable: false }))
+
+    // `data` ne contient QUE les barèmes du cabinet (les seuls calculables) ;
+    // le catalogue d'exemple part dans `exemples`, marqué ligne par ligne. Un
+    // client d'API ne peut donc plus prendre un taux d'exemple pour un taux du
+    // cabinet, et l'écran `/commissions/calculator` (qui n'utilise `data` que
+    // lorsque `source === 'cabinet'`) reste exactement sur la même règle.
+    const message = baremesCabinet.length === 0
+      ? "Aucun barème de commission n'est enregistré pour votre cabinet. Les lignes de `exemples` sont des "
+        + "BARÈMES D'EXEMPLE (compagnies et taux qui ne proviennent d'aucun barème réel) : elles ne sont "
+        + 'jamais appliquées à un calcul. Saisissez vos propres taux pour que les calculs correspondent '
+        + 'à vos conventions.'
+      : "`data` contient les barèmes enregistrés pour votre cabinet. Les lignes de `exemples` (marquées "
+        + "`exemple: true`) proviennent du catalogue d'exemple COURTIA et ne sont jamais appliquées à un calcul."
 
     res.json({
-      data: rows,
-      total: rows.length,
-      source,
-      ...(source === 'exemple_a_configurer' || source === 'exemple_plateforme_a_configurer'
-        ? {
-            message:
-              "Barèmes d'exemple, à remplacer par ceux de votre cabinet : ces compagnies et ces taux "
-              + "ne proviennent d'aucun barème réel. Saisissez vos propres taux pour que les calculs "
-              + 'correspondent à vos conventions.',
-          }
-        : {}),
+      data: baremesCabinet,
+      total: baremesCabinet.length,
+      total_cabinet: baremesCabinet.length,
+      exemples: exemplesMarques,
+      total_exemple: exemplesMarques.length,
+      source: baremesCabinet.length > 0 ? 'cabinet' : 'exemple_a_configurer',
+      message,
     })
   } catch (err) {
-    res.status(500).json({ error: err.message, message: 'Impossible de récupérer les barèmes.' })
+    // Aucun message d'infrastructure dans la réponse.
+    res.status(500).json({
+      error: 'baremes_indisponibles',
+      message: 'Les barèmes de commission sont momentanément indisponibles. Réessayez dans quelques instants.',
+    })
   }
 })
 
@@ -356,8 +421,11 @@ router.post('/calculator', async (req, res) => {
     }
     const pool = req.app.locals.pool
     const userId = req.user?.id || req.user?.userId || null
+    // Portée cabinet : un barème saisi par un collègue du même cabinet est un
+    // taux du cabinet (même autorité que partout ailleurs, lib/porteeCabinet).
+    const portee = await porteeDe(req)
 
-    const baremeCabinet = await chercherBaremeCabinet(pool, req.user, compagnie, produit)
+    const baremeCabinet = await chercherBaremeCabinet(pool, req.user, compagnie, produit, portee)
     const regleCabinet = baremeCabinet ? null : await chercherRegleCabinet(pool, userId, compagnie, produit)
 
     // Un taux d'exemple n'est appliqué QUE si l'appelant le demande
@@ -411,7 +479,10 @@ router.post('/calculator', async (req, res) => {
       prime_annuelle: Number(prime_annuelle || 0),
     })
   } catch (err) {
-    res.status(500).json({ error: err.message, message: 'Impossible de calculer cette commission.' })
+    res.status(500).json({
+      error: 'calcul_commission_indisponible',
+      message: 'Le calcul de commission est momentanément indisponible. Aucun montant n’a été produit.',
+    })
   }
 })
 

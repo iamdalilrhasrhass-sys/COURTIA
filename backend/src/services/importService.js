@@ -2,6 +2,8 @@ const XLSX = require('xlsx');
 const pool = require('../db');
 const { suggestMapping, mapRowFromMapping } = require('./importMappingService');
 const { validateClient, validateContract, validateTask, cleanString } = require('./importValidationService');
+// Marché du cabinet : source unique du fuseau horaire (lib/marcheCabinet).
+const marcheCabinet = require('../lib/marcheCabinet');
 
 const MAX_ROWS = Number(process.env.IMPORT_MAX_ROWS || 10000);
 const IMPORT_FILE_SIZE_LIMIT_MB = Number(process.env.IMPORT_MAX_MB || 10);
@@ -261,9 +263,20 @@ async function maybeCreateContract({ clientId, contractData, db }) {
 async function maybeCreateTask({ userId, clientId, taskData, db }) {
   if (!taskData?.valid) return { created: false };
   const task = taskData.normalized;
+  // FUSEAU DU MARCHÉ DU CABINET (correctif 20/09/2026) : la colonne
+  // `appointments.timezone` n'a plus de valeur par défaut française (migration
+  // 123) ; on écrit le fuseau du marché de l'utilisateur qui importe plutôt que
+  // de laisser NULL ou une référence française sur une donnée suisse.
+  let timezone = marcheCabinet.FUSEAUX.FR;
+  try {
+    const marche = await marcheCabinet.marcheUtilisateur(userId, db || pool);
+    timezone = marcheCabinet.fuseauDuMarche(marche?.marche);
+  } catch (_err) {
+    timezone = marcheCabinet.FUSEAUX.FR;
+  }
   await db.query(
-    `INSERT INTO appointments (title, description, client_id, start_time, status, user_id, created_at)
-     VALUES ($1,$2,$3,$4,$5,$6,NOW())`,
+    `INSERT INTO appointments (title, description, client_id, start_time, status, user_id, timezone, created_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
     [
       task.titre,
       'Tâche générée depuis import portefeuille COURTIA',
@@ -271,6 +284,7 @@ async function maybeCreateTask({ userId, clientId, taskData, db }) {
       task.echeance || null,
       'a_faire',
       userId,
+      timezone,
     ]
   );
   return { created: true };
