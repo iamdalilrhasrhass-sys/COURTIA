@@ -9,6 +9,7 @@ const User = require('../models/User');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { trackEvent } = require('../services/analyticsService');
 const { sendEmail } = require('../services/emailService');
+const { notifierAdminSansBloquer } = require('../services/adminNotifier');
 
 // Générer un JWT token
 function generateToken(user) {
@@ -29,7 +30,10 @@ function generateToken(user) {
 // Inscription
 exports.register = async (req, res) => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const firstName = typeof req.body.firstName === 'string' ? req.body.firstName.trim() : '';
+    const lastName = typeof req.body.lastName === 'string' ? req.body.lastName.trim() : '';
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
@@ -37,12 +41,34 @@ exports.register = async (req, res) => {
         error: 'Champs requis manquants'
       });
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Adresse email invalide' });
+    }
+    if (typeof password !== 'string' || password.length < 8 || Buffer.byteLength(password, 'utf8') > 72) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caracteres et au plus 72 octets.' });
+    }
 
     // Créer l'utilisateur
     const user = await User.create(email, password, firstName, lastName, 'broker');
 
     // Générer token
     const token = generateToken(user);
+
+    // Événement commercial : une nouvelle inscription (essai) doit être visible
+    // par l'exploitant. Non bloquant : l'inscription réussit même si l'e-mail
+    // de notification échoue ou si COURTIA_ADMIN_EMAIL n'est pas configurée.
+    notifierAdminSansBloquer({
+      evenement: 'nouvelle_inscription',
+      sujet: `COURTIA — nouvelle inscription : ${email}`,
+      replyTo: email,
+      lignes: [
+        'Événement : nouvelle inscription (essai COURTIA)',
+        `Adresse : ${email}`,
+        `Nom : ${firstName} ${lastName}`,
+        `Compte interne : ${user.id}`,
+        `Horodatage : ${new Date().toISOString()}`,
+      ],
+    });
 
     res.status(201).json({
       message: 'Compte créé avec succès',

@@ -1,6 +1,7 @@
 import create from 'zustand';
 import { buildApiUrl, clearStoredSession, getAuthToken } from '../api/sessionPolicy';
 import { primeSessionUserCache, resetSessionUserCache } from '../api/sessionUser';
+import { readAuthResponse } from '../api/authResponse';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -20,9 +21,7 @@ const authStore = create((set) => ({
         body: JSON.stringify({ email, password }),
       });
       
-      if (!response.ok) throw new Error('Login failed');
-      
-      const data = await response.json();
+      const data = await readAuthResponse(response);
       localStorage.setItem('courtia_token', data.token);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -46,9 +45,7 @@ const authStore = create((set) => ({
         body: JSON.stringify({ email, password, firstName, lastName }),
       });
       
-      if (!response.ok) throw new Error('Registration failed');
-      
-      const data = await response.json();
+      const data = await readAuthResponse(response);
       localStorage.setItem('courtia_token', data.token);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
