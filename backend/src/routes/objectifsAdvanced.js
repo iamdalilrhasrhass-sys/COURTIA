@@ -9,6 +9,7 @@
 const express = require('express')
 const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
+const porteeCabinet = require('../lib/porteeCabinet')
 const pool = require('../db')
 
 // CORRECTION 2026-09-19 : ce routeur est monte sur '/api' (server.js:435) et
@@ -176,27 +177,50 @@ router.get('/commissions/dashboard', async (req, res) => {
 })
 
 // ─── Ranking équipe ──────────────────────────────────────────────────
+//
+// POURQUOI CETTE ROUTE A ÉTÉ RÉÉCRITE (défaut P0 du 20/09/2026)
+// Elle lisait `SELECT id, cabinet_id FROM users` : `users.cabinet_id` N'EXISTE
+// PAS (vérifiable dans information_schema). La requête échouait donc toujours,
+// et son `.catch(() => ({ rows: [] }))` transformait l'erreur SQL en résultat
+// vide : `cabinetId` restait indéfini, la clause `WHERE u.cabinet_id = $1`
+// n'était jamais ajoutée, et la requête suivante partait SANS AUCUN FILTRE.
+// Conséquence mesurée : N'IMPORTE QUEL compte authentifié recevait les 20
+// premiers utilisateurs de la plateforme — nom, e-mail, volumes clients et
+// contrats — y compris les deux comptes pilotes. Un catch ne doit JAMAIS
+// pouvoir élargir une portée : ici la portée vient de lib/porteeCabinet.js
+// (le cabinet, ou l'utilisateur lui-même s'il n'a pas de cabinet), et une erreur
+// SQL remonte en 500 plutôt que d'être servie comme un classement.
 router.get('/objectifs/ranking', async (req, res) => {
   try {
-    const userId = uid(req)
-    // Identifier le cabinet du courtier courant
-    const { rows: meRows } = await pool.query(`SELECT id, cabinet_id FROM users WHERE id = $1`, [userId]).catch(() => ({ rows: [] }))
-    const cabinetId = meRows[0]?.cabinet_id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (!portee.estAuthentifie) {
+      return res.status(401).json({ error: 'auth_required' })
+    }
 
-    let teamQuery = `
+    // Portée CABINET : uniquement les membres actifs du cabinet courant. Pour un
+    // compte sans cabinet (repli mono-utilisateur), le classement ne contient que
+    // lui-même — jamais « tout le monde ».
+    const membreDuCabinet = `u.id IN (SELECT cm.user_id FROM cabinet_members cm
+                                       WHERE cm.cabinet_id = $1 AND cm.removed_at IS NULL)`
+    const filtres = portee.mode === 'cabinet' && portee.cabinetId
+      ? { sql: membreDuCabinet, params: [portee.cabinetId] }
+      : { sql: 'u.id = $1', params: [portee.userId] }
+
+    const teamQuery = `
       SELECT u.id, u.email, u.first_name, u.last_name,
         (SELECT COUNT(*) FROM clients WHERE courtier_id = u.id) AS clients_count,
         (SELECT COUNT(*) FROM quotes q JOIN clients c ON c.id = q.client_id WHERE c.courtier_id = u.id) AS quotes_count,
         (SELECT COALESCE(SUM(lifetime_value),0)*100 FROM clients WHERE courtier_id = u.id) AS ca_cents
       FROM users u
-    `
-    const params = []
-    if (cabinetId) { teamQuery += ` WHERE u.cabinet_id = $1`; params.push(cabinetId) }
-    teamQuery += ` ORDER BY ca_cents DESC LIMIT 20`
+      WHERE ${filtres.sql}
+      ORDER BY ca_cents DESC LIMIT 20`
 
-    const { rows: team } = await pool.query(teamQuery, params).catch(() => ({ rows: [] }))
+    // Aucun `.catch` de repli : une erreur SQL doit être visible (500), jamais
+    // convertie en « requête sans filtre ».
+    const { rows: team } = await pool.query(teamQuery, filtres.params)
 
-    // Badges (gamification_badges si remplie)
+    // Badges (gamification_badges si remplie) : le repli est un tableau VIDE, il
+    // ne peut donc pas élargir la réponse — un badge manquant n'est pas une fuite.
     const { rows: badges } = await pool.query(`
       SELECT user_id, badge_key, label, awarded_at FROM gamification_badges
       WHERE user_id = ANY($1::int[])
@@ -214,7 +238,13 @@ router.get('/objectifs/ranking', async (req, res) => {
       badges: badges.filter(b => b.user_id === m.id).map(b => ({ key: b.badge_key, label: b.label })),
     }))
 
-    res.json({ ok: true, ranking })
+    res.json({
+      ok: true,
+      // Ce qui a servi de filtre, dit explicitement : la recette peut vérifier
+      // que le classement est bien celui d'un cabinet (et non de la plateforme).
+      portee: portee.mode === 'cabinet' ? 'cabinet' : 'mono-utilisateur',
+      ranking,
+    })
   } catch (err) {
     res.status(500).json({ error: 'ranking_failed', message: err.message })
   }

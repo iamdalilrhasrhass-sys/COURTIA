@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
+// Montants : cast tolérant, une valeur fautive est IGNORÉE par l'agrégat au lieu
+// de faire tomber l'écran (« invalid input syntax for type numeric »).
+const { montantSur } = require('../lib/montants')
 
 /**
  * GET /api/stats/portfolio
@@ -17,7 +20,7 @@ router.get('/portfolio', verifyToken, async (req, res) => {
       SELECT
         COALESCE(quote_data->>'type_contrat', 'Autre') AS type,
         COUNT(*)::int AS count,
-        COALESCE(SUM(NULLIF(quote_data->>'prime_annuelle', '')::decimal), 0) AS prime_total
+        COALESCE(SUM(${montantSur('q')}), 0) AS prime_total
       FROM quotes q
       JOIN clients c ON q.client_id = c.id AND c.courtier_id = $1
       WHERE q.status = 'actif'
@@ -49,7 +52,7 @@ router.get('/portfolio', verifyToken, async (req, res) => {
         q.id,
         q.quote_data->>'type_contrat' AS type_contrat,
         q.quote_data->>'date_echeance' AS date_echeance,
-        NULLIF(q.quote_data->>'prime_annuelle', '')::decimal AS prime_annuelle,
+        ${montantSur('q')} AS prime_annuelle,
         c.first_name AS prenom,
         c.last_name AS nom,
         c.id AS client_id,

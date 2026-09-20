@@ -76,6 +76,36 @@ async function getPrimaryMembership(pool, userId) {
   return result.rows[0] || null
 }
 
+/**
+ * Nom donné à un cabinet NOUVELLEMENT créé.
+ *
+ * POURQUOI : `cabinets.name` porte le `DEFAULT` « Cabinet COURTIA ». Ce gabarit
+ * n'est pas un nom d'entreprise — il s'imprimait sur les documents d'un cabinet
+ * portant un autre nom (défaut constaté sur un cabinet suisse). On cherche donc,
+ * dans l'ordre : le nom saisi par le cabinet (`profile.cabinet`), puis le nom de
+ * la personne qui crée l'entreprise (le courtier est l'intermédiaire), et
+ * seulement en dernier recours le gabarit — la colonne est NOT NULL, donc
+ * « aucun nom » n'est pas représentable ici.
+ */
+async function nommerCabinet(pool, userId, profile = {}) {
+  const saisi = String(profile.cabinet || profile.cabinet_name || '').trim()
+  if (saisi && saisi.toUpperCase() !== 'CABINET COURTIA') return saisi
+  try {
+    const { rows } = await pool.query(
+      'SELECT first_name, last_name, cabinet_name FROM users WHERE id = $1',
+      [userId]
+    )
+    const utilisateur = rows && rows[0] ? rows[0] : {}
+    return String(utilisateur.cabinet_name || '').trim()
+      || `${utilisateur.first_name || ''} ${utilisateur.last_name || ''}`.trim()
+      || saisi
+      || 'Cabinet COURTIA'
+  } catch (_err) {
+    // Lecture impossible : on garde le nom fourni, ou le gabarit, jamais un nom inventé.
+    return saisi || 'Cabinet COURTIA'
+  }
+}
+
 async function ensureUserCabinet(pool, userOrId, profile = {}) {
   const userId = getSafeUserId(userOrId)
   if (!userId) throw createHttpError('AUTH_REQUIRED', 401, 'Utilisateur requis')
@@ -83,7 +113,7 @@ async function ensureUserCabinet(pool, userOrId, profile = {}) {
   const existing = await getPrimaryMembership(pool, userId)
   if (existing) return existing
 
-  const cabinetName = String(profile.cabinet || profile.cabinet_name || '').trim() || 'Cabinet COURTIA'
+  const cabinetName = await nommerCabinet(pool, userId, profile)
   const orias = String(profile.orias || profile.orias_number || '').trim() || null
 
   const cabinetResult = await pool.query(

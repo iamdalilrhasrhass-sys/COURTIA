@@ -15,6 +15,9 @@ const {
   journaliserErreurIa,
 } = require('../services/iaErreurs')
 const pool = require('../db')
+// Montants : cast tolérant, pour qu'une prime illisible en base ne fasse pas
+// tomber la lecture du portefeuille par l'assistant (lib/montants.js).
+const { montantSur } = require('../lib/montants')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const {
   buildAndStoreMorningBrief,
@@ -261,7 +264,7 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
       if (!Array.isArray(clientData.contrats)) {
         try {
           const contratsRes = await pool.query(
-            `SELECT quote_data->>'type_contrat' as type, quote_data->>'compagnie' as compagnie, (quote_data->>'prime_annuelle')::numeric as prime_annuelle, status as statut, (quote_data->>'date_echeance')::date as date_echeance FROM quotes WHERE client_id = $1`,
+            `SELECT quote_data->>'type_contrat' as type, quote_data->>'compagnie' as compagnie, ${montantSur('quotes')} as prime_annuelle, status as statut, (CASE WHEN quote_data->>'date_echeance' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (quote_data->>'date_echeance')::date END) as date_echeance FROM quotes WHERE client_id = $1`,
             [clientData.id]
           )
           clientData.contrats = contratsRes.rows || []
@@ -301,7 +304,7 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
               q.status,
               q.quote_data->>'type_contrat' as type_contrat,
               q.quote_data->>'compagnie' as compagnie,
-              (q.quote_data->>'prime_annuelle')::decimal as prime_annuelle,
+              ${montantSur('q')} as prime_annuelle,
               q.quote_data->>'date_echeance' as date_echeance
             FROM quotes q 
             WHERE q.client_id = $1`,

@@ -79,11 +79,89 @@ async function getNextEcritureNum(pool, userId, fiscalYear) {
 }
 
 /**
- * Crée une écriture comptable
+ * Crée une écriture comptable.
+ *
+ * POURQUOI LES CONTRÔLES CI-DESSOUS (Red Team P1 #4, mesuré le 20/09/2026)
+ * `POST /api/accounting/entries` répondait 500
+ * « invalid input syntax for type integer: "NaN" » : un champ absent de l'écran
+ * (montant non saisi) devenait `NaN`, la valeur partait telle quelle dans la
+ * requête, et PostgreSQL la refusait — après quoi l'API recopiait le message SQL
+ * au courtier. Une écriture comptable est un document : elle est refusée en 400
+ * avec le champ fautif, jamais corrigée en silence (aucun montant inventé,
+ * aucune date inventée).
  */
-async function createAccountingEntry(pool, userId, entry) {
-  const fiscalYear = new Date(entry.ecriture_date).getFullYear()
-  const ecritureNum = entry.ecriture_num || await getNextEcritureNum(pool, userId, fiscalYear)
+async function createAccountingEntry(pool, userId, entry = {}, { exigerMontant = false } = {}) {
+  const { ErreurEntree, dateValide, entierValide, texteObligatoire } = require('./validationEntree')
+
+  const dateEcriture = dateValide(entry.ecriture_date)
+  if (dateEcriture === null || dateEcriture === false) {
+    throw new ErreurEntree(
+      "La date d'écriture est obligatoire et doit exister (format AAAA-MM-JJ).",
+      { champ: 'ecriture_date', code: 'date_ecriture_invalide' },
+    )
+  }
+
+  const libelle = texteObligatoire(entry.ecriture_lib, { max: 500 })
+  if (!libelle) {
+    throw new ErreurEntree("Le libellé de l'écriture est obligatoire (500 caractères maximum).", {
+      champ: 'ecriture_lib', code: 'libelle_requis',
+    })
+  }
+
+  const compte = texteObligatoire(entry.compte_num, { max: 20 })
+  if (!compte) {
+    throw new ErreurEntree('Le numéro de compte est obligatoire (20 caractères maximum).', {
+      champ: 'compte_num', code: 'compte_requis',
+    })
+  }
+
+  const debit = entierValide(entry.debit_cents ?? 0, { min: 0 })
+  const credit = entierValide(entry.credit_cents ?? 0, { min: 0 })
+  if (debit === false || credit === false) {
+    throw new ErreurEntree('Le débit et le crédit doivent être des montants valides, en centimes (entiers positifs).', {
+      champ: debit === false ? 'debit_cents' : 'credit_cents', code: 'montant_invalide',
+    })
+  }
+  // Une écriture SAISIE À LA MAIN nulle n'a pas de sens comptable : on le dit
+  // au lieu d'écrire une ligne vide qui fausserait le FEC. Le drapeau
+  // `exigerMontant` réserve cette règle à la saisie manuelle : une génération
+  // automatique qui trouve une commission à zéro doit continuer de produire sa
+  // ligne (sinon l'export comptable s'arrêterait sur une donnée légitime).
+  if (exigerMontant && debit === 0 && credit === 0) {
+    throw new ErreurEntree("Une écriture comptable doit porter un débit ou un crédit supérieur à zéro.", {
+      champ: 'debit_cents', code: 'montant_nul',
+    })
+  }
+
+  const fiscalYear = dateEcriture.getFullYear()
+  const ecritureNum = entierValide(entry.ecriture_num, { min: 1 })
+  const numeroEcriture = ecritureNum || await getNextEcritureNum(pool, userId, fiscalYear)
+
+  // Champs texte optionnels : bornés AVANT la base (les colonnes du FEC ont des
+  // longueurs légales précises — un libellé de journal de 300 caractères n'est
+  // pas un incident serveur, c'est une saisie à corriger).
+  const LIMITES_FEC = {
+    journal_code: 10, journal_lib: 100, compte_lib: 200, comp_aux_num: 50,
+    comp_aux_lib: 200, piece_ref: 100, ecriture_let: 20, idevise: 3, source_type: 50,
+  }
+  for (const [champ, limite] of Object.entries(LIMITES_FEC)) {
+    const valeur = entry[champ]
+    if (valeur !== undefined && valeur !== null && String(valeur).length > limite) {
+      throw new ErreurEntree(`Le champ « ${champ} » ne peut pas dépasser ${limite} caractères.`, {
+        champ, code: 'champ_trop_long',
+      })
+    }
+  }
+
+  // Dates optionnelles : vérifiées elles aussi, sinon PostgreSQL les refuse en
+  // 500 (« invalid input syntax for type date »).
+  for (const champ of ['piece_date', 'valid_date', 'date_let']) {
+    if (entry[champ] !== undefined && entry[champ] !== null && entry[champ] !== '' && dateValide(entry[champ]) === false) {
+      throw new ErreurEntree(`Le champ « ${champ} » n'est pas une date valide (format AAAA-MM-JJ).`, {
+        champ, code: 'date_invalide',
+      })
+    }
+  }
 
   const result = await pool.query(`
     INSERT INTO accounting_entries (
@@ -98,17 +176,17 @@ async function createAccountingEntry(pool, userId, entry) {
     userId,
     entry.journal_code || 'VE',
     entry.journal_lib || JOURNAL_CODES[entry.journal_code] || 'Journal des ventes',
-    ecritureNum,
+    numeroEcriture,
     entry.ecriture_date,
     entry.compte_num,
-    entry.compte_lib,
+    entry.compte_lib || null,
     entry.comp_aux_num || null,
     entry.comp_aux_lib || null,
     entry.piece_ref || null,
     entry.piece_date || entry.ecriture_date,
     entry.ecriture_lib,
-    entry.debit_cents || 0,
-    entry.credit_cents || 0,
+    debit,
+    credit,
     entry.ecriture_let || null,
     entry.date_let || null,
     entry.valid_date || entry.ecriture_date,

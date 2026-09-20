@@ -11,6 +11,7 @@ const { getUserPlanInfo } = require('../services/planService');
 const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
 const { listClientInteractions } = require('../services/integrationsStore');
 const porteeCabinet = require('../lib/porteeCabinet');
+const cabinetMembershipService = require('../services/cabinetMembershipService');
 // Bloc unique des définitions d'indicateurs (contrat, prime, échéance) : la
 // « prime annuelle d'un client » doit être le même calcul que la « prime
 // annuelle totale » du tableau de bord, sinon la liste Clients affiche « — »
@@ -41,6 +42,48 @@ function filtreClients(portee, { depart = 1, ecriture = false, alias = 'clients'
     depart,
     ecriture,
   });
+}
+
+/**
+ * Identifiant numérique strict.
+ * POURQUOI : `GET /api/clients/duplicates` tombait dans `GET /api/clients/:id`
+ * et PostgreSQL répondait « invalid input syntax for type integer: "duplicates" »
+ * — un 500 pour une entrée invalide. Un identifiant qui n'est pas un entier ne
+ * peut désigner AUCUN client : la réponse est un 404 (et une route inexistante
+ * reçoit le 404 du routeur, plus jamais une erreur de base).
+ */
+function identifiantClient(valeur) {
+  const texte = String(valeur ?? '').trim();
+  return /^\d+$/.test(texte) ? Number(texte) : null;
+}
+
+/**
+ * Le cabinet de l'utilisateur existe-t-il ? Sinon, le créer MAINTENANT.
+ *
+ * POURQUOI : un compte ouvert par l'exploitant (invitation d'essai) n'a aucune
+ * appartenance tant qu'il n'a pas visité les écrans Équipe / Onboarding. Ses
+ * clients étaient donc créés avec `cabinet_id = NULL`, et le jour où un
+ * collaborateur était invité dans ce cabinet, il ne voyait RIEN du portefeuille
+ * déjà saisi (défaut reproduit en production le 20/09/2026 : les 3 clients du
+ * cabinet d'audit A étaient invisibles pour le broker invité). Le cabinet naît
+ * donc à la PREMIÈRE donnée métier écrite, avec le nom déjà saisi par le
+ * cabinet (`users.cabinet_name`) — aucune donnée n'est inventée.
+ *
+ * Une panne de création ne doit pas empêcher l'enregistrement du client : on
+ * retombe alors sur le comportement historique (cabinet_id NULL), sans jamais
+ * prétendre le contraire.
+ */
+async function garantirCabinet(pool, utilisateur) {
+  try {
+    const userId = porteeCabinet.identifiantUtilisateur(utilisateur);
+    if (!userId) return null;
+    const { rows } = await pool.query('SELECT cabinet_name FROM users WHERE id = $1', [userId]);
+    const nom = rows[0] && rows[0].cabinet_name;
+    return await cabinetMembershipService.ensureUserCabinet(pool, userId, nom ? { cabinet: nom } : {});
+  } catch (err) {
+    console.error('[clients] création du cabinet impossible:', err.message);
+    return null;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -334,11 +377,212 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Regroupe des clients en DOUBLONS RÉELS (aucune donnée inventée : chaque ligne
+ * rendue vient de la base).
+ *
+ * Trois familles de rapprochement, celles qui font perdre un dossier au
+ * courtier : même nom + prénom (accents et casse repliés), même e-mail, même
+ * numéro de téléphone (chiffres seuls, pour que « +41 79 123 45 67 » et
+ * « 0791234567 » se rejoignent). Deux clients liés par N'IMPORTE laquelle de
+ * ces clés sont dans le même groupe.
+ *
+ * @param {Array<object>} lignes lignes `clients` de la portée de l'appelant
+ * @param {string} terme filtre optionnel (nom, prénom, e-mail, téléphone)
+ */
+function grouperDoublonsClients(lignes, terme) {
+  const cle = (valeur) => normaliserTexteClient(valeur);
+  // Clé de NOM : la ponctuation du nom est retirée (« Müller-d'Arc » et
+  // « Muller d Arc » doivent se rejoindre — c'est exactement le doublon que le
+  // courtier ne voit pas). Un tiret ou une apostrophe ne fait pas deux clients.
+  const cleNom = (valeur) => normaliserTexteClient(valeur).replace(/[^a-z0-9]+/g, '');
+  const chiffres = (valeur) => String(valeur ?? '').replace(/\D/g, '');
+
+  const parent = new Map();
+  const trouver = (id) => {
+    let racine = id;
+    while (parent.get(racine) !== racine) racine = parent.get(racine);
+    return racine;
+  };
+  const unir = (a, b) => {
+    const ra = trouver(a);
+    const rb = trouver(b);
+    if (ra !== rb) parent.set(rb, ra);
+  };
+
+  const raisons = new Map(); // id -> Set des familles qui l'ont rapproché
+  const parCle = new Map();  // `famille|clé` -> premier id
+
+  for (const ligne of lignes) {
+    const id = Number(ligne.id);
+    parent.set(id, id);
+    raisons.set(id, new Set());
+
+    const nom = cleNom([ligne.last_name || ligne.nom, ligne.first_name || ligne.prenom].filter(Boolean).join(' '));
+    const email = cle(ligne.email);
+    const telephone = chiffres(ligne.phone || ligne.telephone || ligne.mobile);
+    const candidats = [
+      ['nom', nom],
+      ['email', email],
+      // Un numéro trop court (poste interne, indicatif seul) ne rapproche rien :
+      // exiger 8 chiffres évite de fusionner deux dossiers sur un « 0 » commun.
+      ['telephone', telephone.length >= 8 ? telephone.slice(-9) : ''],
+    ];
+
+    for (const [famille, valeur] of candidats) {
+      if (!valeur) continue;
+      const index = `${famille}|${valeur}`;
+      if (parCle.has(index)) {
+        const autre = parCle.get(index);
+        unir(autre, id);
+        raisons.get(autre)?.add(famille);
+        raisons.get(id)?.add(famille);
+      } else {
+        parCle.set(index, id);
+      }
+    }
+  }
+
+  const parRacine = new Map();
+  for (const ligne of lignes) {
+    const id = Number(ligne.id);
+    const racine = trouver(id);
+    if (!parRacine.has(racine)) parRacine.set(racine, []);
+    parRacine.get(racine).push(ligne);
+  }
+
+  const termeCherche = normaliserTexteClient(terme);
+  const groupes = [];
+  for (const membres of parRacine.values()) {
+    if (membres.length < 2) continue;
+    if (termeCherche) {
+      const correspond = membres.some((m) => normaliserTexteClient(
+        [m.first_name, m.last_name, m.nom, m.prenom, m.email, m.phone, m.telephone, m.mobile]
+          .filter(Boolean).join(' ')
+      ).includes(termeCherche));
+      if (!correspond) continue;
+    }
+    const familles = new Set();
+    for (const membre of membres) {
+      for (const famille of raisons.get(Number(membre.id)) || []) familles.add(famille);
+    }
+    groupes.push({
+      raisons: [...familles].sort(),
+      clients: membres.map((m) => ({
+        id: m.id,
+        prenom: m.first_name || m.prenom || '',
+        nom: m.last_name || m.nom || '',
+        email: m.email || '',
+        telephone: m.phone || m.telephone || m.mobile || '',
+        ville: m.city || '',
+        code_postal: m.postal_code || '',
+        statut: m.status || '',
+      })),
+    });
+  }
+
+  // Les groupes les plus gros d'abord : ce sont ceux qui coûtent le plus cher.
+  return groupes.sort((a, b) => b.clients.length - a.clients.length);
+}
+
+/**
+ * GET /api/clients/duplicates — Clients en doublon dans le portefeuille.
+ *
+ * POURQUOI CETTE ROUTE : elle était absente et la requête tombait dans
+ * `GET /api/clients/:id`, qui rendait un 500 « invalid input syntax for type
+ * integer: "duplicates" » — l'écran ne pouvait ni détecter un doublon ni
+ * comprendre l'erreur. Filtres optionnels : `nom`, `prenom`, `email`,
+ * `telephone` (ou `q`) restreignent aux groupes contenant ce terme.
+ */
+router.get('/duplicates', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    const f = filtreClients(portee, { depart: 1 });
+
+    const { rows } = await pool.query(
+      `SELECT id, first_name, last_name, nom, prenom, email, phone, telephone, mobile,
+              postal_code, city, status, created_at
+         FROM clients
+        WHERE ${f.sql}
+        ORDER BY created_at ASC
+        LIMIT 5000`,
+      [...f.params]
+    );
+
+    const terme = req.query.q ?? req.query.nom ?? req.query.prenom ?? req.query.email ?? req.query.telephone;
+    const groupes = grouperDoublonsClients(rows, terme);
+
+    return res.json({
+      success: true,
+      data: groupes,
+      total: groupes.reduce((somme, groupe) => somme + groupe.clients.length, 0),
+      groupes: groupes.length,
+      // Ce que la détection regarde, dit explicitement : l'appelant sait sur
+      // quoi un dossier a été rapproché d'un autre.
+      criteres: ['nom+prenom (accents et casse repliés)', 'email', 'telephone (chiffres seuls)'],
+      portee: portee.mode === 'cabinet' ? 'cabinet' : 'utilisateur',
+    });
+  } catch (err) {
+    console.error('GET /api/clients/duplicates error:', err.message);
+    res.status(500).json({ error: 'duplicates_unavailable', message: 'Détection des doublons indisponible pour le moment.' });
+  }
+});
+
+/**
+ * GET /api/clients/:id/tags — Tags réellement associés à un client.
+ *
+ * POURQUOI : `POST` et `DELETE` d'association existaient (`/api/clients/:id/tags`)
+ * mais aucune lecture : l'écran ne pouvait pas afficher les tags qu'il venait de
+ * poser. Les lignes rendues viennent toutes de `client_tags` (aucun tag inventé) ;
+ * un client sans tag rend une liste vide, pas une erreur.
+ */
+router.get('/:id/tags', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+    const clientId = identifiantClient(req.params.id);
+    if (clientId === null) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
+    }
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    const f = filtreClients(portee, { depart: 2 });
+
+    const client = await pool.query(
+      `SELECT id FROM clients WHERE id = $1 AND ${f.sql}`,
+      [clientId, ...f.params]
+    );
+    if (client.rows.length === 0) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT ct.tag_id AS id, COALESCE(t.name, ct.tag, '') AS name,
+              COALESCE(t.color, '') AS color, ct.created_at
+         FROM client_tags ct
+         LEFT JOIN tags t ON t.id = ct.tag_id
+        WHERE ct.client_id = $1
+        ORDER BY ct.created_at ASC`,
+      [clientId]
+    );
+
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('GET /api/clients/:id/tags error:', err.message);
+    res.status(500).json({ error: 'tags_unavailable', message: 'Tags du client indisponibles pour le moment.' });
+  }
+});
+
+/**
  * GET /api/clients/:id — Récupérer un client par ID
  */
 router.get('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const clientId = identifiantClient(req.params.id);
+    // Un identifiant non numérique ne peut désigner aucun client : 404 (et non
+    // un 500 SQL « invalid input syntax for type integer »).
+    if (clientId === null) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
+    }
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     // Le client doit appartenir au CABINET de l'utilisateur (404 sinon : un 403
     // révélerait l'existence du client d'un autre cabinet).
@@ -355,7 +599,7 @@ router.get('/:id', async (req, res) => {
         loyalty_score, lifetime_value, civility, postal_code, city, country,
         silent_alert, last_contact
       FROM clients WHERE id = $1 AND ${f.sql}`,
-      [req.params.id, ...f.params]
+      [clientId, ...f.params]
     );
 
     if (result.rows.length === 0) {
@@ -512,9 +756,24 @@ router.get('/:id/interactions', async (req, res) => {
 router.post('/', requireUnderLimit('clients'), async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
-    // Un assistant ou un viewer lit tout le cabinet mais ne crée rien.
+    // Un assistant ou un viewer lit tout le cabinet mais ne crée rien : ce
+    // refus est prononcé AVANT toute écriture annexe (aucun cabinet créé pour
+    // un rôle en lecture seule).
+    let portee = await porteeCabinet.resoudrePortee(poolModule, req);
     if (porteeCabinet.refuserEcriture(portee, res, 'créer un client')) return;
+
+    // Aucun cabinet connu (compte ouvert par l'exploitant, jamais passé par
+    // l'écran Équipe) : il naît MAINTENANT pour que ce premier client soit
+    // rattaché au cabinet — sans quoi il resterait invisible pour un
+    // collaborateur invité plus tard. On relit la portée ensuite : c'est elle
+    // qui estampille la ligne.
+    if (portee.mode !== 'cabinet') {
+      await garantirCabinet(poolModule, req.user);
+      delete req._porteeCabinet;
+      delete req._porteeCabinetPromesse;
+      portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    }
+
     const {
       nom, prenom, email, telephone, adresse, statut, segment,
       notes, zone_geographique, profession, situation_familiale,
@@ -599,6 +858,12 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const clientId = identifiantClient(req.params.id);
+    // Un identifiant non numérique ne peut désigner aucun client : 404, jamais
+    // un 500 SQL.
+    if (clientId === null) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
+    }
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     if (porteeCabinet.refuserEcriture(portee, res, 'modifier un client')) return;
     const {
@@ -659,6 +924,10 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const clientId = identifiantClient(req.params.id);
+    if (clientId === null) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
+    }
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     if (porteeCabinet.refuserSuppression(portee, res)) return;
     // La suppression ne renvoie un succès QUE si une ligne a réellement été
@@ -667,7 +936,7 @@ router.delete('/:id', async (req, res) => {
     const f = filtreClients(portee, { depart: 2, ecriture: true });
     const supprime = await pool.query(
       `DELETE FROM clients WHERE id = $1 AND ${f.sql}`,
-      [req.params.id, ...f.params]
+      [clientId, ...f.params]
     );
     if (!supprime.rowCount) {
       return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });

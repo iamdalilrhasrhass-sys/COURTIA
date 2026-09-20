@@ -45,6 +45,9 @@ const express = require('express');
 const router = express.Router();
 const { getJwtSecret } = require('../utils/jwtSecret');
 const porteeCabinet = require('../lib/porteeCabinet');
+// Montants : cast tolérant (une valeur fautive est ignorée, elle ne casse pas
+// l'écran) — lib/montants.js.
+const { montantSur } = require('../lib/montants');
 
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -81,7 +84,12 @@ const STATUTS_CONTRAT_ACTIF = "('actif', 'active')";
  * puis le JSON posé par POST /api/contrats, puis les colonnes historiques.
  */
 const PRIME_CONTRAT =
-  "COALESCE(q.prime_annuelle, NULLIF(q.quote_data->>'prime_annuelle', '')::numeric, q.premium, q.amount)";
+  // `montantSur` (lib/montants.js) ne caste la valeur JSON QUE si elle a la
+  // forme d'un nombre : sans lui, une prime 'abc' écrite un jour faisait tomber
+  // en 500 la liste des clients, le reporting ET le cockpit du cabinet entier
+  // (« invalid input syntax for type numeric: "abc" », défaut P0 du 20/09/2026).
+  // Une valeur illisible est ignorée (NULL), jamais devinée.
+  `COALESCE(q.prime_annuelle, ${montantSur('q')}, q.premium, q.amount)`;
 
 /**
  * Échéance d'un contrat, alias `q` sur `quotes`.
@@ -92,7 +100,8 @@ const PRIME_CONTRAT =
  * vérifie tests/routes/erreursSqlP1.test.js (garde-fou de schéma existant).
  */
 const ECHEANCE_CONTRAT =
-  "COALESCE(NULLIF(q.quote_data->>'date_echeance', '')::date, COALESCE(date_echeance, end_date))";
+  `COALESCE(CASE WHEN q.quote_data->>'date_echeance' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+                 THEN (q.quote_data->>'date_echeance')::date END, COALESCE(date_echeance, end_date))`;
 
 /** Portée SQL sur `clients` (le cabinet, ou l'utilisateur s'il n'a pas de cabinet). */
 function porteeClients(portee, { depart = 1, alias = 'c' } = {}) {

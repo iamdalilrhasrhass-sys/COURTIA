@@ -11,6 +11,10 @@ const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { getFeatureFlagsForUser } = require('../lib/featureFlags');
 const { marcheDepuis, devise: deviseDuMarche } = require('../lib/devise');
+// Marché / identité du CABINET : lib/marcheCabinet.js est la SEULE autorité
+// (voir l'en-tête de ce module : le marché appartient au cabinet, jamais au
+// collaborateur connecté).
+const marcheCabinet = require('../lib/marcheCabinet');
 
 const router = express.Router();
 
@@ -59,6 +63,18 @@ router.post('/login', loginLimiter, authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 
+/**
+ * POST /api/auth/logout — Déconnexion réellement enregistrée côté serveur.
+ *
+ * POURQUOI une route protégée : la révocation porte la marque
+ * `users.sessions_revoked_at` (migration 116), qui borne les jetons à refuser à
+ * partir de la session appelante. Un appelant non authentifié n'a aucune
+ * session à fermer : il reçoit 401 (et non un faux succès).
+ * Un jeton déjà révoqué reçoit 401 : la déconnexion est idempotente côté
+ * serveur, elle n'a pas besoin d'être rejouable avec un jeton mort.
+ */
+router.post('/logout', verifyTokenMiddleware, authController.logout);
+
 // Protected
 router.post('/verify', verifyToken, authController.verify);
 router.post('/refresh', authController.refresh);
@@ -95,10 +111,25 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
     const brokerProfile = await lireCabinet(userId);
     const featureFlags = await getFeatureFlagsForUser({ userId }).catch(() => ({}));
 
-    // Marché réel du cabinet déduit de son pays / de son registre (CH → CHF).
-    // Exposé explicitement : un écran n'a pas à redéduire la devise d'un pays
-    // mal orthographié, et la recette peut vérifier ce que l'API déclare.
-    const marche = marcheDepuis(brokerProfile);
+    // LE MARCHÉ, LA DEVISE ET L'IDENTITÉ VIENNENT DU CABINET.
+    // POURQUOI : avant ce correctif, ils venaient de `broker_profiles` de la
+    // PERSONNE connectée. Le propriétaire d'un cabinet suisse (fiche `pays =
+    // 'CH'`) recevait « CH / CHF », mais son commercial, son assistant et son
+    // lecteur — fiches vides — recevaient « FR / EUR » : le même cabinet
+    // affichait « 7 450 CHF » sur un cockpit et « 7 450 € » sur l'autre, et la
+    // facturation servait une TVA française. lib/marcheCabinet.js résout le
+    // cabinet d'abord (pays/registre/UID du cabinet, puis de son référent),
+    // et ne retombe sur le profil de l'utilisateur QUE pour un compte sans
+    // cabinet (repli mono-utilisateur, comportement historique préservé).
+    const appartenance = await marcheCabinet.cabinetDeLUtilisateur(userId);
+    const identite = appartenance
+      ? await marcheCabinet.identiteCabinet(appartenance.cabinet_id)
+      : null;
+    const marche = identite ? identite.marche : (await marcheCabinet.marcheUtilisateur(userId)).marche;
+    // Un champ non renseigné pour le cabinet retombe sur la fiche de la
+    // personne : aucune valeur n'est inventée, et rien n'est perdu à l'écran.
+    const duCabinetOuDuProfil = (champCabinet, champProfil) =>
+      (identite ? identite[champCabinet] : '') || brokerProfile[champProfil] || '';
 
     res.json({
       id: user.id,
@@ -115,31 +146,41 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       trial_started_at: user.trial_started_at,
       trial_ends_at: user.trial_ends_at,
       trial_days: user.trial_days,
-      cabinet: brokerProfile.cabinet || '',
-      orias: brokerProfile.orias || '',
+      // Cabinet courant : identifiant et rôle, exposés pour que l'écran sache
+      // sur quelle ENTREPRISE il travaille (et non sur quelle fiche personnelle).
+      cabinet_id: identite ? identite.cabinet_id : null,
+      cabinet_role: appartenance ? appartenance.role : null,
+      // Nom réel du cabinet (« Red Team Alpha »), jamais le gabarit
+      // « Cabinet COURTIA » posé par défaut de colonne.
+      cabinet: duCabinetOuDuProfil('nom', 'cabinet'),
+      orias: duCabinetOuDuProfil('orias', 'orias'),
       // Le numéro de téléphone vit dans broker_profiles.telephone (fiche
       // cabinet) ; users.phone est l'ancien emplacement. On expose la valeur
       // réellement remplie, sans en inventer une.
-      telephone: brokerProfile.telephone || user.phone || '',
-      phone: user.phone || brokerProfile.telephone || '',
-      adresse: brokerProfile.adresse || '',
-      ville: brokerProfile.ville || '',
-      code_postal: brokerProfile.code_postal || '',
+      telephone: duCabinetOuDuProfil('telephone', 'telephone') || user.phone || '',
+      phone: user.phone || duCabinetOuDuProfil('telephone', 'telephone') || '',
+      adresse: duCabinetOuDuProfil('adresse', 'adresse'),
+      ville: duCabinetOuDuProfil('ville', 'ville'),
+      code_postal: duCabinetOuDuProfil('code_postal', 'code_postal'),
       // Identite reglementaire reelle du cabinet : en Suisse un numero FINMA et
       // un UID, pas un numero ORIAS. Renvoyes distinctement pour ne jamais
       // afficher un registre sous le libelle d'un autre.
-      registre_type: brokerProfile.registre_type || '',
-      registre_numero: brokerProfile.registre_numero || '',
-      uid: brokerProfile.uid || '',
+      registre_type: duCabinetOuDuProfil('registre_type', 'registre_type'),
+      registre_numero: duCabinetOuDuProfil('registre_numero', 'registre_numero'),
+      uid: duCabinetOuDuProfil('uid', 'uid'),
       site_web: brokerProfile.site_web || '',
-      pays: brokerProfile.pays || '',
+      pays: duCabinetOuDuProfil('pays', 'pays'),
       langue: brokerProfile.langue || '',
       // Canton RÉELLEMENT enregistré (vide si le cabinet n'en a pas). C'est le
       // seul moyen pour l'écran Paramètres de le réafficher après rechargement.
-      canton: brokerProfile.canton || '',
-      // Marché et devise du cabinet : « CH »/« CHF » ou « FR »/« EUR ».
+      canton: duCabinetOuDuProfil('canton', 'canton'),
+      // Marché et devise du cabinet : « CH »/« CHF » ou « FR »/« EUR ». TOUS les
+      // membres d'un même cabinet reçoivent la même valeur.
       marche,
-      devise: deviseDuMarche(marche),
+      devise: identite ? identite.devise : deviseDuMarche(marche),
+      // D'où vient la réponse (diagnostic : `cabinet.country`,
+      // `cabinet.referent`, `profil_utilisateur`, `defaut…`).
+      marche_source: identite ? identite.source : 'profil_utilisateur',
       feature_flags: featureFlags
     });
   } catch (err) {
@@ -233,6 +274,36 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
       }
     }
 
+    // ── LE RÉFÉRENTIEL DU CABINET S'ÉCRIT SUR LE CABINET ───────────────────
+    // POURQUOI (défaut P0 du 20/09/2026, cabinet suisse c8bb6112) : les
+    // paramètres suisses saisis par le propriétaire n'allaient que dans SA fiche
+    // `broker_profiles`. Les documents, e-mails, prompts IA et la facturation
+    // des AUTRES membres du cabinet — résolus depuis leur propre fiche, vide —
+    // restaient français : le commercial du cabinet suisse recevait
+    // `{"error":"orias_required","marche":"FR"}` et la grille « Starter 89 €
+    // HT / mois, TVA 20 % ». L'identité d'ENTREPRISE est donc écrite dans
+    // `cabinets` (nom, pays, registre, UID, canton, adresse, téléphone).
+    // Seuls owner et manager engagent le cabinet : un `broker` met à jour sa
+    // fiche personnelle, jamais l'identité réglementaire de l'entreprise.
+    let cabinetMaj = null;
+    const appartenance = await marcheCabinet.cabinetDeLUtilisateur(userId);
+    if (appartenance && ['owner', 'manager'].includes(appartenance.role)) {
+      cabinetMaj = await marcheCabinet.mettreAJourIdentiteCabinet(appartenance.cabinet_id, {
+        cabinet: corps.cabinet,
+        cabinet_name: corps.cabinet_name,
+        telephone: corps.telephone,
+        adresse: corps.adresse,
+        ville: corps.ville,
+        code_postal: corps.code_postal,
+        pays: corps.pays,
+        registre_type: corps.registre_type,
+        registre_numero: corps.registre_numero,
+        uid: corps.uid,
+        orias: corps.orias,
+        canton: cantonNormalise,
+      });
+    }
+
     // Relecture de ce qui est RÉELLEMENT en base, canton compris : le client
     // n'affiche jamais une valeur déduite de ce qu'il a envoyé.
     const cabinetEnBase = await lireCabinet(userId);
@@ -245,6 +316,10 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
       utilisateur: resultat.utilisateur || null,
       profil_cabinet: { ...(resultat.profil || {}), ...cabinetEnBase },
       canton: cabinetEnBase.canton || '',
+      // Ce qui a réellement été écrit sur le CABINET (référentiel partagé par
+      // tous ses membres). `ok: false` avec un motif : l'écriture d'entreprise
+      // n'a pas eu lieu — l'appelant ne doit pas le présenter comme enregistré.
+      cabinet_identite: cabinetMaj,
       // Champs reçus mais NON enregistrables ici : dits explicitement, jamais
       // présentés comme enregistrés.
       champs_ignores: resultat.champs_ignores || [],

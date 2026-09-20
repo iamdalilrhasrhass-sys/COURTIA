@@ -3,6 +3,9 @@ const pool = require('../db');
 const router = express.Router();
 const { getJwtSecret } = require('../utils/jwtSecret');
 const porteeCabinet = require('../lib/porteeCabinet');
+// Validation de FORME (date réellement existante) : une échéance impossible
+// était acceptée puis refusée par PostgreSQL → 500 SQL au lieu d'un 400.
+const { dateValide } = require('../services/validationEntree');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES TÂCHES / RENDEZ-VOUS (`appointments`) : LE CABINET
@@ -115,6 +118,18 @@ router.post('/', verifyToken, async (req, res) => {
       });
     }
 
+    // Une échéance qui n'existe pas (« 2026-02-31T99:99:99Z ») était acceptée
+    // ici puis refusée par PostgreSQL : 500 avec un message SQL. La date est
+    // donc vérifiée MAINTENANT, sans jamais en inventer une (Red Team P1 #4).
+    const echeanceControlee = dateValide(echeance);
+    if (echeanceControlee === false) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: "L'échéance transmise n'existe pas (jour ou heure invalide). Format attendu : AAAA-MM-JJ ou AAAA-MM-JJTHH:MM.",
+        champs: ['echeance'],
+      });
+    }
+
     // Vérifier que le client appartient au CABINET (null en portée mono).
     if (client_id) {
       const fClient = porteeCabinet.fragment(portee, {
@@ -163,6 +178,16 @@ router.put('/:id', verifyToken, async (req, res) => {
     const { titre, description, statut, echeance } = req.body;
     const portee = await porteeCabinet.resoudrePortee(pool, req);
     if (porteeCabinet.refuserEcriture(portee, res, 'modifier une tâche')) return;
+
+    // Même règle que pour la création : une échéance qui n'existe pas est
+    // refusée en 400 (jamais un 500 SQL, jamais une date inventée).
+    if (echeance !== undefined && echeance !== null && dateValide(echeance) === false) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: "L'échéance transmise n'existe pas (jour ou heure invalide). Format attendu : AAAA-MM-JJ ou AAAA-MM-JJTHH:MM.",
+        champs: ['echeance'],
+      });
+    }
     const fEcriture = filtreTaches(portee, { depart: 6, ecriture: true });
 
     // COALESCE : une mise à jour partielle (ex. cocher « terminée ») ne doit pas

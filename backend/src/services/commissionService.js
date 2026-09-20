@@ -1,4 +1,5 @@
 const porteeCabinet = require('../lib/porteeCabinet')
+const { analyserErreurEntree } = require('../middleware/erreursEntree')
 
 const COMMISSION_STATUSES = new Set(['expected', 'partial', 'paid', 'overdue', 'cancelled'])
 
@@ -454,18 +455,28 @@ async function importCommissionsCsv(pool, user, content = '', portee = null) {
     try {
       if (!row.contract_ref) {
         report.unmatched += 1
-        report.errors.push({ line: index + 2, error: 'contract_ref_missing' })
+        report.errors.push({ line: index + 2, code: 'contract_ref_missing', error: 'Référence de contrat absente (colonne contract_ref).' })
         continue
       }
 
-      // Le contrat est recherché dans le périmètre CABINET quand la portée est
-      // fournie (sinon comportement historique : les contrats du seul appelant).
+      // ─────────────────────────────────────────────────────────────────────
+      // CAUSE RACINE DU DÉFAUT « import qui n'importe rien », mesuré en
+      // production le 20/09/2026 (Red Team P1 #2) : la liste de paramètres
+      // commençait par `getUserId(user)`, mais AUCUNE clause de la requête ne
+      // référençait $1 (les clauses utilisaient $2, puis $3/$4 pour la portée).
+      // PostgreSQL ne peut pas typer un paramètre jamais utilisé : il refusait
+      // la requête entière avec « could not determine data type of parameter
+      // $1 », message SQL servi au courtier à la place d'un diagnostic — et
+      // zéro ligne importée alors que l'API répondait 201.
+      // `contract_ref` est donc désormais $1, et la portée prend les index
+      // suivants (`f.suivant` renvoie l'index laissé libre).
+      // ─────────────────────────────────────────────────────────────────────
       const clauses = ['(' +
-        `q.id::text = $2` +
-        ` OR q.quote_data->>'numero' = $2` +
-        ` OR q.quote_data->>'policy_number' = $2` +
+        `q.id::text = $1` +
+        ` OR q.quote_data->>'numero' = $1` +
+        ` OR q.quote_data->>'policy_number' = $1` +
         ')']
-      const params = [getUserId(user), row.contract_ref]
+      const params = [row.contract_ref]
       if (portee) {
         const f = porteeCabinet.fragment(portee, {
           cabinet: 'c.cabinet_id',
@@ -491,19 +502,50 @@ async function importCommissionsCsv(pool, user, content = '', portee = null) {
       const quote = match.rows[0]
       if (!quote) {
         report.unmatched += 1
-        report.errors.push({ line: index + 2, error: 'contract_not_found', contract_ref: row.contract_ref })
+        report.errors.push({
+          line: index + 2,
+          code: 'contract_not_found',
+          error: `Aucun contrat de votre cabinet ne porte la référence « ${row.contract_ref} ».`,
+          contract_ref: row.contract_ref,
+        })
         continue
       }
 
       await upsertCommission(pool, user, quote.id, row, portee)
       report.imported += 1
     } catch (err) {
-      report.errors.push({ line: index + 2, error: err.message || 'import_failed' })
+      // Le diagnostic rendu au courtier ne recopie JAMAIS le message de
+      // PostgreSQL : il nomme la ligne et dit quoi corriger. La nature SQL de
+      // l'échec (entrée invalide) est traduite par le même module que le reste
+      // de l'API, pour que le libellé soit identique partout.
+      report.errors.push({
+        line: index + 2,
+        code: err.code === 'contract_not_found' ? 'contract_not_found' : 'ligne_refusee',
+        error: traduireErreurLigneImport(err),
+      })
     }
   }
 
+  // « Aucune ligne importée » est un ÉCHEC, pas un succès : on l'expose dans le
+  // rapport (la route en déduit le code HTTP). Un import partiel reste un
+  // succès partiel, mais il est annoncé comme tel.
+  report.ok = report.imported > 0
   return report
 }
+
+/**
+ * Message lisible pour une ligne refusée. Aucun nom de colonne, de contrainte
+ * ou de type SQL n'est transmis à l'appelant.
+ */
+function traduireErreurLigneImport(err) {
+  const analyse = analyserErreurEntree(err)
+  if (analyse) return analyse.message
+  if (err && err.code === 'contract_not_found') {
+    return 'Le contrat référencé est introuvable dans votre cabinet.'
+  }
+  return "Cette ligne n'a pas pu être importée : vérifiez la période (AAAA-MM), la compagnie et les montants."
+}
+
 
 module.exports = {
   normalizePeriod,

@@ -31,6 +31,8 @@ const { captureException } = require('../sentry')
 const PDFDocument = require('pdfkit')
 const porteeCabinet = require('../lib/porteeCabinet')
 const devise = require('../lib/devise')
+// Marché du cabinet : seule autorité pour devise et référentiel réglementaire.
+const marcheCabinet = require('../lib/marcheCabinet')
 const { kpi } = require('./dashboard')
 
 // Un client est rattaché au cabinet par `courtier_id` (colonne réellement
@@ -39,15 +41,19 @@ const { kpi } = require('./dashboard')
 // lib/porteeCabinet.js, la seule à faire autorité (même règle que /api/clients).
 
 /** Devise du cabinet (CHF en Suisse, EUR sinon) — un montant ne porte jamais la
- * devise du développeur. */
+ * devise du développeur.
+ *
+ * POURQUOI lib/marcheCabinet.js : cette fonction lisait `cabinets.country` sans
+ * repli et retombait sur l'euro dès que la colonne était vide — sur un cabinet
+ * suisse créé avant la complétion de sa fiche, le cockpit affichait donc des
+ * euros. Le helper résout le cabinet, puis son référent, puis (uniquement pour
+ * un compte sans cabinet) le profil de la personne. */
 async function deviseDuCabinet(pool, userId) {
   try {
-    const { rows } = await pool.query(
-      `SELECT c.country FROM cabinets c
-       JOIN cabinet_members cm ON cm.cabinet_id = c.id
-       WHERE cm.user_id = $1 AND cm.removed_at IS NULL
-       ORDER BY cm.created_at ASC LIMIT 1`, [userId])
-    return devise.marcheDepuis({ pays: rows[0] && rows[0].country })
+    const marche = await marcheCabinet.marcheUtilisateur(userId, {
+      query: (sql, params) => pool.query(sql, params),
+    })
+    return marche.marche
   } catch (_) {
     return 'FR'
   }

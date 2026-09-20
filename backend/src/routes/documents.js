@@ -17,6 +17,10 @@ const visionService = require('../services/visionService')
 const logger = require('../lib/logger')
 const { logAudit } = require('../lib/audit')
 const porteeCabinet = require('../lib/porteeCabinet')
+// Marché / identité du CABINET : un document client porte l'identité de
+// l'ENTREPRISE (FINMA ou ORIAS selon son marché), jamais celle de la personne
+// connectée qui lance la génération.
+const marcheCabinet = require('../lib/marcheCabinet')
 const { incrementUsage } = require('../services/planService')
 const { trackEvent } = require('../services/analyticsService')
 const { isFeatureEnabled } = require('../lib/featureFlags')
@@ -168,34 +172,62 @@ async function getCourtierContext(userId) {
       [userId]
     )
     const row = result.rows[0] || {}
+
+    // IDENTITÉ DU CABINET, résolue par lib/marcheCabinet.js.
+    // POURQUOI : le registre (FINMA en Suisse, ORIAS en France), le pays et le
+    // nom étaient lus dans `broker_profiles` de la PERSONNE QUI GÉNÈRE LE
+    // DOCUMENT. Le commercial d'un cabinet suisse — dont la fiche est vide —
+    // recevait donc `{"error":"orias_required","marche":"FR"}` : impossible de
+    // produire un document client depuis ce compte, alors que le propriétaire y
+    // parvenait. Le marché et le registre appartiennent au cabinet.
+    const identite = row.cabinet_id
+      ? await marcheCabinet.identiteCabinet(row.cabinet_id)
+      : null
+
     return {
       courtier: row,
       cabinet: {
         id: row.cabinet_id || null,
-        name: row.cabinet_name || row.cabinet || 'Cabinet COURTIA',
-        // Identité du cabinet : le marché (CH/FR) et le registre réel décident
-        // du document produit (voir services/documentDdaService.getMarche).
-        pays: row.pays || null,
+        // Nom RÉEL du cabinet. « Cabinet COURTIA » est un défaut de colonne, pas
+        // une identité : il s'imprimait sur le PDF d'un cabinet portant un autre
+        // nom. Le nom de la personne n'est utilisé qu'en tout dernier recours
+        // (elle est l'intermédiaire qui remet le document).
+        name: (identite && identite.nom)
+          || row.cabinet_name
+          || row.cabinet
+          || `${row.first_name || ''} ${row.last_name || ''}`.trim(),
+        // Marché du CABINET : c'est lui qui décide du référentiel du document.
+        marche: identite ? identite.marche : undefined,
+        pays: (identite && identite.pays) || row.pays || null,
         langue: row.langue || null,
-        registre_type: row.registre_type || null,
-        registre_numero: row.registre_numero || null,
-        uid: row.uid || null,
-        orias_number: row.orias_number || row.orias || '',
+        registre_type: (identite && identite.registre_type) || row.registre_type || null,
+        registre_numero: (identite && identite.registre_numero) || row.registre_numero || null,
+        uid: (identite && identite.uid) || row.uid || null,
+        // Un cabinet suisse n'a pas d'ORIAS : le champ reste vide (aucun numéro
+        // français ne doit apparaître sur son document).
+        orias_number: identite ? identite.orias : (row.orias_number || row.orias || ''),
+        canton: (identite && identite.canton) || null,
         ias_categories: row.ias_categories || [],
         rc_pro_company: row.rc_pro_company || '',
         rc_pro_number: row.rc_pro_number || '',
         rc_pro_amount_cents: row.rc_pro_amount_cents || null,
-        address_line1: row.address_line1 || row.adresse || '',
-        postal_code: row.postal_code || row.code_postal || '',
-        city: row.city || row.ville || '',
-        tutelle_authority: row.tutelle_authority || null,
+        address_line1: (identite && identite.adresse) || row.address_line1 || row.adresse || '',
+        postal_code: (identite && identite.code_postal) || row.postal_code || row.code_postal || '',
+        city: (identite && identite.ville) || row.city || row.ville || '',
+        telephones: (identite && identite.telephone) || row.telephone || '',
+        // Autorité de contrôle du marché RÉEL : jamais un « ACPR » par défaut
+        // sur un document suisse.
+        tutelle_authority: identite ? identite.tutelle_authority : (row.tutelle_authority || null),
         dpa_signed_at: row.dpa_signed_at || null,
       },
     }
   } catch (err) {
     logger.warn({ error: err.message, user_id: userId }, 'documents courtier context fallback')
     const result = await pool.query('SELECT id, email, first_name, last_name FROM users WHERE id = $1 LIMIT 1', [userId])
-    return { courtier: result.rows[0] || {}, cabinet: { name: 'Cabinet COURTIA' } }
+    const courtier = result.rows[0] || {}
+    // Repli : aucune identité inventée. Un nom vide vaut mieux qu'un nom faux
+    // (« Cabinet COURTIA ») imprimé sur un document client.
+    return { courtier, cabinet: { name: `${courtier.first_name || ''} ${courtier.last_name || ''}`.trim() } }
   }
 }
 
@@ -583,7 +615,9 @@ function generatePDF(filePath, template, client, courtier, data) {
         doc.text(`Produit proposé : ${data.produit}`)
       }
       if (data && data.prime_annuelle) {
-        doc.text(`Prime annuelle indicative : ${data.prime_annuelle} €`)
+        // Devise du CABINET : un montant en euros sur un document suisse est un
+        // chiffre faux (défaut constaté sur un cabinet établi en Suisse).
+        doc.text(`Prime annuelle indicative : ${data.prime_annuelle} ${data.devise === 'CHF' ? 'CHF' : '€'}`)
       }
       if (data && data.description) {
         doc.text(data.description)
@@ -623,12 +657,19 @@ function generatePDF(filePath, template, client, courtier, data) {
       .font('Helvetica')
       .fillColor('#999999')
       .text(
-        `${courtier.first_name || ''} ${courtier.last_name || ''} — Cabinet de courtage en assurances`,
+        // Le cabinet est nommé s'il est connu : « Cabinet de courtage en
+        // assurances » générique reste un repli, jamais un nom inventé.
+        courtier.cabinet_nom
+          || `${courtier.first_name || ''} ${courtier.last_name || ''} — Cabinet de courtage en assurances`,
         50,
         pageHeight - 90
       )
 
-    if (courtier.orias_number) {
+    // Registre du marché RÉEL du cabinet : FINMA / IDE en Suisse, ORIAS en
+    // France. Un cabinet suisse ne doit jamais porter un numéro ORIAS.
+    if (courtier.registre_numero) {
+      doc.text(`${courtier.registre_type || 'Registre'} : ${courtier.registre_numero}`, 50, pageHeight - 78)
+    } else if (courtier.orias_number) {
       doc.text(`ORIAS : ${courtier.orias_number}`, 50, pageHeight - 78)
     }
 
@@ -765,13 +806,33 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
     )
     const courtier = courtierResult.rows[0] || {}
 
+    // L'identité imprimée au pied du document est celle du CABINET : sur un
+    // cabinet suisse, aucun ORIAS ne doit apparaître, et le numéro FINMA / l'IDE
+    // (UID) doivent y figurer à sa place. Le marché décide aussi de la devise
+    // des montants imprimés (CHF en Suisse, € en France).
+    const appartenance = await marcheCabinet.cabinetDeLUtilisateur(courtier_id)
+    const identiteCabinet = appartenance
+      ? await marcheCabinet.identiteCabinet(appartenance.cabinet_id)
+      : await marcheCabinet.marcheUtilisateur(courtier_id)
+    courtier.orias_number = identiteCabinet.marche === 'CH'
+      ? ''
+      : (courtier.orias_number || identiteCabinet.orias || '')
+    courtier.registre_type = identiteCabinet.registre_type || ''
+    courtier.registre_numero = identiteCabinet.registre_numero || ''
+    courtier.cabinet_nom = identiteCabinet.nom || ''
+    const donneesPdf = {
+      ...(data || {}),
+      marche: identiteCabinet.marche,
+      devise: identiteCabinet.devise,
+    }
+
     // Créer le répertoire si besoin
     const tmpDir = ensureTmpDir()
     const docId = generateDocId()
     const filePath = path.join(tmpDir, `${docId}.pdf`)
 
     // Générer le PDF
-    await generatePDF(filePath, template, client, courtier, data || {})
+    await generatePDF(filePath, template, client, courtier, donneesPdf)
 
     // Insérer en base
     const pdf_url = `/api/documents/${docId}/download`

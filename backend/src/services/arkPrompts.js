@@ -5,6 +5,11 @@
  * @module arkPrompts
  */
 
+// Marché du CABINET : seule autorité (lib/marcheCabinet.js). Le référentiel
+// réglementaire servi à l'assistant IA (FINMA/LSA/CHF ou ORIAS/DDA/€) dépend du
+// cabinet, jamais de la fiche personnelle du collaborateur connecté.
+const marcheCabinet = require('../lib/marcheCabinet')
+
 const ARK_PERSONA = `Tu es ARK, l'assistant IA de COURTIA, expert en courtage d'assurance français.
 Tu connais parfaitement :
 - La réglementation DDA (Directive Distribution Assurance)
@@ -147,14 +152,20 @@ function appliquerMarche(system, market = 'FR') {
  */
 async function chargerMarcheCabinet(pool, userId) {
   if (!pool || !userId) return 'FR'
+  // POURQUOI on ne lit plus `broker_profiles` ici : le marché est une propriété
+  // du CABINET. Lu dans la fiche de la personne connectée, il faisait parler
+  // l'assistant IA du référentiel français (ORIAS, ACPR, DDA, €) à un
+  // collaborateur d'un cabinet suisse dont la fiche était vide. On délègue donc
+  // à la seule autorité : lib/marcheCabinet.js (cabinet → référent du cabinet →
+  // profil, uniquement pour un compte sans cabinet → France).
   try {
-    const { rows } = await pool.query(
-      `SELECT pays, langue FROM broker_profiles WHERE user_id = $1 LIMIT 1`,
-      [userId]
-    )
-    return resoudreMarche(rows[0] || {})
+    const marche = await marcheCabinet.marcheUtilisateur(userId, {
+      query: (sql, params) => pool.query(sql, params),
+    })
+    return marche.marche
   } catch (_) {
-    // Profil illisible : on retombe sur le marché par défaut, jamais un marché inventé.
+    // Lecture impossible : on retombe sur le marché par défaut, jamais un marché
+    // inventé ni un droit supplémentaire.
     return 'FR'
   }
 }

@@ -1,11 +1,23 @@
 /**
  * Developer Routes — LOT 23
  * Gestion des clés API pour utilisateurs connectés
+ *
+ * CORRECTION 20/09/2026 (Red Team P1 #3) : `POST /api/developer/keys` ÉMETTAIT
+ * des clés d'API permanentes pour un rôle de cabinet en LECTURE SEULE
+ * (`assistant`) — mesuré en production : `api_keys` id 1 et 2 créés par un
+ * compte sans droit d'écriture. Une clé d'API ouvre l'API publique du cabinet
+ * avec les scopes qu'on lui donne : c'est un acte d'administration, pas une
+ * lecture. Toutes les écritures de ce routeur (clé, webhook) passent donc par
+ * `exigerEcritureCabinet`.
  */
 
 const express = require('express');
 const router = express.Router();
 const apiKeyService = require('../services/apiKeyService');
+const { exigerEcritureCabinet } = require('../middleware/gardeEcritureRole');
+
+/** Refus 403 pour un rôle de cabinet en lecture seule (assistant / viewer). */
+const ecrire = exigerEcritureCabinet(null, "gérer les accès techniques du cabinet (clés d'API, webhooks)");
 
 /**
  * GET /api/developer/keys
@@ -25,7 +37,7 @@ router.get('/keys', async (req, res) => {
  * POST /api/developer/keys
  * Génère une nouvelle clé API
  */
-router.post('/keys', async (req, res) => {
+router.post('/keys', ecrire, async (req, res) => {
   try {
     const { name, scopes } = req.body;
     
@@ -67,7 +79,7 @@ router.post('/keys', async (req, res) => {
  * DELETE /api/developer/keys/:keyId
  * Révoque une clé API
  */
-router.delete('/keys/:keyId', async (req, res) => {
+router.delete('/keys/:keyId', ecrire, async (req, res) => {
   try {
     const revoked = await apiKeyService.revokeApiKey(req.params.keyId, req.user.id);
     
@@ -114,7 +126,7 @@ router.get('/webhooks', async (req, res) => {
  * POST /api/developer/webhooks
  * Crée un webhook
  */
-router.post('/webhooks', async (req, res) => {
+router.post('/webhooks', ecrire, async (req, res) => {
   try {
     const { url, events } = req.body;
     
@@ -143,7 +155,7 @@ router.post('/webhooks', async (req, res) => {
  * DELETE /api/developer/webhooks/:webhookId
  * Supprime un webhook
  */
-router.delete('/webhooks/:webhookId', async (req, res) => {
+router.delete('/webhooks/:webhookId', ecrire, async (req, res) => {
   try {
     const deleted = await apiKeyService.deleteWebhook(req.params.webhookId, req.user.id);
     

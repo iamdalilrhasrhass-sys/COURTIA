@@ -9,6 +9,9 @@ const legalAcceptanceService = require('../services/legalAcceptanceService');
 const emailService = require('../services/emailService');
 const logger = require('../lib/logger');
 const { insertStripePaymentEventIfNew } = require('../services/billingWebhookService');
+// Marché du CABINET : seule autorité (lib/marcheCabinet.js). La grille tarifaire
+// et la mention fiscale d'un membre ne dépendent jamais de SA fiche personnelle.
+const marcheCabinet = require('../lib/marcheCabinet');
 
 const router = express.Router();
 
@@ -533,10 +536,17 @@ async function handleStripeEvent(event) {
 }
 
 /**
- * Marché du cabinet appelant, sans rendre la route obligatoirement authentifiée :
- * si un jeton valide est présent, on lit le pays du cabinet ; sinon on reste sur
- * la grille par défaut (euros). Un visiteur anonyme ne voit donc rien changer,
- * et un cabinet suisse connecté reçoit sa grille en CHF.
+ * Marché du CABINET appelant (lib/marcheCabinet.js), sans rendre la route
+ * obligatoirement authentifiée : si un jeton valide est présent, on lit le
+ * marché du cabinet de l'utilisateur ; sinon on reste sur la grille par défaut
+ * (euros). Un visiteur anonyme ne voit donc rien changer.
+ *
+ * POURQUOI CE PASSAGE PAR LE HELPER (défaut P0 du 20/09/2026) : cette fonction
+ * lisait `broker_profiles.pays` de la PERSONNE connectée. Le propriétaire d'un
+ * cabinet suisse recevait donc « 199 CHF HT / mois, TVA suisse (8,1 %) » et son
+ * commercial du même cabinet « Starter 89 € HT / mois, TVA 20 % » — une
+ * fiscalité française servie à une entreprise suisse. Le marché appartient au
+ * cabinet : `marcheDuCabinet` est la seule autorité.
  */
 async function marcheDepuisRequete(req) {
   try {
@@ -547,9 +557,8 @@ async function marcheDepuisRequete(req) {
     const decode = jwt.verify(entete.slice(7), getJwtSecret());
     const userId = decode.id || decode.userId;
     if (!userId) return 'FR';
-    const { rows } = await pool.query('SELECT pays FROM broker_profiles WHERE user_id = $1 LIMIT 1', [userId]);
-    const pays = String(rows[0]?.pays || '').trim().toUpperCase();
-    return (pays === 'CH' || pays === 'CHE' || pays === 'SUISSE') ? 'CH' : 'FR';
+    const marche = await marcheCabinet.marcheUtilisateur(userId, { query: (sql, params) => pool.query(sql, params) });
+    return marche.marche;
   } catch (_) {
     return 'FR';
   }
@@ -726,10 +735,16 @@ router.get('/status', verifyToken, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ success: false, error: 'unauthorized' });
     const status = await billingService.getBillingStatus(userId);
+    // Le marché et la mention fiscale viennent du CABINET (jamais de la fiche du
+    // collaborateur connecté) : deux membres d'un même cabinet ne peuvent pas
+    // recevoir deux fiscalités différentes sur le même écran.
+    const marche = await marcheDepuisRequete(req);
+    const plans = billingService.getPlans(marche);
     return res.json({
       success: true,
+      market: marche,
       billing_mode: stripeService.getBillingMode(),
-      fiscal_label: billingService.FISCAL_LABEL,
+      fiscal_label: plans[0]?.fiscal_label || billingService.FISCAL_LABEL,
       stripe_configuration: stripeService.getConfigurationStatus(),
       status,
     });
@@ -743,7 +758,14 @@ router.get('/me', verifyToken, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ success: false, error: 'unauthorized' });
     const status = await billingService.getBillingStatus(userId);
-    return res.json({ success: true, subscription: status });
+    const marche = await marcheDepuisRequete(req);
+    const plans = billingService.getPlans(marche);
+    return res.json({
+      success: true,
+      market: marche,
+      fiscal_label: plans[0]?.fiscal_label || billingService.FISCAL_LABEL,
+      subscription: status,
+    });
   } catch (_err) {
     return res.status(500).json({ success: false, error: 'billing_status_unavailable' });
   }

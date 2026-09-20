@@ -7,6 +7,25 @@ import SimpleCard from '../components/SimpleCard'
 import api from '../api'
 import toast from 'react-hot-toast'
 
+/**
+ * Libellés de conformité par défaut, utilisés quand l'API ne les fournit pas
+ * (backend plus ancien). Ils décrivent le marché FRANÇAIS — comportement
+ * historique : on ne bascule JAMAIS un cabinet vers un référentiel étranger
+ * sur une donnée manquante. Pour un cabinet suisse, l'API renvoie FINMA et
+ * « Export du registre de conformité » (elle seule connaît le pays du cabinet).
+ */
+const CONFORMITE_DEFAUT = {
+  marche: 'FR',
+  autorite: 'ACPR',
+  chapeau: 'DDA · KYC · Mandats · Audit logs · Export ACPR',
+  checklist_titre: 'Checklist DDA (Directive Distribution Assurance)',
+  export: {
+    libelle: 'Export ACPR',
+    fichier: `rapport-acpr-${new Date().getFullYear()}.json`,
+    route: '/conformite/export-acpr',
+  },
+}
+
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
   cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)',
@@ -36,18 +55,25 @@ export default function Conformite() {
   }
   useEffect(() => { load() }, [])
 
-  async function exportAcpr() {
+  // Export du registre de conformité : la route, le nom de fichier et le
+  // libellé viennent du marché du cabinet (FINMA pour la Suisse, ACPR pour la
+  // France). L'écran n'écrit plus « ACPR » en dur — c'était le défaut mesuré sur
+  // un cabinet suisse, où l'ACPR n'a aucune compétence.
+  const conformite = dashboard?.conformite || CONFORMITE_DEFAUT
+  const conformiteExport = conformite.export || CONFORMITE_DEFAUT.export
+
+  async function exporterConformite() {
     try {
-      const res = await api.get('/conformite/export-acpr')
+      const res = await api.get(conformiteExport.route || CONFORMITE_DEFAUT.export.route)
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `rapport-acpr-${new Date().getFullYear()}.json`
+      a.download = conformiteExport.fichier || `registre-conformite-${new Date().getFullYear()}.json`
       a.click()
-      toast.success('Rapport ACPR exporté ✓')
+      toast.success(`${conformiteExport.libelle} généré ✓`)
     } catch {
-      toast.error('Erreur export ACPR')
+      toast.error(`Erreur lors de l'export : ${conformiteExport.libelle}`)
     }
   }
 
@@ -68,15 +94,15 @@ export default function Conformite() {
           title={<span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Shield size={24} color={T.cyan} /> Conformité courtage
           </span>}
-          subtitle="DDA · KYC · Mandats · Audit logs · Export ACPR"
+          subtitle={conformite.chapeau}
           action={
-            <button onClick={exportAcpr} style={{
+            <button onClick={exporterConformite} style={{
               background: 'rgba(34,211,238,0.12)', color: T.cyan,
               border: '1px solid rgba(34,211,238,0.25)',
               padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
             }}>
-              <Download size={12} /> Export ACPR
+              <Download size={12} /> {conformiteExport.libelle}
             </button>
           }
         />
@@ -110,7 +136,7 @@ export default function Conformite() {
           <div style={{ padding: 20 }}>
             {tab === 'overview' && (
               <div>
-                <h4 style={{ color: T.text, fontSize: 14, margin: '0 0 12px' }}>Checklist DDA (Directive Distribution Assurance)</h4>
+                <h4 style={{ color: T.text, fontSize: 14, margin: '0 0 12px' }}>{conformite.checklist_titre || CONFORMITE_DEFAUT.checklist_titre}</h4>
                 <ul style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.8, paddingLeft: 16 }}>
                   <li>✅ Besoin client exprimé</li>
                   <li>✅ Devoir de conseil documenté</li>

@@ -100,11 +100,34 @@ describe('arkPrompts — marché FR inchangé', () => {
   })
 })
 
-describe('arkPrompts — lecture du profil cabinet en base', () => {
-  test('le marché est lu dans broker_profiles', async () => {
-    const pool = { query: jest.fn(async () => ({ rows: [{ pays: 'CH', langue: 'fr' }] })) }
-    await expect(chargerMarcheCabinet(pool, 4)).resolves.toBe('CH')
-    expect(pool.query.mock.calls[0][0]).toContain('broker_profiles')
+describe('arkPrompts — lecture du marché du cabinet en base', () => {
+  test('le marché vient du CABINET ; sans cabinet, du profil de la personne', async () => {
+    // RÈGLE (20/09/2026) : le marché est une propriété du CABINET. Lu dans la
+    // fiche de la personne connectée, il faisait répondre l'assistant IA au
+    // référentiel français (ORIAS, ACPR, DDA, €) au commercial d'un cabinet
+    // suisse dont la fiche était vide.
+    const CAB = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const avecCabinet = {
+      query: jest.fn(async (sql) => {
+        const texte = String(sql)
+        if (texte.includes('cabinet_members') && texte.includes('JOIN broker_profiles')) {
+          return { rows: [{ user_id: 4, pays: 'CH', registre_type: 'FINMA' }] }
+        }
+        if (texte.includes('FROM cabinet_members')) return { rows: [{ cabinet_id: CAB, role: 'owner' }] }
+        if (texte.includes('FROM cabinets')) return { rows: [{ id: CAB, name: 'Cabinet QA', country: 'CH' }] }
+        return { rows: [] }
+      }),
+    }
+    await expect(chargerMarcheCabinet(avecCabinet, 4)).resolves.toBe('CH')
+    expect(avecCabinet.query.mock.calls[0][0]).toContain('cabinet_members')
+
+    // Repli mono-utilisateur : aucun cabinet ⇒ le profil fait foi, et il est
+    // bien lu en base (aucun marché inventé).
+    const sansCabinet = {
+      query: jest.fn(async (sql) => (String(sql).includes('FROM broker_profiles') ? { rows: [{ pays: 'CH', langue: 'fr' }] } : { rows: [] })),
+    }
+    await expect(chargerMarcheCabinet(sansCabinet, 4)).resolves.toBe('CH')
+    expect(sansCabinet.query.mock.calls.some(([sql]) => String(sql).includes('broker_profiles'))).toBe(true)
   })
 
   test('un profil illisible retombe sur FR, sans marché inventé', async () => {

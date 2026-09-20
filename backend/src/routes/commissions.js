@@ -78,6 +78,26 @@ router.post('/import', async (req, res) => {
       return res.status(400).json({ error: 'csv_required', message: 'Ajoutez un contenu CSV à importer.' })
     }
     const report = await importCommissionsCsv(req.app.locals.pool, req.user, csv, portee)
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // LE CODE HTTP DIT LA VÉRITÉ (Red Team P1 #2, mesuré le 20/09/2026)
+    // L'import répondait 201 `{total:1, imported:0}` : le courtier lisait un
+    // succès alors que sa base n'avait rien reçu. Un import qui n'importe AUCUNE
+    // ligne est un échec (422, l'entrée est comprise mais inexploitable) et le
+    // message dit exactement quoi corriger, ligne par ligne.
+    // ─────────────────────────────────────────────────────────────────────────
+    if (!report.imported) {
+      const premier = report.errors[0] || {}
+      return res.status(422).json({
+        ...report,
+        error: 'import_aucune_ligne',
+        message: report.total === 0
+          ? "Aucune ligne exploitable dans le fichier : la première ligne doit contenir les en-têtes (contract_ref, insurer, period, expected_amount)."
+          : `Aucune commission n'a été importée sur ${report.total} ligne(s) lue(s). `
+            + (premier.line ? `Ligne ${premier.line} : ${premier.error}` : 'Corrigez le fichier puis réessayez.'),
+      })
+    }
+
     res.status(201).json(report)
   } catch (err) {
     res.status(err.statusCode || 500).json({

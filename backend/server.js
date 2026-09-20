@@ -60,6 +60,26 @@ app.use((req, res, next) => {
   next()
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEUX GARDES TRANSVERSALES, MONTÉES AVANT TOUT ROUTEUR /api
+//
+// 1. `traduireErreursEntree` : une entrée invalide qui faisait répondre 500 avec
+//    le message brut de PostgreSQL (« value too long for type character
+//    varying(100) », « invalid input syntax for type integer: "NaN" ») est
+//    réécrite en 400 avec un message produit. Ferme la classe entière, pas les
+//    quatre appels mesurés (Red Team P1 #4).
+// 2. `creerGardeEcritureRole` : aucune ÉCRITURE pour un rôle de cabinet en
+//    lecture seule (assistant / viewer) — y compris l'émission de clés d'API.
+//    Trois routes l'oubliaient (objectifs/set, partners, developer/keys),
+//    mesuré en production le 20/09/2026 (Red Team P1 #3).
+// Montées sur le préfixe '/api' et avant les routeurs : aucune route ne peut
+// les contourner, quelle que soit son authentification interne.
+// ─────────────────────────────────────────────────────────────────────────────
+const { traduireErreursEntree } = require('./src/middleware/erreursEntree')
+const { creerGardeEcritureRole } = require('./src/middleware/gardeEcritureRole')
+app.use('/api', traduireErreursEntree)
+app.use('/api', creerGardeEcritureRole(pool))
+
 if (String(process.env.LOG_HTTP_REQUESTS || '').toLowerCase() === 'true') {
   app.use((req, res, next) => {
     const startedAt = Date.now()
@@ -367,7 +387,11 @@ app.use('/api/invite', inviteRouter)
 
 // Protected
 app.use('/api/dashboard',       verifyToken, dashboardRouter)
-app.use('/api/clients',         verifyToken, clientsRouter)
+// Les longueurs des champs clients sont contrôlées AVANT la base : une valeur
+// trop longue répond 400 en nommant le champ, au lieu d'un 500 SQL
+// « value too long for type character varying(100) » (Red Team P1 #4).
+const { limiterLongueurs, LIMITES_CLIENTS } = require('./src/middleware/validationChamps')
+app.use('/api/clients',         limiterLongueurs(LIMITES_CLIENTS), verifyToken, clientsRouter)
 app.use('/api/clients',         verifyToken, clientTagsRouter)
 app.use('/api/contrats',        verifyToken, contratsRouter)
 app.use('/api/contracts',       verifyToken, contractsAliasRouter)

@@ -203,16 +203,37 @@ async function getUsageStats(apiKeyId, days = 30) {
 async function registerWebhook(userId, url, events = ['client.created', 'contract.created', 'commission.received']) {
   // Génère un secret pour signature des webhooks
   const secret = crypto.randomBytes(32).toString('hex');
-  
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // POURQUOI CETTE RÉÉCRITURE (20/09/2026 — API publique v1, Red Team P2 #5)
+  // La requête d'origine portait `ON CONFLICT (user_id) WHERE url = $2` :
+  // syntaxe invalide pour PostgreSQL (le prédicat d'index ne prend pas de
+  // paramètre) et, de toute façon, AUCUN index unique (user_id, url) n'existe
+  // dans le schéma réel. Chaque enregistrement de webhook échouait donc en
+  // erreur SQL — un point d'entrée de l'API publique qui ne pouvait pas
+  // fonctionner. On fait un vrai « upsert » en deux temps : mise à jour de
+  // l'abonnement existant pour cette URL, sinon création.
+  // ───────────────────────────────────────────────────────────────────────────
+  const existant = await pool.query(
+    `UPDATE api_webhooks
+        SET events = $3, is_active = true, updated_at = NOW()
+      WHERE user_id = $1 AND url = $2
+      RETURNING id, url, events, is_active, created_at`,
+    [userId, url, events]
+  )
+  if (existant.rows.length > 0) {
+    // Le secret n'est PAS régénéré à la mise à jour : les intégrations qui
+    // vérifient déjà les signatures continuent de fonctionner.
+    return existant.rows[0]
+  }
+
   const result = await pool.query(
-    `INSERT INTO api_webhooks (user_id, url, events, secret)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (user_id) WHERE url = $2
-     DO UPDATE SET events = $3, is_active = true, updated_at = NOW()
+    `INSERT INTO api_webhooks (user_id, url, events, secret, is_active, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, true, NOW(), NOW())
      RETURNING id, url, events, is_active, created_at`,
     [userId, url, events, secret]
-  );
-  
+  )
+
   return {
     ...result.rows[0],
     secret // Retourné une seule fois

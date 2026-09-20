@@ -58,6 +58,23 @@ function getCourtierDisplayName(courtier = {}) {
   )
 }
 
+/**
+ * Nom RÉEL du cabinet, ou '' si aucun n'est connu.
+ *
+ * POURQUOI : « Cabinet COURTIA » est le `DEFAULT` de la colonne `cabinets.name`
+ * — un gabarit de base de données, pas une identité. Lu comme un nom réel, il
+ * s'imprimait sur le document d'un cabinet établi en Suisse et portant un autre
+ * nom. Un document client ne doit jamais porter un nom d'entreprise inventé :
+ * ce qui n'est pas renseigné reste vide et l'appelant décide de son repli.
+ */
+function nomCabinetReel(...valeurs) {
+  for (const valeur of valeurs) {
+    const texte = String(valeur ?? '').trim()
+    if (texte && texte.toUpperCase() !== 'CABINET COURTIA') return texte
+  }
+  return ''
+}
+
 function getOrias(cabinet = {}, courtier = {}) {
   return pick(cabinet.orias_number, cabinet.orias, courtier.orias_number, courtier.orias, courtier.iobsp_orias_number)
 }
@@ -149,7 +166,14 @@ function buildDdaVariables({ type, client = {}, courtier = {}, cabinet = {}, con
       generated_date_fr: generatedAt.toLocaleDateString('fr-FR'),
     },
     cabinet: {
-      name: pick(cabinet.name, courtier.cabinet, 'Cabinet COURTIA'),
+      // Nom RÉEL du cabinet. « Cabinet COURTIA » est le `DEFAULT` de colonne de
+      // `cabinets.name` : le traiter comme une identité faisait imprimer ce
+      // gabarit sur le PDF d'un cabinet portant un autre nom (défaut constaté
+      // sur un cabinet suisse). En dernier recours — aucun nom nulle part — on
+      // nomme l'intermédiaire qui remet le document : c'est une donnée réelle,
+      // jamais un nom d'entreprise inventé.
+      name: nomCabinetReel(cabinet.name, courtier.cabinet, courtier.cabinet_name)
+        || getCourtierDisplayName(courtier),
       // `orias` est conservé pour les documents FRANÇAIS ; il reste vide pour un
       // cabinet suisse (aucun numéro ORIAS ne doit apparaître sur son document).
       orias: getIdentifiantReglementaire(cabinet, courtier).marche === 'FR' ? getOrias(cabinet, courtier) : '',
@@ -214,7 +238,7 @@ function renderDdaPlainText(type, variables) {
     definition.title,
     '',
     `Date de génération : ${v.document?.generated_date_fr || new Date().toLocaleDateString('fr-FR')}`,
-    `Cabinet : ${v.cabinet?.name || 'Cabinet COURTIA'}`,
+    `Cabinet : ${v.cabinet?.name || 'Non renseigné'}`,
     v.cabinet?.registry_label
       ? `${v.cabinet.registry_label} : ${v.cabinet.registry_number}`
       : (v.cabinet?.orias ? `ORIAS : ${v.cabinet.orias}` : 'Identifiant réglementaire : non renseigné'),
@@ -257,6 +281,7 @@ module.exports = {
   DDA_DOCUMENT_TYPES,
   getDocumentDefinition,
   normalizeDocumentType,
+  nomCabinetReel,
   validateDdaReadiness,
   buildDdaVariables,
   getMarche,

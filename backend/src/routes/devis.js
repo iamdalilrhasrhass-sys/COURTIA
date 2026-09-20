@@ -32,6 +32,9 @@ const {
   validerOffresPourClient,
 } = require('../lib/donneesReelles')
 const porteeCabinet = require('../lib/porteeCabinet')
+// Règle UNIQUE des montants : refus explicite à l'écriture (non numérique,
+// négatif, au-delà du plafond) — partagée avec les contrats (lib/montants.js).
+const { montantOuNull, erreurMontant } = require('../lib/montants')
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
 
@@ -1060,6 +1063,31 @@ router.post('/wizard/finalize', async (req, res) => {
       })
     }
 
+    // MONTANTS DU DEVIS : même règle que les contrats (lib/montants.js).
+    // POURQUOI : `total_premium_cents` était calculé par
+    // `Math.round(offers[0].prime_annuelle_eur * 100)` sans contrôle. Une offre
+    // à `-2000` faisait DIMINUER le total de primes du cockpit, une offre à
+    // `'abc'` produisait `NaN` (donc une écriture en échec ou un total faux),
+    // et une offre à `99999999999999` rendait les KPI absurdes. On refuse la
+    // finalisation en nommant l'offre fautive : le devis reste en brouillon.
+    for (const [index, offre] of offers.entries()) {
+      const montantOffre = offre?.prime_annuelle_eur ?? offre?.premium_annual ?? offre?.total_premium_eur
+      // Un montant ABSENT reste absent (le devis n'aura pas de total de prime :
+      // « non mesuré » ≠ « zéro ») ; seul un montant FOURNI est validé.
+      const verdictMontant = montantOuNull(montantOffre)
+      if (!verdictMontant.ok) {
+        return res.status(400).json({
+          ...erreurMontant('prime_annuelle_eur', verdictMontant),
+          offre: { index, fournisseur: offre?.fournisseur || offre?.provider || offre?.libelle || null },
+        })
+      }
+      // Le montant retenu est celui qui a été VALIDÉ (arrondi au centime) : la
+      // même valeur entre dans le total, dans le PDF et dans le devis.
+      if (verdictMontant.valeur !== null && offre && typeof offre === 'object') {
+        offre.prime_annuelle_eur = verdictMontant.valeur
+      }
+    }
+
     const { rows: existing } = await pool.query(
       // Alias `d` : la portée cabinet (`d.cabinet_id` / `d.user_id`) l'exige.
       // Sans alias, la finalisation répondait 500
@@ -1375,27 +1403,103 @@ router.post('/:id/relance', async (req, res) => {
   }
 })
 
-// ─── POST /api/devis/:id/sign — marque signé
+// ─── POST /api/devis/:id/sign — marque signé ────────────────────────────────
+//
+// POURQUOI CETTE ROUTE A ÉTÉ RÉÉCRITE (Red Team P1 #1, mesuré en production
+// le 20/09/2026)
+// `POST /api/devis/8/sign {}` répondait HTTP 200 `{"ok":true}` alors que RIEN
+// n'était signé : `quote_requests.status` restait 'draft', son `metadata`
+// restait `{}` et `signature_requests` ne comptait aucune ligne. La cause : la
+// route n'écrivait que dans `devis_wizard`, sans regarder le nombre de lignes
+// réellement touchées, puis annonçait un succès inconditionnel. Le courtier
+// croyait son devis signé ; la base disait le contraire.
+//
+// LA RÈGLE ICI : un succès n'est renvoyé QUE si une ligne a réellement changé
+// d'état (vérifié par `RETURNING`, donc lu DANS la transaction d'écriture). Si
+// le devis n'existe pas pour ce cabinet — ni devis guidé, ni devis v1 —, la
+// réponse est un 404 explicite qui dit qu'aucune signature n'a été enregistrée.
 router.post('/:id/sign', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     if (porteeCabinet.refuserEcriture(portee, res, 'signer un devis')) return
+
     const devisId = parseInt(req.params.id, 10)
+    // Un identifiant qui n'est pas un entier ne peut désigner aucun devis : la
+    // base n'est même pas interrogée (sinon PostgreSQL répondrait 500
+    // « invalid input syntax for type integer »).
+    if (!Number.isFinite(devisId) || devisId <= 0) {
+      return res.status(404).json({
+        error: 'devis_not_found',
+        message: "Aucune signature n'a été enregistrée : cet identifiant de devis n'existe pas.",
+      })
+    }
+
+    // ── 1. Devis GUIDÉ (`devis_wizard`) ─────────────────────────────────────
     const fSign = filtreWizard(portee, { depart: 2, ecriture: true })
-    await pool.query(
-      `UPDATE devis_wizard d SET status = 'signed', signed_at = NOW(), updated_at = NOW()
-       WHERE id = $1 AND ${fSign.sql}`, [devisId, ...fSign.params]
+    const wizard = await pool.query(
+      `UPDATE devis_wizard d SET status = 'signed', signed_at = COALESCE(d.signed_at, NOW()), updated_at = NOW()
+       WHERE d.id = $1 AND ${fSign.sql}
+       RETURNING d.id, d.status, d.signed_at`,
+      [devisId, ...fSign.params]
     )
-    await cancelPendingRelancesForDevis(devisId)
-    await pool.query(
-      `INSERT INTO devis_activity (devis_id, user_id, event, payload)
-       VALUES ($1, $2, 'signed', '{}'::jsonb)`, [devisId, userId]
-    ).catch(() => {})
-    res.json({ ok: true })
+    if (wizard.rows[0] && wizard.rows[0].status === 'signed') {
+      await cancelPendingRelancesForDevis(devisId)
+      await pool.query(
+        `INSERT INTO devis_activity (devis_id, user_id, event, payload)
+         VALUES ($1, $2, 'signed', '{}'::jsonb)`, [devisId, userId]
+      ).catch(() => {})
+      // La signature est PROUVÉE par la ligne renvoyée par l'UPDATE : le corps
+      // de la réponse dit exactement ce qui a été écrit, pas ce qu'on espérait.
+      return res.json({
+        ok: true,
+        devis_type: 'wizard',
+        signature: {
+          devis_id: wizard.rows[0].id,
+          status: wizard.rows[0].status,
+          signed_at: wizard.rows[0].signed_at,
+        },
+      })
+    }
+
+    // ── 2. Devis v1 (`quote_requests`) ──────────────────────────────────────
+    // `metadata` porte désormais l'horodatage et l'auteur de la signature : un
+    // devis v1 n'a pas de colonne `signed_at`, et un statut seul ne dit pas QUI
+    // a signé. `suivant` vient du fragment de portée : l'index du paramètre
+    // laissé libre, quel que soit le mode (cabinet ou mono-utilisateur).
+    const fV1 = filtreDevis(portee, { depart: 2, ecriture: true })
+    const v1 = await pool.query(
+      `UPDATE quote_requests qr
+          SET status = 'signed',
+              metadata = COALESCE(qr.metadata, '{}'::jsonb)
+                         || jsonb_build_object('signed_at', to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SSOF'),
+                                               'signed_by', $${fV1.suivant}::int),
+              submitted_at = COALESCE(qr.submitted_at, NOW())
+        WHERE qr.id = $1 AND ${fV1.sql}
+        RETURNING qr.id, qr.status, qr.metadata`,
+      [devisId, ...fV1.params, userId]
+    )
+    if (v1.rows[0] && v1.rows[0].status === 'signed') {
+      return res.json({
+        ok: true,
+        devis_type: 'v1',
+        signature: {
+          devis_id: v1.rows[0].id,
+          status: v1.rows[0].status,
+          signed_at: (v1.rows[0].metadata || {}).signed_at || null,
+        },
+      })
+    }
+
+    // ── 3. Rien n'a été signé : on le dit, sans jamais un « ok » ────────────
+    return res.status(404).json({
+      error: 'devis_not_found',
+      message: "Aucune signature n'a été enregistrée : ce devis n'existe pas dans votre cabinet (ni devis guidé, ni devis v1).",
+    })
   } catch (err) {
-    res.status(500).json({ error: 'sign_failed', message: err.message })
+    logger.error({ err: err.message }, 'devis signature')
+    res.status(500).json({ error: 'sign_failed', message: 'La signature n’a pas pu être enregistrée.' })
   }
 })
 

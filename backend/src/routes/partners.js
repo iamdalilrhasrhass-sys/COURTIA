@@ -1,11 +1,22 @@
 /**
  * Partenaires — Routes API
  * Module de suivi des partenariats courtage
+ *
+ * CORRECTION 20/09/2026 (Red Team P1 #3) : ce routeur n'avait AUCUNE garde de
+ * rôle. Un compte de cabinet en LECTURE SEULE (`assistant`) créait réellement
+ * des partenaires en base (`POST /api/partners` → 201, ligne écrite). Les
+ * écritures passent désormais par `exigerEcritureCabinet` : 403 `lecture_seule`
+ * pour assistant/viewer, comportement inchangé pour owner/manager/broker et
+ * pour les comptes sans cabinet.
  */
 const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
 const pool = require('../db');
+const { exigerEcritureCabinet } = require('../middleware/gardeEcritureRole');
+
+/** Refus 403 pour un rôle de cabinet en lecture seule (assistant / viewer). */
+const ecrire = exigerEcritureCabinet(pool, 'modifier les partenaires du cabinet');
 
 // GET /api/partners — Liste des partenaires du courtier
 router.get('/', verifyToken, async (req, res) => {
@@ -69,7 +80,7 @@ router.get('/stats', verifyToken, async (req, res) => {
 });
 
 // POST /api/partners — Créer un partenaire
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, ecrire, async (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
     const { nom, categorie, type_partenaire, contact_nom, contact_email, contact_telephone, produit_principal, priorite, vague, notes } = req.body;
@@ -92,7 +103,7 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // PUT /api/partners/:id — Mettre à jour
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:id', verifyToken, ecrire, async (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
     const { id } = req.params;
@@ -135,7 +146,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 });
 
 // DELETE /api/partners/:id
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, ecrire, async (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
     const { id } = req.params;
@@ -151,7 +162,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 });
 
 // PATCH /api/partners/:id/statut — Changement rapide de statut
-router.patch('/:id/statut', verifyToken, async (req, res) => {
+router.patch('/:id/statut', verifyToken, ecrire, async (req, res) => {
   try {
     const userId = req.user.userId || req.user.id;
     const { id } = req.params;

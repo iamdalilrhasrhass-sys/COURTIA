@@ -154,10 +154,24 @@ router.get('/entries', async (req, res) => {
 router.post('/entries', async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId
-    const entry = await fecService.createAccountingEntry(req.app.locals.pool, userId, req.body)
+    // Saisie MANUELLE : une écriture sans débit ni crédit est refusée (400).
+    const entry = await fecService.createAccountingEntry(req.app.locals.pool, userId, req.body, { exigerMontant: true })
     res.status(201).json(entry)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    // POURQUOI CE MAPPAGE (Red Team P1 #4, mesuré le 20/09/2026)
+    // Cette route répondait 500 avec le message BRUT de PostgreSQL
+    // (« invalid input syntax for type integer: "NaN" ») pour un champ mal
+    // saisi. Une entrée invalide est un 400 : le message produit par les
+    // validateurs dit quel champ corriger, et aucun nom de colonne, de type ou
+    // de contrainte interne n'est transmis à l'appelant.
+    const statut = err.statusCode && err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500
+    res.status(statut).json({
+      error: err.code || 'accounting_entry_failed',
+      message: statut === 400
+        ? err.message
+        : "Impossible d'enregistrer cette écriture pour le moment.",
+      ...(err.champ ? { champs: [err.champ] } : {}),
+    })
   }
 })
 

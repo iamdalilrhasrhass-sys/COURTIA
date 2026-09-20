@@ -8,16 +8,41 @@
  *   POST   /api/conformite/kyc/verify               → soumission vérification KYC
  *   GET    /api/conformite/mandats                  → liste mandats actifs
  *   GET    /api/conformite/audit-logs               → logs audit (lecture)
- *   GET    /api/conformite/export-acpr              → rapport annuel ACPR (JSON)
+ *   GET    /api/conformite/export-acpr              → registre de conformité (JSON)
+ *   GET    /api/conformite/export-registre          → même export, nom du marché
+ *
+ * VOCABULAIRE RÉGLEMENTAIRE = PAYS DU CABINET (Red Team P2 #6, 20/09/2026)
+ * L'écran d'un cabinet SUISSE affichait « Export ACPR » dans son chapeau et sur
+ * son bouton principal. L'ACPR n'a aucune compétence en Suisse : l'écran
+ * annonçait une obligation française inexistante. Les libellés viennent
+ * désormais de `services/referentielConformite` (FINMA pour la Suisse, ACPR
+ * pour la France) et sont servis par l'API, pour qu'un seul endroit les décide.
+ *
+ * CE N'EST PAS UNE TRADUCTION : la route et le contenu changent de marché.
+ * Un cabinet suisse n'obtient ni les sources ACPR/ORIAS, ni la mention « pour
+ * exigences ACPR / DDA ». Aucune obligation suisse n'est inventée pour autant :
+ * l'export reste le registre de conformité du cabinet, nommé comme tel.
  */
 const express = require('express')
 const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
 const pool = require('../db')
+const referentielConformite = require('../services/referentielConformite')
 
 router.use(verifyToken)
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
+
+/**
+ * Libellés de conformité du CABINET de l'appelant : FINMA pour un cabinet
+ * suisse, ACPR pour un cabinet français. Le marché est résolu par la règle
+ * unique du produit (`lib/marcheCabinet`, via `referentielConformite`) : tous
+ * les membres d'un même cabinet voient le même vocabulaire, et une donnée
+ * manquante fait retomber sur la France — jamais sur un référentiel étranger.
+ */
+async function libellesDuCabinet(req) {
+  return referentielConformite.libellesDeLaRequete(req, { pool })
+}
 
 router.get('/dashboard', async (req, res) => {
   try {
@@ -53,12 +78,19 @@ router.get('/dashboard', async (req, res) => {
     const ddaCoverage = totalClients ? Math.round(((dda.conforme || 0) / totalClients) * 100) : 0
     const kycCoverage = totalClients ? Math.round(((kyc.verified || 0) / totalClients) * 100) : 0
 
+    // Le bloc `conformite` porte le vocabulaire du PAYS du cabinet : chapeau de
+    // page, autorité de tutelle, registre et libellé/route de l'export. L'écran
+    // s'en sert au lieu d'écrire « ACPR » en dur (un cabinet suisse affichait
+    // une autorité française sans compétence chez lui).
+    const conformite = await libellesDuCabinet(req)
+
     res.json({
       ok: true,
       total_clients: totalClients,
       dda: { ...dda, coverage_pct: ddaCoverage },
       kyc: { ...kyc, coverage_pct: kycCoverage },
       mandats,
+      conformite,
     })
   } catch (err) {
     res.status(500).json({ error: 'dashboard_failed', message: err.message })
@@ -183,10 +215,17 @@ router.get('/audit-logs', async (req, res) => {
   }
 })
 
-router.get('/export-acpr', async (req, res) => {
+/**
+ * Export du registre de conformité, dans le vocabulaire du marché du cabinet.
+ * Exposé sous deux chemins : `/export-acpr` (chemin historique, conservé pour
+ * les intégrations françaises existantes) et `/export-registre` (nom neutre
+ * utilisé par les cabinets suisses).
+ */
+router.get(['/export-acpr', '/export-registre'], async (req, res) => {
   try {
     const userId = uid(req)
     const year = Number(req.query.year || new Date().getFullYear())
+    const libelles = await libellesDuCabinet(req)
 
     const { rows: meRows } = await pool.query(`SELECT id, email, orias_id, raison_sociale FROM users WHERE id = $1`, [userId]).catch(() => ({ rows: [] }))
     const me = meRows[0] || { email: 'n/a' }
@@ -205,9 +244,14 @@ router.get('/export-acpr', async (req, res) => {
 
     res.json({
       ok: true,
+      marche: libelles.marche,
       rapport: {
         generated_at: new Date().toISOString(),
         year,
+        // Titre du document tel qu'il sera nommé pour ce cabinet : « Export
+        // ACPR » en France, « Export du registre de conformité » en Suisse.
+        libelle: libelles.export.libelle,
+        autorite: libelles.autorite,
         courtier: { email: me.email, orias_id: me.orias_id || null, raison_sociale: me.raison_sociale || null },
         clients_total: clientsTotal[0].count,
         contracts_total: contractsTotal[0].count,
@@ -216,8 +260,10 @@ router.get('/export-acpr', async (req, res) => {
           conforme_count: ddaConforme[0].count,
           coverage_pct: clientsTotal[0].count ? Math.round((ddaConforme[0].count / clientsTotal[0].count) * 100) : 0,
         },
-        sources: { acpr: 'https://acpr.banque-france.fr', orias: 'https://www.orias.fr' },
-        legal: 'Document généré pour exigences ACPR / DDA — usage interne courtier.',
+        // Sources et mention légale du MARCHÉ : un cabinet suisse n'obtient ni
+        // l'ACPR ni l'ORIAS, dont il ne dépend pas.
+        sources: libelles.export.sources,
+        legal: libelles.export.legal,
       },
     })
   } catch (err) {

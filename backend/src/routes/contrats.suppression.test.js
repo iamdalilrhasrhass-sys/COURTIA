@@ -72,6 +72,7 @@ describe('contrats — cloisonnement et suppression', () => {
   test('suppression d’un contrat portant des commissions → 409 explicite', async () => {
     mockSql([
       ['cabinet_members', { rows: [] }],
+      ['FROM quotes', { rows: [{ id: 42 }] }],   // le contrat EST dans la portée
       ['FROM commissions', { rows: [{ nombre: 2 }] }],
     ]);
 
@@ -83,11 +84,29 @@ describe('contrats — cloisonnement et suppression', () => {
     expect(pool.query.mock.calls.some(([sql]) => /DELETE FROM quotes/i.test(String(sql)))).toBe(false);
   });
 
+  test('contrat HORS PORTÉE : 404 avant toute règle métier (aucune lecture de commission)', async () => {
+    // Le contrat n'est pas dans la portée, mais il porte une commission : la
+    // réponse ne doit PAS être 409 (un 409 confirmerait son existence à un
+    // cabinet qui ne le possède pas).
+    mockSql([
+      ['cabinet_members', { rows: [] }],
+      ['FROM quotes', { rows: [] }],
+      ['FROM commissions', { rows: [{ nombre: 2 }] }],
+    ]);
+
+    const res = await appeler('/api/contrats/42', 'DELETE');
+    expect(res.status).toBe(404);
+    expect(pool.query.mock.calls.some(([sql]) => /FROM commissions/i.test(String(sql)))).toBe(false);
+  });
+
   test('suppression d’un contrat sans commission → 200 seulement si la ligne part', async () => {
     mockSql([
       ['cabinet_members', { rows: [] }],
-      ['FROM commissions', { rows: [{ nombre: 0 }] }],
+      // AVANT « FROM quotes » : une requête `DELETE FROM quotes` contient aussi
+      // « FROM quotes », elle doit donc être reconnue en premier.
       ['DELETE FROM quotes', { rows: [{ id: 42 }], rowCount: 1 }],
+      ['FROM quotes', { rows: [{ id: 42 }] }],
+      ['FROM commissions', { rows: [{ nombre: 0 }] }],
     ]);
 
     const res = await appeler('/api/contrats/42', 'DELETE');

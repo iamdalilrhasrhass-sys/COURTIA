@@ -6,6 +6,7 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { isSessionRevoked } = require('../middleware/auth');
 const { trackEvent } = require('../services/analyticsService');
@@ -431,5 +432,100 @@ exports.refresh = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Actualisation de session impossible' });
+  }
+};
+
+// Déconnexion — POST /api/auth/logout
+//
+// POURQUOI : jusqu'ici le client jetait son jeton, mais le serveur continuait
+// de l'accepter jusqu'à son expiration (7 jours). Un jeton copié restait donc
+// utilisable après une déconnexion : aucune révocation serveur n'existait.
+//
+// MÉCANISME (aucun stockage de jetons révoqués) : on pose la MÊME marque que
+// celle du changement de mot de passe (`users.sessions_revoked_at`, migration
+// 116 ; voir middleware/auth.js) : tout jeton dont `iat` est antérieur est
+// refusé avec 401. Un jeton ne peut donc jamais « revenir » après reconnexion.
+//
+// DEUX PORTÉES, ANNONCÉES DANS LA RÉPONSE
+//   * par défaut (`toutes_les_sessions` absent) : marque = `iat` de la session
+//     appelante ⇒ les sessions ouvertes AVANT celle-ci (autres appareils) sont
+//     fermées, la session appelante reste valide jusqu'à l'expiration de son
+//     jeton et c'est le client qui l'efface. Un appelant qui enchaîne une
+//     déconnexion puis un appel avec le même jeton — ce que fait la recette E2E
+//     de production — reste donc fonctionnel.
+//   * `{ "toutes_les_sessions": true }` (ou `?toutes_les_sessions=true`) :
+//     marque = NOW() ⇒ la session appelante est fermée aussi ; l'appel suivant
+//     avec le même jeton reçoit 401. C'est la déconnexion « de partout ».
+//
+// La marque ne recule JAMAIS (`sessions_revoked_at < $2`) : un jeton ancien ne
+// peut pas rouvrir les sessions déjà fermées.
+exports.logout = async (req, res) => {
+  const userId = Number(req.user && (req.user.id || req.user.userId));
+  const iat = Number(req.user && req.user.iat);
+
+  if (!Number.isFinite(userId) || userId <= 0) {
+    return res.status(401).json({ error: 'Authentification requise' });
+  }
+
+  const toutes = req.body?.toutes_les_sessions === true
+    || String(req.query?.toutes_les_sessions || '').toLowerCase() === 'true';
+
+  // Sans `iat`, la marque ne peut pas être bornée : fermer TOUTES les sessions
+  // « au cas où » fermerait aussi celles des autres appareils sans le dire.
+  if (!toutes && !Number.isFinite(iat)) {
+    return res.status(400).json({
+      error: 'jeton_sans_date_emission',
+      message: "Ce jeton ne porte pas de date d'émission : la portée de la déconnexion ne peut pas être bornée. Utilisez toutes_les_sessions=true pour fermer toutes les sessions.",
+    });
+  }
+
+  const marque = new Date(toutes ? Date.now() : iat * 1000);
+
+  try {
+    const maj = await pool.query(
+      `UPDATE users
+          SET sessions_revoked_at = $2
+        WHERE id = $1
+          AND (sessions_revoked_at IS NULL OR sessions_revoked_at < $2)
+        RETURNING sessions_revoked_at`,
+      [userId, marque.toISOString()]
+    );
+
+    const enregistree = maj.rows.length > 0;
+    // `rowCount = 0` : une marque au moins aussi récente est déjà en place. La
+    // déconnexion demandée est donc déjà effective — on ne prétend pas avoir
+    // écrit, on relit la marque réellement en base.
+    const marqueEnBase = enregistree
+      ? maj.rows[0].sessions_revoked_at
+      : (await pool.query(
+        `SELECT to_jsonb(u)->>'sessions_revoked_at' AS sessions_revoked_at FROM users u WHERE u.id = $1`,
+        [userId]
+      )).rows[0]?.sessions_revoked_at || marque.toISOString();
+
+    return res.json({
+      success: true,
+      deconnexion: toutes ? 'toutes_les_sessions' : 'sessions_anterieures',
+      revocation_serveur: true,
+      sessions_revoked_at: new Date(marqueEnBase).toISOString(),
+      ecriture_effectuee: enregistree,
+      message: toutes
+        ? 'Toutes les sessions de ce compte sont fermées côté serveur, y compris celle-ci : effacez le jeton côté client.'
+        : 'Les sessions ouvertes avant celle-ci sont fermées côté serveur. La session appelante reste valide jusqu\'à l\'expiration de son jeton : effacez-le côté client.',
+    });
+  } catch (err) {
+    // 42703 = `users.sessions_revoked_at` absente (migration 116 non jouée) :
+    // on refuse explicitement plutôt que de répondre « déconnecté » sans effet.
+    if (err && err.code === '42703') {
+      console.error('[logout] users.sessions_revoked_at absente : migration 116 non appliquée');
+      return res.status(503).json({
+        error: 'revocation_indisponible',
+        message: "La déconnexion n'a pas pu être enregistrée côté serveur (migration 116 non appliquée). Le jeton reste valide jusqu'à son expiration : ne le considérez pas comme révoqué.",
+      });
+    }
+    console.error('Logout error:', err.message);
+    return res.status(503).json({
+      error: 'revocation_indisponible',
+      message: "La déconnexion n'a pas pu être enregistrée côté serveur : le jeton reste valide jusqu'à son expiration.",
+    });
   }
 };
