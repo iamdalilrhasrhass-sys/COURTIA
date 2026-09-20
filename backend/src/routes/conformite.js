@@ -90,6 +90,10 @@ router.post('/dda/checklist/:client_id', async (req, res) => {
     const allOk = besoin_exprime && devoir_conseil && document_remis && informations_marche && fiche_synthese
     const status = allOk ? 'conforme' : (besoin_exprime || devoir_conseil) ? 'incomplete' : 'pending'
 
+    // 9 marqueurs ($1..$9) → 9 valeurs : `status` manquait dans le tableau de
+    // valeurs, PostgreSQL refusait chaque insertion (« bind message supplies 8
+    // parameters, but prepared statement requires 9 ») : la checklist DDA
+    // répondait 500 à chaque appel.
     const { rows } = await pool.query(`
       INSERT INTO dda_checklists (user_id, client_id, besoin_exprime, devoir_conseil, document_remis, informations_marche, fiche_synthese, notes, status, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
@@ -103,7 +107,7 @@ router.post('/dda/checklist/:client_id', async (req, res) => {
           status = EXCLUDED.status,
           updated_at = NOW()
       RETURNING *
-    `, [userId, clientId, !!besoin_exprime, !!devoir_conseil, !!document_remis, !!informations_marche, !!fiche_synthese, notes || ''])
+    `, [userId, clientId, !!besoin_exprime, !!devoir_conseil, !!document_remis, !!informations_marche, !!fiche_synthese, notes || '', status])
     res.json({ ok: true, checklist: rows[0] })
   } catch (err) {
     res.status(500).json({ error: 'update_failed', message: err.message })

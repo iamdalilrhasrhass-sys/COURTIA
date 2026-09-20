@@ -26,8 +26,35 @@ const {
   cancelPendingRelancesForDevis,
 } = require('../services/devisRelanceService')
 const { sendCommercialEmail } = require('../services/emailService')
+const {
+  SOURCES_REELLES,
+  MESSAGE_OFFRES_SIMULEES,
+  validerOffresPourClient,
+} = require('../lib/donneesReelles')
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
+
+/**
+ * Coercition d'une valeur en paramètre jsonb VALIDE.
+ *
+ * POURQUOI : `POST /api/devis` (route v1) passait `criteria` tel quel à la
+ * colonne `quote_requests.normalized_data` (jsonb). Un appelant qui envoie du
+ * texte libre (« Paris ») ou une liste de compagnies en chaîne
+ * (« AXA,Allianz ») recevait 500 `invalid input syntax for type json` : le
+ * diagnostic parlait de SQL, pas de la donnée envoyée. On n'invente aucune
+ * structure : un objet/tableau est sérialisé, une chaîne qui EST du JSON est
+ * conservée telle quelle, une chaîne qui n'en est pas devient une chaîne JSON
+ * (la valeur saisie reste intacte).
+ */
+function versParametreJsonb(valeur, defaut) {
+  if (valeur === undefined || valeur === null) return JSON.stringify(defaut)
+  if (typeof valeur === 'string') {
+    const texte = valeur.trim()
+    if (!texte) return JSON.stringify(defaut)
+    try { JSON.parse(texte); return texte } catch (_) { return JSON.stringify(texte) }
+  }
+  try { return JSON.stringify(valeur) } catch (_) { return JSON.stringify(defaut) }
+}
 
 async function ensureWizardSchema() {
   try { await pool.query(`SELECT 1 FROM devis_wizard LIMIT 1`); return true }
@@ -335,7 +362,7 @@ router.post('/', async (req, res) => {
       INSERT INTO quote_requests (broker_id, client_id, product_type, normalized_data, target_providers, status)
       VALUES ($1, $2, $3, $4, $5, 'draft')
       RETURNING *
-    `, [brokerId, client_id || null, product_type, criteria || {}, target_providers || null])
+    `, [brokerId, client_id || null, product_type, versParametreJsonb(criteria, {}), versParametreJsonb(target_providers, null)])
 
     logger.info({ brokerId, devisId: result.rows[0].id }, 'Devis created')
 
@@ -735,6 +762,21 @@ router.post('/wizard/finalize', async (req, res) => {
     if (!Array.isArray(offers) || offers.length === 0)
       return res.status(400).json({ error: 'no_offers_selected' })
 
+    // Une offre sans provenance réelle est une offre SIMULÉE. Elle ne doit ni
+    // devenir un PDF ni partir par e-mail à un client : le document porterait
+    // des primes, des garanties et des notations qui n'ont jamais été obtenues
+    // auprès d'un assureur. On refuse donc la finalisation en nommant les
+    // offres fautives, plutôt que de produire un faux devis.
+    const verdictOffres = validerOffresPourClient(offers)
+    if (!verdictOffres.ok) {
+      return res.status(400).json({
+        error: 'simulated_offers_refused',
+        message: MESSAGE_OFFRES_SIMULEES,
+        offres_refusees: verdictOffres.fournisseurs_refuses,
+        sources_acceptees: SOURCES_REELLES,
+      })
+    }
+
     const { rows: existing } = await pool.query(
       `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`,
       [devis_id, userId]
@@ -912,18 +954,99 @@ router.post('/:id/relance', async (req, res) => {
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
     const devisId = parseInt(req.params.id, 10)
-    await pool.query(`
-      INSERT INTO devis_relances (devis_id, scheduled_at, channel, template_key, status)
-      VALUES ($1, NOW(), 'email', $2, 'scheduled')
-    `, [devisId, req.body?.template || 'J7'])
+    if (!Number.isFinite(devisId) || devisId <= 0) {
+      return res.status(400).json({ error: 'invalid_devis_id', message: 'Identifiant de devis invalide.' })
+    }
+    // Modèles connus uniquement : `template_key` est un varchar(40) et un
+    // modèle inconnu ne produit jamais de message.
+    const templates = ['J3', 'J7', 'J14']
+    const template = templates.includes(req.body?.template) ? req.body.template : 'J7'
 
-    // Tick immédiat
-    const { processDueRelances } = require('../services/devisRelanceService')
-    const r = await processDueRelances()
-    res.json({ ok: true, ...r })
+    // DEUX FAMILLES DE DEVIS COEXISTENT, elles n'ont pas la même table :
+    //   v2 → devis_wizard  (devis_relances.devis_id référence devis_wizard.id)
+    //   v1 → quote_requests (lue par GET /api/devis, donc la liste « Devis »
+    //        de l'application et le bouton Relancer de DevisDetail)
+    // Avant ce correctif, l'identifiant v1 était écrit dans devis_relances :
+    // violation de clé étrangère → 500 `relance_failed` à chaque clic, sans
+    // qu'aucune relance n'existe. On route maintenant chaque famille vers sa
+    // table, et un identifiant inconnu répond 404 au lieu de 500.
+    const wizard = await pool.query(
+      'SELECT id, status, client_id FROM devis_wizard WHERE id = $1 AND user_id = $2',
+      [devisId, userId]
+    )
+    if (wizard.rows[0]) {
+      await pool.query(`
+        INSERT INTO devis_relances (devis_id, scheduled_at, channel, template_key, status)
+        VALUES ($1, NOW(), 'email', $2, 'scheduled')
+      `, [devisId, template])
+
+      // Tick immédiat
+      const { processDueRelances } = require('../services/devisRelanceService')
+      const r = await processDueRelances()
+      return res.json({ ok: true, devis_type: 'wizard', template, ...r })
+    }
+
+    const v1 = await pool.query(
+      `SELECT qr.id, qr.client_id, qr.product_type, c.email AS client_email,
+              CONCAT(COALESCE(c.first_name, ''), ' ', COALESCE(c.last_name, '')) AS client_name
+         FROM quote_requests qr
+         LEFT JOIN clients c ON c.id = qr.client_id
+        WHERE qr.id = $1 AND qr.broker_id = $2`,
+      [devisId, userId]
+    )
+    const devisV1 = v1.rows[0]
+    if (devisV1) {
+      const relance = await pool.query(`
+        INSERT INTO relances (client_id, quote_request_id, type, channel, priority, subject, scheduled_at, ai_generated, metadata)
+        VALUES ($1, $2, 'devis_relance', 'email', 'high', $3, NOW(), false, $4::jsonb)
+        RETURNING id, client_id, quote_request_id, type, channel, status, scheduled_at
+      `, [
+        devisV1.client_id,
+        devisV1.id,
+        `Relance devis ${devisV1.product_type || ''}`.trim(),
+        JSON.stringify({ template, origine: 'devis_relance_forcee', devis_v1_id: devisV1.id }),
+      ])
+
+      // Envoi immédiat réel : le statut écrit dit ce qui s'est RÉELLEMENT passé.
+      let envoye = false
+      let raison = null
+      if (devisV1.client_email) {
+        const { sendCommercialEmail } = require('../services/emailService')
+        const envoi = await sendCommercialEmail({
+          to: devisV1.client_email,
+          subject: `Votre devis ${devisV1.product_type || ''} — un point rapide`.trim(),
+          html: `<p>Bonjour ${devisV1.client_name.trim()},</p><p>Je reviens vers vous au sujet de votre devis ${devisV1.product_type || ''}.</p>`,
+        })
+        envoye = !!(envoi && envoi.success)
+        raison = envoi && envoi.error ? envoi.error : (envoi && envoi.skipped ? 'email_non_configure' : null)
+      } else {
+        raison = 'client_sans_email'
+      }
+
+      if (envoye) {
+        await pool.query(`UPDATE relances SET status = 'sent', sent_at = NOW(), updated_at = NOW() WHERE id = $1`, [relance.rows[0].id])
+      }
+
+      return res.json({
+        ok: true,
+        devis_type: 'v1',
+        template,
+        relance: { ...relance.rows[0], status: envoye ? 'sent' : 'pending' },
+        envoye,
+        raison: envoye ? null : raison,
+        message: envoye
+          ? 'Relance envoyée au client.'
+          : "Relance enregistrée mais NON envoyée (voir « raison ») — rien n'est simulé.",
+      })
+    }
+
+    return res.status(404).json({
+      error: 'devis_not_found',
+      message: 'Devis introuvable pour ce cabinet (ni devis guidé, ni devis v1).',
+    })
   } catch (err) {
     logger.error({ err: err.message }, 'devis relance force')
-    res.status(500).json({ error: 'relance_failed' })
+    res.status(500).json({ error: 'relance_failed', message: err.message })
   }
 })
 

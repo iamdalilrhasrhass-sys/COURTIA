@@ -7,6 +7,10 @@ const { logAudit } = require('../lib/audit')
 
 const router = express.Router()
 
+// Rôles réellement invitables dans un cabinet (source : normalizeCabinetRole du
+// service d'adhésion). `super_admin` est un rôle plateforme : jamais invitable.
+const ROLES_INVITABLES = Object.freeze(['owner', 'manager', 'broker', 'assistant', 'viewer'])
+
 function safeMember(row) {
   return {
     id: row.id,
@@ -57,10 +61,34 @@ router.get('/', async (req, res) => {
 router.post('/invite', requireRole('owner'), async (req, res) => {
   try {
     const { email, role } = req.body || {}
+
+    // Un rôle inconnu doit être REFUSÉ avec un code 400 et la liste des rôles
+    // acceptés. Avant ce correctif, `normalizeCabinetRole` levait une erreur
+    // sans statut : l'appelant recevait 500 `invalid_role` — une erreur de
+    // saisie affichée comme une panne serveur, sans lui dire quoi corriger.
+    const rolesAcceptes = ROLES_INVITABLES
+    let roleNormalise
+    try {
+      roleNormalise = cabinetService.normalizeCabinetRole(role)
+    } catch (_) {
+      return res.status(400).json({
+        error: 'invalid_role',
+        message: `Rôle « ${String(role ?? '')} » inconnu. Rôles acceptés : ${rolesAcceptes.join(', ')}.`,
+        roles_acceptes: rolesAcceptes,
+      })
+    }
+    if (!rolesAcceptes.includes(roleNormalise)) {
+      return res.status(400).json({
+        error: 'invalid_role',
+        message: `Le rôle ${roleNormalise} ne peut pas être invité dans un cabinet. Rôles acceptés : ${rolesAcceptes.join(', ')}.`,
+        roles_acceptes: rolesAcceptes,
+      })
+    }
+
     const invite = await cabinetService.createInvitation(pool, {
       actorUserId: cabinetService.getSafeUserId(req.user),
       email,
-      role,
+      role: roleNormalise,
       frontendUrl: process.env.FRONTEND_URL || 'https://app.courtiark.fr',
     })
 
@@ -88,7 +116,15 @@ router.post('/invite', requireRole('owner'), async (req, res) => {
       message: emailResult?.skipped ? 'Invitation créée. Email désactivé : lien à transmettre manuellement.' : 'Invitation envoyée.',
     })
   } catch (err) {
-    res.status(err.status || 500).json({ error: err.code || 'invite_failed', message: err.message || 'Invitation impossible.' })
+    // Un rôle invalide reste une erreur de SAISIE (400), jamais une panne 500 —
+    // y compris si le refus vient du service d'adhésion.
+    const statut = err.status || (err.message === 'invalid_role' || err.code === 'INVALID_INVITE_ROLE' ? 400 : 500)
+    const corps = {
+      error: err.code || 'invite_failed',
+      message: err.message || 'Invitation impossible.',
+    }
+    if (statut === 400) corps.roles_acceptes = ROLES_INVITABLES
+    res.status(statut).json(corps)
   }
 })
 

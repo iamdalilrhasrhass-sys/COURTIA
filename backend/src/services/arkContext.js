@@ -48,8 +48,11 @@ async function getClientContext(clientId, userId) {
     )
     
     // RDV du client
+    // `calendar_events` n'a PAS de colonne `notes` (schéma réel : description,
+    // metadata). Cette requête répondait 500 « column "notes" does not exist »
+    // sur /api/ark/client/:id/brief, /next-best-actions et /quote-assistant.
     const appointmentsResult = await pool.query(
-      `SELECT id, title, start_time, end_time, location, notes, status
+      `SELECT id, title, start_time, end_time, location, description, status
        FROM calendar_events
        WHERE client_id = $1
        ORDER BY start_time DESC
@@ -68,8 +71,10 @@ async function getClientContext(clientId, userId) {
     )
     
     // Dernières interactions
+    // `client_interactions` n'a PAS de colonne `summary` (schéma réel :
+    // subject, body_preview) : deuxième requête en échec sur le brief client.
     const interactionsResult = await pool.query(
-      `SELECT id, provider, direction, summary, occurred_at
+      `SELECT id, provider, direction, subject, body_preview, occurred_at
        FROM client_interactions
        WHERE client_id = $1
        ORDER BY occurred_at DESC

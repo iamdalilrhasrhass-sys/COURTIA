@@ -32,11 +32,14 @@ router.post('/change-password', verifyTokenMiddleware, authController.changePass
  */
 router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
+    // Les jetons de l'application portent `id` ET `userId` ; certains jetons
+    // (rafraîchissement, portail) ne portent que l'un des deux. Sans ce repli,
+    // `req.user.id` valait undefined et la lecture répondait 404.
+    const userId = req.user?.id || req.user?.userId;
 
     const userResult = await pool.query(
       `SELECT id, email, first_name, last_name, role, plan, subscription_status, created_at,
-              must_change_password, trial_started_at, trial_ends_at, trial_days
+              must_change_password, trial_started_at, trial_ends_at, trial_days, phone
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -75,7 +78,11 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       trial_days: user.trial_days,
       cabinet: brokerProfile.cabinet || '',
       orias: brokerProfile.orias || '',
-      telephone: brokerProfile.telephone || '',
+      // Le numéro de téléphone vit dans broker_profiles.telephone (fiche
+      // cabinet) ; users.phone est l'ancien emplacement. On expose la valeur
+      // réellement remplie, sans en inventer une.
+      telephone: brokerProfile.telephone || user.phone || '',
+      phone: user.phone || brokerProfile.telephone || '',
       adresse: brokerProfile.adresse || '',
       ville: brokerProfile.ville || '',
       code_postal: brokerProfile.code_postal || '',
@@ -98,50 +105,50 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
 
 /**
  * PUT /api/auth/me — Mettre à jour le profil
+ *
+ * Ce handler ne répond `success: true` QUE si une écriture a réellement eu
+ * lieu. Avant ce correctif il renvoyait « Profil mis à jour » après un
+ * `UPDATE ... WHERE id = $3` où `$3` était `undefined` (jeton sans `id`) :
+ * zéro ligne touchée, aucun champ modifié — un succès sans écriture. Les
+ * champs d'identité réglementaire du cabinet (registre FINMA/ORIAS, UID, pays,
+ * langue, adresse) sont désormais réellement persistés dans `broker_profiles`.
  */
 router.put('/me', verifyTokenMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const {
-      first_name, last_name, cabinet, orias, telephone, adresse, ville, code_postal,
-      registre_type, registre_numero, uid, site_web, pays, langue,
-    } = req.body;
-
-    // Update users table
-    await pool.query(
-      `UPDATE users SET first_name = $1, last_name = $2, updated_at = NOW() WHERE id = $3`,
-      [first_name, last_name, userId]
-    );
-
-    // Upsert broker_profiles
-    const existing = await pool.query('SELECT id FROM broker_profiles WHERE user_id = $1', [userId]);
-    if (existing.rows.length > 0) {
-      await pool.query(
-        `UPDATE broker_profiles
-            SET cabinet=$1, orias=$2, telephone=$3, adresse=$4, ville=$5, code_postal=$6,
-                registre_type=COALESCE(NULLIF($8,''), registre_type),
-                registre_numero=COALESCE(NULLIF($9,''), registre_numero),
-                uid=COALESCE(NULLIF($10,''), uid),
-                site_web=COALESCE(NULLIF($11,''), site_web),
-                pays=COALESCE(NULLIF($12,''), pays),
-                langue=COALESCE(NULLIF($13,''), langue),
-                updated_at=NOW()
-         WHERE user_id=$7`,
-        [cabinet, orias, telephone, adresse, ville, code_postal, userId,
-         registre_type, registre_numero, uid, site_web, pays, langue]
-      );
-    } else {
-      await pool.query(
-        `INSERT INTO broker_profiles (user_id, cabinet, orias, telephone, adresse, ville, code_postal,
-                                      registre_type, registre_numero, uid, site_web, pays, langue,
-                                      created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW())`,
-        [userId, cabinet, orias, telephone, adresse, ville, code_postal,
-         registre_type, registre_numero, uid, site_web, pays, langue]
-      );
+    const userId = req.user?.id || req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentification requise' });
     }
 
-    res.json({ success: true, message: 'Profil mis à jour' });
+    const resultat = await User.mettreAJourProfil(userId, req.body || {});
+
+    if (!resultat.ok) {
+      if (resultat.raison === 'aucun_champ_modifiable') {
+        return res.status(400).json({
+          error: 'aucune_modification',
+          message: 'Aucun champ enregistrable reçu : rien n’a été modifié.',
+        });
+      }
+      if (resultat.raison === 'email_non_modifiable') {
+        return res.status(409).json({
+          error: 'email_non_modifiable',
+          message: 'L’adresse e-mail de connexion ne peut pas être modifiée depuis cet écran : rien n’a été modifié.',
+        });
+      }
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profil mis à jour',
+      // Relecture de ce qui vient d'être écrit : le client n'affiche pas une
+      // valeur qu'il aurait inventée si l'enregistrement avait échoué.
+      utilisateur: resultat.utilisateur,
+      profil_cabinet: resultat.profil,
+      // Champs reçus mais NON enregistrables ici : dits explicitement, jamais
+      // présentés comme enregistrés.
+      champs_ignores: resultat.champs_ignores || [],
+    });
   } catch (err) {
     console.error('PUT /api/auth/me error:', err.message);
     res.status(500).json({ error: 'Mise à jour du profil impossible pour le moment' });

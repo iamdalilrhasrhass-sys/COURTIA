@@ -8,19 +8,30 @@ const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
 const { listClientInteractions } = require('../services/integrationsStore');
 const Anthropic = require('@anthropic-ai/sdk');
 
-/**
- * GET /api/clients — Lister tous les clients avec pagination
- */
-router.get('/', async (req, res) => {
-  try {
-    const pool = req.app.locals.pool;
-    const limit = parseInt(req.query.limit) || 20;
-    const page = parseInt(req.query.page) || 1;
-    const offset = (page - 1) * limit;
+// ─────────────────────────────────────────────────────────────────────────────
+// Recherche serveur des clients
+//
+// POURQUOI : `GET /api/clients` ignorait `search`, `statut`, `status`,
+// `segment` et `sort` (aucun WHERE). L'assistant de devis appelle
+// `/clients?search=<nom>&limit=10` : il recevait les 10 derniers clients du
+// cabinet, quel que soit le terme — le courtier pouvait donc rattacher un
+// devis au mauvais client. Le filtrage est désormais fait par PostgreSQL.
+//
+// Insensibilité aux accents : l'extension `unaccent` est utilisée si elle est
+// RÉELLEMENT installée (vérifié une fois par processus) ; sinon on replie les
+// accents avec `translate()` (fonction native, aucune extension) et on replie
+// le terme de recherche côté serveur avec la même table de correspondance.
+// ─────────────────────────────────────────────────────────────────────────────
 
-    // Récupérer les clients
-    const result = await pool.query(
-      `SELECT 
+const TABLE_ACCENTS_SOURCE = 'àâäáãåāçèéêëēìíîïīòóôöõøùúûüÿñ'
+const TABLE_ACCENTS_CIBLE = 'aaaaaaaceeeeeiiiioooooouuuuyn'
+
+// Nom, prénom, entreprise, e-mail, téléphone : les deux familles de colonnes
+// existent dans le schéma réel (first_name/last_name ET nom/prenom).
+const RECHERCHE_CLIENT_EXPRESSION =
+  "concat_ws(' ', clients.first_name, clients.last_name, clients.nom, clients.prenom, clients.company_name, clients.email, clients.phone, clients.telephone, clients.mobile)"
+
+const SELECT_LISTE_CLIENTS = `SELECT 
         id, first_name as prenom, last_name as nom, 
         email, phone as telephone, address as adresse,
         status as statut, risk_score as score_risque,
@@ -43,24 +54,184 @@ router.get('/', async (req, res) => {
           SELECT MIN(NULLIF(q.quote_data->>'date_echeance', '')::date)
           FROM quotes q
           WHERE q.client_id = clients.id AND q.status = 'actif'
-        ) AS next_echeance
-      FROM clients 
-      WHERE courtier_id = $3
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2`,
-      [limit, offset, req.user.id]
-    );
+        ) AS next_echeance`
 
-    // Compter le total
-    const countResult = await pool.query('SELECT COUNT(*) as count FROM clients WHERE courtier_id = $1', [req.user.id]);
-    const total = parseInt(countResult.rows[0].count);
+// Tris autorisés (liste blanche : jamais de SQL venu de la requête).
+const TRIS_CLIENTS = Object.freeze({
+  nom: "lower(COALESCE(clients.last_name, clients.nom, ''))",
+  last_name: "lower(COALESCE(clients.last_name, clients.nom, ''))",
+  prenom: "lower(COALESCE(clients.first_name, clients.prenom, ''))",
+  first_name: "lower(COALESCE(clients.first_name, clients.prenom, ''))",
+  entreprise: "lower(COALESCE(clients.company_name, ''))",
+  email: "lower(COALESCE(clients.email, ''))",
+  statut: "lower(COALESCE(clients.status, ''))",
+  status: "lower(COALESCE(clients.status, ''))",
+  segment: "lower(COALESCE(clients.type, ''))",
+  score_risque: 'COALESCE(clients.risk_score, 0)',
+  risque: 'COALESCE(clients.risk_score, 0)',
+  ltv: 'COALESCE(clients.lifetime_value, 0)',
+  valeur_client: 'COALESCE(clients.lifetime_value, 0)',
+  dernier_contact: 'clients.last_contact',
+  cree_le: 'clients.created_at',
+  created_at: 'clients.created_at',
+})
+
+/** Replie accents et casse d'un texte (même table que translate() en SQL). */
+function normaliserTexteClient(valeur) {
+  return String(valeur ?? '')
+    .normalize('NFD')
+    // Replis insensibles à la casse : « HŒRTH » doit être trouvé comme « Hœrth ».
+    .replace(/œ/gi, 'oe')
+    .replace(/æ/gi, 'ae')
+    .replace(/ø/gi, 'o')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+/** Terme de recherche prêt pour LIKE : replié, borné, jokers neutralisés. */
+function preparerTermeRecherche(valeur) {
+  const replie = normaliserTexteClient(valeur).slice(0, 80)
+  if (!replie) return ''
+  return replie.replace(/[\\%_]/g, (caractere) => `\\${caractere}`)
+}
+
+/** Expression SQL sans accents ni casse (unaccent si disponible, translate sinon). */
+function expressionSansAccent(expression, unaccentDisponible) {
+  const base = unaccentDisponible
+    ? `unaccent(lower(COALESCE(${expression}, '')))`
+    : `translate(lower(COALESCE(${expression}, '')), '${TABLE_ACCENTS_SOURCE}', '${TABLE_ACCENTS_CIBLE}')`
+  return `replace(replace(${base}, 'œ', 'oe'), 'æ', 'ae')`
+}
+
+/** ORDER BY sûr : liste blanche + direction, `-nom` signifiant « descendant ». */
+function construireTrieClients(sort, direction) {
+  const brut = String(sort ?? '').trim()
+  const descendantParPrefixe = brut.startsWith('-')
+  const cle = (descendantParPrefixe ? brut.slice(1) : brut).toLowerCase()
+  const expression = TRIS_CLIENTS[cle]
+  if (!expression) return 'clients.created_at DESC'
+  const sensDemande = String(direction ?? '').trim().toLowerCase()
+  const sens = sensDemande === 'asc' || sensDemande === 'desc'
+    ? sensDemande
+    : (descendantParPrefixe ? 'desc' : 'asc')
+  return `${expression} ${sens.toUpperCase()} NULLS LAST`
+}
+
+/**
+ * Construit la requête de liste (page + total) à partir des filtres reçus.
+ * Fonction PURE : aucun accès à la base, donc directement testable.
+ */
+function construireRequeteListeClients({
+  userId,
+  search,
+  statut,
+  segment,
+  sort,
+  direction,
+  limit,
+  offset,
+  unaccentDisponible = false,
+} = {}) {
+  const clauses = ['clients.courtier_id = $1']
+  const paramsFiltre = [userId]
+  const ajouterParametre = (valeur) => {
+    paramsFiltre.push(valeur)
+    return `$${paramsFiltre.length}`
+  }
+
+  const terme = preparerTermeRecherche(search)
+  if (terme) {
+    clauses.push(`${expressionSansAccent(RECHERCHE_CLIENT_EXPRESSION, unaccentDisponible)} LIKE ${ajouterParametre(`%${terme}%`)}`)
+  }
+  if (statut !== undefined && statut !== null && String(statut).trim() !== '') {
+    clauses.push(`lower(COALESCE(clients.status, '')) = lower(${ajouterParametre(String(statut).trim())})`)
+  }
+  if (segment !== undefined && segment !== null && String(segment).trim() !== '') {
+    clauses.push(`lower(COALESCE(clients.type, '')) = lower(${ajouterParametre(String(segment).trim())})`)
+  }
+
+  const where = `WHERE ${clauses.join(' AND ')}`
+  const limite = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 500) : 20
+  const decalage = Number.isFinite(offset) && offset > 0 ? offset : 0
+  const sql = `${SELECT_LISTE_CLIENTS}
+      FROM clients
+      ${where}
+      ORDER BY ${construireTrieClients(sort, direction)}
+      LIMIT $${paramsFiltre.length + 1} OFFSET $${paramsFiltre.length + 2}`
+
+  return {
+    sql,
+    params: [...paramsFiltre, limite, decalage],
+    countSql: `SELECT COUNT(*)::int AS count FROM clients ${where}`,
+    countParams: paramsFiltre,
+    terme,
+  }
+}
+
+// `unaccent` est propre à une base : on vérifie une fois par processus.
+let unaccentDisponible = null
+async function detecterUnaccent(pool) {
+  if (unaccentDisponible !== null) return unaccentDisponible
+  try {
+    const { rows } = await pool.query(
+      `SELECT 1 FROM pg_extension WHERE extname = 'unaccent'
+       UNION ALL
+       SELECT 1 FROM pg_proc WHERE proname = 'unaccent'
+       LIMIT 1`
+    )
+    unaccentDisponible = rows.length > 0
+  } catch (_) {
+    unaccentDisponible = false
+  }
+  return unaccentDisponible
+}
+
+/**
+ * GET /api/clients — Lister les clients avec pagination et filtres serveur
+ * Paramètres : search, statut|status, segment|type, sort (+ direction), page, limit
+ */
+router.get('/', async (req, res) => {
+  try {
+    const pool = req.app.locals.pool;
+    const userId = req.user?.id || req.user?.userId;
+    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const offset = (page - 1) * limit;
+
+    const unaccentOk = await detecterUnaccent(pool);
+    const requete = construireRequeteListeClients({
+      userId,
+      search: req.query.search,
+      // `statut` et `status` désignent le même filtre, comme `segment` et `type`.
+      statut: req.query.statut ?? req.query.status,
+      segment: req.query.segment ?? req.query.type,
+      sort: req.query.sort,
+      direction: req.query.direction,
+      limit,
+      offset,
+      unaccentDisponible: unaccentOk,
+    });
+
+    const result = await pool.query(requete.sql, requete.params);
+
+    // Le total porte EXACTEMENT les mêmes filtres que la page renvoyée.
+    const countResult = await pool.query(requete.countSql, requete.countParams);
+    const total = parseInt(countResult.rows[0].count, 10) || 0;
 
     res.json({
       data: result.rows,
       total,
       page,
       limit,
-      pages: Math.ceil(total / limit)
+      pages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit),
+      filtres_appliques: {
+        search: requete.terme || null,
+        statut: req.query.statut ?? req.query.status ?? null,
+        segment: req.query.segment ?? req.query.type ?? null,
+        sort: req.query.sort || null,
+      },
     });
   } catch (err) {
     console.error('GET /api/clients error:', err.message);
@@ -637,3 +808,10 @@ router.get('/:id/cross-sell', async (req, res) => {
 });
 
 module.exports = router;
+// Exposés pour le test unitaire de la construction de requête (filtre + total).
+module.exports.construireRequeteListeClients = construireRequeteListeClients;
+module.exports.normaliserTexteClient = normaliserTexteClient;
+module.exports.expressionSansAccent = expressionSansAccent;
+module.exports.TABLE_ACCENTS_SOURCE = TABLE_ACCENTS_SOURCE;
+module.exports.TABLE_ACCENTS_CIBLE = TABLE_ACCENTS_CIBLE;
+module.exports.RECHERCHE_CLIENT_EXPRESSION = RECHERCHE_CLIENT_EXPRESSION;

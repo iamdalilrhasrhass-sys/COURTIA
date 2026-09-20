@@ -72,8 +72,12 @@ class User {
 
   static async resetPassword(token, newPassword) {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // SEC-016 : un mot de passe réinitialisé doit invalider les sessions
+    // ouvertes avec l'ancien mot de passe (password_changed_at testé par
+    // middleware/auth.js).
     const result = await pool.query(
-      `UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL, updated_at = NOW()
+      `UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL,
+                        password_changed_at = NOW(), updated_at = NOW()
        WHERE password_reset_token = $2
        RETURNING id, email`,
       [hashedPassword, token]
@@ -220,6 +224,130 @@ class User {
       [hashedPassword, userId]
     );
     return { ok: true };
+  }
+
+  // --- Profil : identité du titulaire + identité RÉGLEMENTAIRE du cabinet ---
+  //
+  // POURQUOI CE BLOC : `PUT /api/auth/me` répondait `{success:true}` sans que
+  // rien ne garantisse une écriture — la route lisait `req.user.id` alors que
+  // certains jetons ne portent que `userId` (identifiant alors NULL dans le
+  // `WHERE`, zéro ligne touchée, succès affiché quand même), elle n'écrivait
+  // jamais `users.phone`, et elle écrasait `broker_profiles.orias`, `adresse`,
+  // `ville`, `code_postal` par NULL dès qu'un formulaire partiel ne les
+  // envoyait pas. Un cabinet suisse perdait ainsi son numéro FINMA/UID au
+  // premier enregistrement depuis l'écran Paramètres.
+  //
+  // Règles appliquées ici :
+  //   - on n'écrit que ce qui est réellement fourni (un champ omis ou vide
+  //     CONSERVE sa valeur : `COALESCE(NULLIF($n,''), colonne)`) ;
+  //   - aucune écriture ⇒ aucun succès : l'appelant reçoit une raison ;
+  //   - `orias` est une donnée française : elle n'est jamais exigée ni
+  //     inventée, et un cabinet suisse peut enregistrer FINMA + UID sans elle.
+
+  /** Champs du profil cabinet acceptés (colonnes réelles de broker_profiles). */
+  static get CHAMPS_PROFIL_CABINET() {
+    return [
+      'cabinet', 'pays', 'langue', 'registre_type', 'registre_numero', 'uid',
+      'orias', 'telephone', 'adresse', 'ville', 'code_postal', 'site_web',
+    ];
+  }
+
+  /**
+   * Enregistre l'identité du titulaire (users) et du cabinet (broker_profiles).
+   * @param {number} userId identifiant réel de l'utilisateur connecté
+   * @param {object} donnees champs reçus (les absents sont conservés)
+   * @returns {Promise<{ok: true, utilisateur: object, profil: object}|{ok: false, raison: string}>}
+   */
+  static async mettreAJourProfil(userId, donnees = {}) {
+    const id = Number(userId);
+    if (!Number.isFinite(id) || id <= 0) return { ok: false, raison: 'identifiant_utilisateur_absent' };
+
+    const texteDe = (valeur) => (valeur === null ? '' : String(valeur).trim());
+    const valeurSiFournie = (champ) => (donnees[champ] === undefined ? null : texteDe(donnees[champ]));
+
+    // `telephone` (fiche cabinet) et `phone` (compte) désignent le même numéro.
+    const telephone = donnees.telephone !== undefined
+      ? texteDe(donnees.telephone)
+      : (donnees.phone !== undefined ? texteDe(donnees.phone) : null);
+
+    const champsCabinetFournis = User.CHAMPS_PROFIL_CABINET.filter((c) => donnees[c] !== undefined);
+    // Identifiant de connexion : il n'est pas modifiable ici (il sert à
+    // s'authentifier et porte une contrainte d'unicité). On le SIGNALE au lieu
+    // de répondre « mis à jour » sur un champ resté inchangé.
+    const emailFourni = donnees.email === undefined ? null : texteDe(donnees.email).toLowerCase();
+    const rienAFournir = donnees.first_name === undefined && donnees.last_name === undefined
+      && telephone === null && champsCabinetFournis.length === 0;
+    if (rienAFournir) {
+      return { ok: false, raison: emailFourni ? 'email_non_modifiable' : 'aucun_champ_modifiable' };
+    }
+
+    const utilisateur = await pool.query(
+      `UPDATE users
+          SET first_name = COALESCE(NULLIF($2, ''), first_name),
+              last_name  = COALESCE(NULLIF($3, ''), last_name),
+              phone      = COALESCE(NULLIF($4, ''), phone),
+              updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, email, first_name, last_name, phone`,
+      [id, valeurSiFournie('first_name'), valeurSiFournie('last_name'), telephone]
+    );
+    if (utilisateur.rows.length === 0) return { ok: false, raison: 'utilisateur_introuvable' };
+
+    const majProfil = await pool.query(
+      `UPDATE broker_profiles
+          SET cabinet         = COALESCE(NULLIF($2, ''), cabinet),
+              telephone       = COALESCE(NULLIF($3, ''), telephone),
+              adresse         = COALESCE(NULLIF($4, ''), adresse),
+              ville           = COALESCE(NULLIF($5, ''), ville),
+              code_postal     = COALESCE(NULLIF($6, ''), code_postal),
+              orias           = COALESCE(NULLIF($7, ''), orias),
+              registre_type   = COALESCE(NULLIF($8, ''), registre_type),
+              registre_numero = COALESCE(NULLIF($9, ''), registre_numero),
+              uid             = COALESCE(NULLIF($10, ''), uid),
+              site_web        = COALESCE(NULLIF($11, ''), site_web),
+              pays            = COALESCE(NULLIF($12, ''), pays),
+              langue          = COALESCE(NULLIF($13, ''), langue),
+              first_name      = COALESCE(NULLIF($14, ''), first_name),
+              last_name       = COALESCE(NULLIF($15, ''), last_name),
+              updated_at      = NOW()
+        WHERE user_id = $1
+        RETURNING user_id, cabinet, pays, langue, registre_type, registre_numero, uid,
+                  orias, telephone, adresse, ville, code_postal, site_web, first_name, last_name`,
+      [
+        id,
+        valeurSiFournie('cabinet'), telephone, valeurSiFournie('adresse'), valeurSiFournie('ville'),
+        valeurSiFournie('code_postal'), valeurSiFournie('orias'), valeurSiFournie('registre_type'),
+        valeurSiFournie('registre_numero'), valeurSiFournie('uid'), valeurSiFournie('site_web'),
+        valeurSiFournie('pays'), valeurSiFournie('langue'),
+        valeurSiFournie('first_name'), valeurSiFournie('last_name'),
+      ]
+    );
+
+    let profil = majProfil.rows[0];
+    if (!profil) {
+      const creation = await pool.query(
+        `INSERT INTO broker_profiles (user_id, cabinet, pays, langue, registre_type, registre_numero,
+                                      uid, orias, telephone, adresse, ville, code_postal, site_web,
+                                      first_name, last_name, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+         RETURNING user_id, cabinet, pays, langue, registre_type, registre_numero, uid,
+                   orias, telephone, adresse, ville, code_postal, site_web, first_name, last_name`,
+        [
+          id, valeurSiFournie('cabinet') || '', valeurSiFournie('pays') || '', valeurSiFournie('langue') || '',
+          valeurSiFournie('registre_type') || '', valeurSiFournie('registre_numero') || '',
+          valeurSiFournie('uid') || '', valeurSiFournie('orias') || '', telephone || '',
+          valeurSiFournie('adresse') || '', valeurSiFournie('ville') || '', valeurSiFournie('code_postal') || '',
+          valeurSiFournie('site_web') || '', valeurSiFournie('first_name') || '', valeurSiFournie('last_name') || '',
+        ]
+      );
+      profil = creation.rows[0];
+    }
+
+    const champsIgnores = emailFourni && emailFourni !== String(utilisateur.rows[0].email || '').toLowerCase()
+      ? ['email']
+      : [];
+
+    return { ok: true, utilisateur: utilisateur.rows[0], profil, champs_ignores: champsIgnores };
   }
 }
 

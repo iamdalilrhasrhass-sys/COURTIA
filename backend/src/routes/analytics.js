@@ -20,10 +20,19 @@ router.get('/executive', requireFeature('executive_dashboard'), async (req, res)
     const courtier_id = req.user.userId
 
     // CA estimé (somme des primes annuelles des devis actifs / contrats en cours)
+    // Schéma réel : `quotes` n'a ni `annual_premium` ni `courtier_id`. La prime
+    // vit dans prime_annuelle / premium / amount (ou quote_data->>'prime_annuelle'
+    // pour les devis historiques) et le rattachement passe par clients.courtier_id.
     const caResult = await pool.query(
-      `SELECT COALESCE(SUM(annual_premium), 0) AS ca_estimated
-       FROM quotes
-       WHERE courtier_id = $1 AND status = 'active'`,
+      `SELECT COALESCE(SUM(COALESCE(
+                q.prime_annuelle,
+                q.premium,
+                q.amount,
+                NULLIF(q.quote_data->>'prime_annuelle', '')::numeric
+              )), 0) AS ca_estimated
+       FROM quotes q
+       JOIN clients c ON c.id = q.client_id
+       WHERE c.courtier_id = $1 AND q.status IN ('actif', 'active')`,
       [courtier_id]
     )
 

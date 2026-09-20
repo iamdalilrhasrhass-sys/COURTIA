@@ -9,6 +9,12 @@ const verifyToken = require('../middleware/authMiddleware')
 const { captureException } = require('../sentry')
 const PDFDocument = require('pdfkit')
 
+// Un client est rattaché au cabinet par `courtier_id` (colonne réellement
+// écrite par la création de client) ET/OU par `user_id` (colonne historique).
+// Filtrer sur `user_id` seul renvoyait 0 client réel — même constat que
+// routes/onboarding.js — et faisait donc un rapport vide sur une base pleine :
+// les requêtes ci-dessous testent les deux colonnes.
+
 // GET /api/reporting/overview — KPIs globaux
 router.get('/overview', verifyToken, async (req, res) => {
   try {
@@ -19,28 +25,30 @@ router.get('/overview', verifyToken, async (req, res) => {
     const days = period === '7d' ? 7 : period === '90d' ? 90 : period === '1y' ? 365 : 30
 
     const [clientsRes, contractsRes, quotesRes, oppRes, arkRes, signaturesRes] = await Promise.all([
-      pool.query('SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE created_at >= NOW() - $2::interval) as new FROM clients WHERE user_id = $1', [userId, `${days} days`]),
+      pool.query('SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE created_at >= NOW() - $2::interval) as new FROM clients WHERE courtier_id = $1 OR user_id = $1', [userId, `${days} days`]),
       pool.query(`
         SELECT
           COUNT(*) as total,
           COALESCE(SUM(prime_annuelle), 0) as total_value,
           COUNT(*) FILTER (WHERE date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days') as expiring_90d
-        FROM contracts WHERE client_id IN (SELECT id FROM clients WHERE user_id = $1)
+        FROM contracts WHERE client_id IN (SELECT id FROM clients WHERE courtier_id = $1 OR user_id = $1)
       `, [userId]),
       pool.query(`
         SELECT
           COUNT(*) as total,
-          COALESCE(SUM(montant), 0) as total_value,
-          COUNT(*) FILTER (WHERE statut = 'accepte') as won,
-          COUNT(*) FILTER (WHERE created_at >= NOW() - $2::interval) as new
-        FROM quotes WHERE user_id = $1
+          COALESCE(SUM(COALESCE(q.prime_annuelle, q.premium, q.amount)), 0) as total_value,
+          COUNT(*) FILTER (WHERE q.status IN ('accepte', 'accepted')) as won,
+          COUNT(*) FILTER (WHERE q.created_at >= NOW() - $2::interval) as new
+        FROM quotes q
+        WHERE q.client_id IN (SELECT id FROM clients WHERE courtier_id = $1 OR user_id = $1)
       `, [userId, `${days} days`]),
       pool.query(`
         SELECT
           COUNT(*) as total,
           COALESCE(SUM(valeur_estimee), 0) as total_value,
           COUNT(*) FILTER (WHERE statut = 'gagne') as won
-        FROM opportunities WHERE user_id = $1
+        FROM opportunities
+        WHERE user_id = $1
       `, [userId]),
       pool.query(`
         SELECT
@@ -157,15 +165,15 @@ router.get('/revenue/forecast', verifyToken, async (req, res) => {
       pool.query(`
         SELECT COALESCE(SUM(prime_annuelle), 0) as current_arr
         FROM contracts
-        WHERE client_id IN (SELECT id FROM clients WHERE user_id = $1)
-        AND (date_fin IS NULL OR date_fin > NOW())
+        WHERE client_id IN (SELECT id FROM clients WHERE courtier_id = $1 OR user_id = $1)
+        AND (COALESCE(date_echeance, end_date) IS NULL OR COALESCE(date_echeance, end_date) > NOW())
       `, [userId]),
       pool.query(`
         SELECT
           COALESCE(SUM(CASE WHEN date_echeance BETWEEN NOW() AND NOW() + INTERVAL '30 days' THEN prime_annuelle END), 0) as next_30d,
           COALESCE(SUM(CASE WHEN date_echeance BETWEEN NOW() AND NOW() + INTERVAL '90 days' THEN prime_annuelle END), 0) as next_90d
         FROM contracts
-        WHERE client_id IN (SELECT id FROM clients WHERE user_id = $1)
+        WHERE client_id IN (SELECT id FROM clients WHERE courtier_id = $1 OR user_id = $1)
       `, [userId]),
       pool.query(`
         SELECT COALESCE(SUM(valeur_estimee), 0) as pipeline_value
