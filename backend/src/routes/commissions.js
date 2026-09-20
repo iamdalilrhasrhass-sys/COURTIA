@@ -6,14 +6,31 @@ const {
   getCommissionStats,
 } = require('../services/commissionService')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const router = express.Router()
 
 router.use(requireCabinetFeature('v1_commissions'))
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES COMMISSIONS : LE CABINET
+//
+// POURQUOI : les commissions étaient lues et écrites avec
+// `commissions.user_id = utilisateur`. Un associé ne voyait donc que SES
+// commissions, jamais celles du cabinet — et ne pouvait pas rattraper la
+// commission oubliée d'un collègue. La portée est résolue une fois par requête
+// (lib/porteeCabinet) et transmise au service ; `user_id` /
+// `apporteur_user_id` restent l'ATTRIBUTION commerciale de chaque commission.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée de la requête (mémoïsée). */
+const porteeDe = (req) => porteeCabinet.resoudrePortee(req.app.locals.pool || require('../db'), req)
+
 async function saveCommissionForContract(req, res) {
   try {
-    const row = await upsertCommission(req.app.locals.pool, req.user, req.params.id, req.body)
+    const portee = await porteeDe(req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'enregistrer une commission')) return
+    const row = await upsertCommission(req.app.locals.pool, req.user, req.params.id, req.body, portee)
     res.status(201).json(row)
   } catch (err) {
     const status = err.statusCode || (err.message === 'invalid_period' || err.message === 'insurer_required' ? 400 : 500)
@@ -28,7 +45,8 @@ async function saveCommissionForContract(req, res) {
 
 router.get('/', async (req, res) => {
   try {
-    const rows = await listCommissions(req.app.locals.pool, req.user, req.query)
+    const portee = await porteeDe(req)
+    const rows = await listCommissions(req.app.locals.pool, req.user, req.query, portee)
     res.json({ data: rows, total: rows.length })
   } catch (err) {
     res.status(err.statusCode || 500).json({
@@ -40,7 +58,8 @@ router.get('/', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
-    const stats = await getCommissionStats(req.app.locals.pool, req.user, req.query)
+    const portee = await porteeDe(req)
+    const stats = await getCommissionStats(req.app.locals.pool, req.user, req.query, portee)
     res.json(stats)
   } catch (err) {
     res.status(err.statusCode || 500).json({
@@ -52,11 +71,13 @@ router.get('/stats', async (req, res) => {
 
 router.post('/import', async (req, res) => {
   try {
+    const portee = await porteeDe(req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'importer des commissions')) return
     const csv = req.body?.csv || req.body?.content || ''
     if (!csv) {
       return res.status(400).json({ error: 'csv_required', message: 'Ajoutez un contenu CSV à importer.' })
     }
-    const report = await importCommissionsCsv(req.app.locals.pool, req.user, csv)
+    const report = await importCommissionsCsv(req.app.locals.pool, req.user, csv, portee)
     res.status(201).json(report)
   } catch (err) {
     res.status(err.statusCode || 500).json({

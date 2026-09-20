@@ -31,8 +31,41 @@ const {
   MESSAGE_OFFRES_SIMULEES,
   validerOffresPourClient,
 } = require('../lib/donneesReelles')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES DEVIS : LE CABINET
+//
+// POURQUOI : `quote_requests.broker_id` / `devis_wizard.user_id` étaient
+// comparés à l'utilisateur connecté. Un collaborateur du cabinet voyait donc
+// 0 devis, et surtout ne pouvait ni ouvrir ni relancer le dossier d'un
+// collègue — alors qu'il répond au téléphone pour lui. La portée passe par
+// `cabinet_id` (migration 113) ; `broker_id` / `user_id` restent le CRÉATEUR
+// du devis (affectation commerciale). Un utilisateur sans cabinet garde
+// exactement son ancien périmètre.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée SQL des devis v1 (`quote_requests`, propriétaire = broker_id). */
+function filtreDevis(portee, { depart = 1, ecriture = false, alias = 'qr' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.broker_id`,
+    depart,
+    ecriture,
+  })
+}
+
+/** Portée SQL des devis guidés (`devis_wizard`, propriétaire = user_id). */
+function filtreWizard(portee, { depart = 1, ecriture = false, alias = 'd' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.user_id`,
+    depart,
+    ecriture,
+  })
+}
 
 /**
  * Coercition d'une valeur en paramètre jsonb VALIDE.
@@ -100,16 +133,22 @@ async function loadCabinetMeta(userId) {
   }
 }
 
-async function loadClient(userId, clientId) {
+async function loadClient(portee, clientId) {
   if (!clientId) return null
   try {
     // Repli SANS filtre de cabinet supprimé : il permettait à un cabinet de
     // lire l'identité (nom, société, e-mail, téléphone, adresse) du client d'un
     // AUTRE cabinet en passant son identifiant dans le corps de la requête.
+    // La portée est désormais celle du CABINET de l'appelant.
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'clients.cabinet_id',
+      proprietaire: 'clients.courtier_id',
+      depart: 2,
+    })
     const { rows } = await pool.query(
       `SELECT id, first_name, last_name, company_name, email, phone, address, city, postal_code
-       FROM clients WHERE id = $1 AND (courtier_id = $2 OR broker_id = $2) LIMIT 1`,
-      [clientId, userId]
+       FROM clients WHERE id = $1 AND ${f.sql} LIMIT 1`,
+      [clientId, ...f.params]
     ).catch(() => ({ rows: [] }))
     return rows[0] || null
   } catch (_) {
@@ -202,9 +241,10 @@ const SCHEMA_PROPOSAL = {
 
 router.get('/', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { status, client_id, product_type, limit = 50, offset = 0 } = req.query
 
+    const f = filtreDevis(portee, { depart: 1 })
     let sql = `
       SELECT 
         qr.id, qr.client_id, qr.product_type, qr.normalized_data,
@@ -216,10 +256,10 @@ router.get('/', async (req, res) => {
         (SELECT MIN(premium_annual) FROM quote_results WHERE request_id = qr.id AND status = 'received') AS best_price
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.broker_id = $1
+      WHERE ${f.sql}
     `
-    const params = [brokerId]
-    let paramIndex = 2
+    const params = [...f.params]
+    let paramIndex = f.suivant
 
     if (status) {
       sql += ` AND qr.status = $${paramIndex++}`
@@ -239,7 +279,9 @@ router.get('/', async (req, res) => {
 
     const result = await pool.query(sql, params)
 
-    // Stats globales
+    // Stats globales — MÊME portée que la liste : des statistiques calculées
+    // sur un autre périmètre que la liste affichée sont un mensonge.
+    const fStats = filtreDevis(portee, { depart: 1, alias: 'quote_requests' })
     const statsResult = await pool.query(`
       SELECT 
         COUNT(*) AS total,
@@ -247,8 +289,8 @@ router.get('/', async (req, res) => {
         COUNT(*) FILTER (WHERE status = 'submitted') AS submitted,
         COUNT(*) FILTER (WHERE status = 'completed') AS completed,
         COUNT(*) FILTER (WHERE status = 'accepted') AS accepted
-      FROM quote_requests WHERE broker_id = $1
-    `, [brokerId])
+      FROM quote_requests WHERE ${fStats.sql}
+    `, [...fStats.params])
 
     res.json({
       devis: result.rows.map(row => ({
@@ -279,8 +321,9 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const devisId = parseInt(req.params.id, 10)
+    const f = filtreDevis(portee, { depart: 2 })
 
     const result = await pool.query(`
       SELECT 
@@ -290,8 +333,8 @@ router.get('/:id', async (req, res) => {
         c.company_name AS client_company, c.type AS client_type
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.id = $1 AND qr.broker_id = $2
-    `, [devisId, brokerId])
+      WHERE qr.id = $1 AND ${f.sql}
+    `, [devisId, ...f.params])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Devis non trouvé' })
@@ -351,18 +394,28 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    // Validation AVANT tout accès base : on refuse une requête incomplète sans
+    // ouvrir de connexion (et sans résoudre de portée).
     const { client_id, product_type, criteria, target_providers } = req.body
 
     if (!product_type) {
       return res.status(400).json({ error: 'product_type requis' })
     }
 
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const brokerId = portee.userId || uid(req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer un devis')) return
+
     const result = await pool.query(`
-      INSERT INTO quote_requests (broker_id, client_id, product_type, normalized_data, target_providers, status)
-      VALUES ($1, $2, $3, $4, $5, 'draft')
+      INSERT INTO quote_requests (broker_id, cabinet_id, client_id, product_type, normalized_data, target_providers, status)
+      VALUES ($1, $2, $3, $4, $5, $6, 'draft')
       RETURNING *
-    `, [brokerId, client_id || null, product_type, versParametreJsonb(criteria, {}), versParametreJsonb(target_providers, null)])
+    `, [
+      brokerId,
+      porteeCabinet.cabinetPourCreation(portee),
+      client_id || null, product_type,
+      versParametreJsonb(criteria, {}), versParametreJsonb(target_providers, null),
+    ])
 
     logger.info({ brokerId, devisId: result.rows[0].id }, 'Devis created')
 
@@ -382,12 +435,17 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'modifier un devis')) return
     const devisId = parseInt(req.params.id, 10)
     const { status, criteria, target_providers, metadata } = req.body
 
-    // Vérifier que le devis appartient au courtier
-    const check = await pool.query('SELECT id FROM quote_requests WHERE id = $1 AND broker_id = $2', [devisId, brokerId])
+    // Vérifier que le devis appartient AU CABINET de l'appelant (404 sinon).
+    const fPortee = filtreDevis(portee, { depart: 2, ecriture: true })
+    const check = await pool.query(
+      `SELECT id FROM quote_requests WHERE id = $1 AND ${fPortee.sql}`,
+      [devisId, ...fPortee.params]
+    )
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Devis non trouvé' })
     }
@@ -420,10 +478,15 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Aucune modification fournie' })
     }
 
-    params.push(devisId, brokerId)
+    // La portée est REJOUÉE à l'écriture (et non supposée acquise par le SELECT
+    // précédent) : la clause d'écriture est la garantie, pas la vérification.
+    const fEcriture = filtreDevis(portee, { depart: paramIndex + 1, ecriture: true })
+    const indexId = paramIndex
+    paramIndex = fEcriture.suivant
+    params.push(devisId, ...fEcriture.params)
     const result = await pool.query(`
-      UPDATE quote_requests SET ${updates.join(', ')}
-      WHERE id = $${paramIndex++} AND broker_id = $${paramIndex}
+      UPDATE quote_requests qr SET ${updates.join(', ')}
+      WHERE id = $${indexId} AND ${fEcriture.sql}
       RETURNING *
     `, params)
 
@@ -440,12 +503,14 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
     const devisId = parseInt(req.params.id, 10)
+    const f = filtreDevis(portee, { depart: 2, ecriture: true })
 
     const result = await pool.query(
-      'DELETE FROM quote_requests WHERE id = $1 AND broker_id = $2 RETURNING id',
-      [devisId, brokerId]
+      `DELETE FROM quote_requests qr WHERE id = $1 AND ${f.sql} RETURNING id`,
+      [devisId, ...f.params]
     )
 
     if (result.rows.length === 0) {
@@ -465,8 +530,10 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/:id/ai-prepare', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const brokerId = portee.userId || uid(req)
     const devisId = parseInt(req.params.id, 10)
+    const fDevis = filtreDevis(portee, { depart: 2 })
 
     // Récupérer le devis avec infos client
     const devisRes = await pool.query(`
@@ -474,8 +541,8 @@ router.post('/:id/ai-prepare', async (req, res) => {
              c.siret, c.city
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.id = $1 AND qr.broker_id = $2
-    `, [devisId, brokerId])
+      WHERE qr.id = $1 AND ${fDevis.sql}
+    `, [devisId, ...fDevis.params])
 
     if (devisRes.rows.length === 0) {
       return res.status(404).json({ error: 'Devis non trouvé' })
@@ -529,16 +596,18 @@ Génère la checklist documents et les questions client.`,
 
 router.post('/:id/ai-recommendation', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const brokerId = portee.userId || uid(req)
     const devisId = parseInt(req.params.id, 10)
+    const fDevis = filtreDevis(portee, { depart: 2 })
 
     // Récupérer le devis + résultats
     const devisRes = await pool.query(`
       SELECT qr.*, c.first_name, c.last_name, c.company_name, c.type AS client_type
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.id = $1 AND qr.broker_id = $2
-    `, [devisId, brokerId])
+      WHERE qr.id = $1 AND ${fDevis.sql}
+    `, [devisId, ...fDevis.params])
 
     if (devisRes.rows.length === 0) {
       return res.status(404).json({ error: 'Devis non trouvé' })
@@ -607,9 +676,11 @@ Recommande la meilleure offre avec argumentaire.`,
 
 router.post('/:id/generate-proposal', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const brokerId = portee.userId || uid(req)
     const devisId = parseInt(req.params.id, 10)
     const { provider_code } = req.body // Optionnel: forcer un provider
+    const fDevis = filtreDevis(portee, { depart: 2 })
 
     // Récupérer le devis avec client
     const devisRes = await pool.query(`
@@ -617,8 +688,8 @@ router.post('/:id/generate-proposal', async (req, res) => {
              c.email, c.city
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.id = $1 AND qr.broker_id = $2
-    `, [devisId, brokerId])
+      WHERE qr.id = $1 AND ${fDevis.sql}
+    `, [devisId, ...fDevis.params])
 
     if (devisRes.rows.length === 0) {
       return res.status(404).json({ error: 'Devis non trouvé' })
@@ -708,13 +779,15 @@ router.post('/wizard/init', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer un devis')) return
     const ok = await ensureWizardSchema()
     if (!ok) return res.status(503).json({ error: 'schema_missing' })
 
     const { client_id, product, preset = 'confort', garanties = {}, date_effet = null } = req.body || {}
     if (!product) return res.status(400).json({ error: 'product_required' })
 
-    const client = await loadClient(userId, client_id)
+    const client = await loadClient(portee, client_id)
     const clientName = client
       ? (client.company_name || `${client.first_name || ''} ${client.last_name || ''}`.trim())
       : null
@@ -724,8 +797,8 @@ router.post('/wizard/init', async (req, res) => {
     const { rows } = await pool.query(`
       INSERT INTO devis_wizard
         (user_id, client_id, product, preset, garanties, status, reference,
-         client_email_cache, client_name_cache, cabinet_name_cache, validity_days)
-      VALUES ($1, $2, $3, $4, $5::jsonb, 'draft', $6, $7, $8, $9, 30)
+         client_email_cache, client_name_cache, cabinet_name_cache, validity_days, cabinet_id)
+      VALUES ($1, $2, $3, $4, $5::jsonb, 'draft', $6, $7, $8, $9, 30, $10)
       RETURNING *
     `, [
       userId, client_id || null, product, preset,
@@ -734,6 +807,7 @@ router.post('/wizard/init', async (req, res) => {
       client?.email || null,
       clientName,
       cabinet.name,
+      porteeCabinet.cabinetPourCreation(portee),
     ])
 
     await pool.query(
@@ -754,6 +828,8 @@ router.post('/wizard/finalize', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'finaliser un devis')) return
     const ok = await ensureWizardSchema()
     if (!ok) return res.status(503).json({ error: 'schema_missing' })
 
@@ -778,13 +854,13 @@ router.post('/wizard/finalize', async (req, res) => {
     }
 
     const { rows: existing } = await pool.query(
-      `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`,
-      [devis_id, userId]
+      `SELECT * FROM devis_wizard WHERE id = $1 AND ${filtreWizard(portee, { depart: 2, ecriture: true }).sql}`,
+      [devis_id, ...filtreWizard(portee, { depart: 2, ecriture: true }).params]
     )
     if (!existing[0]) return res.status(404).json({ error: 'devis_not_found' })
     const devis = existing[0]
 
-    const client = await loadClient(userId, devis.client_id)
+    const client = await loadClient(portee, devis.client_id)
     const cabinet = await loadCabinetMeta(userId)
 
     const clientName = devis.client_name_cache || (client
@@ -814,7 +890,7 @@ router.post('/wizard/finalize', async (req, res) => {
 
     const totalCents = Math.round((offers[0]?.prime_annuelle_eur || 0) * 100)
     await pool.query(`
-      UPDATE devis_wizard
+      UPDATE devis_wizard d
       SET selected_providers = $1::jsonb,
           pdf_path = $2,
           total_premium_cents = $3,
@@ -822,8 +898,8 @@ router.post('/wizard/finalize', async (req, res) => {
           status = CASE WHEN status = 'draft' THEN 'ready' ELSE status END,
           updated_at = NOW(),
           expires_at = NOW() + INTERVAL '30 days'
-      WHERE id = $5 AND user_id = $6
-    `, [JSON.stringify(offers), pdfPath, totalCents, ark_summary, devis_id, userId])
+      WHERE id = $5 AND ${filtreWizard(portee, { depart: 6, ecriture: true }).sql}
+    `, [JSON.stringify(offers), pdfPath, totalCents, ark_summary, devis_id, ...filtreWizard(portee, { depart: 6, ecriture: true }).params])
 
     await pool.query(
       `INSERT INTO devis_activity (devis_id, user_id, event, payload)
@@ -849,10 +925,12 @@ router.get('/:id/pdf', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const devisId = parseInt(req.params.id, 10)
+    const fDevis = filtreWizard(portee, { depart: 2 })
     const { rows } = await pool.query(
-      `SELECT pdf_path, reference FROM devis_wizard WHERE id = $1 AND user_id = $2`,
-      [devisId, userId]
+      `SELECT pdf_path, reference FROM devis_wizard WHERE id = $1 AND ${fDevis.sql}`,
+      [devisId, ...fDevis.params]
     )
     if (!rows[0] || !rows[0].pdf_path) return res.status(404).json({ error: 'pdf_missing' })
     if (!fs.existsSync(rows[0].pdf_path)) return res.status(404).json({ error: 'pdf_file_missing' })
@@ -873,10 +951,13 @@ router.post('/:id/send', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'envoyer un devis')) return
     const devisId = parseInt(req.params.id, 10)
+    const fDevis = filtreWizard(portee, { depart: 2, ecriture: true })
     const { rows } = await pool.query(
-      `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`,
-      [devisId, userId]
+      `SELECT * FROM devis_wizard WHERE id = $1 AND ${fDevis.sql}`,
+      [devisId, ...fDevis.params]
     )
     if (!rows[0]) return res.status(404).json({ error: 'devis_not_found' })
     const d = rows[0]
@@ -925,10 +1006,10 @@ router.post('/:id/send', async (req, res) => {
     }
 
     await pool.query(
-      `UPDATE devis_wizard
+      `UPDATE devis_wizard d
          SET status = 'sent', sent_at = NOW(), client_email_cache = $1, updated_at = NOW()
-       WHERE id = $2 AND user_id = $3`,
-      [email, devisId, userId]
+       WHERE id = $2 AND ${filtreWizard(portee, { depart: 3, ecriture: true }).sql}`,
+      [email, devisId, ...filtreWizard(portee, { depart: 3, ecriture: true }).params]
     )
 
     // Annule les anciennes relances, replanifie
@@ -957,6 +1038,8 @@ router.post('/:id/relance', async (req, res) => {
     if (!Number.isFinite(devisId) || devisId <= 0) {
       return res.status(400).json({ error: 'invalid_devis_id', message: 'Identifiant de devis invalide.' })
     }
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'relancer un devis')) return
     // Modèles connus uniquement : `template_key` est un varchar(40) et un
     // modèle inconnu ne produit jamais de message.
     const templates = ['J3', 'J7', 'J14']
@@ -970,9 +1053,10 @@ router.post('/:id/relance', async (req, res) => {
     // violation de clé étrangère → 500 `relance_failed` à chaque clic, sans
     // qu'aucune relance n'existe. On route maintenant chaque famille vers sa
     // table, et un identifiant inconnu répond 404 au lieu de 500.
+    const fWizard = filtreWizard(portee, { depart: 2, ecriture: true })
     const wizard = await pool.query(
-      'SELECT id, status, client_id FROM devis_wizard WHERE id = $1 AND user_id = $2',
-      [devisId, userId]
+      `SELECT id, status, client_id FROM devis_wizard WHERE id = $1 AND ${fWizard.sql}`,
+      [devisId, ...fWizard.params]
     )
     if (wizard.rows[0]) {
       await pool.query(`
@@ -986,25 +1070,27 @@ router.post('/:id/relance', async (req, res) => {
       return res.json({ ok: true, devis_type: 'wizard', template, ...r })
     }
 
+    const fV1 = filtreDevis(portee, { depart: 2, ecriture: true })
     const v1 = await pool.query(
       `SELECT qr.id, qr.client_id, qr.product_type, c.email AS client_email,
               CONCAT(COALESCE(c.first_name, ''), ' ', COALESCE(c.last_name, '')) AS client_name
          FROM quote_requests qr
          LEFT JOIN clients c ON c.id = qr.client_id
-        WHERE qr.id = $1 AND qr.broker_id = $2`,
-      [devisId, userId]
+        WHERE qr.id = $1 AND ${fV1.sql}`,
+      [devisId, ...fV1.params]
     )
     const devisV1 = v1.rows[0]
     if (devisV1) {
       const relance = await pool.query(`
-        INSERT INTO relances (client_id, quote_request_id, type, channel, priority, subject, scheduled_at, ai_generated, metadata)
-        VALUES ($1, $2, 'devis_relance', 'email', 'high', $3, NOW(), false, $4::jsonb)
+        INSERT INTO relances (client_id, quote_request_id, type, channel, priority, subject, scheduled_at, ai_generated, metadata, cabinet_id)
+        VALUES ($1, $2, 'devis_relance', 'email', 'high', $3, NOW(), false, $4::jsonb, $5)
         RETURNING id, client_id, quote_request_id, type, channel, status, scheduled_at
       `, [
         devisV1.client_id,
         devisV1.id,
         `Relance devis ${devisV1.product_type || ''}`.trim(),
         JSON.stringify({ template, origine: 'devis_relance_forcee', devis_v1_id: devisV1.id }),
+        porteeCabinet.cabinetPourCreation(portee),
       ])
 
       // Envoi immédiat réel : le statut écrit dit ce qui s'est RÉELLEMENT passé.
@@ -1055,10 +1141,13 @@ router.post('/:id/sign', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'signer un devis')) return
     const devisId = parseInt(req.params.id, 10)
+    const fSign = filtreWizard(portee, { depart: 2, ecriture: true })
     await pool.query(
-      `UPDATE devis_wizard SET status = 'signed', signed_at = NOW(), updated_at = NOW()
-       WHERE id = $1 AND user_id = $2`, [devisId, userId]
+      `UPDATE devis_wizard d SET status = 'signed', signed_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND ${fSign.sql}`, [devisId, ...fSign.params]
     )
     await cancelPendingRelancesForDevis(devisId)
     await pool.query(
@@ -1080,15 +1169,17 @@ router.get('/wizard/list', async (req, res) => {
     if (!ok) return res.json({ items: [], stats: { total: 0, sent: 0, signed: 0, refused: 0 } })
 
     const { status } = req.query
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fListe = filtreWizard(portee, { depart: 1, alias: 'd' })
     let sql = `
       SELECT d.*, c.first_name, c.last_name, c.company_name, c.email AS c_email
       FROM devis_wizard d
       LEFT JOIN clients c ON c.id = d.client_id
-      WHERE d.user_id = $1
+      WHERE ${fListe.sql}
     `
-    const params = [userId]
+    const params = [...fListe.params]
     if (status && status !== 'all') {
-      sql += ` AND d.status = $2`
+      sql += ` AND d.status = $${fListe.suivant}`
       params.push(status)
     }
     sql += ` ORDER BY d.created_at DESC LIMIT 200`
@@ -1132,11 +1223,13 @@ router.get('/wizard/:id', async (req, res) => {
     const ok = await ensureWizardSchema()
     if (!ok) return res.status(404).json({ error: 'not_found' })
     const devisId = parseInt(req.params.id, 10)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fDetail = filtreWizard(portee, { depart: 2, alias: 'd' })
     const { rows } = await pool.query(
       `SELECT d.*, c.first_name, c.last_name, c.company_name, c.email AS c_email, c.phone AS c_phone
        FROM devis_wizard d
        LEFT JOIN clients c ON c.id = d.client_id
-       WHERE d.id = $1 AND d.user_id = $2`, [devisId, userId]
+       WHERE d.id = $1 AND ${fDetail.sql}`, [devisId, ...fDetail.params]
     )
     if (!rows[0]) return res.status(404).json({ error: 'not_found' })
     const d = rows[0]
@@ -1187,9 +1280,12 @@ router.post('/:id/duplicate', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'dupliquer un devis')) return
     const devisId = parseInt(req.params.id, 10)
+    const fSrc = filtreWizard(portee, { depart: 2, ecriture: true })
     const { rows } = await pool.query(
-      `SELECT * FROM devis_wizard WHERE id = $1 AND user_id = $2`, [devisId, userId]
+      `SELECT * FROM devis_wizard WHERE id = $1 AND ${fSrc.sql}`, [devisId, ...fSrc.params]
     )
     if (!rows[0]) return res.status(404).json({ error: 'not_found' })
     const src = rows[0]
@@ -1197,14 +1293,15 @@ router.post('/:id/duplicate', async (req, res) => {
     const { rows: created } = await pool.query(`
       INSERT INTO devis_wizard
         (user_id, client_id, product, preset, garanties, selected_providers,
-         status, reference, client_email_cache, client_name_cache, cabinet_name_cache, validity_days)
-      VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,'draft',$7,$8,$9,$10,30)
+         status, reference, client_email_cache, client_name_cache, cabinet_name_cache, validity_days, cabinet_id)
+      VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,'draft',$7,$8,$9,$10,30,$11)
       RETURNING id, reference
     `, [
       userId, src.client_id, src.product, src.preset,
       JSON.stringify(src.garanties || {}),
       JSON.stringify(src.selected_providers || []),
       ref, src.client_email_cache, src.client_name_cache, src.cabinet_name_cache,
+      porteeCabinet.cabinetPourCreation(portee),
     ])
     res.json({ ok: true, devis: created[0] })
   } catch (err) {
@@ -1217,10 +1314,13 @@ router.post('/:id/cancel', async (req, res) => {
   const userId = uid(req)
   if (!userId) return res.status(401).json({ error: 'auth_required' })
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'annuler un devis')) return
     const devisId = parseInt(req.params.id, 10)
+    const fAnnule = filtreWizard(portee, { depart: 2, ecriture: true })
     await pool.query(
-      `UPDATE devis_wizard SET status = 'refused', updated_at = NOW()
-       WHERE id = $1 AND user_id = $2`, [devisId, userId]
+      `UPDATE devis_wizard d SET status = 'refused', updated_at = NOW()
+       WHERE id = $1 AND ${fAnnule.sql}`, [devisId, ...fAnnule.params]
     )
     await cancelPendingRelancesForDevis(devisId)
     res.json({ ok: true })

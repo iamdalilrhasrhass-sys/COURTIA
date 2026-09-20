@@ -13,6 +13,27 @@
  */
 
 const express = require('express')
+const porteeCabinet = require('../lib/porteeCabinet')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES OPPORTUNITÉS : LE CABINET
+//
+// POURQUOI : `opportunites.broker_id` était comparé à l'utilisateur connecté —
+// un collaborateur invité ne voyait donc AUCUNE opportunité du cabinet, ni la
+// détection, ni les statistiques. La portée passe par `opportunites.cabinet_id`
+// (migration 113) ; `broker_id` reste le courtier en charge de l'opportunité
+// (affectation commerciale), et la détection continue de lui être attribuée.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée SQL sur `opportunites` (propriétaire = broker_id). */
+function filtreOpportunites(portee, { depart = 1, ecriture = false, alias = 'opportunites' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.broker_id`,
+    depart,
+    ecriture,
+  })
+}
 const router = express.Router()
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
@@ -88,9 +109,10 @@ const SCHEMA_PITCH = {
 
 router.get('/', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { status, type, score_min, limit = 50, offset = 0 } = req.query
 
+    const f = filtreOpportunites(portee, { depart: 1, alias: 'o' })
     let sql = `
       SELECT 
         o.*,
@@ -98,10 +120,10 @@ router.get('/', async (req, res) => {
         c.company_name AS client_company, c.email AS client_email, c.type AS client_type
       FROM opportunites o
       LEFT JOIN clients c ON o.client_id = c.id
-      WHERE o.broker_id = $1
+      WHERE ${f.sql}
     `
-    const params = [brokerId]
-    let paramIndex = 2
+    const params = [...f.params]
+    let paramIndex = f.suivant
 
     if (status) {
       sql += ` AND o.status = $${paramIndex++}`
@@ -161,7 +183,8 @@ router.get('/', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fStats = filtreOpportunites(portee, { depart: 1 })
 
     const statsResult = await pool.query(`
       SELECT 
@@ -174,24 +197,24 @@ router.get('/stats', async (req, res) => {
         SUM(estimated_revenue) FILTER (WHERE status = 'converted') AS revenus_convertis,
         AVG(score) FILTER (WHERE status = 'detected') AS score_moyen,
         COUNT(*) FILTER (WHERE score >= 70 AND status = 'detected') AS high_score_count
-      FROM opportunites WHERE broker_id = $1
-    `, [brokerId])
+      FROM opportunites WHERE ${fStats.sql}
+    `, [...fStats.params])
 
     // Par type
     const byTypeResult = await pool.query(`
       SELECT type, COUNT(*) AS count, SUM(estimated_revenue) AS potentiel,
              AVG(score)::INTEGER AS score_moyen
-      FROM opportunites WHERE broker_id = $1 AND status = 'detected'
+      FROM opportunites WHERE ${fStats.sql} AND status = 'detected'
       GROUP BY type ORDER BY count DESC
-    `, [brokerId])
+    `, [...fStats.params])
 
     // Par produit cible
     const byProductResult = await pool.query(`
       SELECT product_target, COUNT(*) AS count, SUM(estimated_revenue) AS potentiel
-      FROM opportunites WHERE broker_id = $1 AND status = 'detected'
+      FROM opportunites WHERE ${fStats.sql} AND status = 'detected'
       GROUP BY product_target ORDER BY potentiel DESC NULLS LAST
       LIMIT 10
-    `, [brokerId])
+    `, [...fStats.params])
 
     // Taux de conversion
     const stats = statsResult.rows[0]
@@ -243,8 +266,9 @@ router.get('/stats', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const oppoId = parseInt(req.params.id, 10)
+    const f = filtreOpportunites(portee, { depart: 2, alias: 'o' })
 
     const result = await pool.query(`
       SELECT 
@@ -254,8 +278,8 @@ router.get('/:id', async (req, res) => {
         c.type AS client_type, c.lifetime_value
       FROM opportunites o
       LEFT JOIN clients c ON o.client_id = c.id
-      WHERE o.id = $1 AND o.broker_id = $2
-    `, [oppoId, brokerId])
+      WHERE o.id = $1 AND ${f.sql}
+    `, [oppoId, ...f.params])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Opportunité non trouvée' })
@@ -263,12 +287,19 @@ router.get('/:id', async (req, res) => {
 
     const row = result.rows[0]
 
-    // Récupérer les contrats actuels du client
+    // Récupérer les contrats actuels du client (portée cabinet sur le client)
+    const fClient = porteeCabinet.fragment(portee, {
+      cabinet: 'clients.cabinet_id',
+      proprietaire: 'clients.courtier_id',
+      depart: 2,
+    })
     const contratsRes = await pool.query(`
-      SELECT id, product_type, premium, status, start_date, end_date
-      FROM quotes WHERE client_id = $1 AND broker_id = $2
-      ORDER BY start_date DESC
-    `, [row.client_id, brokerId])
+      SELECT q.id, q.product_type, q.premium, q.status, q.start_date, q.end_date
+      FROM quotes q
+      JOIN clients c ON c.id = q.client_id AND ${fClient.sql}
+      WHERE q.client_id = $1
+      ORDER BY q.start_date DESC
+    `, [row.client_id, ...fClient.params])
 
     res.json({
       opportunite: {
@@ -317,12 +348,17 @@ router.get('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'modifier une opportunité')) return
     const oppoId = parseInt(req.params.id, 10)
     const { status, metadata, quote_request_id } = req.body
 
-    // Vérifier appartenance
-    const check = await pool.query('SELECT id, status FROM opportunites WHERE id = $1 AND broker_id = $2', [oppoId, brokerId])
+    // Vérifier appartenance (portée CABINET)
+    const fCheck = filtreOpportunites(portee, { depart: 2, ecriture: true })
+    const check = await pool.query(
+      `SELECT id, status FROM opportunites WHERE id = $1 AND ${fCheck.sql}`,
+      [oppoId, ...fCheck.params]
+    )
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Opportunité non trouvée' })
     }
@@ -355,10 +391,12 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Aucune modification fournie' })
     }
 
-    params.push(oppoId, brokerId)
+    const fEcriture = filtreOpportunites(portee, { depart: paramIndex + 1, ecriture: true })
+    const indexId = paramIndex
+    params.push(oppoId, ...fEcriture.params)
     const result = await pool.query(`
       UPDATE opportunites SET ${updates.join(', ')}
-      WHERE id = $${paramIndex++} AND broker_id = $${paramIndex}
+      WHERE id = $${indexId} AND ${fEcriture.sql}
       RETURNING *
     `, params)
 
@@ -375,12 +413,14 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
     const oppoId = parseInt(req.params.id, 10)
+    const f = filtreOpportunites(portee, { depart: 2, ecriture: true })
 
     const result = await pool.query(
-      'DELETE FROM opportunites WHERE id = $1 AND broker_id = $2 RETURNING id',
-      [oppoId, brokerId]
+      `DELETE FROM opportunites WHERE id = $1 AND ${f.sql} RETURNING id`,
+      [oppoId, ...f.params]
     )
 
     if (result.rows.length === 0) {
@@ -400,8 +440,17 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/detect', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'détecter des opportunités')) return
+    const brokerId = portee.userId || req.user.id
     const { max_opportunites = 20, force_rescan = false } = req.body
+    // Portée CABINET sur les clients analysés (les contrats suivent leur client).
+    const fClients = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+      ecriture: true,
+    })
 
     // Récupérer le portefeuille complet
     // 1. Clients avec leurs contrats actuels
@@ -413,29 +462,31 @@ router.post('/detect', async (req, res) => {
              COUNT(q.id) AS contracts_count,
              MAX(q.end_date) AS next_renewal
       FROM clients c
-      LEFT JOIN quotes q ON q.client_id = c.id AND q.status = 'active' AND q.broker_id = $1
-      WHERE c.id IN (SELECT DISTINCT client_id FROM quotes WHERE broker_id = $1)
+      LEFT JOIN quotes q ON q.client_id = c.id AND q.status = 'active'
+      WHERE ${fClients.sql}
       GROUP BY c.id
       ORDER BY c.lifetime_value DESC NULLS LAST
       LIMIT 100
-    `, [brokerId])
+    `, [...fClients.params])
 
     // 2. Clients mono-produit (opportunité cross-sell évidente)
     const monoProduitRes = await pool.query(`
       SELECT c.id, c.first_name, c.last_name, c.company_name, c.type,
              q.product_type, q.premium
       FROM clients c
-      JOIN quotes q ON q.client_id = c.id AND q.broker_id = $1 AND q.status = 'active'
+      JOIN quotes q ON q.client_id = c.id AND q.status = 'active'
+      WHERE ${fClients.sql}
       GROUP BY c.id, q.product_type, q.premium
       HAVING COUNT(DISTINCT q.product_type) = 1
       LIMIT 50
-    `, [brokerId])
+    `, [...fClients.params])
 
-    // 3. Opportunités déjà détectées (pour éviter doublons)
+    // 3. Opportunités déjà détectées (pour éviter doublons) — portée CABINET
+    const fOppo = filtreOpportunites(portee, { depart: 1 })
     const existingRes = await pool.query(`
       SELECT client_id, product_target FROM opportunites
-      WHERE broker_id = $1 AND status = 'detected'
-    `, [brokerId])
+      WHERE ${fOppo.sql} AND status = 'detected'
+    `, [...fOppo.params])
     const existingSet = new Set(existingRes.rows.map(r => `${r.client_id}_${r.product_target}`))
 
     // Appel ARK pour analyse
@@ -498,29 +549,34 @@ Détecte les meilleures opportunités commerciales.`,
       const key = `${opp.client_id}_${opp.product_target}`
       if (!force_rescan && existingSet.has(key)) continue
 
-      // Vérifier que le client appartient au courtier
+      // Vérifier que le client appartient AU CABINET
+      const fClient = porteeCabinet.fragment(portee, {
+        cabinet: 'clients.cabinet_id',
+        proprietaire: 'clients.courtier_id',
+        depart: 2,
+        ecriture: true,
+      })
       const clientCheck = await pool.query(`
-        SELECT c.id FROM clients c
-        JOIN quotes q ON q.client_id = c.id
-        WHERE c.id = $1 AND q.broker_id = $2
+        SELECT id FROM clients WHERE id = $1 AND ${fClient.sql}
         LIMIT 1
-      `, [opp.client_id, brokerId])
+      `, [opp.client_id, ...fClient.params])
 
       if (clientCheck.rows.length === 0) continue
 
-      // Supprimer l'ancienne opportunité si force_rescan
+      // Supprimer l'ancienne opportunité si force_rescan (portée cabinet)
       if (force_rescan) {
+        const fAncienne = filtreOpportunites(portee, { depart: 3, ecriture: true })
         await pool.query(`
-          DELETE FROM opportunites WHERE broker_id = $1 AND client_id = $2 
-            AND product_target = $3 AND status = 'detected'
-        `, [brokerId, opp.client_id, opp.product_target])
+          DELETE FROM opportunites WHERE client_id = $1
+            AND product_target = $2 AND status = 'detected' AND ${fAncienne.sql}
+        `, [opp.client_id, opp.product_target, ...fAncienne.params])
       }
 
       const insertRes = await pool.query(`
         INSERT INTO opportunites (
           broker_id, client_id, type, product_current, product_target,
-          score, estimated_revenue, reasoning, suggested_action, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          score, estimated_revenue, reasoning, suggested_action, metadata, cabinet_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *
       `, [
         brokerId,
@@ -536,7 +592,8 @@ Détecte les meilleures opportunités commerciales.`,
         potentielDepuisDonneesReelles(null),
         opp.reasoning,
         opp.suggested_action || null,
-        { ark_detected: true, detected_version: new Date().toISOString(), estimation_monetaire: 'non_disponible' }
+        { ark_detected: true, detected_version: new Date().toISOString(), estimation_monetaire: 'non_disponible' },
+        porteeCabinet.cabinetPourCreation(portee)
       ])
 
       insertedOppos.push(insertRes.rows[0])
@@ -572,8 +629,10 @@ Détecte les meilleures opportunités commerciales.`,
 
 router.post('/:id/ai-pitch', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const brokerId = portee.userId || req.user.id
     const oppoId = parseInt(req.params.id, 10)
+    const fOppo = filtreOpportunites(portee, { depart: 2, alias: 'o' })
 
     // Récupérer l'opportunité avec infos complètes
     const oppoRes = await pool.query(`
@@ -581,8 +640,8 @@ router.post('/:id/ai-pitch', async (req, res) => {
              c.city, c.siret, c.lifetime_value
       FROM opportunites o
       LEFT JOIN clients c ON o.client_id = c.id
-      WHERE o.id = $1 AND o.broker_id = $2
-    `, [oppoId, brokerId])
+      WHERE o.id = $1 AND ${fOppo.sql}
+    `, [oppoId, ...fOppo.params])
 
     if (oppoRes.rows.length === 0) {
       return res.status(404).json({ error: 'Opportunité non trouvée' })
@@ -591,11 +650,17 @@ router.post('/:id/ai-pitch', async (req, res) => {
     const opp = oppoRes.rows[0]
     const clientName = opp.company_name || `${opp.first_name || ''} ${opp.last_name || ''}`.trim()
 
-    // Récupérer contrats actuels
+    // Récupérer contrats actuels (portée cabinet sur le client)
+    const fClient = porteeCabinet.fragment(portee, {
+      cabinet: 'clients.cabinet_id',
+      proprietaire: 'clients.courtier_id',
+      depart: 2,
+    })
     const contratsRes = await pool.query(`
-      SELECT product_type, premium, start_date FROM quotes
-      WHERE client_id = $1 AND broker_id = $2 AND status = 'active'
-    `, [opp.client_id, brokerId])
+      SELECT q.product_type, q.premium, q.start_date FROM quotes q
+      JOIN clients c ON c.id = q.client_id AND ${fClient.sql}
+      WHERE q.client_id = $1 AND q.status = 'active'
+    `, [opp.client_id, ...fClient.params])
 
     const arkResponse = await callArkStructured({
       system: `Tu es ARK, assistant IA expert en assurance pour courtiers.

@@ -16,6 +16,7 @@ const { requireUnderLimit } = require('../middleware/planGuard')
 const visionService = require('../services/visionService')
 const logger = require('../lib/logger')
 const { logAudit } = require('../lib/audit')
+const porteeCabinet = require('../lib/porteeCabinet')
 const { incrementUsage } = require('../services/planService')
 const { trackEvent } = require('../services/analyticsService')
 const { isFeatureEnabled } = require('../lib/featureFlags')
@@ -103,6 +104,36 @@ router.post('/yousign/webhook', async (req, res) => {
 })
 
 router.use(verifyToken)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES DOCUMENTS : LE CABINET
+//
+// POURQUOI : `documents.user_id` (déposant) était comparé à l'utilisateur
+// connecté. Un collaborateur du cabinet ne voyait donc AUCUN document — ni la
+// fiche client, ni le mandat, ni l'attestation produits par un collègue, alors
+// qu'il traite le même dossier. La portée passe par `documents.cabinet_id`
+// (migration 113) ; `user_id` / `uploaded_by` restent l'AUTEUR du dépôt.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée SQL sur `documents` (propriétaire = user_id, sinon uploaded_by). */
+function filtreDocuments(portee, { depart = 1, ecriture = false, alias = 'd' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `COALESCE(${alias}.user_id, ${alias}.uploaded_by)`,
+    depart,
+    ecriture,
+  })
+}
+
+/** Portée SQL sur `clients` depuis une route documents. */
+function filtreClientsDocuments(portee, { depart = 1, ecriture = false, alias = 'clients' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.courtier_id`,
+    depart,
+    ecriture,
+  })
+}
 
 function getCurrentUserId(req) {
   return Number(req.user?.userId || req.user?.id || 0)
@@ -231,7 +262,12 @@ async function generateDdaDocument(req, res, documentType) {
   if (!definition) return res.status(400).json({ error: 'unsupported_document_type' })
   if (!clientId) return res.status(400).json({ error: 'client_required', message: 'client_id est requis' })
 
-  const clientResult = await pool.query('SELECT * FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1', [clientId, userId])
+  const portee = await porteeCabinet.resoudrePortee(pool, req)
+  const fClient = filtreClientsDocuments(portee, { depart: 2 })
+  const clientResult = await pool.query(
+    `SELECT * FROM clients WHERE id = $1 AND ${fClient.sql} LIMIT 1`,
+    [clientId, ...fClient.params]
+  )
   const client = clientResult.rows[0]
   if (!client) return res.status(404).json({ error: 'not_found', message: 'Client introuvable' })
 
@@ -360,13 +396,15 @@ async function sendDocumentToYousign(req, res) {
     }
   }
 
+  const portee = await porteeCabinet.resoudrePortee(pool, req)
+  const fDoc = filtreDocuments(portee, { depart: 2, ecriture: true })
   const result = await pool.query(
     `SELECT d.*, db.content, db.mime_type, db.file_name
      FROM documents d
      JOIN documents_blob db ON db.document_id = d.id
-     WHERE d.id = $1 AND d.user_id = $2
+     WHERE d.id = $1 AND ${fDoc.sql}
      LIMIT 1`,
-    [documentId, userId]
+    [documentId, ...fDoc.params]
   )
   const documentRow = result.rows[0]
   if (!documentRow) return res.status(404).json({ error: 'not_found', message: 'Document introuvable.' })
@@ -401,11 +439,12 @@ async function sendDocumentToYousign(req, res) {
     signer,
   })
 
+  const fMaj = filtreDocuments(portee, { depart: 3, ecriture: true })
   await pool.query(
-    `UPDATE documents
+    `UPDATE documents d
      SET status = 'sent_to_sign', yousign_signature_id = $1, updated_at = NOW()
-     WHERE id = $2 AND user_id = $3`,
-    [signature.providerRequestId, documentId, userId]
+     WHERE id = $2 AND ${fMaj.sql}`,
+    [signature.providerRequestId, documentId, ...fMaj.params]
   )
   await pool.query(
     `INSERT INTO document_activity_log (document_id, user_id, action, metadata)
@@ -601,12 +640,16 @@ function generatePDF(filePath, template, client, courtier, data) {
   })
 }
 
-// GET /api/documents — liste des documents générés
+// GET /api/documents — liste des documents générés (portée CABINET)
 router.get('/', async (req, res) => {
   try {
     const userId = getCurrentUserId(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fDocs = filtreDocuments(portee, { depart: 1 })
+    // Les filtres supplémentaires s'AJOUTENT à la portée (jamais ne la
+    // remplacent) : les indices commencent donc après les paramètres de portée.
     const filters = []
-    const params = [userId]
+    const params = [...fDocs.params]
     if (req.query.client_id) {
       params.push(Number(req.query.client_id))
       filters.push(`d.client_id = $${params.length}`)
@@ -633,7 +676,7 @@ router.get('/', async (req, res) => {
        FROM documents d
        LEFT JOIN documents_blob db ON db.document_id = d.id
        LEFT JOIN clients c ON c.id = d.client_id
-       WHERE d.user_id = $1${where}
+       WHERE ${fDocs.sql}${where}
        ORDER BY d.created_at DESC`,
       params
     )
@@ -683,10 +726,12 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
       })
     }
 
-    // Récupérer le client
+    // Récupérer le client — portée CABINET (le dossier du collègue est légitime)
+    const porteeGen = await porteeCabinet.resoudrePortee(pool, req)
+    const fClientGen = filtreClientsDocuments(porteeGen, { depart: 2 })
     const clientResult = await pool.query(
-      'SELECT * FROM clients WHERE id = $1 AND courtier_id = $2',
-      [client_id, courtier_id]
+      `SELECT * FROM clients WHERE id = $1 AND ${fClientGen.sql}`,
+      [client_id, ...fClientGen.params]
     )
     if (clientResult.rows.length === 0) {
       return res.status(404).json({ error: 'not_found', message: 'Client introuvable' })
@@ -745,13 +790,16 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
 router.post('/:id/archive', async (req, res) => {
   try {
     const userId = getCurrentUserId(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'archiver un document')) return
     const id = Number(req.params.id)
+    const fArchive = filtreDocuments(portee, { depart: 2, ecriture: true })
     const result = await pool.query(
-      `UPDATE documents
+      `UPDATE documents d
        SET status = 'archived', updated_at = NOW()
-       WHERE id = $1 AND user_id = $2
+       WHERE id = $1 AND ${fArchive.sql}
        RETURNING *`,
-      [id, userId]
+      [id, ...fArchive.params]
     )
     if (!result.rows[0]) return res.status(404).json({ error: 'not_found', message: 'Document introuvable' })
     await pool.query(
@@ -800,17 +848,19 @@ router.post('/:id/send-to-sign', async (req, res) => {
 router.get('/:id/download', async (req, res) => {
   try {
     const courtier_id = getCurrentUserId(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { id } = req.params
 
     if (/^\d+$/.test(String(id))) {
       try {
+        const fDoc = filtreDocuments(portee, { depart: 2 })
         const v1 = await pool.query(
           `SELECT d.*, db.content, db.mime_type, db.file_name
            FROM documents d
            JOIN documents_blob db ON db.document_id = d.id
-           WHERE d.id = $1 AND d.user_id = $2
+           WHERE d.id = $1 AND ${fDoc.sql}
            LIMIT 1`,
-          [Number(id), courtier_id]
+          [Number(id), ...fDoc.params]
         )
         if (v1.rows[0]) {
           const row = v1.rows[0]
@@ -938,10 +988,16 @@ router.post('/bulk', async (req, res) => {
 router.get('/client/:clientId', async (req, res) => {
   try {
     const { clientId } = req.params
-    const courtier_id = req.user.id || req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    // Portée CABINET : les index du dossier sont visibles par tout le cabinet.
+    const fClient = filtreClientsDocuments(portee, { depart: 2 })
     const result = await pool.query(
-      `SELECT * FROM documents_indexes WHERE client_id = $1 AND user_id = $2 ORDER BY created_at DESC`,
-      [clientId, courtier_id]
+      `SELECT di.*
+         FROM documents_indexes di
+         JOIN clients c ON c.id = di.client_id
+        WHERE di.client_id = $1 AND ${fClient.sql}
+        ORDER BY di.created_at DESC`,
+      [clientId, ...fClient.params]
     )
     return res.json({ success: true, data: result.rows })
   } catch (err) {
@@ -954,8 +1010,20 @@ router.get('/client/:clientId', async (req, res) => {
 router.post('/client/:clientId', async (req, res) => {
   try {
     const { clientId } = req.params
-    const courtier_id = req.user.id || req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'indexer un document')) return
+    const courtier_id = portee.userId || req.user.id || req.user.userId
     const { type, donnees_extraites, confiance, resume, source, fileName } = req.body
+
+    // Le client doit appartenir au CABINET (404 sinon).
+    const fClient = filtreClientsDocuments(portee, { depart: 2 })
+    const clientExist = await pool.query(
+      `SELECT id FROM clients WHERE id = $1 AND ${fClient.sql} LIMIT 1`,
+      [clientId, ...fClient.params]
+    )
+    if (!clientExist.rows[0]) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' })
+    }
 
     const result = await pool.query(
       `INSERT INTO documents_indexes (client_id, user_id, categorie, donnees_extraites, confiance, source, fichier_nom)

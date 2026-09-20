@@ -1,12 +1,41 @@
 const express = require('express');
 const pool = require('../db');
+// Alias NON masqué par les `const pool = req.app.locals.pool` des gestionnaires :
+// la résolution de portée doit passer par le module `../db` (le même pool en
+// production ; l'objet simulé par les tests pour la portée).
+const poolModule = pool;
 const router = express.Router();
 const { calculateRiskScore } = require('../utils/riskCalculator');
 const { requireUnderLimit } = require('../middleware/planGuard');
 const { getUserPlanInfo } = require('../services/planService');
 const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
 const { listClientInteractions } = require('../services/integrationsStore');
+const porteeCabinet = require('../lib/porteeCabinet');
 const Anthropic = require('@anthropic-ai/sdk');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES CLIENTS : LE CABINET, PAS L'UTILISATEUR
+//
+// POURQUOI : `clients.courtier_id` identifiait UN utilisateur. Un collaborateur
+// invité (rôle broker) dans un cabinet voyait donc 0 client quand le
+// propriétaire en voyait 1 — un cabinet à plusieurs commerciaux n'avait pas de
+// CRM commun (défaut reproduit en production le 20/09/2026). La lecture et
+// l'écriture sont désormais bornées au CABINET (migration 113,
+// `clients.cabinet_id`), `courtier_id` restant le courtier en charge du dossier.
+// Un utilisateur sans cabinet garde exactement l'ancien comportement : il ne
+// voit que ses propres lignes (voir lib/porteeCabinet.js).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Portée SQL sur la table `clients` (lecture OU écriture selon `ecriture`).
+// `alias` permet de réutiliser la même portée dans une jointure (`c`, `cli`…).
+function filtreClients(portee, { depart = 1, ecriture = false, alias = 'clients' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.courtier_id`,
+    depart,
+    ecriture,
+  });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Recherche serveur des clients
@@ -145,9 +174,13 @@ function construireTrieClients(sort, direction) {
 /**
  * Construit la requête de liste (page + total) à partir des filtres reçus.
  * Fonction PURE : aucun accès à la base, donc directement testable.
+ *
+ * `cabinetIds` absent ou vide ⇒ portée mono-utilisateur (`courtier_id = $1`),
+ * c'est-à-dire exactement la requête historique.
  */
 function construireRequeteListeClients({
   userId,
+  cabinetIds,
   search,
   statut,
   segment,
@@ -157,8 +190,12 @@ function construireRequeteListeClients({
   offset,
   unaccentDisponible = false,
 } = {}) {
-  const clauses = ['clients.courtier_id = $1']
-  const paramsFiltre = [userId]
+  const portee = porteeCabinet.fragment(
+    { userId, cabinetIds: Array.isArray(cabinetIds) ? cabinetIds : [] },
+    { cabinet: 'clients.cabinet_id', proprietaire: 'clients.courtier_id', depart: 1 }
+  )
+  const clauses = [portee.sql]
+  const paramsFiltre = [...portee.params]
   const ajouterParametre = (valeur) => {
     paramsFiltre.push(valeur)
     return `$${paramsFiltre.length}`
@@ -218,7 +255,11 @@ async function detecterUnaccent(pool) {
 router.get('/', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const userId = req.user?.id || req.user?.userId;
+    // La portée est résolue depuis `cabinet_members` (module `../db` : c'est le
+    // même pool en production, et cela garde `req.app.locals.pool` — celui sur
+    // lequel les tests comptent — réservé aux requêtes métier).
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    const userId = portee.userId || req.user?.id || req.user?.userId;
     const limit = parseInt(req.query.limit) || 20;
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const offset = (page - 1) * limit;
@@ -226,6 +267,7 @@ router.get('/', async (req, res) => {
     const unaccentOk = await detecterUnaccent(pool);
     const requete = construireRequeteListeClients({
       userId,
+      cabinetIds: portee.cabinetIds,
       search: req.query.search,
       // `statut` et `status` désignent le même filtre, comme `segment` et `type`.
       statut: req.query.statut ?? req.query.status,
@@ -255,6 +297,11 @@ router.get('/', async (req, res) => {
         statut: req.query.statut ?? req.query.status ?? null,
         segment: req.query.segment ?? req.query.type ?? null,
         sort: req.query.sort || null,
+        // La portée appliquée est ANNONCÉE : le client de l'API peut vérifier
+        // qu'une réponse vide vient d'un cabinet réellement vide, et non d'un
+        // filtre resté sur l'utilisateur.
+        portee: portee.mode === 'cabinet' ? 'cabinet' : 'utilisateur',
+        role: portee.role || null,
       },
     });
   } catch (err) {
@@ -269,6 +316,10 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    // Le client doit appartenir au CABINET de l'utilisateur (404 sinon : un 403
+    // révélerait l'existence du client d'un autre cabinet).
+    const f = filtreClients(portee, { depart: 2 });
     const result = await pool.query(
       `SELECT 
         id, first_name as prenom, last_name as nom,
@@ -280,8 +331,8 @@ router.get('/:id', async (req, res) => {
         notes, created_at, company_name, type as segment,
         loyalty_score, lifetime_value, civility, postal_code, city, country,
         silent_alert, last_contact
-      FROM clients WHERE id = $1 AND courtier_id = $2`,
-      [req.params.id, req.user.id]
+      FROM clients WHERE id = $1 AND ${f.sql}`,
+      [req.params.id, ...f.params]
     );
 
     if (result.rows.length === 0) {
@@ -301,6 +352,8 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/contrats', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req)
+    const f = filtreClients(portee, { depart: 2, alias: 'c' })
     const result = await pool.query(
       `SELECT q.id,
               q.client_id,
@@ -313,10 +366,10 @@ router.get('/:id/contrats', async (req, res) => {
               (quote_data->>'date_effet')::date as date_effet,
               (quote_data->>'date_echeance')::date as date_echeance
        FROM quotes q
-       JOIN clients c ON q.client_id = c.id AND c.courtier_id = $2
+       JOIN clients c ON q.client_id = c.id AND ${f.sql}
        WHERE q.client_id = $1
        ORDER BY (q.quote_data->>'date_echeance')::date ASC NULLS LAST`,
-      [req.params.id, req.user.id]
+      [req.params.id, ...f.params]
     )
     res.json(result.rows)
   } catch (err) {
@@ -332,16 +385,21 @@ router.get('/:id/interactions', async (req, res) => {
   try {
     const pool = req.app.locals.pool
     const clientId = Number.parseInt(req.params.id, 10)
-    const userId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req)
+    const userId = portee.userId || req.user.id
     const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 300)
 
     if (!Number.isFinite(clientId) || clientId <= 0) {
       return res.status(400).json({ error: 'invalid_client_id' })
     }
 
+    // Lecture d'un client du CABINET (l'historique d'interactions reste, lui,
+    // celui du courtier qui a réalisé l'échange : c'est une trace, pas un
+    // document partagé).
+    const fClient = filtreClients(portee, { depart: 2 })
     const ownResult = await pool.query(
-      'SELECT id FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1',
-      [clientId, userId]
+      `SELECT id FROM clients WHERE id = $1 AND ${fClient.sql} LIMIT 1`,
+      [clientId, ...fClient.params]
     )
 
     if (!ownResult.rowCount) {
@@ -353,7 +411,7 @@ router.get('/:id/interactions', async (req, res) => {
       pool.query(
         `SELECT id, title, status, start_time, created_at
          FROM appointments
-         WHERE client_id = $1 AND user_id = $2
+         WHERE client_id = $1 AND COALESCE(user_id, organizer_id) = $2
          ORDER BY COALESCE(start_time, created_at) DESC
          LIMIT 30`,
         [clientId, userId]
@@ -429,6 +487,9 @@ router.get('/:id/interactions', async (req, res) => {
 router.post('/', requireUnderLimit('clients'), async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    // Un assistant ou un viewer lit tout le cabinet mais ne crée rien.
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer un client')) return;
     const {
       nom, prenom, email, telephone, adresse, statut, segment,
       notes, zone_geographique, profession, situation_familiale,
@@ -467,14 +528,18 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
       (first_name, last_name, email, phone, address, status, type,
        risk_score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
        zone_geographique, profession, situation_familiale,
-       postal_code, city, civility, country, courtier_id, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
+       postal_code, city, civility, country, courtier_id, cabinet_id, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW(), NOW())
       RETURNING *`,
       [
         prenom, nom, email, telephone, adresse, statut || 'prospect', segment || 'particulier',
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
-        postal_code, city, civility, country, req.user.id
+        postal_code, city, civility, country,
+        // courtier_id = le courtier CRÉATEUR (affectation commerciale) ;
+        // cabinet_id = le tenant (null pour un cabinet mono-utilisateur).
+        portee.userId || req.user.id,
+        porteeCabinet.cabinetPourCreation(portee)
       ]
     );
 
@@ -509,6 +574,8 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    if (porteeCabinet.refuserEcriture(portee, res, 'modifier un client')) return;
     const {
       nom, prenom, email, telephone, adresse, statut, segment,
       notes, zone_geographique, profession, situation_familiale,
@@ -528,6 +595,10 @@ router.put('/:id', async (req, res) => {
       zone_geographique
     });
 
+    // La portée d'écriture reprend EXACTEMENT la portée de lecture : un membre
+    // du cabinet modifie un dossier du cabinet ; un client d'un autre cabinet
+    // ne matche aucune ligne et reçoit 404 (jamais 403).
+    const fEcriture = filtreClients(portee, { depart: 21, ecriture: true });
     const result = await pool.query(
       `UPDATE clients SET
        first_name = $1, last_name = $2, email = $3, phone = $4,
@@ -537,12 +608,12 @@ router.put('/:id', async (req, res) => {
        profession = $14, situation_familiale = $15,
        postal_code = $16, city = $17, civility = $18, country = $19,
        updated_at = NOW()
-      WHERE id = $20 AND courtier_id = $21 RETURNING *`,
+      WHERE id = $20 AND ${fEcriture.sql} RETURNING *`,
       [
         prenom, nom, email, telephone, adresse, statut, segment,
         score, notes, bonus_malus, annees_permis, nb_sinistres_3ans,
         zone_geographique, profession, situation_familiale,
-        postal_code, city, civility, country, req.params.id, req.user.id
+        postal_code, city, civility, country, req.params.id, ...fEcriture.params
       ]
     );
 
@@ -563,10 +634,16 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    if (porteeCabinet.refuserSuppression(portee, res)) return;
     // La suppression ne renvoie un succès QUE si une ligne a réellement été
     // supprimée : un `{success:true}` sans suppression est un faux succès (le
     // client reste, et l'appelant croit l'avoir supprimé).
-    const supprime = await pool.query('DELETE FROM clients WHERE id = $1 AND courtier_id = $2', [req.params.id, req.user.id]);
+    const f = filtreClients(portee, { depart: 2, ecriture: true });
+    const supprime = await pool.query(
+      `DELETE FROM clients WHERE id = $1 AND ${f.sql}`,
+      [req.params.id, ...f.params]
+    );
     if (!supprime.rowCount) {
       return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
     }
@@ -585,13 +662,27 @@ router.delete('/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/:id/score', async (req, res) => {
   try {
-    const courtierId = req.user.id || req.user.id;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    const courtierId = portee.userId || req.user.id;
     const clientId   = parseInt(req.params.id);
     if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
 
+    // Le client est-il dans le CABINET de l'appelant ? Si oui, l'analyse porte
+    // sur le dossier de son courtier en charge (le score récompense le suivi
+    // commercial de CE dossier, pas celui du lecteur).
+    const f = filtreClients(portee, { depart: 2 });
+    const proprietaire = await poolModule.query(
+      `SELECT courtier_id FROM clients WHERE id = $1 AND ${f.sql} LIMIT 1`,
+      [clientId, ...f.params]
+    ).catch(() => ({ rows: [] }));
+    if (!proprietaire.rows[0]) {
+      return res.status(404).json({ error: 'Client non trouvé ou accès refusé' });
+    }
+    const courtierDuDossier = proprietaire.rows[0].courtier_id || courtierId;
+
     const [planInfo, breakdown] = await Promise.all([
       getUserPlanInfo(courtierId),
-      getClientScoreBreakdown(clientId, courtierId),
+      getClientScoreBreakdown(clientId, courtierDuDossier),
     ]);
 
     if (!breakdown) {
@@ -628,9 +719,22 @@ router.get('/:id/score', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/:id/ark-action-plan', async (req, res) => {
   try {
-    const courtierId = req.user.id || req.user.id;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    const courtierId = portee.userId || req.user.id;
     const clientId   = parseInt(req.params.id);
     if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
+
+    // Contrôle de portée CABINET (et non plus de propriété utilisateur) : le
+    // dossier doit appartenir au cabinet de l'appelant.
+    const fPortee = filtreClients(portee, { depart: 2 });
+    const dossier = await poolModule.query(
+      `SELECT courtier_id FROM clients WHERE id = $1 AND ${fPortee.sql} LIMIT 1`,
+      [clientId, ...fPortee.params]
+    ).catch(() => ({ rows: [] }));
+    if (!dossier.rows[0]) {
+      return res.status(404).json({ error: 'Client non trouvé ou accès refusé' });
+    }
+    const courtierDuDossier = dossier.rows[0].courtier_id || courtierId;
 
     // Vérifier le plan (Elite uniquement)
     const planInfo = await getUserPlanInfo(courtierId);
@@ -650,7 +754,7 @@ router.get('/:id/ark-action-plan', async (req, res) => {
     }
 
     // Récupérer le breakdown
-    const breakdown = await getClientScoreBreakdown(clientId, courtierId);
+    const breakdown = await getClientScoreBreakdown(clientId, courtierDuDossier);
     if (!breakdown) {
       return res.status(404).json({ error: 'Client non trouvé ou accès refusé' });
     }
@@ -659,8 +763,8 @@ router.get('/:id/ark-action-plan', async (req, res) => {
     const clientRes = await pool.query(
       `SELECT first_name, last_name, email, phone, profession,
               situation_familiale, address, created_at, notes
-       FROM clients WHERE id = $1 AND courtier_id = $2`,
-      [clientId, courtierId]
+       FROM clients WHERE id = $1 AND ${fPortee.sql}`,
+      [clientId, ...fPortee.params]
     );
     const client = clientRes.rows[0];
 
@@ -763,14 +867,17 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/:id/cross-sell', async (req, res) => {
   try {
-    const courtierId = req.user.id || req.user.userId;
+    const portee = await porteeCabinet.resoudrePortee(poolModule, req);
+    const courtierId = portee.userId || req.user.userId;
     const clientId   = parseInt(req.params.id, 10);
     if (!Number.isFinite(clientId)) return res.status(400).json({ error: 'ID invalide' });
 
-    // Vérifier accès
+    // Vérifier l'accès : portée CABINET (le client du collègue du même cabinet
+    // est légitime pour une analyse de portefeuille).
+    const fCross = filtreClients(portee, { depart: 2 });
     const cliRes = await pool.query(
       `SELECT id, first_name, last_name, type, status, profession, situation_familiale, lifetime_value
-       FROM clients WHERE id=$1 AND courtier_id=$2`, [clientId, courtierId]);
+       FROM clients WHERE id=$1 AND ${fCross.sql}`, [clientId, ...fCross.params]);
     if (!cliRes.rows[0]) return res.status(404).json({ error: 'Client non trouvé' });
     const client = cliRes.rows[0];
 

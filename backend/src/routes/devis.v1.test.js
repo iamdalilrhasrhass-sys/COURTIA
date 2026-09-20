@@ -30,6 +30,16 @@ describe('devis v1 (quote_requests)', () => {
   let server;
   let origin;
 
+  // ── PORTÉE CABINET ─────────────────────────────────────────────────────────
+  // Depuis le correctif multi-utilisateur, chaque route autorisée commence par
+  // UNE lecture de `cabinet_members` (lib/porteeCabinet). Sans ligne, la portée
+  // retombe sur « mono-utilisateur » : c'est le cas simulé ici, il correspond
+  // aux cabinets sans collaborateur déjà en production.
+  const AUCUNE_APPARTENANCE = { rows: [] };
+  /** Retrouve un appel SQL par son contenu (l'index dépend de la portée). */
+  const appelSql = (sousChaine) =>
+    pool.query.mock.calls.find(([sql]) => String(sql).includes(sousChaine));
+
   beforeAll(async () => {
     const app = express();
     app.use(express.json());
@@ -47,17 +57,20 @@ describe('devis v1 (quote_requests)', () => {
 
   describe('POST /api/devis — création', () => {
     beforeEach(() => {
-      pool.query.mockResolvedValueOnce({ rows: [{ id: 501, client_id: 201, product_type: 'auto', status: 'draft' }] });
+      pool.query
+        .mockResolvedValueOnce(AUCUNE_APPARTENANCE) // portée : utilisateur sans cabinet
+        .mockResolvedValueOnce({ rows: [{ id: 501, client_id: 201, product_type: 'auto', status: 'draft' }] });
     });
 
     test('un `criteria` en texte libre n’est plus une erreur SQL', async () => {
       const res = await appeler('/', { client_id: 201, product_type: 'auto', criteria: 'Paris (texte libre)' });
       expect(res.status).toBe(201);
-      const [sql, valeurs] = pool.query.mock.calls[0];
+      const [sql, valeurs] = appelSql('INSERT INTO quote_requests');
       expect(sql).toContain('INSERT INTO quote_requests');
+      // Paramètres : [broker_id, cabinet_id, client_id, product_type, criteria, target_providers]
       // La valeur transmise est du JSON VALIDE (jsonb) et non modifiée sur le fond.
-      expect(() => JSON.parse(valeurs[3])).not.toThrow();
-      expect(JSON.parse(valeurs[3])).toBe('Paris (texte libre)');
+      expect(() => JSON.parse(valeurs[4])).not.toThrow();
+      expect(JSON.parse(valeurs[4])).toBe('Paris (texte libre)');
     });
 
     test('un objet est sérialisé et `target_providers` accepte aussi une chaîne', async () => {
@@ -65,21 +78,22 @@ describe('devis v1 (quote_requests)', () => {
         client_id: 201, product_type: 'auto', criteria: { type: 'auto' }, target_providers: 'AXA,Allianz',
       });
       expect(res.status).toBe(201);
-      const valeurs = pool.query.mock.calls[0][1];
-      expect(JSON.parse(valeurs[3])).toEqual({ type: 'auto' });
-      expect(JSON.parse(valeurs[4])).toBe('AXA,Allianz');
+      const valeurs = appelSql('INSERT INTO quote_requests')[1];
+      expect(JSON.parse(valeurs[4])).toEqual({ type: 'auto' });
+      expect(JSON.parse(valeurs[5])).toBe('AXA,Allianz');
     });
 
     test('sans `criteria`, l’objet par défaut reste un objet JSON valide', async () => {
       await appeler('/', { client_id: 201, product_type: 'auto' });
-      const valeurs = pool.query.mock.calls[0][1];
-      expect(JSON.parse(valeurs[3])).toEqual({});
-      expect(valeurs[4]).toBe('null');
+      const valeurs = appelSql('INSERT INTO quote_requests')[1];
+      expect(JSON.parse(valeurs[4])).toEqual({});
+      expect(valeurs[5]).toBe('null');
     });
 
     test('`product_type` reste obligatoire (400, pas 500)', async () => {
       const res = await appeler('/', { client_id: 201 });
       expect(res.status).toBe(400);
+      // Refus AVANT toute lecture base (donc avant même la portée cabinet).
       expect(pool.query).not.toHaveBeenCalled();
     });
   });
@@ -87,6 +101,7 @@ describe('devis v1 (quote_requests)', () => {
   describe('POST /api/devis/:id/relance — relance forcée', () => {
     test('un devis v1 est routé vers `relances` (jamais vers devis_relances)', async () => {
       pool.query
+        .mockResolvedValueOnce(AUCUNE_APPARTENANCE) // portée cabinet
         .mockResolvedValueOnce({ rows: [] }) // aucun devis guidé avec cet id
         .mockResolvedValueOnce({ rows: [{ id: 501, client_id: 201, product_type: 'auto', client_email: 'client@exemple.invalid', client_name: 'Léa Dupont' }] })
         .mockResolvedValueOnce({ rows: [{ id: 9, client_id: 201, quote_request_id: 501, type: 'devis_relance', channel: 'email', status: 'pending', scheduled_at: new Date().toISOString() }] });
@@ -107,19 +122,21 @@ describe('devis v1 (quote_requests)', () => {
 
     test('un devis guidé reste écrit dans devis_relances', async () => {
       pool.query
+        .mockResolvedValueOnce(AUCUNE_APPARTENANCE) // portée cabinet
         .mockResolvedValueOnce({ rows: [{ id: 601, status: 'sent', client_id: 201 }] }) // devis_wizard trouvé
         .mockResolvedValueOnce({ rows: [] }); // INSERT devis_relances
 
       const res = await appeler('/601/relance', { template: 'J3' });
       expect(res.status).toBe(200);
       expect((await res.json()).devis_type).toBe('wizard');
-      const insert = pool.query.mock.calls.find((c) => c[0].includes('INSERT INTO devis_relances'));
+      const insert = appelSql('INSERT INTO devis_relances');
       expect(insert).toBeTruthy();
       expect(insert[1]).toEqual([601, 'J3']);
     });
 
     test('un identifiant inconnu répond 404, pas 500', async () => {
       pool.query
+        .mockResolvedValueOnce(AUCUNE_APPARTENANCE)
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
       const res = await appeler('/999999/relance', {});

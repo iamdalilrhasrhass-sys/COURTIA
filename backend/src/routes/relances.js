@@ -30,6 +30,27 @@
  */
 
 const express = require('express')
+const porteeCabinet = require('../lib/porteeCabinet')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES RELANCES : LE CABINET DE LEUR CLIENT
+//
+// POURQUOI : toutes ces requêtes filtraient `c.courtier_id = $n` (le client
+// appartenait à UN utilisateur). Un collaborateur du cabinet ne voyait donc
+// aucune relance de ses collègues alors qu'il suit les mêmes clients. La portée
+// est désormais celle du CLIENT, qui porte le cabinet (migration 113) : une
+// relance suit son client, sans duplication de `cabinet_id` dans la condition.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée SQL via la jointure sur `clients` (alias `c`). */
+function filtreRelances(portee, { depart = 1, ecriture = false, alias = 'c' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.courtier_id`,
+    depart,
+    ecriture,
+  })
+}
 const router = express.Router()
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
@@ -103,9 +124,10 @@ const SCHEMA_AI_CONTENT = {
 
 router.get('/', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { status, client_id, type, priority, channel, limit = 50, offset = 0 } = req.query
 
+    const f = filtreRelances(portee, { depart: 1 })
     let sql = `
       SELECT
         r.*,
@@ -115,10 +137,10 @@ router.get('/', async (req, res) => {
       FROM relances r
       JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
     `
-    const params = [courtierId]
-    let paramIndex = 2
+    const params = [...f.params]
+    let paramIndex = f.suivant
 
     if (status) {
       sql += ` AND r.status = $${paramIndex++}`
@@ -189,24 +211,26 @@ router.get('/', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { days = 30 } = req.query
     const daysInt = parseInt(days, 10) || 30
+    const fStats = filtreRelances(portee, { depart: 1 })
+    const joursRef = `$${fStats.suivant}`
 
     const statsResult = await pool.query(`
       SELECT
         COUNT(*) AS total,
         COUNT(*) FILTER (WHERE r.status = 'pending') AS pending,
         COUNT(*) FILTER (WHERE r.status = 'sent') AS sent,
-        COUNT(*) FILTER (WHERE r.status = 'sent' AND r.created_at >= NOW() - ($2 || ' days')::interval) AS sent_period,
+        COUNT(*) FILTER (WHERE r.status = 'sent' AND r.created_at >= NOW() - (${joursRef} || ' days')::interval) AS sent_period,
         COUNT(*) FILTER (WHERE r.response_received = true) AS responses,
-        COUNT(*) FILTER (WHERE r.response_received = true AND r.created_at >= NOW() - ($2 || ' days')::interval) AS responses_period,
+        COUNT(*) FILTER (WHERE r.response_received = true AND r.created_at >= NOW() - (${joursRef} || ' days')::interval) AS responses_period,
         COUNT(*) FILTER (WHERE r.priority = 'high' AND r.status = 'pending') AS urgent_pending,
         COUNT(*) FILTER (WHERE r.ai_generated = true) AS ai_generated_count
       FROM relances r
       JOIN clients c ON r.client_id = c.id
-      WHERE c.courtier_id = $1
-    `, [courtierId, daysInt])
+      WHERE ${fStats.sql}
+    `, [...fStats.params, daysInt])
 
     // Calcul taux de réponse
     const stats = statsResult.rows[0]
@@ -219,18 +243,18 @@ router.get('/stats', async (req, res) => {
       SELECT r.type, COUNT(*) AS count
       FROM relances r
       JOIN clients c ON r.client_id = c.id
-      WHERE c.courtier_id = $1 AND r.created_at >= NOW() - ($2 || ' days')::interval
+      WHERE ${fStats.sql} AND r.created_at >= NOW() - (${joursRef} || ' days')::interval
       GROUP BY r.type ORDER BY count DESC
-    `, [courtierId, daysInt])
+    `, [...fStats.params, daysInt])
 
     // Relances par canal
     const byChannelResult = await pool.query(`
       SELECT r.channel, COUNT(*) AS count
       FROM relances r
       JOIN clients c ON r.client_id = c.id
-      WHERE c.courtier_id = $1 AND r.created_at >= NOW() - ($2 || ' days')::interval
+      WHERE ${fStats.sql} AND r.created_at >= NOW() - (${joursRef} || ' days')::interval
       GROUP BY r.channel ORDER BY count DESC
-    `, [courtierId, daysInt])
+    `, [...fStats.params, daysInt])
 
     res.json({
       period_days: daysInt,
@@ -261,8 +285,9 @@ router.get('/stats', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const relanceId = parseInt(req.params.id, 10)
+    const f = filtreRelances(portee, { depart: 2 })
 
     const result = await pool.query(`
       SELECT
@@ -273,8 +298,8 @@ router.get('/:id', async (req, res) => {
       FROM relances r
       JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
-      WHERE r.id = $1 AND c.courtier_id = $2
-    `, [relanceId, courtierId])
+      WHERE r.id = $1 AND ${f.sql}
+    `, [relanceId, ...f.params])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -322,24 +347,31 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer une relance')) return
+    const courtierId = portee.userId || req.user.id
     const { client_id, quote_id, quote_request_id, type, channel, priority, subject, content, scheduled_at, metadata } = req.body
 
     if (!client_id) {
       return res.status(400).json({ error: 'client_id requis' })
     }
 
-    // Vérifier que le client appartient bien au courtier connecté
-    const own = await pool.query('SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2', [client_id, courtierId])
+    // Vérifier que le client appartient bien AU CABINET de l'appelant.
+    const fClient = filtreRelances(portee, { depart: 2, alias: 'clients' })
+    const own = await pool.query(
+      `SELECT 1 FROM clients WHERE id = $1 AND ${fClient.sql}`,
+      [client_id, ...fClient.params]
+    )
+    // 404 : ne jamais confirmer l'existence d'un client d'un autre cabinet.
     if (own.rows.length === 0) {
-      return res.status(403).json({ error: 'Client non trouvé ou non autorisé' })
+      return res.status(404).json({ error: 'client_not_found', message: 'Client introuvable.' })
     }
 
     const result = await pool.query(`
       INSERT INTO relances (
         client_id, quote_id, quote_request_id, type, channel, priority,
-        subject, content, scheduled_at, ai_generated, metadata
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, $10)
+        subject, content, scheduled_at, ai_generated, metadata, cabinet_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, $10, $11)
       RETURNING *
     `, [
       client_id,
@@ -351,7 +383,8 @@ router.post('/', async (req, res) => {
       subject || null,
       content || null,
       scheduled_at || null,
-      metadata || {}
+      metadata || {},
+      porteeCabinet.cabinetPourCreation(portee)
     ])
 
     logger.info({ courtierId, relanceId: result.rows[0].id }, 'Relance created')
@@ -372,16 +405,18 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'modifier une relance')) return
     const relanceId = parseInt(req.params.id, 10)
     const { status, priority, channel, subject, content, scheduled_at, response_received, metadata } = req.body
 
-    // Vérifier appartenance (via client -> courtier)
+    // Vérifier appartenance (via le client -> cabinet du client)
+    const fPortee = filtreRelances(portee, { depart: 2 })
     const check = await pool.query(`
       SELECT r.id FROM relances r
       JOIN clients c ON r.client_id = c.id
-      WHERE r.id = $1 AND c.courtier_id = $2
-    `, [relanceId, courtierId])
+      WHERE r.id = $1 AND ${fPortee.sql}
+    `, [relanceId, ...fPortee.params])
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
     }
@@ -452,15 +487,17 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
     const relanceId = parseInt(req.params.id, 10)
+    const f = filtreRelances(portee, { depart: 2, ecriture: true })
 
     const result = await pool.query(`
       DELETE FROM relances r
       USING clients c
-      WHERE r.id = $1 AND r.client_id = c.id AND c.courtier_id = $2
+      WHERE r.id = $1 AND r.client_id = c.id AND ${f.sql}
       RETURNING r.id
-    `, [relanceId, courtierId])
+    `, [relanceId, ...f.params])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -479,8 +516,11 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/:id/send', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'envoyer une relance')) return
+    const courtierId = portee.userId || req.user.id
     const relanceId = parseInt(req.params.id, 10)
+    const fSend = filtreRelances(portee, { depart: 2, ecriture: true })
 
     // Charge la relance + coordonnées du client (envoi réel, plus de simulation)
     const found = await pool.query(`
@@ -489,8 +529,8 @@ router.post('/:id/send', async (req, res) => {
              c.company_name AS client_company, c.courtier_id AS owner_id
       FROM relances r
       JOIN clients c ON r.client_id = c.id
-      WHERE r.id = $1 AND c.courtier_id = $2
-    `, [relanceId, courtierId])
+      WHERE r.id = $1 AND ${fSend.sql}
+    `, [relanceId, ...fSend.params])
 
     if (found.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })
@@ -608,8 +648,13 @@ router.post('/:id/send', async (req, res) => {
 
 router.post('/auto-generate', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'générer des relances')) return
+    const courtierId = portee.userId || req.user.id
     const { max_relances = 10 } = req.body
+    // Toutes les lectures de portefeuille ET les écritures de cette route
+    // partagent la MÊME portée cabinet.
+    const fPortee = filtreRelances(portee, { depart: 1, ecriture: true })
 
     // Récupérer données du portefeuille pour l'analyse
     // 1. Clients silencieux (pas de contact depuis 45+ jours)
@@ -618,11 +663,11 @@ router.post('/auto-generate', async (req, res) => {
              MAX(COALESCE(q.created_at, c.created_at)) AS last_activity
       FROM clients c
       LEFT JOIN quotes q ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${fPortee.sql}
       GROUP BY c.id
       HAVING MAX(COALESCE(q.created_at, c.created_at)) < NOW() - INTERVAL '45 days'
       LIMIT 20
-    `, [courtierId])
+    `, [...fPortee.params])
 
     // 2. Devis sans réponse (quote_requests submitted sans résultat accepté)
     // NOTE: la table quote_requests (comparateur multi-compagnies) peut être
@@ -634,14 +679,14 @@ router.post('/auto-generate', async (req, res) => {
                c.first_name, c.last_name, c.company_name
         FROM quote_requests qr
         JOIN clients c ON qr.client_id = c.id
-        WHERE c.courtier_id = $1 AND qr.status IN ('submitted', 'completed')
+        WHERE ${fPortee.sql} AND qr.status IN ('submitted', 'completed')
           AND qr.created_at > NOW() - INTERVAL '30 days'
           AND NOT EXISTS (
             SELECT 1 FROM relances r WHERE r.quote_request_id = qr.id AND r.status = 'sent'
               AND r.created_at > NOW() - INTERVAL '7 days'
           )
         LIMIT 20
-      `, [courtierId])
+      `, [...fPortee.params])
     } catch (qrErr) {
       logger.warn({ error: qrErr.message }, 'quote_requests indisponible pour auto-generate (ignoré)')
     }
@@ -654,11 +699,11 @@ router.post('/auto-generate', async (req, res) => {
              c.first_name, c.last_name, c.company_name
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
-      WHERE c.courtier_id = $1 AND q.status = 'actif'
+      WHERE ${fPortee.sql} AND q.status = 'actif'
         AND NULLIF(q.quote_data->>'date_echeance', '')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
       ORDER BY (q.quote_data->>'date_echeance') ASC
       LIMIT 20
-    `, [courtierId])
+    `, [...fPortee.params])
 
     // Appel ARK pour prioriser
     const arkResponse = await callArkStructured({
@@ -711,10 +756,11 @@ Génère les relances les plus impactantes.`,
     const relancesProposees = arkResponse.structured?.relances || []
 
     for (const rel of relancesProposees.slice(0, max_relances)) {
-      // Vérifier que le client existe et appartient au courtier
+      // Vérifier que le client existe et appartient AU CABINET
+      const fClient = filtreRelances(portee, { depart: 2, alias: 'clients' })
       const clientCheck = await pool.query(`
-        SELECT id FROM clients WHERE id = $1 AND courtier_id = $2
-      `, [rel.client_id, courtierId])
+        SELECT id FROM clients WHERE id = $1 AND ${fClient.sql}
+      `, [rel.client_id, ...fClient.params])
 
       if (clientCheck.rows.length === 0) continue
 
@@ -730,8 +776,8 @@ Génère les relances les plus impactantes.`,
       const insertRes = await pool.query(`
         INSERT INTO relances (
           client_id, type, channel, priority, subject,
-          ai_generated, ai_reasoning, scheduled_at, metadata
-        ) VALUES ($1, $2, $3, $4, $5, true, $6, $7, $8)
+          ai_generated, ai_reasoning, scheduled_at, metadata, cabinet_id
+        ) VALUES ($1, $2, $3, $4, $5, true, $6, $7, $8, $9)
         RETURNING *
       `, [
         rel.client_id,
@@ -741,7 +787,8 @@ Génère les relances les plus impactantes.`,
         rel.subject || null,
         rel.reasoning,
         rel.suggested_date || null,
-        { ark_generated: true }
+        { ark_generated: true },
+        porteeCabinet.cabinetPourCreation(portee)
       ])
 
       insertedRelances.push(insertRes.rows[0])
@@ -773,9 +820,11 @@ Génère les relances les plus impactantes.`,
 
 router.post('/:id/ai-content', async (req, res) => {
   try {
-    const courtierId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const courtierId = portee.userId || req.user.id
     const relanceId = parseInt(req.params.id, 10)
     const { channel } = req.body // email, sms, whatsapp
+    const fAi = filtreRelances(portee, { depart: 2 })
 
     // Récupérer la relance avec infos client
     const relanceRes = await pool.query(`
@@ -785,8 +834,8 @@ router.post('/:id/ai-content', async (req, res) => {
       FROM relances r
       JOIN clients c ON r.client_id = c.id
       LEFT JOIN quotes q ON r.quote_id = q.id
-      WHERE r.id = $1 AND c.courtier_id = $2
-    `, [relanceId, courtierId])
+      WHERE r.id = $1 AND ${fAi.sql}
+    `, [relanceId, ...fAi.params])
 
     if (relanceRes.rows.length === 0) {
       return res.status(404).json({ error: 'Relance non trouvée' })

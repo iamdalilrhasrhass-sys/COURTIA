@@ -3,6 +3,26 @@ const pool = require('../db');
 const router = express.Router();
 const { requireUnderLimit } = require('../middleware/planGuard');
 const { getJwtSecret } = require('../utils/jwtSecret');
+const porteeCabinet = require('../lib/porteeCabinet');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE DES CONTRATS (`quotes`) : LE CABINET DE SON CLIENT
+//
+// POURQUOI : un contrat n'a pas de colonne « propriétaire » propre — il pend
+// d'un client (`quotes.client_id`). Sa portée est donc CELLE DU CLIENT, et le
+// client porte le cabinet (migration 113). On ne duplique pas `cabinet_id` sur
+// `quotes` : deux vérités finiraient par diverger.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée SQL via la jointure obligatoire sur `clients`. */
+function filtreClientsDuContrat(portee, { depart = 1, ecriture = false, alias = 'clients' } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.courtier_id`,
+    depart,
+    ecriture,
+  });
+}
 
 // Middleware pour vérifier le token
 const verifyToken = (req, res, next) => {
@@ -28,10 +48,12 @@ router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     const clientId = req.query.client_id;
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
 
     let query, params;
 
     if (clientId) {
+      const f = filtreClientsDuContrat(portee, { depart: 2, alias: 'c' });
       query = `SELECT 
         q.id, q.client_id, q.status as statut,
         q.quote_data->>'type_contrat' as type_contrat,
@@ -44,11 +66,12 @@ router.get('/', verifyToken, async (req, res) => {
         c.risk_score as risk_score,
         q.created_at
       FROM quotes q
-      JOIN clients c ON q.client_id = c.id AND c.courtier_id = $2
+      JOIN clients c ON q.client_id = c.id AND ${f.sql}
       WHERE q.client_id = $1
       ORDER BY (q.quote_data->>'date_echeance') ASC`;
-      params = [clientId, req.user.id];
+      params = [clientId, ...f.params];
     } else {
+      const f = filtreClientsDuContrat(portee, { depart: 1, alias: 'c' });
       query = `SELECT 
         q.id, q.client_id, q.status as statut,
         q.quote_data->>'type_contrat' as type_contrat,
@@ -61,9 +84,9 @@ router.get('/', verifyToken, async (req, res) => {
         c.risk_score as risk_score,
         q.created_at
       FROM quotes q
-      JOIN clients c ON q.client_id = c.id AND c.courtier_id = $1
+      JOIN clients c ON q.client_id = c.id AND ${f.sql}
       ORDER BY (q.quote_data->>'date_echeance') ASC`;
-      params = [req.user.id];
+      params = [...f.params];
     }
 
     const result = await pool.query(query, params);
@@ -80,14 +103,23 @@ router.get('/', verifyToken, async (req, res) => {
 router.post('/', verifyToken, requireUnderLimit('contracts'), async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const {
-      client_id, type_contrat, compagnie, numero,
+    const { client_id, type_contrat, compagnie, numero,
       prime_annuelle, date_effet, date_echeance, statut
     } = req.body;
 
-    // Vérifier que le client appartient à l'utilisateur
-    const own = await pool.query('SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2', [client_id, req.user.id]);
-    if (!own.rows.length) return res.status(403).json({ error: 'client_not_owned' });
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer un contrat')) return;
+
+    // Vérifier que le client appartient AU CABINET.
+    const fClient = filtreClientsDuContrat(portee, { depart: 2 });
+    const own = await pool.query(
+      `SELECT 1 FROM clients WHERE id = $1 AND ${fClient.sql}`,
+      [client_id, ...fClient.params]
+    );
+    // 404 : un client d'un autre cabinet ne doit pas être confirmé.
+    if (!own.rows.length) {
+      return res.status(404).json({ error: 'client_not_found', message: 'Client introuvable.' });
+    }
 
     const quoteData = {
       type_contrat,
@@ -131,12 +163,16 @@ router.put('/:id', verifyToken, async (req, res) => {
       date_echeance
     };
 
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
+    if (porteeCabinet.refuserEcriture(portee, res, 'modifier un contrat')) return;
+    const fEcriture = filtreClientsDuContrat(portee, { depart: 3, ecriture: true });
+
     const result = await pool.query(
       `UPDATE quotes SET quote_data = $1, status = $2 
        FROM clients 
-       WHERE quotes.id = $3 AND quotes.client_id = clients.id AND clients.courtier_id = $4
+       WHERE quotes.id = $3 AND quotes.client_id = clients.id AND ${fEcriture.sql}
        RETURNING quotes.*`,
-      [JSON.stringify(quoteData), statut, req.params.id, req.user.id]
+      [JSON.stringify(quoteData), statut, req.params.id, ...fEcriture.params]
     );
 
     if (result.rows.length === 0) {
@@ -156,10 +192,13 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
+    if (porteeCabinet.refuserSuppression(portee, res)) return;
+    const f = filtreClientsDuContrat(portee, { depart: 2, ecriture: true });
     const supprime = await pool.query(
       `DELETE FROM quotes USING clients
-       WHERE quotes.id = $1 AND quotes.client_id = clients.id AND clients.courtier_id = $2`,
-      [req.params.id, req.user.id]
+       WHERE quotes.id = $1 AND quotes.client_id = clients.id AND ${f.sql}`,
+      [req.params.id, ...f.params]
     );
     // Aucun contrat supprimé = pas de succès (voir la même règle sur /api/clients).
     if (!supprime.rowCount) {

@@ -1,3 +1,5 @@
+const porteeCabinet = require('../lib/porteeCabinet')
+
 const COMMISSION_STATUSES = new Set(['expected', 'partial', 'paid', 'overdue', 'cancelled'])
 
 function normalizePeriod(period = {}) {
@@ -147,6 +149,38 @@ function getUserId(user = {}) {
   return user.id || user.userId
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE CABINET DES COMMISSIONS
+//
+// POURQUOI : `commissions.user_id` = le courtier bénéficiaire était aussi la
+// clé de lecture — un collaborateur du cabinet ne voyait donc aucune commission
+// de son collègue, et le propriétaire ne voyait que les siennes. La portée
+// passe par `commissions.cabinet_id` (migration 113) ; `user_id` et
+// `apporteur_user_id` restent l'ATTRIBUTION (qui a produit l'affaire).
+//
+// Rétro-compatibilité : sans portée explicite (appel interne, job), le service
+// garde EXACTEMENT son comportement historique.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Portée SQL des commissions (propriétaire = user_id). */
+function filtrePorteeCommission(portee, { depart = 1, ecriture = false, alias = 'co' } = {}) {
+  if (!portee) return null
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.user_id`,
+    depart,
+    ecriture,
+  })
+}
+
+function appliquerPortee(clauses, params, portee, { ecriture = false } = {}) {
+  const f = filtrePorteeCommission(portee, { depart: params.length + 1, ecriture })
+  if (!f) return false
+  clauses.push(f.sql)
+  params.push(...f.params)
+  return true
+}
+
 function canSeeAllCommissions(user = {}) {
   const role = String(user.role || '').toLowerCase()
   return ['super_admin', 'admin', 'owner', 'manager'].includes(role)
@@ -162,8 +196,25 @@ function mapCommissionRow(row = {}) {
   }
 }
 
-async function getOwnedQuote(pool, user, contractId) {
+async function getOwnedQuote(pool, user, contractId, portee = null) {
   const userId = getUserId(user)
+  const params = [contractId]
+  const clauses = ['q.id = $1']
+  // Avec une portée cabinet, le contrat du collègue est légitime ; sans elle
+  // (appel interne), on garde le contrôle historique par client.
+  if (portee) {
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: params.length + 1,
+      ecriture: true,
+    })
+    clauses.push(f.sql)
+    params.push(...f.params)
+  } else {
+    params.push(userId)
+    clauses.push(`c.courtier_id = $${params.length}`)
+  }
   const result = await pool.query(
     `SELECT q.id,
             q.client_id,
@@ -173,15 +224,15 @@ async function getOwnedQuote(pool, user, contractId) {
             c.last_name AS client_nom
      FROM quotes q
      JOIN clients c ON c.id = q.client_id
-     WHERE q.id = $1 AND c.courtier_id = $2
+     WHERE ${clauses.join(' AND ')}
      LIMIT 1`,
-    [contractId, userId]
+    params
   )
   return result.rows[0] || null
 }
 
-async function upsertCommission(pool, user, contractId, input = {}) {
-  const quote = await getOwnedQuote(pool, user, contractId)
+async function upsertCommission(pool, user, contractId, input = {}, portee = null) {
+  const quote = await getOwnedQuote(pool, user, contractId, portee)
   if (!quote) {
     const err = new Error('contract_not_found')
     err.statusCode = 404
@@ -195,9 +246,9 @@ async function upsertCommission(pool, user, contractId, input = {}) {
     `INSERT INTO commissions (
        user_id, contract_id, insurer, period_year, period_month,
        expected_amount_cents, received_amount_cents, currency, status,
-       apporteur_user_id, apporteur_share_bps, notes, created_at, updated_at
+       apporteur_user_id, apporteur_share_bps, notes, cabinet_id, created_at, updated_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'eur', $8, $9, $10, $11, NOW(), NOW())
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'eur', $8, $9, $10, $11, $12, NOW(), NOW())
      ON CONFLICT (user_id, contract_id, period_year, period_month)
      DO UPDATE SET
        insurer = EXCLUDED.insurer,
@@ -221,19 +272,32 @@ async function upsertCommission(pool, user, contractId, input = {}) {
       apporteurUserId,
       payload.apporteur_share_bps,
       payload.notes,
+      // Cabinet propriétaire (NULL pour un cabinet mono-utilisateur).
+      portee ? porteeCabinet.cabinetPourCreation(portee) : null,
     ]
   )
   return mapCommissionRow(result.rows[0])
 }
 
-async function listCommissions(pool, user, filters = {}) {
+async function listCommissions(pool, user, filters = {}, portee = null) {
   const userId = getUserId(user)
-  const params = [userId]
-  const clauses = ['co.user_id = $1']
+  const clauses = []
+  const params = []
 
-  if (!canSeeAllCommissions(user)) {
+  // Portée CABINET : tout membre du cabinet lit les commissions du cabinet
+  // (assistant/viewer inclus — ils lisent, ils n'écrivent pas). Le filtre
+  // « apporteur = moi » ne s'applique qu'en l'absence de portée.
+  if (portee) {
+    const f = filtrePorteeCommission(portee, { depart: 1 })
+    clauses.push(f.sql)
+    params.push(...f.params)
+  } else {
+    clauses.push('co.user_id = $1')
     params.push(userId)
-    clauses.push(`co.apporteur_user_id = $${params.length}`)
+    if (!canSeeAllCommissions(user)) {
+      params.push(userId)
+      clauses.push(`co.apporteur_user_id = $${params.length}`)
+    }
   }
   if (filters.period) {
     const period = normalizePeriod(filters.period)
@@ -269,7 +333,9 @@ async function listCommissions(pool, user, filters = {}) {
             u.first_name || ' ' || u.last_name AS broker_name
      FROM commissions co
      JOIN quotes q ON q.id = co.contract_id
-     JOIN clients c ON c.id = q.client_id AND c.courtier_id = co.user_id
+     ${portee
+       ? 'JOIN clients c ON c.id = q.client_id'
+       : 'JOIN clients c ON c.id = q.client_id AND c.courtier_id = co.user_id'}
      LEFT JOIN users u ON u.id = co.apporteur_user_id
      WHERE ${clauses.join(' AND ')}
      ORDER BY co.period_year DESC, co.period_month DESC, co.updated_at DESC
@@ -279,15 +345,28 @@ async function listCommissions(pool, user, filters = {}) {
   return result.rows.map(mapCommissionRow)
 }
 
-async function getCommissionStats(pool, user, filters = {}) {
+async function getCommissionStats(pool, user, filters = {}, portee = null) {
   const year = Number.parseInt(filters.year || new Date().getFullYear(), 10)
   const userId = getUserId(user)
-  const params = [userId, year]
-  const clauses = ['co.user_id = $1', 'co.period_year = $2']
+  const clauses = []
+  const params = []
 
-  if (!canSeeAllCommissions(user)) {
-    params.push(userId)
-    clauses.push(`co.apporteur_user_id = $${params.length}`)
+  // Même portée que la liste : des statistiques calculées sur un autre
+  // périmètre que les lignes affichées seraient fausses.
+  if (portee) {
+    const f = filtrePorteeCommission(portee, { depart: 1 })
+    clauses.push(f.sql)
+    params.push(...f.params)
+    params.push(year)
+    clauses.push(`co.period_year = $${params.length}`)
+  } else {
+    clauses.push('co.user_id = $1')
+    params.push(userId, year)
+    clauses.push('co.period_year = $2')
+    if (!canSeeAllCommissions(user)) {
+      params.push(userId)
+      clauses.push(`co.apporteur_user_id = $${params.length}`)
+    }
   }
 
   const result = await pool.query(
@@ -357,7 +436,7 @@ async function getCommissionStats(pool, user, filters = {}) {
   }
 }
 
-async function importCommissionsCsv(pool, user, content = '') {
+async function importCommissionsCsv(pool, user, content = '', portee = null) {
   const rows = parseCommissionCsv(content)
   const report = { total: rows.length, imported: 0, unmatched: 0, errors: [] }
 
@@ -369,18 +448,35 @@ async function importCommissionsCsv(pool, user, content = '') {
         continue
       }
 
+      // Le contrat est recherché dans le périmètre CABINET quand la portée est
+      // fournie (sinon comportement historique : les contrats du seul appelant).
+      const clauses = ['(' +
+        `q.id::text = $2` +
+        ` OR q.quote_data->>'numero' = $2` +
+        ` OR q.quote_data->>'policy_number' = $2` +
+        ')']
+      const params = [getUserId(user), row.contract_ref]
+      if (portee) {
+        const f = porteeCabinet.fragment(portee, {
+          cabinet: 'c.cabinet_id',
+          proprietaire: 'c.courtier_id',
+          depart: params.length + 1,
+          ecriture: true,
+        })
+        clauses.push(f.sql)
+        params.push(...f.params)
+      } else {
+        params.push(getUserId(user))
+        clauses.push(`c.courtier_id = $${params.length}`)
+      }
+
       const match = await pool.query(
         `SELECT q.id
          FROM quotes q
          JOIN clients c ON c.id = q.client_id
-         WHERE c.courtier_id = $1
-           AND (
-             q.id::text = $2
-             OR q.quote_data->>'numero' = $2
-             OR q.quote_data->>'policy_number' = $2
-           )
+         WHERE ${clauses.join(' AND ')}
          LIMIT 1`,
-        [getUserId(user), row.contract_ref]
+        params
       )
       const quote = match.rows[0]
       if (!quote) {
@@ -389,7 +485,7 @@ async function importCommissionsCsv(pool, user, content = '') {
         continue
       }
 
-      await upsertCommission(pool, user, quote.id, row)
+      await upsertCommission(pool, user, quote.id, row, portee)
       report.imported += 1
     } catch (err) {
       report.errors.push({ line: index + 2, error: err.message || 'import_failed' })
