@@ -92,11 +92,11 @@
   "rewrites": [
     {
       "source": "/api/leads/demo-request",
-      "destination": "https://stylus-desire-massachusetts-latter.trycloudflare.com/api/leads/demo-request"
+      "destination": "https://overcome-sweet-ought-managed.trycloudflare.com/api/leads/demo-request"
     },
     {
       "source": "/api/leads/events",
-      "destination": "https://stylus-desire-massachusetts-latter.trycloudflare.com/api/leads/events"
+      "destination": "https://overcome-sweet-ought-managed.trycloudflare.com/api/leads/events"
     },
     {
       "source": "/api/sales/(.*)",
