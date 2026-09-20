@@ -44,7 +44,8 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
 
     // Récupérer le profil courtier si existant
     const profileResult = await pool.query(
-      `SELECT cabinet, orias, telephone, adresse, ville, code_postal
+      `SELECT cabinet, orias, telephone, adresse, ville, code_postal,
+              registre_type, registre_numero, uid, site_web, pays, langue
        FROM broker_profiles WHERE user_id = $1`,
       [userId]
     );
@@ -67,6 +68,15 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       adresse: brokerProfile.adresse || '',
       ville: brokerProfile.ville || '',
       code_postal: brokerProfile.code_postal || '',
+      // Identite reglementaire reelle du cabinet : en Suisse un numero FINMA et
+      // un UID, pas un numero ORIAS. Renvoyes distinctement pour ne jamais
+      // afficher un registre sous le libelle d'un autre.
+      registre_type: brokerProfile.registre_type || '',
+      registre_numero: brokerProfile.registre_numero || '',
+      uid: brokerProfile.uid || '',
+      site_web: brokerProfile.site_web || '',
+      pays: brokerProfile.pays || '',
+      langue: brokerProfile.langue || '',
       feature_flags: featureFlags
     });
   } catch (err) {
@@ -81,7 +91,10 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
 router.put('/me', verifyTokenMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { first_name, last_name, cabinet, orias, telephone, adresse, ville, code_postal } = req.body;
+    const {
+      first_name, last_name, cabinet, orias, telephone, adresse, ville, code_postal,
+      registre_type, registre_numero, uid, site_web, pays, langue,
+    } = req.body;
 
     // Update users table
     await pool.query(
@@ -93,15 +106,27 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
     const existing = await pool.query('SELECT id FROM broker_profiles WHERE user_id = $1', [userId]);
     if (existing.rows.length > 0) {
       await pool.query(
-        `UPDATE broker_profiles SET cabinet=$1, orias=$2, telephone=$3, adresse=$4, ville=$5, code_postal=$6, updated_at=NOW()
+        `UPDATE broker_profiles
+            SET cabinet=$1, orias=$2, telephone=$3, adresse=$4, ville=$5, code_postal=$6,
+                registre_type=COALESCE(NULLIF($8,''), registre_type),
+                registre_numero=COALESCE(NULLIF($9,''), registre_numero),
+                uid=COALESCE(NULLIF($10,''), uid),
+                site_web=COALESCE(NULLIF($11,''), site_web),
+                pays=COALESCE(NULLIF($12,''), pays),
+                langue=COALESCE(NULLIF($13,''), langue),
+                updated_at=NOW()
          WHERE user_id=$7`,
-        [cabinet, orias, telephone, adresse, ville, code_postal, userId]
+        [cabinet, orias, telephone, adresse, ville, code_postal, userId,
+         registre_type, registre_numero, uid, site_web, pays, langue]
       );
     } else {
       await pool.query(
-        `INSERT INTO broker_profiles (user_id, cabinet, orias, telephone, adresse, ville, code_postal, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())`,
-        [userId, cabinet, orias, telephone, adresse, ville, code_postal]
+        `INSERT INTO broker_profiles (user_id, cabinet, orias, telephone, adresse, ville, code_postal,
+                                      registre_type, registre_numero, uid, site_web, pays, langue,
+                                      created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW())`,
+        [userId, cabinet, orias, telephone, adresse, ville, code_postal,
+         registre_type, registre_numero, uid, site_web, pays, langue]
       );
     }
 
