@@ -55,6 +55,15 @@ export default function Equipe() {
 
   const isOwner = useMemo(() => data?.cabinet?.role === 'owner' || data?.cabinet?.role === 'super_admin', [data])
 
+  // L'état vide propose une action réelle plutôt qu'un simple texte : on amène
+  // le propriétaire au formulaire d'invitation présent sur la même page.
+  function focusInvite() {
+    const champ = document.getElementById('invite-email')
+    if (!champ) return
+    champ.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    champ.focus({ preventScroll: true })
+  }
+
   async function submitInvite(e) {
     e.preventDefault()
     setSending(true)
@@ -105,7 +114,7 @@ export default function Equipe() {
         </div>
         <GlassCard style={statCardStyle}>
           <Users size={26} color="var(--c-aurora-cyan)" />
-          <strong style={{ fontSize: 38 }}>{data?.members?.length || 0}</strong>
+          <strong style={{ fontSize: 38 }}>{data?.members?.length ?? '—'}</strong>
           <p style={mutedStyle}>membre(s) cabinet</p>
         </GlassCard>
       </section>
@@ -126,7 +135,7 @@ export default function Equipe() {
           ) : (
             <form onSubmit={submitInvite} style={{ display: 'grid', gap: 14 }}>
               <Field label="Email professionnel">
-                <Input type="email" value={invite.email} onChange={(e) => setInvite((v) => ({ ...v, email: e.target.value }))} placeholder="collaborateur@cabinet.fr" required />
+                <Input id="invite-email" type="email" value={invite.email} onChange={(e) => setInvite((v) => ({ ...v, email: e.target.value }))} placeholder="collaborateur@cabinet.fr" required />
               </Field>
               <Field label="Rôle cabinet">
                 <select className="courtia-input courtia-select" value={invite.role} onChange={(e) => setInvite((v) => ({ ...v, role: e.target.value }))}>
@@ -143,8 +152,8 @@ export default function Equipe() {
           <GlassCard style={panelStyle}>
             <div style={listHeaderStyle}>
               <div>
-                <h2 style={h2Style}>{data?.cabinet?.name || 'Cabinet COURTIA'}</h2>
-                <p style={mutedStyle}>Rôle courant : {data?.cabinet?.role || 'owner'}</p>
+                <h2 style={h2Style}>{data?.cabinet?.name || 'Votre cabinet'}</h2>
+                <p style={mutedStyle}>Rôle courant : {data?.cabinet?.role || '—'}</p>
               </div>
               <Button variant="ghost" onClick={loadTeam}><RefreshCcw size={16} /> Actualiser</Button>
             </div>
@@ -170,7 +179,11 @@ export default function Equipe() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="Aucun membre" description="Invitez votre premier collaborateur pour activer le mode cabinet." />
+              <EmptyState
+                title="Aucun collaborateur pour le moment"
+                description="Invitez votre premier collaborateur pour activer le mode cabinet."
+                action={isOwner ? <Button onClick={focusInvite}>Inviter un collaborateur</Button> : null}
+              />
             )}
           </GlassCard>
 

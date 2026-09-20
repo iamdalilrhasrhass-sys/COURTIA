@@ -8,6 +8,7 @@ import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
+import { fmtMontant } from '../lib/monnaie'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -19,11 +20,22 @@ const NAV_ITEMS = [
   { id: 'integrations', label: 'Intégrations', icon: Link },
 ]
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
-const COMPLIANCE_FIELDS = [
-  ['orias', 'Numéro ORIAS'],
-  ['cabinet', 'Nom du cabinet'],
-  ['telephone', 'Téléphone cabinet'],
-]
+// Champs d'identification réglementaire : ils dépendent du MARCHÉ du cabinet.
+// Un cabinet suisse renseigne son registre FINMA et son IDE ; un cabinet
+// français son numéro ORIAS. Aucun des deux ne se voit imposer le registre de
+// l'autre (constat CH-007 de l'audit du 20/09/2026).
+const champsConformite = (pays) => (String(pays || '').toUpperCase() === 'CH'
+  ? [
+      ['registre_numero', "N° d'enregistrement FINMA"],
+      ['uid', 'IDE (UID)'],
+      ['cabinet', 'Nom du cabinet'],
+      ['telephone', 'Téléphone cabinet'],
+    ]
+  : [
+      ['orias', 'Numéro ORIAS'],
+      ['cabinet', 'Nom du cabinet'],
+      ['telephone', 'Téléphone cabinet'],
+    ])
 
 const getInitials = (firstName, lastName) => ((firstName || '').charAt(0) + (lastName || '').charAt(0)).toUpperCase() || '?'
 
@@ -79,7 +91,25 @@ function getIntegrationLabel(status = '') {
   return { text: 'Non connecté', classes: 'bg-gray-100 text-gray-700' }
 }
 
-const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
+/**
+ * Interrupteurs de notification — TOUS adossés au serveur (correction 2026-09-20).
+ *
+ * Avant : chaque clic affichait « Préférence sauvegardée. » sans aucun appel
+ * réseau. Rien n'était enregistré, et un rechargement repartait des valeurs par
+ * défaut. Ici la clé d'interface est traduite en colonne réelle de
+ * `user_notification_prefs` (GET/PUT /api/notifications/preferences) et le
+ * message de succès n'apparaît qu'après une réponse serveur confirmée.
+ */
+const NOTIF_DEFAUT = { echeances: true, taches: true, morning_brief: true, news: false }
+
+const NOTIF_COLONNES = {
+  echeances: 'contract_expiry_enabled',
+  taches: 'overdue_tasks_enabled',
+  morning_brief: 'morning_brief_enabled',
+  news: 'product_news_enabled',
+}
+
+const Toggle = ({ label, description, enabled, setEnabled, icon: Icon, disabled = false, busy = false }) => (
   <div className="flex items-center justify-between py-3">
     <div className="flex items-start gap-4">
       <Icon className="text-gray-400 mt-0.5" size={20} />
@@ -89,8 +119,12 @@ const Toggle = ({ label, description, enabled, setEnabled, icon: Icon }) => (
       </div>
     </div>
     <button
-      onClick={() => setEnabled(!enabled)}
-      className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563eb] ${enabled ? 'bg-[#2563eb]' : 'bg-gray-200'}`}
+      type="button"
+      onClick={() => setEnabled()}
+      disabled={disabled || busy}
+      aria-pressed={enabled}
+      aria-label={label}
+      className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2563eb] ${enabled ? 'bg-[#2563eb]' : 'bg-gray-200'} ${disabled || busy ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <span className={`inline-block w-5 h-5 transform bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${enabled ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
     </button>
@@ -104,12 +138,20 @@ export default function Parametres() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', cabinet: '', orias: '', telephone: '' })
+  const [form, setForm] = useState({
+    first_name: '', last_name: '', email: '', cabinet: '', orias: '', telephone: '',
+    // Identité réglementaire : le marché décide des champs utiles (ORIAS en
+    // France, registre FINMA / IDE et canton en Suisse). Rien n'est prérempli.
+    pays: '', langue: '', registre_type: '', registre_numero: '', uid: '', canton: '',
+  })
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
   // Parcours « Modifier mon mot de passe » : envoi, confirmation visible, erreur.
   const [passwordState, setPasswordState] = useState({ envoi: false, succes: null, erreur: null })
-  const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
+  const [notifications, setNotifications] = useState(NOTIF_DEFAUT)
+  // Etat réel du chargement/enregistrement des préférences : distinction entre
+  // « pas encore lu », « enregistré par le serveur » et « refusé ».
+  const [notifsEtat, setNotifsEtat] = useState({ chargement: true, enCours: '', message: null, erreur: null })
   const [integrations, setIntegrations] = useState(() => (INTEGRATIONS_API_ENABLED ? [] : DEFAULT_INTEGRATIONS))
   const [integrationsLoading, setIntegrationsLoading] = useState(false)
   const [integrationAction, setIntegrationAction] = useState('')
@@ -120,10 +162,75 @@ export default function Parametres() {
 
   useEffect(() => {
     fetchProfile()
+    fetchNotificationPreferences()
     if (INTEGRATIONS_API_ENABLED) fetchIntegrations()
     fetchMessagingChannels()
     fetchTemplates()
   }, [])
+
+  /**
+   * Préférences de notification : on lit ce qui est RÉELLEMENT enregistré côté
+   * serveur. Si la lecture échoue, on le dit et les interrupteurs restent
+   * verrouillés : afficher des valeurs par défaut ferait croire à un choix.
+   */
+  async function fetchNotificationPreferences() {
+    setNotifsEtat({ chargement: true, enCours: '', message: null, erreur: null })
+    try {
+      const res = await api.get('/notifications/preferences')
+      const prefs = res?.data?.preferences
+      if (!prefs || typeof prefs !== 'object') throw new Error('reponse_inattendue')
+      const lu = {}
+      Object.entries(NOTIF_COLONNES).forEach(([cle, colonne]) => {
+        lu[cle] = typeof prefs[colonne] === 'boolean' ? prefs[colonne] : NOTIF_DEFAUT[cle]
+      })
+      setNotifications(lu)
+      setNotifsEtat({ chargement: false, enCours: '', message: null, erreur: null })
+    } catch (err) {
+      const message = err?.response?.data?.message
+      setNotifications(NOTIF_DEFAUT)
+      setNotifsEtat({
+        chargement: false,
+        enCours: '',
+        message: null,
+        erreur: message
+          ? `Impossible de lire vos préférences de notification : ${message}`
+          : 'Impossible de lire vos préférences de notification (serveur injoignable). Les interrupteurs sont verrouillés pour ne pas afficher un choix non enregistré.',
+      })
+    }
+  }
+
+  /**
+   * Bascule un interrupteur : l'état affiché ne change QUE si le serveur a
+   * confirmé la nouvelle valeur. En cas d'échec, la valeur précédente reste et
+   * un message d'erreur explicite s'affiche.
+   */
+  async function changerPreference(cle) {
+    const colonne = NOTIF_COLONNES[cle]
+    if (!colonne) return
+    const cible = !notifications[cle]
+    const precedente = notifications[cle]
+    setNotifsEtat({ chargement: false, enCours: cle, message: null, erreur: null })
+    try {
+      const res = await api.put('/notifications/preferences', { [colonne]: cible })
+      const confirme = res?.data?.preferences?.[colonne]
+      if (typeof confirme !== 'boolean') throw new Error('confirmation_absente')
+      setNotifications(n => ({ ...n, [cle]: confirme }))
+      setNotifsEtat({ chargement: false, enCours: '', message: 'Préférence sauvegardée.', erreur: null })
+      toast.success('Préférence sauvegardée.')
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.response?.data?.error
+      setNotifications(n => ({ ...n, [cle]: precedente }))
+      setNotifsEtat({
+        chargement: false,
+        enCours: '',
+        message: null,
+        erreur: message
+          ? `Préférence NON enregistrée : ${message}`
+          : 'Préférence NON enregistrée (le serveur n’a pas confirmé). La valeur affichée reste inchangée.',
+      })
+      toast.error('Préférence non enregistrée.')
+    }
+  }
 
 
   async function fetchProfile(options = {}) {
@@ -135,7 +242,12 @@ export default function Parametres() {
 
       primeSessionUserCache(data)
       setProfile(data)
-      setForm({ first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '', cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '' })
+      setForm({
+        first_name: data.first_name || '', last_name: data.last_name || '', email: data.email || '',
+        cabinet: data.cabinet || '', orias: data.orias || '', telephone: data.telephone || '',
+        pays: data.pays || '', langue: data.langue || '', registre_type: data.registre_type || '',
+        registre_numero: data.registre_numero || '', uid: data.uid || '', canton: data.canton || '',
+      })
     } catch {
       toast.error('Impossible de charger le profil')
     } finally {
@@ -397,8 +509,54 @@ export default function Parametres() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label htmlFor="cabinet" className={labelClass}>Cabinet</label><input id="cabinet" value={form.cabinet} onChange={e => setForm({ ...form, cabinet: e.target.value })} className={inputClass} /></div>
-                      <div><label htmlFor="orias" className={labelClass}>Numéro ORIAS</label><input id="orias" value={form.orias} onChange={e => setForm({ ...form, orias: e.target.value })} className={inputClass} /></div>
+                      <div>
+                        <label htmlFor="pays" className={labelClass}>Pays du cabinet</label>
+                        <select id="pays" value={form.pays} onChange={e => setForm({ ...form, pays: e.target.value })} className={inputClass}>
+                          <option value="">Non renseigné</option>
+                          <option value="CH">Suisse</option>
+                          <option value="FR">France</option>
+                        </select>
+                      </div>
                     </div>
+                    {/* Identification réglementaire : les champs suivent le marché.
+                        Un cabinet suisse peut enfin saisir son numéro FINMA et son
+                        IDE (UID) — l'interface n'exposait qu'un « Numéro ORIAS ». */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="registre_numero" className={labelClass}>
+                          {form.pays === 'CH' ? "N° d'enregistrement FINMA" : 'Numéro ORIAS'}
+                        </label>
+                        <input
+                          id="registre_numero"
+                          value={form.pays === 'CH' ? form.registre_numero : form.orias}
+                          onChange={e => setForm(form.pays === 'CH'
+                            ? { ...form, registre_numero: e.target.value, registre_type: form.registre_type || 'FINMA' }
+                            : { ...form, orias: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="uid" className={labelClass}>IDE (UID)</label>
+                        <input id="uid" value={form.uid} onChange={e => setForm({ ...form, uid: e.target.value })} placeholder="CHE-123.456.789" className={inputClass} />
+                      </div>
+                    </div>
+                    {form.pays === 'CH' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="canton" className={labelClass}>Canton</label>
+                          <input id="canton" value={form.canton} onChange={e => setForm({ ...form, canton: e.target.value })} placeholder="GE, VD, VS…" className={inputClass} />
+                        </div>
+                        <div>
+                          <label htmlFor="langue" className={labelClass}>Langue</label>
+                          <select id="langue" value={form.langue} onChange={e => setForm({ ...form, langue: e.target.value })} className={inputClass}>
+                            <option value="">Non renseignée</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Allemand</option>
+                            <option value="it">Italien</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="submit" disabled={saving} className="px-5 py-2.5 bg-[#2563eb] text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
                 </form>
@@ -453,7 +611,7 @@ export default function Parametres() {
                             <span className={`px-3 py-1 text-sm font-bold rounded-full ${currentPlan.classes}`}>{currentPlan.label}</span>
                         </div>
                         {typeof currentPlan.price === 'number'
-                          ? <p className="mt-2 text-3xl font-black text-gray-900">{currentPlan.price}€<span className="text-base font-medium text-gray-400">/mois</span></p>
+                          ? <p className="mt-2 text-3xl font-black text-gray-900">{fmtMontant(currentPlan.price, { maximumFractionDigits: 0 })}<span className="text-base font-medium text-gray-400">/mois</span></p>
                           : <p className="mt-2 text-lg font-semibold text-gray-600">{currentPlan.noSubscriptionText || 'Aucun abonnement actif'}</p>}
                         <ul className="mt-4 space-y-2 text-sm text-gray-600">
                             {currentPlan.features.map(f => (<li key={f} className="flex items-center gap-2"><Check size={16} className="text-emerald-500" /><span>{f}</span></li>))}
@@ -466,12 +624,32 @@ export default function Parametres() {
 
             <section id="notifications" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Notifications</h2>
-              <p className="text-sm text-white/50 mb-5">Choisissez comment nous pouvons vous contacter.</p>
+              <p className="text-sm text-white/50 mb-5">Choisissez comment nous pouvons vous contacter. Chaque choix est enregistré pour votre compte.</p>
               <div className="courtia-depth-card bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-1 divide-y divide-gray-100">
-                <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} setEnabled={() => { setNotifications({...notifications, echeances: !notifications.echeances}); toast.info('Préférence sauvegardée.') }}/>
-                <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} setEnabled={() => { setNotifications({...notifications, taches: !notifications.taches}); toast.info('Préférence sauvegardée.') }}/>
-                <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} setEnabled={() => { setNotifications({...notifications, morning_brief: !notifications.morning_brief}); toast.info('Préférence sauvegardée.') }}/>
-                <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} setEnabled={() => { setNotifications({...notifications, news: !notifications.news}); toast.info('Préférence sauvegardée.') }}/>
+                {notifsEtat.erreur && (
+                  <div role="alert" className="mb-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800 flex items-start gap-2">
+                    <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                    <span>
+                      {notifsEtat.erreur}
+                      <button type="button" onClick={fetchNotificationPreferences} className="ml-2 font-semibold underline">
+                        Réessayer
+                      </button>
+                    </span>
+                  </div>
+                )}
+                {notifsEtat.message && (
+                  <div role="status" className="mb-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800 flex items-start gap-2">
+                    <Check size={16} className="mt-0.5 shrink-0" />
+                    <span>{notifsEtat.message}</span>
+                  </div>
+                )}
+                {notifsEtat.chargement && (
+                  <p className="pb-2 text-xs text-gray-500">Chargement de vos préférences enregistrées…</p>
+                )}
+                <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} busy={notifsEtat.enCours === 'echeances'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('echeances')}/>
+                <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} busy={notifsEtat.enCours === 'taches'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('taches')}/>
+                <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} busy={notifsEtat.enCours === 'morning_brief'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('morning_brief')}/>
+                <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} busy={notifsEtat.enCours === 'news'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('news')}/>
               </div>
             </section>
 
@@ -493,7 +671,7 @@ export default function Parametres() {
                   <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">Chargement des templates…</p>
                 ) : templates.length === 0 ? (
                   <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                    Les templates seront disponibles dès que la migration PR10 sera appliquée.
+                    Aucun modèle de message pour le moment. Les modèles système et ceux de votre cabinet apparaîtront ici.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -521,7 +699,7 @@ export default function Parametres() {
                   COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation et de la remise des documents au client.
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  {COMPLIANCE_FIELDS.map(([key, label]) => (
+                  {champsConformite(form.pays).map(([key, label]) => (
                     <label key={key} className="text-xs font-semibold text-gray-600">
                       {label}
                       <input

@@ -1,13 +1,26 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../api'
 import { ArrowRight, Building2, CheckCircle2, CreditCard, ShieldCheck, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
+import { fmtMontant } from '../lib/monnaie'
+
+// Montant du plan dans la devise du cabinet (CHF en Suisse, EUR sinon).
+// La valeur numérique reste la grille produit : on ne change que l'affichage.
+const prixAffiche = (plan) =>
+  // Le libellé vient du SERVEUR quand il est disponible : c'est lui qui connaît
+  // le marché du cabinet (grille CHF en Suisse, euros en France) et la mention
+  // fiscale applicable. Aucun prix n'est recopié en dur dans cette page.
+  plan.display_price_ht
+    ? plan.display_price_ht
+    : (typeof plan.price === 'number' ? fmtMontant(plan.price, { maximumFractionDigits: 0 }) : plan.price)
 
 const plans = [
   {
     code: 'starter',
     name: 'Starter',
-    price: '89 €',
+    price: 89,
     suffix: 'HT/mois',
     icon: CreditCard,
     text: 'Pour structurer le suivi cabinet et poser les fondamentaux CRM IA.',
@@ -17,7 +30,7 @@ const plans = [
   {
     code: 'pro',
     name: 'Pro',
-    price: '159 €',
+    price: 159,
     suffix: 'HT/mois',
     icon: Sparkles,
     featured: true,
@@ -67,7 +80,7 @@ function PlanCard({ plan, index, onSelect }) {
         <h2>{plan.name}</h2>
       </div>
       <div className="abo6-price">
-        <strong>{plan.price}</strong>
+        <strong>{prixAffiche(plan)}</strong>
         {plan.suffix ? <span>{plan.suffix}</span> : null}
       </div>
       <p>{plan.text}</p>
@@ -85,6 +98,33 @@ function PlanCard({ plan, index, onSelect }) {
 
 export default function Abonnement() {
   const navigate = useNavigate()
+  // La grille (prix + devise + mention fiscale) vient du serveur : un cabinet
+  // suisse reçoit la grille CHF (199/349), un cabinet français la grille en
+  // euros. Les prix ne sont donc plus figés dans cette page.
+  const [grilleServeur, setGrilleServeur] = useState(null)
+
+  useEffect(() => {
+    let annule = false
+    api.get('/billing/plans')
+      .then((res) => { if (!annule) setGrilleServeur(res.data?.plans || null) })
+      .catch(() => { if (!annule) setGrilleServeur(null) })
+    return () => { annule = true }
+  }, [])
+
+  const plansAffiches = useMemo(() => plans.map((plan) => {
+    if (!grilleServeur) return plan
+    const serveur = grilleServeur.find((x) => x.code === plan.code)
+      || grilleServeur.find((x) => plan.code === 'cabinet' && String(x.code).startsWith('cabinet'))
+    if (!serveur) return plan
+    return {
+      ...plan,
+      name: serveur.name || plan.name,
+      price: serveur.price ?? plan.price,
+      display_price_ht: serveur.display_price_ht,
+      devise: serveur.currency,
+      suffix: serveur.price ? 'HT/mois' : '',
+    }
+  }), [grilleServeur])
 
   function handleSelect(planCode) {
     if (planCode === 'cabinet') {
@@ -352,7 +392,7 @@ export default function Abonnement() {
         </section>
 
         <section className="abo6-plan-grid" aria-label="Plans COURTIA">
-          {plans.map((plan, index) => (
+          {plansAffiches.map((plan, index) => (
             <PlanCard key={plan.code} plan={plan} index={index} onSelect={handleSelect} />
           ))}
         </section>

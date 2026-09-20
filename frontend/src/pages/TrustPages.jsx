@@ -23,13 +23,17 @@ import { applySeo } from '../lib/seo'
 const processors = ['Vercel', 'Render', 'Stripe', 'Resend', 'Anthropic', 'Google', 'Microsoft', 'Meta WhatsApp', 'Yousign', 'Cloudflare R2']
 
 function TrustHero({ eyebrow, title, description, icon: Icon = ShieldCheck, canonicalPath }) {
+  // Titre d'onglet : pas de marque en double. « Statut des services COURTIA »
+  // suivi de « — COURTIA » donnait « Statut des services COURTIA — COURTIA ».
+  const titreDocument = /COURTIA/i.test(title) ? title : `${title} — COURTIA`
+
   useEffect(() => {
     applySeo({
-      title: `${title} — COURTIA`,
+      title: titreDocument,
       description,
       canonicalPath,
     })
-  }, [canonicalPath, description, title])
+  }, [canonicalPath, description, titreDocument])
 
   return (
     <section className="mk-section">
@@ -208,9 +212,9 @@ export function HelpPublic() {
       <InfoGrid items={[
         { icon: BookOpen, title: 'Démarrer', text: 'Créez votre compte, renseignez le cabinet, importez vos clients puis ouvrez votre premier Morning Brief.' },
         { icon: Sparkles, title: 'ARK', text: 'ARK priorise les actions mais ne décide pas seul. Le courtier valide chaque recommandation.' },
-        { icon: Lock, title: 'Intégrations', text: 'Google, Gmail, WhatsApp et Yousign restent en “configuration requise” tant que les secrets ne sont pas actifs.' },
+        { icon: Lock, title: 'Intégrations', text: 'Google Agenda, Gmail, Outlook et WhatsApp restent inactifs tant que le cabinet ne les a pas explicitement connectés depuis Paramètres.' },
         { icon: FileText, title: 'Documents', text: 'COURTIA aide à structurer FIC, mandat et devoir de conseil. Les contenus doivent être vérifiés par le cabinet.' },
-        { icon: Activity, title: 'Smoke & incidents', text: 'Le runbook production décrit les contrôles health, auth, admin et double préfixe API.' },
+        { icon: Activity, title: 'Disponibilité', text: 'La page Statut indique l’état des services dont dépend votre connexion, et un message y est publié en cas de maintenance planifiée.' },
         { icon: Scale, title: 'RGPD', text: 'Les demandes RGPD passent par le contact indiqué et sont traitées selon le périmètre cabinet.' },
       ]} />
       <TrustCallout label="Demander de l’aide">
@@ -231,14 +235,10 @@ export function StatusPublic() {
       .catch(() => setStatus(null))
   }, [])
 
-  const integrations = status?.integrations || {}
   const serviceCards = [
-    { title: 'Frontend', value: status ? 'ready' : 'monitoring', icon: CheckCircle2 },
+    { title: 'Application', value: status ? 'ready' : 'monitoring', icon: CheckCircle2 },
     { title: 'API', value: status?.api || status?.status || 'monitoring', icon: Server },
-    { title: 'DB', value: status?.database || 'monitoring', icon: Database },
-    { title: 'Email', value: integrations.email_transactional || 'configuration_required', icon: FileText },
-    { title: 'SMS', value: integrations.sms || 'configuration_required', icon: Activity },
-    { title: 'Intégrations', value: Object.values(integrations).some((v) => v === 'configuration_required') ? 'configuration_required' : 'configured', icon: Lock },
+    { title: 'Base de données', value: status?.database || 'monitoring', icon: Database },
   ]
 
   return (
@@ -246,7 +246,7 @@ export function StatusPublic() {
       <TrustHero
         eyebrow="Status"
         title="Statut des services COURTIA"
-        description="Vue publique indicative des briques principales. Les incidents détaillés sont traités via le runbook interne et les alertes d’infrastructure."
+        description="Vue publique indicative des briques dont dépend votre connexion au cockpit. Un incident en cours est annoncé ici."
         canonicalPath="/status"
         icon={Activity}
       />
@@ -256,9 +256,7 @@ export function StatusPublic() {
           title: card.title,
           text: card.value === 'configured' || card.value === 'ready' || card.value === 'connected'
             ? 'Opérationnel.'
-            : card.value === 'configuration_required'
-              ? 'Configuration requise pour activer ce module.'
-              : 'Surveillance en cours.',
+            : 'Surveillance en cours.',
         })),
       ]} />
       {status?.maintenance?.active && (
@@ -269,10 +267,13 @@ export function StatusPublic() {
           </div>
         </section>
       )}
+      {/* Les modules qui dépendent de la configuration du cabinet (email, SMS,
+          agenda, signature) ne sont plus listés ici avec leur statut interne :
+          cette page est publique et ne concerne que l'accès au service. */}
       <section className="mk-section">
         <div className="mk-card">
-          <h3>Contrôles recommandés</h3>
-          <p>Vérifiez `/api/health`, `/api/status`, login courtier, login Dalil, `/admin`, `/admin/costs`, logout et absence de double préfixe API après chaque déploiement.</p>
+          <h3>Modules optionnels</h3>
+          <p>Les canaux email, SMS, agenda et signature électronique s’activent cabinet par cabinet, depuis Paramètres {"›"} Intégrations. Ils ne sont pas nécessaires pour utiliser le cockpit.</p>
         </div>
       </section>
     </MarketingShell>

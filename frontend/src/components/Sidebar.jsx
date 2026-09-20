@@ -162,6 +162,22 @@ export default function Sidebar() {
     setMobileOpen(false)
   }, [location.pathname])
 
+  /**
+   * Ouvre l'univers qui contient la page courante.
+   *
+   * Sans cela, arriver sur /parametres, /equipe ou /conformite laissait
+   * « CABINET » replié : la rubrique semblait vide et ses entrées inatteignables
+   * depuis le menu. On ouvre, on ne referme jamais (le repli reste au choix du
+   * courtier).
+   */
+  useEffect(() => {
+    const chemin = cheminActif(location.pathname)
+    if (!chemin) return
+    const univers = UNIVERSES.find(u => u.items.some(it => it.path === chemin))
+    if (!univers) return
+    setOpenMap(m => (m[univers.id] ? m : { ...m, [univers.id]: true }))
+  }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function logout() {
     clearStoredSession()
     resetSessionUserCache()
@@ -175,9 +191,28 @@ export default function Sidebar() {
     toast.success('Déconnexion ✓')
   }
 
+  /**
+   * Chemin le plus précis correspondant à la page courante.
+   *
+   * L'ancienne comparaison (`startsWith`) allumait « Admin » sur /admin/users ou
+   * « REACH » sur /reach/inbox : plusieurs entrées semblaient actives à la fois.
+   * On retient ici la correspondance la plus longue, sur frontière de segment.
+   */
+  const TOUS_LES_CHEMINS = [
+    ...UNIVERSES.flatMap(u => u.items.map(it => it.path)),
+    '/acquisition', '/admin', '/admin/users', '/admin/essais',
+  ]
+
+  function cheminActif(pathname) {
+    const correspondances = TOUS_LES_CHEMINS.filter(
+      (chemin) => pathname === chemin || pathname.startsWith(`${chemin}/`)
+    )
+    if (!correspondances.length) return null
+    return correspondances.reduce((meilleur, courant) => (courant.length > meilleur.length ? courant : meilleur))
+  }
+
   function isActive(path) {
-    if (path === '/dashboard') return location.pathname === path
-    return location.pathname.startsWith(path)
+    return cheminActif(location.pathname) === path
   }
 
   const userFirst = user?.first_name || user?.firstName || ''
@@ -334,10 +369,25 @@ export default function Sidebar() {
 
         {isAdmin && (
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+            {/* Étiquette de section : même traitement visuel que les univers,
+                simplement non cliquable (aucune route « rubrique »). */}
+            <div style={{
+              padding: '8px 12px',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: T.textDim,
+            }}>
+              Administration
+            </div>
             {/* ACQUISITION COURTIA — leads réellement captés (service de capture).
-                Administrateurs uniquement, comme la route /acquisition elle-même. */}
+                Chaque cible ci-dessous a une route RÉELLE dans App.jsx, protégée
+                par la garde administrateur (AdminRoute) : aucun lien mort. */}
             {renderItem({ path: '/acquisition', label: 'Acquisition', icon: Flame })}
-            {renderItem({ path: '/admin', label: 'Admin', icon: Shield })}
+            {renderItem({ path: '/admin', label: 'Vue d’ensemble', icon: Shield })}
+            {renderItem({ path: '/admin/users', label: 'Courtiers', icon: Users2 })}
+            {renderItem({ path: '/admin/essais', label: 'Suivi des essais', icon: Activity })}
           </div>
         )}
       </nav>

@@ -63,9 +63,14 @@ const CATEGORY_COLORS = {
   stockage: '#06b6d4'
 }
 
+function messageErreur(e, defaut) {
+  return e?.response?.data?.message || e?.response?.data?.error || defaut
+}
+
 export default function MarketplaceV2() {
   const [connectors, setConnectors] = useState([])
   const [loading, setLoading] = useState(true)
+  const [erreurChargement, setErreurChargement] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [installModal, setInstallModal] = useState(null)
@@ -75,57 +80,83 @@ export default function MarketplaceV2() {
     loadConnectors()
   }, [])
 
+  /**
+   * Le catalogue vient du serveur, et de lui seul.
+   *
+   * Avant : en cas d'échec de l'appel, la page affichait un jeu de connecteurs
+   * inventés (Pennylane, Slack, HubSpot…) dont un « Installé » de démonstration.
+   * Un cabinet croyait donc avoir des connecteurs qu'il n'avait jamais
+   * configurés. Une erreur s'affiche désormais telle quelle.
+   */
   const loadConnectors = async () => {
     setLoading(true)
+    setErreurChargement(null)
     try {
       const res = await api.get('/api/marketplace')
-      setConnectors(res.data?.connectors || mockConnectors)
-    } catch {
-      setConnectors(mockConnectors)
+      if (!Array.isArray(res.data?.connectors)) throw new Error('reponse_inattendue')
+      setConnectors(res.data.connectors)
+    } catch (e) {
+      setConnectors([])
+      setErreurChargement(messageErreur(
+        e,
+        "Le catalogue des connecteurs n'a pas pu être chargé. Réessayez dans un instant."
+      ))
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
+  // Installation : l'état « installé » n'est affiché qu'après confirmation
+  // explicite du serveur (identifiant d'intégration renvoyé).
   const handleInstall = async (connector, config) => {
     try {
-      await api.post(`/api/marketplace/${connector.id}/install`, { config })
-      setConnectors(conns => conns.map(c => 
-        c.id === connector.id ? { ...c, installed: true, installationStatus: 'active' } : c
+      const res = await api.post(`/api/marketplace/${connector.id}/install`, { config })
+      const integration = res.data?.integration
+      if (!integration || !integration.id) throw new Error('confirmation_absente')
+      setConnectors(conns => conns.map(c =>
+        c.id === connector.id
+          ? { ...c, installed: true, installationStatus: integration.status || 'active', installedAt: integration.installedAt || null }
+          : c
       ))
-      toast.success(`${connector.name} installé !`)
-    } catch {
-      // Mode mock
-      setConnectors(conns => conns.map(c => 
-        c.id === connector.id ? { ...c, installed: true, installationStatus: 'active', installedAt: new Date().toISOString() } : c
-      ))
-      toast.success(`${connector.name} installé !`)
+      toast.success(`${connector.name} installé.`)
+      setInstallModal(null)
+      return true
+    } catch (e) {
+      toast.error(messageErreur(e, `Installation de ${connector.name} impossible.`))
+      return false
     }
-    setInstallModal(null)
   }
 
-  const handleUninstall = async (connectorId) => {
-    if (!confirm('Voulez-vous vraiment désinstaller ce connecteur ?')) return
+  // Désinstallation : succès annoncé uniquement si le serveur a supprimé la ligne.
+  const handleUninstall = async (connector) => {
+    if (!confirm(`Désinstaller ${connector.name} ? La configuration enregistrée pour ce connecteur sera supprimée.`)) return
     try {
-      await api.delete(`/api/marketplace/${connectorId}`)
-    } catch (e) { console.warn('Erreur API désinstallation', e) }
-    setConnectors(conns => conns.map(c => 
-      c.id === connectorId ? { ...c, installed: false, installationStatus: null } : c
-    ))
-    toast.success('Connecteur désinstallé')
+      const res = await api.delete(`/api/marketplace/${connector.id}`)
+      if (!res.data?.id) throw new Error('confirmation_absente')
+      setConnectors(conns => conns.map(c =>
+        c.id === connector.id ? { ...c, installed: false, installationStatus: null, lastSyncAt: null } : c
+      ))
+      toast.success('Connecteur désinstallé.')
+    } catch (e) {
+      toast.error(messageErreur(e, `Désinstallation de ${connector.name} impossible. Le connecteur reste installé.`))
+    }
   }
 
+  // Synchronisation : en cas d'échec on le dit, on n'annonce plus « terminée ».
   const handleSync = async (connector) => {
     setSyncing(connector.id)
     try {
-      await api.post(`/api/marketplace/${connector.id}/sync`)
-      toast.success(`Synchronisation ${connector.name} terminée`)
-      setConnectors(conns => conns.map(c => 
-        c.id === connector.id ? { ...c, lastSyncAt: new Date().toISOString() } : c
+      const res = await api.post(`/api/marketplace/${connector.id}/sync`)
+      if (!res.data?.syncedAt) throw new Error('confirmation_absente')
+      toast.success(res.data.message || `Synchronisation ${connector.name} lancée.`)
+      setConnectors(conns => conns.map(c =>
+        c.id === connector.id ? { ...c, lastSyncAt: res.data.syncedAt } : c
       ))
-    } catch {
-      toast.success(`Synchronisation ${connector.name} terminée`)
+    } catch (e) {
+      toast.error(messageErreur(e, `Synchronisation ${connector.name} impossible.`))
+    } finally {
+      setSyncing(null)
     }
-    setSyncing(null)
   }
 
   // Filtrer les connecteurs
@@ -210,6 +241,37 @@ export default function MarketplaceV2() {
           <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 16px' }} />
           <div>Chargement des connecteurs...</div>
         </div>
+      ) : erreurChargement ? (
+        <div style={{ ...auroraStyles.card, textAlign: 'center', padding: 40 }}>
+          <p style={{ color: '#fca5a5', fontSize: 14, margin: '0 0 6px', fontWeight: 600 }}>
+            Catalogue indisponible
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 20px' }}>
+            {erreurChargement} Aucun connecteur n’est affiché tant que la liste réelle n’est pas chargée.
+          </p>
+          <button onClick={loadConnectors} style={{ ...auroraStyles.button, margin: '0 auto' }}>
+            <RefreshCw size={16} /> Réessayer
+          </button>
+        </div>
+      ) : filteredConnectors.length === 0 ? (
+        <div style={{ ...auroraStyles.card, textAlign: 'center', padding: 40 }}>
+          <p style={{ color: 'white', fontSize: 14, margin: '0 0 6px', fontWeight: 600 }}>
+            {connectors.length === 0 ? 'Aucun connecteur disponible pour le moment' : 'Aucun connecteur ne correspond à votre recherche'}
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 20px' }}>
+            {connectors.length === 0
+              ? 'Les connecteurs apparaîtront ici dès qu’ils seront disponibles pour votre cabinet.'
+              : 'Modifiez la recherche ou revenez à toutes les catégories.'}
+          </p>
+          {connectors.length > 0 && (
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedCategory('all') }}
+              style={{ ...auroraStyles.button, margin: '0 auto' }}
+            >
+              Réinitialiser les filtres
+            </button>
+          )}
+        </div>
       ) : (
         <>
           {/* Installés */}
@@ -221,7 +283,7 @@ export default function MarketplaceV2() {
                     key={connector.id}
                     connector={connector}
                     onSync={() => handleSync(connector)}
-                    onUninstall={() => handleUninstall(connector.id)}
+                    onUninstall={() => handleUninstall(connector)}
                     syncing={syncing === connector.id}
                   />
                 ))}
@@ -478,12 +540,19 @@ function ConnectorCard({ connector, onInstall, onUninstall, onSync, syncing, com
 function InstallModal({ connector, onClose, onInstall }) {
   const [config, setConfig] = useState({})
   const [installing, setInstalling] = useState(false)
+  const [erreur, setErreur] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setInstalling(true)
-    await onInstall(config)
+    setErreur(null)
+    // onInstall renvoie true seulement si le serveur a confirmé l'installation ;
+    // la fenêtre est alors déjà refermée par le parent.
+    const confirme = await onInstall(config)
     setInstalling(false)
+    if (!confirme) {
+      setErreur("L’installation n’a pas été confirmée par le serveur. Vérifiez la configuration saisie, puis réessayez.")
+    }
   }
 
   return (
@@ -549,6 +618,18 @@ function InstallModal({ connector, onClose, onInstall }) {
             </div>
           ))}
 
+          {erreur && (
+            <div role="alert" style={{
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 10,
+              padding: 12,
+              marginBottom: 16
+            }}>
+              <p style={{ color: '#fca5a5', margin: 0, fontSize: 13 }}>{erreur}</p>
+            </div>
+          )}
+
           <div style={{
             background: 'rgba(59,130,246,0.1)',
             border: '1px solid rgba(59,130,246,0.3)',
@@ -592,111 +673,3 @@ function InstallModal({ connector, onClose, onInstall }) {
     </div>
   )
 }
-
-// Mock data
-const mockConnectors = [
-  {
-    id: 'pennylane',
-    name: 'Pennylane',
-    description: 'Synchronisez vos commissions et factures avec votre comptabilité Pennylane.',
-    logo: 'https://www.pennylane.com/favicon.ico',
-    category: 'comptabilité',
-    status: 'available',
-    configFields: [
-      { key: 'api_key', label: 'Clé API Pennylane', type: 'password', required: true },
-      { key: 'company_id', label: 'ID Entreprise', type: 'text', required: true }
-    ],
-    features: ['Export commissions', 'Création factures auto', 'Rapprochement bancaire'],
-    installed: false
-  },
-  {
-    id: 'mailchimp',
-    name: 'Mailchimp',
-    description: 'Synchronisez vos contacts clients pour vos campagnes email marketing.',
-    logo: 'https://mailchimp.com/favicon.ico',
-    category: 'emailing',
-    status: 'available',
-    configFields: [
-      { key: 'api_key', label: 'Clé API Mailchimp', type: 'password', required: true },
-      { key: 'list_id', label: 'ID de la liste', type: 'text', required: true }
-    ],
-    features: ['Sync contacts', 'Tags automatiques', 'Segmentation'],
-    installed: true,
-    lastSyncAt: '2026-05-10T15:30:00Z'
-  },
-  {
-    id: 'zapier',
-    name: 'Zapier',
-    description: 'Connectez COURTIA à 5000+ applications avec des automations personnalisées.',
-    logo: 'https://zapier.com/favicon.ico',
-    category: 'automation',
-    status: 'available',
-    configFields: [
-      { key: 'webhook_url', label: 'URL Webhook Zapier', type: 'url', required: true }
-    ],
-    features: ['Triggers personnalisés', 'Actions sur événements', '5000+ apps'],
-    installed: false
-  },
-  {
-    id: 'slack',
-    name: 'Slack',
-    description: 'Recevez des notifications en temps réel dans vos channels Slack.',
-    logo: 'https://slack.com/favicon.ico',
-    category: 'notifications',
-    status: 'available',
-    configFields: [
-      { key: 'webhook_url', label: 'URL Webhook Slack', type: 'url', required: true },
-      { key: 'channel', label: 'Channel (optionnel)', type: 'text', required: false }
-    ],
-    features: ['Alertes sinistres', 'Nouveaux contrats', 'Rappels échéances'],
-    installed: false
-  },
-  {
-    id: 'hubspot',
-    name: 'HubSpot',
-    description: 'Synchronisez vos clients et prospects avec votre CRM HubSpot.',
-    logo: 'https://www.hubspot.com/favicon.ico',
-    category: 'crm',
-    status: 'available',
-    configFields: [
-      { key: 'api_key', label: 'Clé API HubSpot', type: 'password', required: true },
-      { key: 'sync_mode', label: 'Mode sync', type: 'select', options: ['bidirectional', 'courtia_to_hubspot', 'hubspot_to_courtia'], required: true }
-    ],
-    features: ['Sync contacts', 'Deals pipeline', 'Historique activités'],
-    installed: false
-  },
-  {
-    id: 'docusign',
-    name: 'DocuSign',
-    description: 'Alternative à Yousign pour la signature électronique de vos documents.',
-    logo: 'https://www.docusign.com/favicon.ico',
-    category: 'signature',
-    status: 'available',
-    configFields: [
-      { key: 'integration_key', label: 'Integration Key', type: 'password', required: true },
-      { key: 'account_id', label: 'Account ID', type: 'text', required: true }
-    ],
-    features: ['Signature électronique', 'Templates', 'Audit trail'],
-    installed: false
-  },
-  {
-    id: 'google_drive',
-    name: 'Google Drive',
-    description: 'Sauvegardez automatiquement vos documents dans Google Drive.',
-    logo: 'https://drive.google.com/favicon.ico',
-    category: 'stockage',
-    status: 'coming_soon',
-    configFields: [],
-    features: ['Backup auto', 'Organisation par client', 'Partage facile']
-  },
-  {
-    id: 'quickbooks',
-    name: 'QuickBooks',
-    description: 'Intégration comptable avec QuickBooks pour le marché US/UK.',
-    logo: 'https://quickbooks.intuit.com/favicon.ico',
-    category: 'comptabilité',
-    status: 'coming_soon',
-    configFields: [],
-    features: ['Factures', 'Paiements', 'Rapports']
-  }
-]

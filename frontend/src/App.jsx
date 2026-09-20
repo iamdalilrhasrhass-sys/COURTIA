@@ -41,6 +41,10 @@ const Contrats = lazy(() => import('./pages/Contrats'))
 const ClientNew = lazy(() => import('./pages/ClientNew'))
 const ContratNew = lazy(() => import('./pages/ContratNew'))
 const Taches = lazy(() => import('./pages/Taches'))
+// Écran « Rendez-vous » : le menu Rendez-vous ouvrait l'écran « Tâches »
+// (le courtier cliquait Rendez-vous et lisait Tâches). Vue dédiée, adossée à
+// l'agenda réel du cabinet.
+const RendezVous = lazy(() => import('./pages/RendezVous'))
 const Rapports = lazy(() => import('./pages/Rapports'))
 const Objectifs = lazy(() => import('./pages/Objectifs'))
 const Devis = lazy(() => import('./pages/Devis'))
@@ -88,6 +92,12 @@ const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 // Écran interne de pilotage commercial (réservé aux administrateurs).
 const AcquisitionCourtia = lazy(() => import('./pages/AcquisitionCourtia'))
 const AdminEssais = lazy(() => import('./pages/AdminEssais'))
+// Écrans d'administration existants mais montés par AUCUNE route : le lien
+// « Admin » de la barre latérale menait au 404 du SPA. Ils sont désormais
+// servis derrière la garde administrateur (AdminRoute), hors démonstration.
+const AdminOverview = lazy(() => import('./pages/AdminOverview'))
+const AdminUsers = lazy(() => import('./pages/AdminUsers'))
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
 
 function RouteFallback() {
   return (
@@ -183,7 +193,7 @@ const ROUTES_PRIVEES = [
   <Route key="contrats" path="/contrats"      element={<Contrats />} />,
   <Route key="contrats-new" path="/contrats/new"  element={<ContratNew />} />,
   <Route key="taches" path="/taches"        element={<Taches />} />,
-  <Route key="rendez-vous" path="/rendez-vous"   element={<Taches />} />,
+  <Route key="rendez-vous" path="/rendez-vous"   element={<RendezVous />} />,
   <Route key="rapports" path="/rapports"      element={<Rapports />} />,
   <Route key="objectifs" path="/objectifs"     element={<Objectifs />} />,
   <Route key="devis" path="/devis"         element={<Devis />} />,
@@ -229,6 +239,86 @@ const ROUTES_PRIVEES = [
   <Route key="reach-map" path="/reach/map"         element={<ReachMap />} />,
   <Route key="reach-settings" path="/reach/settings"    element={<ReachSettings />} />,
 ]
+
+// ── Titre d'onglet de l'espace privé (§33) ───────────────────────────────────
+// Chaque route du cockpit annonce son propre titre (« Cockpit — COURTIA »,
+// « Clients — COURTIA »…), sans emoji. Sans cela, l'onglet conservait le dernier
+// titre public — « Connexion — COURTIA » — après la connexion : le courtier
+// lisait le nom d'une page qu'il avait déjà quittée. Ces routes ne sont jamais
+// indexables (noindex), elles ne doivent donc pas apparaître dans les SERP.
+const TITRES_PRIVES = [
+  ['/admin/users', 'Courtiers'],
+  ['/admin/essais', 'Suivi des essais'],
+  ['/admin', 'Administration'],
+  ['/acquisition', 'Acquisition'],
+  ['/prise-en-main', 'Prise en main'],
+  ['/rendez-vous', 'Rendez-vous'],
+  ['/commissions/calculator', 'Calculateur de commissions'],
+  ['/commissions', 'Commissions'],
+  ['/parametres/integrations', 'Intégrations'],
+  ['/parametres', 'Paramètres'],
+  ['/clients/new', 'Nouveau client'],
+  ['/clients', 'Clients'],
+  ['/client', 'Fiche client'],
+  ['/contrats/new', 'Nouveau contrat'],
+  ['/contrats', 'Contrats'],
+  ['/devis/new', 'Nouveau devis'],
+  ['/devis', 'Devis'],
+  ['/dashboard', 'Cockpit'],
+  ['/morning-brief', 'Morning Brief'],
+  ['/sante-portefeuille', 'Santé du portefeuille'],
+  ['/ark-intelligence', 'Intelligence prédictive'],
+  ['/assistant-ark', 'Assistant ARK'],
+  ['/taches', 'Tâches'],
+  ['/rapports', 'Rapports'],
+  ['/objectifs', 'Objectifs'],
+  ['/documents', 'Documents'],
+  ['/relances', 'Relances'],
+  ['/opportunites', 'Opportunités'],
+  ['/prospection', 'Prospection'],
+  ['/analyses', 'Analyses'],
+  ['/analytics', 'Analytics'],
+  ['/abonnement', 'Abonnement'],
+  ['/billing', 'Facturation'],
+  ['/partenaires', 'Partenaires'],
+  ['/comparateur', 'Comparateur'],
+  ['/equipe', 'Équipe'],
+  ['/conformite', 'Conformité'],
+  ['/import', 'Import de portefeuille'],
+  ['/academy', 'Academy'],
+  ['/aide', 'Aide'],
+  ['/browser-pilot', 'Browser Pilot'],
+  ['/capitia', 'Capitia'],
+  ['/paiement-succes', 'Paiement confirmé'],
+  ['/paiement-annule', 'Paiement annulé'],
+  ['/reach/prospects', 'REACH — prospects'],
+  ['/reach/campaigns', 'REACH — campagnes'],
+  ['/reach/inbox', 'REACH — messages'],
+  ['/reach/map', 'REACH — carte'],
+  ['/reach/settings', 'REACH — réglages'],
+  ['/reach/search', 'REACH — recherche'],
+  ['/reach', 'REACH'],
+]
+
+function titreEspacePrive(pathname = '/') {
+  const trouve = TITRES_PRIVES.find(([prefixe]) => (
+    pathname === prefixe || pathname.startsWith(`${prefixe}/`)
+  ))
+  return trouve ? trouve[1] : 'Cockpit'
+}
+
+function TitreEspacePrive({ children }) {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    applySeo({
+      title: `${titreEspacePrive(pathname)} — COURTIA`,
+      description: 'Espace applicatif COURTIA — accès réservé.',
+      canonicalUrl: absoluteUrl(pathname),
+      robots: 'noindex, follow',
+    })
+  }, [pathname])
+  return children
+}
 
 export default function App() {
   return (
@@ -309,7 +399,7 @@ export default function App() {
             Le cockpit n'était donc atteignable par personne, alors que ses pages
             et ses modules existent. Restaurées ici, protégées par PrivateRoute,
             avec EXACTEMENT les mêmes composants que la démonstration. */}
-        <Route element={<PrivateRoute><AppPrivateLayout /></PrivateRoute>}>
+        <Route element={<TitreEspacePrive><PrivateRoute><AppPrivateLayout /></PrivateRoute></TitreEspacePrive>}>
           {ROUTES_PRIVEES}
           {/* Prise en main — parcours de démarrage guidé.
               L'écran existait (pages/OnboardingGamified.jsx) et son API est
@@ -326,6 +416,14 @@ export default function App() {
           {/* SUIVI DES ESSAIS — écran interne (super administrateur) : statut,
               dates réelles, jours restants et usage mesurés en base. */}
           <Route path="/admin/essais" element={<AdminRoute><AdminEssais /></AdminRoute>} />
+          {/* ADMINISTRATION — les liens « Admin » et « Courtiers » de la barre
+              latérale pointaient vers /admin sans qu'aucune route n'existe :
+              l'administrateur tombait sur le 404. Les pages existaient déjà ;
+              seules les routes manquaient. Même garde que /acquisition et
+              /admin/essais, et jamais montées sous /demo (données réelles). */}
+          <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/users/:id" element={<AdminRoute><AdminUserDetail /></AdminRoute>} />
         </Route>
 
         {/* Démonstration — mêmes pages, mêmes composants que le cockpit réel */}
