@@ -167,11 +167,17 @@ async function createDocumentRequest(userId, clientId, requiredDocs, message, re
   } else {
     const clId = existingChecklist.rows[0].id;
     // Merge required docs without duplicates
+    // CORRECTION 2026-09-20 : la requête référençait `$3::jsonb` alors que seules
+    // DEUX valeurs étaient fournies ($1 = id de la checklist, $2 = documents
+    // requis). PostgreSQL refusait alors la requête avec « could not determine
+    // data type of parameter $2 » : la création d'une demande de pièces —
+    // fonction de base de la collecte de documents — répondait 500 à CHAQUE
+    // appel. Les deux références pointent désormais $2.
     await pool.query(
       `UPDATE document_checklists SET required_docs = (
-         SELECT jsonb_agg(DISTINCT x) FROM jsonb_array_elements_text(required_docs || $3::jsonb) AS x
+         SELECT jsonb_agg(DISTINCT x) FROM jsonb_array_elements_text(required_docs || $2::jsonb) AS x
        ), missing_docs = (
-         SELECT jsonb_agg(DISTINCT x) FROM jsonb_array_elements_text(required_docs || $3::jsonb) AS x
+         SELECT jsonb_agg(DISTINCT x) FROM jsonb_array_elements_text(required_docs || $2::jsonb) AS x
        ), updated_at = NOW() WHERE id = $1`,
       [clId, JSON.stringify(requiredDocs)]
     );
