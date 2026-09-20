@@ -99,17 +99,22 @@ router.post('/trials/invite', async (req, res) => {
     const motDePasseScelle = crypto.randomBytes(32).toString('hex');
     const user = await User.create(email, motDePasseScelle, firstName || cabinet, lastName || '', 'broker');
 
-    await pool.query(
-      `UPDATE users SET cabinet_name = $1, trial_ends_at = NOW() + ($2 || ' days')::interval WHERE id = $3`,
-      [cabinet, String(jours), user.id]
-    );
+    // L'essai NE COURT PAS encore (20/09/2026) : la durée est enregistrée, mais
+    // `trial_ends_at` reste NULL tant que le cabinet n'a pas activé son accès.
+    // Le lien d'activation valant 72 h, laisser courir l'essai dès l'invitation
+    // faisait perdre jusqu'à trois jours sur les sept annoncés.
+    await User.preparerInvitation(user.id, { cabinet, jours });
 
     const token = crypto.randomBytes(32).toString('hex');
     const expireLe = new Date(Date.now() + 72 * 3600 * 1000); // 72 h pour activer
     await User.setResetToken(email, token, expireLe);
 
     const base = process.env.FRONTEND_URL || 'https://courtiark.fr';
-    const { rows } = await pool.query('SELECT trial_ends_at FROM users WHERE id = $1', [user.id]);
+    const { rows } = await pool.query(
+      'SELECT subscription_status, trial_days, invited_at, trial_ends_at FROM users WHERE id = $1',
+      [user.id]
+    );
+    const etat = rows[0] || {};
 
     return res.status(201).json({
       success: true,
@@ -117,9 +122,13 @@ router.post('/trials/invite', async (req, res) => {
         user_id: user.id,
         email,
         cabinet,
-        essai_debute_le: user.created_at,
-        essai_finit_le: rows[0]?.trial_ends_at || null,
-        duree_essai_jours: jours,
+        // Aucune date d'essai ici : elle n'existera qu'à l'activation réelle.
+        essai_debute_le: null,
+        essai_finit_le: null,
+        essai_demarre_a_lactivation: true,
+        statut_compte: etat.subscription_status || 'pending_activation',
+        duree_essai_jours: Number(etat.trial_days || jours),
+        invitation_emise_le: etat.invited_at || null,
         activation_url: `${base}/reset-password?token=${token}`,
         activation_expire_le: expireLe.toISOString(),
         // Aucun envoi ici, et on ne prétend pas le contraire.
@@ -150,8 +159,12 @@ router.get('/trials', async (_req, res) => {
         u.plan,
         u.subscription_status,
         u.trial_ends_at,
+        u.trial_started_at,
+        u.trial_days,
+        u.invited_at,
         u.created_at                                AS compte_cree_le,
         CASE
+          WHEN u.subscription_status = 'pending_activation' THEN 'TRIAL_PENDING'
           WHEN u.subscription_status = 'trialing' AND u.trial_ends_at > NOW() THEN 'TRIAL_ACTIVE'
           WHEN u.subscription_status = 'trialing' THEN 'TRIAL_EXPIRED'
           WHEN u.subscription_status IN ('active', 'past_due') THEN 'SUBSCRIPTION_ACTIVE'
@@ -199,10 +212,16 @@ router.get('/trials', async (_req, res) => {
       jours_restants: Number(r.jours_restants) || 0,
       // Un champ sans mesure reste null : l'écran affiche « — ».
       jours_restants: r.trial_status === 'TRIAL_ACTIVE' ? r.jours_restants : 0,
-      essai_debute_le: r.trial_ends_at
-        ? new Date(new Date(r.trial_ends_at).getTime() - billingService.TRIAL_DAYS * 86400000).toISOString()
-        : null,
-      duree_essai_jours: billingService.TRIAL_DAYS,
+      // Date de début RÉELLE : posée à l'activation (trial_started_at). Pour un
+      // compte invité, aucune date d'essai n'existe encore : null, pas une
+      // date fabriquée.
+      essai_debute_le: r.trial_started_at
+        ? new Date(r.trial_started_at).toISOString()
+        : (r.trial_ends_at
+          ? new Date(new Date(r.trial_ends_at).getTime() - billingService.TRIAL_DAYS * 86400000).toISOString()
+          : null),
+      invitation_emise_le: r.invited_at ? new Date(r.invited_at).toISOString() : null,
+      duree_essai_jours: Number(r.trial_days || billingService.TRIAL_DAYS),
     }));
 
     return res.json({

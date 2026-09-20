@@ -45,6 +45,18 @@ async function etatAcces(userId) {
       trial_end_at: finValide ? finValide.toISOString() : null,
     }
   }
+  // Compte INVITÉ mais pas encore activé (invitation d'essai) : l'essai n'a pas
+  // commencé, il ne peut donc pas être « expiré ». On refuse les écritures avec
+  // une raison distincte, pour ne jamais annoncer au cabinet une fin d'essai
+  // qui n'a pas eu lieu.
+  if (u.subscription_status === 'pending_activation') {
+    return {
+      ecriture_autorisee: false,
+      raison: 'activation_requise',
+      trial_state: 'TRIAL_PENDING',
+      trial_end_at: null,
+    }
+  }
   if (STATUTS_AUTORISES.has(u.subscription_status)) {
     return { ecriture_autorisee: true, raison: 'abonnement_actif', trial_state: 'SUBSCRIPTION_ACTIVE', trial_end_at: null }
   }
@@ -77,7 +89,9 @@ function requireActiveSubscription(req, res, next) {
         raison: etat.raison,
         lecture_seule: true,
         message:
-          "Votre essai COURTIA de 7 jours est terminé. Vos données sont conservées et restent consultables : choisissez un abonnement pour reprendre les modifications.",
+          etat.raison === 'activation_requise'
+            ? "Votre accès n'est pas encore activé : ouvrez le lien d'invitation reçu pour choisir votre mot de passe, puis votre essai COURTIA de 7 jours démarrera à ce moment-là. Vos données restent consultables."
+            : "Votre essai COURTIA de 7 jours est terminé. Vos données sont conservées et restent consultables : choisissez un abonnement pour reprendre les modifications.",
       })
     } catch (e) {
       // Défaut sûr : panne de base => on laisse passer (les autres gardes font pareil).

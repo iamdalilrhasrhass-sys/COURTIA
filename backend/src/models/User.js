@@ -80,6 +80,66 @@ class User {
     );
     return result.rows[0] || null;
   }
+
+  // --- Essai : invitation puis activation ---
+  //
+  // DEPART DE L'ESSAI (decision du 20/09/2026) : un cabinet invite ne doit pas
+  // perdre des jours d'essai avant meme d'avoir active son acces. L'invitation
+  // enregistre donc la DUREE prevue sans faire courir l'essai
+  // (`pending_activation`, `trial_ends_at` NULL), et l'essai demarre a
+  // l'activation reelle, pour exactement `trial_days` jours.
+
+  /**
+   * Prepare une invitation d'essai : le compte existe, l'essai ne court pas.
+   * @returns {Promise<{trial_days: number}|null>}
+   */
+  static async preparerInvitation(userId, { cabinet, jours }) {
+    const joursValides = Number.isFinite(Number(jours)) && Number(jours) > 0
+      ? Math.trunc(Number(jours))
+      : Number(process.env.BILLING_TRIAL_DAYS || 7);
+    const result = await pool.query(
+      `UPDATE users
+          SET cabinet_name = $1,
+              trial_days = $2,
+              invited_at = NOW(),
+              plan = 'trial',
+              subscription_status = 'pending_activation',
+              trial_ends_at = NULL,
+              trial_started_at = NULL,
+              updated_at = NOW()
+        WHERE id = $3
+        RETURNING id, email, cabinet_name, trial_days, invited_at`,
+      [cabinet || '', joursValides, userId]
+    );
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Demarre l'essai a partir de MAINTENANT, une seule fois.
+   * Sans effet si le compte n'est pas en attente d'activation : un compte deja
+   * en essai ou abonne ne voit jamais ses dates recalculees par une activation.
+   * @returns {Promise<{debut: string, fin: string, jours: number}|null>}
+   */
+  static async demarrerEssai(userId) {
+    const result = await pool.query(
+      `UPDATE users
+          SET subscription_status = 'trialing',
+              trial_started_at = NOW(),
+              trial_ends_at = NOW() + (COALESCE(trial_days, $2) || ' days')::interval,
+              plan = 'trial',
+              updated_at = NOW()
+        WHERE id = $1 AND subscription_status = 'pending_activation'
+        RETURNING trial_started_at, trial_ends_at, COALESCE(trial_days, $2) AS trial_days`,
+      [userId, Number(process.env.BILLING_TRIAL_DAYS || 7)]
+    );
+    const ligne = result.rows[0];
+    if (!ligne) return null;
+    return {
+      debut: ligne.trial_started_at,
+      fin: ligne.trial_ends_at,
+      jours: Number(ligne.trial_days),
+    };
+  }
 }
 
 module.exports = User;

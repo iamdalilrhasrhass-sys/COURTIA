@@ -127,7 +127,7 @@ def main():
     code, corps = appel("POST", "/api/clients", {"nom": "Réactivé", "prenom": "Après", "email": f"reactif.{H}@courtia.invalid"}, jeton)
     verifier("écriture de nouveau autorisée -> 201", code == 201, f"HTTP {code}")
 
-    print("\n7. invitation administrateur : essai créé sans mot de passe transmis")
+    print("\n7. invitation administrateur : l'essai démarre à l'ACTIVATION, pas à l'invitation")
     promo = f"qa.admin.{H}@courtia.invalid"
     appel("POST", "/api/auth/register", {"email": promo, "password": "MotDePasseQA!2026",
                                         "firstName": "QA", "lastName": "ADMIN"})
@@ -142,31 +142,89 @@ def main():
             "email": email_invite, "cabinet_name": "Cabinet QA Invité", "first_name": "Nadia", "last_name": "QA"}, jeton_admin)
         inv = corps.get("invitation") or {}
         verifier("invitation créée -> 201", code == 201, f"HTTP {code} {str(corps)[:120]}")
-        verifier("durée d'essai = 7 jours", inv.get("duree_essai_jours") == 7, str(inv.get("duree_essai_jours")))
+        verifier("durée d'essai annoncée = 7 jours", inv.get("duree_essai_jours") == 7, str(inv.get("duree_essai_jours")))
+        verifier("aucune date d'essai à l'invitation (l'essai n'a pas commencé)",
+                 inv.get("essai_debute_le") is None and inv.get("essai_finit_le") is None,
+                 f"debut={inv.get('essai_debute_le')} fin={inv.get('essai_finit_le')}")
+        verifier("compte en attente d'activation", inv.get("statut_compte") == "pending_activation", str(inv.get("statut_compte")))
         verifier("aucun envoi d'email prétendu", inv.get("email_envoye") is False, str(inv.get("email_envoye")))
-        verifier("lien d'activation fourni", str(inv.get("activation_url", "")).endswith("token=" + str(inv.get("activation_url", "")).split("token=")[-1]) and "token=" in str(inv.get("activation_url")), "lien présent")
+        verifier("lien d'activation fourni", "token=" in str(inv.get("activation_url")), "lien présent")
         champs_interdits = [k for k in inv.keys() if "password" in k.lower() or "secret" in k.lower()]
         verifier("aucun mot de passe dans la réponse", champs_interdits == [], f"champs: {champs_interdits}")
+
+        # Avant activation : les écritures sont refusées, et l'essai n'est pas
+        # présenté comme expiré (il n'a jamais commencé).
+        etat_avant = psql(f"SELECT subscription_status || '|' || COALESCE(trial_ends_at::text,'NULL') FROM users WHERE email = '{email_invite}'")
+        verifier("en base : statut en attente et aucune date d'essai",
+                 etat_avant.startswith("pending_activation|NULL"), etat_avant)
+
         code2, corps2 = appel("POST", "/api/admin/super/trials/invite", {
             "email": email_invite, "cabinet_name": "Doublon"}, jeton_admin)
         verifier("doublon refusé -> 409 (pas de compte en double)", code2 == 409, f"HTTP {code2}")
-        # le lien d'activation fonctionne réellement
+
+        code5, corps5 = appel("GET", "/api/admin/super/trials", None, jeton_admin)
+        ligne0 = next((e for e in (corps5.get("essais") or []) if e.get("email") == email_invite), None)
+        verifier("suivi admin : compte invité visible et en attente",
+                 code5 == 200 and ligne0 is not None and ligne0.get("trial_status") == "TRIAL_PENDING",
+                 f"{ligne0.get('trial_status') if ligne0 else 'absent'}")
+
+        # ACTIVATION RÉELLE : c'est ici que les 7 jours doivent commencer.
         token = str(inv.get("activation_url", "")).split("token=")[-1]
         if token:
+            avant = datetime.datetime.now(datetime.timezone.utc)
             code3, corps3 = appel("POST", "/api/auth/reset-password", {"token": token, "password": "NouveauMotDePasseQA!2026"})
             verifier("le lien d'activation définit le mot de passe -> 200", code3 == 200, f"HTTP {code3} {str(corps3)[:80]}")
+            essai = corps3.get("essai") or {}
+            verifier("l'activation renvoie la durée d'essai", essai.get("jours") == 7, str(essai.get("jours")))
+            debut = fin = None
+            try:
+                debut = datetime.datetime.fromisoformat(str(essai.get("debut")).replace("Z", "+00:00"))
+                fin = datetime.datetime.fromisoformat(str(essai.get("fin")).replace("Z", "+00:00"))
+            except Exception:
+                pass
+            verifier("l'essai démarre à l'activation (moins de 5 min d'écart)",
+                     debut is not None and abs((debut - avant).total_seconds()) < 300,
+                     f"debut={essai.get('debut')}")
+            verifier("la fin est exactement à +7 jours du début",
+                     debut is not None and fin is not None and abs((fin - debut).total_seconds() - 7 * 86400) < 120,
+                     f"debut={essai.get('debut')} fin={essai.get('fin')}")
+
             code4, corps4 = appel("POST", "/api/auth/login", {"email": email_invite, "password": "NouveauMotDePasseQA!2026"})
             verifier("le cabinet invité peut se connecter", code4 == 200 and bool(corps4.get("token")), f"HTTP {code4}")
+            jeton_cabinet = corps4.get("token")
+            if jeton_cabinet:
+                code6, corps6 = appel("GET", "/api/billing/status", None, jeton_cabinet)
+                # La route répond { success, billing_mode, status: {...} } : l'état
+                # d'essai est dans `status`, pas à la racine.
+                st6 = (corps6 or {}).get("status") if isinstance(corps6, dict) else {}
+                st6 = st6 if isinstance(st6, dict) else {}
+                verifier("après activation : essai actif", st6.get("trial_state") == "TRIAL_ACTIVE", str(st6.get("trial_state")))
+                verifier("après activation : 6 ou 7 jours restants", st6.get("jours_restants") in (6, 7), str(st6.get("jours_restants")))
+                code7, _ = appel("POST", "/api/clients", {"nom": "Activé", "prenom": "Après", "email": f"active.{H}@courtia.invalid"}, jeton_cabinet)
+                verifier("après activation : écriture autorisée -> 201", code7 == 201, f"HTTP {code7}")
+
         code5, corps5 = appel("GET", "/api/admin/super/trials", None, jeton_admin)
-        essais = corps5.get("essais") or []
-        ligne = next((e for e in essais if e.get("email") == email_invite), None)
-        verifier("le suivi admin renvoie l'essai créé", code5 == 200 and ligne is not None, f"{len(essais)} essai(s)")
+        ligne = next((e for e in (corps5.get("essais") or []) if e.get("email") == email_invite), None)
+        verifier("le suivi admin renvoie l'essai créé", code5 == 200 and ligne is not None, f"{len(corps5.get('essais') or [])} essai(s)")
         if ligne:
-            verifier("suivi : statut et jours réels",
+            verifier("suivi : statut et jours réels après activation",
                      ligne.get("trial_status") == "TRIAL_ACTIVE" and ligne.get("jours_restants") in (6, 7),
                      f"{ligne.get('trial_status')} / {ligne.get('jours_restants')} j")
-            verifier("suivi : aucune valeur inventée (clients mesurés)",
-                     ligne.get("clients_crees") == 0, f"clients_crees={ligne.get('clients_crees')}")
+            verifier("suivi : date de début = date d'activation",
+                     ligne.get("essai_debute_le") is not None, str(ligne.get("essai_debute_le")))
+            verifier("suivi : aucune valeur inventée (1 client réellement créé après activation)",
+                     ligne.get("clients_crees") == 1, f"clients_crees={ligne.get('clients_crees')}")
+
+        # Expiration après activation : les données restent, les écritures tombent.
+        psql(f"UPDATE users SET trial_ends_at = NOW() - INTERVAL '1 hour' WHERE email = '{email_invite}'")
+        code8, corps8 = appel("POST", "/api/auth/login", {"email": email_invite, "password": "NouveauMotDePasseQA!2026"})
+        jeton_expire = (corps8 or {}).get("token")
+        if jeton_expire:
+            code9, corps9 = appel("POST", "/api/clients", {"nom": "Refus", "prenom": "Expiré", "email": f"refus.{H}@courtia.invalid"}, jeton_expire)
+            verifier("après J+7 : écriture refusée -> 402 trial_expired",
+                     code9 == 402 and (corps9 or {}).get("error") == "trial_expired", f"HTTP {code9} {str(corps9)[:80]}")
+            code10, corps10 = appel("GET", "/api/clients", None, jeton_expire)
+            verifier("après J+7 : les données restent lisibles -> 200", code10 == 200, f"HTTP {code10}")
 
     print("\n=== BILAN ===")
     ok = sum(1 for _, c, _ in R if c)

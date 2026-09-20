@@ -232,7 +232,33 @@ exports.resetPassword = async (req, res) => {
 
     await User.resetPassword(token, password);
 
-    res.json({ message: 'Mot de passe mis à jour avec succès. Vous pouvez vous connecter.' });
+    // ACTIVATION DE L'ESSAI (20/09/2026) : c'est ICI que les 7 jours commencent
+    // pour un cabinet invité. Le compte n'était pas en essai avant ce choix de
+    // mot de passe ; il le devient maintenant, pour la durée annoncée.
+    // Sans effet pour une simple réinitialisation de mot de passe d'un compte
+    // déjà en essai ou abonné (aucune date n'est recalculée).
+    let essai = null;
+    try {
+      essai = await User.demarrerEssai(record.id);
+    } catch (e) {
+      // Ne jamais bloquer l'activation pour un incident sur les dates d'essai :
+      // le mot de passe est enregistré, l'essai sera rattrapé par le support.
+      console.error('Démarrage essai après activation impossible:', e.message);
+    }
+
+    res.json({
+      message: 'Mot de passe mis à jour avec succès. Vous pouvez vous connecter.',
+      ...(essai
+        ? {
+            essai: {
+              demarre: true,
+              debut: new Date(essai.debut).toISOString(),
+              fin: new Date(essai.fin).toISOString(),
+              jours: essai.jours,
+            },
+          }
+        : {}),
+    });
   } catch (err) {
     console.error('Reset password error:', err.message);
     res.status(500).json({ error: 'Impossible de réinitialiser le mot de passe pour le moment' });

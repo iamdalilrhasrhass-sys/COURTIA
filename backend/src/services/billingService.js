@@ -349,7 +349,7 @@ async function getBillingStatus(userId) {
     // Tant qu'aucune souscription Stripe n'existe, l'état vient de `users`.
     // Dès qu'une souscription existe (paiement ou essai Stripe), elle prime.
     const { rows: utilisateurs } = await pool.query(
-      'SELECT plan, subscription_status, trial_ends_at FROM users WHERE id = $1',
+      'SELECT plan, subscription_status, trial_ends_at, trial_days, trial_started_at, invited_at FROM users WHERE id = $1',
       [userId]
     );
     const utilisateur = utilisateurs[0] || {};
@@ -384,26 +384,36 @@ async function getBillingStatus(userId) {
     // d'activation). Sans cela, l'API repondait NOT_STARTED alors que les ecritures
     // etaient autorisees : deux verites contradictoires pour le meme compte.
     const abonnementActif = ['active', 'past_due'].includes(utilisateur.subscription_status)
-    const trialState = enEssai
-      ? 'TRIAL_ACTIVE'
-      : (essaiExpire ? 'TRIAL_EXPIRED' : (abonnementActif ? 'SUBSCRIPTION_ACTIVE' : 'NOT_STARTED'))
+    // Compte invité non encore activé : l'essai n'a pas commencé. On le dit
+    // explicitement au lieu de le présenter comme un essai expiré.
+    const enAttenteActivation = utilisateur.subscription_status === 'pending_activation'
+    const trialState = enAttenteActivation
+      ? 'TRIAL_PENDING'
+      : (enEssai
+        ? 'TRIAL_ACTIVE'
+        : (essaiExpire ? 'TRIAL_EXPIRED' : (abonnementActif ? 'SUBSCRIPTION_ACTIVE' : 'NOT_STARTED')))
 
     return {
       organization_id: org.id,
       plan_code: enEssai ? 'trial' : (abonnementActif ? (utilisateur.plan || 'starter') : 'starter'),
       plan_name: enEssai ? 'Essai gratuit' : (abonnementActif ? (utilisateur.plan || 'starter') : 'Starter'),
-      status: enEssai ? 'trialing' : (essaiExpire ? 'trial_expired' : (abonnementActif ? 'active' : 'not_started')),
+      status: enAttenteActivation
+        ? 'pending_activation'
+        : (enEssai ? 'trialing' : (essaiExpire ? 'trial_expired' : (abonnementActif ? 'active' : 'not_started'))),
       trial_state: trialState,
       trial_active: enEssai,
       trial_expired: essaiExpire,
+      activation_requise: enAttenteActivation,
       // En lecture seule apres expiration : le cabinet garde l'acces a ses
       // donnees (aucune suppression, aucune perte) mais les ecritures metier
       // sont refusees en 402 jusqu'a souscription.
-      lecture_seule: essaiExpire && !abonnementActif,
-      duree_essai_jours: TRIAL_DAYS,
-      trial_start_at: enEssai || essaiExpire
-        ? new Date(finValide.getTime() - TRIAL_DAYS * 86400000).toISOString()
-        : null,
+      lecture_seule: (essaiExpire || enAttenteActivation) && !abonnementActif,
+      duree_essai_jours: Number(utilisateur.trial_days || TRIAL_DAYS),
+      trial_start_at: utilisateur.trial_started_at
+        ? new Date(utilisateur.trial_started_at).toISOString()
+        : (enEssai || essaiExpire
+          ? new Date(finValide.getTime() - TRIAL_DAYS * 86400000).toISOString()
+          : null),
       trial_end_at: finValide ? finValide.toISOString() : null,
       jours_restants: joursRestants,
       plan_effectif: planEffectif,
