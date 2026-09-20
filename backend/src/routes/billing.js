@@ -532,16 +532,42 @@ async function handleStripeEvent(event) {
   }
 }
 
-router.get('/plans', async (_req, res) => {
+/**
+ * Marché du cabinet appelant, sans rendre la route obligatoirement authentifiée :
+ * si un jeton valide est présent, on lit le pays du cabinet ; sinon on reste sur
+ * la grille par défaut (euros). Un visiteur anonyme ne voit donc rien changer,
+ * et un cabinet suisse connecté reçoit sa grille en CHF.
+ */
+async function marcheDepuisRequete(req) {
+  try {
+    const entete = req.headers.authorization || '';
+    if (!entete.startsWith('Bearer ')) return 'FR';
+    const { getJwtSecret } = require('../utils/jwtSecret');
+    const jwt = require('jsonwebtoken');
+    const decode = jwt.verify(entete.slice(7), getJwtSecret());
+    const userId = decode.id || decode.userId;
+    if (!userId) return 'FR';
+    const { rows } = await pool.query('SELECT pays FROM broker_profiles WHERE user_id = $1 LIMIT 1', [userId]);
+    const pays = String(rows[0]?.pays || '').trim().toUpperCase();
+    return (pays === 'CH' || pays === 'CHE' || pays === 'SUISSE') ? 'CH' : 'FR';
+  } catch (_) {
+    return 'FR';
+  }
+}
+
+router.get('/plans', async (req, res) => {
   try {
     await billingService.ensureBillingFoundation();
+    const marche = await marcheDepuisRequete(req);
+    const plans = billingService.getPlans(marche);
     return res.json({
       success: true,
+      market: marche,
       billing_mode: stripeService.getBillingMode(),
       trial_days: billingService.TRIAL_DAYS,
-      fiscal_label: billingService.FISCAL_LABEL,
+      fiscal_label: plans[0]?.fiscal_label || billingService.FISCAL_LABEL,
       stripe_configuration: stripeService.getConfigurationStatus(),
-      plans: billingService.getPlans(),
+      plans,
     });
   } catch (_err) {
     return res.status(500).json({ success: false, error: 'plans_unavailable' });

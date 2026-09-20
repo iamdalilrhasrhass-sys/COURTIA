@@ -52,9 +52,13 @@ export default function ConversionGravityFunnel({
   }, [])
 
   const barW = Math.floor((width - 40) / stages.length) - 8
-  const totalConversion = stages.length >= 2
-    ? Math.round((stages[stages.length - 1].count / stages[0].count) * 100)
-    : 0
+  // Un taux ne se calcule que s'il y a de quoi le calculer : sans entrée dans
+  // le tunnel (premier palier à 0), l'écran affichait « NaN % ». On n'affiche
+  // alors aucune valeur (« — ») plutôt qu'un nombre faux.
+  const entreeTunnel = stages.length > 0 ? Number(stages[0].count) || 0 : 0
+  const totalConversion = stages.length >= 2 && entreeTunnel > 0
+    ? Math.round((stages[stages.length - 1].count / entreeTunnel) * 100)
+    : null
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
@@ -62,7 +66,7 @@ export default function ConversionGravityFunnel({
         <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Pipeline de conversion</p>
         <div className="text-right">
           <p className="text-xs text-slate-400">Conversion globale</p>
-          <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">{totalConversion}%</p>
+          <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">{totalConversion === null ? '—' : `${totalConversion}%`}</p>
         </div>
       </div>
 

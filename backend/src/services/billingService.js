@@ -218,25 +218,44 @@ function normalizePlanCode(code) {
   return ['starter', 'pro', 'cabinet'].includes(v) ? v : null;
 }
 
-function getPlans() {
-  const all = planService.getAllPlans();
-  return all.map((p) => ({
-    display_price_ht: p.price ? `${Number(p.price).toFixed(0)} € HT / mois` : 'Sur devis',
-    display_price_ttc:
-      p.price
-        ? `${(Number(p.price) * 1.2).toFixed(2).replace('.', ',')} € TTC / mois avec TVA 20 %`
-        : null,
-    code: p.id,
-    name: p.name,
-    price: p.price,
-    currency: p.currency,
-    interval: p.interval,
-    highlighted: p.highlighted,
-    trial_days: p.id === 'cabinet' ? 0 : TRIAL_DAYS,
-    has_checkout: !!p.has_stripe_price,
-    fiscal_label: FISCAL_LABEL,
-    features: p.features,
-  }));
+/**
+ * Grille tarifaire servie à l'écran, selon le MARCHÉ du cabinet.
+ *
+ * Avant ce correctif, la grille était toujours en euros avec « TVA 20 % » : un
+ * cabinet suisse recevait une taxe française en clair à l'écran, y compris sur
+ * le paywall de fin d'essai (constat CH-006). La devise, le montant et la
+ * mention fiscale viennent maintenant de la CONFIGURATION (planService), pas
+ * d'un calcul recopié ici.
+ */
+function getPlans(marche = 'FR') {
+  const estSuisse = String(marche).toUpperCase() === 'CH';
+  const fiscal = planService.FISCALITE?.[estSuisse ? 'CH' : 'FR'] || { rate: null, label: FISCAL_LABEL };
+  const all = planService.getAllPlans(estSuisse ? 'CH' : 'FR');
+  return all.map((p) => {
+    const devise = p.currency || (estSuisse ? 'CHF' : 'EUR');
+    // Symbole affiché : le franc suisse s'écrit « CHF », l'euro garde son signe.
+    const symbole = devise === 'CHF' ? 'CHF' : '€';
+    const montant = p.price ? Number(p.price).toFixed(0) : null;
+    return {
+      display_price_ht: montant ? `${montant} ${symbole} HT / mois` : 'Sur devis',
+      // Le total TTC n'est affiché que si un taux est réellement configuré : on
+      // ne fabrique pas une fiscalité à la place du comptable.
+      display_price_ttc:
+        montant && fiscal.rate
+          ? `${(Number(p.price) * (1 + fiscal.rate)).toFixed(2).replace('.', ',')} ${symbole} TTC / mois`
+          : null,
+      code: p.id,
+      name: p.name,
+      price: p.price,
+      currency: devise,
+      interval: p.interval,
+      highlighted: p.highlighted,
+      trial_days: p.id === 'cabinet' || p.id === 'cabinet_ch' ? 0 : TRIAL_DAYS,
+      has_checkout: !!p.has_stripe_price,
+      fiscal_label: fiscal.label,
+      features: p.features,
+    };
+  });
 }
 
 async function getOrCreateOrganization(userId) {
@@ -456,10 +475,10 @@ async function getBillingStatus(userId) {
 module.exports = {
   TRIAL_DAYS,
   FISCAL_LABEL,
+  getPlans,
   safeUserId,
   ensureBillingFoundation,
   normalizePlanCode,
-  getPlans,
   getOrCreateOrganization,
   upsertOrganizationProfile,
   getPlanId,

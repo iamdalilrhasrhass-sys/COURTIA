@@ -62,16 +62,76 @@ function getOrias(cabinet = {}, courtier = {}) {
   return pick(cabinet.orias_number, cabinet.orias, courtier.orias_number, courtier.orias, courtier.iobsp_orias_number)
 }
 
-function validateDdaReadiness({ cabinet = {}, courtier = {} } = {}) {
+/**
+ * Marché du cabinet : 'CH' ou 'FR'.
+ *
+ * Le produit sert DEUX marchés. Un cabinet suisse est identifié par sa
+ * domiciliation (pays/ville/code postal), sa devise ou son registre (FINMA) —
+ * jamais par un numéro ORIAS, qui est un registre FRANÇAIS. Cette fonction est
+ * la seule à décider du référentiel utilisé par la suite du module.
+ */
+function getMarche(cabinet = {}, courtier = {}) {
+  const pays = String(pick(cabinet.pays, courtier.pays, cabinet.country, courtier.country)).trim().toUpperCase()
+  if (pays === 'CH' || pays === 'CHE' || pays === 'SUISSE' || pays === 'SWITZERLAND') return 'CH'
+  const registre = String(pick(cabinet.registre_type, courtier.registre_type)).trim().toUpperCase()
+  if (registre.includes('FINMA')) return 'CH'
+  const devise = String(pick(cabinet.devise, cabinet.currency, courtier.devise)).trim().toUpperCase()
+  if (devise === 'CHF') return 'CH'
+  return 'FR'
+}
+
+/**
+ * Identifiant réglementaire réellement disponible, selon le marché.
+ * CH : numéro d'enregistrement FINMA ou IDE/UID (CHE-…).
+ * FR : numéro ORIAS.
+ * Aucune valeur n'est inventée : ce qui n'est pas renseigné reste vide.
+ */
+function getIdentifiantReglementaire(cabinet = {}, courtier = {}) {
+  const marche = getMarche(cabinet, courtier)
+  if (marche === 'CH') {
+    const registreNumero = pick(cabinet.registre_numero, courtier.registre_numero)
+    const uid = pick(cabinet.uid, courtier.uid)
+    const registreType = pick(cabinet.registre_type, courtier.registre_type, registreNumero ? 'FINMA' : '')
+    if (registreNumero) {
+      return { marche, label: `N° ${registreType || 'registre'}`, valeur: registreNumero,
+               registre_type: registreType || 'FINMA', registre_numero: registreNumero, uid,
+               autorite: 'FINMA (Autorité fédérale de surveillance des marchés financiers)' }
+    }
+    if (uid) {
+      return { marche, label: 'IDE (UID)', valeur: uid, registre_type: registreType || null,
+               registre_numero: null, uid,
+               autorite: 'FINMA (Autorité fédérale de surveillance des marchés financiers)' }
+    }
+    return { marche, label: null, valeur: '', registre_type: null, registre_numero: null, uid: '',
+             autorite: 'FINMA (Autorité fédérale de surveillance des marchés financiers)' }
+  }
   const orias = getOrias(cabinet, courtier)
-  if (!orias) {
+  return { marche, label: 'ORIAS', valeur: orias || '', registre_type: 'ORIAS',
+           registre_numero: orias || null, uid: '',
+           autorite: pick(cabinet.tutelle_authority, 'ACPR (Autorité de Contrôle Prudentiel et de Résolution)') }
+}
+
+/**
+ * Un document client n'est généré que si le cabinet peut être identifié selon
+ * SON marché : numéro FINMA ou IDE pour un cabinet suisse, ORIAS pour un cabinet
+ * français. Exiger un ORIAS à un cabinet suisse bloquait toute génération de
+ * document — c'était le défaut mesuré en production (`orias_required`).
+ */
+function validateDdaReadiness({ cabinet = {}, courtier = {} } = {}) {
+  const ident = getIdentifiantReglementaire(cabinet, courtier)
+  if (!ident.valeur) {
+    const message = ident.marche === 'CH'
+      ? "Renseignez le numéro d'enregistrement FINMA ou l'IDE (UID) du cabinet dans Paramètres > Profil avant de générer un document."
+      : 'Renseignez le numéro ORIAS du cabinet dans Paramètres > Conformité avant de générer un document DDA.'
     return {
       ok: false,
-      error: 'orias_required',
-      message: 'Renseignez le numéro ORIAS du cabinet dans Paramètres > Conformité avant de générer un document DDA.',
+      error: ident.marche === 'CH' ? 'identifiant_reglementaire_requis' : 'orias_required',
+      message,
+      marche: ident.marche,
     }
   }
-  return { ok: true, orias }
+  return { ok: true, orias: ident.marche === 'FR' ? ident.valeur : undefined, identifiant: ident.valeur,
+           marche: ident.marche, label: ident.label }
 }
 
 function buildDdaVariables({ type, client = {}, courtier = {}, cabinet = {}, contract = {}, overrides = {} } = {}) {
@@ -79,6 +139,7 @@ function buildDdaVariables({ type, client = {}, courtier = {}, cabinet = {}, con
   if (!definition) throw new Error('unsupported_document_type')
 
   const generatedAt = new Date()
+  const identiteReglementaire = getIdentifiantReglementaire(cabinet, courtier)
   return {
     document: {
       type: definition.type,
@@ -89,13 +150,26 @@ function buildDdaVariables({ type, client = {}, courtier = {}, cabinet = {}, con
     },
     cabinet: {
       name: pick(cabinet.name, courtier.cabinet, 'Cabinet COURTIA'),
-      orias: getOrias(cabinet, courtier),
+      // `orias` est conservé pour les documents FRANÇAIS ; il reste vide pour un
+      // cabinet suisse (aucun numéro ORIAS ne doit apparaître sur son document).
+      orias: getIdentifiantReglementaire(cabinet, courtier).marche === 'FR' ? getOrias(cabinet, courtier) : '',
+      marche: identiteReglementaire.marche,
+      registry_label: identiteReglementaire.label,
+      registry_number: identiteReglementaire.valeur,
+      registre_type: identiteReglementaire.registre_type,
+      registre_numero: identiteReglementaire.registre_numero,
+      uid: identiteReglementaire.uid,
+      pays: pick(cabinet.pays, courtier.pays),
+      ville: pick(cabinet.city, courtier.ville),
+      devise: identiteReglementaire.marche === 'CH' ? 'CHF' : 'EUR',
       rc_pro_company: pick(cabinet.rc_pro_company, courtier.rc_pro_company),
       rc_pro_number: pick(cabinet.rc_pro_number, courtier.rc_pro_number),
       address: pick(cabinet.address_line1, courtier.adresse),
       city: pick(cabinet.city, courtier.ville),
       postal_code: pick(cabinet.postal_code, courtier.code_postal),
-      tutelle_authority: pick(cabinet.tutelle_authority, 'ACPR'),
+      // Autorité de contrôle : celle du marché réel du cabinet, jamais un
+      // « ACPR » posé par défaut sur un document suisse.
+      tutelle_authority: identiteReglementaire.autorite,
     },
     courtier: {
       name: getCourtierDisplayName(courtier),
@@ -141,7 +215,9 @@ function renderDdaPlainText(type, variables) {
     '',
     `Date de génération : ${v.document?.generated_date_fr || new Date().toLocaleDateString('fr-FR')}`,
     `Cabinet : ${v.cabinet?.name || 'Cabinet COURTIA'}`,
-    `ORIAS : ${v.cabinet?.orias || 'Non renseigné'}`,
+    v.cabinet?.registry_label
+      ? `${v.cabinet.registry_label} : ${v.cabinet.registry_number}`
+      : (v.cabinet?.orias ? `ORIAS : ${v.cabinet.orias}` : 'Identifiant réglementaire : non renseigné'),
     `Courtier : ${v.courtier?.name || 'Courtier'}`,
     '',
     `Client : ${v.client?.name || 'Client'}`,
@@ -183,6 +259,8 @@ module.exports = {
   normalizeDocumentType,
   validateDdaReadiness,
   buildDdaVariables,
+  getMarche,
+  getIdentifiantReglementaire,
   renderDdaPlainText,
   getDdaFileName,
 }

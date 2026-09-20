@@ -49,24 +49,57 @@ function hashPdf(buffer) {
  */
 async function getBrokerProfile(brokerId) {
   const res = await pool.query(
-    `SELECT bps.*, u.email AS user_email, u.name AS user_name
+    `SELECT bps.*, u.email AS user_email, u.name AS user_name,
+            bp.cabinet AS cabinet_profil, bp.pays, bp.registre_type, bp.registre_numero, bp.uid,
+            bp.adresse AS adresse_profil, bp.ville AS ville_profil, bp.code_postal AS code_postal_profil,
+            bp.telephone AS telephone_profil
      FROM broker_profile_settings bps
      RIGHT JOIN users u ON u.id = bps.broker_id
+     LEFT JOIN broker_profiles bp ON bp.user_id = u.id
      WHERE u.id = $1`,
     [brokerId]
   )
-  
+
   if (res.rows.length === 0) {
     return {
       company_name: 'Cabinet à configurer',
       orias_number: null,
       remuneration_type: 'commissions',
-      supervisor_name: 'ACPR',
-      supervisor_address: '4 place de Budapest CS 92459 75436 Paris cedex 09'
+      // Aucune autorité ni adresse inventée : un document client ne doit jamais
+      // porter l'ACPR et une adresse parisienne par défaut (défaut mesuré sur un
+      // cabinet suisse). Le template choisit selon le marché réel du cabinet.
+      supervisor_name: null,
+      supervisor_address: null,
+      market: 'FR',
     }
   }
-  
-  return res.rows[0]
+
+  const row = res.rows[0]
+  return { ...row, ...resoudreMarche(row) }
+}
+
+/**
+ * Marché du cabinet + identité réglementaire réellement disponible.
+ * CH → registre FINMA / IDE ; FR → ORIAS. Complète le profil sans rien inventer.
+ */
+function resoudreMarche(row = {}) {
+  const pays = String(row.pays || row.country || '').trim().toUpperCase()
+  const registre = String(row.registre_type || '').trim().toUpperCase()
+  const marche = (pays === 'CH' || pays === 'CHE' || pays === 'SUISSE' || registre.includes('FINMA')) ? 'CH' : 'FR'
+  const registreNumero = row.registre_numero || null
+  const uid = row.uid || null
+  return {
+    market: marche,
+    country: row.pays || row.country || (marche === 'CH' ? 'Suisse' : 'France'),
+    registry_label: marche === 'CH'
+      ? (registreNumero ? `N° ${row.registre_type || 'FINMA'}` : (uid ? 'IDE (UID)' : null))
+      : 'ORIAS',
+    registry_number: marche === 'CH' ? (registreNumero || uid || null) : (row.orias_number || null),
+    supervisor_name: row.supervisor_name
+      || (marche === 'CH' ? 'FINMA (Autorité fédérale de surveillance des marchés financiers)' : null),
+    supervisor_address: row.supervisor_address
+      || (marche === 'CH' ? 'Laupenstrasse 27, 3003 Berne' : null),
+  }
 }
 
 /**

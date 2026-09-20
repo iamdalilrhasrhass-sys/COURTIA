@@ -117,6 +117,7 @@ async function getCourtierContext(userId) {
     const result = await pool.query(
       `SELECT u.id, u.email, u.first_name, u.last_name,
               bp.cabinet, bp.orias, bp.telephone, bp.adresse, bp.ville, bp.code_postal,
+              bp.pays, bp.langue, bp.registre_type, bp.registre_numero, bp.uid,
               c.id AS cabinet_id, c.name AS cabinet_name, c.orias_number,
               c.ias_categories, c.rc_pro_company, c.rc_pro_number, c.rc_pro_amount_cents,
               c.address_line1, c.postal_code, c.city, c.tutelle_authority, c.dpa_signed_at
@@ -135,6 +136,13 @@ async function getCourtierContext(userId) {
       cabinet: {
         id: row.cabinet_id || null,
         name: row.cabinet_name || row.cabinet || 'Cabinet COURTIA',
+        // Identité du cabinet : le marché (CH/FR) et le registre réel décident
+        // du document produit (voir services/documentDdaService.getMarche).
+        pays: row.pays || null,
+        langue: row.langue || null,
+        registre_type: row.registre_type || null,
+        registre_numero: row.registre_numero || null,
+        uid: row.uid || null,
         orias_number: row.orias_number || row.orias || '',
         ias_categories: row.ias_categories || [],
         rc_pro_company: row.rc_pro_company || '',
@@ -143,7 +151,7 @@ async function getCourtierContext(userId) {
         address_line1: row.address_line1 || row.adresse || '',
         postal_code: row.postal_code || row.code_postal || '',
         city: row.city || row.ville || '',
-        tutelle_authority: row.tutelle_authority || 'ACPR',
+        tutelle_authority: row.tutelle_authority || null,
         dpa_signed_at: row.dpa_signed_at || null,
       },
     }

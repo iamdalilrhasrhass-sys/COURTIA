@@ -218,6 +218,62 @@ const PLANS = {
   },
 };
 
+/**
+ * GRILLE SUISSE — source unique des prix pour un cabinet en Suisse.
+ *
+ * Un cabinet suisse est facturé en francs suisses, sur sa propre grille : lui
+ * présenter « 106,80 € TTC / mois avec TVA 20 % » était une incohérence de
+ * marché (constat CH-006 de l'audit du 20/09/2026). Les montants proviennent
+ * d'ici et de nulle part ailleurs ; aucune recopie dans un composant.
+ *
+ * La qualification fiscale exacte (assujettissement, taux applicable) dépend de
+ * la structure de facturation de COURTIA : elle est donc PORTÉE PAR LA
+ * CONFIGURATION (`tax_label` / `tax_rate`) et non calculée à la place du
+ * comptable. Sans taux configuré, on affiche un prix hors taxes sans total
+ * inventé.
+ */
+const PLANS_CH = {
+  independant: {
+    name: 'Indépendant',
+    price: 199,
+    currency: 'CHF',
+    interval: 'month',
+    description: 'Pour le courtier indépendant : CRM, pipeline, documents et assistant ARK.',
+    highlighted: false,
+    features: { ...PLANS.pro.features },
+    limits: { ...PLANS.pro.limits },
+    stripe_price_id: null,
+  },
+  cabinet_ch: {
+    name: 'Cabinet',
+    price: 349,
+    currency: 'CHF',
+    interval: 'month',
+    description: 'Pour les cabinets de plusieurs collaborateurs : équipe, conformité et suivi complet.',
+    highlighted: true,
+    features: { ...PLANS.cabinet.features },
+    limits: { ...PLANS.cabinet.limits },
+    stripe_price_id: null,
+  },
+  cabinet_ch_sur_devis: {
+    name: 'Sur devis',
+    price: null,
+    currency: 'CHF',
+    interval: 'month',
+    description: 'Cabinets multi-sites et besoins spécifiques : devis établi avec vous.',
+    highlighted: false,
+    features: { ...PLANS.cabinet.features },
+    limits: { ...PLANS.cabinet.limits },
+    stripe_price_id: null,
+  },
+};
+
+/** Taxe affichée par marché. `rate` null = pas de taux calculé automatiquement. */
+const FISCALITE = {
+  FR: { rate: 0.2, label: 'Prix indiqués hors taxes. TVA 20 % applicable.' },
+  CH: { rate: 0.081, label: 'Prix hors taxes. TVA suisse (8,1 %) en sus, au taux en vigueur.' },
+};
+
 const DEFAULT_PLAN = 'starter';
 const TRIAL_FEATURES = PLANS.pro.features; // Essai = features Pro
 // Plafonds de l'essai = ceux du plan dont les FONCTIONS sont réellement ouvertes
@@ -240,8 +296,11 @@ function getPlan(name) {
 /**
  * Retourne tous les plans (sans secrets Stripe pour les routes publiques)
  */
-function getAllPlans() {
-  return Object.entries(PLANS).filter(([key]) => key !== 'premium').map(([key, plan]) => ({
+function getAllPlans(marche = 'FR') {
+  // Un cabinet suisse reçoit la grille CHF ; tout le reste garde la grille
+  // historique en euros. Aucune page ne doit coder ses prix en dur.
+  const source = String(marche).toUpperCase() === 'CH' ? PLANS_CH : PLANS
+  return Object.entries(source).filter(([key]) => key !== 'premium').map(([key, plan]) => ({
     id: key,
     name: plan.name,
     price: plan.price,
@@ -520,6 +579,8 @@ function getMinPlanForFeature(feature) {
 
 module.exports = {
   PLANS,
+  PLANS_CH,
+  FISCALITE,
   TRIAL_FEATURES,
   DEFAULT_PLAN,
   getPlan,

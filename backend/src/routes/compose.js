@@ -359,6 +359,22 @@ router.get('/broker-profile', async (req, res) => {
 router.put('/broker-profile', async (req, res) => {
   try {
     const brokerId = req.user.id || req.user.userId
+    // Marché du cabinet : détermine le pays et l'autorité de contrôle portés par
+    // les documents. Aucun de ces éléments n'est inventé s'il est inconnu.
+    let paysCabinet = null
+    try {
+      const { rows: profilRows } = await pool.query(
+        'SELECT pays, registre_type FROM broker_profiles WHERE user_id = $1 LIMIT 1', [brokerId]
+      )
+      paysCabinet = profilRows[0]?.pays || null
+      const registre = String(profilRows[0]?.registre_type || '').toUpperCase()
+      const suisse = String(paysCabinet || '').toUpperCase() === 'CH' || registre.includes('FINMA')
+      var autoriteParDefaut = suisse
+        ? { nom: 'FINMA (Autorité fédérale de surveillance des marchés financiers)', adresse: 'Laupenstrasse 27, 3003 Berne' }
+        : { nom: 'ACPR (Autorité de Contrôle Prudentiel et de Résolution)', adresse: '4 place de Budapest CS 92459 75436 Paris cedex 09' }
+    } catch (_) {
+      var autoriteParDefaut = { nom: null, adresse: null }
+    }
     const {
       orias_number,
       company_name,
@@ -419,9 +435,14 @@ router.put('/broker-profile', async (req, res) => {
          updated_at = NOW()
        RETURNING *`,
       [
-        brokerId, orias_number, company_name, siret, legal_form, address, postal_code, city, country || 'France',
+        brokerId, orias_number, company_name, siret, legal_form, address, postal_code,
+        // Le pays n'est plus « France » par défaut : un cabinet suisse ne doit
+        // pas hériter d'un pays français sur ses documents.
+        city, paysCabinet || null,
         phone, email, website, remuneration_type, remuneration_details, conflicts_disclosure, complaints_handling,
-        supervisor_name || 'ACPR', supervisor_address || '4 place de Budapest CS 92459 75436 Paris cedex 09',
+        // Autorité de contrôle : celle du marché du cabinet (FINMA en Suisse,
+        // ACPR en France), jamais une autorité étrangère posée par défaut.
+        supervisor_name || autoriteParDefaut.nom, supervisor_address || autoriteParDefaut.adresse,
         rcp_insurer, rcp_policy_number, rcp_coverage_amount, financial_guarantee_insurer, financial_guarantee_amount,
         JSON.stringify(custom_branding || {})
       ]

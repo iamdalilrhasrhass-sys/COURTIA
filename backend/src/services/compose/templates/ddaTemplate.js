@@ -133,34 +133,62 @@ function drawSection1Identity(doc, broker) {
 
 function drawSection2Registration(doc, broker) {
   const y = 280
-  
+  // Le référentiel d'identification suit le MARCHÉ RÉEL du cabinet : un cabinet
+  // suisse est identifié par son registre FINMA ou son IDE (UID). L'ancienne
+  // version imprimait « IMMATRICULATION ORIAS », « www.orias.fr » et un numéro
+  // de téléphone français sur le document d'un cabinet suisse.
+  const suisse = String(broker.market || '').toUpperCase() === 'CH'
+
   doc.fillColor(COLORS.primary).fontSize(14)
-     .text('2. IMMATRICULATION ORIAS', 50, y)
-  
+     .text(suisse ? '2. IDENTIFICATION DU COURTIER' : '2. IMMATRICULATION ORIAS', 50, y)
+
   doc.moveTo(50, y + 18).lineTo(545, y + 18).stroke(COLORS.lightBg)
-  
-  const oriasNumber = broker.orias_number || '[N° ORIAS à renseigner]'
-  
+
   doc.fillColor(COLORS.text).fontSize(10)
   let itemY = y + 30
-  
-  doc.font('Helvetica-Bold').text('N° ORIAS :', 50, itemY)
-  doc.font('Helvetica').text(oriasNumber, 160, itemY)
-  itemY += 16
-  
-  doc.font('Helvetica-Bold').text('Catégorie :', 50, itemY)
-  doc.font('Helvetica').text('Courtier en assurances (COA)', 160, itemY)
-  itemY += 16
-  
-  doc.font('Helvetica-Bold').text('Vérification :', 50, itemY)
-  doc.font('Helvetica').text('www.orias.fr', 160, itemY)
-  itemY += 20
-  
-  // Encadré information
-  doc.rect(50, itemY, 495, 45).fill(COLORS.lightBg)
-  doc.fillColor(COLORS.dark).fontSize(8)
-     .text('L\'ORIAS est l\'organisme pour le registre des intermédiaires en assurance, banque et finance.', 60, itemY + 10, { width: 475 })
-     .text('Vous pouvez vérifier l\'immatriculation de votre intermédiaire sur www.orias.fr ou au 09 69 32 59 73.', 60, itemY + 25, { width: 475 })
+
+  if (suisse) {
+    const registreLabel = broker.registry_label || (broker.registre_numero ? `N° ${broker.registre_type || 'FINMA'}` : null)
+    const registreValeur = broker.registry_number || broker.registre_numero || broker.uid || null
+    doc.font('Helvetica-Bold').text('Registre :', 50, itemY)
+    doc.font('Helvetica').text(registreLabel || 'à renseigner', 160, itemY)
+    itemY += 16
+    doc.font('Helvetica-Bold').text('N° :', 50, itemY)
+    doc.font('Helvetica').text(registreValeur || 'à renseigner', 160, itemY)
+    itemY += 16
+    if (broker.uid && broker.uid !== registreValeur) {
+      doc.font('Helvetica-Bold').text('IDE (UID) :', 50, itemY)
+      doc.font('Helvetica').text(broker.uid, 160, itemY)
+      itemY += 16
+    }
+    doc.font('Helvetica-Bold').text('Pays :', 50, itemY)
+    doc.font('Helvetica').text(broker.country || 'Suisse', 160, itemY)
+    itemY += 20
+
+    doc.rect(50, itemY, 495, 32).fill(COLORS.lightBg)
+    doc.fillColor(COLORS.dark).fontSize(8)
+       .text('Intermédiaire d\'assurance enregistré en Suisse. L\'identification complète du cabinet est '
+             + 'reprise ci-dessus telle qu\'elle est déclarée par le courtier.', 60, itemY + 10, { width: 475 })
+  } else {
+    const oriasNumber = broker.orias_number || '[N° ORIAS à renseigner]'
+    doc.font('Helvetica-Bold').text('N° ORIAS :', 50, itemY)
+    doc.font('Helvetica').text(oriasNumber, 160, itemY)
+    itemY += 16
+
+    doc.font('Helvetica-Bold').text('Catégorie :', 50, itemY)
+    doc.font('Helvetica').text('Courtier en assurances (COA)', 160, itemY)
+    itemY += 16
+
+    doc.font('Helvetica-Bold').text('Vérification :', 50, itemY)
+    doc.font('Helvetica').text('www.orias.fr', 160, itemY)
+    itemY += 20
+
+    // Encadré information
+    doc.rect(50, itemY, 495, 45).fill(COLORS.lightBg)
+    doc.fillColor(COLORS.dark).fontSize(8)
+       .text('L\'ORIAS est l\'organisme pour le registre des intermédiaires en assurance, banque et finance.', 60, itemY + 10, { width: 475 })
+       .text('Vous pouvez vérifier l\'immatriculation de votre intermédiaire sur www.orias.fr ou au 09 69 32 59 73.', 60, itemY + 25, { width: 475 })
+  }
 }
 
 function drawSection3Remuneration(doc, broker) {
@@ -238,16 +266,25 @@ function drawSection5Complaints(doc, broker) {
   doc.fillColor(COLORS.text).fontSize(10)
      .text(complaintsHandling, 50, y + 30, { width: 495, align: 'justify' })
   
-  // Coordonnées médiateur
+  // Coordonnées du médiateur : celui du marché du cabinet.
+  const suisse = String(broker.market || '').toUpperCase() === 'CH'
   let itemY = y + 80
   doc.rect(50, itemY, 495, 60).fill(COLORS.lightBg)
-  
+
   doc.fillColor(COLORS.dark).fontSize(9)
-     .text('MÉDIATEUR DE L\'ASSURANCE', 60, itemY + 10)
-  doc.fillColor(COLORS.text).fontSize(8)
-     .text('La Médiation de l\'Assurance', 60, itemY + 25)
-     .text('TSA 50110 - 75441 Paris Cedex 09', 60, itemY + 37)
-     .text('www.mediation-assurance.org', 60, itemY + 49)
+  if (suisse) {
+    doc.text('MÉDIATION', 60, itemY + 10)
+    doc.fillColor(COLORS.text).fontSize(8)
+       .text('Les coordonnées de l\'organe de médiation compétent doivent être complétées par le cabinet '
+             + 'avant remise au client.', 60, itemY + 25, { width: 475 })
+       .text('Elles ne sont pas préremplies ici : aucune adresse de médiation étrangère n\'est reportée.', 60, itemY + 37, { width: 475 })
+  } else {
+    doc.text('MÉDIATEUR DE L\'ASSURANCE', 60, itemY + 10)
+    doc.fillColor(COLORS.text).fontSize(8)
+       .text('La Médiation de l\'Assurance', 60, itemY + 25)
+       .text('TSA 50110 - 75441 Paris Cedex 09', 60, itemY + 37)
+       .text('www.mediation-assurance.org', 60, itemY + 49)
+  }
 }
 
 function drawSection6Supervision(doc, broker) {
