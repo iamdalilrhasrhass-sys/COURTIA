@@ -45,6 +45,8 @@ const Rapports = lazy(() => import('./pages/Rapports'))
 const Objectifs = lazy(() => import('./pages/Objectifs'))
 const Devis = lazy(() => import('./pages/Devis'))
 const DevisWizard = lazy(() => import('./pages/DevisWizard'))
+const DevisDetail = lazy(() => import('./pages/DevisDetail'))
+const InviteAccept = lazy(() => import('./pages/InviteAccept'))
 const Documents = lazy(() => import('./pages/Documents'))
 const Relances = lazy(() => import('./pages/Relances'))
 const Opportunites = lazy(() => import('./pages/Opportunites'))
@@ -186,6 +188,10 @@ const ROUTES_PRIVEES = [
   <Route key="objectifs" path="/objectifs"     element={<Objectifs />} />,
   <Route key="devis" path="/devis"         element={<Devis />} />,
   <Route key="devis-new" path="/devis/new"     element={<DevisWizard />} />,
+  // Après l'envoi, l'assistant renvoie vers `/devis/<id>` : sans cette route le
+  // courtier terminait sur une page « introuvable » juste après avoir envoyé sa
+  // proposition (flux cœur : créer → envoyer → suivre).
+  <Route key="devis-id" path="/devis/:id"      element={<DevisDetail />} />,
   <Route key="documents" path="/documents"     element={<Documents />} />,
   <Route key="relances" path="/relances"      element={<Relances />} />,
   <Route key="opportunites" path="/opportunites"  element={<Opportunites />} />,
@@ -259,6 +265,10 @@ export default function App() {
         <Route path="/billing/cancel" element={<PaiementAnnule />} />
         <Route path="/forgot-password" element={<NoIndex title="Mot de passe oublié — COURTIA"><ForgotPasswordPage /></NoIndex>} />
         <Route path="/reset-password" element={<NoIndex title="Réinitialiser le mot de passe — COURTIA"><ResetPasswordPage /></NoIndex>} />
+        {/* Le lien d'invitation d'un collaborateur (page Équipe) pointait vers
+            /invite/<jeton> alors qu'aucune route n'existait : la première
+            personne invitée tombait sur un 404. */}
+        <Route path="/invite/:token" element={<NoIndex title="Invitation — COURTIA"><InviteAccept /></NoIndex>} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
         <Route path="/design-system" element={<NoIndex title="Design system — COURTIA"><DesignSystem /></NoIndex>} />
