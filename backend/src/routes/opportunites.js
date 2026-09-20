@@ -17,6 +17,13 @@ const router = express.Router()
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
 const logger = require('../lib/logger')
+const {
+  resultatIaVide,
+  estErreurIa,
+  repondreIaNonConfiguree,
+  repondreIaIndisponible,
+} = require('../services/iaErreurs')
+const { potentielDepuisDonneesReelles } = require('../lib/donneesReelles')
 
 // =============================================================================
 // SCHEMAS JSON pour les réponses ARK
@@ -36,14 +43,14 @@ const SCHEMA_DETECT = {
           product_current: { type: 'string' },
           product_target: { type: 'string' },
           score: { type: 'number', minimum: 0, maximum: 100 },
-          estimated_revenue: { type: 'number' },
+          // AUCUN montant demandé au modèle : un « revenu potentiel » estimé par
+          // un LLM est une invention, pas une donnée (IA-011).
           reasoning: { type: 'string' },
           suggested_action: { type: 'string' }
         },
         required: ['client_id', 'type', 'product_target', 'score', 'reasoning']
       }
     },
-    potentiel_total: { type: 'number' },
     analyse_portefeuille: { type: 'string' },
     tendances: { type: 'array', items: { type: 'string' } }
   },
@@ -109,7 +116,7 @@ router.get('/', async (req, res) => {
       params.push(parseInt(score_min, 10))
     }
 
-    sql += ` ORDER BY o.score DESC, o.estimated_revenue DESC, o.detected_at DESC
+    sql += ` ORDER BY o.score DESC NULLS LAST, o.estimated_revenue DESC NULLS LAST, o.detected_at DESC
     LIMIT $${paramIndex++} OFFSET $${paramIndex++}`
     params.push(parseInt(limit, 10), parseInt(offset, 10))
 
@@ -126,7 +133,12 @@ router.get('/', async (req, res) => {
         product_current: row.product_current,
         product_target: row.product_target,
         score: row.score,
-        estimated_revenue: row.estimated_revenue ? parseFloat(row.estimated_revenue) : 0,
+        // Aucun montant : les 'estimated_revenue' historiques ont été produits
+        // par un modèle de langage (invention) et aucun calcul sur données
+        // réelles ne les remplace encore. On renvoie null — l'écran affiche
+        // « — » — plutôt qu'un revenu présenté comme réel.
+        estimated_revenue: null,
+        estimated_revenue_disponible: false,
         status: row.status,
         reasoning: row.reasoning,
         suggested_action: row.suggested_action,
@@ -198,21 +210,25 @@ router.get('/stats', async (req, res) => {
         high_score: parseInt(stats.high_score_count, 10)
       },
       financials: {
-        potentiel_detecte: parseFloat(stats.potentiel_detecte) || 0,
-        revenus_convertis: parseFloat(stats.revenus_convertis) || 0,
+        // Un « potentiel » monétaire ne peut pas être sommé tant qu'il provient
+        // d'estimations de modèle : on renvoie null (affiché « — »), jamais un
+        // total inventé présenté comme un revenu.
+        potentiel_detecte: null,
+        revenus_convertis: null,
+        estimation_monetaire: 'non_disponible',
         score_moyen: Math.round(parseFloat(stats.score_moyen) || 0)
       },
       taux_conversion: tauxConversion,
       by_type: byTypeResult.rows.map(r => ({
         type: r.type,
         count: parseInt(r.count, 10),
-        potentiel: parseFloat(r.potentiel) || 0,
+        potentiel: null,
         score_moyen: r.score_moyen
       })),
       by_product: byProductResult.rows.map(r => ({
         product: r.product_target,
         count: parseInt(r.count, 10),
-        potentiel: parseFloat(r.potentiel) || 0
+        potentiel: null
       }))
     })
   } catch (err) {
@@ -269,7 +285,9 @@ router.get('/:id', async (req, res) => {
         product_current: row.product_current,
         product_target: row.product_target,
         score: row.score,
-        estimated_revenue: parseFloat(row.estimated_revenue) || 0,
+        // Aucun montant inventé : voir GET /api/opportunites.
+        estimated_revenue: null,
+        estimated_revenue_disponible: false,
         status: row.status,
         reasoning: row.reasoning,
         suggested_action: row.suggested_action,
@@ -431,7 +449,8 @@ Tu dois analyser le portefeuille et détecter les opportunités commerciales:
 - Mono-produit: Client avec un seul contrat = fort potentiel multi-équipement
 
 Score chaque opportunité de 0 à 100 (confiance).
-Estime le revenu potentiel annuel en euros.
+N'ESTIME AUCUN MONTANT en euros : aucun revenu, aucune prime, aucune valeur
+potentielle. Ces chiffres seraient inventés et présentés comme réels.
 Suggère l'action concrète à mener.`,
       user: `Analyse ce portefeuille et détecte jusqu'à ${max_opportunites} opportunités:
 
@@ -458,6 +477,17 @@ Détecte les meilleures opportunités commerciales.`,
       userId: brokerId,
       route: 'opportunites-detect'
     })
+
+    // IA absente ou réponse vide : la route ne doit pas répondre `success: true`
+    // avec « 0 opportunité détectée », ce qui se lisait comme un portefeuille
+    // sans opportunité. Motif de ark.js : 503 configuration_required.
+    if (resultatIaVide(arkResponse) || !Array.isArray(arkResponse.structured?.opportunites)) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'opportunites-detect' },
+        "La détection d'opportunités par l'IA est indisponible : aucun moteur IA n'a répondu. Rien n'a été analysé."
+      )
+    }
 
     // Insérer les opportunités détectées
     const insertedOppos = []
@@ -498,11 +528,15 @@ Détecte les meilleures opportunités commerciales.`,
         opp.type,
         opp.product_current || null,
         opp.product_target,
-        opp.score || 50,
-        opp.estimated_revenue || 0,
+        Number.isFinite(Number(opp.score)) ? Number(opp.score) : null,
+        // Aucune estimation monétaire n'est acceptée d'un modèle de langage :
+        // le potentiel reste NULL tant qu'il n'est pas recalculable depuis des
+        // enregistrements réels (quotes / quote_results). L'écran affiche
+        // alors « — » au lieu d'un revenu inventé, et les KPI ne somment rien.
+        potentielDepuisDonneesReelles(null),
         opp.reasoning,
         opp.suggested_action || null,
-        { ark_detected: true, detected_version: new Date().toISOString() }
+        { ark_detected: true, detected_version: new Date().toISOString(), estimation_monetaire: 'non_disponible' }
       ])
 
       insertedOppos.push(insertRes.rows[0])
@@ -514,7 +548,10 @@ Détecte les meilleures opportunités commerciales.`,
       success: true,
       detected: insertedOppos.length,
       opportunites: insertedOppos,
-      potentiel_total: arkResponse.structured?.potentiel_total || insertedOppos.reduce((s, o) => s + parseFloat(o.estimated_revenue || 0), 0),
+      // Aucun « potentiel total » : il faudrait additionner des montants
+      // inventés. Tant qu'aucune donnée réelle ne l'alimente, on renvoie null.
+      potentiel_total: null,
+      estimation_monetaire: 'non_disponible',
       analyse: arkResponse.structured?.analyse_portefeuille || null,
       tendances: arkResponse.structured?.tendances || [],
       usage: arkResponse.usage,
@@ -522,6 +559,9 @@ Détecte les meilleures opportunités commerciales.`,
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/opportunites/detect error')
+    if (estErreurIa(err)) {
+      return repondreIaIndisponible(res, err, { route: 'opportunites-detect' })
+    }
     res.status(500).json({ error: 'Erreur ARK', details: err.message })
   }
 })
@@ -575,7 +615,7 @@ Type: ${opp.type}
 Produit actuel: ${opp.product_current || 'N/A'}
 Produit cible: ${opp.product_target}
 Score confiance: ${opp.score}%
-Potentiel: ${opp.estimated_revenue}€/an
+${opp.estimated_revenue ? `Potentiel: ${opp.estimated_revenue}€/an` : 'Potentiel monétaire: non calculé (ne pas en inventer)'}
 Analyse: ${opp.reasoning}
 Action suggérée: ${opp.suggested_action || 'Contacter'}
 
@@ -595,6 +635,16 @@ Génère un argumentaire complet avec objections anticipées.`,
       route: 'opportunites-ai-pitch'
     })
 
+    // IA absente ou argumentaire vide : ne pas enregistrer de pitch vide ni
+    // répondre `success: true` sans contenu.
+    if (resultatIaVide(arkResponse) || !arkResponse.structured?.accroche) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'opportunites-ai-pitch' },
+        "La génération d'argumentaire par l'IA est indisponible : aucun moteur IA n'a répondu."
+      )
+    }
+
     // Sauvegarder dans metadata
     await pool.query(`
       UPDATE opportunites 
@@ -610,13 +660,16 @@ Génère un argumentaire complet avec objections anticipées.`,
         client_name: clientName,
         product_target: opp.product_target,
         score: opp.score,
-        estimated_revenue: parseFloat(opp.estimated_revenue) || 0
+        estimated_revenue: null
       },
       usage: arkResponse.usage,
       model: arkResponse.model
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/opportunites/:id/ai-pitch error')
+    if (estErreurIa(err)) {
+      return repondreIaIndisponible(res, err, { route: 'opportunites-ai-pitch' })
+    }
     res.status(500).json({ error: 'Erreur ARK', details: err.message })
   }
 })

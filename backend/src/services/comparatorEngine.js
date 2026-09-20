@@ -1,19 +1,40 @@
 /**
- * Comparator Engine — Moteur de scoring déterministe 8 compagnies fictives.
- * Génère 8 devis comparatifs cohérents basés sur le profil client.
+ * Comparator Engine — MOTEUR DE SIMULATION TARIFAIRE.
  *
- * "ADN tarifaire" par compagnie : multiplicateurs par produit/profil.
+ * ⚠️ CE MOTEUR NE CONSULTE AUCUN ASSUREUR. Il produit huit offres SIMULÉES à
+ * partir de profils tarifaires internes (multiplicateurs par produit/profil),
+ * pour permettre au courtier de travailler un scénario avant d'avoir obtenu de
+ * vrais tarifs. Les « assureurs » ci-dessous ne sont pas des personnes du
+ * marché : ils sont volontairement nommés « Simulation A…H » et chaque offre
+ * porte `is_simulation: true`, `source: 'simulation'` et un `simulation_notice`
+ * en clair.
+ *
+ * CONSÉQUENCE : une offre produite ici ne peut JAMAIS devenir un PDF ou un
+ * e-mail client (voir routes/devis.js `wizard/finalize` et
+ * lib/donneesReelles.js). Les primes, notations et délais sont pseudo-aléatoires
+ * (déterministes) : ils ne reflètent aucun tarif réel, aucune notation réelle
+ * et aucun niveau de service réel d'un assureur.
+ *
+ * "ADN tarifaire" par profil simulé : multiplicateurs par produit/profil.
  */
 
-const COMPAGNIES = {
-  Aurora:  { dna: { age_jeune: 1.05, age_senior: 0.95, urbain: 1.00, rural: 1.00, sinistre: 1.20 }, brand: 'Acteur premium FR — réputation solide' },
-  Novalia: { dna: { age_jeune: 0.92, age_senior: 1.10, urbain: 0.95, rural: 1.05, sinistre: 1.15 }, brand: 'Spécialiste jeunes & profils tech' },
-  Helios:  { dna: { age_jeune: 1.10, age_senior: 0.88, urbain: 0.93, rural: 1.10, sinistre: 1.25 }, brand: 'Best price seniors / patrimoine' },
-  Serenis: { dna: { age_jeune: 1.00, age_senior: 1.00, urbain: 1.00, rural: 1.00, sinistre: 1.10 }, brand: 'Tarif équilibré, large couverture' },
-  Atlas:   { dna: { age_jeune: 0.98, age_senior: 1.02, urbain: 1.08, rural: 0.90, sinistre: 1.30 }, brand: 'Urbain & multi-équipement' },
-  Oria:    { dna: { age_jeune: 1.15, age_senior: 0.92, urbain: 0.92, rural: 1.12, sinistre: 1.10 }, brand: 'Régional rural, mutualiste' },
-  Nivalis: { dna: { age_jeune: 0.95, age_senior: 1.05, urbain: 0.98, rural: 1.02, sinistre: 1.18 }, brand: 'Innovant, digital-first' },
-  Solenys: { dna: { age_jeune: 1.02, age_senior: 0.98, urbain: 1.05, rural: 0.97, sinistre: 1.22 }, brand: 'Premium niche — services VIP' },
+/** Message en clair opposé à toute offre issue de ce moteur. */
+const SIMULATION_NOTICE =
+  'SIMULATION — aucun tarif réel : ces offres sont calculées par le moteur de simulation COURTIA, '
+  + 'elles ne proviennent d\'aucun assureur et ne peuvent pas être remises à un client.'
+
+/** Clé de provenance des offres simulées (opposée à 'manual' | 'imported' | 'api'). */
+const SOURCE_SIMULATION = 'simulation'
+
+const SIMULATEURS = {
+  'Simulation A': { code: 'SIM_A', dna: { age_jeune: 1.05, age_senior: 0.95, urbain: 1.00, rural: 1.00, sinistre: 1.20 }, brand: 'Profil simulé type « acteur premium » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation B': { code: 'SIM_B', dna: { age_jeune: 0.92, age_senior: 1.10, urbain: 0.95, rural: 1.05, sinistre: 1.15 }, brand: 'Profil simulé type « spécialiste jeunes » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation C': { code: 'SIM_C', dna: { age_jeune: 1.10, age_senior: 0.88, urbain: 0.93, rural: 1.10, sinistre: 1.25 }, brand: 'Profil simulé type « seniors / patrimoine » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation D': { code: 'SIM_D', dna: { age_jeune: 1.00, age_senior: 1.00, urbain: 1.00, rural: 1.00, sinistre: 1.10 }, brand: 'Profil simulé « tarif équilibré » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation E': { code: 'SIM_E', dna: { age_jeune: 0.98, age_senior: 1.02, urbain: 1.08, rural: 0.90, sinistre: 1.30 }, brand: 'Profil simulé « urbain multi-équipement » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation F': { code: 'SIM_F', dna: { age_jeune: 1.15, age_senior: 0.92, urbain: 0.92, rural: 1.12, sinistre: 1.10 }, brand: 'Profil simulé « rural mutualiste » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation G': { code: 'SIM_G', dna: { age_jeune: 0.95, age_senior: 1.05, urbain: 0.98, rural: 1.02, sinistre: 1.18 }, brand: 'Profil simulé « digital-first » — multiplicateurs internes, aucun assureur réel' },
+  'Simulation H': { code: 'SIM_H', dna: { age_jeune: 1.02, age_senior: 0.98, urbain: 1.05, rural: 0.97, sinistre: 1.22 }, brand: 'Profil simulé « niche premium » — multiplicateurs internes, aucun assureur réel' },
 }
 
 const BASE_PRIME = {
@@ -54,6 +75,16 @@ const GARANTIES_PRESETS = {
     confort: ['RC + Cyber 25k€', 'Protection juridique', 'Pertes exploitation'],
     premium: ['RC étendue', 'Cyber 100k€', 'Décennale incluse', 'Reconstruction image'],
   },
+}
+
+/** Marque une offre comme simulation, quel que soit son chemin de fabrication. */
+function marquerSimulation(offre) {
+  return {
+    ...offre,
+    is_simulation: true,
+    source: SOURCE_SIMULATION,
+    simulation_notice: SIMULATION_NOTICE,
+  }
 }
 
 function hash(s) {
@@ -107,37 +138,43 @@ function computeProviderQuote({ code, dna, produit, profile, level }) {
   const levelMult = level === 'premium' ? 1.45 : level === 'confort' ? 1.15 : 0.85
   prime *= levelMult
 
-  // Bruit déterministe pour différencier compagnies (±5%)
+  // Bruit déterministe pour différencier les profils simulés (±5%)
   const noise = ((hash(code + produit + JSON.stringify(profile)) % 100) - 50) / 1000
   prime *= (1 + noise)
 
   const primeAnnuelle = Math.round(prime)
-  return {
+  return marquerSimulation({
     provider: code,
-    brand_tagline: COMPAGNIES[code].brand,
+    provider_code: SIMULATEURS[code].code,
+    brand_tagline: SIMULATEURS[code].brand,
     produit,
     level,
     prime_annuelle_eur: primeAnnuelle,
     prime_mensuelle_eur: Math.round(primeAnnuelle / 12),
+    prime_source: SOURCE_SIMULATION,
     franchise_eur: franchiseFor(level),
     garanties: preset(produit, level),
     delai_carence_jours: produit === 'Santé' ? 30 : 0,
+    // Notation et délai : valeurs pseudo-aléatoires du simulateur. Elles ne
+    // mesurent ni la qualité ni la réactivité d'un assureur réel.
     notation: 4.0 + ((hash(code + 'note') % 9) / 10), // 4.0 - 4.9
+    notation_source: SOURCE_SIMULATION,
     delai_traitement_jours: 3 + (hash(code + 'delai') % 7),
-  }
+    delai_source: SOURCE_SIMULATION,
+  })
 }
 
 function computeAllQuotes(profile = {}, opts = {}) {
   const produit = opts.produit || profile.produit || 'Auto'
   const level = opts.level || 'confort'
-  const quotes = Object.entries(COMPAGNIES).map(([code, info]) =>
+  const quotes = Object.entries(SIMULATEURS).map(([code, info]) =>
     computeProviderQuote({ code, dna: info.dna, produit, profile, level })
   )
 
   // Ranking & badges
   quotes.sort((a, b) => a.prime_annuelle_eur - b.prime_annuelle_eur)
 
-  // Calcul du "score ARK" : équilibre prix / couverture / fiabilité
+  // Score de simulation : équilibre prix / couverture / « fiabilité » simulée
   quotes.forEach((q, idx) => {
     const priceRank = idx + 1 // 1 = moins cher
     const coverageScore = q.garanties.length
@@ -149,7 +186,7 @@ function computeAllQuotes(profile = {}, opts = {}) {
     )
   })
 
-  // Re-sort par ark_score pour le "ARK recommande"
+  // Re-sort par ark_score pour le meilleur score simulé
   const sortedByArk = [...quotes].sort((a, b) => b.ark_score - a.ark_score)
   const sortedByPrice = [...quotes].sort((a, b) => a.prime_annuelle_eur - b.prime_annuelle_eur)
   const sortedByCoverage = [...quotes].sort((a, b) => b.garanties.length - a.garanties.length)
@@ -162,14 +199,14 @@ function computeAllQuotes(profile = {}, opts = {}) {
 
   quotes.forEach(q => {
     q.badges = []
-    if (q.provider === bestPrice) q.badges.push({ key: 'best_price', label: '💰 Meilleur prix', tone: 'success' })
-    if (q.provider === arkRecommends) q.badges.push({ key: 'ark_pick', label: '⚡ ARK recommande', tone: 'ark' })
-    if (q.provider === bestCoverage) q.badges.push({ key: 'best_cover', label: '🛡️ Meilleure couverture', tone: 'cyan' })
+    if (q.provider === bestPrice) q.badges.push({ key: 'best_price', label: '💰 Meilleur prix (simulé)', tone: 'success' })
+    if (q.provider === arkRecommends) q.badges.push({ key: 'ark_pick', label: '⚡ Meilleur score (simulé)', tone: 'ark' })
+    if (q.provider === bestCoverage) q.badges.push({ key: 'best_cover', label: '🛡️ Meilleure couverture (simulée)', tone: 'cyan' })
     if (q.provider === bestSaving && refPrime - q.prime_annuelle_eur > 100) {
-      q.badges.push({ key: 'max_saving', label: `📉 Économie max (-${refPrime - q.prime_annuelle_eur}€)`, tone: 'warning' })
+      q.badges.push({ key: 'max_saving', label: `📉 Écart max simulé (-${refPrime - q.prime_annuelle_eur}€)`, tone: 'warning' })
     }
     if (sortedByArk[0].ark_score - q.ark_score < 5 && q.provider !== arkRecommends) {
-      q.badges.push({ key: 'best_value', label: '⭐ Meilleur rapport', tone: 'violet' })
+      q.badges.push({ key: 'best_value', label: '⭐ Meilleur rapport (simulé)', tone: 'violet' })
     }
   })
 
@@ -177,20 +214,31 @@ function computeAllQuotes(profile = {}, opts = {}) {
   quotes.sort((a, b) => b.ark_score - a.ark_score)
 
   const summary = {
+    is_simulation: true,
+    source: SOURCE_SIMULATION,
+    simulation_notice: SIMULATION_NOTICE,
     cheapest_provider: bestPrice,
     cheapest_eur: sortedByPrice[0].prime_annuelle_eur,
     most_expensive_eur: refPrime,
     economy_eur: refPrime - sortedByPrice[0].prime_annuelle_eur,
     ark_recommendation: arkRecommends,
-    ark_explanation: `${arkRecommends} offre le meilleur rapport prix / couverture / fiabilité (score ARK ${sortedByArk[0].ark_score}/100). ${
-      bestSaving === arkRecommends ? "C'est aussi le moins cher." : `Économie possible de ${refPrime - sortedByPrice[0].prime_annuelle_eur}€ avec ${bestPrice} si le budget prime.`
-    }`,
+    ark_explanation: `Simulation : « ${arkRecommends} » obtient le meilleur score interne (${sortedByArk[0].ark_score}/100). ${
+      bestSaving === arkRecommends ? 'C\'est aussi le scénario le moins cher.' : `Écart simulé de ${refPrime - sortedByPrice[0].prime_annuelle_eur}€ avec « ${bestPrice} ».`
+    } Aucun de ces montants ne provient d'un assureur : obtenez des tarifs réels avant toute remise au client.`,
     profile_used: profile,
     produit,
     level,
   }
 
-  return { quotes, summary }
+  return { quotes, summary, is_simulation: true, source: SOURCE_SIMULATION, simulation_notice: SIMULATION_NOTICE }
 }
 
-module.exports = { computeAllQuotes, COMPAGNIES, BASE_PRIME, GARANTIES_PRESETS }
+module.exports = {
+  computeAllQuotes,
+  SIMULATEURS,
+  SIMULATION_NOTICE,
+  SOURCE_SIMULATION,
+  marquerSimulation,
+  BASE_PRIME,
+  GARANTIES_PRESETS,
+}

@@ -14,6 +14,8 @@
 
 const Anthropic = require('@anthropic-ai/sdk');
 const logger = require('../lib/logger');
+const { MODELE_LEGER } = require('./iaModeles');
+const { journaliserErreurIa } = require('./iaErreurs');
 
 // --- Messages Table (auto-create if not exists) ---
 const CREATE_MESSAGES_TABLE = `
@@ -74,13 +76,19 @@ Réponds avec ce JSON exact :
 
 // --- Analyse avec Claude Haiku (le moins cher) ---
 async function analyzeWithClaude(from, subject, body) {
+  // Aucune clé IA configurée : on dégrade vers l'analyse par mots-clés au lieu
+  // de laisser « Missing credentials » remonter (le client n'a jamais à voir
+  // l'erreur du fournisseur).
+  if (!process.env.ANTHROPIC_API_KEY) return fallbackAnalysis(subject, body);
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const systemPrompt = buildAnalysisPrompt(from, subject, body);
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      // Identifiant centralisé (services/iaModeles.js) : « claude-3-5-haiku-20241022 »
+      // était retiré du catalogue, ce chemin d'analyse d'e-mails était donc mort.
+      model: MODELE_LEGER,
       max_tokens: 256,
       messages: [{ role: 'user', content: systemPrompt }],
     });
@@ -102,7 +110,8 @@ async function analyzeWithClaude(from, subject, body) {
       intention: parsed.intention_principale || '',
     };
   } catch (err) {
-    console.error('[inboundProcessor] Claude analysis error:', err.message);
+    // Détail côté serveur uniquement, jamais renvoyé au client.
+    journaliserErreurIa(err, { route: 'inboundProcessor', etape: 'analyse' });
     // Fallback simple sans IA
     return fallbackAnalysis(subject, body);
   }

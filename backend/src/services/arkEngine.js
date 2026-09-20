@@ -8,19 +8,26 @@
 const Anthropic = require('@anthropic-ai/sdk')
 const logger = require('../lib/logger')
 const pool = require('../db')
+const {
+  MODELE_DEFAUT, MODELE_SECOURS, MODELE_LEGER, MODELE_VISION,
+  MODELES, modeleDepuisEnv, coutAppelUsd,
+} = require('./iaModeles')
+const { erreurIaNormalisee } = require('./iaErreurs')
 
-// Modèles Claude
-const DEFAULT_MODEL = process.env.ARK_DEFAULT_MODEL || 'claude-sonnet-4-5-20250929'
-const FALLBACK_MODEL = process.env.ARK_FALLBACK_MODEL || 'claude-haiku-4-5-20250514'
-const LIGHT_MODEL = process.env.ARK_LIGHT_MODEL || 'claude-haiku-4-5-20250514'
+// ── Identifiants de modèles ──────────────────────────────────────────────────
+// SOURCE UNIQUE : services/iaModeles.js.
+// RÈGLE : UN MODÈLE RETIRÉ = UN CHEMIN IA CASSÉ. Ces identifiants étaient codés
+// en dur ici, dont deux qui n'ont jamais existé chez le fournisseur :
+// 'claude-haiku-4-5-20250514' (Haiku 4.5 date du 01/10/2025) et, ailleurs dans
+// le produit, 'claude-3-5-opus-20241022'. Les surcharges par variable
+// d'environnement sont désormais VALIDÉES (modeleDepuisEnv) : un identifiant
+// inconnu est refusé et remplacé par le défaut, au lieu de casser l'appel.
+const DEFAULT_MODEL = modeleDepuisEnv('ARK_DEFAULT_MODEL', MODELE_DEFAUT)
+const FALLBACK_MODEL = modeleDepuisEnv('ARK_FALLBACK_MODEL', MODELE_SECOURS)
+const LIGHT_MODEL = modeleDepuisEnv('ARK_LIGHT_MODEL', MODELE_LEGER)
 
-// Pricing (USD per 1M tokens) - Claude Sonnet 4.5 et Haiku 4.5
-const MODEL_PRICING = {
-  'claude-sonnet-4-5-20250929': { input: 3.00, output: 15.00 },
-  'claude-sonnet-4-5': { input: 3.00, output: 15.00 },
-  'claude-haiku-4-5-20250514': { input: 0.80, output: 4.00 },
-  'claude-haiku-4-5': { input: 0.80, output: 4.00 },
-}
+// Pricing (USD per 1M tokens) — table tarifaire centralisée.
+const MODEL_PRICING = MODELES
 
 // Rate limiting basique en mémoire
 const rateLimitStore = new Map()
@@ -51,10 +58,9 @@ function checkRateLimit(userId) {
 }
 
 function computeCost(model, inputTokens, outputTokens) {
-  const pricing = MODEL_PRICING[model] || MODEL_PRICING['claude-sonnet-4-5-20250929']
-  const inputCost = (inputTokens / 1000000) * pricing.input
-  const outputCost = (outputTokens / 1000000) * pricing.output
-  return parseFloat((inputCost + outputCost).toFixed(6))
+  // Tarif issu de la table centralisée ; 0 si le modèle est inconnu — jamais un
+  // tarif inventé pour un modèle qui n'existe pas.
+  return coutAppelUsd(model, inputTokens, outputTokens)
 }
 
 async function logArkCall(params) {
@@ -294,8 +300,11 @@ async function callArk(options) {
         latencyMs, success: false,
         errorMessage: err.message
       })
-      
-      throw err
+
+      // L'erreur brute du fournisseur (401 « invalid x-api-key », 404 « model
+      // not found », payload JSON complet…) ne doit JAMAIS atteindre le client.
+      // On journalise le détail ici et on propage une erreur normalisée.
+      throw erreurIaNormalisee(err, { route, model: currentModel, userId })
     }
   }
   
@@ -327,8 +336,8 @@ async function callArkStructured(options) {
   })
 }
 
-// Modèles Vision
-const VISION_MODEL = process.env.ARK_VISION_MODEL || 'claude-sonnet-4-5-20250929'
+// Modèles Vision — identifiant centralisé (services/iaModeles.js).
+const VISION_MODEL = modeleDepuisEnv('ARK_VISION_MODEL', MODELE_VISION)
 
 // Pricing Vision (même pricing que texte pour Claude)
 const VISION_PRICING = MODEL_PRICING
@@ -502,7 +511,8 @@ async function callArkVision(options) {
         errorMessage: err.message
       })
 
-      throw err
+      // Même règle que callArk : erreur brute journalisée, jamais propagée.
+      throw erreurIaNormalisee(err, { route, model: currentModel, userId, vision: true })
     }
   }
 

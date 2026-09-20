@@ -72,7 +72,10 @@ async function sendBrief(briefId, brokerId, options = {}) {
   }
   
   if (dryRun) {
-    // Mode V1 : dry-run, on simule l'envoi
+    // Mode V1 : aucun transport e-mail n'est branché. On ne prétend donc PAS
+    // avoir envoyé le brief : aucune écriture de statut « envoyé », aucun
+    // `sent_at`, et une réponse qui dit explicitement qu'il n'y a pas eu
+    // d'envoi (avant : `success: true` + « Brief marqué comme envoyé »).
     logger.info({
       briefId,
       providerId: brief.provider_id,
@@ -80,12 +83,8 @@ async function sendBrief(briefId, brokerId, options = {}) {
       providerEmail: brief.provider_email,
       subject: brief.subject,
       dryRun: true
-    }, 'Quote brief dry-run send')
-    
-    // CORRECTION 2026-09-19 : le dry-run écrivait status='sent' + sent_at, ce qui
-    // faisait compter des envois inexistants dans les KPI (sent_count, délai moyen
-    // de réponse). Le statut métier n'est plus touché : seule la trace dry-run est
-    // ajoutée aux métadonnées.
+    }, 'Quote brief dry-run : aucun envoi réel effectué')
+
     await pool.query(
       `UPDATE provider_quote_briefs
        SET metadata = metadata || $1
@@ -95,15 +94,17 @@ async function sendBrief(briefId, brokerId, options = {}) {
         briefId
       ]
     )
-    
+
     return {
-      success: true,
+      success: false,
+      email_sent: false,
       dry_run: true,
       brief_id: briefId,
+      status: brief.status,
       provider: brief.provider_name,
       to_email: brief.provider_email,
       subject: brief.subject,
-      message: 'Brief marqué comme envoyé (mode simulation V1). En V2, un email réel sera envoyé.'
+      message: "Aucun envoi n'a été effectué : le dispatch réel vers les compagnies n'est pas encore activé. Le brief reste à envoyer."
     }
   }
   
@@ -120,23 +121,31 @@ async function sendBrief(briefId, brokerId, options = {}) {
   })
   */
   
-  throw new Error('Envoi réel non implémenté en V1. Utilisez dryRun=true.')
+  throw new Error("L'envoi réel d'un brief vers une compagnie n'est pas activé sur cette installation. Le brief reste à envoyer.")
 }
 
 /**
- * Envoie plusieurs briefs en batch
+ * Envoie plusieurs briefs en batch.
+ * `sent` ne contient QUE les briefs réellement envoyés : un brief préparé en
+ * dry-run n'est pas un envoi (il est remonté dans `errors` avec son motif).
  */
 async function sendBriefsBatch(briefIds, brokerId, options = {}) {
   const results = await Promise.allSettled(
     briefIds.map(briefId => sendBrief(briefId, brokerId, options))
   )
-  
+
   const sent = []
   const errors = []
-  
+
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') {
-      sent.push(result.value)
+      const valeur = result.value
+      if (valeur && valeur.email_sent === true) sent.push(valeur)
+      else errors.push({
+        briefId: briefIds[index],
+        error: (valeur && valeur.message) || 'Aucun envoi effectué',
+        non_envoye: true
+      })
     } else {
       errors.push({
         briefId: briefIds[index],
@@ -144,7 +153,7 @@ async function sendBriefsBatch(briefIds, brokerId, options = {}) {
       })
     }
   })
-  
+
   return { sent, errors }
 }
 

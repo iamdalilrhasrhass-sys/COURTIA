@@ -5,6 +5,8 @@
  */
 
 const Anthropic = require('@anthropic-ai/sdk')
+const { MODELE_LEGER } = require('./iaModeles')
+const { journaliserErreurIa, erreurIaNormalisee } = require('./iaErreurs')
 
 const MAX_CONTEXT_MESSAGES = 10
 const MAX_TOKENS_RESPONSE = 1024
@@ -163,24 +165,29 @@ async function processMessage(pool, clientId, userMessage, sessionId = null) {
     { role: 'user', content: userMessage }
   ]
 
-  // Mode mock si pas de clé Claude
+  // Aucun moteur IA configuré : on NE fabrique PAS de réponse. Avant, un
+  // générateur local produisait une réponse crédible sur les contrats et
+  // sinistres du client (« Voici vos contrats actifs… ») présentée comme la
+  // réponse d'ARK. On renvoie désormais un message honnête d'indisponibilité.
   if (!process.env.ANTHROPIC_API_KEY) {
-    const mockResponse = generateMockResponse(userMessage, context)
-    
-    // Sauvegarder les messages
+    const messageIndisponible = "L'assistant ARK n'est pas disponible pour le moment. Votre courtier peut répondre directement à votre question."
+
     const insertSession = sessionId || (await pool.query(`
       INSERT INTO ark_chat_sessions (client_id) VALUES ($1) RETURNING id
     `, [clientId])).rows[0]?.id
 
+    // Seul le message du client est enregistré : aucune réponse inventée n'est
+    // ajoutée à la conversation.
     await pool.query(`
       INSERT INTO ark_chat_messages (client_id, session_id, role, content, tokens_used)
-      VALUES ($1, $2, 'user', $3, 0), ($1, $2, 'assistant', $4, 0)
-    `, [clientId, insertSession, userMessage, mockResponse])
+      VALUES ($1, $2, 'user', $3, 0)
+    `, [clientId, insertSession, userMessage])
 
     return {
-      response: mockResponse,
+      response: messageIndisponible,
       sessionId: insertSession,
-      mock: true
+      mock: true,
+      ia_disponible: false
     }
   }
 
@@ -189,7 +196,10 @@ async function processMessage(pool, clientId, userMessage, sessionId = null) {
   
   try {
     const completion = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      // Identifiant centralisé (services/iaModeles.js) : « claude-3-haiku-20240307 »
+      // était retiré du catalogue, le chat ARK répondait donc toujours par une
+      // erreur de fournisseur.
+      model: MODELE_LEGER,
       max_tokens: MAX_TOKENS_RESPONSE,
       system: buildSystemPrompt(context),
       messages
@@ -226,49 +236,22 @@ async function processMessage(pool, clientId, userMessage, sessionId = null) {
       tokensUsed
     }
   } catch (error) {
-    console.error('[ARK Chat] Erreur Claude:', error.message)
-    throw new Error('Erreur lors de la génération de la réponse')
+    // Détail complet côté serveur ; l'appelant reçoit une erreur normalisée qui
+    // ne transporte jamais le message du fournisseur.
+    journaliserErreurIa(error, { route: 'arkChatService' })
+    throw erreurIaNormalisee(error, { route: 'arkChatService' })
   }
 }
 
 /**
- * Génère une réponse mock pour les tests
+ * Générateur de réponses simulées : SUPPRIMÉ.
+ *
+ * Il produisait, sans aucun moteur IA, des réponses crédibles sur les contrats
+ * et sinistres réels du client (« Voici vos contrats actifs : … », « Votre
+ * sinistre … est en statut … ») qui étaient ensuite présentées comme la réponse
+ * d'ARK. Aucune réponse inventée n'est désormais servie : voir le bloc
+ * « Aucun moteur IA configuré » de processMessage.
  */
-function generateMockResponse(message, context) {
-  const msgLower = message.toLowerCase()
-
-  if (msgLower.includes('contrat') || msgLower.includes('police')) {
-    if (context.contracts.length > 0) {
-      const list = context.contracts.map(c => 
-        `• ${c.type || 'Contrat'} n°${c.numero || c.id}`
-      ).join('\n')
-      return `Voici vos contrats actifs :\n${list}\n\nSouhaitez-vous des détails sur l'un d'entre eux ?`
-    }
-    return 'Je ne trouve pas de contrat actif associé à votre compte. Souhaitez-vous que je transfère votre demande à votre courtier ?'
-  }
-
-  if (msgLower.includes('sinistre') || msgLower.includes('accident') || msgLower.includes('déclar')) {
-    if (context.claims.length > 0) {
-      const claim = context.claims[0]
-      return `Votre sinistre ${claim.type} est actuellement en statut "${claim.status}". Si vous avez des questions spécifiques ou des documents à fournir, n'hésitez pas à me le dire.`
-    }
-    return 'Pour déclarer un sinistre, vous pouvez :\n1. Me décrire les circonstances ici\n2. Contacter directement votre courtier\n3. Utiliser le formulaire de déclaration en ligne\n\nComment puis-je vous aider ?'
-  }
-
-  if (msgLower.includes('échéance') || msgLower.includes('renouvellement')) {
-    if (context.upcomingDeadlines && context.upcomingDeadlines.length > 0) {
-      const deadline = context.upcomingDeadlines[0]
-      return `Votre prochaine échéance est le ${new Date(deadline.date).toLocaleDateString('fr-FR')} pour ${deadline.description}. Souhaitez-vous être recontacté pour discuter du renouvellement ?`
-    }
-    return 'Je ne vois pas d\'échéance imminente dans votre dossier. Souhaitez-vous que je vérifie avec votre courtier ?'
-  }
-
-  if (msgLower.includes('bonjour') || msgLower.includes('salut')) {
-    return `Bonjour ${context.clientName.split(' ')[0]} ! Je suis ARK, votre assistant ${context.cabinetName}. Comment puis-je vous aider aujourd'hui ?`
-  }
-
-  return `Je comprends votre demande. Pour vous aider au mieux, pourriez-vous me donner plus de détails ? Je peux vous renseigner sur :\n• Vos contrats d'assurance\n• Vos sinistres en cours\n• Les échéances à venir\n\nN'hésitez pas à me poser votre question !`
-}
 
 /**
  * Récupère l'historique d'un client

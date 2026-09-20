@@ -221,6 +221,19 @@ router.post('/quote-request/:id/submit', async (req, res) => {
     // Appeler les connectors
     const normalizedData = quoteRequest.normalized_data
     const results = await requestQuotesMulti(targetProviders, normalizedData, credentialsByCode)
+
+    // VÉRITÉ DES ENVOIS : les connecteurs embarqués renvoient 'manual_only'
+    // (aucune API assureur branchée) ou 'error'. Écrire alors
+    // status='submitted' + « Demande soumise à N provider(s) » faisait croire
+    // au courtier que la demande était partie chez les assureurs. On ne
+    // considère comme soumis que les retours qui ne sont ni manuels ni en
+    // erreur, et on ne touche au statut que dans ce cas.
+    const soumisReels = results.filter(r => r && r.status !== 'manual_only' && r.status !== 'error')
+    const providersSoumis = targetProviders.filter((_, i) => {
+      const r = results[i]
+      return r && r.status !== 'manual_only' && r.status !== 'error'
+    })
+    const erreursConnecteur = results.filter(r => r && r.status === 'error')
     
     // Sauvegarder les résultats
     const savedResults = []
@@ -256,19 +269,26 @@ router.post('/quote-request/:id/submit', async (req, res) => {
       savedResults.push(savedResult.rows[0])
     }
     
-    // Mettre à jour le status de la demande
-    await pool.query(`
-      UPDATE quote_requests SET 
-        status = 'submitted',
-        submitted_at = NOW()
-      WHERE id = $1
-    `, [requestId])
-    
+    // Le statut « soumise » n'est écrit QUE si une soumission réelle a eu lieu.
+    if (soumisReels.length > 0) {
+      await pool.query(`
+        UPDATE quote_requests SET 
+          status = 'submitted',
+          submitted_at = NOW()
+        WHERE id = $1
+      `, [requestId])
+    }
+
     return res.json({
-      success: true,
-      message: `Demande soumise à ${targetProviders.length} provider(s)`,
-      providers_contacted: targetProviders,
+      success: soumisReels.length > 0,
+      submitted: soumisReels.length > 0,
+      submitted_count: soumisReels.length,
+      message: soumisReels.length > 0
+        ? `Demande transmise à ${soumisReels.length} assureur(s) via une interface connectée.`
+        : "Aucune demande n'a été transmise automatiquement : aucun connecteur assureur n'est activé sur cette installation. Contactez les assureurs listés ci-dessous, puis saisissez les devis reçus.",
+      providers_contacted: providersSoumis,
       results: savedResults,
+      errors: erreursConnecteur.map(r => ({ provider: r.provider_code, message: r.message })),
       manual_actions_required: results.filter(r => r.status === 'manual_only').map(r => ({
         provider: r.provider_code,
         message: r.message,

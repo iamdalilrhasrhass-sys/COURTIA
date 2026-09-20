@@ -183,16 +183,62 @@ router.get('/statement/:year/:month/pdf', async (req, res) => {
 })
 
 // ─── LOT VIBE — Barèmes commissions (catalogue compagnies) ─────────────────
+//
+// Le catalogue ci-dessous est un catalogue d'EXEMPLE (8 « compagnies » qui
+// n'existent pas sur le marché, avec des taux qui ne proviennent d'aucun barème
+// réel). Il est conservé UNIQUEMENT comme aide à la saisie : il est étiqueté
+// comme exemple partout où il est servi, et n'est plus utilisé pour produire un
+// montant de commission présenté comme réel (voir /calculator et
+// services/commissionTaux.js — « aucun taux arbitraire caché »).
+const {
+  BAREMES_EXEMPLE,
+  MESSAGE_BAREME_REQUIS,
+  resoudreTauxCommission,
+  calculerCommission,
+} = require('../services/commissionTaux')
 
-const DEFAULT_BAREMES = {
-  Aurora:  { Auto: 12, Habitation: 14, Santé: 8,  Prévoyance: 18, 'RC Pro': 16, 'Flotte Auto': 11, MRH: 13, Cyber: 20, Décennale: 15, PJ: 22 },
-  Novalia: { Auto: 11, Habitation: 13, Santé: 9,  Prévoyance: 17, 'RC Pro': 15, 'Flotte Auto': 12, MRH: 14, Cyber: 19, Décennale: 14, PJ: 20 },
-  Helios:  { Auto: 10, Habitation: 15, Santé: 7,  Prévoyance: 16, 'RC Pro': 14, 'Flotte Auto': 10, MRH: 12, Cyber: 18, Décennale: 13, PJ: 19 },
-  Serenis: { Auto: 13, Habitation: 12, Santé: 10, Prévoyance: 19, 'RC Pro': 17, 'Flotte Auto': 13, MRH: 15, Cyber: 21, Décennale: 16, PJ: 23 },
-  Atlas:   { Auto: 12, Habitation: 13, Santé: 8,  Prévoyance: 17, 'RC Pro': 18, 'Flotte Auto': 12, MRH: 14, Cyber: 22, Décennale: 15, PJ: 21 },
-  Oria:    { Auto: 11, Habitation: 14, Santé: 9,  Prévoyance: 16, 'RC Pro': 15, 'Flotte Auto': 11, MRH: 13, Cyber: 19, Décennale: 14, PJ: 20 },
-  Nivalis: { Auto: 12, Habitation: 13, Santé: 8,  Prévoyance: 18, 'RC Pro': 16, 'Flotte Auto': 12, MRH: 14, Cyber: 20, Décennale: 17, PJ: 22 },
-  Solenys: { Auto: 10, Habitation: 12, Santé: 10, Prévoyance: 15, 'RC Pro': 13, 'Flotte Auto': 9,  MRH: 11, Cyber: 17, Décennale: 12, PJ: 18 },
+/**
+ * Cherche un barème RÉELLEMENT configuré par le cabinet (commission_baremes).
+ * Les lignes de portée plateforme (user_id et cabinet_id NULL) sont le
+ * catalogue d'exemple : elles ne comptent jamais comme un taux du cabinet.
+ */
+async function chercherBaremeCabinet(pool, user, compagnie, produit) {
+  const userId = user?.id || user?.userId || null
+  const cabinetId = user?.cabinetId || user?.cabinet_id || null
+  if (!pool || (!userId && !cabinetId)) return null
+  try {
+    const { rows } = await pool.query(
+      `SELECT rate_percent, rate_recurring_percent, user_id, cabinet_id
+         FROM commission_baremes
+        WHERE is_active = true AND compagnie = $1 AND produit = $2
+          AND (($3::int IS NOT NULL AND user_id = $3) OR ($4::int IS NOT NULL AND cabinet_id = $4))
+        ORDER BY rate_percent DESC
+        LIMIT 1`,
+      [compagnie, produit, userId, cabinetId]
+    )
+    return rows[0] || null
+  } catch (_) {
+    return null
+  }
+}
+
+/** Cherche une règle de commission configurée par le cabinet (commission_rules). */
+async function chercherRegleCabinet(pool, userId, compagnie, produit) {
+  if (!pool || !userId) return null
+  try {
+    const { rows } = await pool.query(
+      `SELECT rate_percent FROM commission_rules
+        WHERE user_id = $1 AND is_active = true
+          AND (product_type IS NULL OR product_type = $2)
+          AND (company IS NULL OR company ILIKE $3)
+        ORDER BY (product_type IS NOT NULL AND company IS NOT NULL) DESC, created_at DESC
+        LIMIT 1`,
+      [userId, produit, `%${compagnie}%`]
+    )
+    return rows[0] || null
+  } catch (_) {
+    return null
+  }
 }
 
 router.get('/baremes', async (req, res) => {
@@ -211,18 +257,13 @@ router.get('/baremes', async (req, res) => {
       rows = []
     }
 
-    // Repli : catalogue d'EXEMPLE. Ces compagnies (Aurora, Nivalis, Helios…) et
-    // ces taux n'existent pas sur le marché : ils ne doivent JAMAIS être
-    // présentés comme les barèmes réels d'un cabinet. On les renvoie donc
-    // explicitement étiquetés, avec la consigne de saisir ses propres taux
-    // (POST /api/commissions/rules), plutôt que comme une donnée de référence.
     // Les lignes « plateforme » (user_id et cabinet_id NULL) proviennent du
     // catalogue d'EXEMPLE livré avec le produit (compagnies et taux qui ne
     // correspondent à aucun barème réel). Elles sont servies, mais étiquetées :
     // un cabinet doit savoir que ces taux ne sont pas les siens.
     let source = rows.length ? 'exemple_plateforme_a_configurer' : 'cabinet'
     if (!rows.length) {
-      rows = Object.entries(DEFAULT_BAREMES).flatMap(([compagnie, produits]) =>
+      rows = Object.entries(BAREMES_EXEMPLE).flatMap(([compagnie, produits]) =>
         Object.entries(produits).map(([produit, rate]) => ({
           compagnie,
           produit,
@@ -253,32 +294,74 @@ router.get('/baremes', async (req, res) => {
 
 router.post('/calculator', async (req, res) => {
   try {
-    const { compagnie, produit, prime_annuelle, recurrence } = req.body || {}
+    const { compagnie, produit, prime_annuelle, recurrence, exemple } = req.body || {}
     if (!compagnie || !produit) {
       return res.status(400).json({ error: 'compagnie_produit_required' })
     }
-    const rate = DEFAULT_BAREMES[compagnie]?.[produit] ?? null
-    if (rate === null) {
-      return res.status(404).json({ error: 'bareme_not_found', message: `Pas de barème pour ${compagnie} / ${produit}` })
+    const pool = req.app.locals.pool
+    const userId = req.user?.id || req.user?.userId || null
+
+    const baremeCabinet = await chercherBaremeCabinet(pool, req.user, compagnie, produit)
+    const regleCabinet = baremeCabinet ? null : await chercherRegleCabinet(pool, userId, compagnie, produit)
+
+    // Un taux d'exemple n'est appliqué QUE si l'appelant le demande
+    // explicitement (`exemple: true`) : sinon un simple calcul « pour voir »
+    // produisait un montant à partir d'un taux inventé.
+    const taux = resoudreTauxCommission({
+      baremeCabinet,
+      regleCabinet,
+      compagnie,
+      produit,
+      exempleDemande: exemple === true,
+    })
+
+    if (!taux) {
+      return res.status(409).json({
+        error: 'bareme_requis',
+        message: MESSAGE_BAREME_REQUIS,
+        compagnie,
+        produit,
+        exemple_disponible: Boolean(BAREMES_EXEMPLE[compagnie]?.[produit]),
+      })
     }
-    const factor = recurrence === 'recurring' ? 0.6 : 1
-    const prime = Number(prime_annuelle || 0)
-    const commission = (prime * rate * factor) / 100
+
+    const montants = calculerCommission({
+      prime_annuelle,
+      rate_percent: taux.rate_percent,
+      recurrent: recurrence === 'recurring',
+    })
+
+    if (!montants) {
+      return res.status(409).json({
+        error: 'bareme_requis',
+        message: MESSAGE_BAREME_REQUIS,
+        compagnie,
+        produit,
+      })
+    }
+
     res.json({
       compagnie,
       produit,
-      rate_percent: rate,
-      effective_rate_percent: Number((rate * factor).toFixed(3)),
-      prime_annuelle: prime,
-      commission_annuelle: Number(commission.toFixed(2)),
-      commission_mensuelle: Number((commission / 12).toFixed(2)),
+      source: taux.source,
+      ...(taux.source === 'exemple'
+        ? {
+            message:
+              "Calcul d'EXEMPLE : le taux appliqué est un taux d'exemple COURTIA, "
+              + 'il ne correspond à aucune convention de votre cabinet.',
+          }
+        : {}),
+      ...montants,
+      prime_annuelle: Number(prime_annuelle || 0),
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message, message: 'Impossible de calculer cette commission.' })
   }
 })
 
 module.exports = {
   router,
   saveCommissionForContract,
+  chercherBaremeCabinet,
+  chercherRegleCabinet,
 }

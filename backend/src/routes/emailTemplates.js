@@ -12,6 +12,12 @@ const pool = require('../db')
 const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
 const Anthropic = require('@anthropic-ai/sdk')
+const { MODELE_LEGER } = require('../services/iaModeles')
+const {
+  estErreurIa,
+  repondreIaNonConfiguree,
+  repondreIaIndisponible,
+} = require('../services/iaErreurs')
 
 router.use(verifyToken)
 
@@ -124,16 +130,34 @@ router.post('/generate', requireFeature('email_templates_ai'), async (req, res) 
       contrats.map(c => ({ type: c.type_contrat || c.contract_type, status: c.statut || c.status, premium: c.prime_annuelle || c.annual_premium }))
     )
 
+    // Aucun moteur IA sans clé : on répond 503 configuration_required, pas une
+    // erreur de fournisseur (l'utilisateur voyait auparavant, en HTTP 500,
+    // l'erreur brute renvoyée par l'API Anthropic).
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'email-templates-generate' },
+        "La génération d'email par l'IA est indisponible : aucun moteur IA n'est configuré."
+      )
+    }
+
     const prompt = `Tu es un rédacteur expert en courtage assurance. Génère un email professionnel de type ${context_type} pour ce client : ${clientData}. Contrats actuels : ${contractsData}. Réponds en JSON strict uniquement : {"subject": "...", "body": "...", "variables": ["{{first_name}}", ...], "suggested_category": "..."}`
 
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: MODELE_LEGER,
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }]
     })
 
-    const rawContent = message.content[0].text
+    const rawContent = message.content[0]?.text || ''
+    if (!rawContent.trim()) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'email-templates-generate' },
+        "La génération d'email par l'IA n'a produit aucun contenu. Réessayez dans quelques instants."
+      )
+    }
     let parsed
     try {
       // Extraire JSON depuis la réponse
@@ -144,18 +168,37 @@ router.post('/generate', requireFeature('email_templates_ai'), async (req, res) 
       return res.status(502).json({ error: 'ai_parse_error', message: 'Réponse IA non parseable' })
     }
 
+    // Succès avec charge utile vide = faux succès : on refuse plutôt que de
+    // renvoyer un objet email sans objet ni corps.
+    if (!parsed.subject || !parsed.body) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'email-templates-generate' },
+        "La génération d'email par l'IA n'a pas produit d'email exploitable. Rédigez-le manuellement."
+      )
+    }
+
     return res.json({
       success: true,
       data: {
-        subject: parsed.subject || '',
-        body: parsed.body || '',
+        subject: parsed.subject,
+        body: parsed.body,
         variables: parsed.variables || [],
         suggested_category: parsed.suggested_category || context_type
       }
     })
   } catch (err) {
+    // Jamais l'erreur brute du fournisseur au client (IA-043) : on journalise
+    // le détail côté serveur et on répond un message produit.
+    const estIa = estErreurIa(err) || err.status !== undefined || /anthropic|api key|authentication/i.test(String(err.message || ''))
+    if (estIa) {
+      return repondreIaIndisponible(res, err, { route: 'email-templates-generate' })
+    }
     console.error('[POST /api/email-templates/generate]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({
+      error: 'server_error',
+      message: "La génération d'email est momentanément indisponible. Réessayez dans quelques instants.",
+    })
   }
 })
 

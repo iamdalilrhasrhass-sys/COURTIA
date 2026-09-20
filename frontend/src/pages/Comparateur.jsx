@@ -1,15 +1,13 @@
 import { useState } from 'react'
 import {
   Sparkles, FileText, Send, Loader2, Trophy, TrendingDown,
-  Shield, Zap, Crown, Star, ArrowRight,
+  Shield, Star, AlertTriangle,
 } from 'lucide-react'
-import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
+import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
-import ArkRadarCombat from '../components/widgets/ArkRadarCombat'
-import OfferPodium from '../components/widgets/OfferPodium'
 import toast from 'react-hot-toast'
 
 const T = {
@@ -48,6 +46,10 @@ export default function Comparateur() {
   const [selected, setSelected] = useState(null)
   const [exporting, setExporting] = useState(false)
 
+  // Le moteur ne consulte aucun assureur : le comparatif est TOUJOURS une
+  // simulation tant que des tarifs réels ne lui ont pas été rattachés.
+  const isSimulation = result ? (result.is_simulation === true || (result.quotes || []).some(q => q?.is_simulation === true)) : false
+
   async function compute() {
     setLoading(true)
     try {
@@ -55,7 +57,7 @@ export default function Comparateur() {
         profile, produit, level,
       })
       setResult(res.data)
-      toast.success(`8 devis calculés — meilleur prix : ${res.data.summary.cheapest_provider}`)
+      toast.success(`8 scénarios simulés calculés — meilleur prix simulé : ${res.data.summary.cheapest_provider}`)
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Erreur calcul comparatif')
       console.error(err)
@@ -66,6 +68,9 @@ export default function Comparateur() {
 
   async function exportPdf() {
     if (!result?.run_id) return
+    if (isSimulation) {
+      return toast.error("Comparatif simulé : aucun tarif réel, le PDF client est refusé.")
+    }
     setExporting(true)
     try {
       const res = await api.post('/comparator-engine/export-pdf', {
@@ -76,7 +81,7 @@ export default function Comparateur() {
       // Auto-download
       window.open(`/api/comparator-engine/download/${result.run_id}`, '_blank')
     } catch (err) {
-      toast.error('Erreur export PDF')
+      toast.error(err?.response?.data?.message || 'Erreur export PDF')
     } finally {
       setExporting(false)
     }
@@ -84,13 +89,19 @@ export default function Comparateur() {
 
   async function sendToClient() {
     if (!result?.run_id) return
+    if (isSimulation) {
+      return toast.error("Comparatif simulé : rien n'est envoyé au client.")
+    }
     const email = prompt('Email du client ?')
     if (!email) return
     try {
-      await api.post('/comparator-engine/send-email', { run_id: result.run_id, email })
+      const { data } = await api.post('/comparator-engine/send-email', { run_id: result.run_id, email })
+      if (data?.email_sent !== true) {
+        return toast.error("Le comparatif n'a pas été envoyé.")
+      }
       toast.success(`Comparatif envoyé à ${email}`)
     } catch (err) {
-      toast.error('Erreur envoi')
+      toast.error(err?.response?.data?.message || "L'envoi du comparatif a échoué.")
     }
   }
 
@@ -101,12 +112,34 @@ export default function Comparateur() {
       <ScrollGlow />
       <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <PageHeader
-          breadcrumb={[{ label: 'ARK IA', to: '/assistant-ark' }, { label: 'Comparateur 8 compagnies' }]}
+          breadcrumb={[{ label: 'ARK IA', to: '/assistant-ark' }, { label: 'Comparateur 8 profils simulés' }]}
           title={<span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Sparkles size={24} color={T.ark} /> Comparateur intelligent — 8 compagnies
+            <Sparkles size={24} color={T.ark} /> Comparateur — 8 profils simulés
           </span>}
-          subtitle="Moteur ARK : score, badges, recommandation auto + PDF brandé en 1 clic"
+          subtitle="Moteur de simulation COURTIA : score, badges et classement internes. Aucun tarif réel n'est obtenu auprès d'un assureur."
         />
+
+        {/* Bandeau simulation — visible en permanence, dans le design de la
+            page (SimpleCard + tokens T), jamais un succès trompeur. */}
+        <SimpleCard padding={16} style={{
+          marginBottom: 20,
+          background: 'rgba(245,158,11,0.06)',
+          border: '1px solid rgba(245,158,11,0.25)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <AlertTriangle size={18} color={T.warning} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <div style={{ color: T.warning, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                Simulation — aucun tarif réel
+              </div>
+              <div style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>
+                {result?.simulation_notice
+                  || "Les offres affichées ici sont calculées par le moteur de simulation COURTIA : elles ne proviennent d'aucun assureur. Les primes, notations et délais sont simulés."}
+                {' '}Aucun document ni e-mail ne peut être envoyé au client à partir de ces montants : obtenez des tarifs réels avant toute remise.
+              </div>
+            </div>
+          </div>
+        </SimpleCard>
 
         {/* Formulaire profil */}
         <SimpleCard padding={24} style={{ marginBottom: 20 }}>
@@ -172,7 +205,7 @@ export default function Comparateur() {
               }}
             >
               {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-              Comparer 8 compagnies
+              Comparer 8 profils simulés
             </button>
           </div>
         </SimpleCard>
@@ -194,26 +227,28 @@ export default function Comparateur() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ color: T.ark, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
-                  ARK recommande
+                  Meilleur score de simulation
                 </div>
                 <div style={{ color: T.text, fontSize: 14, lineHeight: 1.6 }}>
                   {result.summary.ark_explanation}
                 </div>
                 <div style={{ display: 'flex', gap: 18, marginTop: 14 }}>
-                  <SummaryStat icon={Trophy} label="Meilleur prix" value={`${result.summary.cheapest_provider} · ${fmtEur(result.summary.cheapest_eur)}`} color={T.success} />
-                  <SummaryStat icon={TrendingDown} label="Économie max" value={fmtEur(result.summary.economy_eur)} color={T.warning} />
-                  <SummaryStat icon={Star} label="ARK pick" value={result.summary.ark_recommendation} color={T.ark} />
+                  <SummaryStat icon={Trophy} label="Meilleur prix (simulé)" value={`${result.summary.cheapest_provider} · ${fmtEur(result.summary.cheapest_eur)}`} color={T.success} />
+                  <SummaryStat icon={TrendingDown} label="Écart max simulé" value={fmtEur(result.summary.economy_eur)} color={T.warning} />
+                  <SummaryStat icon={Star} label="Meilleur score" value={result.summary.ark_recommendation} color={T.ark} />
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button
                   onClick={exportPdf}
-                  disabled={exporting}
+                  disabled={exporting || isSimulation}
+                  title={isSimulation ? 'Comparatif simulé : aucun PDF client' : undefined}
                   style={{
-                    background: 'rgba(255,255,255,0.06)', color: T.text,
+                    background: 'rgba(255,255,255,0.06)', color: isSimulation ? T.textMuted : T.text,
                     border: `1px solid ${T.cardBorder}`,
                     padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    cursor: isSimulation ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    opacity: isSimulation ? 0.6 : 1,
                   }}
                 >
                   {exporting ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />}
@@ -221,10 +256,13 @@ export default function Comparateur() {
                 </button>
                 <button
                   onClick={sendToClient}
+                  disabled={isSimulation}
+                  title={isSimulation ? 'Comparatif simulé : aucun envoi client' : undefined}
                   style={{
-                    background: T.ark, color: 'white', border: 'none',
+                    background: isSimulation ? 'rgba(139,92,246,0.25)' : T.ark, color: 'white', border: 'none',
                     padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    cursor: isSimulation ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                    opacity: isSimulation ? 0.6 : 1,
                   }}
                 >
                   <Send size={12} /> Envoyer client
@@ -243,47 +281,22 @@ export default function Comparateur() {
           </div>
         )}
 
-        {/* Vue Radar — Comparaison visuelle des offres */}
-        {result?.quotes && result.quotes.length >= 2 && (
-          <VibeScrollSection delay={0.3} parallax={12}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
-              <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Radar ARK — 6 axes</h3>
-                <ArkRadarCombat
-                  offers={result.quotes.slice(0, 3).map(q => ({
-                    id: q.provider, partnerName: q.provider,
-                    recommended: q.provider === result.summary?.ark_recommendation,
-                    scores: { price: q.ark_score || 70, coverage: q.coverage_score || 70, acceptance: q.acceptance_score || 70, margin: q.margin_score || 70, stability: q.stability_score || 70, speed: q.speed_score || 70 }
-                  }))}
-                  onOfferClick={(o) => console.log('Radar:', o)}
-                  size={220}
-                />
-              </div>
-              <div style={{ background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 16 }}>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: T.text, margin: '0 0 8px' }}>Podium ARK</h3>
-                <OfferPodium
-                  offers={result.quotes.slice(0, 4).map((q, i) => ({
-                    id: q.provider, partnerName: q.provider,
-                    totalScore: q.ark_score || (85 - i * 10),
-                    monthlyPrice: q.monthly_price || 35,
-                    commissionRate: q.commission || 15,
-                    recommended: q.provider === result.summary?.ark_recommendation
-                  }))}
-                  onSelect={(o) => console.log('Podium:', o)}
-                  profile="client"
-                />
-              </div>
-            </div>
-          </VibeScrollSection>
-        )}
+        {/* Vue Radar / Podium : RETIRÉE.
+            Ces deux widgets exigeaient six axes analytiques (prix, couverture,
+            acceptation, marge, stabilité, rapidité) et un taux de commission
+            par offre. Aucune de ces valeurs n'existe dans les données : le
+            fallback du front injectait 70 sur chaque axe et un taux de 15 %
+            codé en dur — de l'analyse de marché inventée, présentée comme
+            réelle. Tant qu'aucune source ne fournit ces axes, on n'affiche
+            rien plutôt qu'un graphique faux. */}
 
         {/* Empty state */}
         {!result && !loading && (
           <SimpleCard padding={48} style={{ textAlign: 'center' }}>
             <Sparkles size={36} color={T.ark} style={{ marginBottom: 12 }} />
-            <h3 style={{ color: T.text, fontSize: 16, margin: '0 0 8px' }}>Lancez votre comparatif</h3>
+            <h3 style={{ color: T.text, fontSize: 16, margin: '0 0 8px' }}>Lancez votre simulation</h3>
             <p style={{ color: T.textSecondary, fontSize: 13, margin: 0 }}>
-              Remplissez le profil et cliquez sur "Comparer 8 compagnies" pour obtenir un classement intelligent.
+              Remplissez le profil et cliquez sur "Comparer 8 profils simulés" pour obtenir le classement du moteur de simulation. Aucun tarif réel n'est consulté.
             </p>
           </SimpleCard>
         )}
@@ -370,7 +383,7 @@ function QuoteCard({ quote, rank, onClick }) {
           <div style={{ color: T.ark, fontSize: 14, fontWeight: 700 }}>{quote.ark_score}/100</div>
         </div>
         <div style={{ flex: 1, background: 'rgba(34,211,238,0.06)', padding: '6px 8px', borderRadius: 6 }}>
-          <div style={{ color: T.textMuted, fontSize: 9, textTransform: 'uppercase' }}>Notation</div>
+          <div style={{ color: T.textMuted, fontSize: 9, textTransform: 'uppercase' }}>Notation (simulée)</div>
           <div style={{ color: T.cyan, fontSize: 14, fontWeight: 700 }}>★ {quote.notation.toFixed(1)}</div>
         </div>
       </div>

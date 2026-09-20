@@ -17,6 +17,148 @@ Tu es factuel, orienté action, et tu fournis toujours des réponses structurée
 Tu utilises un ton professionnel mais accessible, en français.
 Tu ne fais jamais de suppositions non fondées sur les données.`
 
+// ═══════════════════════════════════════════════════════════════════════════
+// MARCHÉS — un cabinet suisse n'a rien à faire d'ORIAS, du DDA ou d'euros.
+//
+// Les prompts ci-dessous ont été écrits pour le marché français : ils parlent
+// d'ORIAS, d'ACPR, du DDA, de la loi Hamon et de primes en €. Servir ces
+// référentiels à un cabinet établi en Suisse produit une réponse fausse au
+// regard de sa réglementation (FINMA, LSA, nLPD) et de sa devise (CHF).
+//
+// `market` se lit depuis le profil du cabinet (broker_profiles.pays / langue —
+// voir resoudreMarche et chargerMarcheCabinet). Défaut : 'FR', comportement
+// historique STRICTEMENT inchangé pour le marché français.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MARCHES = {
+  FR: {
+    code: 'FR',
+    devise: '€',
+    pays: 'France',
+    autorite: 'ACPR',
+    registre: 'ORIAS (registre unique des intermédiaires)',
+    lois: 'DDA (Directive Distribution Assurance), loi Hamon, loi Châtel',
+    donnees: 'RGPD',
+    persona: ARK_PERSONA,
+  },
+  CH: {
+    code: 'CH',
+    devise: 'CHF',
+    pays: 'Suisse',
+    autorite: 'FINMA',
+    registre: "registre des intermédiaires d'assurance FINMA + numéro UID (IDE) du cabinet",
+    lois: "LSA (loi fédérale sur le contrat d'assurance), LCA, droit suisse de la résiliation (CO)",
+    donnees: 'nLPD (nouvelle loi fédérale sur la protection des données)',
+    persona: `Tu es ARK, l'assistant IA de COURTIA, expert en courtage d'assurance en Suisse.
+Tu connais parfaitement :
+- La réglementation suisse de l'intermédiation : LFSA (LSFin/LSA), surveillance FINMA
+- Le registre des intermédiaires d'assurance tenu par la FINMA et le numéro UID (IDE) du cabinet
+- La LSA (loi fédérale sur le contrat d'assurance) et le CO pour la résiliation
+- La nLPD (protection des données) et le secret professionnel
+- Le devoir de conseil et d'information documenté, exigé en Suisse
+
+Tu es factuel, orienté action, et tu fournis toujours des réponses structurées et exploitables.
+Tu utilises un ton professionnel mais accessible, en français.
+Tu raisonnes exclusivement en francs suisses (CHF). Les référentiels français (ORIAS, ACPR, DDA) ne s'appliquent pas : tu ne les cites pas.
+Tu ne fais jamais de suppositions non fondées sur les données.`,
+  },
+}
+
+/** Références françaises à remplacer lorsque le marché est suisse. */
+const REMPLACEMENTS_CH = [
+  [/\bDDA\b/g, 'LSA'],
+  [/Directive Distribution Assurance/g, 'loi suisse sur le contrat d\'assurance'],
+  [/\bORIAS\b/g, 'registre FINMA des intermédiaires'],
+  [/\bACPR\b/g, 'FINMA'],
+  [/Loi Hamon et la Loi Châtel/g, 'droit suisse de la résiliation (LSA/CO)'],
+  [/\bRGPD\b/g, 'nLPD'],
+  [/euros/g, 'francs suisses (CHF)'],
+  [/€/g, 'CHF'],
+]
+
+/** Ramène une valeur libre ('Suisse', 'CH', 'FR') vers un code marché connu. */
+function normaliserMarche(valeur) {
+  const v = String(valeur || '').trim().toLowerCase()
+  if (!v) return null
+  if (['ch', 'che', 'sui', 'suisse', 'switzerland', 'swiss', 'sz'].includes(v)) return 'CH'
+  if (['fr', 'fra', 'france', 'français', 'francais'].includes(v)) return 'FR'
+  if (v.startsWith('ch') || v.startsWith('suisse') || v.startsWith('switz')) return 'CH'
+  if (v.startsWith('fr') || v.startsWith('france')) return 'FR'
+  return null
+}
+
+/**
+ * Détermine le marché du cabinet depuis son profil.
+ * `pays` prime ; à défaut la `langue` (de / it ⇒ Suisse) ; défaut 'FR'.
+ *
+ * @param {Object} profil { pays, langue } — typiquement broker_profiles
+ * @returns {'FR'|'CH'}
+ */
+function resoudreMarche(profil = {}) {
+  if (typeof profil === 'string') return normaliserMarche(profil) || 'FR'
+  const depuisPays = normaliserMarche(profil.pays || profil.country)
+  if (depuisPays) return depuisPays
+  const langue = String(profil.langue || profil.language || '').trim().toLowerCase()
+  if (['de', 'de-ch', 'it', 'it-ch', 'gsw'].includes(langue)) return 'CH'
+  return 'FR'
+}
+
+/** Bloc de contexte marché injecté dans le prompt système. */
+function construireBlocMarche(market = 'FR') {
+  const m = MARCHES[market] || MARCHES.FR
+  return `
+
+=== CONTEXTE MARCHÉ ===
+Marché: ${m.pays} (${m.code})
+Devise: ${m.devise} — tous les montants exprimés doivent être en ${m.devise}.
+Autorité de surveillance: ${m.autorite}
+Registre / identification: ${m.registre}
+Référentiels applicables: ${m.lois}
+Protection des données: ${m.donnees}
+N'invoque jamais un référentiel, un registre ou une devise d'un autre marché.`
+}
+
+/** Applique le persona et les référentiels du marché à un prompt système.
+ *
+ * Le persona est mis de côté (marqueur) le temps des remplacements : sinon les
+ * références françaises citées DANS le persona suisse (« ne cites ni ORIAS… »)
+ * seraient remplacées à leur tour et la consigne deviendrait contradictoire.
+ */
+function appliquerMarche(system, market = 'FR') {
+  const m = MARCHES[market] || MARCHES.FR
+  const MARQUEUR = '\u0000ARK_PERSONA\u0000'
+  let corps = system.split(ARK_PERSONA).join(MARQUEUR)
+  if (m.code === 'CH') {
+    for (const [motif, remplacement] of REMPLACEMENTS_CH) {
+      corps = corps.replace(motif, remplacement)
+    }
+  }
+  const rendu = corps.split(MARQUEUR).join(m.persona)
+  return rendu + construireBlocMarche(m.code)
+}
+
+/**
+ * Charge le marché du cabinet depuis son profil (broker_profiles).
+ * À utiliser par les routes ARK : getPrompt(route, await chargerMarcheCabinet(pool, userId)).
+ *
+ * @param {Object} pool    pool de connexion
+ * @param {number} userId  identifiant du cabinet
+ * @returns {Promise<'FR'|'CH'>}
+ */
+async function chargerMarcheCabinet(pool, userId) {
+  if (!pool || !userId) return 'FR'
+  try {
+    const { rows } = await pool.query(
+      `SELECT pays, langue FROM broker_profiles WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    )
+    return resoudreMarche(rows[0] || {})
+  } catch (_) {
+    // Profil illisible : on retombe sur le marché par défaut, jamais un marché inventé.
+    return 'FR'
+  }
+}
+
 const JSON_INSTRUCTION = `
 RÈGLE ABSOLUE: Tu dois répondre UNIQUEMENT avec un objet JSON valide.
 - Pas de texte avant ou après le JSON
@@ -391,12 +533,23 @@ Schéma de réponse:
 }
 
 /**
- * Récupère le prompt pour une route donnée
+ * Récupère le prompt pour une route donnée, adapté au marché du cabinet.
+ *
  * @param {string} route - Nom de la route
- * @returns {Object} { system, maxTokens }
+ * @param {Object|string} [options] - { market: 'FR'|'CH' } ou directement le code marché
+ *        À lire depuis le profil : `await chargerMarcheCabinet(pool, userId)`.
+ * @returns {Object} { system, maxTokens, market }
  */
-function getPrompt(route) {
-  return PROMPTS[route] || PROMPTS.actions
+function getPrompt(route, options = {}) {
+  const base = PROMPTS[route] || PROMPTS.actions
+  const market = typeof options === 'string'
+    ? (normaliserMarche(options) || 'FR')
+    : resoudreMarche({ pays: options.market, langue: options.langue })
+  return {
+    ...base,
+    market,
+    system: appliquerMarche(base.system, market),
+  }
 }
 
 /**
@@ -410,6 +563,12 @@ module.exports = {
   ARK_PERSONA,
   JSON_INSTRUCTION,
   PROMPTS,
+  MARCHES,
   getPrompt,
-  getAllPrompts
+  getAllPrompts,
+  resoudreMarche,
+  normaliserMarche,
+  construireBlocMarche,
+  appliquerMarche,
+  chargerMarcheCabinet,
 }

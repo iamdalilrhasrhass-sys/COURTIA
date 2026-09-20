@@ -93,6 +93,7 @@ async function processDueRelances() {
   `)
 
   let sent = 0
+  let notSent = 0
   for (const r of rows) {
     const tpl = TEMPLATES[r.template_key]
     if (!tpl) continue
@@ -109,30 +110,59 @@ async function processDueRelances() {
       pdfUrl: `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/devis/${r.devis_id}`,
     }
     try {
-      await sendCommercialEmail({
+      // CORRECTION : le statut « envoyé » n'est plus écrit à l'aveugle.
+      // Avant, la relance était marquée 'sent' + event 'relance_sent' dès que
+      // sendCommercialEmail ne levait pas — même quand le fournisseur d'e-mail
+      // n'était pas configuré (aucun envoi réel). Le courtier croyait son client
+      // relancé. Désormais : succès EXPLICITE exigé, sinon 'a_envoyer'.
+      const envoi = await sendCommercialEmail({
         to: r.client_email_cache,
         subject: tpl.subject(ctx),
         html: tpl.html(ctx),
       })
+
+      if (!envoi || envoi.success !== true) {
+        await pool.query(
+          `UPDATE devis_relances SET status='a_envoyer' WHERE id = $1`,
+          [r.relance_id]
+        )
+        await pool.query(
+          `INSERT INTO devis_activity (devis_id, event, payload) VALUES ($1, 'relance_not_sent', $2::jsonb)`,
+          [r.devis_id, JSON.stringify({
+            template: r.template_key,
+            email_sent: false,
+            raison: envoi?.skipped ? 'email_non_configure' : 'echec_envoi',
+          })]
+        ).catch(() => {})
+        logger.warn(
+          { devisId: r.devis_id, relance: r.relance_id, skipped: Boolean(envoi?.skipped) },
+          "Relance NON envoyée : l'envoi d'e-mail n'a pas confirmé de succès"
+        )
+        notSent++
+        continue
+      }
+
       await pool.query(
         `UPDATE devis_relances SET status='sent', sent_at = NOW() WHERE id = $1`,
         [r.relance_id]
       )
       await pool.query(
         `INSERT INTO devis_activity (devis_id, event, payload) VALUES ($1, 'relance_sent', $2::jsonb)`,
-        [r.devis_id, JSON.stringify({ template: r.template_key })]
+        [r.devis_id, JSON.stringify({ template: r.template_key, email_sent: true, provider: envoi.provider || null })]
       )
       sent++
     } catch (e) {
+      // Un échec d'envoi ne « annule » pas la relance : elle reste à envoyer.
       logger.error({ err: e.message, devisId: r.devis_id, relance: r.relance_id }, 'devis relance failed')
       await pool.query(
-        `UPDATE devis_relances SET status='cancelled' WHERE id = $1`,
+        `UPDATE devis_relances SET status='a_envoyer' WHERE id = $1`,
         [r.relance_id]
       )
+      notSent++
     }
   }
-  if (sent > 0) logger.info({ sent }, 'devis relances flush')
-  return { sent, scanned: rows.length }
+  if (sent > 0) logger.info({ sent, notSent }, 'devis relances flush')
+  return { sent, not_sent: notSent, scanned: rows.length }
 }
 
 let _intervalId = null

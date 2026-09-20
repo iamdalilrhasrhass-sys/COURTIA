@@ -114,6 +114,10 @@ export default function DevisWizard() {
   const [summary, setSummary] = useState(null)
   const [selectedOffers, setSelectedOffers] = useState([])
   const [pdfUrl, setPdfUrl] = useState(null)
+  // Le moteur ARK ne consulte aucun assureur : tant qu'aucun tarif réel n'est
+  // rattaché, la comparaison est une SIMULATION et ne peut pas produire de
+  // document client. On le dit à l'écran, pas seulement côté serveur.
+  const [isSimulation, setIsSimulation] = useState(false)
 
   // Recherche clients
   useEffect(() => {
@@ -160,6 +164,9 @@ export default function DevisWizard() {
       })
       setQuotes(data?.quotes || [])
       setSummary(data?.summary || null)
+      // `is_simulation` est renvoyé par l'API : les offres du moteur ARK sont
+      // simulées tant qu'elles n'ont pas de provenance réelle.
+      setIsSimulation(data?.is_simulation === true || (data?.quotes || []).some(q => q?.is_simulation === true))
       // Pré-sélection : meilleur prix + meilleur score
       const sorted = (data?.quotes || []).slice().sort((a, b) => (a.prime_annuelle_eur || 0) - (b.prime_annuelle_eur || 0))
       setSelectedOffers([sorted[0]?.provider].filter(Boolean))
@@ -179,6 +186,12 @@ export default function DevisWizard() {
         .filter(q => selectedOffers.includes(q.provider))
         .map(q => ({
           provider: q.provider,
+          // PROVENANCE OBLIGATOIRE : le serveur refuse (400) toute offre dont
+          // la source n'est pas réelle ('manual' | 'imported' | 'api'). Tant
+          // que la comparaison vient du moteur de simulation, on transmet
+          // 'simulation' — le back-end refuse alors de produire un document
+          // client, ce qui est le comportement voulu.
+          source: q.source || 'simulation',
           prime_annuelle_eur: q.prime_annuelle_eur,
           prime_mensuelle_eur: q.prime_mensuelle_eur,
           garanties: q.garanties,
@@ -190,7 +203,10 @@ export default function DevisWizard() {
           ...(q.sav ? { sav: q.sav } : {}),
           badges: q.badges || [],
         }))
-      const ark_summary = summary?.ark_explanation || `${selectedOffers.length} offre(s) sélectionnée(s) — économie potentielle ${fmtEur(summary?.economy_eur || 0)}/an.`
+      const ark_summary = summary?.ark_explanation
+        || `${selectedOffers.length} offre(s) sélectionnée(s)${
+          isSimulation ? ' — scénario simulé, aucun tarif réel obtenu auprès d\'un assureur.' : '.'
+        }`
       const { data } = await api.post('/devis/wizard/finalize', {
         devis_id: devisId,
         offers,
@@ -389,7 +405,7 @@ export default function DevisWizard() {
               <AuroraCard hover={false}>
                 <div style={{ padding: 60, textAlign: 'center', color: T.textSecondary }}>
                   <Loader2 size={32} className="animate-spin" style={{ color: T.ark, marginBottom: 16 }} />
-                  <div style={{ fontSize: 14 }}>ARK compare 8 compagnies du marché…</div>
+                  <div style={{ fontSize: 14 }}>ARK calcule 8 scénarios tarifaires simulés…</div>
                 </div>
               </AuroraCard>
             ) : (
@@ -398,11 +414,36 @@ export default function DevisWizard() {
                   <AuroraCard hover={false} glow style={{ marginBottom: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                       <Sparkles size={20} color={T.ark} />
-                      <h3 style={{ color: T.text, margin: 0, fontSize: 16 }}>Recommandation ARK</h3>
+                      <h3 style={{ color: T.text, margin: 0, fontSize: 16 }}>
+                        {isSimulation ? 'Scénario tarifaire (simulation)' : 'Recommandation ARK'}
+                      </h3>
                     </div>
                     <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-                      {summary.ark_explanation || `Meilleur prix : ${summary.cheapest_provider} à ${fmtEur(summary.cheapest_eur)}/an. Économie ${fmtEur(summary.economy_eur)}/an vs marché.`}
+                      {summary.ark_explanation || `Meilleur scénario : ${summary.cheapest_provider} à ${fmtEur(summary.cheapest_eur)}/an.`}
                     </p>
+                  </AuroraCard>
+                )}
+
+                {/* Bandeau de simulation — impossible à manquer, dans le design
+                    existant de la page (mêmes tokens, mêmes composants). */}
+                {isSimulation && (
+                  <AuroraCard hover={false} style={{ marginBottom: 16, borderLeft: `3px solid ${T.warning}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <div style={{ color: T.warning, flexShrink: 0, marginTop: 1 }}>
+                        <Shield size={18} />
+                      </div>
+                      <div>
+                        <div style={{ color: T.warning, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                          Simulation — aucun tarif réel
+                        </div>
+                        <div style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>
+                          {summary?.simulation_notice
+                            || "Ces offres sont calculées par le moteur de simulation COURTIA : elles ne proviennent d'aucun assureur."}
+                          {' '}Aucun PDF ni e-mail client ne peut être produit à partir de ces montants.
+                          Rattachez un devis réel (saisie manuelle, import ou retour d'API assureur) pour générer le document.
+                        </div>
+                      </div>
+                    </div>
                   </AuroraCard>
                 )}
 
@@ -436,7 +477,7 @@ export default function DevisWizard() {
                         )}
                         {idx === 0 && (
                           <AuroraBadge style={{ marginBottom: 8 }}>
-                            <Star size={10} /> Top choix ARK
+                            <Star size={10} /> {isSimulation ? 'Top score simulé' : 'Top choix ARK'}
                           </AuroraBadge>
                         )}
                         <div style={{ fontSize: 16, fontWeight: 800, color: T.text }}>{q.provider}</div>
@@ -469,8 +510,17 @@ export default function DevisWizard() {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                   <AuroraButton variant="ghost" onClick={() => setStep(2)}><ChevronLeft size={16} /> Précédent</AuroraButton>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    {!pdfUrl ? (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {isSimulation ? (
+                      <>
+                        <span style={{ color: T.warning, fontSize: 11, maxWidth: 320, lineHeight: 1.5 }}>
+                          Offres simulées : un devis client ne peut pas être généré ni envoyé à partir de ces montants.
+                        </span>
+                        <AuroraButton disabled chargement={busy}>
+                          <FileSignature size={14} /> PDF indisponible
+                        </AuroraButton>
+                      </>
+                    ) : !pdfUrl ? (
                       <AuroraButton onClick={generatePdf} chargement={busy} disabled={selectedOffers.length === 0}>
                         <FileSignature size={14} /> Générer PDFs ({selectedOffers.length})
                       </AuroraButton>

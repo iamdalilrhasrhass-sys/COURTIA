@@ -33,6 +33,12 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const { callArkStructured } = require('../services/arkEngine')
+const {
+  resultatIaVide,
+  estErreurIa,
+  repondreIaNonConfiguree,
+  repondreIaIndisponible,
+} = require('../services/iaErreurs')
 const { sendEmail, getEmailStatus, sendCommercialEmail } = require('../services/emailService')
 const { sendSMS, getSmsStatus } = require('../services/smsService')
 const whatsappMeta = require('../services/whatsappMetaService')
@@ -519,6 +525,7 @@ router.post('/:id/send', async (req, res) => {
       }
       delivery.provider = sent.provider
       delivery.id = sent.id || null
+      delivery.email_sent = true
     } else if (channel === 'sms') {
       if (!relance.client_phone) {
         return res.status(400).json({ error: "Ce client n'a pas de numéro de téléphone." })
@@ -557,8 +564,27 @@ router.post('/:id/send', async (req, res) => {
         return res.status(502).json({ error: "L'envoi WhatsApp a échoué : " + waErr.message })
       }
     } else {
-      // Canal "appel" ou autre : action humaine, on marque simplement comme traitée
+      // Canal « appel » (ou canal inconnu) : AUCUN envoi automatique n'a lieu.
+      // Avant, la relance était marquée 'sent' + sent_at alors qu'aucun message
+      // n'était parti : un succès affiché pour un client jamais relancé. Le canal
+      // humain laisse désormais la relance à envoyer, et le dit clairement.
       delivery.manual = true
+      const resultManuel = await pool.query(`
+        UPDATE relances
+        SET status = 'a_envoyer', updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `, [relanceId])
+
+      logger.info({ courtierId, relanceId, channel }, 'Relance canal manuel : aucun envoi automatique effectué')
+      return res.json({
+        success: true,
+        relance: resultManuel.rows[0],
+        delivery,
+        status: 'a_envoyer',
+        email_sent: false,
+        message: `Canal « ${channel} » : aucun envoi automatique n'existe. Rien n'a été envoyé — marquez la relance comme traitée après votre appel.`,
+      })
     }
 
     const result = await pool.query(`
@@ -569,7 +595,7 @@ router.post('/:id/send', async (req, res) => {
     `, [relanceId])
 
     logger.info({ courtierId, relanceId, channel, provider: delivery.provider }, 'Relance envoyée (réel)')
-    res.json({ success: true, relance: result.rows[0], delivery })
+    res.json({ success: true, relance: result.rows[0], delivery, email_sent: delivery.email_sent === true })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances/:id/send error')
     res.status(500).json({ error: 'Erreur serveur', details: err.message })
@@ -669,6 +695,17 @@ Génère les relances les plus impactantes.`,
       route: 'relances-auto-generate'
     })
 
+    // IA absente ou réponse vide : on ne renvoie JAMAIS `success: true` avec
+    // zéro contenu — l'écran affichait « 0 relance générée » comme si l'analyse
+    // avait eu lieu. On répond 503 configuration_required (motif de ark.js).
+    if (resultatIaVide(arkResponse) || !Array.isArray(arkResponse.structured?.relances)) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'relances-auto-generate' },
+        "La génération de relances par l'IA est indisponible : aucun moteur IA n'a répondu. Créez vos relances manuellement."
+      )
+    }
+
     // Insérer les relances générées
     const insertedRelances = []
     const relancesProposees = arkResponse.structured?.relances || []
@@ -723,6 +760,9 @@ Génère les relances les plus impactantes.`,
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances/auto-generate error')
+    if (estErreurIa(err)) {
+      return repondreIaIndisponible(res, err, { route: 'relances-auto-generate' })
+    }
     res.status(500).json({ error: 'Erreur ARK', details: err.message })
   }
 })
@@ -784,6 +824,17 @@ Génère le contenu avec variantes si possible.`,
       route: 'relances-ai-content'
     })
 
+    // Aucun contenu généré = aucun enregistrement. Avant, la route écrivait
+    // `content = undefined` puis répondait `success: true` avec un contenu vide :
+    // le courtier croyait le message IA prêt à être envoyé.
+    if (resultatIaVide(arkResponse) || !arkResponse.structured?.content) {
+      return repondreIaNonConfiguree(
+        res,
+        { route: 'relances-ai-content' },
+        "La génération de contenu par l'IA est indisponible : aucun moteur IA n'a répondu. Rédigez votre message manuellement."
+      )
+    }
+
     // Mettre à jour la relance avec le contenu généré
     await pool.query(`
       UPDATE relances
@@ -810,6 +861,9 @@ Génère le contenu avec variantes si possible.`,
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances/:id/ai-content error')
+    if (estErreurIa(err)) {
+      return repondreIaIndisponible(res, err, { route: 'relances-ai-content' })
+    }
     res.status(500).json({ error: 'Erreur ARK', details: err.message })
   }
 })

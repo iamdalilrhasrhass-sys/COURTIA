@@ -14,17 +14,35 @@ const telegramService = require('./telegramService');
 const { clientIA } = require('../lib/aiClient')
 const anthropic = clientIA(Anthropic, { apiKeyVar: 'ANTHROPIC_API_KEY' })
 
+const {
+  MODELE_ANALYSE,
+  MODELE_LEGER,
+  tarifModele,
+} = require('./iaModeles')
+const { MESSAGE_IA_INDISPONIBLE, journaliserErreurIa } = require('./iaErreurs')
+
 // ==================== CONFIGURATION ====================
 
+// Identifiants de modèles : SOURCE UNIQUE services/iaModeles.js.
+// RÈGLE : un modèle retiré = un chemin IA cassé. Les identifiants écrits ici
+// auparavant n'existaient pas chez le fournisseur :
+//   'claude-3-5-opus-20241022'  → Opus 3.5 n'a jamais été publié
+//   'claude-3-5-haiku-20241022' → retiré le 19/02/2026
+// Tarif en USD par token, dérivé de la table centrale (plus de tarif inventé).
+const COUTS = {
+  rapide: tarifModele(MODELE_LEGER),
+  analyse: tarifModele(MODELE_ANALYSE),
+}
+
 const MODEL_COSTS = {
-  'claude-3-5-haiku-20241022': {
-    input: 0.80 / 1_000_000,  // $0.80 per 1M input
-    output: 4.00 / 1_000_000  // $4.00 per 1M output
+  [MODELE_LEGER]: {
+    input: COUTS.rapide.input / 1_000_000,
+    output: COUTS.rapide.output / 1_000_000,
   },
-  'claude-3-5-opus-20241022': {
-    input: 20.00 / 1_000_000,  // $20 per 1M input
-    output: 60.00 / 1_000_000  // $60 per 1M output
-  }
+  [MODELE_ANALYSE]: {
+    input: COUTS.analyse.input / 1_000_000,
+    output: COUTS.analyse.output / 1_000_000,
+  },
 };
 
 const COMPLEX_KEYWORDS = [
@@ -116,9 +134,11 @@ async function checkAndUpdateQuota(pool, userId, modelType) {
     const quotaKey = modelType === 'opus' ? 'opus_monthly' : 'haiku_monthly';
     const monthlyQuota = tier[quotaKey];
     
-    // Compter les requêtes du mois actuel
+    // Compter les requêtes du mois actuel. L'identifiant du modèle « analyse »
+    // est injecté depuis la source unique : la valeur codée en dur visait un
+    // modèle inexistant, le compteur renvoyait donc toujours 0 (KPI faux).
     const countQuery = `
-      SELECT COUNT(*) as count, SUM(CASE WHEN model_used = 'claude-3-5-opus-20241022' THEN 1 ELSE 0 END) as opus_count
+      SELECT COUNT(*) as count, SUM(CASE WHEN model_used = '${MODELE_ANALYSE}' THEN 1 ELSE 0 END) as opus_count
       FROM api_request_logs
       WHERE user_id = $1 
       AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
@@ -213,16 +233,16 @@ async function callAiWithQuotaManagement(
   fallbackToOpusOnFailure = true
 ) {
   try {
-    // Déterminer si requête est complexe
+    // Déterminer si requête est complexe — identifiants issus de la source unique
     const isComplex = isComplexQuery(prompt);
-    let model = isComplex ? 'claude-3-5-opus-20241022' : 'claude-3-5-haiku-20241022';
+    let model = isComplex ? MODELE_ANALYSE : MODELE_LEGER;
     
     // Vérifier quota
     const quotaCheck = await checkAndUpdateQuota(pool, userId, isComplex ? 'opus' : 'haiku');
     if (!quotaCheck.allowed) {
       return {
         success: false,
-        error: `Quota ${model.includes('haiku') ? 'Haiku' : 'Opus'} dépassé. Upgrader votre plan.`,
+        error: `Quota ${isComplex ? 'analyse' : 'rapide'} dépassé. Upgrader votre plan.`,
         statusCode: 429
       };
     }
@@ -264,12 +284,13 @@ async function callAiWithQuotaManagement(
     };
     
   } catch (err) {
-    console.error('[AI ERROR]', err.message);
+    // Détail complet côté serveur ; jamais le message brut du fournisseur.
+    journaliserErreurIa(err, { route: 'aiCostManager', model });
     
-    // Si erreur sur Opus, essayer Haiku en fallback
-    if (fallbackToOpusOnFailure && model === 'claude-3-5-opus-20241022') {
+    // Si erreur sur le modèle d'analyse, essayer le modèle léger en secours
+    if (fallbackToOpusOnFailure && model === MODELE_ANALYSE) {
       console.log('[FALLBACK] Retrying with Haiku...');
-      model = 'claude-3-5-haiku-20241022';
+      model = MODELE_LEGER;
       
       try {
         const response = await anthropic.messages.create({
@@ -299,11 +320,12 @@ async function callAiWithQuotaManagement(
           cost: calculateCost(model, response.usage.input_tokens, response.usage.output_tokens)
         };
       } catch (fallbackErr) {
-        return { success: false, error: 'Both models failed', statusCode: 500 };
+        journaliserErreurIa(fallbackErr, { route: 'aiCostManager', model, fallback: true });
+        return { success: false, error: MESSAGE_IA_INDISPONIBLE, statusCode: 503 };
       }
     }
     
-    return { success: false, error: err.message, statusCode: 500 };
+    return { success: false, error: MESSAGE_IA_INDISPONIBLE, statusCode: 503 };
   }
 }
 

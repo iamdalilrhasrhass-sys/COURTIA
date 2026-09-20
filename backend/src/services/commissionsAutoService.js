@@ -246,9 +246,9 @@ async function reconcileMonth(pool, userId, year, month) {
     batch_id: batchId,
     reconciliations,
     summary: {
-      total_expected_eur: centsToEuros(reconciliations.reduce((s, r) => s + parseInt(r.expected_total_cents, 10), 0)),
-      total_received_eur: centsToEuros(reconciliations.reduce((s, r) => s + parseInt(r.received_total_cents, 10), 0)),
-      total_variance_eur: centsToEuros(reconciliations.reduce((s, r) => s + parseInt(r.variance_cents, 10), 0)),
+      total_expected_eur: centsToEuros(reconciliations.reduce((s, r) => s + (Number(r.expected_total_cents) || 0), 0)),
+      total_received_eur: centsToEuros(reconciliations.reduce((s, r) => s + (Number(r.received_total_cents) || 0), 0)),
+      total_variance_eur: centsToEuros(reconciliations.reduce((s, r) => s + (Number(r.variance_cents) || 0), 0)),
       companies_count: reconciliations.length
     }
   }
@@ -272,18 +272,27 @@ async function generateStatement(pool, userId, year, month) {
   const userRes = await pool.query(`
     SELECT first_name, last_name, cabinet_name, email FROM users WHERE id = $1
   `, [userId])
-  const user = userRes.rows[0]
+  const user = userRes.rows[0] || {}
+  if (!userRes.rows[0]) {
+    const erreur = new Error('Cabinet introuvable : impossible de générer un relevé de commissions.')
+    erreur.code = 'cabinet_introuvable'
+    erreur.statut = 404
+    throw erreur
+  }
 
-  // Totaux par compagnie
+  // Totaux par compagnie — uniquement des commissions RÉELLEMENT enregistrées.
+  // Chaque montant passe par Number(...) || 0 : un amount NULL produisait
+  // « NaN € » dans le relevé.
   const byInsurer = {}
   for (const com of commissionsRes.rows) {
-    if (!byInsurer[com.insurer]) {
-      byInsurer[com.insurer] = { expected: 0, received: 0, count: 0, items: [] }
+    const compagnie = com.insurer || 'Non renseigné'
+    if (!byInsurer[compagnie]) {
+      byInsurer[compagnie] = { expected: 0, received: 0, count: 0, items: [] }
     }
-    byInsurer[com.insurer].expected += parseInt(com.expected_amount_cents, 10)
-    byInsurer[com.insurer].received += parseInt(com.received_amount_cents, 10)
-    byInsurer[com.insurer].count++
-    byInsurer[com.insurer].items.push(com)
+    byInsurer[compagnie].expected += Number(com.expected_amount_cents) || 0
+    byInsurer[compagnie].received += Number(com.received_amount_cents) || 0
+    byInsurer[compagnie].count++
+    byInsurer[compagnie].items.push(com)
   }
 
   // Génération HTML pour PDF
@@ -343,8 +352,8 @@ async function generateStatement(pool, userId, year, month) {
     `
 
     for (const item of data.items) {
-      const expected = centsToEuros(item.expected_amount_cents)
-      const received = centsToEuros(item.received_amount_cents)
+      const expected = centsToEuros(Number(item.expected_amount_cents) || 0)
+      const received = centsToEuros(Number(item.received_amount_cents) || 0)
       const variance = received - expected
       const varianceClass = variance >= 0 ? 'positive' : 'negative'
       
