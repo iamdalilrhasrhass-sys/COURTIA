@@ -4,9 +4,12 @@ import { Sparkles, X, Send, Maximize2, Minimize2 } from 'lucide-react';
 import { ArkVoiceButton } from './ArkVoiceButton';
 import { ArkSuggestionsChips } from './ArkSuggestionsChips';
 import { lireReponseArk, messageErreurArk } from '../../lib/reponseArk';
+import { getAuthToken } from '../../api/sessionPolicy';
 
 const API_BASE = '/api';
-const getToken = () => localStorage.getItem('token');
+// Source de jeton canonique (courtia_token OU token) plutot qu'une cle unique :
+// c'est le meme choix que le client API (src/api/sessionPolicy.js).
+const getToken = () => getAuthToken();
 
 export function ArkBubbleV2() {
   const [open, setOpen] = useState(false);
@@ -59,7 +62,11 @@ export function ArkBubbleV2() {
   const handleVoiceResult = (text) => { setInput(text); sendMessage(text); };
   const handleSuggestion = (text) => sendMessage(text);
 
-  const bubbleSize = expanded ? { width: 480, height: 600 } : { width: 380, height: 500 };
+  // Sur un écran de 390 px, une bulle de 380 px positionnée à 24 px du bord
+  // débordait à gauche (titre tronqué). Largeur bornée par la fenêtre.
+  const bubbleSize = expanded
+    ? { width: 'min(480px, calc(100vw - 32px))', height: 'min(600px, calc(100vh - 140px))' }
+    : { width: 'min(380px, calc(100vw - 32px))', height: 'min(500px, calc(100vh - 140px))' };
 
   return (
     <>
