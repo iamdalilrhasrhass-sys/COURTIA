@@ -85,6 +85,7 @@ const Academy = lazy(() => import('./pages/Academy'))
 const BrowserPilot = lazy(() => import('./pages/BrowserPilot'))
 // Écran interne de pilotage commercial (réservé aux administrateurs).
 const AcquisitionCourtia = lazy(() => import('./pages/AcquisitionCourtia'))
+const AdminEssais = lazy(() => import('./pages/AdminEssais'))
 
 function RouteFallback() {
   return (
@@ -312,6 +313,9 @@ export default function App() {
               Monté à la racine SEULEMENT (jamais sous /demo) : il lit le
               service de capture réel, jamais des données synthétiques. */}
           <Route path="/acquisition" element={<AdminRoute><AcquisitionCourtia /></AdminRoute>} />
+          {/* SUIVI DES ESSAIS — écran interne (super administrateur) : statut,
+              dates réelles, jours restants et usage mesurés en base. */}
+          <Route path="/admin/essais" element={<AdminRoute><AdminEssais /></AdminRoute>} />
         </Route>
 
         {/* Démonstration — mêmes pages, mêmes composants que le cockpit réel */}
