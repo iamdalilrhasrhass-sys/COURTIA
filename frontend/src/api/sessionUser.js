@@ -1,5 +1,6 @@
 import api from './index'
 import { clearStoredSession, getAuthToken } from './sessionPolicy'
+import { configurerContexte } from '../lib/monnaie'
 
 const USER_CACHE_TTL_MS = Number(import.meta.env.VITE_SESSION_USER_CACHE_TTL_MS || 60_000)
 const USER_429_COOLDOWN_MS = Number(import.meta.env.VITE_AUTH_ME_BACKOFF_MS || 45_000)
@@ -25,6 +26,11 @@ function readStoredUser() {
 
 function persistUser(user) {
   if (!user || typeof user !== 'object') return
+  // Le profil est la source de vérité de la devise du cabinet : on pose le
+  // contexte monétaire au moment exact où le profil devient connu. Un profil
+  // partiel (sans champ `pays`, ex. réponse de connexion) ne doit jamais
+  // écraser une devise déjà établie.
+  if (user.pays !== undefined) configurerContexte({ pays: user.pays, langue: user.langue })
   localStorage.setItem('courtia_user', JSON.stringify(user))
   localStorage.setItem('user', JSON.stringify(user))
   if (typeof window !== 'undefined') {

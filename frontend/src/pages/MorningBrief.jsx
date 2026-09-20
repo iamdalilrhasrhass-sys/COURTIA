@@ -13,6 +13,7 @@ import { computeDailyPriorities } from '../lib/priorities'
 import { chargerResume } from '../lib/salesApi'
 import { blocsResume, NON_MESURE } from '../lib/salesViewModel'
 import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
+import { fmtMontant, fmtNombre } from '../lib/monnaie'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const T = {
@@ -43,13 +44,14 @@ function formatDate() {
   return new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function fmtEur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0)) }
-function fmtNum(v) { return Number(v || 0).toLocaleString('fr-FR') }
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+function fmtEur(v) { return fmtMontant(v, { maximumFractionDigits: 0 }) }
+function fmtNum(v) { return fmtNombre(v) }
 
 /* État initial VIDE : le brief est construit à partir des dossiers chargés
    (moteur local src/lib/priorities.js). L'ancien état initial portait un brief
    de démonstration complet — Martin Conseil, Leroy Marie, Dupont SAS, « Devis
-   #247 », « 12 400 €/an » — qui s'affichait avant l'arrivée des données, et
+   #247 », « 12 400 de prime par an » — qui s'affichait avant l'arrivée des données, et
    restait à l'écran si le moteur ne produisait rien. */
 const BRIEF_VIDE = {
   score: null,

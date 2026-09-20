@@ -7,6 +7,7 @@ import {
   CheckCircle2, XCircle, Lightbulb, Layers
 } from 'lucide-react'
 import CommissionForecastBar from '../components/widgets/CommissionForecastBar'
+import { fmtMontant, fmtNombre } from '../lib/monnaie'
 
 // ─── Aurora Dark Theme Tokens ──────────────────────────────────────────────
 const T = {
@@ -34,11 +35,12 @@ const T = {
   dangerBorder: 'rgba(239,68,68,0.15)',
 }
 
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
 const fmtEur = function(v) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+  return fmtMontant(v, { maximumFractionDigits: 0 })
 }
 const fmtNum = function(v) {
-  return Number(v || 0).toLocaleString('fr-FR')
+  return fmtNombre(v)
 }
 const fmtPct = function(v) {
   return Number(v || 0).toFixed(1) + ' %'
@@ -350,7 +352,7 @@ function ArkInsightBanner() {
           Analyse ARK du mois
         </div>
         <p style={{ fontSize: 13, color: T.textSecondary, margin: '0 0 6px', lineHeight: 1.6 }}>
-          Votre taux de transformation devis baisse ce mois-ci (38 % contre 58 % en avril). ARK recommande de prioriser les 5 devis sans réponse. Par ailleurs, 9 clients présentent un score de risque élevé — une action préventive pourrait sauvegarder jusqu'à 8 570 € de primes annuelles.
+          Votre taux de transformation devis baisse ce mois-ci (38 % contre 58 % en avril). ARK recommande de prioriser les 5 devis sans réponse. Par ailleurs, 9 clients présentent un score de risque élevé — une action préventive pourrait sauvegarder jusqu'à {fmtEur(8570)} de primes annuelles.
         </p>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 11, color: T.danger, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -814,7 +816,7 @@ export default function Rapports() {
                   <strong style={{ color: T.text }}>Concentration Auto :</strong> 38 % du portefeuille exposé au marché automobile. Diversification recommandée vers Santé et Prévoyance.
                 </li>
                 <li style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: T.text }}>Échéances imminentes :</strong> 3 contrats à moins de 30 jours sans devis de renouvellement — risque de perte de 8 700 €.
+                  <strong style={{ color: T.text }}>Échéances imminentes :</strong> 3 contrats à moins de 30 jours sans devis de renouvellement — risque de perte de {fmtEur(8700)}.
                 </li>
               </ul>
             </div>
@@ -840,7 +842,7 @@ export default function Rapports() {
                 }}>1</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>Relancer les 5 devis sans réponse</div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>Potentiel de conversion estimé à 4 200 €. Délai recommandé : 48h.</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Potentiel de conversion estimé à {fmtEur(4200)}. Délai recommandé : 48h.</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
@@ -851,7 +853,7 @@ export default function Rapports() {
                 }}>2</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>Contacter les 3 clients à échéance imminente</div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>Moreau Éric, Martin Conseil, Dubois SCP. Sauvegarde potentielle : 8 700 €.</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Moreau Éric, Martin Conseil, Dubois SCP. Sauvegarde potentielle : {fmtEur(8700)}.</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
@@ -862,7 +864,7 @@ export default function Rapports() {
                 }}>3</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>Proposer multi-équipement aux 3 meilleures cibles</div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>Dupont SAS, Martin Sophie, Garcia Anne. Potentiel additionnel : 21 000 €.</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Dupont SAS, Martin Sophie, Garcia Anne. Potentiel additionnel : {fmtEur(21000)}.</div>
                 </div>
               </div>
             </div>

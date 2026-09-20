@@ -7,8 +7,12 @@ import AuroraPageHeader from '../components/brand/AuroraPageHeader'
 import AuroraButton from '../components/brand/AuroraButton'
 import AuroraEmptyState from '../components/brand/AuroraEmptyState'
 import BubbleBackground from '../components/BubbleBackground'
-import { formatCommissionCurrency, getCommissionStatusMeta, summarizeCommissions } from '../lib/commissions'
+import { getCommissionStatusMeta, summarizeCommissions } from '../lib/commissions'
+import { deviseCourante, fmtMontant } from '../lib/monnaie'
 import '../styles/design-system.css'
+
+// Montants de commission dans la devise du cabinet : CHF en Suisse, EUR sinon.
+const formatCommissionCurrency = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const YEARS = [2026, 2025, 2024]
 
@@ -270,8 +274,8 @@ export default function Commissions() {
               <input value={manual.insurer} onChange={(e) => setManual({ ...manual, insurer: e.target.value })} placeholder="Compagnie" className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
               <input value={manual.period} onChange={(e) => setManual({ ...manual, period: e.target.value })} placeholder="Période YYYY-MM" className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
               <div className="grid grid-cols-2 gap-3">
-                <input value={manual.expected_amount} onChange={(e) => setManual({ ...manual, expected_amount: e.target.value })} placeholder="Attendu €" className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
-                <input value={manual.received_amount} onChange={(e) => setManual({ ...manual, received_amount: e.target.value })} placeholder="Reçu €" className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
+                <input value={manual.expected_amount} onChange={(e) => setManual({ ...manual, expected_amount: e.target.value })} placeholder={`Attendu ${deviseCourante()}`} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
+                <input value={manual.received_amount} onChange={(e) => setManual({ ...manual, received_amount: e.target.value })} placeholder={`Reçu ${deviseCourante()}`} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
               </div>
               <select value={manual.status} onChange={(e) => setManual({ ...manual, status: e.target.value })} className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none">
                 <option value="expected" className="text-slate-900">Prévue</option>

@@ -6,6 +6,7 @@ import BubbleCard from '../components/BubbleCard'
 import BubbleBadge from '../components/BubbleBadge'
 import BubbleButton from '../components/BubbleButton'
 import BubbleBackground from '../components/BubbleBackground'
+import { fmtMontant, fmtNombre } from '../lib/monnaie'
 
 // ─── Animated Number ──────────────────────────────────────────────────────────
 function AnimatedNumber({ value, format = 'number' }) {
@@ -13,9 +14,10 @@ function AnimatedNumber({ value, format = 'number' }) {
   const transform = useTransform(motionValue, (v) => {
     // Une valeur non mesurée s'affiche « — » : jamais un chiffre inventé.
     if (format === 'vide' || value === null || value === undefined) return '—'
-    if (format === 'currency') return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+    // Devise du cabinet : CHF en Suisse, EUR sinon.
+    if (format === 'currency') return fmtMontant(v, { maximumFractionDigits: 0 })
     if (format === 'percent') return `${v.toFixed(1)}%`
-    return Math.round(v).toLocaleString('fr-FR')
+    return fmtNombre(Math.round(v))
   })
   const [displayValue, setDisplayValue] = useState('0')
 
@@ -256,7 +258,7 @@ export default function AnalyticsExecutive() {
   // KPI — uniquement des mesures réelles (POST /api/dashboard/stats le jour où
   // l'indicateur est calculé). Les indicateurs que le produit ne mesure pas
   // encore s'affichent « — » : avant ce correctif, la page annonçait un CA de
-  // 142 000 €, un taux de résiliation de 3,2 % et 24 tâches/semaine EN DUR, pour
+  // 142 000 de CA, un taux de résiliation de 3,2 % et 24 tâches/semaine EN DUR, pour
   // n'importe quel cabinet, même totalement vide.
   const kpis = [
     { title: 'Taux résiliation', value: null, format: 'vide', icon: Percent, color: '#dc2626' },

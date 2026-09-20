@@ -9,6 +9,7 @@ import {
   Shield, ChevronRight, Users, Euro, Clock, Briefcase, Sparkles,
   LayoutGrid, List
 } from 'lucide-react'
+import { fmtMontant } from '../lib/monnaie'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -17,7 +18,8 @@ const T = {
   success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const DEMO_CONTRACTS = [
   { id: 1, client: 'Martin Conseil', type: 'Pro', produit: 'RC Pro', compagnie: 'Aurora Assurances', prime: 2800, effet: '2025-01-15', echeance: '2026-06-01', jours: 21, statut: 'actif', risque: 72, ark: 'Échéance dans 21j. Préparer relance.' },

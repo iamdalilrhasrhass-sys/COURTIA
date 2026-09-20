@@ -20,6 +20,7 @@ import {
   normalizeContract,
   normalizeTask,
 } from '../lib/clientViewModel'
+import { fmtMontant } from '../lib/monnaie'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -42,7 +43,8 @@ const T = {
   danger: '#EF4444',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const STATUS = {
   actif:      { label: 'Actif',     color: T.success },

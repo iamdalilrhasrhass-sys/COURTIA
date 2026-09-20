@@ -17,6 +17,7 @@ import { AuroraBadge } from '../components/aurora/AuroraBadge'
 import { AuroraSpinner } from '../components/aurora/AuroraSpinner'
 import { AuroraDialog } from '../components/aurora/AuroraDialog'
 import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
+import { fmtMontant } from '../lib/monnaie'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
@@ -31,7 +32,8 @@ const STATUS_LABEL = {
   signed: 'Signé', refused: 'Refusé', expired: 'Expiré',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v) || 0)
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 const fmtDate = (d) => d ? new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
 export default function DevisDetail() {

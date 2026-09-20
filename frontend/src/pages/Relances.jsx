@@ -6,6 +6,7 @@ import {
   User, AlertTriangle, Clock, Euro, Target, FileText, Loader, CheckCircle
 } from 'lucide-react'
 import api from '../api'
+import { fmtMontant } from '../lib/monnaie'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -14,7 +15,8 @@ const T = {
   success: '#22C55E', warning: '#F59E0B', danger: '#EF4444',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const PRIORITY_LABELS = { high: 'Haute', medium: 'Moyenne', low: 'Basse' }
 const TYPE_LABELS = {

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import { deviseCourante } from '../lib/monnaie'
 
 const inputStyle = {
   width: '100%', padding: '10px 12px',
@@ -162,7 +163,7 @@ export default function ContratNew() {
                   onFocus={focus} onBlur={blur} style={inputStyle}
                 />
               </Field>
-              <Field label="Prime annuelle (€)">
+              <Field label={`Prime annuelle (${deviseCourante()})`}>
                 <input
                   type="number" min="0" step="0.01"
                   value={form.prime_annuelle} onChange={set('prime_annuelle')} placeholder="Ex : 1200"

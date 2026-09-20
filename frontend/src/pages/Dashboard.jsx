@@ -12,6 +12,7 @@ import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } 
 import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyStateAurora, MobileCockpitCard, SectionGlow } from '../components/aurora/Aurora3D'
 import { libelleSante, variation } from '../lib/cockpitTendances'
+import { fmtMontant, fmtNombre } from '../lib/monnaie'
 import { BubbleCMini } from '../design/BubbleC'
 import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
 import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
@@ -43,8 +44,9 @@ const T = {
   danger:       '#EF4444',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
-const fmtNum = (v) => Number(v || 0).toLocaleString('fr-FR')
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
+const fmtNum = (v) => fmtNombre(v)
 
 function normalizeRows(payload) {
   if (Array.isArray(payload)) return payload
@@ -202,7 +204,7 @@ function construirePriorites(contrats, clients) {
       id: `c${c.id}`,
       level: j <= 7 ? 'urgent' : 'haut',
       title: `${j <= 0 ? 'Échéance dépassée' : `Renouvellement ${c.type || 'contrat'}`} — ${nomContrat(c)}`,
-      meta: `${j <= 0 ? `${Math.abs(j)} j de retard` : `J-${j}`} • ${primeDe(c).toLocaleString('fr-FR')} €`,
+      meta: `${j <= 0 ? `${Math.abs(j)} j de retard` : `J-${j}`} • ${fmtEur(primeDe(c))}`,
       cta: 'Préparer', accent: j <= 7 ? T.danger : T.warning, to: '/contrats',
     })
   })
@@ -355,7 +357,7 @@ export default function Dashboard() {
   const metrics = useMemo(() => {
     const statusMap = stats?.clientsParStatut || {}
     // Aucun repli chiffré : les anciennes valeurs (124 clients, 312 contrats,
-    // 248 000 €, score 82) étaient FABRIQUÉES. Quand un appel échouait, le
+    // 248 000 de primes, score 82) étaient FABRIQUÉES. Quand un appel échouait, le
     // cockpit annonçait 124 clients pendant que les autres écrans en affichaient
     // 8 — une contradiction visible par le prospect. On retombe sur les données
     // réellement chargées, sinon sur 0, ce qui reste honnête.

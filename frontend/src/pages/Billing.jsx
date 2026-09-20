@@ -9,6 +9,7 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import GlassCard from '../components/ui/GlassCard'
 import StatusPill from '../components/ui/StatusPill'
+import { fmtMontant } from '../lib/monnaie'
 
 const PLAN_ICON = {
   starter: CreditCard,
@@ -220,7 +221,7 @@ function PlanCard({ plan, selected, loading, onSelect }) {
 
       <div className="mt-4">
         <div className="text-3xl font-black tracking-tight text-white">
-          {contactOnly ? 'Sur devis' : `${Math.round(Number(plan.price || 0))} €`}
+          {contactOnly ? 'Sur devis' : fmtMontant(plan.price, { maximumFractionDigits: 0 })}
         </div>
         {!contactOnly && <div className="text-sm text-white/50">HT / mois</div>}
       </div>

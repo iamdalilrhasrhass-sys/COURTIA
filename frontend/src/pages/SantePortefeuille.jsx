@@ -9,6 +9,7 @@ import {
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import api from '../api'
+import { fmtMontant } from '../lib/monnaie'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
@@ -20,7 +21,7 @@ const T = {
 
 /* État neutre : tant que /contrats et /clients n'ont pas répondu, RIEN n'est
    affiché comme un chiffre. L'ancien état initial portait des constantes de
-   démonstration (124 clients, 312 contrats, 248 000 €, score 82) : elles
+   démonstration (124 clients, 312 contrats, 248 000 de primes, score 82) : elles
    s'affichaient le temps du chargement et, si l'API ne répondait pas, elles
    restaient à l'écran — des chiffres fabriqués présentés comme ceux du
    cabinet. Un tiret est honnête, un faux chiffre ne l'est pas. */
@@ -244,7 +245,7 @@ const alertsPour = (d) => {
 }
 
 /* Recommandations : uniquement ce que les dossiers chargés permettent d'affirmer.
-   Les potentiels chiffrés (« 8 400 €/an ») et les comparaisons de marché
+   Les potentiels chiffrés (des primes annuelles) et les comparaisons de marché
    supposaient un référentiel externe absent : ils ne sont plus affichés. */
 const recosPour = (d) => {
   const liste = []
@@ -279,7 +280,8 @@ const recosPour = (d) => {
   return liste.slice(0, 3)
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 // ─── Gauge SVG ─────────────────────────────────────────────
 function ScoreGauge({ score, color, size = 200 }) {

@@ -6,6 +6,7 @@ import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
 import api from '../api'
 import toast from 'react-hot-toast'
+import { deviseCourante, fmtMontant } from '../lib/monnaie'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
@@ -14,7 +15,8 @@ const T = {
   success: '#22C55E', warning: '#F59E0B',
 }
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0)
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 function GaugeRing({ label, current, target, fmt = (v) => v, color = T.accent }) {
   const pct = target ? Math.min(100, Math.max(0, Math.round((current / target) * 100))) : 0
@@ -270,7 +272,7 @@ function EditTargetsModal({ initial, onSave, onClose }) {
         </h3>
         <div style={{ display: 'grid', gap: 12 }}>
           <div>
-            <label style={{ color: T.textSecondary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>CA cible (€)</label>
+            <label style={{ color: T.textSecondary, fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>CA cible ({deviseCourante()})</label>
             <input type="number" value={vals.ca_target_eur}
               onChange={e => setVals({ ...vals, ca_target_eur: Number(e.target.value) })}
               style={{ width: '100%', padding: 10, marginTop: 4, background: 'rgba(255,255,255,0.05)', color: T.text, border: `1px solid ${T.cardBorder}`, borderRadius: 8, fontSize: 13 }} />

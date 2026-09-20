@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useMotionValue, animate } from 'framer-motion'
+import { fmtMontant, fmtNombre } from '../../lib/monnaie'
 
-const fmtCurrency = v =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+// Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
+const fmtCurrency = v => fmtMontant(v, { maximumFractionDigits: 0 })
 
-const fmtNumber = v =>
-  new Intl.NumberFormat('fr-FR').format(Math.round(v))
+const fmtNumber = v => fmtNombre(Math.round(v))
 
 const fmtPercent = v => `${v.toFixed(1)}%`
 

@@ -1,0 +1,163 @@
+/* ============================================================================
+   COURTIA — Devise unique du frontend
+   ----------------------------------------------------------------------------
+   Un cabinet suisse (pays = 'CH') raisonne en francs suisses : les écrans
+   privés doivent afficher « 1'234.50 CHF », jamais « 1 235 € ». La règle vit
+   ici, à un seul endroit, pour qu'aucune page ne réinvente son propre
+   formatage.
+
+   - `configurerContexte({ pays, langue })` : appelé dès que le profil réel
+     (`GET /api/auth/me`) est connu (voir `api/sessionUser.js`).
+   - Avant toute configuration explicite, le contexte est relu depuis le profil
+     persisté (`localStorage.courtia_user` / `localStorage.user`) : le premier
+     rendu après un rechargement est donc déjà dans la bonne devise.
+   - Profil inconnu : EUR / fr-FR — le comportement historique, jamais cassé
+     pour un cabinet français.
+   - Valeur absente ou non numérique : '—'. On n'invente jamais 0, jamais NaN.
+
+   Le module ne touche qu'au FORMATAGE des montants : aucune couleur, aucun
+   espacement, aucun composant.
+   ========================================================================== */
+
+const CLES_PROFIL_STOCKE = ['courtia_user', 'user']
+
+// « CH » est le code ISO attendu (broker_profiles.pays). Les libellés longs
+// sont acceptés par tolérance : un profil reste un profil.
+const PAYS_SUISSES = new Set(['CH', 'CHE', 'SUISSE', 'SWITZERLAND', 'SCHWEIZ', 'SVIZZERA', 'SVIZRA'])
+
+const DEVISE_SUISSE = 'CHF'
+const LOCALE_SUISSE = 'fr-CH'
+const DEVISE_DEFAUT = 'EUR'
+const LOCALE_DEFAUT = 'fr-FR'
+
+export const VALEUR_ABSENTE = '—'
+
+/** Contexte actif. `null` = pas encore configuré (lecture paresseuse). */
+let contexte = null
+const cacheFormats = new Map()
+
+function normaliserPays(pays) {
+  return String(pays ?? '').trim().toUpperCase()
+}
+
+/** Vrai pour un pays/canton suisse reconnu (`'CH'`, `'Suisse'`, …). */
+export function paysSuisse(pays) {
+  return PAYS_SUISSES.has(normaliserPays(pays))
+}
+
+function contextePour(pays, langue) {
+  const paysNormalise = normaliserPays(pays) || null
+  const langueNormalisee = langue ? String(langue) : null
+  if (paysSuisse(pays)) {
+    return { pays: paysNormalise, langue: langueNormalisee, devise: DEVISE_SUISSE, locale: LOCALE_SUISSE }
+  }
+  return { pays: paysNormalise, langue: langueNormalisee, devise: DEVISE_DEFAUT, locale: LOCALE_DEFAUT }
+}
+
+function profilStocke() {
+  if (typeof localStorage === 'undefined') return null
+  for (const cle of CLES_PROFIL_STOCKE) {
+    try {
+      const brut = localStorage.getItem(cle)
+      if (!brut) continue
+      const profil = JSON.parse(brut)
+      if (profil && typeof profil === 'object' && profil.pays) return profil
+    } catch {
+      // Profil illisible : on garde la devise par défaut, sans casser l'écran.
+    }
+  }
+  return null
+}
+
+function contexteEffectif() {
+  if (!contexte) {
+    const profil = profilStocke()
+    contexte = profil ? contextePour(profil.pays, profil.langue) : contextePour(null, null)
+  }
+  return contexte
+}
+
+/**
+ * Fixe le contexte de devise du cabinet connecté.
+ * @param {{ pays?: string|null, langue?: string|null }} profil
+ * @returns {{ pays: string|null, langue: string|null, devise: string, locale: string }}
+ */
+export function configurerContexte({ pays, langue } = {}) {
+  contexte = contextePour(pays, langue)
+  return contexte
+}
+
+/** Devise affichée par les écrans privés : 'CHF' ou 'EUR'. */
+export function deviseCourante() {
+  return contexteEffectif().devise
+}
+
+/** Locale de formatage correspondante : 'fr-CH' ou 'fr-FR'. */
+export function localeCourante() {
+  return contexteEffectif().locale
+}
+
+/** Contexte complet (lecture seule) — utile aux tests et aux diagnostics. */
+export function contexteCourant() {
+  return { ...contexteEffectif() }
+}
+
+function nombreOuNull(valeur) {
+  if (typeof valeur === 'number') return Number.isFinite(valeur) ? valeur : null
+  // Un montant est un nombre ou une chaîne numérique. Objet, tableau, booléen
+  // ou valeur vide ne sont pas des montants : ils valent '—', jamais 0.
+  if (typeof valeur !== 'string') return null
+  const brut = valeur.trim()
+  if (brut === '') return null
+  const nombre = Number(brut)
+  return Number.isFinite(nombre) ? nombre : null
+}
+
+function formateur(locale, options) {
+  const cle = `${locale}|${JSON.stringify(options)}`
+  let instance = cacheFormats.get(cle)
+  if (!instance) {
+    instance = new Intl.NumberFormat(locale, options)
+    cacheFormats.set(cle, instance)
+  }
+  return instance
+}
+
+/**
+ * Montant en devise du cabinet. Absent/non numérique → '—'.
+ * @param {number|string|null|undefined} valeur
+ * @param {Intl.NumberFormatOptions & { devise?: string, locale?: string }} [options]
+ *   Par défaut : décimales selon l'Intl de la locale. Les écrans qui affichent
+ *   des montants ronds passent `{ maximumFractionDigits: 0 }`.
+ */
+export function fmtMontant(valeur, options = {}) {
+  const nombre = nombreOuNull(valeur)
+  if (nombre === null) return VALEUR_ABSENTE
+  const { devise, locale } = contexteEffectif()
+  const { devise: deviseForcee, locale: localeForcee, ...reste } = options || {}
+  return formateur(localeForcee || locale, {
+    style: 'currency',
+    currency: deviseForcee || devise,
+    ...reste,
+  }).format(nombre)
+}
+
+/** Montant abrégé pour les graphiques : « 12,4 k € » / « 12.4 k CHF ». */
+export function fmtMontantCourt(valeur) {
+  const nombre = nombreOuNull(valeur)
+  if (nombre === null) return VALEUR_ABSENTE
+  const { devise, locale } = contexteEffectif()
+  return formateur(locale, {
+    style: 'currency',
+    currency: devise,
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(nombre)
+}
+
+/** Nombre nu (comptages, volumes) selon la locale du cabinet. Absent → '—'. */
+export function fmtNombre(valeur) {
+  const nombre = nombreOuNull(valeur)
+  if (nombre === null) return VALEUR_ABSENTE
+  return formateur(contexteEffectif().locale, {}).format(nombre)
+}
