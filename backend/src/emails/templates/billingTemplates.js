@@ -3,16 +3,20 @@ function buildBillingTemplate(kind, vars = {}) {
   const planName = vars.planName || 'COURTIA';
   const trialDays = vars.trialDays || 7;
   const trialEndDate = vars.trialEndDate || '';
+  // Libellé neutre : « essai gratuit » + devise du cabinet si elle est connue.
+  const essaiLibelle = vars.devise ? `essai gratuit, facturation en ${vars.devise}` : 'essai gratuit';
 
   const map = {
+    // Aucun montant de démarrage n'est chiffré ici : le libellé dit simplement
+    // qu'il n'y a rien à payer pendant l'essai, sans devise ni prix inventé.
     trial_activated_j0: {
       subject: `COURTIA — Essai ${planName} activé`,
       html: `
         <p>${firstName},</p>
         <p>Votre essai ${planName} est activé.</p>
-        <p>0 € aujourd’hui. Essai de ${trialDays} jours. Annulation en ligne possible avant la fin d’essai.</p>
+        <p>Aucun montant prélevé aujourd’hui (${essaiLibelle}). Essai de ${trialDays} jours. Annulation en ligne possible avant la fin d’essai.</p>
       `,
-      text: `${firstName}, votre essai ${planName} est activé. 0 € aujourd’hui. Essai ${trialDays} jours. Annulation en ligne.`,
+      text: `${firstName}, votre essai ${planName} est activé. Aucun montant prélevé aujourd’hui (${essaiLibelle}). Essai ${trialDays} jours. Annulation en ligne.`,
     },
     trial_reminder_j5: {
       subject: `COURTIA — Rappel fin d’essai`,

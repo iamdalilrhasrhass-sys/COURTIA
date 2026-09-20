@@ -7,6 +7,7 @@
  */
 
 const PDFDocument = require('pdfkit')
+const { fmtMontant, marcheDepuis } = require('../../../lib/devise')
 
 const COLORS = {
   primary: '#8B5CF6',
@@ -60,7 +61,7 @@ async function generateDevoirConseil(data) {
     // Page 2
     doc.addPage()
     drawSection3Recommendation(doc, recommendation, broker)
-    drawSection4Alternatives(doc, alternatives)
+    drawSection4Alternatives(doc, alternatives, broker)
     
     // Page 3
     doc.addPage()
@@ -207,6 +208,9 @@ function drawSection2Needs(doc, needs) {
 }
 
 function drawSection3Recommendation(doc, recommendation, broker) {
+  // Devise du cabinet (CHF en Suisse) : un document client ne porte jamais la
+  // devise d'un autre marché.
+  const marche = (broker && (broker.market || marcheDepuis(broker))) || 'FR'
   const y = 50
   
   doc.fillColor(COLORS.primary).fontSize(14)
@@ -238,7 +242,7 @@ function drawSection3Recommendation(doc, recommendation, broker) {
   
   if (recommendation.premium) {
     doc.fillColor(COLORS.primary).fontSize(11)
-       .text(`Prime : ${recommendation.premium}€/an`, 100, itemY + 70)
+       .text(`Prime : ${fmtMontant(recommendation.premium, marche)}/an`, 100, itemY + 70)
   }
   
   // Raisons de la recommandation
@@ -280,7 +284,8 @@ function drawSection3Recommendation(doc, recommendation, broker) {
   }
 }
 
-function drawSection4Alternatives(doc, alternatives) {
+function drawSection4Alternatives(doc, alternatives, broker) {
+  const marche = (broker && (broker.market || marcheDepuis(broker))) || 'FR'
   const y = 400
   
   doc.fillColor(COLORS.primary).fontSize(14)
@@ -307,7 +312,7 @@ function drawSection4Alternatives(doc, alternatives) {
       doc.text(`Compagnie : ${alt.insurer}`, 60, itemY + 22)
     }
     if (alt.premium) {
-      doc.text(`Prime : ${alt.premium}€/an`, 200, itemY + 22)
+      doc.text(`Prime : ${fmtMontant(alt.premium, marche)}/an`, 200, itemY + 22)
     }
     
     const whyRejected = alt.why_rejected || alt.rejection_reason || 'Ne correspond pas exactement aux besoins'

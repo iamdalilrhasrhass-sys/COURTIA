@@ -6,6 +6,7 @@
  */
 
 const PDFDocument = require('pdfkit')
+const { fmtMontant, marcheDepuis } = require('../../../lib/devise')
 
 const COLORS = {
   primary: '#8B5CF6',
@@ -317,8 +318,10 @@ function drawSection6Supervision(doc, broker) {
   
   const rcpInsurer = broker.rcp_insurer || '[Assureur RCP à renseigner]'
   const rcpPolicy = broker.rcp_policy_number || '[N° police]'
-  const rcpAmount = broker.rcp_coverage_amount 
-    ? `${new Intl.NumberFormat('fr-FR').format(broker.rcp_coverage_amount)} €`
+  // Montant affiché dans la devise du cabinet (CHF pour un cabinet suisse).
+  const marche = broker.market || marcheDepuis(broker)
+  const rcpAmount = broker.rcp_coverage_amount
+    ? fmtMontant(broker.rcp_coverage_amount, marche, 0)
     : '[Montant couverture]'
   
   doc.fillColor(COLORS.text).fontSize(10)
@@ -347,7 +350,7 @@ function drawSection6Supervision(doc, broker) {
     
     if (broker.financial_guarantee_amount) {
       doc.font('Helvetica-Bold').text('Montant :', 50, itemY)
-      doc.font('Helvetica').text(`${new Intl.NumberFormat('fr-FR').format(broker.financial_guarantee_amount)} €`, 160, itemY)
+      doc.font('Helvetica').text(fmtMontant(broker.financial_guarantee_amount, marcheDepuis(broker), 0), 160, itemY)
     }
   }
 }

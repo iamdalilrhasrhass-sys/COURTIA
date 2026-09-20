@@ -7,6 +7,7 @@
  */
 
 const PDFDocument = require('pdfkit')
+const { fmtMontant, marcheDepuis } = require('../../../lib/devise')
 
 // Couleurs COURTIA
 const COLORS = {
@@ -215,8 +216,9 @@ function drawSection5Payment(doc, premium) {
   
   doc.fillColor(COLORS.text).fontSize(9)
   
-  const primeText = premium.amount 
-    ? `Prime annuelle : ${premium.amount}€ ${premium.taxes ? `(dont taxes : ${premium.taxes}€)` : ''}`
+  const marche = premium.market || marcheDepuis(premium)
+  const primeText = premium.amount
+    ? `Prime annuelle : ${fmtMontant(premium.amount, marche)}${premium.taxes ? ` (dont taxes : ${fmtMontant(premium.taxes, marche)})` : ''}`
     : 'Prime : selon conditions particulières'
   
   const fracText = premium.frequency || 'Annuel, semestriel, trimestriel ou mensuel selon choix'

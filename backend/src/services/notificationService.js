@@ -1,10 +1,14 @@
 const telegramService = require('./telegramService');
+const { fmtMontant, marcheDepuis } = require('../lib/devise');
 
 const notificationService = {
   // Contract expiring in less than 30 days
   async notifyExpiringContract(pool, contractData, telegramChatId) {
     try {
       const daysUntilExpiry = Math.ceil((new Date(contractData.end_date) - new Date()) / (1000 * 60 * 60 * 24));
+      // Devise du cabinet (CHF en Suisse) : un montant de notification n'est pas
+      // toujours un euro. On formate selon le marché fourni, sinon « — ».
+      const marcheNotif = contractData.market || marcheDepuis(contractData);
       
       const message = `
 ⚠️ ALERTE CONTRAT EXPIRANT
@@ -13,7 +17,7 @@ Client: ${contractData.client_name}
 Type: ${contractData.type}
 Expire le: ${new Date(contractData.end_date).toLocaleDateString('fr-FR')}
 Jours restants: ${daysUntilExpiry}
-Prime: ${contractData.premium}€
+Prime: ${fmtMontant(contractData.premium, marcheNotif)}
 
 📞 Action recommandée: Contacter le client pour le renouvellement
       `;
@@ -37,7 +41,7 @@ Prime: ${contractData.premium}€
 Nom: ${prospectData.name}
 Colonne: ${prospectData.stage}
 Stagne depuis: ${daysSinceMove} jours
-Valeur: ${prospectData.value}€
+Valeur: ${fmtMontant(prospectData.value, prospectData.market || marcheDepuis(prospectData))}
 Notes: ${prospectData.notes || 'Aucune'}
 
 📌 Action: Relancer le prospect ou reconsidérer la stratégie
