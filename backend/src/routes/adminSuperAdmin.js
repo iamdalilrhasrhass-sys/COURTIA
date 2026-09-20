@@ -31,6 +31,11 @@ const {
   selectPortfolioColumn,
 } = require('../utils/portfolioSchema');
 const billingService = require('../services/billingService');
+const {
+  motDePasseInitialDepuisCabinet,
+  longueurSuffisante,
+} = require('../lib/motDePasseInitial');
+const { buildAccessTemplate, LOGIN_URL } = require('../emails/templates/accessTemplates');
 const pool = require('../db');
 const crypto = require('crypto');
 const User = require('../models/User');
@@ -56,13 +61,21 @@ router.use(verifyToken, superAdminGuard);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/admin/super/trials/invite
-// Crée un VRAI cabinet en essai, SANS jamais transmettre de mot de passe.
+// Crée un VRAI cabinet en essai AVEC des identifiants utilisables tout de suite.
 //
-// L'accès se fait par un lien d'activation à durée limitée (même mécanisme que
-// la réinitialisation de mot de passe : token aléatoire + expiry en base). Le
-// lien est remis à l'administrateur, pas envoyé automatiquement : le garde-fou
-// outbound de COURTIA reste en place (aucun message commercial ne part sans
-// autorisation explicite).
+// RÈGLE (décision du 20/09/2026) : plus d'activation obligatoire. L'exploitant
+// reçoit l'identifiant (l'e-mail du cabinet) et un MOT DE PASSE INITIAL
+// TEMPORAIRE — par défaut le nom du cabinet, première lettre en majuscule, sans
+// espace (« Century Finance » → « CenturyFinance »). Le compte est connectable
+// immédiatement ; l'essai de 7 jours court dès la création, puisqu'il n'y a plus
+// d'activation à attendre.
+//
+// Le mot de passe n'est jamais stocké en clair (bcrypt, 10 tours, même mécanisme
+// que l'inscription) et il est marqué temporaire (`must_change_password`) : le
+// cabinet est invité à le remplacer depuis Paramètres > Sécurité.
+//
+// Aucun envoi automatique : l'e-mail prêt à transmettre est renvoyé à
+// l'administrateur (le garde-fou outbound reste en place).
 // ─────────────────────────────────────────────────────────────────────────────
 router.post('/trials/invite', async (req, res) => {
   try {
@@ -82,9 +95,10 @@ router.post('/trials/invite', async (req, res) => {
       return res.status(400).json({ success: false, error: 'cabinet_requis', message: 'Le nom du cabinet est requis.' });
     }
 
-    // Jamais d'écrasement silencieux d'un compte existant.
+    // Jamais d'écrasement silencieux d'un compte existant : on adapte le compte
+    // existant sur demande explicite (meme_acces: true), sinon on refuse.
     const existant = await User.findByEmail(email);
-    if (existant) {
+    if (existant && req.body?.meme_acces !== true) {
       return res.status(409).json({
         success: false,
         error: 'compte_existant',
@@ -95,46 +109,76 @@ router.post('/trials/invite', async (req, res) => {
       });
     }
 
-    // Mot de passe aléatoire : il n'est ni affiché, ni transmis, ni journalisé.
-    const motDePasseScelle = crypto.randomBytes(32).toString('hex');
-    const user = await User.create(email, motDePasseScelle, firstName || cabinet, lastName || '', 'broker');
+    // Mot de passe initial : imposé par l'appelant s'il est fourni, sinon dérivé
+    // du nom du cabinet selon la convention (« Century Finance » → « CenturyFinance »).
+    const motDePasseImpose = typeof req.body?.mot_de_passe_initial === 'string'
+      ? req.body.mot_de_passe_initial.trim()
+      : '';
+    const motDePasseInitial = motDePasseImpose || motDePasseInitialDepuisCabinet(cabinet);
+    if (!motDePasseInitial) {
+      return res.status(400).json({
+        success: false,
+        error: 'mot_de_passe_initial_impossible',
+        message: 'Impossible de dériver un mot de passe depuis ce nom de cabinet : fournissez-le explicitement.',
+      });
+    }
 
-    // L'essai NE COURT PAS encore (20/09/2026) : la durée est enregistrée, mais
-    // `trial_ends_at` reste NULL tant que le cabinet n'a pas activé son accès.
-    // Le lien d'activation valant 72 h, laisser courir l'essai dès l'invitation
-    // faisait perdre jusqu'à trois jours sur les sept annoncés.
-    await User.preparerInvitation(user.id, { cabinet, jours });
+    let user = existant;
+    if (!user) {
+      const motDePasseScelle = crypto.randomBytes(32).toString('hex');
+      user = await User.create(email, motDePasseScelle, firstName || cabinet, lastName || '', 'broker');
+    }
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const expireLe = new Date(Date.now() + 72 * 3600 * 1000); // 72 h pour activer
-    await User.setResetToken(email, token, expireLe);
+    // Accès direct : mot de passe posé, essai ouvert maintenant, essai de N jours.
+    const acces = await User.definirAccesDirect(user.id, motDePasseInitial, { jours });
+    if (cabinet) {
+      await pool.query('UPDATE users SET cabinet_name = $1 WHERE id = $2', [cabinet, user.id]);
+    }
 
-    const base = process.env.FRONTEND_URL || 'https://courtiark.fr';
     const { rows } = await pool.query(
-      'SELECT subscription_status, trial_days, invited_at, trial_ends_at FROM users WHERE id = $1',
+      'SELECT subscription_status, trial_days, invited_at, trial_started_at, trial_ends_at FROM users WHERE id = $1',
       [user.id]
     );
     const etat = rows[0] || {};
 
-    return res.status(201).json({
+    const emailAcces = buildAccessTemplate({
+      email,
+      motDePasse: motDePasseInitial,
+      cabinet,
+      contact: firstName,
+      joursEssai: Number(etat.trial_days || jours),
+      finEssai: etat.trial_ends_at,
+    });
+
+    return res.status(existant ? 200 : 201).json({
       success: true,
       invitation: {
         user_id: user.id,
         email,
         cabinet,
-        // Aucune date d'essai ici : elle n'existera qu'à l'activation réelle.
-        essai_debute_le: null,
-        essai_finit_le: null,
-        essai_demarre_a_lactivation: true,
-        statut_compte: etat.subscription_status || 'pending_activation',
+        identifiant: email,
+        mot_de_passe_initial: motDePasseInitial,
+        mot_de_passe_temporaire: true,
+        must_change_password: true,
+        mot_de_passe_sous_la_regle_produit: longueurSuffisante(motDePasseInitial),
+        url_connexion: LOGIN_URL,
+        // L'essai court dès maintenant : il n'y a plus d'activation à attendre.
+        essai_debute_le: etat.trial_started_at || null,
+        essai_finit_le: etat.trial_ends_at || null,
+        essai_demarre_a_lactivation: false,
+        statut_compte: etat.subscription_status || 'trialing',
         duree_essai_jours: Number(etat.trial_days || jours),
-        invitation_emise_le: etat.invited_at || null,
-        activation_url: `${base}/reset-password?token=${token}`,
-        activation_expire_le: expireLe.toISOString(),
+        compte_cree_le: etat.invited_at || null,
+        compte_existant_reutilise: Boolean(existant),
         // Aucun envoi ici, et on ne prétend pas le contraire.
         email_envoye: false,
         raison_absence_envoi: 'aucun_envoi_automatique',
-        canal: 'lien à transmettre par votre canal habituel',
+        canal: 'identifiants et e-mail à transmettre par votre canal habituel',
+        email_acces: {
+          subject: emailAcces.subject,
+          html: emailAcces.html,
+          text: emailAcces.text,
+        },
       },
     });
   } catch (err) {

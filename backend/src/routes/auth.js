@@ -23,6 +23,10 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/verify', verifyToken, authController.verify);
 router.post('/refresh', authController.refresh);
 
+// Changement de mot de passe par le titulaire (Paramètres > Sécurité).
+// Route protégée : l'ancien mot de passe est exigé, l'ancien devient inopérant.
+router.post('/change-password', verifyTokenMiddleware, authController.changePassword);
+
 /**
  * GET /api/auth/me — Profil de l'utilisateur connecté
  */
@@ -31,7 +35,8 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     const userResult = await pool.query(
-      `SELECT id, email, first_name, last_name, role, plan, subscription_status, created_at
+      `SELECT id, email, first_name, last_name, role, plan, subscription_status, created_at,
+              must_change_password, trial_started_at, trial_ends_at, trial_days
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -62,6 +67,12 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       plan: user.plan || 'trial',
       subscription_status: user.subscription_status || 'trialing',
       created_at: user.created_at,
+      // Le mot de passe initial remis par COURTIA est temporaire : l'interface
+      // invite à le remplacer (Paramètres > Sécurité). Aucune route n'est bridée.
+      must_change_password: user.must_change_password === true,
+      trial_started_at: user.trial_started_at,
+      trial_ends_at: user.trial_ends_at,
+      trial_days: user.trial_days,
       cabinet: brokerProfile.cabinet || '',
       orias: brokerProfile.orias || '',
       telephone: brokerProfile.telephone || '',

@@ -140,6 +140,87 @@ class User {
       jours: Number(ligne.trial_days),
     };
   }
+
+  // --- Accès direct : identifiants remis par l'exploitant ---
+  //
+  // DÉCISION DU 20/09/2026 : le cabinet n'a plus à « activer » son compte par un
+  // lien pour pouvoir se connecter. L'identifiant est son e-mail et le mot de
+  // passe initial est le nom du cabinet ; il est utilisable IMMÉDIATEMENT et
+  // marqué temporaire (`must_change_password`). L'essai court dès la création du
+  // compte : il n'y a plus d'activation à attendre, donc plus de jours perdus.
+  //
+  // Le mot de passe n'est jamais stocké en clair : même hachage bcrypt (10 tours)
+  // que l'inscription et la réinitialisation.
+
+  /**
+   * Pose un mot de passe utilisable tout de suite et ouvre l'essai.
+   * @returns {Promise<{id: number, email: string, debut: Date, fin: Date, jours: number}|null>}
+   */
+  static async definirAccesDirect(userId, motDePasse, { jours } = {}) {
+    const hashedPassword = await bcrypt.hash(motDePasse, 10);
+    const joursValides = Number.isFinite(Number(jours)) && Number(jours) > 0
+      ? Math.trunc(Number(jours))
+      : Number(process.env.BILLING_TRIAL_DAYS || 7);
+    const result = await pool.query(
+      `UPDATE users
+          SET password_hash = $1,
+              must_change_password = TRUE,
+              plan = 'trial',
+              subscription_status = 'trialing',
+              trial_days = $3::int,
+              trial_started_at = NOW(),
+              trial_ends_at = NOW() + ($3::int || ' days')::interval,
+              invited_at = COALESCE(invited_at, NOW()),
+              password_reset_token = NULL,
+              password_reset_expires = NULL,
+              updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, email, trial_started_at, trial_ends_at, trial_days`,
+      [hashedPassword, userId, String(joursValides)]
+    );
+    const ligne = result.rows[0];
+    if (!ligne) return null;
+    return {
+      id: ligne.id,
+      email: ligne.email,
+      debut: ligne.trial_started_at,
+      fin: ligne.trial_ends_at,
+      jours: Number(ligne.trial_days),
+    };
+  }
+
+  /**
+   * Changement de mot de passe par le titulaire (Paramètres > Sécurité).
+   * L'ancien mot de passe est exigé et devient inopérant : le hachage est
+   * remplacé, il n'existe aucun autre secret utilisable pour se connecter.
+   * @returns {Promise<{ok: true}|{ok: false, raison: string}>}
+   */
+  static async changerMotDePasse(userId, motDePasseActuel, nouveauMotDePasse) {
+    const { rows } = await pool.query(
+      'SELECT id, password_hash FROM users WHERE id = $1',
+      [userId]
+    );
+    const compte = rows[0];
+    if (!compte) return { ok: false, raison: 'compte_introuvable' };
+
+    const actuelValide = await bcrypt.compare(motDePasseActuel, compte.password_hash);
+    if (!actuelValide) return { ok: false, raison: 'mot_de_passe_actuel_invalide' };
+
+    const identique = await bcrypt.compare(nouveauMotDePasse, compte.password_hash);
+    if (identique) return { ok: false, raison: 'mot_de_passe_identique' };
+
+    const hashedPassword = await bcrypt.hash(nouveauMotDePasse, 10);
+    await pool.query(
+      `UPDATE users
+          SET password_hash = $1,
+              must_change_password = FALSE,
+              password_changed_at = NOW(),
+              updated_at = NOW()
+        WHERE id = $2`,
+      [hashedPassword, userId]
+    );
+    return { ok: true };
+  }
 }
 
 module.exports = User;

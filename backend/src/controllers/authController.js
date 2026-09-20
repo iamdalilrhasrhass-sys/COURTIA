@@ -265,6 +265,79 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// Changement de mot de passe par le titulaire du compte — Paramètres > Sécurité.
+//
+// POURQUOI : jusqu'ici l'écran Sécurité répondait « configuration requise :
+// passez par le support ». Un cabinet en essai ne pouvait donc pas remplacer le
+// mot de passe initial remis par COURTIA. Le parcours est désormais réel :
+// ancien mot de passe exigé, nouveau confirmé, ancien invalidé.
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentification requise' });
+    }
+
+    const actuel = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
+    const nouveau = typeof req.body?.newPassword === 'string' ? req.body.newPassword : '';
+    const confirmation = typeof req.body?.confirmPassword === 'string' ? req.body.confirmPassword : '';
+
+    if (!actuel || !nouveau || !confirmation) {
+      return res.status(400).json({
+        error: 'champs_manquants',
+        message: 'Mot de passe actuel, nouveau mot de passe et confirmation sont requis.',
+      });
+    }
+    if (nouveau !== confirmation) {
+      return res.status(400).json({
+        error: 'confirmation_differente',
+        message: 'La confirmation ne correspond pas au nouveau mot de passe.',
+      });
+    }
+    if (nouveau.length < 8 || Buffer.byteLength(nouveau, 'utf8') > 72) {
+      return res.status(400).json({
+        error: 'mot_de_passe_invalide',
+        message: 'Le nouveau mot de passe doit contenir au moins 8 caractères et au plus 72 octets.',
+      });
+    }
+    if (nouveau === actuel) {
+      return res.status(400).json({
+        error: 'mot_de_passe_identique',
+        message: 'Le nouveau mot de passe doit être différent du mot de passe actuel.',
+      });
+    }
+
+    const resultat = await User.changerMotDePasse(userId, actuel, nouveau);
+    if (!resultat.ok) {
+      const messages = {
+        compte_introuvable: 'Compte introuvable.',
+        mot_de_passe_actuel_invalide: 'Le mot de passe actuel est incorrect.',
+        mot_de_passe_identique: 'Le nouveau mot de passe doit être différent du mot de passe actuel.',
+      };
+      const statut = resultat.raison === 'compte_introuvable' ? 404 : 400;
+      return res.status(statut).json({
+        error: resultat.raison,
+        message: messages[resultat.raison] || 'Changement de mot de passe impossible.',
+      });
+    }
+
+    try {
+      await trackEvent({ userId, event: 'mot_de_passe_modifie', properties: { source: 'parametres_securite' } });
+    } catch (e) {
+      // La trace analytique ne doit jamais faire échouer un changement réussi.
+    }
+
+    return res.json({
+      success: true,
+      message: 'Mot de passe modifié. Votre ancien mot de passe ne fonctionne plus : utilisez le nouveau à la prochaine connexion.',
+      must_change_password: false,
+    });
+  } catch (err) {
+    console.error('Change password error:', err.message);
+    return res.status(500).json({ error: 'Changement de mot de passe impossible pour le moment' });
+  }
+};
+
 // Refresh token
 exports.refresh = async (req, res) => {
   try {

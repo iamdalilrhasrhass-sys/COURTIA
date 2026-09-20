@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 const { buildBillingTemplate } = require('../emails/templates/billingTemplates');
+const { buildAccessTemplate } = require('../emails/templates/accessTemplates');
 const logger = require('../lib/logger');
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
@@ -208,6 +209,22 @@ async function emailNouvelAbonnement({ courtierEmail, plan }) {
   });
 }
 
+/**
+ * E-mail d'accès client : « Votre espace COURTIA est prêt. » avec identifiant,
+ * mot de passe initial et bouton ACCÉDER À COURTIA (décision du 20/09/2026).
+ * L'envoi suit le chemin normal (sendEmail) : sans fournisseur configuré, il
+ * échoue proprement et le gabarit reste disponible pour l'exploitant.
+ */
+async function sendAccessEmail(vars = {}) {
+  const template = buildAccessTemplate(vars);
+  return sendEmail({
+    to: [vars.to || vars.email].filter(Boolean),
+    subject: template.subject,
+    html: template.html,
+    text: template.text,
+  });
+}
+
 async function emailEcheanceContrat({ courtierEmail, clientNom, dateEcheance }) {
   return sendEmail({
     to: courtierEmail,
@@ -225,6 +242,7 @@ module.exports = {
   sendEmail,
   sendCommercialEmail,
   sendBillingEmail,
+  sendAccessEmail,
   emailNouveauClient,
   emailNouvelAbonnement,
   emailEcheanceContrat,

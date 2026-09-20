@@ -107,6 +107,8 @@ export default function Parametres() {
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', cabinet: '', orias: '', telephone: '' })
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
+  // Parcours « Modifier mon mot de passe » : envoi, confirmation visible, erreur.
+  const [passwordState, setPasswordState] = useState({ envoi: false, succes: null, erreur: null })
   const [notifications, setNotifications] = useState({ echeances: true, taches: true, morning_brief: true, news: false })
   const [integrations, setIntegrations] = useState(() => (INTEGRATIONS_API_ENABLED ? [] : DEFAULT_INTEGRATIONS))
   const [integrationsLoading, setIntegrationsLoading] = useState(false)
@@ -154,9 +156,55 @@ export default function Parametres() {
     finally { setSaving(false) }
   }
 
-  function handlePasswordSubmit(e) {
+  /**
+   * Changement de mot de passe — Paramètres > Sécurité (20/09/2026).
+   * Le parcours est réel : ancien mot de passe exigé et vérifié côté serveur,
+   * nouveau confirmé, ancien invalidé. La confirmation est visible à l'écran
+   * (bandeau vert) et en notification.
+   */
+  async function handlePasswordSubmit(e) {
     e.preventDefault()
-    toast('Configuration requise : le changement de mot de passe est traité par support pendant la bêta.', { icon: 'ℹ️' })
+    const { current, new: nouveau, confirm } = passwords
+
+    if (!current || !nouveau || !confirm) {
+      setPasswordState({ envoi: false, succes: null, erreur: 'Les trois champs sont requis.' })
+      return
+    }
+    if (nouveau !== confirm) {
+      setPasswordState({ envoi: false, succes: null, erreur: 'La confirmation ne correspond pas au nouveau mot de passe.' })
+      return
+    }
+    if (nouveau.length < 8) {
+      setPasswordState({ envoi: false, succes: null, erreur: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' })
+      return
+    }
+    if (nouveau === current) {
+      setPasswordState({ envoi: false, succes: null, erreur: 'Le nouveau mot de passe doit être différent du mot de passe actuel.' })
+      return
+    }
+
+    setPasswordState({ envoi: true, succes: null, erreur: null })
+    try {
+      const res = await api.post('/auth/change-password', {
+        currentPassword: current,
+        newPassword: nouveau,
+        confirmPassword: confirm,
+      })
+      setPasswords({ current: '', new: '', confirm: '' })
+      setProfile(prev => (prev ? { ...prev, must_change_password: false } : prev))
+      setPasswordState({
+        envoi: false,
+        succes: res?.data?.message || 'Mot de passe modifié. Votre ancien mot de passe ne fonctionne plus.',
+        erreur: null,
+      })
+      toast.success('Mot de passe modifié ✓')
+    } catch (err) {
+      const message = err?.response?.data?.message
+        || err?.response?.data?.error
+        || 'Changement de mot de passe impossible pour le moment.'
+      setPasswordState({ envoi: false, succes: null, erreur: message })
+      toast.error(message)
+    }
   }
 
   async function fetchIntegrations({ silent = false } = {}) {
@@ -359,23 +407,37 @@ export default function Parametres() {
 
             <section id="securite" className="scroll-mt-8">
               <h2 className="text-xl font-bold text-white mb-1">Sécurité</h2>
-              <p className="text-sm text-white/50 mb-5">Accès et récupération de compte.</p>
+              <p className="text-sm text-white/50 mb-5">Modifier mon mot de passe.</p>
               <div className="courtia-depth-card bg-white border border-gray-100 rounded-xl shadow-sm">
                 <form onSubmit={handlePasswordSubmit}>
                     <div className="p-6 space-y-5">
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                        <strong>Configuration requise.</strong> Le changement de mot de passe autonome sera activé avec le provider email sécurisé. Pour la bêta, une demande support déclenche la procédure de réinitialisation.
-                      </div>
+                      {profile?.must_change_password && (
+                        <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs text-violet-900">
+                          <strong>Mot de passe temporaire.</strong> Vous vous connectez avec le mot de passe initial remis par COURTIA. Choisissez votre propre mot de passe ci-dessous : il remplacera immédiatement l'ancien.
+                        </div>
+                      )}
+                      {passwordState.succes && (
+                        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800 flex items-start gap-2">
+                          <Check size={16} className="mt-0.5 shrink-0" />
+                          <span><strong>Mot de passe modifié.</strong> {passwordState.succes}</span>
+                        </div>
+                      )}
+                      {passwordState.erreur && (
+                        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800 flex items-start gap-2">
+                          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                          <span>{passwordState.erreur}</span>
+                        </div>
+                      )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {[ {id: 'current', label: 'Actuel'}, {id: 'new', label: 'Nouveau'}, {id: 'confirm', label: 'Confirmer'} ].map(p => (
                           <div key={p.id}>
                             <label htmlFor={`${p.id}_password`} className={labelClass}>Mot de passe {p.label}</label>
-                            <div className="relative"><input id={`${p.id}_password`} type={showPass[p.id] ? 'text' : 'password'} value={passwords[p.id]} onChange={e => setPasswords({...passwords, [p.id]: e.target.value})} disabled placeholder="Indisponible en libre-service" className={`${inputClass} bg-gray-100 cursor-not-allowed`} /><button type="button" disabled onClick={() => setShowPass({...showPass, [p.id]: !showPass[p.id]})} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 cursor-not-allowed">{showPass[p.id] ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
+                            <div className="relative"><input id={`${p.id}_password`} type={showPass[p.id] ? 'text' : 'password'} value={passwords[p.id]} onChange={e => setPasswords({...passwords, [p.id]: e.target.value})} disabled={passwordState.envoi} autoComplete={p.id === 'current' ? 'current-password' : 'new-password'} placeholder={p.id === 'current' ? 'Votre mot de passe actuel' : 'Au moins 8 caractères'} className={inputClass} /><button type="button" aria-label={showPass[p.id] ? 'Masquer' : 'Afficher'} onClick={() => setShowPass({...showPass, [p.id]: !showPass[p.id]})} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPass[p.id] ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="button" onClick={() => { toast('Configuration requise : ouvrez une demande support pour réinitialiser le mot de passe.', { icon: 'ℹ️' }); navigate('/contact') }} className="px-5 py-2.5 bg-white text-gray-800 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors shadow-sm">Contacter le support</button></div>
+                    <div className="bg-gray-50/70 p-4 flex justify-end rounded-b-xl border-t border-gray-100"><button type="submit" disabled={passwordState.envoi} className="px-5 py-2.5 bg-[#7c3aed] text-white rounded-lg text-sm font-semibold hover:bg-[#6d28d9] disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm">{passwordState.envoi ? 'Enregistrement…' : 'Modifier mon mot de passe'}</button></div>
                 </form>
               </div>
             </section>

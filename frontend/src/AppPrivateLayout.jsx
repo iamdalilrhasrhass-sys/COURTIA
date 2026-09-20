@@ -27,6 +27,11 @@ export default function AppPrivateLayout() {
   const [paywallEssaiMasque, setPaywallEssaiMasque] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // Mot de passe temporaire : le cabinet se connecte avec le mot de passe
+  // initial remis par COURTIA (must_change_password, renvoyé par /api/auth/me).
+  // On l'invite à en choisir un — sans jamais l'y obliger : aucune route n'est
+  // bridée tant qu'il utilise le mot de passe initial.
+  const [motDePasseTemporaire, setMotDePasseTemporaire] = useState(false)
 
   useEffect(() => { fetchPlanInfo() }, [fetchPlanInfo])
   useEffect(() => { return onPaywallTriggered(err => setPaywallError(err)) }, [])
@@ -36,6 +41,14 @@ export default function AppPrivateLayout() {
     api.get('/billing/status')
       .then((r) => { if (!annule) setBillingStatut(r.data?.status || null) })
       .catch(() => { if (!annule) setBillingStatut(null) })
+    return () => { annule = true }
+  }, [])
+
+  useEffect(() => {
+    let annule = false
+    api.get('/auth/me')
+      .then((r) => { if (!annule) setMotDePasseTemporaire(r.data?.must_change_password === true) })
+      .catch(() => { /* indicateur informatif : jamais bloquant */ })
     return () => { annule = true }
   }, [])
 
@@ -95,6 +108,25 @@ export default function AppPrivateLayout() {
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}
             >
               Voir les offres
+            </button>
+          </div>
+        )}
+
+        {motDePasseTemporaire && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            flexWrap: 'wrap', padding: '9px 18px',
+            background: 'rgba(124,58,237,0.14)', borderBottom: '1px solid rgba(124,58,237,0.32)',
+          }}>
+            <span style={{ fontSize: 12.5, color: '#DDD6FE', fontWeight: 600 }}>
+              Mot de passe temporaire — choisissez votre mot de passe personnel dans Paramètres &gt; Sécurité.
+            </span>
+            <button
+              onClick={() => navigate('/parametres')}
+              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}
+            >
+              Modifier mon mot de passe
             </button>
           </div>
         )}
