@@ -4,8 +4,15 @@ import { motion } from 'framer-motion'
 import { Zap, Award, BookOpen, Share2, Users, Target, Lock, Check, ArrowRight, Copy, Sparkles, BarChart } from 'lucide-react'
 import SkillCard from '../components/SkillCard'
 import toast from 'react-hot-toast'
+import api from '../api'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+/* POURQUOI PLUS D'`API_URL` ICI
+   L'écran construisait ses URL en `${API_URL}/api/academy/...` alors que
+   `VITE_API_URL` contient DÉJÀ le préfixe `/api` en production
+   (`.../api/api/academy/progress`). Les 4 appels de chargement — et les 2 appels
+   d'action — répondaient donc 404, en production comme en local : Academy et
+   Aide restaient vides. On passe par le client HTTP de l'application
+   (`src/api`), qui préfixe l'URL UNE seule fois et attache le jeton de session. */
 
 const LEVEL_NAMES = [
   'Découverte', 'Organisé', 'Courtier Actif', 'Pilote de Portefeuille',
@@ -32,19 +39,21 @@ export default function Academy() {
     loadData(t)
   }, [])
 
-  async function loadData(t) {
+  async function loadData(_t) {
     setLoading(true)
     try {
-      const [progRes, cardsRes, coursesRes, refRes] = await Promise.all([
-        fetch(`${API_URL}/api/academy/progress`, { headers: { Authorization: `Bearer ${t}` } }),
-        fetch(`${API_URL}/api/academy/cards`, { headers: { Authorization: `Bearer ${t}` } }),
-        fetch(`${API_URL}/api/academy/courses`, { headers: { Authorization: `Bearer ${t}` } }),
-        fetch(`${API_URL}/api/academy/referral`, { headers: { Authorization: `Bearer ${t}` } }),
+      // 4 lectures en parallèle ; une seule défaillance ne doit pas vider tout
+      // l'écran (chaque lecture est donc isolée par son propre catch).
+      const [prog, cards, courses, ref] = await Promise.all([
+        api.get('/academy/progress').catch(() => null),
+        api.get('/academy/cards').catch(() => null),
+        api.get('/academy/courses').catch(() => null),
+        api.get('/academy/referral').catch(() => null),
       ])
-      if (progRes.ok) setProgress((await progRes.json()).data)
-      if (cardsRes.ok) setCards((await cardsRes.json()).data)
-      if (coursesRes.ok) setCourses((await coursesRes.json()).data)
-      if (refRes.ok) setReferral((await refRes.json()).data)
+      if (prog?.data?.data) setProgress(prog.data.data)
+      if (cards?.data?.data) setCards(cards.data.data)
+      if (courses?.data?.data) setCourses(courses.data.data)
+      if (ref?.data?.data) setReferral(ref.data.data)
     } catch (err) {
       console.error('Academy load error:', err)
     }
@@ -59,9 +68,7 @@ export default function Academy() {
   async function handleShare(card) {
     const text = `Je viens de débloquer la compétence "${card.title}" sur COURTIA.\n\n${card.description}\n\nMon objectif : progresser chaque jour dans la maîtrise de mon portefeuille et de ma relation client.\n\n#Courtier #Assurance #CRM #COURTIA #Progression`
     try {
-      await fetch(`${API_URL}/api/academy/cards/${card.id}/share`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-      })
+      await api.post(`/academy/cards/${card.id}/share`)
     } catch (_err) {
       // Non bloquant: le partage LinkedIn peut continuer même si le tracking API échoue.
     }
@@ -400,15 +407,9 @@ function openCourseDetail(course) {
 }
 
 window.completeCourse = async (btn, courseId, _slug) => {
-  const token = localStorage.getItem('courtia_token') || localStorage.getItem('token')
-  const API_URL = import.meta.env.VITE_API_URL || '/api'
   try {
-    const res = await fetch(`${API_URL}/api/academy/courses/${courseId}/complete`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers: [] })
-    })
-    const data = await res.json()
+    const res = await api.post(`/academy/courses/${courseId}/complete`, { answers: [] })
+    const data = res.data
     if (data.success) {
       btn.textContent = '✅ Terminé !'
       btn.style.background = 'rgba(16,185,129,0.15)'

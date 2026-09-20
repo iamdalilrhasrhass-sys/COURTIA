@@ -8,7 +8,12 @@ const { trackEvent } = require('../services/analyticsService')
 const logger = require('../lib/logger')
 // Réponses IA normalisées : une indisponibilité du moteur IA se traduit par un
 // 503 lisible, jamais par un 500 portant l'erreur brute du fournisseur.
-const { estErreurIa, repondreIaIndisponible, repondreIaNonConfiguree } = require('../services/iaErreurs')
+const {
+  estErreurIa,
+  repondreIaIndisponible,
+  repondreIaNonConfiguree,
+  journaliserErreurIa,
+} = require('../services/iaErreurs')
 const pool = require('../db')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const {
@@ -34,6 +39,51 @@ function arkConfigurationRequired(res) {
     provider: 'deepseek',
     message: 'Configuration ARK requise. Ajoutez DEEPSEEK_API_KEY pour activer le chat IA.',
   })
+}
+
+/**
+ * VÉRITÉ DES RÉPONSES IA — correction 20/09/2026.
+ *
+ * Toutes les routes ARK de ce fichier répondaient `success: true` avec un
+ * objet de repli FABRIQUÉ quand le moteur IA ne renvoyait pas de JSON
+ * exploitable (`{summary: result.text}`, `{actions: []}`,
+ * `{overallStatus:'unknown', checks: []}`, `{overallScore:0, metrics:{}}`…).
+ * Le courtier croyait lire un brief, un audit de conformité ou des actions
+ * calculées alors qu'aucune analyse n'avait été produite.
+ *
+ * Règle désormais appliquée : `success: true` EXIGE un contenu réel
+ * (`result.structured`, ou — pour les routes dont la réponse est du texte —
+ * un `result.text` non vide). Sinon la route répond 503 `ia_indisponible` avec
+ * un message produit. Aucune donnée inventée n'est renvoyée.
+ */
+const MESSAGE_IA_INEXPLOITABLE =
+  "L'assistant IA n'a pas renvoyé de résultat exploitable : aucune donnée n'a été produite. Réessayez dans quelques instants."
+
+/** 503 « réponse IA inexploitable » (aucun `success:true` vide). */
+function refuserResultatIaInexploitable(res, contexte = {}) {
+  journaliserErreurIa(new Error('réponse IA sans contenu exploitable'), {
+    ...contexte,
+    motif: 'reponse_ia_inexploitable',
+  })
+  return res.status(503).json({ error: 'ia_indisponible', message: MESSAGE_IA_INEXPLOITABLE })
+}
+
+/** Traduit `result.error` (moteur absent / KO) en 503 produit, sans clé API ni erreur fournisseur. */
+function repondreErreurMoteurIa(res, result, contexte = {}) {
+  if (result?.error === 'configuration_required') return repondreIaNonConfiguree(res, contexte)
+  return repondreIaIndisponible(res, new Error(String(result?.error || 'ia_indisponible')), contexte)
+}
+
+/**
+ * Contrôle commun avant toute réponse en succès.
+ * @returns {null|import('express').Response} null = contenu exploitable.
+ */
+function verifierResultatIa(res, result, contexte = {}, { structureRequise = true } = {}) {
+  if (result?.error) return repondreErreurMoteurIa(res, result, contexte)
+  const structure = result?.structured
+  if (structure !== null && structure !== undefined) return null
+  if (!structureRequise && typeof result?.text === 'string' && result.text.trim().length > 0) return null
+  return refuserResultatIaInexploitable(res, contexte)
 }
 
 function getCurrentUserId(req) {
@@ -618,12 +668,13 @@ router.post('/actions', verifyToken, async (req, res) => {
     })
 
     if (result.error) {
-      return res.status(503).json({
-        error: result.error,
-        message: result.message,
-        configuration_required: true
-      })
+      return repondreErreurMoteurIa(res, result, { route: 'ark_actions', action })
     }
+    // `/actions` peut légitimement répondre du texte (pas seulement du JSON) :
+    // on exige alors un texte NON VIDE. Avant, un résultat vide partait en
+    // `success: true` avec `{summary: undefined}`.
+    const refus = verifierResultatIa(res, result, { route: 'ark_actions', action }, { structureRequise: false })
+    if (refus) return refus
 
     res.json({
       success: true,
@@ -637,7 +688,8 @@ router.post('/actions', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err }, 'ARK actions failed')
-    res.status(500).json({ error: 'ark_actions_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'ark_actions' })
+    res.status(500).json({ error: 'ark_actions_failed', message: 'Le traitement ARK de cette action est momentanément indisponible.' })
   }
 })
 
@@ -669,15 +721,19 @@ router.get('/client/:id/brief', verifyToken, async (req, res) => {
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'client_brief', clientId })
     }
+    // Un brief est un objet structuré : sans JSON exploitable, la route échoue
+    // (503) au lieu de renvoyer `success:true` avec un brief vide/fabriqué.
+    const refus = verifierResultatIa(res, result, { route: 'client_brief', clientId })
+    if (refus) return refus
 
     res.json({
       success: true,
       action: 'client_brief',
       data: {
         clientId,
-        ...(result.structured || { summary: result.text })
+        ...result.structured
       },
       usage: result.usage,
       model: result.model,
@@ -721,15 +777,20 @@ router.get('/client/:id/next-best-actions', verifyToken, async (req, res) => {
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'next_best_actions', clientId })
     }
+    // Sans JSON exploitable, l'ancien code renvoyait `success:true` avec
+    // `{actions: []}` — un « aucune action » qui n'était pas le résultat d'une
+    // analyse mais un objet fabriqué. On refuse.
+    const refus = verifierResultatIa(res, result, { route: 'next_best_actions', clientId })
+    if (refus) return refus
 
     res.json({
       success: true,
       action: 'next_best_actions',
       data: {
         clientId,
-        ...(result.structured || { actions: [] })
+        ...result.structured
       },
       usage: result.usage,
       model: result.model,
@@ -748,47 +809,27 @@ router.get('/client/:id/next-best-actions', verifyToken, async (req, res) => {
 // POST /api/ark/client/:id/documents-analysis — Analyse documents client
 // NOTE: Implémentation complète avec OCR + Claude Vision prévue dans LOT 4
 router.post('/client/:id/documents-analysis', verifyToken, async (req, res) => {
-  try {
-    const userId = getArkUserId(req)
-    if (!userId) return res.status(401).json({ error: 'auth_required' })
+  const userId = getArkUserId(req)
+  if (!userId) return res.status(401).json({ error: 'auth_required' })
 
-    const clientId = validateClientId(req.params.id)
-    if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
+  const clientId = validateClientId(req.params.id)
+  if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
 
-    const documents = req.body?.documents || []
-
-    logger.info({ userId, clientId, docCount: documents.length }, 'ARK documents-analysis requested (LOT 4 pending)')
-
-    // Pour LOT 3: retourner structure de base + indication LOT 4
-    res.json({
-      success: true,
-      action: 'documents_analysis',
-      data: {
-        clientId,
-        status: 'pending_implementation',
-        message: 'Analyse documentaire avancée disponible dans la prochaine version (LOT 4)',
-        analyzedCount: documents.length,
-        expectedCapabilities: [
-          'OCR des contrats et attestations',
-          'Extraction automatique des données clés',
-          'Détection des clauses importantes',
-          'Comparaison avec le marché',
-          'Alertes sur incohérences'
-        ],
-        basicAnalysis: documents.length > 0 ? {
-          documentsReceived: documents.length,
-          types: documents.map(d => d.type || 'unknown'),
-          totalSize: documents.reduce((sum, d) => sum + (d.size || 0), 0)
-        } : null,
-        plannedRelease: 'LOT 4'
-      },
-      timestamp: new Date().toISOString()
-    })
-
-  } catch (err) {
-    logger.error({ err, clientId: req.params.id }, 'ARK documents-analysis failed')
-    res.status(500).json({ error: 'ark_documents_analysis_failed', message: err.message })
-  }
+  // CORRECTION 20/09/2026 : cette route renvoyait `success: true` avec
+  // `status: 'pending_implementation'`, une liste de capacités « attendues » et
+  // un `plannedRelease` — aucun document n'était analysé. Un succès annoncé
+  // pour une fonctionnalité inexistante fait croire au courtier que l'analyse a
+  // eu lieu (et alimente des écrans de conformité avec du vide).
+  // Fail-closed : 501 Non implémenté, message produit, aucune donnée inventée.
+  logger.warn(
+    { userId, clientId },
+    'ARK documents-analysis appelée : fonctionnalité non implémentée (LOT 4) — réponse 501'
+  )
+  return res.status(501).json({
+    error: 'fonctionnalite_non_implementee',
+    message: "L'analyse documentaire ARK (OCR et lecture des contrats) n'est pas encore disponible sur cette installation.",
+    action: 'documents_analysis',
+  })
 })
 
 // POST /api/ark/client/:id/quote-assistant — Assistant devis
@@ -828,20 +869,21 @@ Budget indicatif: ${budget || 'Non communiqué'}`
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'quote_assistant', clientId })
     }
+    // Le repli `{analysis: result.text, questionsToAsk: [], documentsRequired:
+    // [], coverageSuggestions: []}` présentait une liste de questions et de
+    // pièces VIDE comme une préparation de devis aboutie. Sans JSON
+    // exploitable, on refuse.
+    const refus = verifierResultatIa(res, result, { route: 'quote_assistant', clientId })
+    if (refus) return refus
 
     res.json({
       success: true,
       action: 'quote_assistant',
       data: {
         clientId,
-        ...(result.structured || {
-          analysis: result.text,
-          questionsToAsk: [],
-          documentsRequired: [],
-          coverageSuggestions: []
-        })
+        ...result.structured
       },
       usage: result.usage,
       model: result.model,
@@ -889,19 +931,19 @@ router.post('/compliance-check', verifyToken, async (req, res) => {
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'compliance_check', clientId: parsedClientId })
     }
+    // Le repli `{overallStatus: 'unknown', checks: [], recommendations: []}`
+    // ressemblait à un audit de conformité rendu — sans audit. On refuse.
+    const refus = verifierResultatIa(res, result, { route: 'compliance_check', clientId: parsedClientId })
+    if (refus) return refus
 
     res.json({
       success: true,
       action: 'compliance_check',
       data: {
         clientId: parsedClientId,
-        ...(result.structured || {
-          overallStatus: 'unknown',
-          checks: [],
-          recommendations: []
-        })
+        ...result.structured
       },
       usage: result.usage,
       model: result.model,
@@ -911,7 +953,8 @@ router.post('/compliance-check', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err }, 'ARK compliance-check failed')
-    res.status(500).json({ error: 'ark_compliance_check_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'compliance_check' })
+    res.status(500).json({ error: 'ark_compliance_check_failed', message: 'La vérification de conformité est momentanément indisponible.' })
   }
 })
 
@@ -935,18 +978,18 @@ router.get('/portfolio-health', verifyToken, async (req, res) => {
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'portfolio_health' })
     }
+    // Le repli `{overallScore: 0, metrics: {}, alerts: [], recommendations: []}`
+    // affichait un score de portefeuille de 0 comme un résultat d'analyse (et
+    // « 0 » se lit comme une note, pas comme une absence de mesure). On refuse.
+    const refus = verifierResultatIa(res, result, { route: 'portfolio_health' })
+    if (refus) return refus
 
     res.json({
       success: true,
       action: 'portfolio_health',
-      data: result.structured || {
-        overallScore: 0,
-        metrics: {},
-        alerts: [],
-        recommendations: []
-      },
+      data: result.structured,
       usage: result.usage,
       model: result.model,
       latencyMs: result.latencyMs,
@@ -955,7 +998,8 @@ router.get('/portfolio-health', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err }, 'ARK portfolio-health failed')
-    res.status(500).json({ error: 'ark_portfolio_health_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'portfolio_health' })
+    res.status(500).json({ error: 'ark_portfolio_health_failed', message: "L'analyse du portefeuille est momentanément indisponible." })
   }
 })
 
@@ -1001,8 +1045,13 @@ ${bodyContext?.subject ? 'Sujet: ' + bodyContext.subject : ''}`
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'generate_message', clientId: parsedClientId })
     }
+    // Un message généré peut être du texte : on exige alors un texte NON VIDE
+    // (avant, `generated: {content: result.text}` partait en `success:true` même
+    // avec `content: undefined`).
+    const refus = verifierResultatIa(res, result, { route: 'generate_message', clientId: parsedClientId }, { structureRequise: false })
+    if (refus) return refus
 
     res.json({
       success: true,
@@ -1021,7 +1070,8 @@ ${bodyContext?.subject ? 'Sujet: ' + bodyContext.subject : ''}`
 
   } catch (err) {
     logger.error({ err }, 'ARK generate failed')
-    res.status(500).json({ error: 'ark_generate_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'generate_message' })
+    res.status(500).json({ error: 'ark_generate_failed', message: 'La génération de message est momentanément indisponible.' })
   }
 })
 
@@ -1127,15 +1177,19 @@ router.get('/client/:id/recommendations', verifyToken, async (req, res) => {
     })
 
     if (result.error) {
-      return res.status(503).json({ error: result.error, message: result.message })
+      return repondreErreurMoteurIa(res, result, { route: 'client_recommendations', clientId })
     }
+    // Le repli `{recommendations: [], missingProducts: []}` affichait
+    // « aucune opportunité de cross-sell » sans avoir analysé le client.
+    const refus = verifierResultatIa(res, result, { route: 'client_recommendations', clientId })
+    if (refus) return refus
 
     res.json({
       success: true,
       action: 'recommendations',
       data: {
         clientId,
-        ...(result.structured || { recommendations: [], missingProducts: [] })
+        ...result.structured
       },
       usage: result.usage,
       model: result.model,
@@ -1145,7 +1199,8 @@ router.get('/client/:id/recommendations', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err, clientId: req.params.id }, 'ARK client recommendations failed')
-    res.status(500).json({ error: 'ark_recommendations_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'client_recommendations', clientId: req.params.id })
+    res.status(500).json({ error: 'ark_recommendations_failed', message: 'Les recommandations ARK sont momentanément indisponibles.' })
   }
 })
 

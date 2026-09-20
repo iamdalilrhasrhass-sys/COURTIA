@@ -6,6 +6,47 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 import api from '../api'
 import { computeScores } from '../lib/scoring'
+import { paysSuisse, contexteCourant } from '../lib/monnaie'
+
+/* ─── Adresses : la bonne source selon le pays ────────────────────────────────
+   POURQUOI : l'auto-complétion interrogeait TOUJOURS la Base Adresse Nationale
+   française (api-adresse.data.gouv.fr). Un cabinet suisse qui saisissait
+   « Lausanne » recevait donc des adresses françaises (« 13012 Marseille »),
+   impossibles à enregistrer. On interroge la source du pays concerné :
+     * Suisse  → Nominatim (OpenStreetMap), filtré sur `countrycodes=ch`, qui
+       renvoie le NPA, la ville et le canton (ISO3166-2-lvl4, ex. CH-VD) ;
+     * France  → la BAN, comme avant, source officielle et inchangée.
+   Aucune adresse n'est inventée : si la source ne répond pas, la liste de
+   suggestions reste vide et la saisie manuelle reste possible. */
+const ADRESSE_SUISSE = 'https://nominatim.openstreetmap.org/search'
+const ADRESSE_FRANCE = 'https://api-adresse.data.gouv.fr/search/'
+
+function suggestionsFrance(features = []) {
+  return features.map((f) => ({
+    id: f.properties.id,
+    label: f.properties.label,
+    adresse: f.properties.name,
+    postal_code: f.properties.postcode,
+    city: f.properties.city,
+    country: 'France',
+  }))
+}
+
+function suggestionsSuisse(resultats = []) {
+  return resultats.map((r) => {
+    const a = r.address || {}
+    const canton = String(a['ISO3166-2-lvl4'] || '').replace(/^CH-/, '')
+    return {
+      id: r.place_id,
+      label: r.display_name,
+      adresse: [a.house_number, a.road].filter(Boolean).join(' ') || a.road || r.name || '',
+      postal_code: a.postcode || '',
+      city: a.city || a.town || a.village || a.municipality || '',
+      canton,
+      country: 'Suisse',
+    }
+  })
+}
 
 const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-blue-300 focus:border-[#2563eb] outline-none transition-all"
 const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5"
@@ -90,15 +131,24 @@ export default function ClientNew() {
   const [isEditMode] = useState(!!id)
   const [showInsurance, setShowInsurance] = useState(false)
   const [addressSuggestions, setAddressSuggestions] = useState([])
-  const [dialCode, setDialCode] = useState('+33') // +33 FR / +41 CH
-  
+  // Pays du CABINET (profil de session) : un cabinet suisse saisit des adresses
+  // suisses par défaut. Il sert de repli tant que le pays du client n'est pas
+  // choisi, et n'écrase jamais un pays explicitement sélectionné.
+  const cabinetSuisse = paysSuisse(contexteCourant().pays)
+  const [dialCode, setDialCode] = useState(cabinetSuisse ? '+41' : '+33') // +33 FR / +41 CH
+
   const [form, setForm] = useState({
     prenom: '', nom: '', email: '', telephone: '',
-    adresse: '', postal_code: '', city: '',
+    adresse: '', postal_code: '', city: '', country: '',
     statut: 'prospect', segment: 'particulier',
     bonus_malus: 1.0, nb_sinistres_3ans: 0, annees_permis: '',
     zone_geographique: '', situation_familiale: '', profession: '', notes: ''
   })
+
+  // Le pays qui pilote l'auto-complétion d'adresse : celui du client s'il est
+  // renseigné, sinon celui du cabinet.
+  const paysAdresse = form.country || (cabinetSuisse ? 'Suisse' : 'France')
+  const adresseEnSuisse = paysSuisse(paysAdresse)
 
   useEffect(() => {
     if (id) {
@@ -112,13 +162,32 @@ export default function ClientNew() {
 
   useEffect(() => {
     if (form.adresse.length < 3) { setAddressSuggestions([]); return }
+    // Le délai est plus long côté suisse : la politique d'usage de Nominatim
+    // demande au plus une requête par seconde. La source française supporte 300 ms.
+    const delai = adresseEnSuisse ? 700 : 300
     const handler = setTimeout(() => {
-      axios.get(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(form.adresse)}&limit=5`)
-        .then(res => setAddressSuggestions(res.data.features))
-        .catch(console.error)
-    }, 300)
+      if (adresseEnSuisse) {
+        axios.get(ADRESSE_SUISSE, {
+          params: {
+            q: form.adresse,
+            format: 'jsonv2',
+            addressdetails: 1,
+            countrycodes: 'ch',
+            limit: 5,
+          },
+          headers: { Accept: 'application/json' },
+          timeout: 8000,
+        })
+          .then(res => setAddressSuggestions(suggestionsSuisse(res.data)))
+          .catch(() => setAddressSuggestions([]))
+        return
+      }
+      axios.get(`${ADRESSE_FRANCE}?q=${encodeURIComponent(form.adresse)}&limit=5`)
+        .then(res => setAddressSuggestions(suggestionsFrance(res.data.features)))
+        .catch(() => setAddressSuggestions([]))
+    }, delai)
     return () => clearTimeout(handler)
-  }, [form.adresse])
+  }, [form.adresse, adresseEnSuisse])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -134,9 +203,16 @@ export default function ClientNew() {
   }
 
   const handleAddressSelect = (suggestion) => {
-    set('adresse', suggestion.properties.name)
-    set('postal_code', suggestion.properties.postcode)
-    set('city', suggestion.properties.city)
+    // Les deux sources renvoient la MÊME forme (adresse / NPA ou code postal /
+    // ville / pays) : la sélection remplit les champs et fixe le pays, ce qui
+    // bascule aussi le format de téléphone attendu.
+    set('adresse', suggestion.adresse || suggestion.label)
+    set('postal_code', suggestion.postal_code || '')
+    set('city', suggestion.city || '')
+    if (suggestion.country) {
+      set('country', suggestion.country)
+      setDialCode(paysSuisse(suggestion.country) ? '+41' : '+33')
+    }
     setAddressSuggestions([])
   }
 
@@ -191,17 +267,33 @@ export default function ClientNew() {
                 </div>
                 <div className="mt-4 relative">
                   <label className={labelClass}>Adresse</label>
-                  <input value={form.adresse} onChange={e => set('adresse', e.target.value)} className={inputClass} />
+                  <input value={form.adresse} onChange={e => set('adresse', e.target.value)} className={inputClass}
+                    placeholder={adresseEnSuisse ? 'Rue, NPA, localité (Suisse)' : 'N°, rue'} />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Suggestions : {adresseEnSuisse
+                      ? 'adresses suisses (OpenStreetMap, NPA + canton)'
+                      : 'Base Adresse Nationale française'} — saisie manuelle toujours possible.
+                  </p>
                   <AnimatePresence>
                     {addressSuggestions.length > 0 && (
                       <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {addressSuggestions.map(s => <li key={s.properties.id} onClick={() => handleAddressSelect(s)} className="p-3 text-sm hover:bg-gray-50 cursor-pointer">{s.properties.label}</li>)}
+                        {addressSuggestions.map(s => <li key={s.id} onClick={() => handleAddressSelect(s)} className="p-3 text-sm hover:bg-gray-50 cursor-pointer">{s.label}</li>)}
                       </motion.ul>
                     )}
                   </AnimatePresence>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div><label className={labelClass}>Code Postal</label><input value={form.postal_code} onChange={e => set('postal_code', e.target.value)} className={inputClass} /></div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  {/* Le pays pilote la source d'adresse ET le format du numéro :
+                      un cabinet suisse ne se voit plus proposer d'adresses françaises. */}
+                  <div>
+                    <label className={labelClass}>Pays</label>
+                    <select value={form.country} onChange={e => { const v = e.target.value; set('country', v); if (v) setDialCode(paysSuisse(v) ? '+41' : '+33') }} className={inputClass}>
+                      <option value="">Non précisé</option>
+                      <option value="France">France</option>
+                      <option value="Suisse">Suisse</option>
+                    </select>
+                  </div>
+                  <div><label className={labelClass}>{adresseEnSuisse ? 'NPA' : 'Code Postal'}</label><input value={form.postal_code} onChange={e => set('postal_code', e.target.value)} className={inputClass} /></div>
                   <div><label className={labelClass}>Ville</label><input value={form.city} onChange={e => set('city', e.target.value)} className={inputClass} /></div>
                 </div>
                 <div className="mt-6"><label className={labelClass}>Statut</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

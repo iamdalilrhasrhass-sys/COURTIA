@@ -122,11 +122,16 @@ router.post('/calculate/:contractId', async (req, res) => {
       return res.status(400).json({ error: 'period requis (ex: "2026-05" ou { year: 2026, month: 5 })' })
     }
 
+    // Portée cabinet : le contrat d'un collègue du même cabinet est légitime.
+    const portee = await porteeDe(req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'calculer une commission')) return
+
     const result = await commissionsAutoService.calculateCommission(
       req.app.locals.pool,
       userId,
       parseInt(req.params.contractId, 10),
-      period
+      period,
+      portee
     )
     res.json(result)
   } catch (err) {

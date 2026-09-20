@@ -6,6 +6,8 @@
 //   autoRefresh {boolean} — si true, refresh toutes les 8s
 
 import { useEffect, useRef, useState } from 'react'
+import { symboleCourant } from '../../lib/monnaie'
+import useDevise from '../useDevise'
 
 const ACTION_LABELS = {
   analyze_dossier:     { label: 'Analyse dossier',         icon: '🔍', color: '#8B5CF6' },
@@ -58,6 +60,8 @@ export default function ArkActivityFeed({
      l'activité réelle du cabinet. Par défaut, plus aucune invention. */
   exemple = false,
 }) {
+  // Re-rend au changement de devise : « Coût session » suit le cabinet.
+  useDevise()
   const [activities, setActivities] = useState(propActivities ?? (exemple ? generateMockActivities() : []))
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(false)
@@ -195,7 +199,7 @@ export default function ArkActivityFeed({
                 <p className="text-xs text-slate-400">{fmtTime(activity.timestamp)}</p>
                 {activity.costCents != null && (
                   <p className="text-xs text-slate-300 dark:text-slate-600">
-                    {activity.costCents.toFixed(3)}€
+                    {activity.costCents.toFixed(3)} {symboleCourant()}
                   </p>
                 )}
               </div>
@@ -207,7 +211,7 @@ export default function ArkActivityFeed({
       {/* Footer */}
       <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <span className="text-xs text-slate-400">
-          Coût session : {totalCost.toFixed(3)} €
+          Coût session : {totalCost.toFixed(3)} {symboleCourant()}
         </span>
         {autoRefresh && (
           <span className="text-xs text-slate-400 flex items-center gap-1">

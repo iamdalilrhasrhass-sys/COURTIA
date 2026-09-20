@@ -1,10 +1,13 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { Plus, Sparkles, TrendingUp, Target, Calendar, Euro } from 'lucide-react'
+import { Plus, Sparkles, TrendingUp, Target, Calendar } from 'lucide-react'
 import api from '../api'
 import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
+import { fmtMontant } from '../lib/monnaie'
+import DeviseIcone from '../components/DeviseIcone'
+import useDevise from '../components/useDevise'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
@@ -22,7 +25,11 @@ const KANBAN_STAGES = [
   { id: 'signe',    label: 'Signé',    color: '#22C55E', glyph: '✅' },
 ]
 
-const fmtEur = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v || 0))
+// Montants du pipeline : devise RÉELLE du cabinet (CHF pour un cabinet suisse,
+// EUR pour un cabinet français) via le module de devise du frontend. Avant ce
+// correctif, ce formateur forçait « fr-FR/EUR » : un cabinet suisse lisait
+// « Potentiel total 0 € » et « POTENTIEL 0 € » sur ses colonnes.
+const fmtMontantPipeline = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 const DEMO_OPPS = [
   { id: 1, client: 'Martin Conseil',  produit: 'Prévoyance TNS', potentiel: 1200, proba: 70, date: '15 mai', stage: 'devis',    ark: true },
@@ -80,7 +87,7 @@ function Card({ o, dragStart, dragEnd }) {
       </div>
       <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 10 }}>{o.produit}</div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: T.success }}>{fmtEur(o.potentiel)}</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: T.success }}>{fmtMontantPipeline(o.potentiel)}</span>
         <span style={{
           fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
           background: `${probaColor}15`, color: probaColor,
@@ -99,6 +106,9 @@ function Card({ o, dragStart, dragEnd }) {
 
 export default function Opportunites() {
   const navigate = useNavigate()
+  // La devise du cabinet est relue à chaque changement de profil : sans cela,
+  // un écran déjà rendu restait en euros jusqu'au prochain rendu.
+  useDevise()
   // Aucune opportunité d'exemple : le pipeline doit refléter les seuls
   // dossiers réels du cabinet (sinon il affiche un potentiel inventé).
   const [columns, setColumns] = useState(() => initStages([]))
@@ -189,7 +199,7 @@ export default function Opportunites() {
             }}>
               <TrendingUp size={13} color={T.success} />
               <span style={{ fontSize: 11, color: T.textMuted }}>Potentiel total</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: T.success }}>{fmtEur(grandTotal)}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: T.success }}>{fmtMontantPipeline(grandTotal)}</span>
             </div>
             {arkCount > 0 && (
               <div style={{
@@ -255,7 +265,7 @@ export default function Opportunites() {
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   }}>
                     <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Potentiel</span>
-                    <strong style={{ color: T.success, fontSize: 12 }}>{fmtEur(total.sum)}</strong>
+                    <strong style={{ color: T.success, fontSize: 12 }}>{fmtMontantPipeline(total.sum)}</strong>
                   </div>
 
                   <AnimatePresence>

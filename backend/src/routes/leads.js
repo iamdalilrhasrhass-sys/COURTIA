@@ -6,7 +6,7 @@ const {
   validateDemoRequestPayload,
 } = require('../services/demoRequestService')
 const { isAdminRole } = require('../constants/roles')
-const { notifierAdminSansBloquer } = require('../services/adminNotifier')
+const { notifierAdmin } = require('../services/adminNotifier')
 
 const router = express.Router()
 
@@ -135,9 +135,22 @@ router.post('/demo-request', async (req, res) => {
       ]
     )
 
-    // Événement commercial : nouvelle demande de démo publique. Non bloquant —
-    // la demande est enregistrée et répondue quoi qu'il arrive côté e-mail.
-    notifierAdminSansBloquer({
+    // CORRECTION 20/09/2026 — la demande était enregistrée puis on répondait
+    // « notre équipe vous recontacte rapidement » ALORS QUE la notification
+    // interne partait en « sans bloquant » : sans COURTIA_ADMIN_EMAIL ou sans
+    // fournisseur d'e-mail, adminNotifier renvoie {envoye:false} et personne
+    // n'était alerté. Le prospect lisait une promesse de rappel que personne ne
+    // pouvait tenir.
+    //
+    // Désormais on ATTEND le résultat et on le dit dans la réponse :
+    //   - notification partie  → promesse de rappel légitime ;
+    //   - notification non partie → la réponse le signale explicitement
+    //     (notification_interne.envoye=false + configuration_required) et
+    //     n'annonce AUCUN rappel automatique. La demande reste bien enregistrée
+    //     (action réelle) et consultable dans /api/leads/demo-requests.
+    // notifierAdmin n'émet jamais d'exception : la demande ne peut pas être
+    // perdue à cause de l'e-mail.
+    const notification = await notifierAdmin({
       evenement: 'nouvelle_demande_demo',
       sujet: `COURTIA — demande de démo : ${payload.company_name || payload.email}`,
       replyTo: payload.email,
@@ -154,10 +167,25 @@ router.post('/demo-request', async (req, res) => {
       ],
     })
 
+    const notifiee = notification?.envoye === true
+
+    // Message produit : aucune promesse de rappel quand aucune alerte n'est
+    // partie. Rien n'est inventé, l'état réel est transmis au client.
+    const message = notifiee
+      ? 'Demande de démo reçue. Votre demande a été transmise à l\'équipe COURTIA, qui vous recontacte.'
+      : 'Votre demande de démo est enregistrée et visible dans l\'espace COURTIA, mais la notification interne n\'a pas pu partir ('
+        + `${notification?.raison || 'configuration_required'}). Prévenez l'équipe COURTIA par un autre canal si votre demande est urgente.`
+
     return res.status(201).json({
       success: true,
       lead: insert.rows[0],
-      message: 'Demande de démo reçue. Notre équipe vous recontacte rapidement.',
+      notification_interne: {
+        envoye: notifiee,
+        raison: notifiee ? null : (notification?.raison || 'configuration_required'),
+        canal: 'email',
+      },
+      configuration_required: !notifiee,
+      message,
     })
   } catch (err) {
     console.error('[LEADS] POST /demo-request error:', err.message)

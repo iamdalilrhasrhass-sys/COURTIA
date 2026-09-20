@@ -94,6 +94,120 @@ async function ensureWizardSchema() {
   catch (_) { return false }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEUX FAMILLES DE DEVIS, UNE SEULE LISTE
+//
+// POURQUOI : l'assistant de devis écrit dans `devis_wizard` (devis « guidé »),
+// alors que GET /api/devis ne lisait que `quote_requests` (devis v1). Un devis
+// créé par l'assistant n'apparaissait donc JAMAIS dans la liste des devis de
+// l'application (défaut reproduit en production : réf. DV-P92F76 présente dans
+// `devis_wizard`, GET /api/devis → {"devis":[],"stats":{"total":"0"}}), et sa
+// suppression répondait 404 « Devis non trouvé » alors que la ligne existait.
+// On expose donc les DEUX familles dans la même liste, chaque élément portant
+// `source` (« wizard » ou « v1 ») : l'application peut les distinguer, mais
+// aucune ne disparaît. `id` reste l'identifiant de la famille concernée, comme
+// le fait déjà POST /api/devis/:id/relance.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Élément de liste pour un devis guidé (`devis_wizard`), au format v1. */
+function mapDevisWizardVersListe(r = {}) {
+  return {
+    id: r.id,
+    client_id: r.client_id,
+    client_name: r.client_name_cache || r.company_name
+      || `${r.first_name || ''} ${r.last_name || ''}`.trim() || null,
+    product_type: r.product,
+    status: r.status,
+    created_at: r.created_at,
+    submitted_at: r.sent_at,
+    results_count: 0,
+    best_price: null,
+    normalized_data: r.garanties || {},
+    metadata: {
+      source: 'devis_wizard',
+      reference: r.reference || null,
+      total_premium_eur: r.total_premium_cents != null ? Math.round(r.total_premium_cents / 100) : null,
+      expires_at: r.expires_at || null,
+    },
+    source: 'wizard',
+    reference: r.reference || null,
+  }
+}
+
+/**
+ * Détail d'un devis GUIDÉ (`devis_wizard`), au format « devis » de la v1.
+ * Renvoie `null` si la portée ne le voit pas (jamais 403 : un devis hors
+ * cabinet est INEXISTANT pour l'appelant).
+ */
+async function chargerDevisWizardParId(portee, devisId) {
+  const ok = await ensureWizardSchema()
+  if (!ok) return null
+  const f = filtreWizard(portee, { depart: 2, alias: 'd' })
+  const { rows } = await pool.query(
+    `SELECT d.*, c.first_name, c.last_name, c.company_name, c.email AS c_email, c.phone AS c_phone
+       FROM devis_wizard d
+       LEFT JOIN clients c ON c.id = d.client_id
+      WHERE d.id = $1 AND ${f.sql}
+      LIMIT 1`,
+    [devisId, ...f.params]
+  )
+  const d = rows[0]
+  if (!d) return null
+  return {
+    id: d.id,
+    client_id: d.client_id,
+    client: {
+      name: d.client_name_cache || d.company_name || `${d.first_name || ''} ${d.last_name || ''}`.trim(),
+      email: d.c_email || d.client_email_cache || null,
+      phone: d.c_phone || null,
+      type: null,
+    },
+    product_type: d.product,
+    normalized_data: d.garanties || {},
+    target_providers: [],
+    status: d.status,
+    metadata: {
+      source: 'devis_wizard',
+      reference: d.reference || null,
+      total_premium_eur: d.total_premium_cents != null ? Math.round(d.total_premium_cents / 100) : null,
+      ark_summary: d.ark_summary || null,
+      expires_at: d.expires_at || null,
+    },
+    created_at: d.created_at,
+    submitted_at: d.sent_at,
+    source: 'wizard',
+    reference: d.reference || null,
+    // Offres réellement enregistrées par l'assistant (aucune n'est fabriquée).
+    offres: Array.isArray(d.selected_providers) ? d.selected_providers : [],
+  }
+}
+
+/** Devis guidés visibles par la portée, filtrés comme la liste v1. */
+async function listerDevisWizard(portee, { status, client_id, product_type, limit = 50 } = {}) {
+  const ok = await ensureWizardSchema()
+  if (!ok) return []
+  const f = filtreWizard(portee, { depart: 1, alias: 'd' })
+  const clauses = [f.sql]
+  const params = [...f.params]
+  if (status) { params.push(String(status)); clauses.push(`d.status = $${params.length}`) }
+  if (client_id) { params.push(parseInt(client_id, 10)); clauses.push(`d.client_id = $${params.length}`) }
+  if (product_type) { params.push(String(product_type)); clauses.push(`d.product = $${params.length}`) }
+  params.push(parseInt(limit, 10) || 50)
+  const { rows } = await pool.query(
+    `SELECT d.id, d.client_id, d.product, d.status, d.garanties, d.reference,
+            d.total_premium_cents, d.client_name_cache, d.client_email_cache,
+            d.created_at, d.sent_at, d.expires_at,
+            c.first_name, c.last_name, c.company_name
+       FROM devis_wizard d
+       LEFT JOIN clients c ON c.id = d.client_id
+      WHERE ${clauses.join(' AND ')}
+      ORDER BY d.created_at DESC
+      LIMIT $${params.length}`,
+    params
+  )
+  return rows.map(mapDevisWizardVersListe)
+}
+
 async function loadCabinetMeta(userId) {
   // Identité RÉELLE du cabinet. Avant ce correctif, cette fonction renvoyait
   // `orias: '12345678'` et `rcpro: '1234'` ÉCRITS EN DUR : ces faux numéros de
@@ -130,6 +244,34 @@ async function loadCabinetMeta(userId) {
   } catch (_) {
     return { name: 'COURTIA', registreType: null, registreNumero: null, uid: null,
              orias: null, ville: null, codePostal: null, pays: null, devise: 'EUR' }
+  }
+}
+
+/**
+ * Identifiant de registre RÉEL du cabinet, pour les messages destinés au client.
+ *
+ * POURQUOI CETTE FONCTION : l'e-mail de devis se terminait par
+ * « Validité 30 jours · ORIAS 12345678 » — un numéro ÉCRIT EN DUR, donc faux,
+ * dans un message envoyé au client final (le PDF avait été corrigé, pas
+ * l'e-mail). On n'imprime que ce qui est réellement renseigné : le numéro ORIAS
+ * du cabinet (`cabinets.orias_number`), sinon celui du profil du courtier
+ * (`broker_profiles.orias`). Si rien n'est renseigné, la mention disparaît —
+ * on n'invente jamais un numéro de registre.
+ */
+async function chargerRegistreReel(devisWizard = {}) {
+  try {
+    const { rows } = await pool.query(
+      `SELECT COALESCE(NULLIF(c.orias_number, ''), NULLIF(bp.orias, '')) AS registre
+         FROM users u
+         LEFT JOIN broker_profiles bp ON bp.user_id = u.id
+         LEFT JOIN cabinets c ON c.id = $2::uuid
+        WHERE u.id = $1
+        LIMIT 1`,
+      [devisWizard.user_id || null, devisWizard.cabinet_id || null]
+    )
+    return (rows[0] && rows[0].registre) || null
+  } catch (_) {
+    return null
   }
 }
 
@@ -292,21 +434,49 @@ router.get('/', async (req, res) => {
       FROM quote_requests WHERE ${fStats.sql}
     `, [...fStats.params])
 
+    // Devis guidés (assistant) : même portée, mêmes filtres, ajoutés à la liste.
+    const devisWizard = await listerDevisWizard(portee, { status, client_id, product_type, limit })
+    const devisV1 = result.rows.map(row => ({
+      id: row.id,
+      client_id: row.client_id,
+      client_name: row.client_company || `${row.client_first_name || ''} ${row.client_last_name || ''}`.trim(),
+      product_type: row.product_type,
+      status: row.status,
+      created_at: row.created_at,
+      submitted_at: row.submitted_at,
+      results_count: parseInt(row.results_count, 10) || 0,
+      best_price: row.best_price ? parseFloat(row.best_price) : null,
+      normalized_data: row.normalized_data,
+      metadata: row.metadata || {},
+      source: 'v1',
+      reference: null,
+    }))
+
+    // Une seule liste, du plus récent au plus ancien. `total` compte ce qui est
+    // RÉELLEMENT renvoyé (un « total » à 0 devant une liste non vide est un
+    // mensonge) ; le détail par famille reste disponible.
+    const devis = [...devisV1, ...devisWizard]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .slice(0, parseInt(limit, 10) || 50)
+
+    const statsV1 = statsResult.rows[0] || {}
+
     res.json({
-      devis: result.rows.map(row => ({
-        id: row.id,
-        client_id: row.client_id,
-        client_name: row.client_company || `${row.client_first_name || ''} ${row.client_last_name || ''}`.trim(),
-        product_type: row.product_type,
-        status: row.status,
-        created_at: row.created_at,
-        submitted_at: row.submitted_at,
-        results_count: parseInt(row.results_count, 10) || 0,
-        best_price: row.best_price ? parseFloat(row.best_price) : null,
-        normalized_data: row.normalized_data,
-        metadata: row.metadata || {}
-      })),
-      stats: statsResult.rows[0],
+      devis,
+      stats: {
+        total: devis.length,
+        total_v1: parseInt(statsV1.total, 10) || 0,
+        total_wizard: devisWizard.length,
+        // Répartition v1 (inchangée)
+        drafts: statsV1.drafts,
+        submitted: statsV1.submitted,
+        completed: statsV1.completed,
+        accepted: statsV1.accepted,
+        // Répartition des devis guidés, sur les éléments listés
+        wizard_draft: devisWizard.filter(d => d.status === 'draft' || d.status === 'ready').length,
+        wizard_sent: devisWizard.filter(d => d.status === 'sent' || d.status === 'opened').length,
+        wizard_signed: devisWizard.filter(d => d.status === 'signed').length,
+      },
       pagination: { limit: parseInt(limit, 10), offset: parseInt(offset, 10) }
     })
   } catch (err) {
@@ -337,7 +507,12 @@ router.get('/:id', async (req, res) => {
     `, [devisId, ...f.params])
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Devis non trouvé' })
+      // Devis GUIDÉ (assistant) : sa table est `devis_wizard`, pas
+      // `quote_requests`. Un devis créé par l'assistant doit s'ouvrir comme les
+      // autres — sinon l'écran de détail répondrait 404 pour un devis qui existe.
+      const wizard = await chargerDevisWizardParId(portee, devisId)
+      if (!wizard) return res.status(404).json({ error: 'Devis non trouvé' })
+      return res.json({ devis: wizard, results: [] })
     }
 
     const devis = result.rows[0]
@@ -443,7 +618,11 @@ router.put('/:id', async (req, res) => {
     // Vérifier que le devis appartient AU CABINET de l'appelant (404 sinon).
     const fPortee = filtreDevis(portee, { depart: 2, ecriture: true })
     const check = await pool.query(
-      `SELECT id FROM quote_requests WHERE id = $1 AND ${fPortee.sql}`,
+      // Alias `qr` OBLIGATOIRE : la portée cabinet s'écrit `qr.cabinet_id` /
+      // `qr.broker_id`. Sans alias, PostgreSQL répondait
+      // « missing FROM-clause entry for table "qr" » (500) — la modification d'un
+      // devis était donc impossible pour TOUS les cabinets.
+      `SELECT id FROM quote_requests qr WHERE id = $1 AND ${fPortee.sql}`,
       [devisId, ...fPortee.params]
     )
     if (check.rows.length === 0) {
@@ -506,8 +685,32 @@ router.delete('/:id', async (req, res) => {
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     if (porteeCabinet.refuserSuppression(portee, res)) return
     const devisId = parseInt(req.params.id, 10)
-    const f = filtreDevis(portee, { depart: 2, ecriture: true })
+    if (!Number.isFinite(devisId) || devisId <= 0) {
+      return res.status(400).json({ error: 'invalid_devis_id', message: 'Identifiant de devis invalide.' })
+    }
+    // `?source=wizard|v1` : permet de lever l'ambiguïté quand un même entier
+    // existe dans les DEUX tables. Sans indication, on suit l'ordre de la liste
+    // (devis guidé d'abord, comme POST /api/devis/:id/relance), puis on
+    // supprime RÉELLEMENT la ligne — sinon 404.
+    const sourceDemandee = String(req.query?.source || '').toLowerCase()
 
+    if (sourceDemandee !== 'v1') {
+      // Devis guidé de l'assistant : `devis_relances` et `devis_activity` sont en
+      // ON DELETE CASCADE, la suppression emporte donc aussi ses relances.
+      const fWizard = filtreWizard(portee, { depart: 2, ecriture: true })
+      const wizard = await pool.query(
+        `DELETE FROM devis_wizard d WHERE d.id = $1 AND ${fWizard.sql} RETURNING id, reference`,
+        [devisId, ...fWizard.params]
+      ).catch((err) => {
+        if (String(err.message || '').includes('does not exist')) return { rows: [], rowCount: 0 }
+        throw err
+      })
+      if (wizard.rowCount) {
+        return res.json({ success: true, deleted_id: devisId, source: 'wizard', reference: wizard.rows[0].reference || null })
+      }
+    }
+
+    const f = filtreDevis(portee, { depart: 2, ecriture: true })
     const result = await pool.query(
       `DELETE FROM quote_requests qr WHERE id = $1 AND ${f.sql} RETURNING id`,
       [devisId, ...f.params]
@@ -517,7 +720,11 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Devis non trouvé' })
     }
 
-    res.json({ success: true, deleted_id: devisId })
+    // Les relances planifiées d'un devis supprimé n'ont plus d'objet : on les
+    // annule (même règle que l'annulation d'un devis guidé).
+    await cancelPendingRelancesForDevis(devisId).catch(() => {})
+
+    res.json({ success: true, deleted_id: devisId, source: 'v1' })
   } catch (err) {
     logger.error({ error: err.message }, 'DELETE /api/devis/:id error')
     res.status(500).json({ error: 'Erreur serveur', details: err.message })
@@ -854,7 +1061,10 @@ router.post('/wizard/finalize', async (req, res) => {
     }
 
     const { rows: existing } = await pool.query(
-      `SELECT * FROM devis_wizard WHERE id = $1 AND ${filtreWizard(portee, { depart: 2, ecriture: true }).sql}`,
+      // Alias `d` : la portée cabinet (`d.cabinet_id` / `d.user_id`) l'exige.
+      // Sans alias, la finalisation répondait 500
+      // « missing FROM-clause entry for table "d" ».
+      `SELECT * FROM devis_wizard d WHERE id = $1 AND ${filtreWizard(portee, { depart: 2, ecriture: true }).sql}`,
       [devis_id, ...filtreWizard(portee, { depart: 2, ecriture: true }).params]
     )
     if (!existing[0]) return res.status(404).json({ error: 'devis_not_found' })
@@ -929,7 +1139,8 @@ router.get('/:id/pdf', async (req, res) => {
     const devisId = parseInt(req.params.id, 10)
     const fDevis = filtreWizard(portee, { depart: 2 })
     const { rows } = await pool.query(
-      `SELECT pdf_path, reference FROM devis_wizard WHERE id = $1 AND ${fDevis.sql}`,
+      // Alias `d` exigé par la portée cabinet (d.cabinet_id / d.user_id).
+      `SELECT pdf_path, reference FROM devis_wizard d WHERE id = $1 AND ${fDevis.sql}`,
       [devisId, ...fDevis.params]
     )
     if (!rows[0] || !rows[0].pdf_path) return res.status(404).json({ error: 'pdf_missing' })
@@ -956,7 +1167,10 @@ router.post('/:id/send', async (req, res) => {
     const devisId = parseInt(req.params.id, 10)
     const fDevis = filtreWizard(portee, { depart: 2, ecriture: true })
     const { rows } = await pool.query(
-      `SELECT * FROM devis_wizard WHERE id = $1 AND ${fDevis.sql}`,
+      // Alias `d` exigé par la portée cabinet (d.cabinet_id / d.user_id) : sans
+      // lui, l'envoi du devis répondait 500 « missing FROM-clause entry for
+      // table "d" » — aucun devis guidé ne pouvait donc partir par e-mail.
+      `SELECT * FROM devis_wizard d WHERE id = $1 AND ${fDevis.sql}`,
       [devisId, ...fDevis.params]
     )
     if (!rows[0]) return res.status(404).json({ error: 'devis_not_found' })
@@ -971,6 +1185,12 @@ router.post('/:id/send', async (req, res) => {
       `Bonjour,\n\nVeuillez trouver ci-joint la proposition que je vous avais préparée.\nN'hésitez pas à me contacter pour toute question.\n\n— ${d.cabinet_name_cache || 'COURTIA'}`
 
     const pdfLink = `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/devis/${devisId}`
+    // Registre réel du cabinet — plus JAMAIS de numéro inventé dans un message
+    // client (la version précédente imprimait « ORIAS 12345678 » en dur).
+    const registreReel = await chargerRegistreReel(d)
+    // Le numéro affiché est une donnée saisie par le cabinet : on la neutralise
+    // pour l'HTML (aucune balise ne peut être injectée dans l'e-mail).
+    const registreAffiche = registreReel ? String(registreReel).replace(/[^\w\s.-]/g, '').trim() : ''
     const html = `
       <div style="font-family:Inter,Arial;color:#1F2937;max-width:600px;margin:0 auto">
         <div style="background:#050510;padding:24px;border-radius:12px 12px 0 0">
@@ -983,7 +1203,7 @@ router.post('/:id/send', async (req, res) => {
             <a href="${pdfLink}" style="background:#5B4DF5;color:#FFF;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Consulter & signer ma proposition</a>
           </p>
           <p style="color:#6B7280;font-size:12px">Référence : ${d.reference || 'DV-' + devisId}</p>
-          <p style="color:#6B7280;font-size:12px">Validité ${d.validity_days || 30} jours · ORIAS 12345678</p>
+          <p style="color:#6B7280;font-size:12px">Validité ${d.validity_days || 30} jours${registreAffiche ? ` · ORIAS ${registreAffiche}` : ''}</p>
         </div>
       </div>
     `
@@ -994,6 +1214,24 @@ router.post('/:id/send', async (req, res) => {
        le devis était donc « envoyé » alors qu'aucun message n'existait).
        Passage par sendCommercialEmail : un devis est un message commercial,
        le client doit pouvoir répondre. */
+
+    // Aperçu SANS envoi (`{"dry_run": true}`) : permet de vérifier le message
+    // RÉELLEMENT produit (contenu, identité du cabinet, registre imprimé) sans
+    // envoyer d'e-mail à un client et sans mentir sur l'état du devis : rien
+    // n'est envoyé, le statut et `sent_at` restent inchangés.
+    if (req.body?.dry_run === true || req.body?.apercu === true) {
+      return res.json({
+        ok: false,
+        dry_run: true,
+        envoye: false,
+        destinataire: email,
+        subject,
+        html,
+        registre_imprime: registreAffiche || null,
+        message: "Aperçu : aucun e-mail n'a été envoyé et le devis n'a pas changé de statut.",
+      })
+    }
+
     const envoi = await sendCommercialEmail({ to: email, subject, html })
     if (!envoi || !envoi.success) {
       logger.warn({ devisId, error: envoi && envoi.error }, 'devis send email failed')
@@ -1055,7 +1293,8 @@ router.post('/:id/relance', async (req, res) => {
     // table, et un identifiant inconnu répond 404 au lieu de 500.
     const fWizard = filtreWizard(portee, { depart: 2, ecriture: true })
     const wizard = await pool.query(
-      `SELECT id, status, client_id FROM devis_wizard WHERE id = $1 AND ${fWizard.sql}`,
+      // Alias `d` exigé par la portée cabinet (d.cabinet_id / d.user_id).
+      `SELECT id, status, client_id FROM devis_wizard d WHERE id = $1 AND ${fWizard.sql}`,
       [devisId, ...fWizard.params]
     )
     if (wizard.rows[0]) {
@@ -1285,7 +1524,8 @@ router.post('/:id/duplicate', async (req, res) => {
     const devisId = parseInt(req.params.id, 10)
     const fSrc = filtreWizard(portee, { depart: 2, ecriture: true })
     const { rows } = await pool.query(
-      `SELECT * FROM devis_wizard WHERE id = $1 AND ${fSrc.sql}`, [devisId, ...fSrc.params]
+      // Alias `d` exigé par la portée cabinet (d.cabinet_id / d.user_id).
+      `SELECT * FROM devis_wizard d WHERE id = $1 AND ${fSrc.sql}`, [devisId, ...fSrc.params]
     )
     if (!rows[0]) return res.status(404).json({ error: 'not_found' })
     const src = rows[0]
@@ -1317,13 +1557,28 @@ router.post('/:id/cancel', async (req, res) => {
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     if (porteeCabinet.refuserEcriture(portee, res, 'annuler un devis')) return
     const devisId = parseInt(req.params.id, 10)
+    if (!Number.isFinite(devisId) || devisId <= 0) {
+      return res.status(400).json({ error: 'invalid_devis_id', message: 'Identifiant de devis invalide.' })
+    }
     const fAnnule = filtreWizard(portee, { depart: 2, ecriture: true })
-    await pool.query(
+    // `RETURNING` + contrôle de `rowCount` : l'ancienne version renvoyait
+    // `{ok:true}` même quand l'UPDATE ne touchait AUCUNE ligne (défaut reproduit
+    // en production : POST /api/devis/15/cancel depuis un autre cabinet → 200
+    // alors que rien n'avait changé). Un devis hors cabinet est INEXISTANT :
+    // réponse 404, jamais un succès.
+    const maj = await pool.query(
       `UPDATE devis_wizard d SET status = 'refused', updated_at = NOW()
-       WHERE id = $1 AND ${fAnnule.sql}`, [devisId, ...fAnnule.params]
+       WHERE id = $1 AND ${fAnnule.sql} RETURNING id, reference, status`,
+      [devisId, ...fAnnule.params]
     )
+    if (!maj.rowCount) {
+      return res.status(404).json({
+        error: 'devis_not_found',
+        message: 'Devis introuvable pour ce cabinet : aucune annulation effectuée.',
+      })
+    }
     await cancelPendingRelancesForDevis(devisId)
-    res.json({ ok: true })
+    res.json({ ok: true, cancelled_id: devisId, status: 'refused', reference: maj.rows[0].reference || null })
   } catch (err) {
     res.status(500).json({ error: 'cancel_failed' })
   }

@@ -5,6 +5,7 @@
 
 const { v4: uuidv4 } = require('uuid')
 const { eurosToCents, centsToEuros, normalizePeriod } = require('./commissionService')
+const porteeCabinet = require('../lib/porteeCabinet')
 const { generateEntriesFromCommissions } = require('./fecService')
 const { generatePDF } = require('./pdfService')
 
@@ -85,15 +86,35 @@ async function listRules(pool, userId) {
 
 /**
  * Calcule la commission pour un contrat
+ *
+ * @param {object} portee portée cabinet résolue (lib/porteeCabinet), ou null
+ *        pour le comportement historique (contrats du seul appelant). Avec une
+ *        portée, le contrat d'un collègue du même cabinet est légitime — sinon
+ *        un associé recevait « Contrat introuvable » pour son propre cabinet.
  */
-async function calculateCommission(pool, userId, contractId, period) {
+async function calculateCommission(pool, userId, contractId, period, portee = null) {
   // Récupérer le contrat
+  const clausesContrat = ['q.id = $1']
+  const paramsContrat = [contractId]
+  if (portee) {
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: paramsContrat.length + 1,
+      ecriture: true,
+    })
+    clausesContrat.push(f.sql)
+    paramsContrat.push(...f.params)
+  } else {
+    paramsContrat.push(userId)
+    clausesContrat.push(`c.courtier_id = $${paramsContrat.length}`)
+  }
   const contractRes = await pool.query(`
     SELECT q.*, c.first_name, c.last_name
     FROM quotes q
     JOIN clients c ON c.id = q.client_id
-    WHERE q.id = $1 AND c.courtier_id = $2
-  `, [contractId, userId])
+    WHERE ${clausesContrat.join(' AND ')}
+  `, paramsContrat)
 
   const contract = contractRes.rows[0]
   if (!contract) {
@@ -103,7 +124,18 @@ async function calculateCommission(pool, userId, contractId, period) {
   const quoteData = contract.quote_data || {}
   const productType = quoteData.type_contrat || quoteData.product_type || null
   const company = quoteData.compagnie || quoteData.company || null
-  const primeTTC = parseFloat(quoteData.prime_ttc || quoteData.premium || 0)
+  // POURQUOI : la prime était lue UNIQUEMENT dans `prime_ttc` / `premium`, deux
+  // champs que POST /api/contrats n'écrit PAS — il écrit `prime_annuelle`
+  // (et les imports peuvent écrire `annual_premium`). La commission calculée
+  // valait donc 0 × taux + frais fixes : le barème saisi ne produisait jamais
+  // le montant attendu. On lit maintenant TOUS les champs de prime réellement
+  // utilisés par le produit, sans en inventer aucun.
+  const primeBrute = quoteData.prime_ttc
+    ?? quoteData.prime_annuelle
+    ?? quoteData.annual_premium
+    ?? quoteData.premium
+    ?? 0
+  const primeTTC = parseFloat(String(primeBrute).replace(',', '.')) || 0
 
   // Trouver la règle applicable
   const rule = await getApplicableRules(pool, userId, productType, company)
@@ -118,18 +150,27 @@ async function calculateCommission(pool, userId, contractId, period) {
   // Normaliser la période
   const { year, month } = normalizePeriod(period)
 
-  // Enregistrer ou mettre à jour la commission
+  // Enregistrer ou mettre à jour la commission.
+  // `commission_amount` (colonne d'origine NOT NULL, jamais alimentée par le
+  // code) recevait NULL → 23502 « null value in column commission_amount » ;
+  // elle est désormais écrite en euros, comme les colonnes `*_amount_cents`.
   const result = await pool.query(`
     INSERT INTO commissions (
       user_id, contract_id, insurer, period_year, period_month,
-      expected_amount_cents, received_amount_cents, status, rule_id, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, 0, 'expected', $7, NOW(), NOW())
+      expected_amount_cents, received_amount_cents, status, rule_id,
+      commission_amount, cabinet_id, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, 0, 'expected', $7, $8, $9, NOW(), NOW())
     ON CONFLICT (user_id, contract_id, period_year, period_month) DO UPDATE SET
       expected_amount_cents = EXCLUDED.expected_amount_cents,
       rule_id = EXCLUDED.rule_id,
+      commission_amount = EXCLUDED.commission_amount,
       updated_at = NOW()
     RETURNING *
-  `, [userId, contractId, company || 'Non renseigné', year, month, expectedAmountCents, rule?.id || null])
+  `, [
+    userId, contractId, company || 'Non renseigné', year, month, expectedAmountCents, rule?.id || null,
+    centsToEuros(expectedAmountCents),
+    portee ? porteeCabinet.cabinetPourCreation(portee) : null,
+  ])
 
   return {
     ...result.rows[0],

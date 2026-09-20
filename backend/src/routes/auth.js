@@ -10,8 +10,48 @@ const User = require('../models/User');
 const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { getFeatureFlagsForUser } = require('../lib/featureFlags');
+const { marcheDepuis, devise: deviseDuMarche } = require('../lib/devise');
 
 const router = express.Router();
+
+/**
+ * Colonnes de l'identité du cabinet relues après CHAQUE écriture.
+ * POURQUOI une constante : l'écriture (`PUT /api/auth/me`) et la lecture
+ * (`GET /api/auth/me`) DOIVENT porter sur la même liste. Le canton était
+ * persisté en base mais absent de la lecture : l'écran Paramètres le perdait au
+ * premier rechargement. Une seule liste = plus de divergence possible.
+ */
+const COLONNES_CABINET = `cabinet, orias, telephone, adresse, ville, code_postal,
+              registre_type, registre_numero, uid, site_web, pays, langue, canton`;
+
+/**
+ * Cantons suisses officiels (codes à deux lettres). Un canton inventé ne doit
+ * pas être enregistré en silence : le cabinet croirait sa fiche complète alors
+ * que l'échéancier cantonal n'aurait aucune valeur exploitable.
+ */
+const CANTONS_SUISSES = new Set([
+  'AG', 'AI', 'AR', 'BE', 'BL', 'BS', 'FR', 'GE', 'GL', 'GR', 'JU', 'LU', 'NE',
+  'NW', 'OW', 'SG', 'SH', 'SO', 'SZ', 'TG', 'TI', 'UR', 'VD', 'VS', 'ZG', 'ZH',
+]);
+
+/** Normalise « ge » / « GE » en « GE ». Renvoie null si le code est inconnu. */
+function normaliserCanton(valeur) {
+  const code = String(valeur ?? '').trim().toUpperCase();
+  if (!code) return null;
+  return CANTONS_SUISSES.has(code) ? code : null;
+}
+
+/**
+ * Identité du cabinet telle qu'elle est RÉELLEMENT en base (ou {} si la fiche
+ * n'existe pas encore). Aucune valeur n'est inventée : un champ vide reste vide.
+ */
+async function lireCabinet(userId) {
+  const { rows } = await pool.query(
+    `SELECT ${COLONNES_CABINET} FROM broker_profiles WHERE user_id = $1`,
+    [userId]
+  );
+  return rows[0] || {};
+}
 
 // Public
 router.post('/register', authController.register);
@@ -50,16 +90,15 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Récupérer le profil courtier si existant
-    const profileResult = await pool.query(
-      `SELECT cabinet, orias, telephone, adresse, ville, code_postal,
-              registre_type, registre_numero, uid, site_web, pays, langue
-       FROM broker_profiles WHERE user_id = $1`,
-      [userId]
-    );
-
-    const brokerProfile = profileResult.rows[0] || {};
+    // Récupérer le profil courtier si existant — la MÊME liste de colonnes que
+    // celle relue après écriture (voir COLONNES_CABINET).
+    const brokerProfile = await lireCabinet(userId);
     const featureFlags = await getFeatureFlagsForUser({ userId }).catch(() => ({}));
+
+    // Marché réel du cabinet déduit de son pays / de son registre (CH → CHF).
+    // Exposé explicitement : un écran n'a pas à redéduire la devise d'un pays
+    // mal orthographié, et la recette peut vérifier ce que l'API déclare.
+    const marche = marcheDepuis(brokerProfile);
 
     res.json({
       id: user.id,
@@ -95,6 +134,12 @@ router.get('/me', meLimiter, verifyTokenMiddleware, async (req, res) => {
       site_web: brokerProfile.site_web || '',
       pays: brokerProfile.pays || '',
       langue: brokerProfile.langue || '',
+      // Canton RÉELLEMENT enregistré (vide si le cabinet n'en a pas). C'est le
+      // seul moyen pour l'écran Paramètres de le réafficher après rechargement.
+      canton: brokerProfile.canton || '',
+      // Marché et devise du cabinet : « CH »/« CHF » ou « FR »/« EUR ».
+      marche,
+      devise: deviseDuMarche(marche),
       feature_flags: featureFlags
     });
   } catch (err) {
@@ -120,9 +165,40 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
       return res.status(401).json({ error: 'Authentification requise' });
     }
 
-    const resultat = await User.mettreAJourProfil(userId, req.body || {});
+    const corps = req.body || {};
 
-    if (!resultat.ok) {
+    // Le canton est une donnée d'identité du cabinet suisse (Paramètres >
+    // Profil, affiché quand le pays vaut « CH »). Le modèle de profil ne le
+    // connaît pas : il est écrit ici, dans la même requête HTTP, pour que le
+    // champ ne soit jamais ni ignoré en silence ni perdu après rechargement.
+    const cantonFourni = corps.canton !== undefined && String(corps.canton ?? '').trim() !== '';
+    let cantonNormalise = null;
+    if (cantonFourni) {
+      cantonNormalise = normaliserCanton(corps.canton);
+      if (!cantonNormalise) {
+        // On refuse plutôt que d'enregistrer un canton qui n'existe pas : rien
+        // n'est écrit, l'appelant sait exactement pourquoi.
+        return res.status(400).json({
+          error: 'canton_inconnu',
+          message: `« ${String(corps.canton).trim()} » n'est pas un canton suisse reconnu (codes acceptés : ${[...CANTONS_SUISSES].join(', ')}). Rien n'a été modifié.`,
+        });
+      }
+    }
+
+    // Le canton ne doit pas être présenté au modèle comme un champ qu'il
+    // enregistrerait : il est retiré du corps qui lui est transmis.
+    const corpsPourModele = { ...corps };
+    delete corpsPourModele.canton;
+
+    const resultat = await User.mettreAJourProfil(userId, corpsPourModele);
+
+    // Seul le canton fourni : ce n'est PAS « aucun champ enregistrable », c'est
+    // une modification réelle que personne d'autre n'écrit.
+    const cantonSeul = !resultat.ok
+      && resultat.raison === 'aucun_champ_modifiable'
+      && cantonFourni;
+
+    if (!resultat.ok && !cantonSeul) {
       if (resultat.raison === 'aucun_champ_modifiable') {
         return res.status(400).json({
           error: 'aucune_modification',
@@ -138,13 +214,37 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
 
+    if (cantonFourni) {
+      // `COALESCE` volontairement absent : le canton fourni est écrit tel quel
+      // (normalisé en majuscules). Une fiche cabinet absente est créée — sans
+      // aucun autre champ inventé.
+      const maj = await pool.query(
+        `UPDATE broker_profiles SET canton = $2, updated_at = NOW()
+          WHERE user_id = $1
+          RETURNING canton`,
+        [userId, cantonNormalise]
+      );
+      if (maj.rows.length === 0) {
+        await pool.query(
+          `INSERT INTO broker_profiles (user_id, canton, created_at, updated_at)
+           VALUES ($1, $2, NOW(), NOW())`,
+          [userId, cantonNormalise]
+        );
+      }
+    }
+
+    // Relecture de ce qui est RÉELLEMENT en base, canton compris : le client
+    // n'affiche jamais une valeur déduite de ce qu'il a envoyé.
+    const cabinetEnBase = await lireCabinet(userId);
+
     res.json({
       success: true,
       message: 'Profil mis à jour',
       // Relecture de ce qui vient d'être écrit : le client n'affiche pas une
       // valeur qu'il aurait inventée si l'enregistrement avait échoué.
-      utilisateur: resultat.utilisateur,
-      profil_cabinet: resultat.profil,
+      utilisateur: resultat.utilisateur || null,
+      profil_cabinet: { ...(resultat.profil || {}), ...cabinetEnBase },
+      canton: cabinetEnBase.canton || '',
       // Champs reçus mais NON enregistrables ici : dits explicitement, jamais
       // présentés comme enregistrés.
       champs_ignores: resultat.champs_ignores || [],

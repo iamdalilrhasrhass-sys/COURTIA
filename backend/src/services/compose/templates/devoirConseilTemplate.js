@@ -78,10 +78,17 @@ function drawConseilHeader(doc, broker, client) {
   // Bandeau titre
   doc.rect(0, 0, 595, 80).fill(COLORS.dark)
   
+  // Le sous-titre citait l'article L520-1 du Code des assurances, y compris sur
+  // le document d'un cabinet suisse. On ne remplace pas cette mention par un
+  // article suisse supposé : pour le marché CH, le sous-titre reste descriptif.
+  const suisse = String((broker && broker.market) || '').toUpperCase() === 'CH'
+
   doc.fillColor(COLORS.white).fontSize(22)
      .text('DEVOIR DE CONSEIL', 50, 25)
   doc.fontSize(11)
-     .text('Recommandation personnalisée — Article L520-1 Code des assurances', 50, 52)
+     .text(suisse
+       ? 'Recommandation personnalisée remise au client'
+       : 'Recommandation personnalisée — Article L520-1 Code des assurances', 50, 52)
   
   // Badge IA
   doc.rect(450, 20, 95, 40).fill(COLORS.primary)
@@ -381,17 +388,24 @@ function drawSection6Signature(doc, client, broker, generatedAt) {
   
   itemY += 95
   
+  // Date en locale du marché : « fr-CH » pour un cabinet suisse.
+  const locale = String((broker && broker.market) || '').toUpperCase() === 'CH' ? 'fr-CH' : 'fr-FR'
   doc.fillColor(COLORS.text).fontSize(8)
-     .text(`Fait à ______________________, le ${generatedAt.toLocaleDateString('fr-FR')}`, 50, itemY)
+     .text(`Fait à ______________________, le ${generatedAt.toLocaleDateString(locale)}`, 50, itemY)
 }
 
 function drawConseilFooter(doc, broker, generatedAt) {
   const y = 750
+  const suisse = String((broker && broker.market) || '').toUpperCase() === 'CH'
+  const locale = suisse ? 'fr-CH' : 'fr-FR'
   
   doc.fillColor(COLORS.text).fontSize(7)
-     .text(`Document généré par COURTIA ARK Compose — ${generatedAt.toLocaleDateString('fr-FR')} ${generatedAt.toLocaleTimeString('fr-FR')}`, 50, y)
+     .text(`Document généré par COURTIA ARK Compose — ${generatedAt.toLocaleDateString(locale)} ${generatedAt.toLocaleTimeString(locale)}`, 50, y)
   
-  if (broker.orias_number) {
+  // L'ORIAS est un registre français : sur un document suisse, le pied de page
+  // n'affiche pas de numéro d'un registre étranger. Un cabinet suisse est
+  // identifié par son registre FINMA / son IDE, repris dans le document DDA.
+  if (!suisse && broker.orias_number) {
     doc.text(`Intermédiaire : ${broker.company_name || ''} — ORIAS n°${broker.orias_number}`, 50, y + 10)
   }
   

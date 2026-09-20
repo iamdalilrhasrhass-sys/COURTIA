@@ -9,8 +9,8 @@ import {
 import toast from 'react-hot-toast'
 import api from '../api'
 import { getSessionUser } from '../api/sessionUser'
+import { getAuthToken } from '../api/sessionPolicy'
 import { computeDailyPriorities } from '../lib/priorities'
-import { chargerResume } from '../lib/salesApi'
 import { blocsResume, NON_MESURE } from '../lib/salesViewModel'
 import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
 import { fmtMontant, fmtNombre } from '../lib/monnaie'
@@ -177,6 +177,57 @@ function adapterPriorites(resultat, contexte = {}) {
   }
 }
 /* ADAPTATEUR-FIN */
+
+/* ─── Lecture commerciale AVEC la session COURTIA ──────────────────────────────
+   POURQUOI CET APPEL EST ÉCRIT ICI ET PAS DANS lib/salesApi.js
+   Le relais de production (api/sales/[...chemin].js) refuse en 401 `jeton_absent`
+   toute lecture commerciale qui n'arrive pas avec un en-tête
+   `Authorization: Bearer <jeton de session>` : il valide la session de
+   l'appelant via COURTIA_AUTH_VERIFY_URL avant de relayer vers le service de
+   capture (le jeton de LECTURE du service, lui, reste côté serveur).
+   Or lib/salesApi.js n'envoie que `Accept: application/json` : les lectures
+   /api/sales/* répondaient donc 401 pour un courtier pourtant connecté —
+   pendant que les autres appels de la page répondaient 200.
+   lib/salesApi.js est partagé avec l'écran AcquisitionCourtia : il n'est PAS
+   modifié ici (signalé séparément). L'appel est posé au bon endroit, avec le
+   jeton de session, et le contrat de réponse reste identique (blocsResume). */
+const BASE_SALES = import.meta.env.VITE_SALES_API_URL || '/api'
+
+function messageLectureCommerciale(statut, code) {
+  if (code === 'jeton_absent' || code === 'jeton_invalide') {
+    return 'Lecture refusée : la session COURTIA transmise au relais est absente ou invalide.'
+  }
+  if (code === 'lecture_desactivee') {
+    return "Lecture commerciale désactivée : le jeton de lecture n'est pas configuré sur le serveur."
+  }
+  if (code === 'capture_injoignable') {
+    return "Le service de capture n'a pas répondu : la lecture commerciale est momentanément indisponible."
+  }
+  if (statut === 404) return 'Route de lecture commerciale introuvable sur ce serveur.'
+  return `Lecture commerciale impossible (HTTP ${statut || 'inconnu'}).`
+}
+
+async function chargerResume({ heures = 24 } = {}) {
+  const base = BASE_SALES.endsWith('/') ? BASE_SALES.slice(0, -1) : BASE_SALES
+  const jeton = getAuthToken()
+  const reponse = await fetch(`${base}/sales/summary?heures=${encodeURIComponent(heures)}`, {
+    method: 'GET',
+    // Le jeton de session est indispensable : sans lui, le relais répond 401.
+    headers: jeton
+      ? { Accept: 'application/json', Authorization: `Bearer ${jeton}` }
+      : { Accept: 'application/json' },
+    credentials: 'same-origin',
+  })
+  let charge = null
+  try { charge = await reponse.json() } catch { charge = null }
+  if (!reponse.ok) {
+    const erreur = new Error(messageLectureCommerciale(reponse.status, charge?.error))
+    erreur.status = reponse.status
+    erreur.code = charge?.error || ''
+    throw erreur
+  }
+  return charge
+}
 
 /* ─── COURTIA SALES : bloc d'acquisition alimenté par le service de capture ───
    Source UNIQUE : GET /api/sales/summary (service_capture.py). Rien n'est

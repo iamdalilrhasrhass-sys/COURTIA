@@ -92,6 +92,20 @@ export function deviseCourante() {
   return contexteEffectif().devise
 }
 
+/**
+ * Symbole de la devise courante tel qu'il doit apparaître à côté d'un nombre
+ * DÉJÀ formaté par ailleurs : « CHF » ou « € ».
+ *
+ * POURQUOI cette fonction en plus de `fmtMontant` : le journal d'activité ARK
+ * affiche des coûts à trois décimales (« 0.315 ») avec son propre arrondi. Il
+ * lui faut le symbole du cabinet, pas le formatage complet. Sans elle, chaque
+ * composant réécrivait « € » en dur — ce qui affichait un euro dans un cabinet
+ * suisse (relevé : « Coût session : 0.000 € »).
+ */
+export function symboleCourant() {
+  return contexteEffectif().devise === DEVISE_SUISSE ? 'CHF' : '€'
+}
+
 /** Locale de formatage correspondante : 'fr-CH' ou 'fr-FR'. */
 export function localeCourante() {
   return contexteEffectif().locale

@@ -28,7 +28,11 @@ CREATE TABLE IF NOT EXISTS clients (
     address VARCHAR(255),
     postal_code VARCHAR(10),
     city VARCHAR(100),
-    country VARCHAR(100) DEFAULT 'France',
+    -- Aucun pays par défaut : COURTIA sert la France ET la Suisse. Le
+    -- DEFAULT 'France' faisait naître chaque client d'un cabinet suisse avec un
+    -- pays faux (donc une devise et un domicile faux). Un champ non renseigné
+    -- reste NULL — jamais une supposition.
+    country VARCHAR(100),
     
     -- Données d'affaires
     type VARCHAR(20), -- particulier, entreprise, professionnel

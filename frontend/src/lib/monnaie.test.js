@@ -7,6 +7,7 @@ import {
   fmtMontantCourt,
   fmtNombre,
   localeCourante,
+  symboleCourant,
 } from './monnaie'
 
 /* Les espaces Insécables d'Intl (U+00A0 étroite U+202F) varient selon la
@@ -80,5 +81,45 @@ describe('monnaie — devise centrale', () => {
     } finally {
       delete globalThis.localStorage
     }
+  })
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     Montants des écrans « pipeline » et « cockpit » (20/09/2026).
+     Ces écrans passaient un formateur écrit à la main
+     (`Intl.NumberFormat('fr-FR', { currency: 'EUR' })`) : un cabinet suisse y
+     lisait « Potentiel total 0 € », « POTENTIEL 0 € », « LTV : 0 € »,
+     « TOTAL €/AN », ou encore « Coût session : 0.000 € ». Les cas ci-dessous
+     fixent la sortie ATTENDUE de ces montants.
+     ───────────────────────────────────────────────────────────────────────── */
+  it('cabinet suisse : les montants du pipeline/cockpit sortent en CHF', () => {
+    configurerContexte({ pays: 'CH', langue: 'fr' })
+    // « Potentiel total » / « POTENTIEL » des colonnes (pipeline)
+    expect(norm(fmtMontant(0, { maximumFractionDigits: 0 }))).toBe('0 CHF')
+    expect(norm(fmtMontant(840, { maximumFractionDigits: 0 }))).toBe('840 CHF')
+    // « LTV » et matrice cross-sell de l'écran ARK
+    expect(norm(fmtMontant(800, { maximumFractionDigits: 0 }))).toBe('800 CHF')
+    // Aucun euro dans la sortie
+    expect(norm(fmtMontant(840, { maximumFractionDigits: 0 }))).not.toContain('€')
+  })
+
+  it('cabinet français : la sortie historique en euros est conservée', () => {
+    configurerContexte({ pays: 'FR', langue: 'fr' })
+    expect(norm(fmtMontant(0, { maximumFractionDigits: 0 }))).toBe('0 €')
+    expect(norm(fmtMontant(840, { maximumFractionDigits: 0 }))).toBe('840 €')
+  })
+
+  it('symboleCourant : « CHF » en Suisse, « € » en France (coûts déjà formatés)', () => {
+    configurerContexte({ pays: 'CH', langue: 'fr' })
+    expect(symboleCourant()).toBe('CHF')
+    // « Coût session : 0.000 € » devient « 0.000 CHF » (le composant garde son
+    // propre arrondi à trois décimales).
+    expect(`Coût session : ${(0).toFixed(3)} ${symboleCourant()}`).toBe('Coût session : 0.000 CHF')
+
+    configurerContexte({ pays: 'FR', langue: 'fr' })
+    expect(symboleCourant()).toBe('€')
+    expect(`Coût session : ${(0).toFixed(3)} ${symboleCourant()}`).toBe('Coût session : 0.000 €')
+
+    configurerContexte({ pays: null, langue: null })
+    expect(symboleCourant()).toBe('€')
   })
 })

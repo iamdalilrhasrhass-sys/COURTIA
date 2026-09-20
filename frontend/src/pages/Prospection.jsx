@@ -1,46 +1,70 @@
 import { useState, useEffect } from 'react'
 import { UserPlus, Target, MapPin, TrendingUp, Zap, Search, CalendarDays } from 'lucide-react'
 import api from '../api'
+import { fmtMontant } from '../lib/monnaie'
 
 /* Aucun jeu de données d'exemple : cet écran affichait six entreprises inventées
    (Entreprise Lambert, Clinique Vétérinaire du Parc, SARL Dupuis Transport…)
    dès que l'API ne répondait pas — ce qui est le cas en production, faute de
    route backend /api/prospection. Un pipeline vide et une erreur explicite
-   valent mieux qu'un pipeline imaginaire. */
+   valent mieux qu'un pipeline imaginaire.
+
+   ÉTAT RÉEL (vérifié) : aucune route `/api/prospection` n'existe côté backend
+   (`grep -rn prospection backend/src/routes backend/src/server.js` ne renvoie
+   que des libellés marketing dans reach.js). L'écran est donc en « module
+   indisponible », et il le DIT — au lieu de laisser croire à une panne de
+   chargement passagère. */
 
 const STATUT_STYLE = {
   nouveau:  { bg: 'rgba(59,130,246,0.10)', text: '#3B82F6' },
   contacte: { bg: 'rgba(245,158,11,0.10)', text: '#F59E0B' },
   qualifie: { bg: 'rgba(139,92,246,0.10)', text: '#8B5CF6' },
-  rdv:      { bg: 'rgba(34,197,94,0.10)', text: '#22C55E' },
+  rdv:      { bg: 'rgba(34,197,94,0.10)',  text: '#22C55E' },
 }
 
 const STATUT_LABEL = {
   nouveau: 'Nouveau', contacte: 'Contacté', qualifie: 'Qualifié', rdv: 'RDV planifié',
 }
 
+/** Libellé d'état : « — » (non mesuré) tant que la donnée n'existe pas. */
+const mesure = (valeur) => (valeur === null || valeur === undefined ? '—' : valeur)
+
 export default function Prospection() {
   const [prospects, setProspects] = useState([])
+  // `disponible` : null = chargement, true = l'API répond, false = module absent
+  // ou en erreur. Les KPI n'affichent une valeur que lorsque `disponible === true`.
+  const [disponible, setDisponible] = useState(null)
   const [erreur, setErreur] = useState(null)
 
   useEffect(() => {
+    let actif = true
     api.get('/prospection')
       .then(res => {
+        if (!actif) return
         const payload = res && res.data
         const liste = Array.isArray(payload) ? payload
           : Array.isArray(payload && payload.data) ? payload.data
           : Array.isArray(payload && payload.prospects) ? payload.prospects
-          : Array.isArray(payload && payload.documents) ? payload.documents
           : null
-        if (Array.isArray(liste) && liste.length > 0) setProspects(liste)
+        setProspects(Array.isArray(liste) ? liste : [])
+        setDisponible(true)
       })
-      .catch(() => setErreur(
-        "Le module prospection n'est pas disponible : aucune donnée n'a pu être chargée. " +
-        "Aucun prospect n'est affiché tant que le chargement n'a pas abouti."
-      ))
+      .catch((err) => {
+        if (!actif) return
+        // 404 = la route n'existe pas (module non livré) : ce n'est PAS une panne
+        // de chargement. On distingue les deux cas plutôt que d'afficher un
+        // message vague qui laisse espérer une nouvelle tentative.
+        const statut = err?.response?.status
+        setDisponible(false)
+        setErreur(statut === 404
+          ? "Le module de prospection n'est pas livré dans COURTIA : aucune route /api/prospection n'existe. Aucun prospect n'est affiché, et aucun ne sera inventé."
+          : `Le module de prospection est injoignable (${statut ? `HTTP ${statut}` : 'réseau'}). Aucun prospect n'est affiché tant que le chargement n'a pas abouti.`)
+      })
+    return () => { actif = false }
   }, [])
 
-  const totalPotentiel = prospects.reduce((s, p) => s + p.potentiel, 0)
+  const totalPotentiel = prospects.reduce((s, p) => s + (Number(p.potentiel) || 0), 0)
+  const rdvPlanifies = prospects.filter(p => String(p.statut || p.status || '').toLowerCase().includes('rdv')).length
 
   return (
     <div style={{ padding: 32, minHeight: '100vh' }}>
@@ -49,13 +73,14 @@ export default function Prospection() {
         <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>Pipeline de nouveaux clients potentiels</p>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs — « — » tant que rien n'est mesuré (jamais un 0 qui ferait croire
+          à un pipeline vide alors que le module est absent). */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Prospects', value: prospects.length, icon: UserPlus, accent: '#5B4DF5' },
-          { label: 'Potentiel', value: `${(totalPotentiel / 1000).toFixed(0)}k €`, icon: TrendingUp, accent: '#22C55E' },
-          { label: 'RDV planifiés', value: prospects.filter(p => String(p.statut || p.status || '').toLowerCase().includes('rdv')).length, icon: CalendarDays, accent: '#F59E0B' },
-          { label: 'Qualifiés', value: prospects.filter(p => ['qualifie', 'rdv'].includes(String(p.statut || p.status || '').toLowerCase())).length, icon: Target, accent: '#3B82F6' },
+          { label: 'Prospects', value: disponible === true ? prospects.length : '—', icon: UserPlus, accent: '#5B4DF5' },
+          { label: 'Potentiel', value: (disponible === true && prospects.length) ? fmtMontant(totalPotentiel, { maximumFractionDigits: 0 }) : '—', icon: TrendingUp, accent: '#22C55E' },
+          { label: 'RDV planifiés', value: disponible === true ? rdvPlanifies : '—', icon: CalendarDays, accent: '#F59E0B' },
+          { label: 'Qualifiés', value: disponible === true ? prospects.filter(p => ['qualifie', 'rdv'].includes(String(p.statut || p.status || '').toLowerCase())).length : '—', icon: Target, accent: '#3B82F6' },
         ].map((kpi, i) => (
           <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -77,7 +102,7 @@ export default function Prospection() {
           {erreur}
         </div>
       )}
-      {!erreur && prospects.length === 0 && (
+      {disponible === true && prospects.length === 0 && (
         <div style={{
           marginBottom: 16, padding: '10px 14px', borderRadius: 10,
           background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
@@ -99,12 +124,17 @@ export default function Prospection() {
             background: 'none', border: 'none', color: '#fff', fontSize: 13, outline: 'none', flex: 1,
           }} />
         </div>
-        <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.05)', color: '#9CA3AF', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
-          + Nouveau prospect
+        {/* Bouton inactif assumé : il n'ouvrait aucun formulaire (le clic ne
+            faisait rien). Un bouton qui ne fait rien vaut moins qu'un bouton
+            annoncé comme indisponible. */}
+        <button type="button" disabled aria-disabled="true"
+          title="La création manuelle de prospect n'est pas disponible : le module prospection n'est pas livré."
+          style={{ padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.03)', color: '#4B5563', border: '1px solid rgba(255,255,255,0.06)', cursor: 'not-allowed' }}>
+          + Nouveau prospect (indisponible)
         </button>
       </div>
 
-      {/* ARK */}
+      {/* ARK — ne parle que de ce qui est réellement mesuré */}
       <div style={{
         background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)',
         borderRadius: 12, padding: '14px 18px', marginBottom: 24,
@@ -112,17 +142,24 @@ export default function Prospection() {
       }}>
         <Zap size={16} color="#8B5CF6" />
         <p style={{ fontSize: 13, color: '#c4b5fd', margin: 0 }}>
-          <strong style={{ color: '#a78bfa' }}>ARK</strong> — {prospects.length} prospect{prospects.length > 1 ? 's' : ''} en pipeline. {
-            (() => {
-              if (!prospects.length) return 'Aucun prospect à analyser pour le moment.'
-              const parts = [...prospects].sort((a, b) => b.potentiel - a.potentiel)
-              const top = parts[0]
-              const ph = `Le plus fort potentiel : ${top.nom} (${(top.potentiel || 0).toLocaleString('fr-FR')} €)`
-              const rdv = prospects.filter((p) => p.statut === 'rdv')
-              return rdv.length
-                ? `${ph}. ${rdv.length > 1 ? rdv.length + ' rendez-vous sont' : rdv[0].nom + ' a un rendez-vous'} planifié${rdv.length > 1 ? 's' : ''}.`
-                : `${ph}. Prochaine action : qualifier les prospects sans rendez-vous.`
-            })()
+          <strong style={{ color: '#a78bfa' }}>ARK</strong> — {
+            disponible === true
+              ? `${prospects.length} prospect${prospects.length > 1 ? 's' : ''} en pipeline. ${
+                  (() => {
+                    if (!prospects.length) return 'Aucun prospect à analyser pour le moment.'
+                    const top = [...prospects].sort((a, b) => (Number(b.potentiel) || 0) - (Number(a.potentiel) || 0))[0]
+                    const nom = top?.nom || top?.societe || 'Prospect non nommé'
+                    const potentiel = Number(top?.potentiel)
+                    const ph = Number.isFinite(potentiel)
+                      ? `Le plus fort potentiel : ${nom} (${fmtMontant(potentiel, { maximumFractionDigits: 0 })})`
+                      : `Le plus fort potentiel : ${nom}`
+                    const rdv = prospects.filter((p) => p.statut === 'rdv')
+                    return rdv.length
+                      ? `${ph}. ${rdv.length > 1 ? rdv.length + ' rendez-vous sont' : (rdv[0]?.nom || 'Un prospect') + ' a un rendez-vous'} planifié${rdv.length > 1 ? 's' : ''}.`
+                      : `${ph}. Prochaine action : qualifier les prospects sans rendez-vous.`
+                  })()
+                }`
+              : "aucun prospect n'est analysable : le module prospection n'est pas disponible."
           }
         </p>
       </div>
@@ -142,23 +179,28 @@ export default function Prospection() {
           </thead>
           <tbody>
             {prospects.map(p => {
-              const s = STATUT_STYLE[p.statut]
+              const statutBrut = String(p.statut || p.status || '').toLowerCase()
+              const s = STATUT_STYLE[statutBrut] || { bg: 'rgba(255,255,255,0.05)', text: '#9CA3AF' }
+              const potentiel = Number(p.potentiel)
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{p.nom}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{p.secteur}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#fff' }}>{mesure(p.nom || p.societe)}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{mesure(p.secteur)}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <MapPin size={11} /> {p.ville}
+                    <MapPin size={11} /> {mesure(p.ville)}
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#22C55E' }}>{p.potentiel.toLocaleString('fr-FR')} €</td>
+                  {/* Un potentiel absent reste « — » : jamais un 0 €. */}
+                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#22C55E' }}>
+                    {Number.isFinite(potentiel) ? `${potentiel.toLocaleString('fr-FR')} CHF` : '—'}
+                  </td>
                   <td style={{ padding: '12px 16px' }}>
                     <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: s.bg, color: s.text }}>
-                      {STATUT_LABEL[p.statut]}
+                      {STATUT_LABEL[statutBrut] || mesure(p.statut || p.status)}
                     </span>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{p.date}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, color: '#9CA3AF' }}>{mesure(p.date)}</td>
                 </tr>
               )
             })}

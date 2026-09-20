@@ -20,7 +20,7 @@ import {
   normalizeContract,
   normalizeTask,
 } from '../lib/clientViewModel'
-import { fmtMontant } from '../lib/monnaie'
+import { fmtMontant, paysSuisse, contexteCourant } from '../lib/monnaie'
 
 // ─── Aurora tokens ────────────────────────────────────────────
 const T = {
@@ -130,6 +130,12 @@ function TabButton({ label, active, onClick, badge }) {
 // ─── Vue 360° ────────────────────────────────────────────────
 function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, navigate }) {
   const st = STATUS[client.statut] || STATUS.actif
+  // Identité réglementaire selon le pays : un cabinet suisse (ou un client
+  // suisse) ne connaît pas le SIRET mais l'IDE / UID (CHE-xxx.xxx.xxx) et son
+  // canton. L'ancien écran affichait « SIRET » pour tout le monde.
+  const identiteSuisse = paysSuisse(client.country)
+    || (!client.country && paysSuisse(contexteCourant().pays))
+  const dernier = daysAgo(client.dernierContactReel)
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
@@ -142,9 +148,18 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, n
         <InfoRow icon={Mail}     label="Email"           value={client.email} />
         <InfoRow icon={Phone}    label="Téléphone"       value={client.telephone} />
         <InfoRow icon={MapPin}   label="Ville"           value={client.city} />
-        <InfoRow icon={FileText} label="SIRET"           value={client.siret} />
+        {/* Identifiant de l'entreprise : IDE / UID en Suisse, SIRET en France.
+            La valeur vient de l'API — si elle n'est pas renseignée, « — » (et
+            jamais un numéro fabriqué). */}
+        <InfoRow icon={FileText} label={identiteSuisse ? 'IDE / UID' : 'SIRET'} value={client.siret} />
+        {identiteSuisse && (
+          <InfoRow icon={MapPin} label="Canton" value={client.canton || '—'} />
+        )}
         <InfoRow icon={Calendar} label="Client depuis"   value={new Date(client.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} />
-        <InfoRow icon={Clock}    label="Dernier contact" value={`il y a ${daysAgo(client.last_contact)} jours`} last />
+        {/* Une date de contact inconnue reste inconnue : l'ancien écran laissait
+            les composants de secours afficher « il y a 0 jours » (aucun contact
+            n'avait pourtant eu lieu). */}
+        <InfoRow icon={Clock}    label="Dernier contact" value={dernier === null ? 'non renseigné' : `il y a ${dernier} jours`} last />
       </GlassPanel>
 
       {/* Contrats actifs */}
@@ -445,7 +460,15 @@ export default function ClientDetail() {
         api.get(`/taches?clientId=${id}`).catch(() => ({ data: [] })),
       ])
 
-      const nextClient = normalizeClientDetail(clientRes.data)
+      // `normalizeClientDetail` (module partagé) retombe sur updated_at/created_at
+      // quand `last_contact` est vide : un client JAMAIS contacté affichait donc
+      // « Dernier contact il y a 0 jours ». On conserve la valeur réellement
+      // renvoyée par l'API sous un nom distinct, pour pouvoir dire « non
+      // renseigné » sans modifier le module partagé.
+      const nextClient = {
+        ...normalizeClientDetail(clientRes.data),
+        dernierContactReel: clientRes.data?.last_contact || null,
+      }
       const nextContracts = (Array.isArray(contractsRes.data) ? contractsRes.data : []).map(normalizeContract)
       const nextTasks = (Array.isArray(tasksRes.data) ? tasksRes.data : []).map(normalizeTask)
       const nextHistory = buildClientHistory(nextClient, nextContracts, nextTasks).map((event) => ({

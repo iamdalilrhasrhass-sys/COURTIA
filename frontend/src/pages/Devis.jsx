@@ -18,18 +18,48 @@ const T = {
 // Devise centrale du cabinet : CHF en Suisse, EUR sinon (lib/monnaie).
 const fmtEur = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
-const DEMO_DEVIS = [
-  { id: 1, client: 'Karim B.', produit: 'Auto', montant: 1100, statut: 'envoye', dateEnvoi: '2026-05-04', derniereRelance: null, probabilite: 72, ark: 'Devis envoyé il y a 6j. Client actif sur Habitation. Forte probabilité de conversion.' },
-  { id: 2, client: 'Garcia Anne', produit: 'MRH', montant: 420, statut: 'preparation', dateEnvoi: null, derniereRelance: null, probabilite: 85, ark: 'Opportunité MRH détectée. Score opportunité 78%. Client mono-produit Santé.' },
-  { id: 3, client: 'Petit Philippe', produit: 'Auto', montant: 1100, statut: 'envoye', dateEnvoi: '2026-04-22', derniereRelance: '2026-04-29', probabilite: 45, ark: 'Devis envoyé il y a 18j sans réponse. Relancer par téléphone.' },
-  { id: 4, client: 'BatiSens Pro', produit: 'Prévoyance', montant: 950, statut: 'accepte', dateEnvoi: '2026-04-15', derniereRelance: '2026-04-25', probabilite: 100, ark: null },
-  { id: 5, client: 'Martin Conseil', produit: 'Prévoyance', montant: 1200, statut: 'preparation', dateEnvoi: null, derniereRelance: null, probabilite: 65, ark: 'Client RC Pro actif. Prévoyance TNS non souscrite. Opportunité 65%.' },
-  { id: 6, client: 'Leroy Marie', produit: 'MRH', montant: 380, statut: 'refuse', dateEnvoi: '2026-03-10', derniereRelance: '2026-03-20', probabilite: 0, ark: 'Refus client. Motif : déjà couvert. Proposer revue globale.' },
-  { id: 7, client: 'Dupont SAS', produit: 'PJ', montant: 2100, statut: 'envoye', dateEnvoi: '2026-05-02', derniereRelance: null, probabilite: 60, ark: 'Devis PJ. Client RC Pro actif. Multi-équipement favorable.' },
-  { id: 8, client: 'Auto Évolution 89', produit: 'Flotte Auto', montant: 8500, statut: 'accepte', dateEnvoi: '2026-05-01', derniereRelance: null, probabilite: 100, ark: null },
-  { id: 9, client: 'Cabinet Moreau', produit: 'Cyber', montant: 1800, statut: 'expire', dateEnvoi: '2026-03-01', derniereRelance: '2026-03-20', probabilite: 10, ark: 'Devis expiré. Relancer avec mise à jour garanties.' },
-  { id: 10, client: 'Sophie L.', produit: 'Prévoyance', montant: 520, statut: 'envoye', dateEnvoi: '2026-05-06', derniereRelance: null, probabilite: 70, ark: 'Nouveau devis Prévoyance. Cliente Santé active.' },
-]
+// Statuts renvoyés par l'API des devis (quote_requests « v1 » + devis guidés)
+// → statuts de cet écran. Sans cette traduction, chaque carte affichait
+// « Envoyé » et « — » à la place du client, du produit et du montant.
+const STATUT_API_VERS_ECRAN = {
+  draft: 'preparation',
+  ready: 'preparation',
+  submitted: 'envoye',
+  sent: 'envoye',
+  opened: 'envoye',
+  completed: 'envoye',
+  accepted: 'accepte',
+  signed: 'accepte',
+  refused: 'refuse',
+  rejected: 'refuse',
+  expired: 'expire',
+}
+
+/** Un devis de l'API → la forme lue par cet écran. Aucun champ n'est inventé :
+ *  ce que l'API ne fournit pas reste `null` et s'affiche « — ». */
+function devisDepuisApi(d) {
+  const type = String(d?.product_type || '').trim().toLowerCase()
+  return {
+    id: d?.id,
+    client: d?.client_name || d?.client_company || 'Client non renseigné',
+    produit: type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Produit non renseigné',
+    montant: Number(d?.best_price ?? d?.total_premium_eur),
+    statut: STATUT_API_VERS_ECRAN[String(d?.status || '').toLowerCase()] || 'preparation',
+    dateEnvoi: d?.submitted_at || d?.created_at || null,
+    derniereRelance: null,
+    // Montant : `best_price` (meilleure offre reçue) ou le total du devis guidé.
+    // Absent ⇒ `null` (non mesuré) et jamais 0, qui ferait croire à une offre nulle.
+    montant: (() => {
+      const brut = Number(d?.best_price ?? d?.total_premium_eur)
+      return Number.isFinite(brut) ? brut : null
+    })(),
+    // La probabilité de conversion n'est pas calculée par l'API des devis :
+    // elle reste non mesurée au lieu d'être repeinte à 45 % / 72 % au hasard.
+    probabilite: Number.isFinite(d?.probabilite) ? d.probabilite : null,
+    // Idem pour le commentaire ARK : aucun texte n'est renvoyé, on n'en écrit pas.
+    ark: null,
+  }
+}
 
 const STATUT_STYLE = {
   preparation: { bg: 'rgba(100,116,139,0.08)', text: '#9CA3AF', label: 'Préparation' },
@@ -72,7 +102,13 @@ function DevisCard({ d, navigate }) {
         <span style={{ fontSize: 16, fontWeight: 800, color: T.text }}>{fmtEur(d.montant)}</span>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 10, color: T.textMuted }}>Probabilité</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: d.probabilite >= 70 ? T.success : d.probabilite >= 40 ? T.warning : T.danger }}>{d.probabilite}%</div>
+          {/* L'API des devis ne calcule pas de probabilité de conversion : on
+              affiche « — » (non mesuré) au lieu d'un pourcentage inventé. */}
+          <div style={{
+            fontSize: 14, fontWeight: 700,
+            color: d.probabilite === null ? T.textMuted
+              : d.probabilite >= 70 ? T.success : d.probabilite >= 40 ? T.warning : T.danger,
+          }}>{d.probabilite === null ? '—' : `${d.probabilite}%`}</div>
         </div>
       </div>
       {d.ark && (
@@ -92,6 +128,9 @@ export default function Devis() {
   // (« Aucun devis trouvé. ») et non des devis fictifs (Karim B., BatiSens Pro…)
   // qui lui feraient croire à un portefeuille qu'il n'a pas.
   const [devis, setDevis] = useState([])
+  // `null` = pas encore de mesure exploitable (chargement en cours ou API en
+  // erreur) : les KPI affichent alors « — », jamais 0 (0 est une mesure).
+  const [totalApi, setTotalApi] = useState(null)
 
   useEffect(() => {
     let actif = true
@@ -103,11 +142,17 @@ export default function Devis() {
           : Array.isArray(d?.data) ? d.data
           : Array.isArray(d?.devis) ? d.devis
           : null
-        // On ne remplace les données de démonstration que si l'API renvoie
-        // réellement des devis ; en erreur ou réponse vide, on ne touche à rien.
-        if (actif && liste && liste.length > 0) setDevis(liste)
+        if (!actif) return
+        if (liste) {
+          setDevis(liste.map(devisDepuisApi))
+          // Total réel du cabinet renvoyé par l'API (la liste peut être bornée à
+          // 50 lignes) ; à défaut, ce qui est réellement affiché.
+          const total = Number(d?.stats?.total)
+          setTotalApi(Number.isFinite(total) ? total : liste.length)
+        }
       } catch {
-        // Erreur API : on conserve les données de démonstration.
+        // Erreur API : aucune donnée n'est fabriquée, les KPI restent « — ».
+        if (actif) setTotalApi(prev => prev)
       }
     }
     charger()
@@ -130,14 +175,27 @@ export default function Devis() {
     return list
   }, [devis, search, filter])
 
-  const stats = useMemo(() => ({
-    total: devis.length,
-    aRelancer: devis.filter(d => d.statut === 'envoye' && !d.derniereRelance).length,
-    potentiel: devis.filter(d => d.statut !== 'refuse' && d.statut !== 'expire').reduce((s, d) => s + d.montant, 0),
-    taux: devis.length ? Math.round(devis.filter(d => d.statut === 'accepte').length / devis.length * 100) : 0,
-    acceptes: devis.filter(d => d.statut === 'accepte').length,
-    ark: devis.filter(d => d.ark).length,
-  }), [devis])
+  const stats = useMemo(() => {
+    const montants = devis.map(d => d.montant).filter(v => Number.isFinite(v))
+    return {
+      total: devis.length,
+      aRelancer: devis.filter(d => d.statut === 'envoye' && !d.derniereRelance).length,
+      // Somme des montants RÉELLEMENT connus ; aucun montant connu ⇒ « — ».
+      potentiel: montants.length ? montants.reduce((s, v) => s + v, 0) : null,
+      // Un taux sans dénominateur n'a pas de valeur : « — », jamais 0 %.
+      taux: devis.length ? Math.round(devis.filter(d => d.statut === 'accepte').length / devis.length * 100) : null,
+      acceptes: devis.filter(d => d.statut === 'accepte').length,
+      // L'API des devis ne fournit pas de score d'alerte ARK : « — » plutôt qu'un 0
+      // qui se lirait comme « aucune alerte ».
+      ark: null,
+    }
+  }, [devis])
+
+  // « Devis en cours » = devis NON finalisés (en préparation ou envoyés), sur le
+  // total réel du cabinet. POURQUOI : l'écran annonçait « 10 / 42 » EN DUR, pour
+  // n'importe quel cabinet — y compris celui dont l'API ne renvoie aucun devis.
+  const devisEnCours = devis.filter(d => d.statut === 'preparation' || d.statut === 'envoye').length
+  const kpiDevisEnCours = totalApi === null ? '—' : `${devisEnCours} / ${totalApi}`
 
   return (
     <div style={{ minHeight: '100vh', padding: '24px 20px 40px', color: T.text }}>
@@ -161,14 +219,14 @@ export default function Devis() {
           </div>
         </div>
 
-        {/* KPIs */}
+        {/* KPIs — tous calculés depuis GET /api/devis */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          <KpiCard icon={FileText} title="Devis en cours" value="10 / 42" />
+          <KpiCard icon={FileText} title="Devis en cours" value={kpiDevisEnCours} />
           <KpiCard icon={Send} title="À relancer" value={stats.aRelancer} accent={T.warning} />
-          <KpiCard icon={Euro} title="Potentiel" value={fmtEur(stats.potentiel)} />
-          <KpiCard icon={TrendingUp} title="Transformation" value={stats.taux + '%'} accent={T.success} />
-          <KpiCard icon={CheckCircle2} title="Acceptés mois" value={stats.acceptes} accent={T.success} />
-          <KpiCard icon={Sparkles} title="Alertes ARK" value={stats.ark} accent={T.ark} />
+          <KpiCard icon={Euro} title="Potentiel" value={stats.potentiel === null ? '—' : fmtEur(stats.potentiel)} />
+          <KpiCard icon={TrendingUp} title="Transformation" value={stats.taux === null ? '—' : stats.taux + '%'} accent={T.success} />
+          <KpiCard icon={CheckCircle2} title="Acceptés" value={stats.acceptes} accent={T.success} />
+          <KpiCard icon={Sparkles} title="Alertes ARK" value={stats.ark === null ? '—' : stats.ark} accent={T.ark} />
         </div>
 
         {/* TOOLBAR */}

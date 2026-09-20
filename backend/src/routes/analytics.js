@@ -4,6 +4,18 @@
  * GET /compliance   → requireFeature('compliance_dashboard')
  * GET /lead-scoring → requireFeature('lead_scoring')
  * GET /benchmarks   → requireFeature('benchmarks')
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LES CHIFFRES DE CET ÉCRAN VIENNENT DU MÊME BLOC QUE LES AUTRES
+ *
+ * POURQUOI : /api/analytics/executive comptait TOUTES les lignes de `quotes`
+ * (dont les devis de l'époque) et annonçait donc 3 « contrats » là où
+ * /api/dashboard/stats en annonçait 2 et /api/reporting/overview 0 (il lisait la
+ * table `contracts`, jamais écrite). Les requêtes viennent désormais du bloc
+ * unique de définitions de `dashboard.js` (`require('./dashboard').kpi`) :
+ * contrat = `quotes` au statut 'actif', devis = `devis_wizard`, prime définie
+ * une seule fois. Aucun écran ne peut plus répondre autre chose.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 const express = require('express')
@@ -11,100 +23,73 @@ const router = express.Router()
 const pool = require('../db')
 const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
+const porteeCabinet = require('../lib/porteeCabinet')
+const { kpi } = require('./dashboard')
 
 router.use(verifyToken)
 
 // GET /api/analytics/executive — KPIs exécutifs
 router.get('/executive', requireFeature('executive_dashboard'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
 
-    // CA estimé (somme des primes annuelles des devis actifs / contrats en cours)
-    // Schéma réel : `quotes` n'a ni `annual_premium` ni `courtier_id`. La prime
-    // vit dans prime_annuelle / premium / amount (ou quote_data->>'prime_annuelle'
-    // pour les devis historiques) et le rattachement passe par clients.courtier_id.
-    const caResult = await pool.query(
-      `SELECT COALESCE(SUM(COALESCE(
-                q.prime_annuelle,
-                q.premium,
-                q.amount,
-                NULLIF(q.quote_data->>'prime_annuelle', '')::numeric
-              )), 0) AS ca_estimated
-       FROM quotes q
-       JOIN clients c ON c.id = q.client_id
-       WHERE c.courtier_id = $1 AND q.status IN ('actif', 'active')`,
-      [courtier_id]
-    )
+    const qClients = kpi.requeteClients(portee, { jours: 30 })
+    const qContrats = kpi.requeteContratsActifs(portee, { jours: 30 })
+    const qDevis = kpi.requeteDevis(portee, { jours: 30 })
 
-    // Nombre de clients
-    const clientsResult = await pool.query(
-      'SELECT COUNT(*) AS clients_count FROM clients WHERE courtier_id = $1',
-      [courtier_id]
-    )
+    const [clientsRes, contratsRes, devisRes, portfolioResult] = await Promise.all([
+      pool.query(qClients.sql, qClients.params),
+      pool.query(qContrats.sql, qContrats.params),
+      pool.query(qDevis.sql, qDevis.params),
+      pool.query(
+        `SELECT health_score, created_at
+         FROM portfolio_insights
+         WHERE courtier_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [portee.userId]
+      )
+    ])
 
-    // Nombre de contrats (via quotes JOIN clients)
-    const contratsResult = await pool.query(
-      `SELECT COUNT(*) AS contracts_count
-       FROM quotes q
-       JOIN clients c ON q.client_id = c.id
-       WHERE c.courtier_id = $1`,
-      [courtier_id]
-    )
+    const clients = clientsRes.rows[0] || {}
+    const contrats = contratsRes.rows[0] || {}
+    const devis = devisRes.rows[0] || {}
 
-    // Nouveaux clients sur 30 jours
-    const newClients30dResult = await pool.query(
-      `SELECT COUNT(*) AS new_clients_30d
-       FROM clients
-       WHERE courtier_id = $1 AND created_at >= NOW() - INTERVAL '30 days'`,
-      [courtier_id]
-    )
+    const clients_count = parseInt(clients.total, 10) || 0
+    const new_clients_30d = parseInt(clients.nouveaux, 10) || 0
+    // Clients du portefeuille (hors prospects) : base du taux de croissance.
+    const clients_actifs = parseInt(clients.actifs, 10) || 0
+    const contrats_count = parseInt(contrats.total, 10) || 0
 
-    // Nouveaux contrats sur 30 jours (via quotes JOIN clients)
-    const newContracts30dResult = await pool.query(
-      `SELECT COUNT(*) AS new_contracts_30d
-       FROM quotes q
-       JOIN clients c ON q.client_id = c.id
-       WHERE c.courtier_id = $1 AND q.created_at >= NOW() - INTERVAL '30 days'`,
-      [courtier_id]
-    )
-
-    // Portfolio health score (dernier depuis portfolio_insights)
-    const portfolioResult = await pool.query(
-      `SELECT health_score, created_at
-       FROM portfolio_insights
-       WHERE courtier_id = $1
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [courtier_id]
-    )
-
-    // Taux de croissance 30 jours (clients)
-    const prevClients30dResult = await pool.query(
-      `SELECT COUNT(*) AS prev_clients_30d
-       FROM clients
-       WHERE courtier_id = $1
-         AND created_at >= NOW() - INTERVAL '60 days'
-         AND created_at < NOW() - INTERVAL '30 days'`,
-      [courtier_id]
-    )
-
-    const clients_count = parseInt(clientsResult.rows[0].clients_count, 10)
-    const new_clients_30d = parseInt(newClients30dResult.rows[0].new_clients_30d, 10)
-    const prev_clients_30d = parseInt(prevClients30dResult.rows[0].prev_clients_30d, 10)
-
-    let growth_rate_30d = null
-    if (prev_clients_30d > 0) {
-      growth_rate_30d = Math.round(((new_clients_30d - prev_clients_30d) / prev_clients_30d) * 100)
-    }
+    // Taux de croissance 30 jours : nouveaux clients de la période rapportés aux
+    // clients présents AVANT la période. Sans historique, aucune mesure possible
+    // ⇒ null (l'ancien code comparait 30 j à 30 j et renvoyait parfois -100 %).
+    const base = clients_count - new_clients_30d
+    const growth_rate_30d = base > 0 ? Math.round((new_clients_30d / base) * 100) : null
 
     return res.json({
       success: true,
+      definitions: {
+        clients_count: 'toutes les lignes de `clients` du cabinet (prospects compris)',
+        contracts_count: "lignes de `quotes` au statut 'actif' (la table `contracts` n'est jamais écrite)",
+        devis_count: 'lignes de `devis_wizard` du cabinet (un devis n’est pas un contrat)',
+        ca_estimated: 'somme des primes annuelles des contrats actifs (colonne prime_annuelle, sinon quote_data)',
+      },
       data: {
-        ca_estimated: parseFloat(caResult.rows[0].ca_estimated) || 0,
+        ca_estimated: parseFloat(contrats.prime_totale) || 0,
+        // Champ dédié : contrats qui portaient réellement une prime.
+        ca_contrats_avec_prime: parseInt(contrats.contrats_avec_prime, 10) || 0,
         clients_count,
-        contracts_count: parseInt(contratsResult.rows[0].contracts_count, 10),
+        clients_actifs,
+        clients_prospects: parseInt(clients.prospects, 10) || 0,
+        contracts_count: contrats_count,
         new_clients_30d,
-        new_contracts_30d: parseInt(newContracts30dResult.rows[0].new_contracts_30d, 10),
+        new_contracts_30d: parseInt(contrats.nouveaux, 10) || 0,
+        // Devis : mêmes chiffres que /api/dashboard/stats et /api/reporting/overview.
+        devis_count: parseInt(devis.total, 10) || 0,
+        devis_signes: parseInt(devis.signes, 10) || 0,
+        devis_en_attente: parseInt(devis.envoyes, 10) || 0,
+        devis_prime_totale: kpi.centsVersMontant(devis.prime_cents),
         portfolio_health_score: portfolioResult.rows.length > 0
           ? portfolioResult.rows[0].health_score
           : null,
@@ -120,7 +105,8 @@ router.get('/executive', requireFeature('executive_dashboard'), async (req, res)
 // GET /api/analytics/compliance — tableau de bord conformité
 router.get('/compliance', requireFeature('compliance_dashboard'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fCl = kpi.porteeClients(portee, { alias: 'c' })
 
     // DDA Quiz : dernière tentative réussie
     const ddaResult = await pool.query(
@@ -129,7 +115,7 @@ router.get('/compliance', requireFeature('compliance_dashboard'), async (req, re
        WHERE user_id = $1 AND passed = TRUE
        ORDER BY completed_at DESC
        LIMIT 1`,
-      [courtier_id]
+      [portee.userId]
     )
 
     const dda_quiz_completed = ddaResult.rows.length > 0
@@ -139,47 +125,53 @@ router.get('/compliance', requireFeature('compliance_dashboard'), async (req, re
       ? new Date(new Date(dda_last_pass).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()
       : null
 
-    // % clients avec fiche complète (email + phone + adresse)
-    const clientsTotal = await pool.query(
-      'SELECT COUNT(*) AS total FROM clients WHERE courtier_id = $1',
-      [courtier_id]
-    )
-    const clientsComplete = await pool.query(
-      `SELECT COUNT(*) AS complete
-       FROM clients
-       WHERE courtier_id = $1
-         AND email IS NOT NULL AND email != ''
-         AND phone IS NOT NULL AND phone != ''`,
-      [courtier_id]
-    )
+    // % clients avec fiche complète (email + phone) — portée CABINET.
+    const [clientsTotal, clientsComplete] = await Promise.all([
+      pool.query(`SELECT COUNT(*)::int AS total FROM clients c WHERE ${fCl.sql}`, fCl.params),
+      pool.query(
+        `SELECT COUNT(*)::int AS complete
+         FROM clients c
+         WHERE ${fCl.sql}
+           AND c.email IS NOT NULL AND c.email <> ''
+           AND c.phone IS NOT NULL AND c.phone <> ''`,
+        fCl.params
+      ),
+    ])
 
-    const total = parseInt(clientsTotal.rows[0].total, 10)
-    const complete = parseInt(clientsComplete.rows[0].complete, 10)
-    const clients_complete_fiches_pct = total > 0 ? Math.round((complete / total) * 100) : 0
+    const total = parseInt(clientsTotal.rows[0].total, 10) || 0
+    const complete = parseInt(clientsComplete.rows[0].complete, 10) || 0
 
-    // % clients contactés récemment (activité dans les 90 jours)
+    // % clients avec une tâche créée dans les 90 jours.
+    // CORRECTION 2026-09-20 : la requête lisait la table `taches`, que
+    // l'application n'écrit JAMAIS (les tâches vivent dans `appointments`) :
+    // l'indicateur valait donc toujours 0 % — un client « non contacté » pour
+    // l'éternité, et un score de risque de conformité faussement bon.
     const clientsRecent = await pool.query(
-      `SELECT COUNT(DISTINCT t.client_id) AS recent
-       FROM taches t
-       JOIN clients c ON t.client_id = c.id
-       WHERE c.courtier_id = $1
-         AND t.created_at >= NOW() - INTERVAL '90 days'`,
-      [courtier_id]
+      `SELECT COUNT(DISTINCT a.client_id)::int AS recent
+       FROM appointments a
+       JOIN clients c ON c.id = a.client_id
+       WHERE ${fCl.sql}
+         AND a.created_at >= NOW() - INTERVAL '90 days'`,
+      fCl.params
     )
-    const recent = parseInt(clientsRecent.rows[0].recent, 10)
-    const clients_with_recent_contact_pct = total > 0 ? Math.round((recent / total) * 100) : 0
+    const recent = parseInt(clientsRecent.rows[0].recent, 10) || 0
 
-    // Score de risque (simple : 100 - moyenne des %s de conformité)
-    const risk_score = Math.max(
-      0,
-      100 - Math.round((clients_complete_fiches_pct + clients_with_recent_contact_pct) / 2)
-    )
+    // Taux sans dénominateur = pas de mesure ⇒ null (0 % afficherait « conforme »).
+    const clients_complete_fiches_pct = total > 0 ? Math.round((complete / total) * 100) : null
+    const clients_with_recent_contact_pct = total > 0 ? Math.round((recent / total) * 100) : null
+
+    // Score de risque (100 - moyenne des deux taux). Sans clients, il n'y a rien
+    // à auditer : null plutôt qu'un « 100 » rassurant et faux.
+    const risk_score = (clients_complete_fiches_pct === null || clients_with_recent_contact_pct === null)
+      ? null
+      : Math.max(0, 100 - Math.round((clients_complete_fiches_pct + clients_with_recent_contact_pct) / 2))
 
     return res.json({
       success: true,
       data: {
         dda_quiz_completed,
         dda_certificate_expires_at,
+        clients_total: total,
         clients_complete_fiches_pct,
         clients_with_recent_contact_pct,
         risk_score
@@ -194,15 +186,19 @@ router.get('/compliance', requireFeature('compliance_dashboard'), async (req, re
 // GET /api/analytics/lead-scoring — clients triés par score
 router.get('/lead-scoring', requireFeature('lead_scoring'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fCl = kpi.porteeClients(portee, { alias: 'c' })
 
+    // Portée cabinet : le classement d'un cabinet à plusieurs commerciaux est
+    // celui du CABINET (même règle que GET /api/clients), pas celui du seul
+    // utilisateur connecté.
     const result = await pool.query(
       `SELECT c.id, c.first_name, c.last_name, c.lead_score
        FROM clients c
-       WHERE c.courtier_id = $1
+       WHERE ${fCl.sql}
        ORDER BY c.lead_score DESC NULLS LAST
        LIMIT 100`,
-      [courtier_id]
+      fCl.params
     )
 
     return res.json({ success: true, data: result.rows })
@@ -215,7 +211,7 @@ router.get('/lead-scoring', requireFeature('lead_scoring'), async (req, res) => 
 // GET /api/analytics/benchmarks — comparaison sectorielle
 router.get('/benchmarks', requireFeature('benchmarks'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
 
     // Récupérer le score du courtier depuis portfolio_insights
     const myInsights = await pool.query(
@@ -224,7 +220,7 @@ router.get('/benchmarks', requireFeature('benchmarks'), async (req, res) => {
        WHERE courtier_id = $1
        ORDER BY created_at DESC
        LIMIT 1`,
-      [courtier_id]
+      [portee.userId]
     )
 
     // Récupérer les benchmarks depuis benchmarks_cache (colonnes réelles)

@@ -8,6 +8,20 @@
 const PDFDocument = require('pdfkit')
 const { fmtMontant, marcheDepuis } = require('../../../lib/devise')
 
+/**
+ * Valeurs de repli HISTORIQUES d'autorité française.
+ *
+ * POURQUOI ce filtre : `broker_profile_settings.supervisor_name` vaut « ACPR »
+ * et son adresse « 4 place de Budapest CS 92459 75436 Paris cedex 09 » par
+ * DÉFAUT de base de données (migration 101). Un cabinet suisse dont la fiche de
+ * composition n'a jamais été remplie héritait donc de ces valeurs, et le repli
+ * du template faisait le reste : son document client portait une autorité
+ * française. Le filtre refuse une autorité/adresse française sur un document
+ * suisse — et réciproquement on ne mélange jamais les deux pays dans un même
+ * couple (jamais « FINMA » avec une adresse parisienne).
+ */
+const MOTIF_AUTORITE_FRANCAISE = /ACPR|Paris|Budapest|ORIAS/i
+
 const COLORS = {
   primary: '#8B5CF6',
   dark: '#1E1B4B',
@@ -81,6 +95,12 @@ function drawDdaHeader(doc, broker) {
 
 function drawSection1Identity(doc, broker) {
   const y = 120
+  // Identité du cabinet : le référentiel d'immatriculation suit le marché. Un
+  // cabinet suisse n'a ni SIRET ni numéro de TVA intracommunautaire français :
+  // l'ancienne version imprimait « SIRET : » sur TOUS les documents, y compris
+  // ceux d'un cabinet suisse. Ici, un cabinet suisse n'affiche que ce qu'il a
+  // réellement déclaré (fin de l'invention de champs français).
+  const suisse = String(broker.market || '').toUpperCase() === 'CH'
   
   doc.fillColor(COLORS.primary).fontSize(14)
      .text('1. IDENTITÉ DU DISTRIBUTEUR', 50, y)
@@ -89,7 +109,6 @@ function drawSection1Identity(doc, broker) {
   
   const companyName = broker.company_name || '[Nom société à renseigner]'
   const legalForm = broker.legal_form || '[Forme juridique]'
-  const siret = broker.siret || '[SIRET à renseigner]'
   const address = broker.address || '[Adresse]'
   const postalCode = broker.postal_code || ''
   const city = broker.city || ''
@@ -106,9 +125,20 @@ function drawSection1Identity(doc, broker) {
   doc.font('Helvetica').text(legalForm, 160, itemY)
   itemY += 16
   
-  doc.font('Helvetica-Bold').text('SIRET :', 50, itemY)
-  doc.font('Helvetica').text(siret, 160, itemY)
-  itemY += 16
+  if (suisse) {
+    // IDE (UID) = identifiant d'entreprise suisse. Affiché seulement s'il est
+    // connu : un cabinet suisse sans IDE n'affiche pas de champ vide français.
+    if (broker.uid) {
+      doc.font('Helvetica-Bold').text('IDE (UID) :', 50, itemY)
+      doc.font('Helvetica').text(broker.uid, 160, itemY)
+      itemY += 16
+    }
+  } else {
+    const siret = broker.siret || '[SIRET à renseigner]'
+    doc.font('Helvetica-Bold').text('SIRET :', 50, itemY)
+    doc.font('Helvetica').text(siret, 160, itemY)
+    itemY += 16
+  }
   
   doc.font('Helvetica-Bold').text('Adresse :', 50, itemY)
   doc.font('Helvetica').text(fullAddress, 160, itemY, { width: 380 })
@@ -163,7 +193,12 @@ function drawSection2Registration(doc, broker) {
       itemY += 16
     }
     doc.font('Helvetica-Bold').text('Pays :', 50, itemY)
-    doc.font('Helvetica').text(broker.country || 'Suisse', 160, itemY)
+    // `broker.country` peut encore valoir « France » : c'est le DEFAULT de
+    // `broker_profile_settings.country` (migration 101), recopié dans les fiches
+    // créées avant que le marché ne soit renseigné. Sur un document suisse, on
+    // n'imprime pas « France » : le marché résolu (CH) fait foi.
+    const paysAffiche = /france/i.test(String(broker.country || '')) ? 'Suisse' : (broker.country || 'Suisse')
+    doc.font('Helvetica').text(paysAffiche, 160, itemY)
     itemY += 20
 
     doc.rect(50, itemY, 495, 32).fill(COLORS.lightBg)
@@ -259,16 +294,28 @@ function drawSection5Complaints(doc, broker) {
   
   doc.moveTo(50, y + 18).lineTo(545, y + 18).stroke(COLORS.lightBg)
   
-  const complaintsHandling = broker.complaints_handling ||
-    'En cas de réclamation, vous pouvez nous contacter par courrier, email ou téléphone. ' +
-    'Nous nous engageons à accuser réception sous 10 jours et à apporter une réponse sous 2 mois maximum. ' +
-    'En cas de désaccord persistant, vous pouvez saisir le Médiateur de l\'Assurance.'
+  const suisse = String(broker.market || '').toUpperCase() === 'CH'
+
+  // Le texte par défaut ne doit nommer AUCUN organisme du mauvais pays : le
+  // « Médiateur de l'Assurance » et son adresse parisienne n'ont pas cours pour
+  // un cabinet suisse. Les engagements génériques (accusé de réception, délai de
+  // réponse) restent : ce sont des engagements du cabinet, pas une affirmation
+  // sur une réglementation étrangère. L'organe compétent en Suisse n'est pas
+  // prérempli ici : ses coordonnées exactes sont à renseigner par le cabinet.
+  const complaintsHandling = broker.complaints_handling || (
+    suisse
+      ? 'En cas de réclamation, vous pouvez nous contacter par courrier, email ou téléphone. ' +
+        'Nous nous engageons à accuser réception sous 10 jours et à apporter une réponse sous 2 mois maximum. ' +
+        'En cas de désaccord persistant, le cabinet vous indiquera l\'organe de médiation compétent.'
+      : 'En cas de réclamation, vous pouvez nous contacter par courrier, email ou téléphone. ' +
+        'Nous nous engageons à accuser réception sous 10 jours et à apporter une réponse sous 2 mois maximum. ' +
+        'En cas de désaccord persistant, vous pouvez saisir le Médiateur de l\'Assurance.'
+  )
   
   doc.fillColor(COLORS.text).fontSize(10)
      .text(complaintsHandling, 50, y + 30, { width: 495, align: 'justify' })
   
   // Coordonnées du médiateur : celui du marché du cabinet.
-  const suisse = String(broker.market || '').toUpperCase() === 'CH'
   let itemY = y + 80
   doc.rect(50, itemY, 495, 60).fill(COLORS.lightBg)
 
@@ -290,14 +337,32 @@ function drawSection5Complaints(doc, broker) {
 
 function drawSection6Supervision(doc, broker) {
   const y = 200
-  
+  // L'autorité de contrôle par défaut suit le MARCHÉ du cabinet. L'ancien repli
+  // imprimait « ACPR » et « 4 place de Budapest … Paris » sur le document d'un
+  // cabinet suisse. Pour la Suisse, la FINMA et son adresse officielle sont
+  // reprises telles quelles (mêmes valeurs que la résolution de marché du
+  // composer) ; jamais de fait inventé, jamais de repli français.
+  const suisse = String(broker.market || '').toUpperCase() === 'CH'
+
   doc.fillColor(COLORS.primary).fontSize(14)
      .text('6. AUTORITÉ DE CONTRÔLE', 50, y)
   
   doc.moveTo(50, y + 18).lineTo(545, y + 18).stroke(COLORS.lightBg)
-  
-  const supervisorName = broker.supervisor_name || 'ACPR (Autorité de Contrôle Prudentiel et de Résolution)'
-  const supervisorAddress = broker.supervisor_address || '4 place de Budapest CS 92459 75436 Paris cedex 09'
+
+  // Le couple autorité + adresse doit décrire UN SEUL pays. Si l'un des deux
+  // champs porte une autorité française alors que le cabinet est suisse (cas des
+  // valeurs par défaut de la base), on n'en garde aucun : le couple suisse est
+  // utilisé en entier.
+  const autoriteFournie = broker.supervisor_name || broker.supervisor_address
+  const autoriteFrancaise = MOTIF_AUTORITE_FRANCAISE.test(String(autoriteFournie || ''))
+  const repliSuisse = suisse && (autoriteFrancaise || !autoriteFournie)
+
+  const supervisorName = repliSuisse
+    ? 'FINMA (Autorité fédérale de surveillance des marchés financiers)'
+    : (broker.supervisor_name || 'ACPR (Autorité de Contrôle Prudentiel et de Résolution)')
+  const supervisorAddress = repliSuisse
+    ? 'Laupenstrasse 27, 3003 Berne'
+    : (broker.supervisor_address || '4 place de Budapest CS 92459 75436 Paris cedex 09')
   
   doc.fillColor(COLORS.text).fontSize(10)
   let itemY = y + 30
@@ -357,12 +422,19 @@ function drawSection6Supervision(doc, broker) {
 
 function drawDdaFooter(doc, broker, client, generatedAt) {
   const y = 700
+  // Un document produit pour un cabinet suisse ne cite pas le Code des
+  // assurances français : on ne prétend pas non plus qu'un article suisse
+  // équivalent existe (il n'est pas vérifié ici), la phrase reste donc neutre.
+  const suisse = String(broker.market || '').toUpperCase() === 'CH'
+  const locale = suisse ? 'fr-CH' : 'fr-FR'
   
   doc.rect(50, y, 495, 80).fill(COLORS.primary)
   
   doc.fillColor(COLORS.white).fontSize(9)
-     .text('Document remis conformément à l\'article L521-2 du Code des assurances', 60, y + 10)
-     .text(`Généré le ${generatedAt.toLocaleDateString('fr-FR')} à ${generatedAt.toLocaleTimeString('fr-FR')}`, 60, y + 25)
+     .text(suisse
+       ? 'Document d\'information remis au client avant la conclusion du contrat d\'assurance'
+       : 'Document remis conformément à l\'article L521-2 du Code des assurances', 60, y + 10)
+     .text(`Généré le ${generatedAt.toLocaleDateString(locale)} à ${generatedAt.toLocaleTimeString(locale)}`, 60, y + 25)
   
   if (client.nom || client.prenom) {
     doc.text(`Destinataire : ${client.prenom || ''} ${client.nom || ''}`.trim(), 60, y + 40)

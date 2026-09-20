@@ -242,13 +242,21 @@ async function upsertCommission(pool, user, contractId, input = {}, portee = nul
   const payload = normalizeCommissionPayload(input)
   const userId = getUserId(user)
   const apporteurUserId = payload.apporteur_user_id || userId
+  // `commission_amount` (colonne d'origine, NOT NULL) n'était JAMAIS alimentée
+  // par le code : l'insertion échouait en 23502 « null value in column
+  // commission_amount » (la migration 114 lui donne en plus un DEFAULT 0 pour
+  // les chemins qui ne la connaissent pas). On y écrit le montant attendu, en
+  // euros, pour que la colonne historique reste cohérente avec les colonnes
+  // `*_amount_cents`.
+  const montantAttenduEuros = centsToEuros(payload.expected_amount_cents)
   const result = await pool.query(
     `INSERT INTO commissions (
        user_id, contract_id, insurer, period_year, period_month,
        expected_amount_cents, received_amount_cents, currency, status,
-       apporteur_user_id, apporteur_share_bps, notes, cabinet_id, created_at, updated_at
+       apporteur_user_id, apporteur_share_bps, notes, cabinet_id,
+       commission_amount, created_at, updated_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'eur', $8, $9, $10, $11, $12, NOW(), NOW())
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'eur', $8, $9, $10, $11, $12, $13, NOW(), NOW())
      ON CONFLICT (user_id, contract_id, period_year, period_month)
      DO UPDATE SET
        insurer = EXCLUDED.insurer,
@@ -258,6 +266,7 @@ async function upsertCommission(pool, user, contractId, input = {}, portee = nul
        apporteur_user_id = EXCLUDED.apporteur_user_id,
        apporteur_share_bps = EXCLUDED.apporteur_share_bps,
        notes = EXCLUDED.notes,
+       commission_amount = EXCLUDED.commission_amount,
        updated_at = NOW()
      RETURNING *`,
     [
@@ -274,6 +283,7 @@ async function upsertCommission(pool, user, contractId, input = {}, portee = nul
       payload.notes,
       // Cabinet propriétaire (NULL pour un cabinet mono-utilisateur).
       portee ? porteeCabinet.cabinetPourCreation(portee) : null,
+      montantAttenduEuros,
     ]
   )
   return mapCommissionRow(result.rows[0])

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Users, FileText, Euro, ArrowRight, Sparkles, Heart,
+  Users, FileText, ArrowRight, Sparkles, Heart,
   AlertTriangle, CheckSquare, UserPlus, Clock, Bell,
   TrendingUp, TrendingDown, Activity, Calendar, Phone,
   Zap, Target, ChevronRight, FileSignature,
@@ -11,6 +11,8 @@ import { getSessionUser } from '../api/sessionUser'
 import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } from '../components/vibe'
 import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyStateAurora, MobileCockpitCard, SectionGlow } from '../components/aurora/Aurora3D'
+import DeviseIcone from '../components/DeviseIcone'
+import useDevise from '../components/useDevise'
 import { libelleSante, variation } from '../lib/cockpitTendances'
 import { fmtMontant, fmtNombre } from '../lib/monnaie'
 import { BubbleCMini } from '../design/BubbleC'
@@ -322,6 +324,9 @@ const LEVEL_BADGE = {
 }
 
 export default function Dashboard() {
+  // Re-rend au changement de devise : un cockpit déjà affiché ne peut pas rester
+  // en euros pour un cabinet suisse.
+  useDevise()
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [clients, setClients] = useState([])
@@ -516,7 +521,7 @@ export default function Dashboard() {
             <CockpitMetricCard label="Contrats actifs" value={fmtNum(metrics.activeContracts)} icon={FileText} color="#3B82F6" trend={tendanceContrats} />
           </PriorityHalo>
           <PriorityHalo color="#22C55E" intensity={0.7}>
-            <CockpitMetricCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)} icon={Euro} color="#22C55E" trend={null} />
+            <CockpitMetricCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)} icon={DeviseIcone} color="#22C55E" trend={null} />
           </PriorityHalo>
           <PriorityHalo color="#8B5CF6" intensity={0.7}>
             <CockpitMetricCard label="Score santé" value={`${metrics.healthScore}%`} icon={Heart} color="#8B5CF6" trend={tendanceSante} />

@@ -11,6 +11,12 @@ const { getUserPlanInfo } = require('../services/planService');
 const { getClientScoreBreakdown } = require('../services/portfolioAnalyzer');
 const { listClientInteractions } = require('../services/integrationsStore');
 const porteeCabinet = require('../lib/porteeCabinet');
+// Bloc unique des définitions d'indicateurs (contrat, prime, échéance) : la
+// « prime annuelle d'un client » doit être le même calcul que la « prime
+// annuelle totale » du tableau de bord, sinon la liste Clients affiche « — »
+// pendant que le tableau de bord affiche 1 450 CHF (défaut reproduit en
+// production le 20/09/2026).
+const { kpi } = require('./dashboard');
 const Anthropic = require('@anthropic-ai/sdk');
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -96,17 +102,34 @@ const SELECT_LISTE_CLIENTS = `SELECT
         (
           SELECT COUNT(*)::int
           FROM quotes q
-          WHERE q.client_id = clients.id AND q.status = 'actif'
+          WHERE q.client_id = clients.id AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
         ) AS contracts_count,
         (
-          SELECT COALESCE(SUM(NULLIF(q.quote_data->>'prime_annuelle', '')::numeric), 0)
+          -- « Prime annuelle du client » = somme de la prime de ses contrats
+          -- ACTIFS, avec l'expression de prime définie UNE fois (kpi.PRIME_CONTRAT :
+          -- colonne prime_annuelle, sinon quote_data, sinon premium/amount).
+          -- L'ancienne expression ne lisait que quote_data : un contrat dont la
+          -- prime est dans la colonne comptait pour 0.
+          -- COALESCE(...,0) est conservé : 0 est ici une VALEUR EXACTE (aucune
+          -- prime à sommer) et empêche la liste de retomber sur lifetime_value
+          -- comme le fait le front quand le champ est absent.
+          SELECT COALESCE(SUM(${kpi.PRIME_CONTRAT}), 0)
           FROM quotes q
-          WHERE q.client_id = clients.id AND q.status = 'actif'
+          WHERE q.client_id = clients.id AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
         ) AS prime_totale,
         (
-          SELECT MIN(NULLIF(q.quote_data->>'date_echeance', '')::date)
+          -- Nom lu par la liste Clients (front : prime_annuelle_total ?? total_prime
+          -- ?? portfolio_value) : même valeur, pour que l'écran n'affiche plus
+          -- « — » là où le tableau de bord affiche un montant.
+          SELECT COALESCE(SUM(${kpi.PRIME_CONTRAT}), 0)
           FROM quotes q
-          WHERE q.client_id = clients.id AND q.status = 'actif'
+          WHERE q.client_id = clients.id AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
+        ) AS prime_annuelle_total,
+        (
+          -- Prochaine échéance : même définition d'échéance que partout ailleurs.
+          SELECT MIN(${kpi.ECHEANCE_CONTRAT})
+          FROM quotes q
+          WHERE q.client_id = clients.id AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
         ) AS next_echeance`
 
 // Tris autorisés (liste blanche : jamais de SQL venu de la requête).
@@ -359,16 +382,18 @@ router.get('/:id/contrats', async (req, res) => {
               q.client_id,
               q.status,
               q.status as statut,
-              quote_data->>'type_contrat' as type_contrat,
-              quote_data->>'compagnie' as compagnie,
-              quote_data->>'numero' as numero,
-              (quote_data->>'prime_annuelle')::numeric as prime_annuelle,
-              (quote_data->>'date_effet')::date as date_effet,
-              (quote_data->>'date_echeance')::date as date_echeance
+              q.quote_data->>'type_contrat' as type_contrat,
+              q.quote_data->>'compagnie' as compagnie,
+              q.quote_data->>'numero' as numero,
+              -- Prime : même expression que le tableau de bord et la liste
+              -- (colonne prime_annuelle, sinon quote_data, sinon premium/amount).
+              ${kpi.PRIME_CONTRAT} as prime_annuelle,
+              NULLIF(q.quote_data->>'date_effet', '')::date as date_effet,
+              ${kpi.ECHEANCE_CONTRAT} as date_echeance
        FROM quotes q
        JOIN clients c ON q.client_id = c.id AND ${f.sql}
        WHERE q.client_id = $1
-       ORDER BY (q.quote_data->>'date_echeance')::date ASC NULLS LAST`,
+       ORDER BY ${kpi.ECHEANCE_CONTRAT} ASC NULLS LAST`,
       [req.params.id, ...f.params]
     )
     res.json(result.rows)
@@ -886,7 +911,7 @@ router.get('/:id/cross-sell', async (req, res) => {
     try {
       const qr = await pool.query(
         `SELECT DISTINCT LOWER(COALESCE(quote_data->>'type_contrat','')) AS produit
-         FROM quotes WHERE client_id=$1 AND status='actif'`, [clientId]);
+         FROM quotes WHERE client_id=$1 AND status IN ${kpi.STATUTS_CONTRAT_ACTIF}`, [clientId]);
       produitsExistants = qr.rows.map(r => r.produit).filter(Boolean);
     } catch (_) { /* fallthrough */ }
 

@@ -1,5 +1,5 @@
-import { useState, useEffect, _useMemo } from 'react'
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
+import { useState, useEffect, useMemo } from 'react'
+import { motion, useMotionValue, animate } from 'framer-motion'
 import { TrendingUp, Users, FileText, Percent, Star, CheckSquare } from 'lucide-react'
 import api from '../api'
 import BubbleCard from '../components/BubbleCard'
@@ -9,26 +9,47 @@ import BubbleBackground from '../components/BubbleBackground'
 import { fmtMontant, fmtNombre } from '../lib/monnaie'
 
 // ─── Animated Number ──────────────────────────────────────────────────────────
+/** Formatage d'une valeur mesurée. Une valeur absente reste « — ». */
+function formatValeur(v, format) {
+  if (!Number.isFinite(v)) return '—'
+  // Devise du cabinet : CHF en Suisse, EUR sinon.
+  if (format === 'currency') return fmtMontant(v, { maximumFractionDigits: 0 })
+  if (format === 'percent') return `${v.toFixed(1)}%`
+  return fmtNombre(Math.round(v))
+}
+
 function AnimatedNumber({ value, format = 'number' }) {
+  // POURQUOI CE GARDE-FOU (cause racine de l'écran /analytics qui tuait le
+  // cockpit) : framer-motion `animate(motionValue, keyframes, …)` lit
+  // `keyframes.default` sans vérifier que les keyframes existent. Appelé avec
+  // `value === null` — le cas NORMAL d'un indicateur non mesuré — il lève
+  // « Cannot read properties of null (reading 'default') » pendant le rendu.
+  // Aucune frontière d'erreur n'entoure les routes privées : React démontait
+  // alors TOUT l'arbre, la sidebar disparaissait et l'écran de secours
+  // « Le cockpit n'a pas pu se charger » remplaçait l'application.
+  // Une valeur absente n'est donc ni animée ni calculée : elle s'affiche « — ».
+  const mesurable = typeof value === 'number' && Number.isFinite(value)
   const motionValue = useMotionValue(0)
-  const transform = useTransform(motionValue, (v) => {
-    // Une valeur non mesurée s'affiche « — » : jamais un chiffre inventé.
-    if (format === 'vide' || value === null || value === undefined) return '—'
-    // Devise du cabinet : CHF en Suisse, EUR sinon.
-    if (format === 'currency') return fmtMontant(v, { maximumFractionDigits: 0 })
-    if (format === 'percent') return `${v.toFixed(1)}%`
-    return fmtNombre(Math.round(v))
-  })
-  const [displayValue, setDisplayValue] = useState('0')
+  // La valeur RESTE affichée telle qu'elle est mesurée : l'animation ne fait que
+  // l'habiller. On n'attend donc jamais qu'un abonnement à une valeur dérivée se
+  // déclenche pour afficher le chiffre (sans cela, un indicateur mesuré pouvait
+  // rester bloqué sur « — », c'est-à-dire annoncé comme non mesuré).
+  const [displayValue, setDisplayValue] = useState(() => (mesurable ? formatValeur(value, format) : '—'))
 
   useEffect(() => {
-    const controls = animate(motionValue, value, { duration: 1.2, ease: 'easeOut' })
-    const unsubscribe = transform.onChange(setDisplayValue)
-    return () => {
-      controls.stop()
-      unsubscribe()
+    if (!mesurable) {
+      // Rien à animer : on affiche l'état honnête, et on n'appelle PAS animate().
+      setDisplayValue('—')
+      return undefined
     }
-  }, [value, format, motionValue, transform])
+    setDisplayValue(formatValeur(value, format))
+    const controls = animate(motionValue, value, {
+      duration: 1.2,
+      ease: 'easeOut',
+      onUpdate: (v) => setDisplayValue(formatValeur(v, format)),
+    })
+    return () => controls.stop()
+  }, [mesurable, value, format, motionValue])
 
   return <span>{displayValue}</span>
 }
@@ -82,22 +103,11 @@ function KPICard({ icon: Icon, title, value, format = 'number', loading, color, 
 }
 
 // ─── Mini SVG Line Chart ─────────────────────────────────────────────────────
-const MONTHLY_DATA = [
-  { month: 'Jan', value: 98000 },
-  { month: 'Fév', value: 105000 },
-  { month: 'Mar', value: 112000 },
-  { month: 'Avr', value: 108000 },
-  { month: 'Mai', value: 125000 },
-  { month: 'Jun', value: 132000 },
-  { month: 'Jul', value: 128000 },
-  { month: 'Aoû', value: 140000 },
-  { month: 'Sep', value: 135000 },
-  { month: 'Oct', value: 142000 },
-  { month: 'Nov', value: 138000 },
-  { month: 'Déc', value: 142000 },
-]
-
-function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 }) {
+// Plus AUCUNE série posée en dur : la courbe ne reçoit que la série réellement
+// mesurée (`revenus6Mois` de GET /api/dashboard/stats). L'ancienne constante
+// MONTHLY_DATA (98 000 → 142 000 de CA) servait de valeur par défaut et
+// affichait donc un chiffre d'affaires inventé dès qu'aucune donnée n'arrivait.
+function MiniLineChart({ data = [], color = '#2563eb', height = 180 }) {
   const width = 100
   const padding = { top: 10, right: 8, bottom: 24, left: 8 }
   const chartW = width
@@ -189,14 +199,32 @@ function MiniLineChart({ data = MONTHLY_DATA, color = '#2563eb', height = 180 })
 }
 
 // ─── Product Repartition Bars ─────────────────────────────────────────────────
-const PRODUCT_DATA = [
-  { label: 'Auto', value: 42, color: '#2563eb' },
-  { label: 'Habitation', value: 28, color: '#7c3aed' },
-  { label: 'Santé', value: 18, color: '#10b981' },
-  { label: 'Prévoyance', value: 12, color: '#f59e0b' },
-]
+// Libellés lisibles des types réellement renvoyés par l'API (min. en base).
+const LIBELLES_PRODUIT = {
+  auto: 'Auto',
+  habitation: 'Habitation',
+  mrh: 'Habitation',
+  sante: 'Santé',
+  prévoyance: 'Prévoyance',
+  prevoyance: 'Prévoyance',
+  rc_pro: 'RC Pro',
+  flotte: 'Flotte auto',
+  cyber: 'Cyber',
+  pj: 'Protection juridique',
+  decennale: 'Décennale',
+  vie: 'Vie',
+  autre: 'Autre',
+}
+// Palette du design system COURTIA (mêmes teintes que les KPI de l'écran).
+const COULEURS_PRODUIT = ['#2563eb', '#7c3aed', '#10b981', '#f59e0b', '#ec4899', '#0ea5e9', '#64748b']
 
-function ProductBars({ data = PRODUCT_DATA }) {
+function libelleProduit(type) {
+  const cle = String(type || '').trim().toLowerCase()
+  if (LIBELLES_PRODUIT[cle]) return LIBELLES_PRODUIT[cle]
+  return cle ? cle.charAt(0).toUpperCase() + cle.slice(1) : 'Type non renseigné'
+}
+
+function ProductBars({ data = [] }) {
   const maxVal = Math.max(...data.map((d) => d.value))
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -220,6 +248,16 @@ function ProductBars({ data = PRODUCT_DATA }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+/** Message unique des sections que le produit ne mesure pas encore. */
+function NonMesure({ children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <BubbleBadge color="#94a3b8" size="sm">non mesuré</BubbleBadge>
+      <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', margin: 0 }}>{children}</p>
     </div>
   )
 }
@@ -248,6 +286,26 @@ export default function AnalyticsExecutive() {
   const serieCa = Array.isArray(stats?.revenus6Mois)
     ? stats.revenus6Mois.map((r) => ({ month: r.mois, value: Number(r.revenue) || 0 }))
     : []
+
+  // Répartition par type de produit — CALCULÉE à partir des contrats réellement
+  // enregistrés (`typesContrats` de /api/dashboard/stats). L'ancien écran posait
+  // Auto 42 % / Habitation 28 % / Santé 18 % / Prévoyance 12 % EN DUR, pour
+  // n'importe quel cabinet — y compris un cabinet vide — sur une page qui
+  // affirme ne montrer que des mesures réelles.
+  const repartitionProduits = useMemo(() => {
+    const lignes = Array.isArray(stats?.typesContrats) ? stats.typesContrats : []
+    const total = lignes.reduce((somme, l) => somme + (Number(l?.count) || 0), 0)
+    if (!total) return []
+    return lignes
+      .map((l) => ({ type: l?.type, count: Number(l?.count) || 0 }))
+      .filter((l) => l.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .map((l, i) => ({
+        label: libelleProduit(l.type),
+        value: Math.round((l.count / total) * 1000) / 10, // 1 décimale, en %
+        color: COULEURS_PRODUIT[i % COULEURS_PRODUIT.length],
+      }))
+  }, [stats])
 
   const activeClients = stats?.clientsParStatut?.actif || 0
   const prospects = stats?.clientsParStatut?.prospect || 0
@@ -327,55 +385,41 @@ export default function AnalyticsExecutive() {
 
           {/* 2-column bottom section */}
           <div className="ae-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-            {/* Product repartition */}
+            {/* Product repartition — mesurée, ou déclarée non mesurée */}
             <BubbleCard hover={false} padding={24}>
-              <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
-                Répartition par type de produit
-              </h3>
-              <ProductBars data={PRODUCT_DATA} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
+                  Répartition par type de produit
+                </h3>
+                {repartitionProduits.length > 0 && (
+                  <BubbleBadge color="#2563eb" size="sm">
+                    {repartitionProduits.reduce((s, p) => s + p.value, 0).toFixed(0)} % mesurés
+                  </BubbleBadge>
+                )}
+              </div>
+              {repartitionProduits.length > 0 ? (
+                <ProductBars data={repartitionProduits} />
+              ) : (
+                <NonMesure>
+                  Aucun contrat enregistré pour ce cabinet : il n'y a donc aucune répartition à
+                  afficher. Aucune répartition d'exemple n'est présentée.
+                </NonMesure>
+              )}
             </BubbleCard>
 
-            {/* Heatmap placeholder */}
+            {/* Activité hebdomadaire — aucune source de mesure : on le dit */}
             <BubbleCard hover={false} padding={24}>
               <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
                 Activité hebdomadaire
               </h3>
-              <div
-                className="ae-heatmap"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  gap: 4,
-                  aspectRatio: '7 / 5',
-                }}
-              >
-                {Array.from({ length: 35 }).map((_, i) => {
-                  const intensity = Math.random()
-                  const opacity = 0.04 + intensity * 0.18
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        borderRadius: 'var(--r-sm, 8px)',
-                        background: `rgba(37,99,235,${opacity})`,
-                        border: '0.5px solid rgba(0,0,0,0.04)',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
-                    />
-                  )
-                })}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10, color: 'rgba(0,0,0,0.3)', fontWeight: 600 }}>
-                <span>Lun</span>
-                <span>Mar</span>
-                <span>Mer</span>
-                <span>Jeu</span>
-                <span>Ven</span>
-                <span>Sam</span>
-                <span>Dim</span>
-              </div>
+              {/* L'ancien écran dessinait ici une grille de 35 cases colorées par
+                  Math.random() : le motif changeait à CHAQUE rendu et se présentait
+                  comme l'activité du cabinet. Aucune mesure d'activité par jour de
+                  semaine n'existe côté API : la case est donc vide et l'écran le dit. */}
+              <NonMesure>
+                L'activité par jour de la semaine n'est pas mesurée par COURTIA : aucune carte
+                de chaleur n'est affichée tant que la mesure n'existe pas.
+              </NonMesure>
             </BubbleCard>
           </div>
         </div>

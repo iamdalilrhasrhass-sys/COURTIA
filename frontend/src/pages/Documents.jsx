@@ -5,7 +5,6 @@ import {
   FileText, Upload, Search, X, Check, Sparkles, Shield, Zap,
   Clock, File, FileImage, FileSpreadsheet, Eye, Download, AlertTriangle, XCircle
 } from 'lucide-react'
-import toast from 'react-hot-toast'
 import api from '../api'
 
 const T = {
@@ -26,20 +25,30 @@ const DOC_TYPES = [
   { value: 'rib', label: 'RIB', desc: 'Relevé bancaire', icon: FileSpreadsheet },
 ]
 
-const DEMO_DOCS = [
-  { id: 1, nom: 'Mandat courtage_Sophie L..pdf', client: 'Sophie L.', type: 'mandat_courtage', lieA: 'Client', date: '2026-05-08', statut: 'valide' },
-  { id: 2, nom: 'FIC_Martin Conseil.pdf', client: 'Martin Conseil', type: 'fic', lieA: 'Client', date: '2026-05-07', statut: 'valide' },
-  { id: 3, nom: 'Attestation_Dupont SAS.pdf', client: 'Dupont SAS', type: 'attestation', lieA: 'RC Pro', date: '2026-05-05', statut: 'valide' },
-  { id: 4, nom: 'Devoir conseil_Karim B..pdf', client: 'Karim B.', type: 'devoir_conseil', lieA: 'Devis Auto', date: '2026-05-04', statut: 'a_verifier' },
-  { id: 5, nom: 'RIB_BatiSens Pro.pdf', client: 'BatiSens Pro', type: 'rib', lieA: 'Client', date: '2026-04-28', statut: 'valide' },
-  { id: 6, nom: 'Permis_Leroy Marie.jpg', client: 'Leroy Marie', type: 'permis', lieA: 'Client', date: '2026-04-25', statut: 'expire' },
-  { id: 7, nom: 'Carte grise_Auto Évolution.pdf', client: 'Auto Évolution 89', type: 'carte_grise', lieA: 'Flotte Auto', date: '2026-04-20', statut: 'valide' },
-  { id: 8, nom: 'FIC_Groupe Ardent.pdf', client: 'Groupe Ardent', type: 'fic', lieA: 'Client', date: '2026-04-15', statut: 'manquant' },
-  { id: 9, nom: 'Mandat courtage_Nadia R..pdf', client: 'Nadia R.', type: 'mandat_courtage', lieA: 'Client', date: '2026-04-10', statut: 'valide' },
-  { id: 10, nom: 'Attestation_Cabinet Moreau.pdf', client: 'Cabinet Moreau', type: 'attestation', lieA: 'PJ', date: '2026-04-05', statut: 'a_verifier' },
-  { id: 11, nom: 'Devoir conseil_Transports Galli.pdf', client: 'Transports Galli', type: 'devoir_conseil', lieA: 'RC Pro', date: '2026-03-30', statut: 'valide' },
-  { id: 12, nom: 'RIB_Maison Lefèvre.pdf', client: 'Maison Lefèvre', type: 'rib', lieA: 'Client', date: '2026-05-09', statut: 'valide' },
-]
+// Statuts renvoyés par GET /api/documents → statuts affichés.
+// `documents.status` porte 'generated' (document produit par COURTIA),
+// 'draft', 'sent_to_sign' (en attente de signature) ou 'archived'.
+const STATUT_DOC_VERS_ECRAN = {
+  generated: 'valide',
+  draft: 'a_verifier',
+  sent_to_sign: 'a_verifier',
+  signed: 'valide',
+  archived: 'expire',
+}
+
+/** Une ligne de GET /api/documents → la forme lue par cet écran.
+ *  Aucun champ n'est inventé : ce que l'API ne renvoie pas reste « — ». */
+function documentDepuisApi(d) {
+  return {
+    id: d?.id,
+    nom: d?.file_name || d?.filename || d?.title || 'Document sans nom',
+    client: d?.client_name || '—',
+    type: d?.type || d?.document_type || 'autre',
+    lieA: d?.contract_id ? 'Contrat' : d?.client_id ? 'Client' : '—',
+    date: d?.created_at || d?.generated_at || d?.uploaded_at || null,
+    statut: STATUT_DOC_VERS_ECRAN[String(d?.status || '').toLowerCase()] || 'valide',
+  }
+}
 
 const STATUT_STYLE = {
   valide: { bg: 'rgba(34,197,94,0.08)', text: '#22C55E', label: 'Validé' },
@@ -70,19 +79,25 @@ export default function Documents() {
   // Aucun document d'exemple : l'écran doit refléter uniquement les pièces
   // réellement déposées dans le cabinet.
   const [documents, setDocuments] = useState([])
+  // `null` = pas de mesure exploitable (chargement ou API en erreur) : les KPI
+  // affichent « — ». 0 resterait une mesure, et une fausse si l'API a échoué.
+  const [charge, setCharge] = useState(false)
 
   useEffect(() => {
+    let actif = true
     api.get('/documents')
       .then(res => {
+        if (!actif) return
         const payload = res && res.data
         const liste = Array.isArray(payload) ? payload
           : Array.isArray(payload && payload.data) ? payload.data
           : Array.isArray(payload && payload.documents) ? payload.documents
-          : Array.isArray(payload && payload.prospects) ? payload.prospects
           : null
-        if (Array.isArray(liste) && liste.length > 0) setDocuments(liste)
+        setDocuments(Array.isArray(liste) ? liste.map(documentDepuisApi) : [])
+        setCharge(true)
       })
-      .catch(() => { /* erreur réseau/API : on garde les données de démonstration */ })
+      .catch(() => { /* erreur réseau/API : on n'affiche AUCUN document inventé */ })
+    return () => { actif = false }
   }, [])
 
   const filtered = useMemo(() => {
@@ -100,13 +115,18 @@ export default function Documents() {
     return list
   }, [documents, search, filter])
 
-  const stats = useMemo(() => ({
-    total: documents.length,
-    aVerifier: documents.filter(d => d.statut === 'a_verifier').length,
-    manquants: documents.filter(d => d.statut === 'manquant').length,
-    expires: documents.filter(d => d.statut === 'expire').length,
-    recents: documents.filter(d => new Date(d.date) > new Date('2026-05-01')).length,
-  }), [documents])
+  const stats = useMemo(() => {
+    // « Récents (7j) » = dépôt/génération dans les 7 derniers jours : la fenêtre
+    // est GLISSANTE. L'ancien calcul comparait à la date fixe du 1er mai 2026 —
+    // un KPI qui devenait faux tout seul au fil des jours.
+    const ilYA7Jours = Date.now() - 7 * 24 * 60 * 60 * 1000
+    return {
+      total: documents.length,
+      aVerifier: documents.filter(d => d.statut === 'a_verifier').length,
+      expires: documents.filter(d => d.statut === 'expire').length,
+      recents: documents.filter(d => d.date && new Date(d.date).getTime() >= ilYA7Jours).length,
+    }
+  }, [documents])
 
   const getTypeInfo = (type) => {
     const t = DOC_TYPES.find(ti => ti.value === type)
@@ -134,13 +154,16 @@ export default function Documents() {
           </div>
         </div>
 
-        {/* KPIs */}
+        {/* KPIs — tous calculés depuis GET /api/documents */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          <KpiCard icon={FileText} title="Documents" value="12 / 186" />
-          <KpiCard icon={AlertTriangle} title="À vérifier" value={stats.aVerifier} accent={T.warning} />
-          <KpiCard icon={XCircle} title="Manquants" value={stats.manquants} accent={T.danger} />
-          <KpiCard icon={Clock} title="Expirés" value={stats.expires} accent={T.textMuted} />
-          <KpiCard icon={Check} title="Récents (7j)" value={stats.recents} accent={T.success} />
+          <KpiCard icon={FileText} title="Documents" value={charge ? stats.total : '—'} />
+          <KpiCard icon={AlertTriangle} title="À vérifier" value={charge ? stats.aVerifier : '—'} accent={T.warning} />
+          {/* « Manquants » n'est PAS mesurable : une pièce absente ne peut pas
+              figurer dans la liste des documents. L'ancien écran affichait 0, ce
+              qui se lisait « aucun document manquant ». */}
+          <KpiCard icon={XCircle} title="Manquants" value="—" accent={T.textMuted} />
+          <KpiCard icon={Clock} title="Expirés" value={charge ? stats.expires : '—'} accent={T.textMuted} />
+          <KpiCard icon={Check} title="Récents (7j)" value={charge ? stats.recents : '—'} accent={T.success} />
         </div>
 
         {/* TOOLBAR */}
@@ -166,8 +189,8 @@ export default function Documents() {
           </div>
         </div>
 
-        {/* ARK ALERT */}
-        {stats.manquants > 0 && (
+        {/* ARK ALERT — déclenchée par une mesure RÉELLE (documents à vérifier) */}
+        {charge && stats.aVerifier > 0 && (
           <div style={{
             background: 'rgba(139,92,246,0.04)', border: '1px solid ' + T.arkBorder,
             borderRadius: 10, padding: '10px 16px', marginBottom: 16,
@@ -175,7 +198,9 @@ export default function Documents() {
           }}>
             <Sparkles size={14} color={T.ark} />
             <span style={{ fontSize: 12, color: '#c4b5fd', flex: 1 }}>
-              <strong style={{ color: '#a78bfa' }}>ARK</strong> a détecté {stats.manquants} document(s) manquant(s) et {stats.aVerifier} à vérifier. Centralisez toutes les pièces pour sécuriser vos dossiers.
+              <strong style={{ color: '#a78bfa' }}>ARK</strong> : {stats.aVerifier} document(s) en
+              attente de vérification sur {stats.total} au total. Traitez-les pour sécuriser vos
+              dossiers.
             </span>
           </div>
         )}
@@ -213,7 +238,7 @@ export default function Documents() {
                       <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: T.cardBg, color: T.textMuted }}>{typeInfo.label}</span>
                     </td>
                     <td style={{ padding: '10px 12px', color: T.textSecondary }}>{d.lieA}</td>
-                    <td style={{ padding: '10px 12px', color: T.textMuted }}>{new Date(d.date).toLocaleDateString('fr-FR')}</td>
+                    <td style={{ padding: '10px 12px', color: T.textMuted }}>{d.date ? new Date(d.date).toLocaleDateString('fr-FR') : '—'}</td>
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: statut.bg, color: statut.text }}>{statut.label}</span>
                     </td>
@@ -238,7 +263,15 @@ export default function Documents() {
           </div>
         )}
 
-        {/* UPLOAD MODAL */}
+        {/* FENÊTRE « Ajouter un document »
+            AVANT : cette fenêtre n'avait AUCUN champ fichier — la zone en
+            pointillés n'acceptait rien — et le bouton « Téléverser » fermait la
+            fenêtre en affichant un toast vert « Document ajoute (simulation) »,
+            sans émettre la moindre requête. C'était un faux succès.
+            MAINTENANT : l'écran dit la vérité. Aucune API ne range un fichier
+            déposé depuis cet écran (les pièces arrivent par la fiche client via
+            POST /api/clients/:id/documents, et les documents listés ici sont
+            PRODUITS par COURTIA) : le bouton reste donc inactif. */}
         <AnimatePresence>
           {showUpload && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -257,17 +290,25 @@ export default function Documents() {
                   <button onClick={() => setShowUpload(false)} style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer' }}><X size={16} color={T.textMuted} /></button>
                 </div>
                 <div style={{
-                  border: '2px dashed rgba(255,255,255,0.08)', borderRadius: 12, padding: '40px 20px',
+                  border: '1px dashed rgba(255,255,255,0.14)', borderRadius: 12, padding: '24px 20px',
                   textAlign: 'center', marginBottom: 16,
                 }}>
-                  <Upload size={32} color={T.textMuted} style={{ marginBottom: 12 }} />
-                  <p style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>Glissez un fichier ici</p>
-                  <p style={{ fontSize: 11, color: T.textMuted }}>PDF, JPG, PNG — Max 10 MB</p>
+                  <AlertTriangle size={26} color={T.warning} style={{ marginBottom: 10 }} />
+                  <p style={{ fontSize: 13, color: T.textSecondary, margin: '0 0 8px', fontWeight: 600 }}>
+                    Le dépôt direct d&apos;un fichier depuis cet écran n&apos;est pas disponible.
+                  </p>
+                  <p style={{ fontSize: 11.5, color: T.textMuted, margin: 0, lineHeight: 1.6 }}>
+                    Cet écran liste les documents produits par COURTIA pour vos dossiers. Les pièces
+                    fournies par un client arrivent par sa fiche client, ou par le lien de dépôt
+                    envoyé au client. Aucun fichier n&apos;est accepté ici, et rien n&apos;est
+                    enregistré par le bouton ci-dessous.
+                  </p>
                 </div>
-                <button onClick={() => { setShowUpload(false); toast.success('Document ajoute (simulation)') }} style={{
+                <button type="button" disabled aria-disabled="true" title="Aucune API de dépôt n'existe pour cet écran : le bouton est désactivé pour ne pas simuler un envoi." style={{
                   width: '100%', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                  background: T.accent, color: '#fff', border: 'none', cursor: 'pointer',
-                }}>Téléverser</button>
+                  background: 'rgba(255,255,255,0.06)', color: T.textMuted, border: '1px solid ' + T.cardBorder,
+                  cursor: 'not-allowed',
+                }}>Téléverser (indisponible)</button>
               </motion.div>
             </motion.div>
           )}

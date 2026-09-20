@@ -195,6 +195,25 @@ router.delete('/:id', verifyToken, async (req, res) => {
     const portee = await porteeCabinet.resoudrePortee(pool, req);
     if (porteeCabinet.refuserSuppression(portee, res)) return;
     const f = filtreClientsDuContrat(portee, { depart: 2, ecriture: true });
+
+    // Un contrat qui porte des commissions ne peut pas disparaître en silence :
+    // la clé étrangère `commissions.contract_id → quotes(id)` (migration 114)
+    // refuse la suppression du parent. On répond un refus EXPLICITE (409) avec
+    // le nombre de commissions rattachées, plutôt que de laisser PostgreSQL
+    // produire un 500 illisible — et sans jamais détruire une ligne comptable.
+    const commissions = await pool.query(
+      'SELECT COUNT(*)::int AS nombre FROM commissions WHERE contract_id = $1',
+      [req.params.id]
+    ).catch(() => ({ rows: [{ nombre: 0 }] }));
+    const nombreCommissions = (commissions.rows[0] && commissions.rows[0].nombre) || 0;
+    if (nombreCommissions > 0) {
+      return res.status(409).json({
+        error: 'contract_has_commissions',
+        commissions: nombreCommissions,
+        message: `Ce contrat porte ${nombreCommissions} commission(s) : supprimez-les ou annulez-le (statut) au lieu de le supprimer.`,
+      });
+    }
+
     const supprime = await pool.query(
       `DELETE FROM quotes USING clients
        WHERE quotes.id = $1 AND quotes.client_id = clients.id AND ${f.sql}`,

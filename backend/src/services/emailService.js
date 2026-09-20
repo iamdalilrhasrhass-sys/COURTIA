@@ -100,10 +100,13 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
   const status = getEmailStatus();
   if (!status.configured) {
     logger.warn({ payload: { to, subject, provider: status.provider, missing: status.missing } }, 'Email configuration required - send skipped');
+    // `raison` explicite (correction 20/09/2026) : l'appelant doit pouvoir
+    // écrire POURQUOI rien n'est parti sans interpréter le code d'erreur.
     return {
       success: false,
       skipped: true,
       error: 'configuration_required',
+      raison: 'configuration_required',
       provider: status.provider,
       missing: status.missing,
       message: 'Configuration email transactionnel requise.',
@@ -151,7 +154,8 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
     return { success: true, provider: status.provider, reply_to: adresseReponse || null };
   } catch (err) {
     logger.error({ err, payload: { to, subject, provider: status.provider } }, 'Email send failed');
-    return { success: false, error: 'send_failed', provider: status.provider };
+    // Le fournisseur a refusé : on le dit sans jamais renvoyer l'erreur brute.
+    return { success: false, error: 'send_failed', raison: 'send_failed', provider: status.provider };
   }
 }
 
@@ -163,7 +167,26 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
 async function sendCommercialEmail({ to, subject, html, text, replyTo }) {
   const statut = getEmailStatus();
   const adresseReponse = replyTo !== undefined ? String(replyTo).trim() : getReplyTo();
-  if (statut.configured && !adresseReponse) {
+
+  // Fournisseur absent : on le dit ici, avec la liste exacte des variables
+  // manquantes, au lieu de laisser l'appelant croire à un échec réseau.
+  if (!statut.configured) {
+    logger.warn(
+      { payload: { to, subject, provider: statut.provider, missing: statut.missing } },
+      'Envoi commercial impossible : aucun fournisseur e-mail configure'
+    );
+    return {
+      success: false,
+      skipped: true,
+      error: 'configuration_required',
+      raison: 'configuration_required',
+      provider: statut.provider,
+      missing: statut.missing,
+      message: 'Envoi commercial impossible : configuration e-mail requise.',
+    };
+  }
+
+  if (!adresseReponse) {
     logger.warn(
       { payload: { to, subject, provider: statut.provider } },
       'Envoi commercial refuse : EMAIL_REPLY_TO absent - aucune reponse ne pourrait etre recue'
@@ -172,6 +195,7 @@ async function sendCommercialEmail({ to, subject, html, text, replyTo }) {
       success: false,
       skipped: true,
       error: 'reply_to_required',
+      raison: 'reply_to_required',
       provider: statut.provider,
       missing: ['EMAIL_REPLY_TO'],
       message:

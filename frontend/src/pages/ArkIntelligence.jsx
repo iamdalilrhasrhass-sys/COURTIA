@@ -9,6 +9,8 @@ import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import api from '../api'
 import toast from 'react-hot-toast'
+import { fmtMontant, deviseCourante } from '../lib/monnaie'
+import useDevise from '../components/useDevise'
 
 const T = {
   text: '#FFFFFF',
@@ -26,11 +28,11 @@ const T = {
 
 // CORRECTION 2026-09-19 : `format(v || 0)` transformait « inconnu » en « 0 € ».
 // Un montant absent s'affiche desormais « — », jamais zero.
-const fmtEur = (v) => {
-  const n = Number(v)
-  if (v === null || v === undefined || v === '' || Number.isNaN(n)) return '—'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
-}
+// CORRECTION 2026-09-20 : le formatage forçait « fr-FR/EUR ». Un cabinet suisse
+// lisait donc « LTV : 0 € », « 800 € » ou « TOTAL €/AN 600 € » dans un écran
+// dont les tarifs sont en francs suisses. On passe par le module de devise du
+// frontend (devise du cabinet, déduite de son pays).
+const fmtMontantArk = (v) => fmtMontant(v, { maximumFractionDigits: 0 })
 
 // ────────────────────────────────────────────────────────────
 // WIDGET 1 — CHURN PREDICTOR
@@ -150,7 +152,7 @@ function ChurnPredictor() {
                 </div>
               ))}
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: T.textMuted, fontSize: 11 }}>LTV : {fmtEur(r.lifetime_value)}</span>
+                <span style={{ color: T.textMuted, fontSize: 11 }}>LTV : {fmtMontantArk(r.lifetime_value)}</span>
                 <span style={{ color: T.ark, fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                   Plan ARK <ArrowRight size={11} />
                 </span>
@@ -318,7 +320,7 @@ function CrossSellMatrix() {
           }}>
             {data.total_potential_eur === null || data.total_potential_eur === undefined
               ? 'Potentiel total : non disponible — aucun tarif de référence dans les dossiers'
-              : `Potentiel total : ${fmtEur(data.total_potential_eur)}/an`}
+              : `Potentiel total : ${fmtMontantArk(data.total_potential_eur)}/an`}
           </div>
         )}
       </div>
@@ -338,7 +340,7 @@ function CrossSellMatrix() {
                 {data.products.map((p) => (
                   <th key={p} style={{ ...thStyle, textAlign: 'center' }}>{p}</th>
                 ))}
-                <th style={{ ...thStyle, textAlign: 'right' }}>Total €/an</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Total {deviseCourante()}/an</th>
               </tr>
             </thead>
             <tbody>
@@ -372,7 +374,7 @@ function CrossSellMatrix() {
                         ) : opp?.score >= 30 ? (
                           <div>
                             <div style={{ color: T.text, fontWeight: 700, fontSize: 11 }}>{opp.score}</div>
-                            <div style={{ color: T.textSecondary, fontSize: 9 }}>{fmtEur(opp.estimated_eur)}</div>
+                            <div style={{ color: T.textSecondary, fontSize: 9 }}>{fmtMontantArk(opp.estimated_eur)}</div>
                           </div>
                         ) : (
                           <span style={{ color: T.textMuted, fontSize: 10 }}>—</span>
@@ -381,7 +383,7 @@ function CrossSellMatrix() {
                     )
                   })}
                   <td style={{ padding: '10px 8px', fontSize: 12, color: T.cyan, fontWeight: 700, textAlign: 'right', borderBottom: `1px solid ${T.cardBorder}` }}>
-                    {fmtEur(c.total_opportunity_eur)}
+                    {fmtMontantArk(c.total_opportunity_eur)}
                   </td>
                 </tr>
               ))}
@@ -451,7 +453,7 @@ function RenewalOptimizer() {
           }}>
             {data.total_potential_saving_eur === null || data.total_potential_saving_eur === undefined
               ? 'Économie potentielle : non calculée — COURTIA ne dispose d\'aucun tarif de marché vérifié'
-              : `Économie potentielle : ${fmtEur(data.total_potential_saving_eur)}`}
+              : `Économie potentielle : ${fmtMontantArk(data.total_potential_saving_eur)}`}
           </div>
         )}
       </div>
@@ -525,7 +527,7 @@ function RenewalOptimizer() {
                 <div>
                   <div style={{ color: T.textSecondary, fontSize: 10, textTransform: 'uppercase' }}>Actuel</div>
                   <div style={{ color: T.text, fontSize: 12 }}>{r.current_provider || '—'}</div>
-                  <div style={{ color: T.textMuted, fontSize: 11 }}>{fmtEur(r.current_premium_eur)}</div>
+                  <div style={{ color: T.textMuted, fontSize: 11 }}>{fmtMontantArk(r.current_premium_eur)}</div>
                 </div>
                 <div>
                   <div style={{ color: T.textSecondary, fontSize: 10, textTransform: 'uppercase' }}>Recommandé</div>
@@ -533,7 +535,7 @@ function RenewalOptimizer() {
                   <div style={{ color: r.saving_eur > 30 ? T.success : T.textMuted, fontSize: 11 }}>
                     {r.saving_eur === null || r.saving_eur === undefined
                       ? 'non calculé'
-                      : r.saving_eur > 0 ? `−${fmtEur(r.saving_eur)}` : 'équivalent'}
+                      : r.saving_eur > 0 ? `−${fmtMontantArk(r.saving_eur)}` : 'équivalent'}
                   </div>
                 </div>
                 <div>
@@ -595,6 +597,8 @@ function StatBox({ label, value, color }) {
 // PAGE PRINCIPALE
 // ────────────────────────────────────────────────────────────
 export default function ArkIntelligence() {
+  // Re-rend au changement de devise (montants de l'écran ARK en CHF).
+  useDevise()
   return (
     <>
       <VibeBackdrop intensity="medium" />

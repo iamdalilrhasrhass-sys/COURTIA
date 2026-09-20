@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Send, Phone, MessageSquare, Calendar, TrendingUp, Sparkles, Zap, Search,
-  User, AlertTriangle, Clock, Euro, Target, FileText, Loader, CheckCircle
+  User, AlertTriangle, Clock, Target, FileText, Loader, CheckCircle
 } from 'lucide-react'
 import api from '../api'
 import { fmtMontant } from '../lib/monnaie'
+import DeviseIcone from '../components/DeviseIcone'
+import useDevise from '../components/useDevise'
 
 const T = {
   bg: '#050510', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.06)', cardHover: 'rgba(255,255,255,0.05)',
@@ -65,6 +67,8 @@ function KpiCard({ icon: Icon, title, value, accent }) {
 }
 
 export default function Relances() {
+  // Re-rend au changement de devise (CHF pour un cabinet suisse).
+  useDevise()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Toutes')
@@ -153,7 +157,7 @@ export default function Relances() {
           <KpiCard icon={Send} title="Devis sans réponse" value={stats.devis} accent={T.warning} />
           <KpiCard icon={AlertTriangle} title="Échéances" value={stats.echeances} accent={T.warning} />
           {stats.tauxReponse !== null && <KpiCard icon={TrendingUp} title="Taux de réponse" value={stats.tauxReponse + ' %'} accent={T.success} />}
-          <KpiCard icon={Euro} title="Potentiel" value={fmtEur(stats.potentiel)} accent={T.success} />
+          <KpiCard icon={DeviseIcone} title="Potentiel" value={fmtEur(stats.potentiel)} accent={T.success} />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
@@ -210,7 +214,7 @@ export default function Relances() {
                   </div>
                   <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 11, color: T.textSecondary, flexWrap: 'wrap' }}>
                     {r.produit && <span><FileText size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{r.produit}</span>}
-                    {r.potentiel > 0 && <span style={{ color: T.success }}><Euro size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{fmtEur(r.potentiel)}</span>}
+                    {r.potentiel > 0 && <span style={{ color: T.success }}><DeviseIcone size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{fmtEur(r.potentiel)}</span>}
                     {r.dernierContact && <span><Clock size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />{new Date(r.dernierContact).toLocaleDateString('fr-FR')}</span>}
                   </div>
                 </div>

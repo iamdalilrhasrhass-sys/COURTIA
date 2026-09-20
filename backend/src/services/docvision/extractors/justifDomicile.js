@@ -21,7 +21,7 @@ const JUSTIF_DOMICILE_SCHEMA = {
     prenom_titulaire: { type: 'string', description: 'Prénom sur le document' },
     adresse_ligne1: { type: 'string', description: 'Première ligne d\'adresse' },
     adresse_ligne2: { type: 'string', description: 'Complément d\'adresse' },
-    code_postal: { type: 'string', description: 'Code postal' },
+    code_postal: { type: 'string', description: 'Code postal (5 chiffres en France, 4 chiffres — NPA — en Suisse)' },
     ville: { type: 'string', description: 'Ville' },
     pays: { type: 'string', description: 'Pays (si précisé)' },
     numero_client: { type: 'string', description: 'N° client ou référence' },
@@ -34,13 +34,17 @@ const JUSTIF_DOMICILE_SCHEMA = {
 }
 
 // Prompt système pour Claude Vision
-const SYSTEM_PROMPT = `Tu es un expert en lecture de justificatifs de domicile français.
+// Le cabinet peut être français (code postal à 5 chiffres, fournisseurs EDF /
+// Orange…) ou suisse (NPA à 4 chiffres, régies locales) : le prompt ne doit
+// enfermer la lecture ni dans un pays ni dans un format. Il ne présume rien du
+// fournisseur et laisse les exemples tels quels (ce ne sont que des exemples).
+const SYSTEM_PROMPT = `Tu es un expert en lecture de justificatifs de domicile (France et Suisse).
 
 TYPES DE JUSTIFICATIFS ACCEPTÉS:
-1. FACTURES D'ÉNERGIE (EDF, Engie, TotalEnergies, etc.)
-2. FACTURES TELECOM (Orange, SFR, Free, Bouygues)
-3. FACTURES D'EAU (Veolia, Suez, régie)
-4. AVIS D'IMPOSITION (impôts sur le revenu)
+1. FACTURES D'ÉNERGIE
+2. FACTURES TELECOM
+3. FACTURES D'EAU (régie, distributeur local)
+4. AVIS D'IMPOSITION
 5. TAXE D'HABITATION / TAXE FONCIÈRE
 6. QUITTANCE DE LOYER
 7. ATTESTATION D'HÉBERGEMENT
@@ -68,7 +72,7 @@ Retourne un JSON avec:
 - prenom_titulaire: prénom
 - adresse_ligne1: n° et rue
 - adresse_ligne2: complément
-- code_postal: 5 chiffres
+- code_postal: code postal tel qu'imprimé (5 chiffres en France, 4 chiffres — NPA — en Suisse)
 - ville: ville
 - pays: pays (si précisé)
 - numero_client: référence client
@@ -129,24 +133,74 @@ function detectJustifType(text, fournisseur) {
 }
 
 /**
- * Valide le code postal français
+ * Valide un groupe de chiffres comme code postal : français (5 chiffres) ou
+ * suisse (NPA à 4 chiffres). Fonction interne, sans nettoyage.
+ */
+function validerChiffres(chiffres) {
+  if (/^\d{4}$/.test(chiffres)) {
+    const npa = parseInt(chiffres, 10)
+    if (npa < 1000 || npa > 9999) {
+      return { valid: false, error: 'NPA hors plage valide (1000-9999)' }
+    }
+    return { valid: true, pays: 'CH', format: 'npa' }
+  }
+  if (/^\d{5}$/.test(chiffres)) {
+    const num = parseInt(chiffres, 10)
+    if (num < 1000 || num > 98999) {
+      return { valid: false, error: 'Code postal hors plage valide' }
+    }
+    return { valid: true, pays: 'FR', format: 'code_postal' }
+  }
+  return null
+}
+
+/**
+ * Valide le code postal du document : français (5 chiffres) OU suisse (NPA à
+ * 4 chiffres).
+ *
+ * POURQUOI : la version précédente n'acceptait que 5 chiffres. Un cabinet
+ * suisse ne pouvait donc jamais valider un justificatif de domicile réel
+ * (« 1844 Villeneuve », « 1201 Genève », « 3003 Berne ») : le document était
+ * rejeté comme invalide alors qu'il était parfaitement lisible.
+ *
+ * Les deux formats sont disjoints (4 vs 5 chiffres) : accepter le NPA suisse
+ * n'assouplit RIEN pour la France, où un code à 4 chiffres reste refusé.
+ * Le pays détecté est renvoyé pour que l'appelant sache ce qu'il a lu, ainsi
+ * que le groupe de chiffres isolé quand la lecture a collé le code postal et la
+ * ville (« 1844Villeneuve »).
  */
 function validateCodePostal(cp) {
   if (!cp) return { valid: false, error: 'Code postal manquant' }
-  
-  const clean = cp.replace(/\s/g, '')
-  
-  if (!/^\d{5}$/.test(clean)) {
-    return { valid: false, error: 'Code postal invalide (5 chiffres requis)' }
+
+  const clean = String(cp).replace(/\s/g, '')
+
+  // 1. Cas nominal : le champ ne contient que le code.
+  const direct = validerChiffres(clean)
+  if (direct) return direct
+
+  // Un nombre de 6 chiffres ou plus n'est jamais un code postal (4 ou 5
+  // chiffres). Sans ce refus, « 123456 » livrerait « 12345 » par extraction
+  // partielle — un code postal qui n'est pas sur le document.
+  if (/\d{6,}/.test(clean)) {
+    return {
+      valid: false,
+      error: 'Code postal invalide (5 chiffres en France, 4 chiffres — NPA — en Suisse)',
+    }
   }
-  
-  // Vérifier plage valide
-  const num = parseInt(clean, 10)
-  if (num < 1000 || num > 98999) {
-    return { valid: false, error: 'Code postal hors plage valide' }
+
+  // 2. Code postal collé à la ville ou accompagné d'un complément : on isole le
+  // SEUL groupe de 4 ou 5 chiffres. Deux groupes candidats = ambigu, on refuse
+  // plutôt que de choisir au hasard.
+  const groupes = clean.match(/\d{4,5}/g) || []
+  if (groupes.length === 1) {
+    const isole = validerChiffres(groupes[0])
+    if (isole) return { ...isole, extrait: groupes[0] }
   }
-  
-  return { valid: true }
+
+  return {
+    valid: false,
+    error: 'Code postal invalide (5 chiffres en France, 4 chiffres — NPA — en Suisse)',
+  }
 }
 
 /**
@@ -205,6 +259,10 @@ function validateAndNormalize(extracted) {
     const cpVal = validateCodePostal(normalized.code_postal)
     if (!cpVal.valid) {
       warnings.push('Code postal: ' + cpVal.error)
+    } else if (cpVal.extrait) {
+      // « 1844Villeneuve » (code postal collé à la ville) : on ne conserve que
+      // les chiffres réellement lus sur le document.
+      normalized.code_postal = cpVal.extrait
     }
   } else {
     warnings.push('Code postal non détecté')
@@ -244,12 +302,16 @@ function validateAndNormalize(extracted) {
   const presentRequired = requiredFields.filter(f => normalized[f]).length
   const hasDate = normalized.date_emission && !ageCheck.error ? 0.15 : 0
   const confidence = Math.round((presentRequired / requiredFields.length) * 0.65 + hasDate + (warnings.filter(w => w.includes('non détecté')).length === 0 ? 0.2 : 0.05)) * 1000 / 1000
-  
+
   return {
     fields: normalized,
     confidence: Math.min(0.98, confidence),
     warnings,
-    isValid: normalized.nom_titulaire && normalized.adresse_ligne1 && normalized.code_postal && normalized.ville
+    // `isValid` doit être un VRAI booléen : l'expression `a && b && c && d`
+    // renvoyait la DERNIÈRE valeur trouvée (par exemple la chaîne « VILLENEUVE »
+    // au lieu de `true`). Un appelant qui teste `isValid === true` ou qui
+    // transmet ce champ tel quel lisait donc autre chose qu'un verdict.
+    isValid: Boolean(normalized.nom_titulaire && normalized.adresse_ligne1 && normalized.code_postal && normalized.ville)
   }
 }
 

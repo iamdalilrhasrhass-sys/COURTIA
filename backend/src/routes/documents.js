@@ -140,7 +140,13 @@ function getCurrentUserId(req) {
 }
 
 function isMissingTable(err) {
-  return err?.code === '42P01'
+  // « 42P01 » couvre DEUX erreurs différentes : la table n'existe pas, ET la
+  // référence à une table absente de la clause FROM (« missing FROM-clause
+  // entry for table "x" »). Les confondre transformait une requête cassée en
+  // « donnée introuvable » silencieuse — c'est exactement ce qui masquait la
+  // suppression impossible d'un document (DELETE /api/documents/:id → 404 alors
+  // que la ligne existait). Seule l'absence RÉELLE de table est tolérée.
+  return err?.code === '42P01' && /does not exist/i.test(String(err.message || ''))
 }
 
 async function getCourtierContext(userId) {
@@ -739,8 +745,22 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
     const client = clientResult.rows[0]
 
     // Récupérer les infos courtier (user)
+    //
+    // POURQUOI CE JOIN : `users.orias_number` N'EXISTE PAS dans le schéma réel —
+    // la lecture échouait donc en 500 « column "orias_number" does not exist »
+    // pour TOUS les modèles client de ce chemin (attestation_assurance,
+    // proposition_commerciale, courrier_resiliation), alors que le contrôle
+    // d'appartenance du client, lui, répondait bien 404. Le numéro ORIAS est
+    // porté par `broker_profiles.orias` (identité du courtier, migration 108) et
+    // par `users.iobsp_orias_number` (statut IOBSP déclaré, services/iobspService).
+    // On ne fabrique AUCUNE valeur : ce qui n'est pas renseigné reste NULL, et
+    // le PDF imprime alors simplement l'absence de mention.
     const courtierResult = await pool.query(
-      'SELECT first_name, last_name, orias_number FROM users WHERE id = $1',
+      `SELECT u.first_name, u.last_name,
+              COALESCE(NULLIF(bp.orias, ''), NULLIF(u.iobsp_orias_number, '')) AS orias_number
+         FROM users u
+         LEFT JOIN broker_profiles bp ON bp.user_id = u.id
+        WHERE u.id = $1`,
       [courtier_id]
     )
     const courtier = courtierResult.rows[0] || {}
@@ -783,6 +803,123 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
     })
   } catch (err) {
     logger.error({ error: err.message }, 'documents generate failed')
+    return res.status(500).json({ error: 'server_error', message: err.message })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/documents/:id — supprimer RÉELLEMENT un document
+//
+// POURQUOI CETTE ROUTE : le produit écrit un document client dans `documents`
+// (téléchargeable par GET /api/documents/:id/download) et l'ancien chemin
+// d'impression dans `generated_documents`. Aucune des deux n'était supprimable :
+// l'appel tombait sur `DELETE /documents/:id` de routes/clientDocuments.js
+// (montée sur /api) qui cherche dans `client_documents` et répondait
+// 404 « Document introuvable » — alors que le document existait bel et bien en
+// base (défaut reproduit en production : DELETE /api/documents/7). On supprime
+// ici ; l'ordre de recherche est CELUI DU TÉLÉCHARGEMENT (`documents` puis
+// `generated_documents`), et un identifiant présent dans LES DEUX tables est
+// refusé en 409 plutôt que de supprimer la mauvaise ligne. Aucun succès n'est
+// renvoyé si aucune ligne n'a réellement été supprimée.
+// ─────────────────────────────────────────────────────────────────────────────
+router.delete('/:id', async (req, res) => {
+  try {
+    const userId = getCurrentUserId(req)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id) || id <= 0) {
+      return res.status(400).json({ error: 'validation_error', message: 'Identifiant de document invalide.' })
+    }
+
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
+
+    // 1) document « v1 » (`documents`) — portée CABINET.
+    const fDoc = filtreDocuments(portee, { depart: 2, ecriture: true })
+    let ligneV1 = null
+    try {
+      const r = await pool.query(
+        `SELECT d.id, d.filename, d.type FROM documents d WHERE d.id = $1 AND ${fDoc.sql} LIMIT 1`,
+        [id, ...fDoc.params]
+      )
+      ligneV1 = r.rows[0] || null
+    } catch (err) {
+      if (!isMissingTable(err)) throw err
+    }
+
+    // 2) document de l'ancien chemin (`generated_documents`) : il n'a pas de
+    //    `cabinet_id` — il reste visible si c'est MON impression ou celle d'un
+    //    client de mon cabinet (même règle que la liste des documents).
+    //    `alias: 'c'` : la portée cabinet doit viser l'alias utilisé par la
+    //    jointure ci-dessous (`c`), pas le nom de la table.
+    const fLegacy = filtreClientsDocuments(portee, { depart: 3, alias: 'c' })
+    let ligneAncienne = null
+    try {
+      const r = await pool.query(
+        `SELECT g.id, g.template_id, g.document_type
+           FROM generated_documents g
+           LEFT JOIN clients c ON c.id = g.client_id
+          WHERE g.id = $1 AND (g.courtier_id = $2 OR ${fLegacy.sql})
+          LIMIT 1`,
+        [id, userId, ...fLegacy.params]
+      )
+      ligneAncienne = r.rows[0] || null
+    } catch (err) {
+      if (!isMissingTable(err)) throw err
+    }
+
+    if (ligneV1 && ligneAncienne) {
+      return res.status(409).json({
+        error: 'ambiguous_document_id',
+        message: "Deux documents portent cet identifiant (un document client et une impression archivée). Suppression refusée pour ne pas effacer le mauvais fichier.",
+      })
+    }
+
+    if (!ligneV1 && !ligneAncienne) {
+      return res.status(404).json({ error: 'not_found', message: 'Document introuvable' })
+    }
+
+    if (ligneV1) {
+      // `documents_blob` est en ON DELETE CASCADE, `document_activity_log` et
+      // `signature_requests` en ON DELETE SET NULL : la ligne part proprement.
+      const supprime = await pool.query('DELETE FROM documents WHERE id = $1 RETURNING id, filename', [id])
+      if (!supprime.rowCount) return res.status(404).json({ error: 'not_found', message: 'Document introuvable' })
+      await logAudit({
+        userId,
+        entityType: 'document',
+        entityId: id,
+        action: 'document.deleted',
+        metadata: { type: ligneV1.type, filename: ligneV1.filename },
+        req,
+      }).catch(() => {})
+      return res.json({ success: true, deleted_id: id, source: 'documents' })
+    }
+
+    const supprime = await pool.query(
+      'DELETE FROM generated_documents WHERE id = $1 RETURNING id, template_id, document_type',
+      [id]
+    )
+    if (!supprime.rowCount) return res.status(404).json({ error: 'not_found', message: 'Document introuvable' })
+    // Le PDF temporaire n'a plus aucune ligne qui le référence : on le retire du
+    // disque (au mieux — un fichier déjà absent n'est pas une erreur métier).
+    try {
+      const fichier = path.join('/tmp/documents', `${supprime.rows[0].template_id || id}.pdf`)
+      if (fs.existsSync(fichier)) fs.unlinkSync(fichier)
+    } catch (err) {
+      logger.warn({ error: err.message, document_id: id }, 'documents delete: fichier temporaire non supprimé')
+    }
+    await logAudit({
+      userId,
+      entityType: 'document',
+      entityId: id,
+      action: 'document.deleted',
+      metadata: { type: supprime.rows[0].document_type, legacy: true },
+      req,
+    }).catch(() => {})
+    return res.json({ success: true, deleted_id: id, source: 'generated_documents' })
+  } catch (err) {
+    logger.error({ error: err.message }, 'documents delete failed')
     return res.status(500).json({ error: 'server_error', message: err.message })
   }
 })
