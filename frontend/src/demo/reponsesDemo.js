@@ -182,7 +182,7 @@ function _repondreBrut(methode, cheminBrut, corps) {
       '',
       `Ma recommandation : traiter d’abord ${retard[0] ? `« ${retard[0].titre} »` : 'les échéances à venir'}, puis les pièces manquantes — elles bloquent ${manquants.length} dossier${manquants.length > 1 ? 's' : ''}.`,
     ].join('\n')
-    return { statut: 200, donnees: { response: texte, reponse: texte, demo: true } }
+    return { statut: 200, donnees: { reply: texte, response: texte, reponse: texte, demo: true } }
   }
 
   /* ---- /devis : pages/Devis.jsx ----------------------------------------
