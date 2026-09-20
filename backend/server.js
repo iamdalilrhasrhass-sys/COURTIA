@@ -202,11 +202,17 @@ app.get('/landing', (req, res) => res.sendFile(path.join(__dirname, 'public/land
 
 app.post('/api/clients/:id/score/refresh', verifyToken, async (req, res) => {
   try {
-    const Client = require('./src/models/Client')
     const riskScoreService = require('./src/services/riskScoreService')
 
-    const client = await Client.findById(req.params.id)
-    if (!client) return res.status(404).json({ error: 'Client not found' })
+    // Le client est résolu AVEC son cabinet : sans ce filtre, un cabinet
+    // authentifié pouvait rafraîchir (donc RÉÉCRIRE) le score de risque du
+    // client d'un autre cabinet — atteinte à l'intégrité, inter-cabinets.
+    const scope = await pool.query(
+      'SELECT * FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1',
+      [req.params.id, req.user.id || req.user.userId]
+    )
+    const client = scope.rows[0]
+    if (!client) return res.status(404).json({ error: 'Client non trouvé' })
 
     const contractsRes = await pool.query('SELECT * FROM contracts WHERE client_id = $1', [client.id])
     client.contracts = contractsRes.rows
@@ -214,8 +220,8 @@ app.post('/api/clients/:id/score/refresh', verifyToken, async (req, res) => {
     const riskResult = await riskScoreService.calculateRiskScore(client)
 
     await pool.query(
-      'UPDATE clients SET risk_score = $1, updated_at = NOW() WHERE id = $2',
-      [riskResult.score, client.id]
+      'UPDATE clients SET risk_score = $1, updated_at = NOW() WHERE id = $2 AND courtier_id = $3',
+      [riskResult.score, client.id, req.user.id || req.user.userId]
     )
 
     res.json({ risk: riskResult })

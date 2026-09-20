@@ -404,6 +404,21 @@ async function generateStatement(pool, userId, year, month) {
   `
 
   // Générer le PDF
+  // Le service PDF du produit (services/pdfService.js) ne rend pas de HTML :
+  // l'appel `generatePDF(html, …)` échouait donc systématiquement
+  // (« generatePDF is not a function ») et le relevé de commissions répondait
+  // 500. On refuse désormais proprement, avec un message de produit lisible,
+  // en attendant un rendu pdfkit dédié (voir RESTE À FAIRE du rapport d'audit).
+  if (typeof generatePDF !== 'function') {
+    const erreur = new Error(
+      "Le relevé de commissions en PDF n'est pas encore disponible dans cette version : "
+      + 'les montants restent consultables à l’écran et exportables en CSV.'
+    )
+    erreur.code = 'statement_pdf_unavailable'
+    erreur.statut = 501
+    throw erreur
+  }
+
   const pdf = await generatePDF(html, {
     format: 'A4',
     margin: { top: 20, right: 20, bottom: 20, left: 20 }

@@ -60,7 +60,7 @@ describe('accès direct : mot de passe initial temporaire', () => {
     const sql = pool.query.mock.calls[0][0];
     expect(sql).toContain("subscription_status = 'trialing'");
     expect(sql).toContain('trial_started_at = NOW()');
-    expect(sql).toContain("trial_ends_at = NOW() + ($3 || ' days')::interval");
+    expect(sql).toContain("trial_ends_at = NOW() + ($3::int || ' days')::interval");
     expect(sql).not.toContain('pending_activation');
     expect(acces.jours).toBe(7);
     expect(acces.debut).toBeTruthy();

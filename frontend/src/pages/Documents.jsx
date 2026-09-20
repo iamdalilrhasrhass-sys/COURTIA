@@ -67,7 +67,9 @@ export default function Documents() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Tous')
   const [showUpload, setShowUpload] = useState(false)
-  const [documents, setDocuments] = useState(DEMO_DOCS)
+  // Aucun document d'exemple : l'écran doit refléter uniquement les pièces
+  // réellement déposées dans le cabinet.
+  const [documents, setDocuments] = useState([])
 
   useEffect(() => {
     api.get('/documents')

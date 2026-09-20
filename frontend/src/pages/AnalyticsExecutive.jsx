@@ -11,6 +11,8 @@ import BubbleBackground from '../components/BubbleBackground'
 function AnimatedNumber({ value, format = 'number' }) {
   const motionValue = useMotionValue(0)
   const transform = useTransform(motionValue, (v) => {
+    // Une valeur non mesurée s'affiche « — » : jamais un chiffre inventé.
+    if (format === 'vide' || value === null || value === undefined) return '—'
     if (format === 'currency') return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
     if (format === 'percent') return `${v.toFixed(1)}%`
     return Math.round(v).toLocaleString('fr-FR')
@@ -240,20 +242,29 @@ export default function AnalyticsExecutive() {
     fetchStats()
   }, [])
 
+  // Série de CA réellement mesurée (revenus6Mois renvoyé par /api/dashboard/stats).
+  const serieCa = Array.isArray(stats?.revenus6Mois)
+    ? stats.revenus6Mois.map((r) => ({ month: r.mois, value: Number(r.revenue) || 0 }))
+    : []
+
   const activeClients = stats?.clientsParStatut?.actif || 0
   const prospects = stats?.clientsParStatut?.prospect || 0
   const _conversionRate = (activeClients + prospects > 0)
     ? (activeClients / (activeClients + prospects)) * 100
     : 0
 
-  // KPI config — 6 cards
+  // KPI — uniquement des mesures réelles (POST /api/dashboard/stats le jour où
+  // l'indicateur est calculé). Les indicateurs que le produit ne mesure pas
+  // encore s'affichent « — » : avant ce correctif, la page annonçait un CA de
+  // 142 000 €, un taux de résiliation de 3,2 % et 24 tâches/semaine EN DUR, pour
+  // n'importe quel cabinet, même totalement vide.
   const kpis = [
-    { title: 'Taux résiliation', value: 3.2, format: 'percent', icon: Percent, color: '#dc2626' },
-    { title: 'Score de satisfaction', value: 72, format: 'number', icon: Star, color: '#f59e0b' },
-    { title: 'CA Cumul annuel', value: 142000, format: 'currency', icon: TrendingUp, color: '#10b981' },
-    { title: 'Nouveaux clients/mois', value: 5.3, format: 'percent', icon: Users, color: '#2563eb' },
-    { title: 'Contrats vendus/mois', value: 11, format: 'number', icon: FileText, color: '#7c3aed' },
-    { title: 'Tâches complétées/sem', value: 24, format: 'number', icon: CheckSquare, color: '#ec4899' },
+    { title: 'Taux résiliation', value: null, format: 'vide', icon: Percent, color: '#dc2626' },
+    { title: 'Score de satisfaction', value: null, format: 'vide', icon: Star, color: '#f59e0b' },
+    { title: 'Primes annuelles suivies', value: stats?.primeTotale ?? null, format: 'currency', icon: TrendingUp, color: '#10b981' },
+    { title: 'Taux de conversion', value: stats?.tauxConversion ?? null, format: 'percent', icon: Users, color: '#2563eb' },
+    { title: 'Contrats actifs', value: stats?.contratsActifs ?? null, format: 'number', icon: FileText, color: '#7c3aed' },
+    { title: 'Clients au portefeuille', value: stats?.totalClients ?? null, format: 'number', icon: CheckSquare, color: '#ec4899' },
   ]
 
   return (
@@ -300,9 +311,16 @@ export default function AnalyticsExecutive() {
               <h3 style={{ fontFamily: 'Arial, sans-serif', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
                 Évolution mensuelle du CA
               </h3>
-              <BubbleBadge color="#2563eb" size="sm">Cumul annuel +14%</BubbleBadge>
+              {serieCa.length > 1
+                ? <BubbleBadge color="#2563eb" size="sm">{serieCa.length} mois mesurés</BubbleBadge>
+                : <BubbleBadge color="#94a3b8" size="sm">non mesuré</BubbleBadge>}
             </div>
-            <MiniLineChart data={MONTHLY_DATA} color="#2563eb" height={200} />
+            {serieCa.length > 1
+              ? <MiniLineChart data={serieCa} color="#2563eb" height={200} />
+              : <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', margin: 0 }}>
+                  Pas encore d'historique de primes : la courbe s'affichera dès que des contrats
+                  seront enregistrés sur plusieurs mois. Aucune courbe d'exemple n'est affichée.
+                </p>}
           </BubbleCard>
 
           {/* 2-column bottom section */}

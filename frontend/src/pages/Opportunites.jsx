@@ -99,7 +99,9 @@ function Card({ o, dragStart, dragEnd }) {
 
 export default function Opportunites() {
   const navigate = useNavigate()
-  const [columns, setColumns] = useState(() => initStages(DEMO_OPPS))
+  // Aucune opportunité d'exemple : le pipeline doit refléter les seuls
+  // dossiers réels du cabinet (sinon il affiche un potentiel inventé).
+  const [columns, setColumns] = useState(() => initStages([]))
   const [dragging, setDragging] = useState(null)
 
   useEffect(() => {

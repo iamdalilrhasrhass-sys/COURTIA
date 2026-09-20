@@ -219,7 +219,16 @@ const PLANS = {
 };
 
 const DEFAULT_PLAN = 'starter';
-const TRIAL_FEATURES = PLANS.pro.features; // Essai 30j = features Pro
+const TRIAL_FEATURES = PLANS.pro.features; // Essai = features Pro
+// Plafonds de l'essai = ceux du plan dont les FONCTIONS sont réellement ouvertes
+// pendant l'essai (Pro). Avant ce correctif, l'essai ouvrait les fonctions Pro
+// mais gardait les plafonds du plan de repli « starter » : un cabinet en essai
+// de 7 jours ne pouvait enregistrer que 3 clients (limite « max_clients: 3 ») et
+// se voyait répondre « Limite atteinte (3/3). Passez au plan Pro » dès le 4e
+// client — c'est-à-dire pendant la période où il évalue justement le produit.
+// L'essai reste borné dans le TEMPS par trial_ends_at (paywall J+7) : c'est la
+// durée qui protège l'offre, pas un plafond de saisie.
+const TRIAL_LIMITS = PLANS.pro.limits;
 
 /**
  * Retourne un plan complet par son nom
@@ -314,7 +323,7 @@ async function getUserPlanInfo(userId) {
       stripe_customer_id: user.stripe_customer_id,
       stripe_subscription_id: user.stripe_subscription_id,
       features: activeFeatures,
-      limits: plan.limits,
+      limits: onTrial ? TRIAL_LIMITS : plan.limits,
     };
   } catch (error) {
     logger.warn({ error: error.message }, 'planService.getUserPlanInfo failed');

@@ -86,7 +86,10 @@ export default function Devis() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('Tous')
-  const [devis, setDevis] = useState(DEMO_DEVIS)
+  // Aucune donnée d'exemple : un cabinet neuf doit voir un écran vide honnête
+  // (« Aucun devis trouvé. ») et non des devis fictifs (Karim B., BatiSens Pro…)
+  // qui lui feraient croire à un portefeuille qu'il n'a pas.
+  const [devis, setDevis] = useState([])
 
   useEffect(() => {
     let actif = true

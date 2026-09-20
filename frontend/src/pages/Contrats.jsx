@@ -44,6 +44,41 @@ const STATUT_STYLE = {
   resilie: { bg: 'rgba(239,68,68,0.06)', text: '#9CA3AF', label: 'Résilié' },
 }
 
+/**
+ * normaliserContrat — convertit une ligne renvoyée par /api/contrats en objet
+ * d'affichage. L'API stocke l'essentiel dans `quote_data` (compagnie, prime,
+ * échéance, type) : sans cette conversion, la page affichait « J-undefined »,
+ * une prime vide et des filtres qui plantaient sur un nom de client absent.
+ * Aucune valeur inventée : ce qui manque reste vide et s'affiche « — ».
+ */
+function normaliserContrat(c) {
+  const q = c?.quote_data || c?.details || {}
+  const prime = Number(q.prime_annuelle ?? c?.prime_annuelle ?? c?.prime ?? c?.premium ?? c?.amount ?? 0) || 0
+  const echeance = q.date_echeance || c?.date_echeance || c?.end_date || null
+  let jours = null
+  if (echeance) {
+    const d = new Date(echeance)
+    if (!Number.isNaN(d.getTime())) jours = Math.round((d.getTime() - Date.now()) / 86400000)
+  }
+  const client = c?.client_name
+    || [c?.first_name || c?.prenom, c?.last_name || c?.nom].filter(Boolean).join(' ')
+    || c?.company_name
+    || (c?.id ? `Client #${c.id}` : '—')
+  return {
+    id: c?.id,
+    client,
+    produit: q.type_contrat || c?.type_contrat || c?.produit || c?.product_type || '—',
+    compagnie: q.compagnie || c?.compagnie || c?.provider_name || '—',
+    numero: q.numero || c?.numero || null,
+    prime,
+    echeance,
+    jours,
+    statut: (c?.statut || c?.status || 'actif'),
+    risque: c?.risque ?? c?.risk_score ?? null,
+    ark: null,
+  }
+}
+
 const FILTERS = ['Tous', 'Actifs', 'Renouvellement', 'Résiliés', 'Échéance proche', 'Risque élevé', 'Opportunité ARK']
 
 function KpiCard({ icon: Icon, title, value, accent }) {
@@ -81,7 +116,7 @@ function ContractCard({ c, navigate }) {
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 16, fontWeight: 800, color: T.text }}>{fmtEur(c.prime)}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: jourColor }}>{c.jours <= 0 ? `Échu J+${Math.abs(c.jours)}` : `J-${c.jours}`}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: jourColor }}>{c.jours === null ? '—' : (c.jours <= 0 ? `Échu J+${Math.abs(c.jours)}` : `J-${c.jours}`)}</span>
       </div>
       {c.ark && (
         <div style={{ background: T.arkBg, border: `1px solid ${T.arkBorder}`, borderRadius: 6, padding: '6px 10px', marginTop: 8, fontSize: 10, color: '#c4b5fd', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -98,7 +133,10 @@ export default function Contrats() {
   const [filter, setFilter] = useState('Tous')
   const [viewMode, setViewMode] = useState('cards')
   // Valeur initiale = jeu de démonstration ; remplacée par l'API si elle répond.
-  const [contrats, setContrats] = useState(DEMO_CONTRACTS)
+  // Aucun contrat d'exemple : les KPI et la liste ne doivent afficher que les
+  // contrats réels du cabinet (sinon le courtier lit un portefeuille inventé).
+  const [contrats, setContrats] = useState([])
+  const [erreur, setErreur] = useState(null)
 
   useEffect(() => {
     let annule = false
@@ -110,9 +148,15 @@ export default function Contrats() {
           : Array.isArray(d?.data) ? d.data
           : Array.isArray(d?.contrats) ? d.contrats
           : []
-        if (liste.length > 0) setContrats(liste)
+        // On remplace TOUJOURS la liste par celle du serveur, même vide : un
+        // cabinet sans contrat doit voir un écran vide, jamais un portefeuille
+        // fictif. Et chaque ligne est normalisée vers le modèle d'affichage,
+        // l'API renvoyant les données dans quote_data (compagnie, prime,
+        // échéance) : sans cette étape la page affichait « J-undefined ».
+        setContrats(liste.map(normaliserContrat))
+        setErreur(null)
       })
-      .catch(() => { /* API indisponible : on garde le jeu de démonstration */ })
+      .catch(() => { if (!annule) setErreur('Les contrats n\'ont pas pu être chargés.') })
     return () => { annule = true }
   }, [])
 
@@ -120,12 +164,13 @@ export default function Contrats() {
     let list = contrats
     if (search) {
       const q = search.toLowerCase()
-      list = list.filter(c => c.client.toLowerCase().includes(q) || c.produit.toLowerCase().includes(q) || c.compagnie.toLowerCase().includes(q))
+      const texte = (v) => String(v || '').toLowerCase()
+      list = list.filter(c => texte(c.client).includes(q) || texte(c.produit).includes(q) || texte(c.compagnie).includes(q))
     }
     if (filter === 'Actifs') list = list.filter(c => c.statut === 'actif')
     else if (filter === 'Renouvellement') list = list.filter(c => c.statut === 'renouvellement')
     else if (filter === 'Résiliés') list = list.filter(c => c.statut === 'resilie')
-    else if (filter === 'Échéance proche') list = list.filter(c => c.jours <= 30 && c.jours > -999)
+    else if (filter === 'Échéance proche') list = list.filter(c => c.jours !== null && c.jours <= 30 && c.jours > -999)
     else if (filter === 'Risque élevé') list = list.filter(c => c.risque >= 60)
     else if (filter === 'Opportunité ARK') list = list.filter(c => c.ark)
     return list
@@ -134,9 +179,12 @@ export default function Contrats() {
   const stats = useMemo(() => ({
     actifs: contrats.filter(c => c.statut === 'actif').length,
     total: contrats.length,
-    primes: contrats.reduce((s, c) => s + c.prime, 0),
-    echeance30: contrats.filter(c => c.jours <= 30 && c.jours > -999).length,
-    risque: contrats.filter(c => c.risque >= 60).length,
+    primes: contrats.reduce((s, c) => s + (Number(c.prime) || 0), 0),
+    // `jours` peut être null (aucune échéance enregistrée) : sans ce garde-fou,
+    // null <= 30 vaut vrai en JavaScript et TOUS les contrats sans échéance
+    // étaient comptés comme « à échéance proche ».
+    echeance30: contrats.filter(c => c.jours !== null && c.jours <= 30 && c.jours > -999).length,
+    risque: contrats.filter(c => Number(c.risque) >= 60).length,
     ark: contrats.filter(c => c.ark).length,
   }), [contrats])
 
@@ -204,7 +252,7 @@ export default function Contrats() {
 
         {/* KPIs */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          <KpiCard icon={FileText} title="Contrats actifs" value="14 / 312" />
+          <KpiCard icon={FileText} title="Contrats actifs" value={stats.total > 0 ? `${stats.actifs} / ${stats.total}` : '—'} />
           <KpiCard icon={Euro} title="Primes annuelles" value={fmtEur(stats.primes)} />
           <KpiCard icon={Calendar} title="Échéances ≤30j" value={stats.echeance30} accent={T.warning} />
           <KpiCard icon={AlertTriangle} title="À risque" value={stats.risque} accent={T.danger} />

@@ -422,6 +422,21 @@ export default function Rapports() {
           <p style={{ fontSize: 14, color: T.textMuted, margin: 0 }}>Pilotez la performance de votre cabinet avec les analyses ARK.</p>
         </div>
 
+        {/* ── AVERTISSEMENT D'HONNÊTETÉ ──
+            Cette page est encore un modèle : ses chiffres (clients, contrats,
+            primes, graphiques) sont des EXEMPLES de démonstration et ne
+            proviennent d'AUCUNE donnée du cabinet. Elle doit être branchée sur
+            les flux réels ou masquée avant une mise en production commerciale. */}
+        <div style={{
+          marginBottom: 20, padding: '12px 16px', borderRadius: 10,
+          background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
+          color: '#FCD34D', fontSize: 12.5, lineHeight: 1.5,
+        }}>
+          <strong>Module en préparation.</strong> Les chiffres affichés sur cette page sont des
+          exemples de démonstration et ne correspondent pas aux données de votre cabinet.
+          Les indicateurs réellement mesurés se trouvent dans le Cockpit et dans Analyses dirigeants.
+        </div>
+
         {/* ── ARK INSIGHT BANNER ── */}
         <ArkInsightBanner />
 

@@ -35,36 +35,55 @@ async function ensureWizardSchema() {
 }
 
 async function loadCabinetMeta(userId) {
+  // Identité RÉELLE du cabinet. Avant ce correctif, cette fonction renvoyait
+  // `orias: '12345678'` et `rcpro: '1234'` ÉCRITS EN DUR : ces faux numéros de
+  // registre partaient ensuite dans les devis et documents remis au client
+  // final — un cabinet suisse voyait donc imprimé sur sa proposition un numéro
+  // ORIAS français inventé. On ne renvoie désormais que ce qui est réellement
+  // renseigné dans le profil du cabinet (aucune valeur par défaut inventée).
   try {
     const { rows } = await pool.query(
-      `SELECT u.email, u.first_name, u.last_name, u.phone
-       FROM users u WHERE u.id = $1 LIMIT 1`, [userId]
+      `SELECT u.email, u.first_name, u.last_name, u.phone,
+              bp.cabinet, bp.registre_type, bp.registre_numero, bp.uid, bp.orias,
+              bp.ville, bp.code_postal, bp.pays, bp.langue, bp.telephone
+         FROM users u
+         LEFT JOIN broker_profiles bp ON bp.user_id = u.id
+        WHERE u.id = $1 LIMIT 1`, [userId]
     )
     const r = rows[0] || {}
-    const name = (r.first_name || r.last_name)
-      ? `Cabinet ${r.first_name || ''} ${r.last_name || ''}`.trim()
-      : 'COURTIA'
-    return { name, orias: '12345678', rcpro: '1234', email: r.email, phone: r.phone }
+    const name = r.cabinet
+      || ((r.first_name || r.last_name) ? `Cabinet ${r.first_name || ''} ${r.last_name || ''}`.trim() : 'COURTIA')
+    return {
+      name,
+      // Champs d'identification réglementaire : vides s'ils ne sont pas saisis.
+      registreType: r.registre_type || null,
+      registreNumero: r.registre_numero || null,
+      uid: r.uid || null,
+      orias: r.orias || null,
+      ville: r.ville || null,
+      codePostal: r.code_postal || null,
+      pays: r.pays || null,
+      devise: (r.pays || '').toUpperCase() === 'CH' ? 'CHF' : 'EUR',
+      email: r.email || null,
+      phone: r.telephone || r.phone || null,
+    }
   } catch (_) {
-    return { name: 'COURTIA', orias: '12345678', rcpro: '1234' }
+    return { name: 'COURTIA', registreType: null, registreNumero: null, uid: null,
+             orias: null, ville: null, codePostal: null, pays: null, devise: 'EUR' }
   }
 }
 
 async function loadClient(userId, clientId) {
   if (!clientId) return null
   try {
+    // Repli SANS filtre de cabinet supprimé : il permettait à un cabinet de
+    // lire l'identité (nom, société, e-mail, téléphone, adresse) du client d'un
+    // AUTRE cabinet en passant son identifiant dans le corps de la requête.
     const { rows } = await pool.query(
       `SELECT id, first_name, last_name, company_name, email, phone, address, city, postal_code
        FROM clients WHERE id = $1 AND (courtier_id = $2 OR broker_id = $2) LIMIT 1`,
       [clientId, userId]
     ).catch(() => ({ rows: [] }))
-    if (!rows[0]) {
-      const { rows: r2 } = await pool.query(
-        `SELECT id, first_name, last_name, company_name, email, phone, address, city, postal_code
-         FROM clients WHERE id = $1 LIMIT 1`, [clientId]
-      )
-      return r2[0] || null
-    }
     return rows[0] || null
   } catch (_) {
     return null

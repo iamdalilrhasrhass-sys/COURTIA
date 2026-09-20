@@ -118,8 +118,9 @@ const contratsLigne = (ligne) => nombre(ligne?.contrats ?? ligne?.clients)
 export default function Partenaires() {
   // Les constantes DEMO_* restent la valeur INITIALE : si /partners ne répond
   // rien (ou échoue), l'écran garde exactement son rendu de démonstration.
-  const [partenaires, setPartenaires] = useState(DEMO_PARTENAIRES)
-  const [apporteurs, setApporteurs] = useState(DEMO_APPORTEURS)
+  // Aucun partenaire d'exemple en attendant la réponse de l'API.
+  const [partenaires, setPartenaires] = useState([])
+  const [apporteurs, setApporteurs] = useState([])
 
   const chargerPartenaires = useCallback(async () => {
     try {

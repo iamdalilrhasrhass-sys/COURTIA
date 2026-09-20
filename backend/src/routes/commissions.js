@@ -172,7 +172,13 @@ router.get('/statement/:year/:month/pdf', async (req, res) => {
     res.send(result.pdf)
   } catch (err) {
     console.error('[Commissions PDF] Erreur:', err.message)
-    res.status(500).json({ error: err.message })
+    const statut = err.statut || (err.code === 'statement_pdf_unavailable' ? 501 : 500)
+    res.status(statut).json({
+      error: err.code || 'statement_failed',
+      message: statut === 501
+        ? err.message
+        : 'Le relevé de commissions est momentanément indisponible.',
+    })
   }
 })
 
@@ -205,7 +211,12 @@ router.get('/baremes', async (req, res) => {
       rows = []
     }
 
-    // Fallback : si la table n'existe pas ou est vide, on renvoie le catalogue par défaut
+    // Repli : catalogue d'EXEMPLE. Ces compagnies (Aurora, Nivalis, Helios…) et
+    // ces taux n'existent pas sur le marché : ils ne doivent JAMAIS être
+    // présentés comme les barèmes réels d'un cabinet. On les renvoie donc
+    // explicitement étiquetés, avec la consigne de saisir ses propres taux
+    // (POST /api/commissions/rules), plutôt que comme une donnée de référence.
+    let source = 'cabinet'
     if (!rows.length) {
       rows = Object.entries(DEFAULT_BAREMES).flatMap(([compagnie, produits]) =>
         Object.entries(produits).map(([produit, rate]) => ({
@@ -215,9 +226,22 @@ router.get('/baremes', async (req, res) => {
           rate_recurring_percent: Number((rate * 0.6).toFixed(1)),
         }))
       )
+      source = 'exemple_a_configurer'
     }
 
-    res.json({ data: rows, total: rows.length })
+    res.json({
+      data: rows,
+      total: rows.length,
+      source,
+      ...(source === 'exemple_a_configurer'
+        ? {
+            message:
+              "Barèmes d'exemple, à remplacer par ceux de votre cabinet : ces compagnies et ces taux "
+              + "ne proviennent d'aucun barème réel. Saisissez vos propres taux pour que les calculs "
+              + 'correspondent à vos conventions.',
+          }
+        : {}),
+    })
   } catch (err) {
     res.status(500).json({ error: err.message, message: 'Impossible de récupérer les barèmes.' })
   }
