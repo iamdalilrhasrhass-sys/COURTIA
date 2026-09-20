@@ -266,17 +266,29 @@ async function generateDdaDocument(req, res, documentType) {
   })
   const text = renderDdaPlainText(definition.type, variables)
 
+  // `documents.filename` et `documents.file_path` sont déclarés NOT NULL dans le
+  // schéma réel : sans eux, la génération échouait en 500
+  // (« null value in column "filename" »). Le nom définitif dépend de
+  // l'identifiant attribué par la base : on pose donc un nom provisoire, puis on
+  // l'écrit une fois la ligne créée — aucune colonne n'est contournée.
+  const nomProvisoire = `document-en-cours-${Date.now()}.pdf`
   const inserted = await pool.query(
     `INSERT INTO documents (
        user_id, client_id, contract_id, type, status, template_version,
-       variables, storage_path, generated_by, generated_at, created_at, updated_at
-     ) VALUES ($1,$2,$3,$4,'generated',$5,$6,NULL,$1,NOW(),NOW(),NOW())
+       variables, storage_path, filename, file_path, generated_by, generated_at, created_at, updated_at
+     ) VALUES ($1,$2,$3,$4,'generated',$5,$6,NULL,$7,$7,$1,NOW(),NOW(),NOW())
      RETURNING *`,
-    [userId, clientId, contractId, definition.type, definition.templateVersion, JSON.stringify(variables)]
+    [userId, clientId, contractId, definition.type, definition.templateVersion,
+     JSON.stringify(variables), nomProvisoire]
   )
   const documentRow = inserted.rows[0]
   const fileName = getDdaFileName(definition.type, documentRow.id)
   const buffer = await createPdfBufferFromText({ title: definition.title, text })
+
+  await pool.query(
+    'UPDATE documents SET filename = $1, file_path = $2, updated_at = NOW() WHERE id = $3',
+    [fileName, `db://documents_blob/${documentRow.id}`, documentRow.id]
+  )
 
   await pool.query(
     `INSERT INTO documents_blob (document_id, content, mime_type, file_name, created_at)
