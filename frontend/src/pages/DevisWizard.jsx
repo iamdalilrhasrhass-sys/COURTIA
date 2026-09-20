@@ -182,8 +182,12 @@ export default function DevisWizard() {
           prime_annuelle_eur: q.prime_annuelle_eur,
           prime_mensuelle_eur: q.prime_mensuelle_eur,
           garanties: q.garanties,
-          am_best: q.am_best || 'A',
-          sav: '24/7',
+          // Aucune valeur inventée sur un document remis au client : une
+          // notation « A » et un « SAV 24/7 » étaient ajoutés par défaut,
+          // sans qu'aucune source ne les fournisse. On ne transmet que ce
+          // que l'offre contient réellement.
+          ...(q.am_best ? { am_best: q.am_best } : {}),
+          ...(q.sav ? { sav: q.sav } : {}),
           badges: q.badges || [],
         }))
       const ark_summary = summary?.ark_explanation || `${selectedOffers.length} offre(s) sélectionnée(s) — économie potentielle ${fmtEur(summary?.economy_eur || 0)}/an.`

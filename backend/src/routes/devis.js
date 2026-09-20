@@ -852,7 +852,7 @@ router.post('/:id/send', async (req, res) => {
       <div style="font-family:Inter,Arial;color:#1F2937;max-width:600px;margin:0 auto">
         <div style="background:#050510;padding:24px;border-radius:12px 12px 0 0">
           <h1 style="color:#FFF;margin:0;font-size:22px">${d.cabinet_name_cache || 'COURTIA'}</h1>
-          <p style="color:#A78BFA;margin:4px 0 0;font-size:12px">Proposition d'assurance — Aurora</p>
+          <p style="color:#A78BFA;margin:4px 0 0;font-size:12px">Proposition d'assurance — ${d.cabinet_name_cache || 'votre courtier'}</p>
         </div>
         <div style="background:#FFF;padding:24px;border:1px solid #E5E7EB;border-radius:0 0 12px 12px">
           <p>${message.replace(/\n/g, '<br>')}</p>
