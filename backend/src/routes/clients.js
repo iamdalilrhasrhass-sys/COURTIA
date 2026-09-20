@@ -240,6 +240,20 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
       postal_code, city, civility, country
     } = req.body;
 
+    // Le schéma réel impose clients.first_name / last_name non nuls. Sans prénom,
+    // l'insertion échouait en 500 SQL (« null value in column first_name ») :
+    // l'appelant recevait une erreur de base au lieu d'une validation. On refuse
+    // AVANT la base — et on n'invente jamais un prénom de remplacement.
+    const prenomNettoye = typeof prenom === 'string' ? prenom.trim() : '';
+    const nomNettoye = typeof nom === 'string' ? nom.trim() : '';
+    if (!prenomNettoye || !nomNettoye) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: 'Le prénom et le nom du client sont obligatoires.',
+        champs: [!prenomNettoye ? 'prenom' : null, !nomNettoye ? 'nom' : null].filter(Boolean),
+      });
+    }
+
     // Parser les champs numériques (le frontend peut les envoyer en string)
     const bonus_malus        = parseFloat(req.body.bonus_malus) || 1.0;
     const annees_permis      = parseInt(req.body.annees_permis, 10) || 0;
