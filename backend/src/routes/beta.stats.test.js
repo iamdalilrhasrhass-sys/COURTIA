@@ -18,6 +18,17 @@ function jeton(role) {
   return jwt.sign({ id: 1, email: 'qa@example.invalid', role }, SECRET, { expiresIn: '1h' });
 }
 
+/**
+ * Ligne `users` du porteur du jeton : le compte EXISTE, sans marque de
+ * révocation. Depuis la fermeture du défaut D3-08 (troisième QA adverse), un
+ * jeton dont le compte est introuvable est refusé 401 — ce banc teste la garde
+ * d'administration, il lui faut donc un compte réel.
+ */
+const LIGNE_SESSION = { password_changed_at: null, sessions_revoked_at: null };
+function repondreSession(sql) {
+  return /FROM users/.test(String(sql)) ? { rows: [LIGNE_SESSION] } : null;
+}
+
 describe('GET /api/beta/stats — administration uniquement (SEC-006)', () => {
   let server;
   let origin;
@@ -36,8 +47,8 @@ describe('GET /api/beta/stats — administration uniquement (SEC-006)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Réponses par défaut : aucune révocation de session, agrégats vides.
-    pool.query.mockResolvedValue({ rows: [] });
+    // Réponses par défaut : compte existant, agrégats vides.
+    pool.query.mockImplementation(async (sql) => repondreSession(sql) || { rows: [] });
   });
 
   const appeler = (token, options = {}) => fetch(`${origin}/stats`, {
@@ -58,7 +69,8 @@ describe('GET /api/beta/stats — administration uniquement (SEC-006)', () => {
 
   it('sert des compteurs agrégés à un administrateur, sans aucune adresse e-mail', async () => {
     pool.query.mockImplementation(async (sql) => {
-      if (/SELECT password_changed_at/.test(sql)) return { rows: [] };
+      const session = repondreSession(sql);
+      if (session) return session;
       if (/COUNT\(\*\) FROM beta_signups/.test(sql)) return { rows: [{ count: '12' }] };
       if (/by_portfolio_size|GROUP BY portfolio_size/.test(sql)) {
         return { rows: [{ portfolio_size: '10-50', count: '7' }] };
@@ -79,7 +91,8 @@ describe('GET /api/beta/stats — administration uniquement (SEC-006)', () => {
 
   it('accepte aussi les rôles super_admin et owner', async () => {
     pool.query.mockImplementation(async (sql) => {
-      if (/SELECT password_changed_at/.test(sql)) return { rows: [] };
+      const session = repondreSession(sql);
+      if (session) return session;
       if (/COUNT\(\*\) FROM beta_signups/.test(sql)) return { rows: [{ count: '0' }] };
       return { rows: [] };
     });

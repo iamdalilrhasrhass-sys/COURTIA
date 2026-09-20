@@ -257,31 +257,66 @@ async function sendBulk({ clientIds, canal, message, subject }) {
 }
 
 /**
- * Récupère l'historique des messages pour un client
+ * Récupère l'historique des messages d'un client — DANS LA PORTÉE DU CABINET.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * CORRECTION DU 20/09/2026 (troisième QA adverse, défaut D3-01 — P1)
+ *
+ * DÉFAUT MESURÉ : la requête était `SELECT * FROM messages WHERE client_id = $1`,
+ * sans AUCUN filtre, et la route ne portait que `verifyToken`. Tout compte
+ * authentifié — y compris un compte en LECTURE SEULE d'un cabinet ÉTRANGER —
+ * recevait le sujet, le corps et le contenu des messages d'un client qui n'est
+ * pas le sien (marqueur relu depuis trois cabinets étrangers).
+ *
+ * RÈGLE TENUE : la lecture de `messages` JOINT le dossier client et lui applique
+ * la portée du cabinet (`lib/porteeCabinet`, seule autorité). Sans portée
+ * fournie (`options.portee`), la fonction ne lit RIEN et le dit dans le journal :
+ * il n'existe plus de chemin de lecture non filtrée, même appelée par erreur.
+ * Un dossier hors cabinet ne renvoie donc aucune ligne (404 posé par la route,
+ * AVANT toute lecture).
+ * ────────────────────────────────────────────────────────────────────────────
  *
  * @param {number} clientId
  * @param {Object} [options]
  * @param {number} [options.limit=50]
  * @param {number} [options.offset=0]
  * @param {string} [options.canal] - Filtrer par canal
+ * @param {Object} [options.portee] - Portée cabinet résolue (OBLIGATOIRE)
  * @returns {Promise<Array>}
  */
 async function getHistory(clientId, options = {}) {
-  const { limit = 50, offset = 0, canal } = options;
+  const { limit = 50, offset = 0, canal, portee } = options;
+
+  if (!portee) {
+    logger.warn(
+      { client_id: clientId },
+      'getHistory sans portée cabinet : aucune lecture émise (une lecture de messages sans filtre est interdite)'
+    );
+    return [];
+  }
 
   try {
-    let query = 'SELECT * FROM messages WHERE client_id = $1';
-    const params = [clientId];
+    const porteeCabinet = require('../lib/porteeCabinet');
+    // `depart: 2` : $1 est l'identifiant du client.
+    const fClient = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 2,
+    });
+
+    let query =
+      `SELECT m.* FROM messages m
+         JOIN clients c ON c.id = m.client_id AND ${fClient.sql}
+        WHERE m.client_id = $1`;
+    const params = [clientId, ...fClient.params];
+    let suivant = fClient.suivant;
 
     if (canal) {
-      query += ' AND canal = $2';
+      query += ` AND m.canal = $${suivant++}`;
       params.push(canal);
-      query += ' ORDER BY created_at DESC LIMIT $3 OFFSET $4';
-      params.push(limit, offset);
-    } else {
-      query += ' ORDER BY created_at DESC LIMIT $2 OFFSET $3';
-      params.push(limit, offset);
     }
+    query += ` ORDER BY m.created_at DESC LIMIT $${suivant++} OFFSET $${suivant++}`;
+    params.push(limit, offset);
 
     const result = await pool.query(query, params);
     return result.rows;

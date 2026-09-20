@@ -44,10 +44,21 @@ async function marcheDuCabinetAppelant(req, res) {
   const marche = (verdict && verdict.marche) || 'FR'
   if (marche === 'FR') return 'FR'
 
-  // Message PRODUIT : il nomme le format, dit pourquoi il ne s'applique pas, et
-  // affirme qu'aucun fichier n'a été produit (aucun « export généré » mensonger).
-  res.status(501).json({
-    error: 'export_comptable_indisponible_marche',
+  // ──────────────────────────────────────────────────────────────────────────
+  // 403 ET NON 501 (correction du 20/09/2026 — troisième QA adverse, D3-06)
+  //
+  // DÉFAUT MESURÉ : le cabinet suisse recevait 501 « non implémenté ». Or un
+  // 501 sur un point d'entrée du PRODUIT compte comme une erreur serveur
+  // (défaut D2-11, déjà corrigé sur /api/commissions/statement/:y/:m/pdf et
+  // /api/ark/client/:id/documents-analysis, ramenés à 403) : la fonctionnalité
+  // n'est pas « pas encore écrite », elle n'est pas SOUSCRITE pour ce marché —
+  // et la personne y a bien droit en lecture, donc elle sait que la ressource
+  // existe. La réponse est donc un refus CLIENT, nommé, identique d'un marché à
+  // l'autre dans sa forme, qui dit qu'aucun fichier n'a été produit.
+  // ──────────────────────────────────────────────────────────────────────────
+  res.status(403).json({
+    error: 'fonctionnalite_non_souscrite',
+    fonctionnalite: 'export_comptable_fec',
     marche,
     format: 'FEC',
     message:
@@ -93,8 +104,13 @@ router.get('/fec', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${fec.filename}"`)
     res.send(fec.content)
   } catch (err) {
-    console.error('[FEC] Erreur génération:', err.message)
-    res.status(500).json({ error: err.message })
+    // Aucun message de moteur dans la réponse (défaut D3-03) : le détail (nom de
+    // colonne, contrainte, chemin) reste dans les journaux du serveur.
+    console.error('[FEC] Erreur génération:', err.code || err.name)
+    res.status(500).json({
+      error: 'export_comptable_indisponible',
+      message: "L'export comptable n'a pas pu être produit.",
+    })
   }
 })
 
@@ -109,7 +125,11 @@ router.get('/summary/:year', async (req, res) => {
     const summary = await fecService.getAccountingSummary(req.app.locals.pool, userId, year)
     res.json(summary)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error('[FEC] Erreur résumé:', err.code || err.name)
+    res.status(500).json({
+      error: 'resume_comptable_indisponible',
+      message: "Le résumé comptable n'a pas pu être produit.",
+    })
   }
 })
 
@@ -124,7 +144,11 @@ router.get('/balance/:year', async (req, res) => {
     const balance = await fecService.getBalance(req.app.locals.pool, userId, year)
     res.json(balance)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error('[FEC] Erreur balance:', err.code || err.name)
+    res.status(500).json({
+      error: 'balance_indisponible',
+      message: "La balance comptable n'a pas pu être produite.",
+    })
   }
 })
 
@@ -151,7 +175,11 @@ router.post('/generate-from-commissions', async (req, res) => {
 
     res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error('[FEC] Erreur génération des écritures:', err.code || err.name)
+    res.status(500).json({
+      error: 'ecritures_non_generees',
+      message: "Les écritures comptables n'ont pas pu être générées.",
+    })
   }
 })
 
@@ -203,7 +231,11 @@ router.get('/entries', async (req, res) => {
       total: result.rows.length 
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error('[FEC] Erreur lecture des écritures:', err.code || err.name)
+    res.status(500).json({
+      error: 'ecritures_indisponibles',
+      message: "Les écritures comptables n'ont pas pu être chargées.",
+    })
   }
 })
 

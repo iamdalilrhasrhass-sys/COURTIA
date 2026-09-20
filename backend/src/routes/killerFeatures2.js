@@ -5,6 +5,7 @@
 // ============================================================
 
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 
@@ -267,7 +268,33 @@ router.get('/dda/audit/:clientId', verifyToken, async (req, res) => {
   }
 });
 
+// ────────────────────────────────────────────────────────────────────────────
+// GET /api/dda/report/:clientId — Téléchargement du rapport de conformité
+//
+// DÉFAUT MESURÉ (troisième QA adverse, D3-04, P3) : le rapport était servi par
+// `res.download(chemin)`. Fichier absent, Express propageait l'erreur système et
+// le cabinet PROPRIÉTAIRE recevait
+//   404 {"error":"Erreur serveur","details":"ENOENT: no such file or directory,
+//        stat('/opt/render/project/src/backend/<donnée cliente>'"}
+// soit le CHEMIN ABSOLU du serveur et un nom de fichier dérivé d'une donnée
+// cliente — alors qu'un cabinet ÉTRANGER recevait, pour la même panne, un
+// message propre. La réponse dépendait donc du cabinet appelant.
+//
+// RÈGLE TENUE : une seule réponse, produite, identique pour tout le monde —
+// 404 `rapport_indisponible` (« aucun rapport ») que le dossier soit hors
+// cabinet, sans rapport, ou que le fichier ait disparu du disque. L'emplacement
+// du fichier n'est JAMAIS transmis, ni le message du système de fichiers : le
+// détail reste dans les journaux du serveur. Panne de lecture = 503 nommé, jamais
+// une erreur brute recopiée.
+// ────────────────────────────────────────────────────────────────────────────
 router.get('/dda/report/:clientId', verifyToken, async (req, res) => {
+  const refusRapport = () =>
+    res.status(404).json({
+      success: false,
+      error: 'rapport_indisponible',
+      message: 'Aucun rapport disponible pour ce dossier.',
+    });
+
   try {
     const clientId = identifiantAnalyse(req.params.clientId);
     if (!clientId) {
@@ -280,10 +307,32 @@ router.get('/dda/report/:clientId', verifyToken, async (req, res) => {
         WHERE da.client_id=$1 AND ${f.sql}`,
       [clientId, ...f.params]
     );
-    if (!r.rows[0]?.report_pdf_path) return res.status(404).json({ success: false, error: 'rapport_indisponible', message: 'Aucun rapport disponible pour ce dossier.' });
-    res.download(r.rows[0].report_pdf_path, `conformite_client_${clientId}.pdf`);
+    // Dossier hors cabinet, sans audit, ou sans rapport : MÊME réponse.
+    if (!r.rows[0]?.report_pdf_path) return refusRapport();
+
+    // Le fichier est-il réellement là ? (contrôle explicite : on ne laisse pas
+    // `res.download` produire une erreur système qui remonterait au client.)
+    try {
+      const stat = fs.statSync(r.rows[0].report_pdf_path);
+      if (!stat.isFile()) return refusRapport();
+    } catch (errFichier) {
+      console.warn('[dda/report] rapport absent du disque:', errFichier.code || errFichier.name);
+      return refusRapport();
+    }
+
+    // `res.download` avec rappel : une erreur d'envoi est traitée ici, jamais
+    // propagée à l'ErrorHandler (qui, ailleurs, recopie err.message).
+    return res.download(r.rows[0].report_pdf_path, `conformite_client_${clientId}.pdf`, (errEnvoi) => {
+      if (!errEnvoi || res.headersSent) return;
+      console.error('[dda/report] envoi interrompu:', errEnvoi.code || errEnvoi.name);
+      res.status(503).json({
+        success: false,
+        error: 'rapport_indisponible',
+        message: "Le rapport de conformité n'a pas pu être téléchargé.",
+      });
+    });
   } catch (e) {
-    console.error('[dda/report]', e);
+    console.error('[dda/report]', e.code || e.name);
     res.status(500).json({ success: false, error: 'rapport_indisponible', message: "Le rapport de conformité n'a pas pu être téléchargé." });
   }
 });

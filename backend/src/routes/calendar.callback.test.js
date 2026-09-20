@@ -52,7 +52,20 @@ describe('GET /api/calendar/callback — state OAuth signé (SEC-008)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.ENCRYPTION_KEY; // le secret de state retombe sur getJwtSecret()
-    pool.query.mockResolvedValue({ rows: [] });
+    // ────────────────────────────────────────────────────────────────────────
+    // Le compte porteur du jeton EXISTE dans le banc.
+    // Depuis la fermeture du défaut D3-08 (troisième QA adverse), un jeton dont
+    // le compte est INTROUVABLE est refusé 401 : « un compte supprimé n'a plus
+    // de session ». Ce banc-ci vérifie autre chose (rôle, renouvellement,
+    // state OAuth) : on sert donc une ligne `users` réelle, marques de
+    // révocation NULL (aucune révocation).
+    // ────────────────────────────────────────────────────────────────────────
+    pool.query.mockImplementation(async (sql) => {
+      if (/FROM users u WHERE u\.id/.test(String(sql))) {
+        return { rows: [{ password_changed_at: null, sessions_revoked_at: null }] };
+      }
+      return { rows: [] };
+    });
     calendarService.getTokensFromCode.mockResolvedValue({ access_token: 'at', refresh_token: 'rt' });
   });
 

@@ -45,6 +45,10 @@ const {
   repondreIaIndisponible,
 } = require('../services/iaErreurs')
 const { potentielDepuisDonneesReelles } = require('../lib/donneesReelles')
+// Définitions UNIQUES de « prime d'un contrat » et « échéance d'un contrat » :
+// elles vivent dans routes/dashboard.js et sont importées, jamais réécrites
+// (une seule vérité pour la prime, cf. P0 du 20/09/2026 sur les montants).
+const { kpi } = require('./dashboard')
 
 // =============================================================================
 // SCHEMAS JSON pour les réponses ARK
@@ -172,8 +176,12 @@ router.get('/', async (req, res) => {
       pagination: { limit: parseInt(limit, 10), offset: parseInt(offset, 10) }
     })
   } catch (err) {
+    // Le détail reste dans les LOGS : jamais dans la réponse (défaut D3-03).
     logger.error({ error: err.message }, 'GET /api/opportunites error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({
+      error: 'opportunites_indisponibles',
+      message: "La liste des opportunités n'a pas pu être chargée.",
+    })
   }
 })
 
@@ -256,7 +264,10 @@ router.get('/stats', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/opportunites/stats error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({
+      error: 'statistiques_opportunites_indisponibles',
+      message: "Les statistiques d'opportunités n'ont pas pu être chargées.",
+    })
   }
 })
 
@@ -288,17 +299,38 @@ router.get('/:id', async (req, res) => {
     const row = result.rows[0]
 
     // Récupérer les contrats actuels du client (portée cabinet sur le client)
+    // ───────────────────────────────────────────────────────────────────────
+    // ALIAS RÉEL DE LA JOINTURE (correction du 20/09/2026 — défaut D3-03)
+    // DÉFAUT MESURÉ : la portée était construite sur `clients.cabinet_id` /
+    // `clients.courtier_id` alors que la requête joint `clients c`. PostgreSQL
+    // refuse la requête (« invalid reference to FROM-clause entry for table
+    // "clients" ») : l'écran de détail d'une opportunité répondait 500 dans SON
+    // PROPRE cabinet, et le message du moteur partait au navigateur.
+    // La portée vise donc l'alias exact de la jointure (`c`), comme partout
+    // ailleurs (cf. /api/documents/client/:id).
+    // ───────────────────────────────────────────────────────────────────────
     const fClient = porteeCabinet.fragment(portee, {
-      cabinet: 'clients.cabinet_id',
-      proprietaire: 'clients.courtier_id',
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
       depart: 2,
     })
+    // COLONNES RÉELLES DE `quotes` (correction du 20/09/2026, défaut D3-03) :
+    // la requête lisait `q.start_date` — colonne qui N'EXISTE PAS dans le schéma
+    // (« column q.start_date does not exist ») : l'écran de détail répondait 500
+    // même une fois l'alias de portée corrigé. La prime et l'échéance passent par
+    // les définitions uniques de `kpi`, la date d'effet par `quote_data`.
     const contratsRes = await pool.query(`
-      SELECT q.id, q.product_type, q.premium, q.status, q.start_date, q.end_date
+      SELECT q.id,
+             q.product_type,
+             ${kpi.PRIME_CONTRAT} AS premium,
+             q.status,
+             CASE WHEN q.quote_data->>'date_effet' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+                  THEN (q.quote_data->>'date_effet')::date END AS start_date,
+             ${kpi.ECHEANCE_CONTRAT} AS end_date
       FROM quotes q
       JOIN clients c ON c.id = q.client_id AND ${fClient.sql}
       WHERE q.client_id = $1
-      ORDER BY q.start_date DESC
+      ORDER BY ${kpi.ECHEANCE_CONTRAT} ASC NULLS LAST
     `, [row.client_id, ...fClient.params])
 
     res.json({
@@ -338,7 +370,10 @@ router.get('/:id', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/opportunites/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({
+      error: 'opportunite_indisponible',
+      message: "Le détail de cette opportunité n'a pas pu être chargé.",
+    })
   }
 })
 
@@ -403,7 +438,10 @@ router.put('/:id', async (req, res) => {
     res.json({ success: true, opportunite: result.rows[0] })
   } catch (err) {
     logger.error({ error: err.message }, 'PUT /api/opportunites/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({
+      error: 'opportunite_non_modifiee',
+      message: "La modification de cette opportunité n'a pas pu être enregistrée.",
+    })
   }
 })
 
@@ -430,7 +468,10 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true, deleted_id: oppoId })
   } catch (err) {
     logger.error({ error: err.message }, 'DELETE /api/opportunites/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({
+      error: 'opportunite_non_supprimee',
+      message: "La suppression de cette opportunité n'a pas pu aboutir.",
+    })
   }
 })
 
@@ -619,7 +660,10 @@ Détecte les meilleures opportunités commerciales.`,
     if (estErreurIa(err)) {
       return repondreIaIndisponible(res, err, { route: 'opportunites-detect' })
     }
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    res.status(500).json({
+      error: 'detection_indisponible',
+      message: "La détection d'opportunités n'a pas pu aboutir.",
+    })
   }
 })
 
@@ -651,13 +695,29 @@ router.post('/:id/ai-pitch', async (req, res) => {
     const clientName = opp.company_name || `${opp.first_name || ''} ${opp.last_name || ''}`.trim()
 
     // Récupérer contrats actuels (portée cabinet sur le client)
+    // ───────────────────────────────────────────────────────────────────────
+    // ALIAS RÉEL DE LA JOINTURE (correction du 20/09/2026 — défaut D3-03)
+    // DÉFAUT MESURÉ : la portée était construite sur `clients.cabinet_id` /
+    // `clients.courtier_id` alors que la requête joint `clients c`. PostgreSQL
+    // refuse la requête (« invalid reference to FROM-clause entry for table
+    // "clients" ») : l'écran de détail d'une opportunité répondait 500 dans SON
+    // PROPRE cabinet, et le message du moteur partait au navigateur.
+    // La portée vise donc l'alias exact de la jointure (`c`), comme partout
+    // ailleurs (cf. /api/documents/client/:id).
+    // ───────────────────────────────────────────────────────────────────────
     const fClient = porteeCabinet.fragment(portee, {
-      cabinet: 'clients.cabinet_id',
-      proprietaire: 'clients.courtier_id',
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
       depart: 2,
     })
+    // Mêmes colonnes RÉELLES que GET /:id (défaut D3-03 : `q.start_date` n'existe
+    // pas dans le schéma — la route d'argumentaire répondait 500 elle aussi).
     const contratsRes = await pool.query(`
-      SELECT q.product_type, q.premium, q.start_date FROM quotes q
+      SELECT q.product_type,
+             ${kpi.PRIME_CONTRAT} AS premium,
+             CASE WHEN q.quote_data->>'date_effet' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+                  THEN (q.quote_data->>'date_effet')::date END AS start_date
+      FROM quotes q
       JOIN clients c ON c.id = q.client_id AND ${fClient.sql}
       WHERE q.client_id = $1 AND q.status = 'active'
     `, [opp.client_id, ...fClient.params])
@@ -735,7 +795,10 @@ Génère un argumentaire complet avec objections anticipées.`,
     if (estErreurIa(err)) {
       return repondreIaIndisponible(res, err, { route: 'opportunites-ai-pitch' })
     }
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    res.status(500).json({
+      error: 'argumentaire_indisponible',
+      message: "La génération de l'argumentaire n'a pas pu aboutir.",
+    })
   }
 })
 

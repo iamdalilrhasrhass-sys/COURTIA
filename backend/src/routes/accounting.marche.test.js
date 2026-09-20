@@ -9,8 +9,15 @@
  * comptable suisse ne l'attend. Un cabinet suisse déposait donc un fichier
  * présenté comme un export valable.
  *
- * Le correctif REFUSE (501, message produit) au lieu d'inventer un équivalent
- * suisse, et le marché français conserve exactement son export.
+ * Le correctif REFUSE (message produit) au lieu d'inventer un équivalent suisse,
+ * et le marché français conserve exactement son export.
+ *
+ * CE TEST A CHANGÉ LE 20/09/2026 (troisième QA adverse, défaut D3-06) : le refus
+ * était un 501 « non implémenté », c'est-à-dire une ERREUR SERVEUR sur un point
+ * d'entrée du produit — deux autres routes du même genre avaient déjà été
+ * ramenées à 403 `fonctionnalite_non_souscrite`. Le test fige désormais ce
+ * contrat : 403 « fonctionnalité non souscrite », message produit, aucune
+ * génération. Le fond du correctif (refuser plutôt qu'inventer) est inchangé.
  *
  * Le pool est simulé au niveau du MODULE `../db` : c'est lui que traverse
  * `lib/marcheCabinet` (appartenance → cabinet → référent).
@@ -80,13 +87,15 @@ const CABINET_FR = { id: CAB_FR, country: 'FR', registre_type: null, registre_nu
 describe('accounting / FEC — réservé au marché français', () => {
   beforeEach(() => pool.query.mockReset())
 
-  test('cabinet SUISSE : l’export FEC est refusé (501) avec un message produit', async () => {
+  test('cabinet SUISSE : l’export FEC est refusé (403 fonctionnalité non souscrite) avec un message produit', async () => {
     simulerCabinet(CABINET_CH)
     const res = fausseReponse()
     await gestionnaire('get', '/fec')(requete(), res)
 
-    expect(res.code).toBe(501)
-    expect(res.corps.error).toBe('export_comptable_indisponible_marche')
+    // 403 et non 501 : la fonctionnalité n'est pas « pas écrite », elle n'est pas
+    // souscrite pour ce marché — donc un refus client, jamais une erreur serveur.
+    expect(res.code).toBe(403)
+    expect(res.corps.error).toBe('fonctionnalite_non_souscrite')
     expect(res.corps.marche).toBe('CH')
     expect(res.corps.format).toBe('FEC')
     expect(res.corps.message).toMatch(/française/)
@@ -101,7 +110,8 @@ describe('accounting / FEC — réservé au marché français', () => {
     await gestionnaire('post', '/generate-from-commissions')(
       { ...requete(), body: { startDate: '2026-01-01', endDate: '2026-12-31' } }, res
     )
-    expect(res.code).toBe(501)
+    expect(res.code).toBe(403)
+    expect(res.corps.error).toBe('fonctionnalite_non_souscrite')
     expect(pool.query.mock.calls.map((c) => String(c[0])).some((s) => /INSERT INTO accounting_entries/.test(s))).toBe(false)
   })
 

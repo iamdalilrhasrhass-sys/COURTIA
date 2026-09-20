@@ -851,7 +851,7 @@ router.get('/client/:id/brief', verifyToken, async (req, res) => {
     if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
 
     // Récupérer contexte client
-    const clientContext = await getClientContext(clientId, userId)
+    const clientContext = await getClientContext(clientId, userId, { req })
     if (clientContext.error) {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
@@ -907,7 +907,7 @@ router.get('/client/:id/next-best-actions', verifyToken, async (req, res) => {
     const clientId = validateClientId(req.params.id)
     if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
 
-    const clientContext = await getClientContext(clientId, userId)
+    const clientContext = await getClientContext(clientId, userId, { req })
     if (clientContext.error) {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
@@ -981,7 +981,7 @@ router.post('/client/:id/documents-analysis', verifyToken, async (req, res) => {
   // ───────────────────────────────────────────────────────────────────────────
   let contexteDossier
   try {
-    contexteDossier = await getClientContext(clientId, userId)
+    contexteDossier = await getClientContext(clientId, userId, { req })
   } catch (errDossier) {
     logger.error({ err: errDossier, clientId }, 'ARK documents-analysis : portée du dossier illisible')
     return res.status(503).json({
@@ -1023,7 +1023,7 @@ router.post('/client/:id/quote-assistant', verifyToken, async (req, res) => {
 
     const { productType, needs, budget } = req.body || {}
 
-    const clientContext = await getClientContext(clientId, userId)
+    const clientContext = await getClientContext(clientId, userId, { req })
     if (clientContext.error) {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
@@ -1090,7 +1090,7 @@ router.post('/compliance-check', verifyToken, async (req, res) => {
 
     let complianceContext = {}
     if (parsedClientId) {
-      complianceContext = await getComplianceContext(parsedClientId, userId)
+      complianceContext = await getComplianceContext(parsedClientId, userId, { req })
       if (complianceContext.error) {
         return res.status(404).json({ error: complianceContext.error, message: complianceContext.message })
       }
@@ -1196,7 +1196,7 @@ router.post('/generate', verifyToken, async (req, res) => {
 
     let messageContext = {}
     if (parsedClientId) {
-      messageContext = await getMessageContext(parsedClientId, userId)
+      messageContext = await getMessageContext(parsedClientId, userId, { req })
       if (messageContext.error) {
         return res.status(404).json({ error: messageContext.error, message: messageContext.message })
       }
@@ -1326,7 +1326,7 @@ router.get('/context-suggestions', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err }, 'ARK context-suggestions failed')
-    res.status(500).json({ error: 'ark_context_suggestions_failed', message: err.message })
+    res.status(500).json({ error: 'ark_context_suggestions_failed', message: 'Les suggestions ARK pour ce dossier sont momentanément indisponibles.' })
   }
 })
 
@@ -1339,7 +1339,7 @@ router.get('/client/:id/recommendations', verifyToken, async (req, res) => {
     const clientId = validateClientId(req.params.id)
     if (!clientId) return res.status(400).json({ error: 'invalid_client_id' })
 
-    const clientContext = await getClientContext(clientId, userId)
+    const clientContext = await getClientContext(clientId, userId, { req })
     if (clientContext.error) {
       return res.status(404).json({ error: clientContext.error, message: clientContext.message })
     }
@@ -1513,7 +1513,7 @@ router.get('/priorities', verifyToken, async (req, res) => {
     })
   } catch (err) {
     logger.error({ err }, 'ARK priorities failed')
-    res.status(500).json({ error: 'ark_priorities_failed', message: err.message })
+    res.status(500).json({ error: 'ark_priorities_failed', message: 'Les priorités ARK sont momentanément indisponibles.' })
   }
 })
 
@@ -1604,7 +1604,7 @@ router.get('/clients/:id/insight', verifyToken, async (req, res) => {
     })
   } catch (err) {
     logger.error({ err }, 'ARK client insight failed')
-    res.status(500).json({ error: 'ark_insight_failed', message: err.message })
+    res.status(500).json({ error: 'ark_insight_failed', message: "L'analyse ARK de ce dossier est momentanément indisponible." })
   }
 })
 

@@ -19,6 +19,7 @@ const router = express.Router();
 const verifyToken = require('../middleware/authMiddleware');
 const pool = require('../db');
 const messagingService = require('../services/messagingService');
+const porteeCabinet = require('../lib/porteeCabinet');
 const { processInboundEmail } = require('../services/inboundProcessor');
 const { getWhatsAppStatus } = require('../services/whatsappService');
 const { getIMAPStatus } = require('../services/imapService');
@@ -30,6 +31,50 @@ const secretsEntrants = require('../lib/secretsEntrants');
 // ─── Helper : extraire userId du JWT ────────────────────────
 function getUserId(req) {
   return req.user?.id || req.user?.userId;
+}
+
+/**
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DU DOSSIER AVANT TOUTE LECTURE OU ÉCRITURE DE MESSAGERIE
+ * (correction du 20/09/2026 — troisième QA adverse, défaut D3-01, P1)
+ *
+ * DÉFAUT MESURÉ : `GET /api/messaging/history/:clientId` portait le seul
+ * `verifyToken` et lisait `messages` par `client_id`, SANS filtre. Tout compte
+ * authentifié — y compris un compte en lecture seule d'un AUTRE cabinet —
+ * recevait le sujet, le corps et le contenu de la conversation d'un client
+ * étranger (marqueur relu depuis trois cabinets étrangers). Même classe que le
+ * P0 des conversations ARK, sur une autre route.
+ *
+ * RÈGLE TENUE : toute route de messagerie résout d'abord le DOSSIER dans la
+ * portée du cabinet (`lib/porteeCabinet`, seule autorité). Un dossier hors
+ * cabinet répond 404 AVANT qu'une seule ligne de `messages` soit lue ou écrite :
+ * aucune donnée d'autrui n'est confirmée, ni par un succès, ni par un refus
+ * différent.
+ *
+ * @returns {Promise<object|null>} la portée résolue, ou `null` si la réponse
+ *          (404) a déjà été envoyée — la route doit alors `return`.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+async function resoudreDossierDansPortee(req, res, clientId) {
+  const portee = await porteeCabinet.resoudrePortee(req.app.locals.pool || pool, req);
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 2,
+  });
+  const dossier = await pool.query(
+    `SELECT c.id FROM clients c WHERE c.id = $1 AND ${f.sql} LIMIT 1`,
+    [clientId, ...f.params]
+  );
+  if (!dossier.rows.length) {
+    res.status(404).json({
+      success: false,
+      error: 'client_introuvable',
+      message: 'Client introuvable.',
+    });
+    return null;
+  }
+  return portee;
 }
 
 // ===================================================================
@@ -53,14 +98,10 @@ router.post('/send', verifyToken, async (req, res) => {
       });
     }
 
-    // Vérifier que le client appartient à l'utilisateur
-    const own = await pool.query(
-      'SELECT 1 FROM clients WHERE id = $1 AND courtier_id = $2',
-      [clientId, getUserId(req)]
-    );
-    if (!own.rows.length) {
-      return res.status(403).json({ success: false, error: 'client_not_owned' });
-    }
+    // Vérifier que le client appartient AU CABINET (portée unique) : un dossier
+    // hors cabinet est INTROUVABLE (404), jamais confirmé par un 403.
+    const portee = await resoudreDossierDansPortee(req, res, clientId);
+    if (!portee) return;
 
     const result = await messagingService.sendMessage({
       clientId,
@@ -79,11 +120,11 @@ router.post('/send', verifyToken, async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error('[Messaging] Erreur send:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur send');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de l\'envoi du message',
-      details: err.message,
+      error: 'envoi_message_impossible',
+      message: "L'envoi du message n'a pas pu aboutir.",
     });
   }
 });
@@ -109,6 +150,14 @@ router.post('/send-bulk', verifyToken, async (req, res) => {
       });
     }
 
+    // Un envoi groupé ne doit toucher QUE des dossiers du cabinet : on refuse
+    // l'appel entier (404) dès qu'un identifiant est hors portée, plutôt que
+    // d'envoyer à certains et de confirmer l'existence des autres.
+    for (const clientId of clientIds) {
+      const portee = await resoudreDossierDansPortee(req, res, clientId);
+      if (!portee) return;
+    }
+
     const result = await messagingService.sendBulk({
       clientIds,
       canal,
@@ -126,27 +175,35 @@ router.post('/send-bulk', verifyToken, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[Messaging] Erreur send-bulk:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur send-bulk');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de l\'envoi groupé',
-      details: err.message,
+      error: 'envoi_groupe_impossible',
+      message: "L'envoi groupé n'a pas pu aboutir.",
     });
   }
 });
 
 // ===================================================================
 //  GET /history/:clientId — Historique des messages d'un client
+//
+//  D3-01 (P1, fuite inter-cabinets) : le dossier est résolu dans la portée du
+//  cabinet AVANT toute lecture ; hors cabinet = 404, sans qu'aucune ligne de
+//  `messages` ne soit lue (le service reçoit la portée et la joint lui-même).
 // ===================================================================
 router.get('/history/:clientId', verifyToken, async (req, res) => {
   try {
     const { clientId } = req.params;
     const { limit, offset, canal } = req.query;
 
+    const portee = await resoudreDossierDansPortee(req, res, clientId);
+    if (!portee) return;
+
     const messages = await messagingService.getHistory(clientId, {
       limit: parseInt(limit) || 50,
       offset: parseInt(offset) || 0,
       canal: canal || null,
+      portee,
     });
 
     res.status(200).json({
@@ -156,11 +213,11 @@ router.get('/history/:clientId', verifyToken, async (req, res) => {
       data: messages,
     });
   } catch (err) {
-    console.error('[Messaging] Erreur history:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur history');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de la récupération de l\'historique',
-      details: err.message,
+      error: 'historique_indisponible',
+      message: "L'historique des messages n'a pas pu être chargé.",
     });
   }
 });
@@ -177,11 +234,11 @@ router.get('/channels', verifyToken, (req, res) => {
       data: channels,
     });
   } catch (err) {
-    console.error('[Messaging] Erreur channels:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur channels');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de la récupération des canaux',
-      details: err.message,
+      error: 'canaux_indisponibles',
+      message: "La liste des canaux de communication n'a pas pu être chargée.",
     });
   }
 });
@@ -251,11 +308,11 @@ router.post('/webhook/inbound', async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error('[Messaging] Erreur webhook inbound:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur webhook inbound');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors du traitement du message entrant',
-      details: err.message,
+      error: 'traitement_message_entrant_impossible',
+      message: "Le message entrant n'a pas pu être traité.",
     });
   }
 });
@@ -305,11 +362,11 @@ router.get('/status', verifyToken, (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[Messaging] Erreur status:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur status');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de la récupération du statut',
-      details: err.message,
+      error: 'statut_indisponible',
+      message: "L'état des services de messagerie n'a pas pu être chargé.",
     });
   }
 });
@@ -328,6 +385,12 @@ router.post('/relance/trigger', verifyToken, async (req, res) => {
       });
     }
 
+    // Une relance ÉCRIT (trace `messages`) et SORT (e-mail/SMS) : la portée du
+    // dossier est vérifiée comme pour /send. Sans ce contrôle, un identifiant
+    // étranger suffisait à déclencher un envoi vers le client d'un autre cabinet.
+    const portee = await resoudreDossierDansPortee(req, res, clientId);
+    if (!portee) return;
+
     // Envoyer un message de relance via le canal préféré du client
     const result = await messagingService.sendMessage({
       clientId,
@@ -341,11 +404,11 @@ router.post('/relance/trigger', verifyToken, async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error('[Messaging] Erreur relance trigger:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur relance trigger');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors du déclenchement de la relance',
-      details: err.message,
+      error: 'relance_impossible',
+      message: "La relance n'a pas pu être déclenchée.",
     });
   }
 });
@@ -380,11 +443,11 @@ router.post('/relance/trigger-all', verifyToken, async (req, res) => {
       data: summary,
     });
   } catch (err) {
-    console.error('[Messaging] Erreur relance trigger-all:', err.message);
+    logger.error({ error: err.message }, '[Messaging] Erreur relance trigger-all');
     res.status(500).json({
       success: false,
-      error: 'Erreur lors du déclenchement des relances',
-      details: err.message,
+      error: 'relances_impossibles',
+      message: "Les relances n'ont pas pu être déclenchées.",
     });
   }
 });

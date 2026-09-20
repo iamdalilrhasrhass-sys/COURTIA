@@ -13,6 +13,26 @@
  * Les comptes dont les deux colonnes sont NULL (jamais réinitialisés, jamais
  * déconnectés) ne sont PAS impactés : aucune session pilote n'est cassée.
  *
+ * ────────────────────────────────────────────────────────────────────────────
+ * TROISIÈME RÈGLE : UN COMPTE QUI N'EXISTE PLUS N'A PLUS DE SESSION
+ * (correction du 20/09/2026 — troisième QA adverse, défaut D3-08)
+ *
+ * DÉFAUT MESURÉ : `isSessionRevoked` lisait `users` par identifiant et
+ * répondait `{ revoked: false }` quand la ligne était INTROUVABLE — c'est-à-dire
+ * précisément quand le compte avait été SUPPRIMÉ. Le jeton émis avant la
+ * suppression (7 jours de vie) restait donc accepté : `GET /api/clients` → 200,
+ * `POST /api/notifications/read-all` → 200 `success:true`, et les routes
+ * d'écriture ATTEIGNAIENT leurs handlers (500/409) au lieu d'être refusées.
+ * L'application savait pourtant, sur la route `/api/auth/me`, que le compte
+ * n'existait plus (404 « Utilisateur non trouvé ») : deux réponses
+ * contradictoires pour le même jeton.
+ *
+ * RÈGLE TENUE : compte introuvable ⇒ session INVALIDE (401), jamais
+ * `revoked: false`. Rien ne doit pouvoir lire ni écrire « au nom » d'un compte
+ * inexistant. Le signal est remonté (`compteInexistant`) pour que la réponse
+ * soit exacte plutôt que de faire croire à une simple expiration.
+ * ────────────────────────────────────────────────────────────────────────────
+ *
  * CODES DE RÉPONSE
  * Un jeton absent ou invalide signifie « non authentifié » : 401 (RFC 7235), et
  * non 403 qui signifie « authentifié mais interdit » et ferait croire au client
@@ -61,9 +81,9 @@ function sessionRevokedByLogout(decoded, sessionsRevokedAt) {
 
 /**
  * Révoque-t-il cette session ? Interroge `users` (les deux marques, sinon la
- * seule colonne disponible).
+ * seule colonne disponible), et vérifie que le compte EXISTE encore.
  * @param {{id?: number, userId?: number, iat?: number}} decoded
- * @returns {Promise<{revoked: boolean, dbError?: boolean}>}
+ * @returns {Promise<{revoked: boolean, compteInexistant?: boolean, dbError?: boolean}>}
  */
 async function isSessionRevoked(decoded) {
   const userId = Number(decoded && (decoded.id || decoded.userId));
@@ -82,7 +102,12 @@ async function isSessionRevoked(decoded) {
          FROM users u WHERE u.id = $1`,
       [userId]
     );
-    if (result.rows.length === 0) return { revoked: false };
+    if (result.rows.length === 0) {
+      // Compte SUPPRIMÉ (ou identifiant jamais attribué à un compte) : le jeton
+      // ne représente plus personne. « revoked: false » ici était le défaut
+      // D3-08 : la session restait ouverte 7 jours sur un compte inexistant.
+      return { revoked: true, compteInexistant: true };
+    }
     const ligne = result.rows[0] || {};
     return {
       revoked: sessionRevokedByPasswordChange(decoded, ligne.password_changed_at)
@@ -98,6 +123,29 @@ async function isSessionRevoked(decoded) {
     console.error('[auth] vérification de révocation de session impossible:', err.message);
     return { revoked: false, dbError: true };
   }
+}
+
+// Réponses de session refusée : 401 dans tous les cas, avec un message PRODUIT
+// (aucun détail de base, aucun identifiant interne).
+const REPONSE_SESSION_REVOQUEE = {
+  success: false,
+  error: 'SessionRevoked',
+  message: 'Session expirée, veuillez vous reconnecter',
+};
+const REPONSE_COMPTE_INEXISTANT = {
+  success: false,
+  error: 'SessionRevoked',
+  message: 'Ce compte n’existe plus : reconnectez-vous ou créez un compte.',
+};
+
+/** Charge utile 401 correspondant au verdict de `isSessionRevoked`. */
+function chargeSessionRefusee(session) {
+  return session && session.compteInexistant ? { ...REPONSE_COMPTE_INEXISTANT } : { ...REPONSE_SESSION_REVOQUEE };
+}
+
+/** Réponse 401 correspondant au verdict de `isSessionRevoked`. */
+function repondreSessionRefusee(res, session) {
+  return res.status(401).json(chargeSessionRefusee(session));
 }
 
 const verifyToken = async (req, res, next) => {
@@ -124,11 +172,7 @@ const verifyToken = async (req, res, next) => {
       });
     }
     if (session.revoked) {
-      return res.status(401).json({
-        success: false,
-        error: 'SessionRevoked',
-        message: 'Session expirée, veuillez vous reconnecter'
-      });
+      return repondreSessionRefusee(res, session);
     }
     req.user = decoded;
     next();
@@ -167,6 +211,8 @@ module.exports = {
   sessionRevokedByPasswordChange,
   sessionRevokedByLogout,
   isSessionRevoked,
+  repondreSessionRefusee,
+  chargeSessionRefusee,
   reinitialiserCacheColonnes,
   CLOCK_SKEW_SECONDS
 };

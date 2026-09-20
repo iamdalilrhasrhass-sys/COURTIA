@@ -20,6 +20,37 @@
  *                      le comportement d'avant la migration 113. C'est le cas
  *                      de trois des quatre comptes réels en production : rien
  *                      ne doit changer pour eux.
+ *   APPARTENANCE RÉVOQUÉE → AUCUN droit : ni lecture, ni écriture, ni clé.
+ *                      Voir §RÉVOCATION ci-dessous.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * RÉVOCATION (correction du 20/09/2026 — troisième QA adverse, défaut D3-09)
+ *
+ * DÉFAUT MESURÉ : `UPDATE cabinet_members SET removed_at = NOW()` — le geste
+ * d'administration qui retire un collaborateur du cabinet — n'avait AUCUN
+ * effet sur sa session. L'appartenance active disparaissant, la résolution
+ * retombait sur le repli « mono-utilisateur », dont `peutEcrire` vaut `true` :
+ * le collaborateur écarté créait encore des clients (201), des tâches (201),
+ * des partenaires (201) et S'ÉMETTAIT UNE CLÉ D'API PERMANENTE (201). Un
+ * retrait de membre qui laisse écrire est un retrait qui ne retire rien.
+ *
+ * RÈGLE TENUE ICI : une appartenance révoquée (`removed_at` renseigné) et
+ * AUCUNE appartenance active ⇒ portée « révoquee », soit zéro droit :
+ *   * `peutEcrire = false`, `peutSupprimer = false` → toute écriture est
+ *     refusée 403 `acces_revoque` (garde globale ET routes) ;
+ *   * la clause SQL de portée ne peut correspondre à AUCUNE ligne → le compte
+ *     n'obtient plus rien du cabinet (recommandation retenue : rien du
+ *     cabinet), pas même le contenu qu'il avait créé pendant son passage ;
+ *   * `GET /api/developer/keys` ne liste plus rien, `POST` refuse.
+ * Ce qui rouvre les droits : une NOUVELLE invitation acceptée (nouvelle ligne
+ * `cabinet_members` active) — jamais le seul écoulement du temps.
+ *
+ * POURQUOI PAS LE REPLI « MONO » DANS CE CAS : « mono » est le comportement
+ * historique des comptes qui n'ont JAMAIS eu de cabinet (trois des quatre
+ * comptes réels). Il ne doit pas servir de porte de sortie à un compte dont le
+ * rattachement a été délibérément retiré. Les deux situations se distinguent par
+ * la PRÉSENCE d'une ligne `cabinet_members` révoquée, pas par une supposition.
+ * ────────────────────────────────────────────────────────────────────────────
  *
  * L'appartenance est lue dans `cabinet_members` (jamais créée ici : une lecture
  * ne doit pas fabriquer un cabinet en base — `ensureUserCabinet` le fait
@@ -76,11 +107,15 @@ function identifiantUtilisateur(userOrId) {
  * Une appartenance n'est retenue que si la ligne ressemble VRAIMENT à une ligne
  * de `cabinet_members` : un pool simulé (tests) qui renvoie n'importe quoi ne
  * doit pas fabriquer un cabinet imaginaire, ni une portée élargie.
+ *
+ * Une ligne RÉVOQUÉE (`removed_at` renseigné, ou `retire` vrai) n'est jamais une
+ * appartenance active : elle ne donne accès à rien (voir §RÉVOCATION).
  */
 function normaliserAppartenances(rows) {
   if (!Array.isArray(rows)) return []
   return rows
     .filter((ligne) => ligne && typeof ligne.cabinet_id === 'string' && ligne.cabinet_id.length > 0)
+    .filter((ligne) => !(ligne.retire === true || ligne.removed_at != null))
     .map((ligne) => ({ cabinet_id: ligne.cabinet_id, role: String(ligne.role || '').toLowerCase() }))
 }
 
@@ -102,6 +137,34 @@ function porteeMono(userId, raison) {
     peutEcrire: true,
     peutSupprimer: true,
     motif: raison || 'aucune appartenance cabinet : portée mono-utilisateur (comportement historique préservé)',
+  })
+}
+
+/**
+ * Portée d'un compte dont le rattachement au cabinet a été RÉVOQUÉ et qui n'a
+ * aucune appartenance active (voir §RÉVOCATION en tête de fichier).
+ *
+ * Zéro droit : aucune lecture (la clause SQL de `fragment` ne peut correspondre
+ * à aucune ligne), aucune écriture (403 `acces_revoque`, cf. refuserEcriture).
+ * Le compte reste AUTHENTIFIÉ (son jeton est valide) : il n'est donc pas
+ * question de répondre 401 — la personne se reconnecterait pour rien.
+ */
+function porteeRevoquee(userId, raison) {
+  return Object.freeze({
+    userId,
+    estAuthentifie: userId !== null,
+    mode: 'revoquee',
+    role: null,
+    appartenances: Object.freeze([]),
+    cabinetId: null,
+    cabinetIds: Object.freeze([]),
+    cabinetIdsEcriture: Object.freeze([]),
+    peutLireTout: false,
+    peutEcrire: false,
+    peutSupprimer: false,
+    motif:
+      raison ||
+      'appartenance cabinet révoquée (cabinet_members.removed_at) : aucun droit tant qu’une nouvelle invitation n’a pas été acceptée',
   })
 }
 
@@ -155,11 +218,14 @@ async function resoudrePortee(pool, req) {
 
   const promesse = (async () => {
     try {
+      // UNE SEULE requête, y compris pour les lignes RÉVOQUÉES : on lit l'état
+      // d'appartenance en entier (`removed_at`), sans quoi « aucune
+      // appartenance » (repli mono légitime) et « appartenance retirée » (zéro
+      // droit) seraient indiscernables — c'est exactement le défaut D3-09.
       const resultat = await pool.query(
-        `SELECT cm.cabinet_id, cm.role
+        `SELECT cm.cabinet_id, cm.role, (cm.removed_at IS NOT NULL) AS retire
            FROM cabinet_members cm
           WHERE cm.user_id = $1
-            AND cm.removed_at IS NULL
           ORDER BY CASE cm.role
                      WHEN 'owner'     THEN 0
                      WHEN 'manager'   THEN 1
@@ -171,10 +237,20 @@ async function resoudrePortee(pool, req) {
                    cm.created_at ASC`,
         [userId]
       )
-      const appartenances = normaliserAppartenances(resultat && resultat.rows)
-      const portee = appartenances.length === 0
-        ? porteeMono(userId)
-        : construirePortee(userId, appartenances)
+      const lignes = (resultat && resultat.rows) || []
+      const appartenances = normaliserAppartenances(lignes)
+      const revoquees = lignes.filter(
+        (ligne) => ligne && (ligne.retire === true || ligne.removed_at != null)
+      )
+      let portee
+      if (appartenances.length > 0) {
+        portee = construirePortee(userId, appartenances)
+      } else if (revoquees.length > 0) {
+        // Retiré du cabinet : ni lecture, ni écriture (D3-09).
+        portee = porteeRevoquee(userId)
+      } else {
+        portee = porteeMono(userId)
+      }
       req._porteeCabinet = portee
       return portee
     } catch (err) {
@@ -215,6 +291,15 @@ function fragment(portee, { cabinet, proprietaire, depart = 1, ecriture = false 
   const p = portee || porteeMono(null)
   const cabinetIds = ecriture ? (p.cabinetIdsEcriture || []) : (p.cabinetIds || [])
   if (!proprietaire) throw new Error('porteeCabinet.fragment : colonne propriétaire obligatoire')
+  // PORTÉE RÉVOQUÉE : la clause est FAUSSE par construction (aucune ligne ne
+  // peut y répondre). On conserve la forme du repli mono — un paramètre, mêmes
+  // indices — pour que les requêtes qui numérotent leurs paramètres après le
+  // fragment (`f.suivant`) ne changent pas de forme : seule la vérité de la
+  // clause change. Un compte écarté du cabinet ne lit donc plus rien, y compris
+  // ce qu'il avait créé pendant son passage.
+  if (p.mode === 'revoquee') {
+    return { sql: `(${proprietaire} = $${depart} AND FALSE)`, params: [p.userId], suivant: depart + 1 }
+  }
   if (!cabinetIds.length) {
     return { sql: `${proprietaire} = $${depart}`, params: [p.userId], suivant: depart + 1 }
   }
@@ -226,11 +311,23 @@ function fragment(portee, { cabinet, proprietaire, depart = 1, ecriture = false 
 }
 
 /**
- * Refus d'écriture explicite pour un rôle en lecture seule (assistant/viewer).
+ * Refus d'écriture explicite pour un rôle en lecture seule (assistant/viewer)
+ * ou pour un compte dont l'appartenance au cabinet a été RÉVOQUÉE (D3-09).
  * Renvoie `true` si la réponse est déjà partie : la route doit alors `return`.
  */
 function refuserEcriture(portee, res, action = 'modifier') {
   if (!portee || portee.peutEcrire) return false
+  if (portee.mode === 'revoquee') {
+    // Message PRODUIT : il dit l'état du compte, pas un détail technique, et il
+    // indique le seul chemin de retour (une nouvelle invitation).
+    res.status(403).json({
+      error: 'acces_revoque',
+      message:
+        'Votre accès à ce cabinet a été retiré : aucune donnée ne peut être créée ni modifiée. '
+        + 'Demandez une nouvelle invitation au propriétaire du cabinet pour retrouver vos accès.',
+    })
+    return true
+  }
   res.status(403).json({
     error: 'lecture_seule',
     role: portee.role,
@@ -242,6 +339,15 @@ function refuserEcriture(portee, res, action = 'modifier') {
 /** Refus de suppression (mêmes rôles que l'écriture). */
 function refuserSuppression(portee, res) {
   if (!portee || portee.peutSupprimer) return false
+  if (portee.mode === 'revoquee') {
+    res.status(403).json({
+      error: 'acces_revoque',
+      message:
+        'Votre accès à ce cabinet a été retiré : aucune donnée ne peut être supprimée. '
+        + 'Demandez une nouvelle invitation au propriétaire du cabinet pour retrouver vos accès.',
+    })
+    return true
+  }
   res.status(403).json({
     error: 'lecture_seule',
     role: portee.role,
@@ -271,4 +377,5 @@ module.exports = {
   refuserSuppression,
   cabinetPourCreation,
   porteeMono,
+  porteeRevoquee,
 }

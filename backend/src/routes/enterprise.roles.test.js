@@ -47,7 +47,11 @@ describe('Routes rôles enterprise — cabinet résolu côté serveur (SEC-005 /
     jest.clearAllMocks();
     handlers = [];
     pool.query.mockImplementation(async (sql, params) => {
-      if (/SELECT password_changed_at/.test(sql)) return { rows: [] }; // pas de révocation
+      // Compte EXISTANT, sans marque de révocation (D3-08 : un compte
+      // introuvable n'a plus de session — ce banc teste les RÔLES). Le motif
+      // porte sur `FROM users` : la requête réelle commence par
+      // `SELECT to_jsonb(u)->>'password_changed_at'`.
+      if (/FROM users/.test(String(sql))) return { rows: [{ password_changed_at: null, sessions_revoked_at: null }] };
       for (const handler of handlers) {
         if (handler.match.test(sql)) return handler.result(sql, params);
       }

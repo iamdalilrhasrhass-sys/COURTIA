@@ -11,7 +11,7 @@
 
 const jwt = require('jsonwebtoken');
 const { getJwtSecret } = require('../utils/jwtSecret');
-const { isSessionRevoked } = require('./auth');
+const { isSessionRevoked, chargeSessionRefusee } = require('./auth');
 
 async function verifyToken(req, res, next) {
   try {
@@ -41,9 +41,9 @@ async function verifyToken(req, res, next) {
       });
     }
     if (session.revoked) {
-      return res.status(401).json({
-        error: 'Session expirée, veuillez vous reconnecter'
-      });
+      // 401 dans tous les cas : jeton révoqué (déconnexion, mot de passe changé)
+      // ou compte SUPPRIMÉ (D3-08). Un compte inexistant n'a plus de session.
+      return res.status(401).json({ error: chargeSessionRefusee(session).message });
     }
 
     req.user = decoded;

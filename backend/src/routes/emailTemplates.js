@@ -9,6 +9,7 @@
 const express = require('express')
 const router = express.Router()
 const pool = require('../db')
+const porteeCabinet = require('../lib/porteeCabinet')
 const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
 const Anthropic = require('@anthropic-ai/sdk')
@@ -44,7 +45,7 @@ router.get('/', async (req, res) => {
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     console.error('[GET /api/email-templates]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: "La liste des modèles d'e-mail n'a pas pu être chargée." })
   }
 })
 
@@ -78,7 +79,7 @@ router.post('/', requireFeature('email_templates_ai'), async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[POST /api/email-templates]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: "Le modèle d'e-mail n'a pas pu être enregistré." })
   }
 })
 
@@ -103,13 +104,22 @@ router.post('/generate', requireFeature('email_templates_ai'), async (req, res) 
       })
     }
 
-    // Récupérer le client
+    // Récupérer le client — PORTÉE DU CABINET (même règle que les routes ARK et
+    // /api/clients) : un collaborateur du cabinet doit pouvoir générer un
+    // e-mail pour un dossier du cabinet ; celui d'un autre cabinet reste
+    // introuvable (404), sans nommer de table ni de colonne.
+    const portee = await porteeCabinet.resoudrePortee(req.app.locals.pool || pool, req)
+    const fClient = porteeCabinet.fragment(portee, {
+      cabinet: 'clients.cabinet_id',
+      proprietaire: 'clients.courtier_id',
+      depart: 2,
+    })
     const clientResult = await pool.query(
-      'SELECT * FROM clients WHERE id = $1 AND courtier_id = $2',
-      [client_id, courtier_id]
+      `SELECT * FROM clients WHERE id = $1 AND ${fClient.sql}`,
+      [client_id, ...fClient.params]
     )
     if (clientResult.rows.length === 0) {
-      return res.status(404).json({ error: 'not_found', message: 'Client introuvable' })
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable' });
     }
     const client = clientResult.rows[0]
 
@@ -288,7 +298,7 @@ router.get('/:id/render', async (req, res) => {
     })
   } catch (err) {
     console.error('[GET /api/email-templates/:id/render]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: "Le modèle d'e-mail n'a pas pu être produit." })
   }
 })
 

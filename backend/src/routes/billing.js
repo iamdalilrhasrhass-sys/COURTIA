@@ -845,8 +845,32 @@ router.post('/cancel-trial', verifyToken, async (req, res) => {
 async function stripeWebhookHandler(req, res) {
   try {
     await billingService.ensureBillingFoundation();
+    // ────────────────────────────────────────────────────────────────────────
+    // 503 « SECRET NON CONFIGURÉ » ET NON 200 « REÇU »
+    // (correction du 20/09/2026 — troisième QA adverse, défaut D3-07)
+    //
+    // DÉFAUT MESURÉ : sans `STRIPE_WEBHOOK_SECRET`, les quatre chemins de
+    // webhook répondaient 200 {"received":true,"note":"stripe_not_configured"}
+    // sans RIEN traiter — y compris avec une signature absente, invalide, ou le
+    // jeton d'un compte en lecture seule. C'est un « succès » pour une opération
+    // qui n'a pas eu lieu : Stripe ne réessaiera pas, et un humain qui appelle
+    // la route croit que l'événement a été enregistré.
+    //
+    // RÈGLE TENUE (identique aux autres webhooks du produit — WhatsApp,
+    // messagerie entrante, signatures) : tant que le secret n'est pas
+    // configuré, le point d'entrée est FERMÉ et le dit : 503
+    // `secret_non_configure`, message produit, aucun traitement, aucune
+    // écriture. Le code reste dans les journaux du serveur, jamais dans le corps.
+    // ────────────────────────────────────────────────────────────────────────
     if (!stripeService.isConfigured()) {
-      return res.status(200).json({ received: true, note: 'stripe_not_configured' });
+      return res.status(503).json({
+        error: 'secret_non_configure',
+        code: 'stripe_webhook_secret',
+        message:
+          'Le webhook de facturation est fermé : la clé de signature Stripe '
+          + "(STRIPE_WEBHOOK_SECRET) n'est pas configurée sur ce serveur. "
+          + "Aucun événement n'a été traité.",
+      });
     }
 
     const signature = req.headers['stripe-signature'];

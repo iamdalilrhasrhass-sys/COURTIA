@@ -42,7 +42,15 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers({ now: T0 });
   delete process.env.JWT_REFRESH_GRACE_SECONDS;
-  pool.query.mockResolvedValue({ rows: [] }); // password_changed_at illisible => pas de révocation
+  // Compte EXISTANT, marques de révocation NULL => pas de révocation (D3-08 :
+  // un compte introuvable est désormais refusé 401, ce banc teste le
+  // RENOUVELLEMENT d'une session valide).
+  pool.query.mockImplementation(async (sql) => {
+    if (/FROM users/.test(String(sql))) {
+      return { rows: [{ password_changed_at: null, sessions_revoked_at: null }] };
+    }
+    return { rows: [] };
+  });
   User.findById.mockResolvedValue(UTILISATEUR);
 });
 

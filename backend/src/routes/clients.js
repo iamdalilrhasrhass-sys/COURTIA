@@ -427,13 +427,18 @@ router.get('/', async (req, res) => {
         // La portée appliquée est ANNONCÉE : le client de l'API peut vérifier
         // qu'une réponse vide vient d'un cabinet réellement vide, et non d'un
         // filtre resté sur l'utilisateur.
-        portee: portee.mode === 'cabinet' ? 'cabinet' : 'utilisateur',
+        // Libellé EXACT de la portée : un compte dont l'appartenance a été
+        // révoquée ne doit pas être présenté comme « mono-utilisateur » (il ne
+        // voit RIEN du cabinet) — défaut D3-09.
+        portee: portee.mode === 'cabinet'
+          ? 'cabinet'
+          : (portee.mode === 'revoquee' ? 'acces_revoque' : 'utilisateur'),
         role: portee.role || null,
       },
     });
   } catch (err) {
     console.error('GET /api/clients error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'clients_indisponibles', message: "La liste des clients n'a pas pu être chargée." });
   }
 });
 
@@ -581,7 +586,12 @@ router.get('/duplicates', async (req, res) => {
       // Ce que la détection regarde, dit explicitement : l'appelant sait sur
       // quoi un dossier a été rapproché d'un autre.
       criteres: ['nom+prenom (accents et casse repliés)', 'email', 'telephone (chiffres seuls)'],
-      portee: portee.mode === 'cabinet' ? 'cabinet' : 'utilisateur',
+      // Libellé EXACT de la portée : un compte dont l'appartenance a été
+      // révoquée ne doit pas être présenté comme « mono-utilisateur » (il ne
+      // voit RIEN du cabinet) — défaut D3-09.
+      portee: portee.mode === 'cabinet'
+        ? 'cabinet'
+        : (portee.mode === 'revoquee' ? 'acces_revoque' : 'utilisateur'),
     });
   } catch (err) {
     console.error('GET /api/clients/duplicates error:', err.message);
@@ -670,7 +680,7 @@ router.get('/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('GET /api/clients/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'client_indisponible', message: "La fiche de ce client n'a pas pu être chargée." });
   }
 });
 
@@ -682,6 +692,23 @@ router.get('/:id/contrats', async (req, res) => {
     const pool = req.app.locals.pool
     const portee = await porteeCabinet.resoudrePortee(poolModule, req)
     const f = filtreClients(portee, { depart: 2, alias: 'c' })
+
+    // ────────────────────────────────────────────────────────────────────────
+    // PORTÉE AVANT RÉPONSE (correction du 20/09/2026 — défaut D3-05 / D2-21)
+    // DÉFAUT MESURÉ : un cabinet ÉTRANGER recevait 200 `[]` (tableau vide) pour
+    // les contrats d'un client qui n'est pas le sien. Aucune donnée n'était
+    // exposée, mais la ressource INEXISTANTE était annoncée comme existante et
+    // vide : c'est un faux succès, et il confirme au passage que l'identifiant
+    // existe. Hors cabinet = 404, comme partout ailleurs.
+    // ────────────────────────────────────────────────────────────────────────
+    const dossier = await pool.query(
+      `SELECT c.id FROM clients c WHERE c.id = $1 AND ${f.sql} LIMIT 1`,
+      [req.params.id, ...f.params]
+    )
+    if (!dossier.rows.length) {
+      return res.status(404).json({ error: 'client_introuvable', message: 'Client introuvable.' })
+    }
+
     const result = await pool.query(
       `SELECT q.id,
               q.client_id,
@@ -708,7 +735,7 @@ router.get('/:id/contrats', async (req, res) => {
     res.json(result.rows)
   } catch (err) {
     console.error('GET /api/clients/:id/contrats error:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: 'contrats_indisponibles', message: "Les contrats de ce client n'ont pas pu être chargés." })
   }
 })
 
@@ -980,7 +1007,7 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('POST /api/clients error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'client_non_cree', message: "Le client n'a pas pu être créé." });
   }
 });
 
@@ -1068,7 +1095,7 @@ router.put('/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('PUT /api/clients/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'client_non_modifie', message: "La fiche du client n'a pas pu être modifiée." });
   }
 });
 
@@ -1098,7 +1125,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/clients/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'client_non_supprime', message: "Le client n'a pas pu être supprimé." });
   }
 });
 
@@ -1156,7 +1183,7 @@ router.get('/:id/score', async (req, res) => {
 
   } catch (err) {
     console.error('GET /api/clients/:id/score error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'score_indisponible', message: "Le score de ce client n'a pas pu être calculé." });
   }
 });
 
@@ -1474,7 +1501,7 @@ router.get('/:id/cross-sell', async (req, res) => {
     });
   } catch (err) {
     console.error('GET /api/clients/:id/cross-sell error:', err.message);
-    res.status(500).json({ error: 'cross_sell_failed', message: err.message });
+    res.status(500).json({ error: 'cross_sell_failed', message: "L'analyse cross-sell n'a pas pu être produite." });
   }
 });
 

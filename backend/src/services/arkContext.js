@@ -6,23 +6,75 @@
  */
 
 const pool = require('../db')
+const porteeCabinet = require('../lib/porteeCabinet')
 const logger = require('../lib/logger')
+
+/**
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DU DOSSIER CLIENT — LE CABINET, PAS LA SEULE PERSONNE
+ * (correction du 20/09/2026 — troisième QA adverse, défaut D3-02, P2)
+ *
+ * DÉFAUT MESURÉ : la lecture du dossier filtrait `c.courtier_id = $2` (portée
+ * MONO-utilisateur) alors que tout le reste du produit — `/api/ark/history`,
+ * `/api/ark/conversations`, `/api/clients/:id`, `/api/documents/client/:id` —
+ * filtre le CABINET. Un collaborateur (`broker`) du même cabinet lisait donc la
+ * conversation ARK du dossier (200) puis recevait 404 « Client non trouvé ou non
+ * autorisé » sur `/brief`, `/next-best-actions` et `/documents-analysis` : deux
+ * réponses contradictoires pour la même personne et le même dossier, sur les
+ * deux marchés (CH et FR).
+ *
+ * RÈGLE TENUE : le dossier se résout dans la portée du CABINET
+ * (`lib/porteeCabinet` — seule autorité), jamais au-delà : un cabinet ÉTRANGER
+ * reçoit toujours le même refus.
+ *
+ * `options.req` (requête Express) ou `options.portee` (portée déjà résolue) est
+ * REQUIS sur tout chemin HTTP : tous les appels de `routes/ark.js` le passent.
+ * Sans l'un des deux, on retombe volontairement sur la clause historique
+ * (`courtier_id = $2`) pour les appelants hors requête HTTP (outillage, tests) —
+ * ce repli ne peut PAS élargir la portée, il la restreint.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+async function resoudrePorteeDossier(userId, options = {}) {
+  if (options.portee) return options.portee
+  if (options.req) {
+    const ressource = options.req.app?.locals?.pool || pool
+    return porteeCabinet.resoudrePortee(ressource, options.req)
+  }
+  return null
+}
 
 /**
  * Récupère le contexte complet d'un client
  * @param {number} clientId - ID du client
  * @param {number} userId - ID du courtier (pour vérification sécurité)
+ * @param {Object} [options] - `{ req }` (requête Express) ou `{ portee }`
  * @returns {Object} Contexte client enrichi
  */
-async function getClientContext(clientId, userId) {
+async function getClientContext(clientId, userId, options = {}) {
   try {
-    // Vérifier que le client appartient bien au courtier
+    const portee = await resoudrePorteeDossier(userId, options)
+    // Portée CABINET si une requête (ou une portée) est fournie : le dossier
+    // d'un COLLÈGUE du même cabinet est légitime, celui d'un autre cabinet reste
+    // introuvable.
+    let clausePortee = 'c.courtier_id = $2'
+    let parametresClient = [clientId, userId]
+    if (portee) {
+      const f = porteeCabinet.fragment(portee, {
+        cabinet: 'c.cabinet_id',
+        proprietaire: 'c.courtier_id',
+        depart: 2,
+      })
+      clausePortee = f.sql
+      parametresClient = [clientId, ...f.params]
+    }
+
+    // Vérifier que le client appartient bien au cabinet de l'appelant
     const clientResult = await pool.query(
       `SELECT c.*, bp.cabinet_name, bp.specialites
        FROM clients c
        LEFT JOIN broker_profiles bp ON bp.user_id = c.courtier_id
-       WHERE c.id = $1 AND c.courtier_id = $2`,
-      [clientId, userId]
+       WHERE c.id = $1 AND ${clausePortee}`,
+      parametresClient
     )
     
     if (clientResult.rows.length === 0) {
@@ -340,8 +392,8 @@ async function getMorningBriefContext(userId) {
  * @param {number} userId - ID courtier
  * @returns {Object} Contexte pour génération message
  */
-async function getMessageContext(clientId, userId) {
-  const ctx = await getClientContext(clientId, userId)
+async function getMessageContext(clientId, userId, options = {}) {
+  const ctx = await getClientContext(clientId, userId, options)
   if (ctx.error) return ctx
   
   // Récupérer nom courtier
@@ -373,8 +425,8 @@ async function getMessageContext(clientId, userId) {
  * @param {number} userId - ID courtier
  * @returns {Object} État de conformité
  */
-async function getComplianceContext(clientId, userId) {
-  const ctx = await getClientContext(clientId, userId)
+async function getComplianceContext(clientId, userId, options = {}) {
+  const ctx = await getClientContext(clientId, userId, options)
   if (ctx.error) return ctx
   
   // Documents DDA du client
