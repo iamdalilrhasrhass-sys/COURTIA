@@ -154,6 +154,21 @@ describe('GET /api/clients – comportement HTTP', () => {
     expect(comptage.params).toEqual([7, '%dupont%', 'actif']);
   });
 
+  test('la table d’accents est alignée : chaque lettre accentuée est repliée', () => {
+    // Régression du 20/09/2026 : les deux chaînes littérales de translate()
+    // avaient des longueurs différentes (30 contre 29) et « Müller » était
+    // replié en « myller » — la recherche ne trouvait plus le client.
+    const { TABLE_ACCENTS_SOURCE: source, TABLE_ACCENTS_CIBLE: cible } = router;
+    expect(source.length).toBe(cible.length);
+    const paires = source.split('').map((de, i) => [de, cible[i]]);
+    expect(paires).toContainEqual(['ü', 'u']);
+    expect(paires).toContainEqual(['é', 'e']);
+    expect(paires).toContainEqual(['ñ', 'n']);
+    expect(paires).toContainEqual(['ø', 'o']);
+    // Aucun caractère ne doit être supprimé par la traduction.
+    paires.forEach(([, vers]) => expect(vers.length).toBe(1));
+  });
+
   test('sans filtre, aucune clause LIKE n’est ajoutée', async () => {
     const res = await fetch(`${origin}/`);
     expect(res.status).toBe(200);

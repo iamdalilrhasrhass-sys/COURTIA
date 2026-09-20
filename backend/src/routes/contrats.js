@@ -156,11 +156,15 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    await pool.query(
-      `DELETE FROM quotes USING clients 
+    const supprime = await pool.query(
+      `DELETE FROM quotes USING clients
        WHERE quotes.id = $1 AND quotes.client_id = clients.id AND clients.courtier_id = $2`,
       [req.params.id, req.user.id]
     );
+    // Aucun contrat supprimé = pas de succès (voir la même règle sur /api/clients).
+    if (!supprime.rowCount) {
+      return res.status(404).json({ error: 'not_found', message: 'Contrat introuvable.' });
+    }
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/contrats/:id error:', err.message);

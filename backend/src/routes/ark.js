@@ -6,6 +6,9 @@ const { requireUnderLimit } = require('../middleware/planGuard')
 const { incrementUsage } = require('../services/planService')
 const { trackEvent } = require('../services/analyticsService')
 const logger = require('../lib/logger')
+// Réponses IA normalisées : une indisponibilité du moteur IA se traduit par un
+// 503 lisible, jamais par un 500 portant l'erreur brute du fournisseur.
+const { estErreurIa, repondreIaIndisponible, repondreIaNonConfiguree } = require('../services/iaErreurs')
 const pool = require('../db')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const {
@@ -684,7 +687,10 @@ router.get('/client/:id/brief', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err, clientId: req.params.id }, 'ARK client brief failed')
-    res.status(500).json({ error: 'ark_client_brief_failed', message: err.message })
+    // IA indisponible => 503 lisible (jamais 500 avec l'erreur du fournisseur).
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'client_brief', clientId: req.params.id })
+    if (/configuration/i.test(String(err.message || ''))) return repondreIaNonConfiguree(res, { route: 'client_brief' })
+    res.status(500).json({ error: 'ark_client_brief_failed', message: 'Le brief client est momentanément indisponible.' })
   }
 })
 
@@ -733,7 +739,9 @@ router.get('/client/:id/next-best-actions', verifyToken, async (req, res) => {
 
   } catch (err) {
     logger.error({ err, clientId: req.params.id }, 'ARK next-best-actions failed')
-    res.status(500).json({ error: 'ark_nba_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'next_best_actions', clientId: req.params.id })
+    if (/configuration/i.test(String(err.message || ''))) return repondreIaNonConfiguree(res, { route: 'next_best_actions' })
+    res.status(500).json({ error: 'ark_nba_failed', message: 'Les prochaines actions sont momentanément indisponibles.' })
   }
 })
 
@@ -843,7 +851,9 @@ Budget indicatif: ${budget || 'Non communiqué'}`
 
   } catch (err) {
     logger.error({ err, clientId: req.params.id }, 'ARK quote-assistant failed')
-    res.status(500).json({ error: 'ark_quote_assistant_failed', message: err.message })
+    if (estErreurIa(err)) return repondreIaIndisponible(res, err, { route: 'quote_assistant', clientId: req.params.id })
+    if (/configuration/i.test(String(err.message || ''))) return repondreIaNonConfiguree(res, { route: 'quote_assistant' })
+    res.status(500).json({ error: 'ark_quote_assistant_failed', message: "L'assistant de devis est momentanément indisponible." })
   }
 })
 

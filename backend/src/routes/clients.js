@@ -23,8 +23,32 @@ const Anthropic = require('@anthropic-ai/sdk');
 // le terme de recherche côté serveur avec la même table de correspondance.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TABLE_ACCENTS_SOURCE = 'àâäáãåāçèéêëēìíîïīòóôöõøùúûüÿñ'
-const TABLE_ACCENTS_CIBLE = 'aaaaaaaceeeeeiiiioooooouuuuyn'
+// Table de repli des accents, construite PAIRES PAR PAIRES.
+//
+// POURQUOI AINSI : `translate()` remplace caractère par caractère, position par
+// position. Les deux chaînes littérales qui vivaient ici étaient DÉSALIGNÉES
+// (30 caractères en source contre 29 en cible) : à partir du décalage, chaque
+// lettre était remplacée par la suivante de la table — « Müller » devenait
+// « myller » — et la recherche accent-insensible ne trouvait plus les clients
+// dont le nom contient un accent (défaut reproduit en production le 20/09/2026).
+// En construisant les deux chaînes depuis les mêmes paires, elles ne peuvent
+// plus diverger.
+const PAIRES_ACCENTS = [
+  ['à', 'a'], ['â', 'a'], ['ä', 'a'], ['á', 'a'], ['ã', 'a'], ['å', 'a'], ['ā', 'a'],
+  ['ç', 'c'],
+  ['è', 'e'], ['é', 'e'], ['ê', 'e'], ['ë', 'e'], ['ē', 'e'],
+  ['ì', 'i'], ['í', 'i'], ['î', 'i'], ['ï', 'i'], ['ī', 'i'],
+  ['ò', 'o'], ['ó', 'o'], ['ô', 'o'], ['ö', 'o'], ['õ', 'o'], ['ø', 'o'],
+  ['ù', 'u'], ['ú', 'u'], ['û', 'u'], ['ü', 'u'],
+  ['ÿ', 'y'], ['ñ', 'n'],
+]
+const TABLE_ACCENTS_SOURCE = PAIRES_ACCENTS.map(([de]) => de).join('')
+const TABLE_ACCENTS_CIBLE = PAIRES_ACCENTS.map(([, vers]) => vers).join('')
+if (TABLE_ACCENTS_SOURCE.length !== TABLE_ACCENTS_CIBLE.length) {
+  // Impossible par construction ; garde-fou explicite si quelqu'un édite la
+  // liste à la main un jour.
+  throw new Error('table d\'accents désalignée : source et cible de longueurs différentes')
+}
 
 // Nom, prénom, entreprise, e-mail, téléphone : les deux familles de colonnes
 // existent dans le schéma réel (first_name/last_name ET nom/prenom).
@@ -539,7 +563,13 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    await pool.query('DELETE FROM clients WHERE id = $1 AND courtier_id = $2', [req.params.id, req.user.id]);
+    // La suppression ne renvoie un succès QUE si une ligne a réellement été
+    // supprimée : un `{success:true}` sans suppression est un faux succès (le
+    // client reste, et l'appelant croit l'avoir supprimé).
+    const supprime = await pool.query('DELETE FROM clients WHERE id = $1 AND courtier_id = $2', [req.params.id, req.user.id]);
+    if (!supprime.rowCount) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
+    }
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/clients/:id error:', err.message);
