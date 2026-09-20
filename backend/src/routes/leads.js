@@ -6,6 +6,7 @@ const {
   validateDemoRequestPayload,
 } = require('../services/demoRequestService')
 const { isAdminRole } = require('../constants/roles')
+const { notifierAdminSansBloquer } = require('../services/adminNotifier')
 
 const router = express.Router()
 
@@ -133,6 +134,25 @@ router.post('/demo-request', async (req, res) => {
         payload.source,
       ]
     )
+
+    // Événement commercial : nouvelle demande de démo publique. Non bloquant —
+    // la demande est enregistrée et répondue quoi qu'il arrive côté e-mail.
+    notifierAdminSansBloquer({
+      evenement: 'nouvelle_demande_demo',
+      sujet: `COURTIA — demande de démo : ${payload.company_name || payload.email}`,
+      replyTo: payload.email,
+      lignes: [
+        'Événement : nouvelle demande de démo (site public)',
+        `Société : ${payload.company_name || 'non renseignée'}`,
+        `Contact : ${payload.first_name || ''} ${payload.last_name || ''} — ${payload.email}`,
+        `Téléphone : ${payload.phone || 'non renseigné'}`,
+        `Ville : ${payload.city || 'non renseignée'}`,
+        `Taille équipe : ${payload.team_size || 'non renseignée'}`,
+        `Besoins : Google Agenda=${payload.wants_google_calendar ? 'oui' : 'non'}, WhatsApp=${payload.wants_whatsapp ? 'oui' : 'non'}, sync e-mail=${payload.wants_email_sync ? 'oui' : 'non'}`,
+        `Demande interne : ${insert.rows[0].id}`,
+        `Horodatage : ${new Date().toISOString()}`,
+      ],
+    })
 
     return res.status(201).json({
       success: true,

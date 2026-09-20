@@ -11,6 +11,7 @@ import { getSessionUser } from '../api/sessionUser'
 import { VibeBackdrop, VibeHeader, Vibe3DCard, VibeScrollSection, VibeStagger } from '../components/vibe'
 import VibePage, { GlowHover, Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyStateAurora, MobileCockpitCard, SectionGlow } from '../components/aurora/Aurora3D'
+import { libelleSante, variation } from '../lib/cockpitTendances'
 import { BubbleCMini } from '../design/BubbleC'
 import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
 import EmailInboxUnified from '../components/inbox/EmailInboxUnified'
@@ -368,6 +369,16 @@ export default function Dashboard() {
     return { activeClients, activeContracts, annualPrime, healthScore }
   }, [stats, clients])
 
+  /* Tendances : uniquement ce qui est calculable. Les anciennes valeurs
+     (« +8 ce mois », « +12 ce mois », « +5,2 % vs M-1 », « +2 pts ») étaient
+     écrites en dur et s'affichaient même sur un cabinet vide. L'API ne fournit
+     pas d'historique : on n'affiche donc AUCUNE variation, sauf si un nombre de
+     créations du mois est réellement renvoyé. */
+  const aDesDonnees = clients.length > 0 || metrics.activeContracts > 0
+  const tendanceClients = variation(metrics.activeClients, stats?.clientsMoisPrecedent)
+  const tendanceContrats = variation(metrics.activeContracts, stats?.contratsMoisPrecedent)
+  const tendanceSante = libelleSante(metrics.healthScore, aDesDonnees)
+
   const userName = user?.first_name || user?.firstName || ''
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
@@ -497,16 +508,16 @@ export default function Dashboard() {
         <VibeScrollSection delay={0.1} parallax={15}>
         <VibeStagger style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 18}} itemStyle={{flex: '1 1 220px'}}>
           <PriorityHalo color="#5B4DF5" intensity={0.7}>
-            <CockpitMetricCard label="Clients actifs" value={fmtNum(metrics.activeClients)} icon={Users} color="#5B4DF5" trend="+8 ce mois" />
+            <CockpitMetricCard label="Clients actifs" value={fmtNum(metrics.activeClients)} icon={Users} color="#5B4DF5" trend={tendanceClients} />
           </PriorityHalo>
           <PriorityHalo color="#3B82F6" intensity={0.7}>
-            <CockpitMetricCard label="Contrats actifs" value={fmtNum(metrics.activeContracts)} icon={FileText} color="#3B82F6" trend="+12 ce mois" />
+            <CockpitMetricCard label="Contrats actifs" value={fmtNum(metrics.activeContracts)} icon={FileText} color="#3B82F6" trend={tendanceContrats} />
           </PriorityHalo>
           <PriorityHalo color="#22C55E" intensity={0.7}>
-            <CockpitMetricCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)} icon={Euro} color="#22C55E" trend="+5,2% vs M-1" />
+            <CockpitMetricCard label="Primes annuelles" value={fmtEur(metrics.annualPrime)} icon={Euro} color="#22C55E" trend={null} />
           </PriorityHalo>
           <PriorityHalo color="#8B5CF6" intensity={0.7}>
-            <CockpitMetricCard label="Score santé" value={`${metrics.healthScore}%`} icon={Heart} color="#8B5CF6" trend="+2 pts · bon état" />
+            <CockpitMetricCard label="Score santé" value={`${metrics.healthScore}%`} icon={Heart} color="#8B5CF6" trend={tendanceSante} />
           </PriorityHalo>
         </VibeStagger>
         </VibeScrollSection>

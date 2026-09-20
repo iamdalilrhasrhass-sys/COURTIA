@@ -424,9 +424,14 @@ router.post('/gamified/auto-check', async (req, res) => {
       if (upd.rowCount > 0) earnedBadges.push({ key: 'maitre_docs', name: 'Maître des Docs', icon: '📄' });
     }
 
-    // Vérifier ARK Watch activé
+    // ARK Watch : `ark_watch_runs` est garantie par la migration 101. Cette table
+    // vivait dans backend/sql/migrations/lot7_arkwatch.sql, dossier que NI le
+    // runner (backend/scripts/migrate.js) NI scripts/db_rebuild.sh n'appliquent :
+    // l'étape échouait donc en arrière-plan sur une table inexistante.
+    // Aucun masquage d'erreur ici : si la table disparaissait un jour, l'échec
+    // doit être visible, pas transformé silencieusement en « 0 ».
     const arkWatchRes = await pool.query(
-      `SELECT COUNT(*) as count FROM ark_signals WHERE user_id = $1`,
+      `SELECT COUNT(*) as count FROM ark_watch_runs WHERE broker_id = $1 AND completed_at IS NOT NULL AND errors = 0`,
       [userId]
     );
     if (parseInt(arkWatchRes.rows[0].count) > 0) {

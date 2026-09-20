@@ -224,7 +224,7 @@ export function StatusPublic() {
   const [status, setStatus] = useState(null)
 
   useEffect(() => {
-    const base = import.meta.env.VITE_API_URL || 'https://api.courtiark.fr/api'
+    const base = import.meta.env.VITE_API_URL || '/api'
     fetch(`${base.replace(/\/$/, '')}/status`, { headers: { Accept: 'application/json' } })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => setStatus(data))

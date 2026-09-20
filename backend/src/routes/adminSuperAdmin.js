@@ -32,10 +32,19 @@ const {
 } = require('../utils/portfolioSchema');
 const billingService = require('../services/billingService');
 const pool = require('../db');
+const crypto = require('crypto');
+const User = require('../models/User');
 const logger = require('../lib/logger');
 
-// Prix mensuels par plan (HT, €) — à synchroniser avec les prix Stripe
-const PLAN_PRICES_EUR = { start: 49, pro: 99, elite: 199 };
+// Prix mensuels (HT, €) : SOURCE UNIQUE = services/planService (mêmes valeurs que
+// la grille publique et Stripe). La table précédente (start 49 / pro 99 / elite 199)
+// était une grille périmée : elle affichait un MRR faux dans l'administration.
+// « cabinet » est sur devis : prix null, donc 0 € de MRR calculé (jamais inventé).
+const { PLANS } = require('../services/planService');
+const PLAN_PRICES_EUR = Object.entries(PLANS).reduce((acc, [code, plan]) => {
+  acc[code] = typeof plan.price === 'number' ? plan.price : 0;
+  return acc;
+}, {});
 
 function adminCompletedFilter(columns, alias = '') {
   const prefix = alias ? `${alias}.` : '';
@@ -44,6 +53,169 @@ function adminCompletedFilter(columns, alias = '') {
 
 // Appliquer verifyToken + superAdminGuard sur tout le routeur
 router.use(verifyToken, superAdminGuard);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/admin/super/trials/invite
+// Crée un VRAI cabinet en essai, SANS jamais transmettre de mot de passe.
+//
+// L'accès se fait par un lien d'activation à durée limitée (même mécanisme que
+// la réinitialisation de mot de passe : token aléatoire + expiry en base). Le
+// lien est remis à l'administrateur, pas envoyé automatiquement : le garde-fou
+// outbound de COURTIA reste en place (aucun message commercial ne part sans
+// autorisation explicite).
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/trials/invite', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const cabinet = String(req.body?.cabinet_name || '').trim();
+    const firstName = String(req.body?.first_name || '').trim();
+    const lastName = String(req.body?.last_name || '').trim();
+    const joursDemandes = Number(req.body?.duree_essai_jours);
+    const jours = Number.isFinite(joursDemandes)
+      ? Math.min(90, Math.max(1, Math.trunc(joursDemandes)))
+      : billingService.TRIAL_DAYS;
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'email_invalide' });
+    }
+    if (!cabinet) {
+      return res.status(400).json({ success: false, error: 'cabinet_requis', message: 'Le nom du cabinet est requis.' });
+    }
+
+    // Jamais d'écrasement silencieux d'un compte existant.
+    const existant = await User.findByEmail(email);
+    if (existant) {
+      return res.status(409).json({
+        success: false,
+        error: 'compte_existant',
+        user_id: existant.id,
+        plan: existant.plan,
+        subscription_status: existant.subscription_status,
+        message: 'Un compte existe déjà avec cette adresse. Aucun compte en double n’a été créé.',
+      });
+    }
+
+    // Mot de passe aléatoire : il n'est ni affiché, ni transmis, ni journalisé.
+    const motDePasseScelle = crypto.randomBytes(32).toString('hex');
+    const user = await User.create(email, motDePasseScelle, firstName || cabinet, lastName || '', 'broker');
+
+    await pool.query(
+      `UPDATE users SET cabinet_name = $1, trial_ends_at = NOW() + ($2 || ' days')::interval WHERE id = $3`,
+      [cabinet, String(jours), user.id]
+    );
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expireLe = new Date(Date.now() + 72 * 3600 * 1000); // 72 h pour activer
+    await User.setResetToken(email, token, expireLe);
+
+    const base = process.env.FRONTEND_URL || 'https://courtiark.fr';
+    const { rows } = await pool.query('SELECT trial_ends_at FROM users WHERE id = $1', [user.id]);
+
+    return res.status(201).json({
+      success: true,
+      invitation: {
+        user_id: user.id,
+        email,
+        cabinet,
+        essai_debute_le: user.created_at,
+        essai_finit_le: rows[0]?.trial_ends_at || null,
+        duree_essai_jours: jours,
+        activation_url: `${base}/reset-password?token=${token}`,
+        activation_expire_le: expireLe.toISOString(),
+        // Aucun envoi ici, et on ne prétend pas le contraire.
+        email_envoye: false,
+        raison_absence_envoi: 'aucun_envoi_automatique',
+        canal: 'lien à transmettre par votre canal habituel',
+      },
+    });
+  } catch (err) {
+    logger.error({ err: err.message }, '[adminSuperAdmin] POST /trials/invite');
+    return res.status(500).json({ success: false, error: 'invitation_failed', message: 'Création du cabinet en essai impossible.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/admin/super/trials
+// Suivi des essais : une ligne par cabinet en essai ou sorti d'essai, avec des
+// mesures RÉELLES. Aucun score, aucune estimation : un champ sans source est
+// laissé à null plutôt que rempli d'une valeur plausible.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/trials', async (_req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        u.id                                        AS user_id,
+        u.email,
+        COALESCE(NULLIF(u.cabinet_name, ''), NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''), u.email) AS cabinet,
+        u.plan,
+        u.subscription_status,
+        u.trial_ends_at,
+        u.created_at                                AS compte_cree_le,
+        CASE
+          WHEN u.subscription_status = 'trialing' AND u.trial_ends_at > NOW() THEN 'TRIAL_ACTIVE'
+          WHEN u.subscription_status = 'trialing' THEN 'TRIAL_EXPIRED'
+          WHEN u.subscription_status IN ('active', 'past_due') THEN 'SUBSCRIPTION_ACTIVE'
+          ELSE 'NOT_STARTED'
+        END                                          AS trial_status,
+        CASE
+          WHEN u.subscription_status = 'trialing' AND u.trial_ends_at > NOW()
+            THEN GREATEST(0, CEIL(EXTRACT(EPOCH FROM (u.trial_ends_at - NOW())) / 86400.0))::int
+          ELSE 0
+        END                                          AS jours_restants,
+        (SELECT COUNT(*) FROM clients c WHERE c.courtier_id = u.id)                    AS clients_crees,
+        (SELECT COUNT(*) FROM document_uploads d WHERE d.user_id = u.id)               AS documents_deposes,
+        (SELECT COUNT(*) FROM ark_conversations a WHERE a.user_id = u.id)              AS conversations_ark,
+        (SELECT COUNT(*) FROM kanban_cards kc JOIN kanban_boards kb ON kc.board_id = kb.id
+          WHERE kb.courtier_id = u.id)                                                 AS cartes_pipeline,
+        op.completed_at                              AS onboarding_termine_le,
+        (CASE WHEN op.step_create_client      THEN 1 ELSE 0 END +
+         CASE WHEN op.step_generate_document  THEN 1 ELSE 0 END +
+         CASE WHEN op.step_analyze_portfolio THEN 1 ELSE 0 END +
+         CASE WHEN op.step_activate_ark_watch THEN 1 ELSE 0 END +
+         CASE WHEN op.step_invite_colleague   THEN 1 ELSE 0 END)                       AS etapes_validees,
+        GREATEST(
+          u.updated_at,
+          COALESCE((SELECT MAX(a.created_at) FROM audit_log a WHERE a.user_id = u.id), u.updated_at),
+          COALESCE((SELECT MAX(k.updated_at) FROM ark_conversations k WHERE k.user_id = u.id), u.updated_at),
+          COALESCE((SELECT MAX(d2.created_at) FROM document_uploads d2 WHERE d2.user_id = u.id), u.updated_at)
+        )                                            AS derniere_activite
+      FROM users u
+      LEFT JOIN onboarding_progress op ON op.user_id = u.id
+      WHERE u.subscription_status = 'trialing'
+         OR u.plan = 'trial'
+         OR u.subscription_status IN ('active', 'past_due')
+      ORDER BY u.trial_ends_at DESC NULLS LAST, u.id DESC
+      LIMIT 200
+    `);
+
+    const essais = rows.map((r) => ({
+      ...r,
+      // pg renvoie COUNT(*) en chaîne : un compteur d'écran doit être un nombre.
+      clients_crees: Number(r.clients_crees) || 0,
+      documents_deposes: Number(r.documents_deposes) || 0,
+      conversations_ark: Number(r.conversations_ark) || 0,
+      cartes_pipeline: Number(r.cartes_pipeline) || 0,
+      etapes_validees: Number(r.etapes_validees) || 0,
+      jours_restants: Number(r.jours_restants) || 0,
+      // Un champ sans mesure reste null : l'écran affiche « — ».
+      jours_restants: r.trial_status === 'TRIAL_ACTIVE' ? r.jours_restants : 0,
+      essai_debute_le: r.trial_ends_at
+        ? new Date(new Date(r.trial_ends_at).getTime() - billingService.TRIAL_DAYS * 86400000).toISOString()
+        : null,
+      duree_essai_jours: billingService.TRIAL_DAYS,
+    }));
+
+    return res.json({
+      success: true,
+      duree_essai_jours: billingService.TRIAL_DAYS,
+      total: essais.length,
+      essais,
+    });
+  } catch (err) {
+    logger.error({ err: err.message }, '[adminSuperAdmin] GET /trials');
+    return res.status(500).json({ success: false, error: 'trials_unavailable', details: err.message });
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/admin/super/billing
@@ -653,7 +825,9 @@ router.get('/analytics', async (req, res) => {
     const mrrByPlan = {};
     let totalMrr = 0;
     for (const row of planDist.rows) {
-      const price = PLAN_PRICES_EUR[row.subscription_plan] || 0;
+      // Un plan inconnu (ex. 'trial') ne produit pas de MRR : on ne lui prête
+      // pas un prix par défaut.
+      const price = PLAN_PRICES_EUR[row.subscription_plan] ?? 0;
       const mrr   = parseInt(row.count) * price;
       mrrByPlan[row.subscription_plan] = {
         count: parseInt(row.count),

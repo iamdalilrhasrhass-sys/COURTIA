@@ -459,7 +459,12 @@ export default function Login() {
     try {
       const res = await api.post('/api/auth/login', { email, password })
       const { token, user } = res.data
+      // La session est ecrite sous les DEUX cles : `courtia_token` (convention
+      // historique) et `token`, que lisent encore la bulle ARK et plusieurs
+      // ecrans (pages/v2/*). Sans ce miroir, un courtier connecte via /login
+      // voyait « Session expiree » dans ARK alors que sa session etait valide.
       localStorage.setItem('courtia_token', token)
+      localStorage.setItem('token', token)
       if (user) localStorage.setItem('courtia_user', JSON.stringify(user))
       navigate('/dashboard')
     } catch (err) {

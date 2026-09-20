@@ -32,6 +32,11 @@ router.get('/', verifyToken, async (req, res) => {
     const clientClause = clientId ? ` AND a.client_id = $2` : '';
     if (clientId) params.push(clientId);
 
+    // CORRECTION 2026-09-20 : le JOIN était INNER sur clients, donc toute tâche
+    // sans client était créée puis invisible (l'API répondait 201 et la liste
+    // restait vide : un faux succès). Le périmètre est désormais la PROPRIÉTÉ de
+    // la tâche (appointments.user_id, la colonne lue par autoTasks et
+    // gamificationService), et le client est une jointure facultative.
     const result = await pool.query(`
       SELECT 
         a.id, a.title as titre, a.description, 
@@ -39,14 +44,16 @@ router.get('/', verifyToken, async (req, res) => {
         a.client_id, c.first_name as client_prenom, c.last_name as client_nom,
         a.created_at,
         CASE 
+          WHEN a.start_time IS NULL THEN 'normale'
           WHEN a.start_time < NOW() + INTERVAL '3 days' THEN 'haute'
           WHEN a.start_time < NOW() + INTERVAL '7 days' THEN 'normale'
           ELSE 'basse'
         END as priorite
       FROM appointments a
-      JOIN clients c ON a.client_id = c.id AND c.courtier_id = $1
+      LEFT JOIN clients c ON a.client_id = c.id
+      WHERE COALESCE(a.user_id, a.organizer_id) = $1
       ${clientClause}
-      ORDER BY a.start_time ASC
+      ORDER BY a.start_time ASC NULLS LAST
     `, params);
 
     res.json(result.rows);
@@ -66,6 +73,24 @@ router.post('/', verifyToken, async (req, res) => {
       titre, description, client_id, echeance, statut
     } = req.body;
 
+    const userId = req.user.id || req.user.userId;
+
+    // Validations explicites : sans titre ni échéance, la base refusait la ligne
+    // (title et start_time sont NOT NULL) et l'API répondait 500 « création
+    // impossible » — un message d'infrastructure au lieu de dire quel champ
+    // manque. On refuse AVANT la base, sans inventer de date.
+    const titreNettoye = typeof titre === 'string' ? titre.trim() : '';
+    if (!titreNettoye) {
+      return res.status(400).json({ error: 'validation_error', message: 'Le titre de la tâche est obligatoire.', champs: ['titre'] });
+    }
+    if (!echeance) {
+      return res.status(400).json({
+        error: 'validation_error',
+        message: "L'échéance est obligatoire pour créer une tâche.",
+        champs: ['echeance'],
+      });
+    }
+
     // Vérifier que le client appartient à l'utilisateur
     if (client_id) {
       const own = await pool.query(
@@ -76,10 +101,10 @@ router.post('/', verifyToken, async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO appointments 
-       (title, description, client_id, start_time, status, user_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *`,
-      [titre, description, client_id, echeance, statut || 'a_faire', req.user.id || req.user.userId]
+      `INSERT INTO appointments
+       (title, description, client_id, start_time, status, user_id, organizer_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $6, NOW()) RETURNING *`,
+      [titreNettoye, description || null, client_id || null, echeance, statut || 'a_faire', userId]
     );
 
     res.status(201).json(result.rows[0]);
@@ -95,15 +120,28 @@ router.post('/', verifyToken, async (req, res) => {
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const { titre, description, statut, echeance } = req.body;
+    // Un identifiant non numérique produisait un 500 « invalid input syntax for
+    // type integer » : l'écran recevait une erreur de base au lieu d'un refus clair.
+    if (!/^\d+$/.test(String(req.params.id))) {
+      return res.status(400).json({ error: 'invalid_id', message: 'Identifiant de tâche invalide.' });
+    }
 
+    const { titre, description, statut, echeance } = req.body;
+    const userId = req.user.id || req.user.userId;
+
+    // COALESCE : une mise à jour partielle (ex. cocher « terminée ») ne doit pas
+    // effacer le reste. L'ancienne requête écrasait titre/description par NULL si
+    // l'appelant ne les envoyait pas, et ne trouvait la tâche que si elle avait un
+    // client (FROM clients) : cocher une tâche sans client renvoyait 404.
     const result = await pool.query(
-      `UPDATE appointments 
-       SET title = $1, description = $2, status = $3, start_time = $4
-      FROM clients
-      WHERE appointments.id = $5 AND appointments.client_id = clients.id AND clients.courtier_id = $6
-      RETURNING appointments.*`,
-      [titre, description, statut, echeance, req.params.id, req.user.id]
+      `UPDATE appointments
+       SET title = COALESCE($1, title),
+           description = COALESCE($2, description),
+           status = COALESCE($3, status),
+           start_time = COALESCE($4, start_time)
+      WHERE id = $5 AND COALESCE(user_id, organizer_id) = $6
+      RETURNING *`,
+      [titre ?? null, description ?? null, statut ?? null, echeance ?? null, req.params.id, userId]
     );
 
     if (result.rows.length === 0) {
@@ -139,12 +177,25 @@ router.post('/auto-generate', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    await pool.query(
-      `DELETE FROM appointments USING clients 
-       WHERE appointments.id = $1 AND appointments.client_id = clients.id AND clients.courtier_id = $2`,
-      [req.params.id, req.user.id]
+    // Un identifiant non numérique produisait un 500 « invalid input syntax for
+    // type integer » : l'écran recevait une erreur de base au lieu d'un refus clair.
+    if (!/^\d+$/.test(String(req.params.id))) {
+      return res.status(400).json({ error: 'invalid_id', message: 'Identifiant de tâche invalide.' });
+    }
+
+    const userId = req.user.id || req.user.userId;
+    const supprime = await pool.query(
+      `DELETE FROM appointments
+       WHERE id = $1 AND COALESCE(user_id, organizer_id) = $2
+       RETURNING id`,
+      [req.params.id, userId]
     );
-    res.json({ success: true });
+    // Une suppression qui ne supprime rien doit le DIRE : l'écran affichait
+    // « supprimé » alors que la ligne existait toujours.
+    if (supprime.rows.length === 0) {
+      return res.status(404).json({ error: 'not_found', message: 'Tâche introuvable.' });
+    }
+    res.json({ success: true, id: supprime.rows[0].id });
   } catch (err) {
     console.error('DELETE /api/taches/:id error:', err.message);
     res.status(500).json({ error: 'task_delete_failed', message: 'Suppression de tâche impossible pour le moment.' });

@@ -116,7 +116,26 @@ router.put('/me', verifyTokenMiddleware, async (req, res) => {
  * POST /api/auth/google — Authentification via Google
  */
 router.post('/google', async (req, res) => {
-  const { googleId, email, firstName, lastName, picture } = req.body;
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(503).json({ error: 'Connexion Google indisponible. Utilisez votre email et votre mot de passe.' });
+  }
+  const { credential } = req.body;
+  if (typeof credential !== 'string' || !credential) {
+    return res.status(401).json({ error: 'Identite Google non verifiee' });
+  }
+  let identity;
+  try {
+    const { OAuth2Client } = require('google-auth-library');
+    const ticket = await new OAuth2Client(clientId).verifyIdToken({ idToken: credential, audience: clientId });
+    identity = ticket.getPayload();
+    if (!identity?.email_verified || !identity.email || !identity.sub) throw new Error('unverified_identity');
+  } catch {
+    return res.status(401).json({ error: 'Identite Google non verifiee' });
+  }
+  const email = identity.email.trim().toLowerCase();
+  const firstName = identity.given_name;
+  const lastName = identity.family_name;
 
   try {
     // Cherche si l'user existe déjà par email

@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { Activity, Server, Database, Globe, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import { adminFetch, publicApiFetch } from '../lib/adminApi'
-const VPS_BACKEND = 'https://api.courtiark.fr'
+// Base d'API canonique : même origine (Vercel) → /api, qui relaie vers le backend.
+// L'ancienne constante `https://api.courtiark.fr` pointait un hôte dont le
+// certificat est invalide : elle a été retirée (aucun appel ne doit l'utiliser).
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 export default function AdminSystem() {
   const [checks, setChecks] = useState(null)
@@ -26,12 +29,16 @@ export default function AdminSystem() {
 
     // Frontend visible
     try {
-      const _r = await fetch('https://courtiark.fr', { mode: 'no-cors' })
-      results.frontend = { ok: true, url: 'courtiark.fr' }
+      const _r = await fetch(window.location.origin, { mode: 'no-cors' })
+      results.frontend = { ok: true, url: window.location.host }
     } catch { results.frontend = { ok: false, error: 'Inaccessible' } }
 
-    // VPS reachable (indirect — via API)
-    results.vps = results.api.ok ? { ok: true, note: 'API répond depuis le VPS' } : { ok: false, note: 'API KO' }
+    // État réel renvoyé par le backend (dont la base de données et les
+    // intégrations). Rien n'est affiché qui ne vienne de cette mesure.
+    try {
+      const r = await publicApiFetch('/api/status')
+      results.status = r.ok || r.status === 503 ? await r.json() : null
+    } catch { results.status = null }
 
     setChecks(results)
     setLoading(false)
@@ -41,9 +48,9 @@ export default function AdminSystem() {
 
   const checksList = [
     { key: 'api', icon: Server, label: 'API Backend', detail: checks?.api },
-    { key: 'db', icon: Database, label: 'Base de données', detail: checks?.db },
+    { key: 'db', icon: Database, label: 'Base de données', detail: checks?.db || (checks?.status ? { ok: checks.status.database === 'connected', note: `base ${checks.status.database}` } : undefined) },
     { key: 'frontend', icon: Globe, label: 'Frontend', detail: checks?.frontend },
-    { key: 'vps', icon: Activity, label: 'VPS', detail: checks?.vps },
+    { key: 'backend', icon: Activity, label: 'Backend / statut', detail: checks?.status ? { ok: checks.status.status === 'running', data: checks.status } : undefined },
   ]
 
   return (
@@ -106,12 +113,12 @@ export default function AdminSystem() {
       <div style={{ marginTop: 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
         <h3 style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: '0 0 12px' }}>Environnement</h3>
         <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.45)', lineHeight: 2 }}>
-          <div>Frontend : Vercel (courtiark.fr)</div>
-          <div>Backend API : VPS 72.62.187.63 (PM2, Nginx, Certbot)</div>
-          <div>Base de données : PostgreSQL (VPS local)</div>
-          <div>API externe : {VPS_BACKEND}</div>
-          <div>Mode : Production</div>
-          <div>Gateway AI : DeepSeek v4 Pro</div>
+          <div>Frontend : {typeof window !== 'undefined' ? window.location.host : 'non mesuré'}</div>
+          <div>API : {API_BASE} (même origine, relais Vercel)</div>
+          <div>Base de données : {checks?.status?.database || 'non mesuré'}</div>
+          <div>Email transactionnel : {checks?.status?.integrations?.email_transactional || 'non mesuré'}</div>
+          <div>Paiement : {checks?.status?.integrations?.stripe || 'non mesuré'}</div>
+          <div>Environnement : {import.meta.env.VITE_VERCEL_ENV || 'non mesuré'}</div>
         </div>
       </div>
     </div>

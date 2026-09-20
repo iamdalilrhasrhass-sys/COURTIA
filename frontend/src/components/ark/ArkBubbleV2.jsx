@@ -3,9 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, Maximize2, Minimize2 } from 'lucide-react';
 import { ArkVoiceButton } from './ArkVoiceButton';
 import { ArkSuggestionsChips } from './ArkSuggestionsChips';
+import { lireReponseArk, messageErreurArk } from '../../lib/reponseArk';
+import { getAuthToken } from '../../api/sessionPolicy';
 
 const API_BASE = '/api';
-const getToken = () => localStorage.getItem('token');
+// Source de jeton canonique (courtia_token OU token) plutot qu'une cle unique :
+// c'est le meme choix que le client API (src/api/sessionPolicy.js).
+const getToken = () => getAuthToken();
 
 export function ArkBubbleV2() {
   const [open, setOpen] = useState(false);
@@ -25,18 +29,19 @@ export function ArkBubbleV2() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setStreaming(true);
+    const controleur = new AbortController();
+    // 30 s : au-delà, on rend la main au courtier au lieu de laisser la bulle
+    // « tourner » indéfiniment sur un backend muet.
+    const minuterie = setTimeout(() => controleur.abort(), 30000);
     try {
       const res = await fetch(`${API_BASE}/ark/chat`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history: messages }),
+        signal: controleur.signal,
       });
-      // CORRECTION 2026-09-19 : ce composant lisait la réponse comme un FLUX
-      // alors que POST /api/ark/chat renvoie du JSON, et il ne testait jamais
-      // res.ok. Résultat : le courtier voyait le JSON brut — ou le JSON d'erreur —
-      // dans la bulle. Le contrat est désormais explicite : JSON + contrôle du
-      // statut. (Si ARK passe un jour en streaming, ce sera un endpoint distinct,
-      // pas un accident de lecture.)
+      // Contrat de la réponse : figé et testé dans src/lib/reponseArk.js
+      // (POST /api/ark/chat répond `{ reply }` en JSON, avec un code HTTP explicite).
       let data = null;
       try {
         data = await res.json();
@@ -44,32 +49,24 @@ export function ArkBubbleV2() {
         data = null;
       }
 
-      if (!res.ok) {
-        const message = res.status === 401
-          ? 'Session expirée : reconnectez-vous pour utiliser ARK.'
-          : res.status === 400
-            ? (data?.message || data?.error || 'Demande invalide.')
-            : res.status >= 500
-              ? 'ARK est momentanément indisponible. Réessayez dans quelques instants.'
-              : (data?.message || data?.error || `Erreur ${res.status}.`);
-        setMessages(prev => [...prev, { role: 'assistant', content: message, error: true }]);
-      } else {
-        const texte = (data?.response || data?.message || '').trim();
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: texte || "ARK n'a pas produit de réponse. Reformulez votre demande.",
-        }]);
-      }
+      const { texte, erreur } = lireReponseArk(res.status, data);
+      setMessages(prev => [...prev, { role: 'assistant', content: texte, error: erreur }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Erreur de connexion' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: messageErreurArk(e), error: true }]);
+    } finally {
+      clearTimeout(minuterie);
+      setStreaming(false);
     }
-    setStreaming(false);
   };
 
   const handleVoiceResult = (text) => { setInput(text); sendMessage(text); };
   const handleSuggestion = (text) => sendMessage(text);
 
-  const bubbleSize = expanded ? { width: 480, height: 600 } : { width: 380, height: 500 };
+  // Sur un écran de 390 px, une bulle de 380 px positionnée à 24 px du bord
+  // débordait à gauche (titre tronqué). Largeur bornée par la fenêtre.
+  const bubbleSize = expanded
+    ? { width: 'min(480px, calc(100vw - 32px))', height: 'min(600px, calc(100vh - 140px))' }
+    : { width: 'min(380px, calc(100vw - 32px))', height: 'min(500px, calc(100vh - 140px))' };
 
   return (
     <>

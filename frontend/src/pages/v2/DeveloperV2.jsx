@@ -386,7 +386,7 @@ function DocumentationTab() {
               color: '#a78bfa',
               fontSize: 13
             }}>
-              https://api.courtiark.fr/api/v1
+              https://courtiark.fr/api/v1
             </code>
           </div>
         </div>
@@ -523,13 +523,13 @@ function ExamplesTab({ copyToClipboard, copiedId }) {
     {
       title: 'Authentification (cURL)',
       lang: 'bash',
-      code: `curl -X GET "https://api.courtiark.fr/api/v1/me" \\
+      code: `curl -X GET "https://courtiark.fr/api/v1/me" \\
   -H "Authorization: Bearer sk-ark-VOTRE_CLE_API"`
     },
     {
       title: 'Liste des clients (JavaScript)',
       lang: 'javascript',
-      code: `const response = await fetch('https://api.courtiark.fr/api/v1/clients', {
+      code: `const response = await fetch('https://courtiark.fr/api/v1/clients', {
   headers: {
     'Authorization': 'Bearer sk-ark-VOTRE_CLE_API',
     'Content-Type': 'application/json'
@@ -541,7 +541,7 @@ console.log(\`\${pagination.total} clients trouvés\`);`
     {
       title: 'Créer un webhook (cURL)',
       lang: 'bash',
-      code: `curl -X POST "https://api.courtiark.fr/api/v1/webhooks" \\
+      code: `curl -X POST "https://courtiark.fr/api/v1/webhooks" \\
   -H "Authorization: Bearer sk-ark-VOTRE_CLE_API" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://mon-app.com/webhook", "events": ["client.created", "contract.created"]}'`

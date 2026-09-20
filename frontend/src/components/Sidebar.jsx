@@ -364,7 +364,7 @@ export default function Sidebar() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.text, letterSpacing: '0.02em' }}>ARK Intelligence</div>
-          <div style={{ fontSize: 10, color: T.textMuted }}>3 priorités aujourd'hui</div>
+          <div style={{ fontSize: 10, color: T.textMuted }}>Voir les priorités du cabinet</div>
         </div>
       </div>
 

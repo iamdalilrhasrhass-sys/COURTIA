@@ -147,30 +147,9 @@ export function installerDemo() {
       window.__demoRequetes = window.__demoRequetes || []
       window.__demoRequetes.push(`${methode} ${chemin}`)
     }
-    /* Console ARK : la réponse est du TEXTE, pas du JSON — le composant la lit
-       en streaming. `donnees.demo` la balise comme DEMO RESPONSE. */
-    if (/\/ark\/chat$/.test(chemin) && donnees && donnees.demo && donnees.response) {
-      return reponseTexte(donnees.response)
-    }
     return reponseJson(donnees, statut)
   }
 }
-
-
-/** Réponse TEXTE de la console ARK.
- *  Le vrai composant (ArkBubbleV2) lit le corps de la réponse en streaming.
- *  On lui renvoie donc du texte brut, livré d'un bloc : un flux progressif
- *  était interrompu par les changements de route de la visite guidée, ce qui
- *  laissait la réponse inachevée. La teneur est une DEMO RESPONSE
- *  déterministe, calculée depuis le dataset central — jamais présentée comme
- *  une génération du modèle. */
-function reponseTexte(texte) {
-  return new Response(String(texte), {
-    status: 200,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  })
-}
-
 /** Rétablit le comportement normal (utilisé en quittant la démo). */
 export function desinstallerDemo() {
   if (!installe) return

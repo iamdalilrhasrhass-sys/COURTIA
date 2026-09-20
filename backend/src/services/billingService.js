@@ -374,11 +374,33 @@ async function getBillingStatus(userId) {
       console.warn('[billing.getBillingStatus] planService indisponible:', erreur.message);
     }
 
+    // ETAT EXPLICITE (20/09/2026) : le frontend ne doit pas deduire lui-meme si
+    // l'essai est fini (il le faisait avec sa propre date, donc deux verites).
+    // Une regle business, un seul serveur : TRIAL_ACTIVE tant que trial_ends_at
+    // est dans le futur, TRIAL_EXPIRED ensuite, sans jamais supprimer de donnee.
+    // Etat derive EXACTEMENT comme la garde d'ecriture (middleware/subscriptionGuard) :
+    // un compte dont users.subscription_status vaut 'active' est un abonnement actif,
+    // meme s'il n'a pas encore de ligne dans `subscriptions` (cas de la periode
+    // d'activation). Sans cela, l'API repondait NOT_STARTED alors que les ecritures
+    // etaient autorisees : deux verites contradictoires pour le meme compte.
+    const abonnementActif = ['active', 'past_due'].includes(utilisateur.subscription_status)
+    const trialState = enEssai
+      ? 'TRIAL_ACTIVE'
+      : (essaiExpire ? 'TRIAL_EXPIRED' : (abonnementActif ? 'SUBSCRIPTION_ACTIVE' : 'NOT_STARTED'))
+
     return {
       organization_id: org.id,
-      plan_code: enEssai ? 'trial' : 'starter',
-      plan_name: enEssai ? 'Essai gratuit' : 'Starter',
-      status: enEssai ? 'trialing' : (essaiExpire ? 'trial_expired' : 'not_started'),
+      plan_code: enEssai ? 'trial' : (abonnementActif ? (utilisateur.plan || 'starter') : 'starter'),
+      plan_name: enEssai ? 'Essai gratuit' : (abonnementActif ? (utilisateur.plan || 'starter') : 'Starter'),
+      status: enEssai ? 'trialing' : (essaiExpire ? 'trial_expired' : (abonnementActif ? 'active' : 'not_started')),
+      trial_state: trialState,
+      trial_active: enEssai,
+      trial_expired: essaiExpire,
+      // En lecture seule apres expiration : le cabinet garde l'acces a ses
+      // donnees (aucune suppression, aucune perte) mais les ecritures metier
+      // sont refusees en 402 jusqu'a souscription.
+      lecture_seule: essaiExpire && !abonnementActif,
+      duree_essai_jours: TRIAL_DAYS,
       trial_start_at: enEssai || essaiExpire
         ? new Date(finValide.getTime() - TRIAL_DAYS * 86400000).toISOString()
         : null,
@@ -400,6 +422,15 @@ async function getBillingStatus(userId) {
     plan_code: sub.plan_code || 'starter',
     plan_name: sub.plan_name || 'Starter',
     status: sub.status,
+    // Une souscription Stripe existe : c'est elle qui fait foi (essai Stripe ou
+    // abonnement paye). `lecture_seule` est faux des que le statut est actif.
+    trial_state: sub.status === 'trialing'
+      ? 'TRIAL_ACTIVE'
+      : (['active', 'past_due'].includes(sub.status) ? 'SUBSCRIPTION_ACTIVE' : 'TRIAL_EXPIRED'),
+    trial_active: sub.status === 'trialing',
+    trial_expired: !['trialing', 'active', 'past_due'].includes(sub.status),
+    lecture_seule: !['trialing', 'active', 'past_due'].includes(sub.status),
+    duree_essai_jours: TRIAL_DAYS,
     trial_start_at: sub.trial_start_at,
     trial_end_at: sub.trial_end_at,
     current_period_start: sub.current_period_start,

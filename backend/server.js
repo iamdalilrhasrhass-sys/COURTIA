@@ -326,6 +326,30 @@ const objectifsAdvancedRouter = require('./src/routes/objectifsAdvanced')
 const conformiteRouter = require('./src/routes/conformite')
 
 // Public
+// ==================== FIN D'ESSAI : LECTURE CONSERVÉE, ÉCRITURE SUSPENDUE =====
+// Règle validée : essai de 7 jours, puis lecture seule (aucune donnée perdue)
+// jusqu'à souscription. Monté AVANT les routeurs car il vérifie lui-même le
+// jeton ; il ne concerne QUE les écritures des ressources du quotidien. Restent
+// ouverts : authentification, facturation, onboarding, support, dépôt public de
+// pièces et toutes les routes publiques.
+const { requireActiveSubscription } = require('./src/middleware/subscriptionGuard')
+const PREFIXES_ECRITURE_SOUS_ESSAI = [
+  '/api/clients', '/api/taches', '/api/documents', '/api/document-inbox',
+  '/api/contrats', '/api/contracts', '/api/devis', '/api/kanban',
+  '/api/automations', '/api/commissions', '/api/signatures', '/api/reach',
+  '/api/financing', '/api/objectifs',
+]
+const EXEMPTIONS_ECRITURE = ['/api/document-inbox/public']
+
+app.use('/api', (req, res, next) => {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next()
+  const chemin = String(req.originalUrl || '').split('?')[0]
+  if (EXEMPTIONS_ECRITURE.some((p) => chemin.startsWith(p))) return next()
+  const concerne = PREFIXES_ECRITURE_SOUS_ESSAI.some((p) => chemin === p || chemin.startsWith(p + '/'))
+  if (!concerne) return next()
+  return requireActiveSubscription(req, res, next)
+})
+
 app.use('/api/auth',   authRouter)
 app.use('/api/health', healthRouter)
 app.use('/api/stripe', stripeRouter) // Handles public webhook and protected checkout routes
@@ -525,7 +549,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 10000
 console.log('⚡ COURTIA Backend — ARK Enabled')
-app.listen(PORT, () => {
+app.listen(PORT, process.env.HOST || '0.0.0.0', () => {
   console.log('COURTIA backend port ' + PORT)
   // ─── Workers asynchrones LOT F3/F8 ────────────────────────────
   try {

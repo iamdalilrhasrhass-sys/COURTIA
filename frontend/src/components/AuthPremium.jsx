@@ -35,8 +35,8 @@ export default function Auth({ onAuthSuccess, mode = 'login' }) {
       } else {
         setError('Authentification échouée.')
       }
-    } catch (_err) {
-      setError('Erreur. Veuillez réessayer.')
+    } catch (err) {
+      setError(err instanceof TypeError ? 'Le service de connexion est injoignable. Veuillez réessayer plus tard.' : err.message || 'Erreur. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
