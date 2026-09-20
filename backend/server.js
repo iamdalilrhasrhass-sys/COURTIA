@@ -525,7 +525,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 10000
 console.log('⚡ COURTIA Backend — ARK Enabled')
-app.listen(PORT, () => {
+app.listen(PORT, process.env.HOST || '0.0.0.0', () => {
   console.log('COURTIA backend port ' + PORT)
   // ─── Workers asynchrones LOT F3/F8 ────────────────────────────
   try {
