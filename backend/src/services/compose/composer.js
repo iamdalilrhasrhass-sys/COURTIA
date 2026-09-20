@@ -21,8 +21,12 @@ const {
   enrichQuoteData 
 } = require('./composeAi')
 
-// Chemin stockage (hors webroot)
-const STORAGE_BASE = process.env.COMPOSE_STORAGE_PATH || '/root/courtia/storage/compliance'
+const { COMPOSE_STORAGE_ROOT } = require('../../lib/storagePaths')
+
+// Chemin stockage (hors webroot) — dérivé de la racine du dépôt, surchargeable
+// par COMPOSE_STORAGE_PATH. L'ancien /root/courtia/storage/compliance
+// n'existait sur aucune machine.
+const STORAGE_BASE = COMPOSE_STORAGE_ROOT
 
 /**
  * Assure que le dossier de stockage existe

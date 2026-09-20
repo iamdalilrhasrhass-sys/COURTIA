@@ -14,8 +14,12 @@ const pool = require('../db');
 const { clientIA } = require('../lib/aiClient')
 const deepseek = clientIA(OpenAI, { apiKeyVar: 'DEEPSEEK_API_KEY', baseURL: 'https://api.deepseek.com' })
 
-const REPORTS_DIR = process.env.DDA_REPORTS_DIR || '/srv/courtia/backend/reports/dda';
-if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
+const { DDA_REPORTS_DIR, ensureDir } = require('../lib/storagePaths');
+
+// Chemin dérivé de la racine du dépôt (surchargeable par DDA_REPORTS_DIR).
+// La création est faite à l'usage, pas au chargement : un dossier non
+// inscriptible ne doit jamais empêcher le serveur de démarrer.
+const REPORTS_DIR = DDA_REPORTS_DIR;
 
 // 9 checks DDA exigibles
 const DDA_CHECKS = [
@@ -206,6 +210,9 @@ JSON STRICT :
 }
 
 async function generatePdfReport(clientId, audit, ctx) {
+  if (!ensureDir(REPORTS_DIR)) {
+    throw new Error(`Dossier des rapports DDA indisponible : ${REPORTS_DIR}`);
+  }
   const filename = `dda_${clientId}_${Date.now()}.pdf`;
   const filepath = path.join(REPORTS_DIR, filename);
   const doc = new PDFDocument({ size: 'A4', margin: 50 });

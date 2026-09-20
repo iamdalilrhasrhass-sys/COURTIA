@@ -10,7 +10,12 @@ const path = require('path')
 const crypto = require('crypto')
 
 // Configuration
-const STORAGE_ROOT = process.env.DOCUMENT_STORAGE_PATH || '/root/courtia/storage/documents'
+const { DOCUMENT_STORAGE_ROOT } = require('../lib/storagePaths')
+
+// Configuration — chemin dérivé de la racine du dépôt (surchargeable par
+// DOCUMENT_STORAGE_PATH), au lieu de l'ancien /root/courtia/storage/documents
+// qui n'existait sur aucune machine.
+const STORAGE_ROOT = DOCUMENT_STORAGE_ROOT
 const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
 const ALLOWED_MIMES = [
   'application/pdf',

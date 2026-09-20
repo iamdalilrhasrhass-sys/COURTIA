@@ -6,7 +6,10 @@ const path = require('path');
 const crypto = require('crypto');
 const pool = require('../db');
 
-const UPLOAD_DIR = process.env.DOCUMENT_UPLOAD_DIR || '/srv/courtia/uploads/documents';
+const { DOCUMENTS_UPLOAD_DIR, REPO_ROOT, ensureDir } = require('../lib/storagePaths');
+
+// Chemin dérivé de la racine du dépôt (surchargeable par DOCUMENT_UPLOAD_DIR).
+const UPLOAD_DIR = DOCUMENTS_UPLOAD_DIR;
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 const TOKEN_EXPIRY_HOURS = 72;
@@ -14,9 +17,7 @@ const TOKEN_EXPIRY_HOURS = 72;
 // ── Utilitaires ────────────────────────────────────────────────────────
 
 function ensureUploadDir() {
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  }
+  return ensureDir(UPLOAD_DIR);
 }
 
 function generateToken() {
@@ -40,8 +41,8 @@ function generateFilePath(userId, clientId, fileName, mimeType) {
   const safeName = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
   const subDir = `${userId}/${clientId}`;
   const fullDir = path.join(UPLOAD_DIR, subDir);
-  if (!fs.existsSync(fullDir)) {
-    fs.mkdirSync(fullDir, { recursive: true });
+  if (!ensureDir(fullDir)) {
+    throw new Error(`Stockage documentaire indisponible : ${fullDir}`);
   }
   return { filePath: path.join(fullDir, safeName), storagePath: `uploads/documents/${subDir}/${safeName}` };
 }
@@ -313,8 +314,10 @@ async function deleteDocument(docId, userId) {
   );
   if (doc.rows.length === 0) throw new Error('Document introuvable');
 
-  // Delete file
-  const fullPath = path.join('/srv/courtia', doc.rows[0].storage_path);
+  // Delete file — le chemin stocké est relatif à la racine du dépôt ; un
+  // éventuel chemin absolu hérité est utilisé tel quel.
+  const stored = doc.rows[0].storage_path || '';
+  const fullPath = path.isAbsolute(stored) ? stored : path.join(REPO_ROOT, stored);
   try { fs.unlinkSync(fullPath); } catch (e) {}
 
   await pool.query(`DELETE FROM document_uploads WHERE id = $1`, [docId]);
