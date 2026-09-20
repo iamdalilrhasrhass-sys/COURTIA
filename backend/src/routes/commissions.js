@@ -216,7 +216,11 @@ router.get('/baremes', async (req, res) => {
     // présentés comme les barèmes réels d'un cabinet. On les renvoie donc
     // explicitement étiquetés, avec la consigne de saisir ses propres taux
     // (POST /api/commissions/rules), plutôt que comme une donnée de référence.
-    let source = 'cabinet'
+    // Les lignes « plateforme » (user_id et cabinet_id NULL) proviennent du
+    // catalogue d'EXEMPLE livré avec le produit (compagnies et taux qui ne
+    // correspondent à aucun barème réel). Elles sont servies, mais étiquetées :
+    // un cabinet doit savoir que ces taux ne sont pas les siens.
+    let source = rows.length ? 'exemple_plateforme_a_configurer' : 'cabinet'
     if (!rows.length) {
       rows = Object.entries(DEFAULT_BAREMES).flatMap(([compagnie, produits]) =>
         Object.entries(produits).map(([produit, rate]) => ({
@@ -233,7 +237,7 @@ router.get('/baremes', async (req, res) => {
       data: rows,
       total: rows.length,
       source,
-      ...(source === 'exemple_a_configurer'
+      ...(source === 'exemple_a_configurer' || source === 'exemple_plateforme_a_configurer'
         ? {
             message:
               "Barèmes d'exemple, à remplacer par ceux de votre cabinet : ces compagnies et ces taux "
