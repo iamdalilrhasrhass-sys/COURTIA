@@ -62,21 +62,32 @@ Retourne un JSON avec ces champs:
 JSON:`
 
 /**
- * Valide un IBAN français
+ * Valide un IBAN — français (FR, 27) OU suisse (CH, 21).
+ *
+ * La version précédente refusait tout IBAN non français (« IBAN non français ») :
+ * un cabinet suisse voyait ses propres relevés bancaires déclarés invalides.
+ * Les longueurs par pays viennent de la norme ISO 13616.
  */
+const LONGUEURS_IBAN = { FR: 27, CH: 21, LI: 21, DE: 22, IT: 27, BE: 16, LU: 20, MC: 27 }
+
 function validateIBAN(iban) {
   if (!iban) return { valid: false, error: 'IBAN manquant' }
-  
+
   // Nettoyer l'IBAN
   const cleanIban = iban.replace(/\s/g, '').toUpperCase()
-  
-  // IBAN français = 27 caractères, commence par FR
-  if (!cleanIban.startsWith('FR')) {
-    return { valid: false, error: 'IBAN non français' }
+  const pays = cleanIban.slice(0, 2)
+
+  if (!LONGUEURS_IBAN[pays]) {
+    // Pays non pris en charge : on refuse explicitement, sans prétendre que
+    // l'IBAN est invalide dans l'absolu.
+    return { valid: false, error: `IBAN non pris en charge (pays ${pays || 'inconnu'})` }
   }
-  
-  if (cleanIban.length !== 27) {
-    return { valid: false, error: 'IBAN invalide (longueur: ' + cleanIban.length + ', attendu: 27)' }
+
+  if (cleanIban.length !== LONGUEURS_IBAN[pays]) {
+    return {
+      valid: false,
+      error: `IBAN invalide (longueur: ${cleanIban.length}, attendu: ${LONGUEURS_IBAN[pays]} pour ${pays})`,
+    }
   }
   
   // Vérification checksum (algorithme MOD 97)

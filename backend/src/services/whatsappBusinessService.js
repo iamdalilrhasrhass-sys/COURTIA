@@ -55,9 +55,21 @@ function sanitizeWhatsappPhone(phone, options = {}) {
   digits = digits.replace(/^0033/, '+33')
   digits = digits.replace(/^33\(0\)/, '33')
   digits = digits.replace(/^330/, '33')
+  // Préfixe international saisi en « 00 » : on le normalise, sans changer de pays.
+  digits = digits.replace(/^00/, '+')
 
-  if (digits.startsWith('0') && digits.length === 10) {
+  if (digits.startsWith('+')) {
+    // Numéro déjà international (+41, +33, …) : on n'y touche PAS. Forcer le
+    // +33 transformait un mobile suisse 079… en numéro français injoignable.
+    digits = digits
+  } else if (digits.startsWith('0') && digits.length === 10) {
+    // Format national français (0X XX XX XX XX) : 10 chiffres.
     digits = `+33${digits.slice(1)}`
+  } else if (digits.startsWith('0') && digits.length === 9) {
+    // Format national suisse (0XX XXX XX XX) : 9 chiffres.
+    digits = `+41${digits.slice(1)}`
+  } else if (digits.startsWith('41') && digits.length >= 11) {
+    digits = `+${digits}`
   } else if (digits.startsWith('33')) {
     digits = `+${digits}`
   } else if (!digits.startsWith('+') && digits.length >= 8) {

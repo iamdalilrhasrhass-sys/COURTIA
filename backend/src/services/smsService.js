@@ -6,8 +6,12 @@ function sanitizePhone(phone) {
   let cleaned = String(phone).replace(/[\s.\-()]/g, '');
   cleaned = cleaned.replace(/^\+33\(0\)/, '+33');
   if (cleaned.startsWith('00')) cleaned = `+${cleaned.slice(2)}`;
-  if (cleaned.startsWith('0') && !cleaned.startsWith('+')) cleaned = `+33${cleaned.slice(1)}`;
+  // Un numéro national suisse (9 chiffres commençant par 0) devient +41 : le
+  // convertir en +33 rendait le numéro injoignable (constat CH-008).
+  if (/^0\d{8}$/.test(cleaned)) cleaned = `+41${cleaned.slice(1)}`;
+  else if (/^0\d{9}$/.test(cleaned)) cleaned = `+33${cleaned.slice(1)}`;
   if (/^33[1-9]/.test(cleaned)) cleaned = `+${cleaned}`;
+  if (/^41[2-9]/.test(cleaned)) cleaned = `+${cleaned}`;
   if (!cleaned.startsWith('+')) cleaned = `+${cleaned}`;
   return /^\+[1-9]\d{7,14}$/.test(cleaned) ? cleaned : null;
 }
