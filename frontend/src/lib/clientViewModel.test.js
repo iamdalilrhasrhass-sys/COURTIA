@@ -80,3 +80,25 @@ describe('clientViewModel', () => {
     expect(contract.prime).toBe(1200)
   })
 })
+
+describe('risque — aucun verdict sans score réel', () => {
+  // Régression du 21/09/2026 : un score absent tombait sur un repli 0 et le client
+  // était affiché « À surveiller » — un jugement inventé, présenté comme mesuré.
+  it('n’invente pas de libellé de risque quand aucun score n’est fourni', () => {
+    const sansScore = normalizeClientDetail({ id: 1, prenom: 'Jean', nom: 'Dupont' })
+    expect(sansScore.scoreMesure).toBe(false)
+    expect(sansScore.risque).toBe('—')
+  })
+
+  it('déduit le libellé uniquement d’un score transmis', () => {
+    expect(normalizeClientDetail({ id: 2, nom: 'A', score: 80 }).risque).toBe('Faible')
+    expect(normalizeClientDetail({ id: 3, nom: 'B', score: 50 }).risque).toBe('Modéré')
+    expect(normalizeClientDetail({ id: 4, nom: 'C', score: 10 }).risque).toBe('À surveiller')
+  })
+
+  it('traite un vrai score 0 comme une mesure, pas comme une absence', () => {
+    const zero = normalizeClientDetail({ id: 5, nom: 'D', score: 0 })
+    expect(zero.scoreMesure).toBe(true)
+    expect(zero.risque).toBe('À surveiller')
+  })
+})

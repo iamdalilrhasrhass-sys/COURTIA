@@ -72,7 +72,11 @@ export function normalizeClient(row = {}) {
   const segment = clean(row.segment || row.type || row.client_type || row.company_name && 'pro')
   const contracts = toNumber(row.contracts_count ?? row.nb_contrats ?? row.contracts, 0)
   const prime = toNumber(row.prime_annuelle_total ?? row.total_prime ?? row.portfolio_value ?? row.lifetime_value, 0)
-  const score = Math.round(toNumber(row.score ?? row.score_risque ?? row.risk_score ?? row.loyalty_score, 0))
+  const scoreBrut = row.score ?? row.score_risque ?? row.risk_score ?? row.loyalty_score
+  // « pas de score » n'est pas « score 0 » : sans valeur du serveur, l'écran doit
+  // pouvoir dire « non mesuré » au lieu d'inventer un risque (repli 0 → « À surveiller »).
+  const scoreMesure = scoreBrut !== null && scoreBrut !== undefined && scoreBrut !== ''
+  const score = Math.round(toNumber(scoreBrut, 0))
   const city = clean(row.city || row.ville || row.zone_geographique)
 
   return {
@@ -88,6 +92,7 @@ export function normalizeClient(row = {}) {
     contracts,
     prime,
     score,
+    scoreMesure,
     lastContact: formatRelativeDays(row.last_contact || row.updated_at || row.created_at),
     createdAtLabel: formatDateFr(row.created_at),
     ark: row.ark || row.next_best_action || null,
@@ -132,7 +137,10 @@ export function normalizeClientDetail(row = {}) {
     created_at: row.created_at || row.createdAt || null,
     last_contact: row.last_contact || row.updated_at || row.created_at || null,
     portfolio_value: normalized.prime,
-    risque: normalized.score >= 75 ? 'Faible' : normalized.score >= 45 ? 'Modéré' : 'À surveiller',
+    // Un libellé de risque ne se déduit que d'un score réellement fourni.
+    risque: normalized.scoreMesure
+      ? (normalized.score >= 75 ? 'Faible' : normalized.score >= 45 ? 'Modéré' : 'À surveiller')
+      : EMPTY,
   }
 }
 

@@ -619,7 +619,7 @@ ${clientsRes.rows.slice(0, 50).map(c =>
    Produits: ${(c.products || []).join(', ') || 'aucun actif'}
    Primes: ${c.total_premium || 0} ${symboleDevise} | LTV: ${c.lifetime_value || 0} ${symboleDevise}
    Proch. renouvellement: ${c.next_renewal || 'N/A'}
-   ${c.silent_alert ? '⚠️ Alerte silence' : ''} | Risque: ${c.risk_score || 50}`
+   ${c.silent_alert ? '⚠️ Alerte silence' : ''} | Risque: ${c.risk_score ?? 'non mesuré'}`
 ).join('\n')}
 
 CLIENTS MONO-PRODUIT (${monoProduitRes.rows.length}):
