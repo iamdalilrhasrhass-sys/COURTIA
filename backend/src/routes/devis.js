@@ -754,6 +754,24 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'product_type requis' })
     }
 
+    // ── UN PRODUIT EST UN NOM, PAS UNE STRUCTURE (Red Team RT4-11) ──────────
+    // `{"product_type": {"a": 1}}` était accepté : PostgreSQL recevait
+    // « [object Object] » et le stockait dans la colonne. Le refus est ici,
+    // avant toute résolution de portée et tout accès base.
+    if (typeof product_type !== 'string' && typeof product_type !== 'number') {
+      return res.status(400).json({
+        error: 'product_type_invalide',
+        message: 'Indiquez le produit sous forme de texte (par exemple « sante », « auto »).',
+      })
+    }
+    const produit = String(product_type).trim()
+    if (!produit || produit.length > 120) {
+      return res.status(400).json({
+        error: 'product_type_invalide',
+        message: 'Indiquez le produit sous forme de texte (1 à 120 caractères).',
+      })
+    }
+
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     const brokerId = portee.userId || uid(req)
     if (porteeCabinet.refuserEcriture(portee, res, 'créer un devis')) return
@@ -765,7 +783,7 @@ router.post('/', async (req, res) => {
     `, [
       brokerId,
       porteeCabinet.cabinetPourCreation(portee),
-      client_id || null, product_type,
+      client_id || null, produit,
       versParametreJsonb(criteria, {}), versParametreJsonb(target_providers, null),
     ])
 
