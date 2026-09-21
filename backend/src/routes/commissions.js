@@ -11,6 +11,20 @@ const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router()
 
+/**
+ * Entier d'une PÉRIODE (année, mois) : la chaîne entière doit être numérique et
+ * la valeur doit tomber dans la plage de la colonne. Rend `null` sinon — la
+ * route répond alors 400 sans émettre de requête. `parseInt('12abc')` vaut 12,
+ * ce n'est pas une période valide : seul `/^\d+$/` est accepté.
+ */
+function entierDePeriode(valeur, minimum, maximum) {
+  const texte = String(valeur == null ? '' : valeur).trim()
+  if (!/^\d+$/.test(texte)) return null
+  const nombre = Number(texte)
+  if (!Number.isSafeInteger(nombre) || nombre < minimum || nombre > maximum) return null
+  return nombre
+}
+
 router.use(requireCabinetFeature('v1_commissions'))
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -214,8 +228,21 @@ router.get('/reconcile/:year/:month', async (req, res) => {
 router.get('/statement/:year/:month/pdf', async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId
-    const year = parseInt(req.params.year, 10)
-    const month = parseInt(req.params.month, 10)
+    // ── ANNÉE ET MOIS VALIDÉS AVANT LA BASE (mesure du 21/09/2026) ───────────
+    // `GET /api/commissions/statement/abc/1/pdf` envoyait `NaN` à PostgreSQL :
+    // le moteur répondait « invalid input syntax for type integer: \"NaN\" », la
+    // route un 500, et le message brut du moteur partait au navigateur
+    // (Red Team RT4-09 : le code SQLSTATE 22P02 allait jusqu'à être servi comme
+    // code d'erreur). Une période qui n'est pas une période est une demande mal
+    // formée : 400, sans aucune requête émise.
+    const year = entierDePeriode(req.params.year, 1970, 2100)
+    const month = entierDePeriode(req.params.month, 1, 12)
+    if (year === null || month === null) {
+      return res.status(400).json({
+        error: 'periode_invalide',
+        message: 'Indiquez une année (1970-2100) et un mois (1-12) valides pour le relevé.',
+      })
+    }
 
     const result = await commissionsAutoService.generateStatement(
       req.app.locals.pool,
