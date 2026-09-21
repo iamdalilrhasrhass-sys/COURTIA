@@ -23,6 +23,7 @@
 require('dotenv').config()
 
 const pool = require('../src/db')
+pool.verifierConfigurationBase()
 const { runAllBrokers } = require('../src/services/arkWatch')
 
 // =============================================================================

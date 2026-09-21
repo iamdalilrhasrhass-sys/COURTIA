@@ -14,8 +14,10 @@
  */
 const { verifyToken } = require('./auth')
 
-// `../db` refuse de se charger sans DATABASE_URL (process.exit) : on le remplace,
-// le middleware testé ne touche la base que pour vérifier une session révoquée.
+// Le pool est simulé : cette suite n'a besoin d'AUCUNE base (le middleware testé
+// ne touche la base que pour vérifier une session révoquée). Le module `../db`
+// n'arrête plus le processus au chargement (voir src/db.js), mais on garde le
+// pool simulé pour qu'aucune requête réelle ne parte.
 jest.mock('../db', () => ({ query: jest.fn(async () => ({ rows: [] })), pool: {} }))
 
 function fauxRes() {

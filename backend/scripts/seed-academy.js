@@ -1,5 +1,6 @@
 // Seed Academy — 20 skill cards + 8 courses
 const pool = require('../src/db');
+pool.verifierConfigurationBase();
 
 async function seedAcademy() {
   console.log('[seed-academy] Démarrage...');

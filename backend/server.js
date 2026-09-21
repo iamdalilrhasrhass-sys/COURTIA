@@ -93,6 +93,10 @@ if (trustProxyEnv === undefined || trustProxyEnv === '') {
 }
 
 const pool = require('./src/db')
+// Démarrage sans base configurée = arrêt immédiat (même message, même code de
+// sortie 1 qu'avant) : le contrôle est ICI, à l'entrée, et non plus au
+// chargement de `src/db` (qui tuait les workers Jest — voir src/db.js).
+pool.verifierConfigurationBase()
 app.locals.pool = pool
 
 // Rate limiting

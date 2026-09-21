@@ -18,9 +18,9 @@
  */
 const express = require('express')
 
-// La base n'est pas sollicitée : le pool est simulé et le module `../db` (qui
-// refuse de se charger sans DATABASE_URL) est remplacé avant tout require du
-// routeur. Aucun test ne doit dépendre d'une base réelle.
+// La base n'est pas sollicitée : le pool est simulé et le module `../db` est
+// remplacé avant tout require du routeur. Aucun test ne dépend d'une base
+// réelle (et `../db` n'arrête plus le processus au chargement, voir src/db.js).
 jest.mock('../db', () => ({ query: jest.fn(async () => ({ rows: [] })), pool: {} }))
 
 function application(pool) {

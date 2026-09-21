@@ -1,4 +1,5 @@
 const pool = require('./db');
+pool.verifierConfigurationBase();
 
 async function initializeDatabase() {
   try {
