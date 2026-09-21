@@ -152,10 +152,15 @@ const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Contrat d'erreur UNIQUE (audit de surface du 21/09/2026) : un code
+    // machine stable et un message rédigé, jamais le nom d'une classe interne
+    // (« AuthenticationError » exposait l'implémentation et divergeait des
+    // autres routes protégées, qui répondent « En-tête d'authentification
+    // manquant »).
     return res.status(401).json({
       success: false,
-      error: 'AuthenticationError',
-      message: 'Token manquant'
+      error: 'token_absent',
+      message: 'En-tête d’authentification manquant'
     });
   }
 
@@ -167,7 +172,7 @@ const verifyToken = async (req, res, next) => {
     if (session.dbError) {
       return res.status(503).json({
         success: false,
-        error: 'AuthenticationError',
+        error: 'session_verification_indisponible',
         message: 'Vérification de session indisponible'
       });
     }
@@ -182,7 +187,7 @@ const verifyToken = async (req, res, next) => {
     // dont l'action serait interdite.
     return res.status(401).json({
       success: false,
-      error: 'AuthenticationError',
+      error: 'token_invalide',
       message: 'Token invalide ou expiré'
     });
   }
