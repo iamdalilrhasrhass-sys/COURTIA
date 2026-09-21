@@ -4,6 +4,17 @@ const cors = require('cors')
 const helmet = require('helmet')
 const app = express()
 const logger = require('./src/lib/logger')
+// ── POURQUOI CES REQUIRES SONT EN TÊTE ──────────────────────────────────────
+// `assainirErreursInternes` est MONTÉ très haut dans ce fichier (avant tous les
+// routeurs, c'est sa raison d'être) : sa déclaration doit donc précéder son
+// usage. Placée plus bas (à côté du rate limiting), elle provoquait
+// « ReferenceError: Cannot access 'assainirErreursInternes' before
+// initialization » — le serveur ne démarrait plus DU TOUT. Constaté en
+// production le 21/09/2026 : le déploiement Render est passé en
+// `update_failed` (nonZeroExit 1) sur ce seul défaut, alors que 1 343 tests
+// backend étaient verts — aucun test ne démarrait `server.js`. Le test de
+// démarrage `src/server.boot.test.js` ferme cette classe.
+const { messagePublic, assainirErreursInternes } = require('./src/lib/erreursPubliques')
 const { initSentry, captureException } = require('./src/sentry')
 
 initSentry()
@@ -86,7 +97,6 @@ app.locals.pool = pool
 
 // Rate limiting
 const { apiLimiter, healthLimiter, arkLimiter } = require('./src/middleware/rateLimit')
-const { messagePublic, assainirErreursInternes } = require('./src/lib/erreursPubliques')
 app.use('/api', apiLimiter)
 app.use('/health', healthLimiter)
 app.use('/api/health', healthLimiter)
