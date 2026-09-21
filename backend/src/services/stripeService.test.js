@@ -23,12 +23,17 @@ describe('stripeService configuration', () => {
     expect(status.configured).toBe(false)
     expect(status.checkout_ready).toBe(false)
     expect(status.missing).toEqual(expect.arrayContaining([
-      'STRIPE_SECRET_KEY',
-      'STRIPE_PRICE_STARTER',
-      'STRIPE_PRICE_PRO',
-      'STRIPE_PRICE_CABINET',
-      'STRIPE_WEBHOOK_SECRET',
+      'clé secrète du prestataire de paiement',
+      "identifiant de tarif pour l'offre starter",
+      "identifiant de tarif pour l'offre pro",
+      "identifiant de tarif pour l'offre cabinet",
+      'secret de webhook de paiement',
     ]))
+
+    // Non-régression (constat du 21/09/2026) : `getConfigurationStatus` alimente
+    // une route PUBLIQUE. Aucun nom de variable d'environnement ne doit y figurer.
+    const serialise = JSON.stringify(status)
+    expect(serialise).not.toMatch(/STRIPE_[A-Z_]+/)
   })
 
   it('recognizes Starter, Pro and Cabinet price IDs in test mode', () => {

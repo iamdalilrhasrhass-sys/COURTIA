@@ -79,13 +79,22 @@ function getConfigurationStatus(marche = 'FR') {
   const marcheNormalise = String(marche).toUpperCase() === 'CH' ? 'CH' : 'FR';
   const requiredPricePlans = PLANS_FACTURABLES[marcheNormalise];
 
-  if (!secretKey) missing.push('STRIPE_SECRET_KEY');
+  // `missing` est renvoyé par une route PUBLIQUE (/api/billing/plans) et affiché
+  // dans l'écran d'abonnement : on n'y inscrit JAMAIS le nom des variables
+  // d'environnement (divulgation d'architecture inutile), seulement un libellé
+  // compréhensible. Constat du 21/09/2026 : la réponse publique listait
+  // STRIPE_SECRET_KEY / STRIPE_PRICE_* / STRIPE_WEBHOOK_SECRET.
+  const LABELS_MANQUANTS = {
+    cle_secrete: 'clé secrète du prestataire de paiement',
+    webhook: 'secret de webhook de paiement',
+  }
+  if (!secretKey) missing.push(LABELS_MANQUANTS.cle_secrete);
   for (const plan of requiredPricePlans) {
     if (!getPriceId(plan)) {
-      missing.push(`STRIPE_PRICE_${plan.toUpperCase()}`);
+      missing.push(`identifiant de tarif pour l'offre ${plan}`);
     }
   }
-  if (!webhookSecret) missing.push('STRIPE_WEBHOOK_SECRET');
+  if (!webhookSecret) missing.push(LABELS_MANQUANTS.webhook);
 
   return {
     mode,
