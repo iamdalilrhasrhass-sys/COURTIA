@@ -232,10 +232,14 @@ async function callAiWithQuotaManagement(
   systemPrompt = null,
   fallbackToOpusOnFailure = true
 ) {
+  // `model` est déclaré AVANT le try : dans le bloc `catch` (journalisation et
+  // repli), il était hors de portée — le gestionnaire d'erreur levait alors une
+  // ReferenceError et masquait la panne d'origine (défaut mesuré le 21/09/2026).
+  let model = null;
   try {
     // Déterminer si requête est complexe — identifiants issus de la source unique
     const isComplex = isComplexQuery(prompt);
-    let model = isComplex ? MODELE_ANALYSE : MODELE_LEGER;
+    model = isComplex ? MODELE_ANALYSE : MODELE_LEGER;
     
     // Vérifier quota
     const quotaCheck = await checkAndUpdateQuota(pool, userId, isComplex ? 'opus' : 'haiku');

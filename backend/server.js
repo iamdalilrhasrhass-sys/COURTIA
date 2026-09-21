@@ -97,7 +97,17 @@ app.locals.pool = pool
 
 // Rate limiting
 const { apiLimiter, healthLimiter, arkLimiter } = require('./src/middleware/rateLimit')
+// ── AUCUNE RÉPONSE D'API NE DOIT ÊTRE MISE EN CACHE (mesure du 21/09/2026) ──
+// Aucune réponse ne portait `Cache-Control` : via le proxy Vercel, une réponse
+// authentifiée ressortait avec `cache-control: public, max-age=0,
+// must-revalidate`, donc stockable par un cache partagé qui ne distingue pas
+// l'appelant. `no-store` est posé ici, avant tout routeur.
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store')
+  next()
+})
 app.use('/api', apiLimiter)
+
 app.use('/health', healthLimiter)
 app.use('/api/health', healthLimiter)
 
@@ -746,7 +756,18 @@ startReachWorker(pool);
 // ==================== ERROR HANDLERS ====================
 
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route non trouvée', path: req.originalUrl })
+  // Chemin réfléchi BORNÉ (mesure du 21/09/2026) : au-delà d'environ 260
+  // caractères, le corps JSON dépassait la longueur maximale admise par le
+  // filtre anti-fuite, qui le remplaçait alors par le message générique — la
+  // réponse perdait son contrat JSON sur une simple URL inconnue, et l'appelant
+  // ne pouvait plus distinguer « route inconnue » d'une panne serveur.
+  // On tronque donc ce qu'on renvoie, et on le dit.
+  const complet = String(req.originalUrl || '')
+  const borne = 180
+  const corps = { error: 'Route non trouvée' }
+  corps.path = complet.length > borne ? `${complet.slice(0, borne)}…` : complet
+  if (complet.length > borne) corps.path_tronque = true
+  res.status(404).json(corps)
 })
 
 app.use((err, req, res, next) => {

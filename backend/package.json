@@ -10,7 +10,8 @@
     "migrate": "node scripts/migrate.js",
     "playwright:install": "npx playwright install chromium || npx playwright install --with-deps chromium",
     "qa:preview-smoke": "node scripts/preview-smoke-playwright.js",
-    "qa:prod-smoke": "PROD_URL=https://app.courtiark.fr node scripts/preview-smoke-playwright.js"
+    "qa:prod-smoke": "PROD_URL=https://app.courtiark.fr node scripts/preview-smoke-playwright.js",
+    "audit:no-undef": "npx --yes eslint@9 \"src/**/*.js\" server.js --config ./eslint.no-undef.config.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

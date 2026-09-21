@@ -1832,6 +1832,9 @@ function connectorEnvOk(c) {
 
 router.get('/connectors', async (req, res) => {
   try {
+    // Source unique du pool (défaut mesuré le 21/09/2026 : `pool` n'était pas
+    // déclaré dans ce handler, la route répondait 500 au lieu de 401/200).
+    const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
 
@@ -1924,6 +1927,9 @@ router.get('/connectors/:type/connect', async (req, res) => {
 
 router.post('/connectors/:type/save-credentials', async (req, res) => {
   try {
+    // Source unique du pool (défaut mesuré le 21/09/2026 : `pool` n'était pas
+    // déclaré dans ce handler, la route répondait 500 au lieu de 401/200).
+    const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
     const c = CONNECTORS.find(x => x.key === req.params.type)
@@ -1950,6 +1956,9 @@ router.post('/connectors/:type/save-credentials', async (req, res) => {
 
 router.post('/connectors/:type/disconnect', async (req, res) => {
   try {
+    // Source unique du pool (défaut mesuré le 21/09/2026 : `pool` n'était pas
+    // déclaré dans ce handler, la route répondait 500 au lieu de 401/200).
+    const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
     const c = CONNECTORS.find(x => x.key === req.params.type)
@@ -1967,6 +1976,9 @@ router.post('/connectors/:type/disconnect', async (req, res) => {
 
 router.post('/connectors/:type/test', async (req, res) => {
   try {
+    // Source unique du pool (défaut mesuré le 21/09/2026 : `pool` n'était pas
+    // déclaré dans ce handler, la route répondait 500 au lieu de 401/200).
+    const pool = req.app.locals.pool
     const userId = withUserId(req, res)
     if (!userId) return
     const c = CONNECTORS.find(x => x.key === req.params.type)

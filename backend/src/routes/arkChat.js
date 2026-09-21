@@ -7,6 +7,10 @@ const express = require('express')
 const router = express.Router()
 const arkChatService = require('../services/arkChatService')
 const { getJwtSecret } = require('../utils/jwtSecret')
+// Import au niveau MODULE : placé dans le bloc `try` de verifyClientToken, il
+// n'était pas visible des handlers de routes — /api/ark/chat répondait alors une
+// erreur interne au lieu de son message métier (défaut mesuré le 21/09/2026).
+const { messagePublic } = require('../lib/erreursPubliques')
 
 /**
  * Middleware d'authentification client portail
@@ -26,7 +30,6 @@ async function verifyClientToken(req, res, next) {
   
   try {
     const jwt = require('jsonwebtoken')
-const { messagePublic } = require('../lib/erreursPubliques')
     const decoded = jwt.verify(token, getJwtSecret())
     
     // Vérifier que c'est un token client portail

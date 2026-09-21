@@ -28,6 +28,7 @@ const pool = require('../db');
 const multer = require('multer');
 const path = require('path');
 const verifyToken = require('../middleware/authMiddleware');
+const { clauseJetonRecherche } = require('../lib/jetons');
 
 const docInboxService = require('../services/documentInboxService');
 const porteeCabinet = require('../lib/porteeCabinet');
