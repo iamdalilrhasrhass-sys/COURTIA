@@ -3,13 +3,21 @@
 // Anneau externe = documents, anneau interne = champs structurés.
 // Segments manquants pulsent. Hover = tooltip + action directe.
 //
-// Props :
-//   docsScore     {number} — 0-100
-//   fieldsScore   {number} — 0-100
+// Props (AUCUNE valeur par défaut chiffrée) :
+//   docsScore     {number|null} — 0-100 mesuré, sinon null (« non mesuré »)
+//   fieldsScore   {number|null} — 0-100 mesuré, sinon null (« non mesuré »)
 //   missingDocs   {Array<{id, label, action: 'whatsapp'|'email'|'form'}>}
 //   missingFields {Array<{id, label}>}
 //   clientName    {string}
 //   onAction      {function({type, item})}
+//
+// POURQUOI AUCUN DÉFAUT : ce composant portait des scores de repli chiffrés et
+// deux listes d'exemple (« Relevé d'information », « Date d'effet »). Monté sans
+// props — ou avec les pourcentages fabriqués de la fiche client — il affichait un
+// taux de complétude et un « Prêt à tarifer » qu'aucune donnée ne soutenait
+// (relevé en production le 21/09/2026). Un anneau sans mesure affiche « non
+// mesuré », et « Prêt à tarifer » n'apparaît que si les DEUX mesures existent et
+// valent 100 %.
 
 import { useState } from 'react'
 
@@ -19,21 +27,11 @@ const ACTION_ICONS = {
   form: '📝',
 }
 
-const DEFAULT_MISSING_DOCS = [
-  { id: 'ri', label: "Relevé d'information", action: 'whatsapp' },
-  { id: 'domicile', label: 'Justificatif domicile', action: 'whatsapp' },
-]
-
-const DEFAULT_MISSING_FIELDS = [
-  { id: 'bonus_malus', label: 'Bonus/malus' },
-  { id: 'date_effet', label: "Date d'effet" },
-]
-
 export default function DossierOrbitalRings({
-  docsScore = 60,
-  fieldsScore = 80,
-  missingDocs = DEFAULT_MISSING_DOCS,
-  missingFields = DEFAULT_MISSING_FIELDS,
+  docsScore = null,
+  fieldsScore = null,
+  missingDocs = [],
+  missingFields = [],
   clientName = 'Dossier',
   onAction,
   size = 220,
@@ -46,7 +44,18 @@ export default function DossierOrbitalRings({
   const strokeOuter = size * 0.09
   const strokeInner = size * 0.07
 
-  const globalScore = Math.round((docsScore + fieldsScore) / 2)
+  const docsMesure = Number.isFinite(docsScore)
+  const champsMesure = Number.isFinite(fieldsScore)
+  const completudeMesuree = docsMesure && champsMesure
+
+  // Un score global n'a de sens que si ses DEUX composantes sont mesurées :
+  // moyenner une mesure avec une inconnue produirait un chiffre inventé.
+  const globalScore = completudeMesuree ? Math.round((docsScore + fieldsScore) / 2) : null
+  const pretATarifer = completudeMesuree && docsScore >= 100 && fieldsScore >= 100
+
+  const docsSurvolables = Array.isArray(missingDocs) ? missingDocs : []
+  const champsSurvolables = Array.isArray(missingFields) ? missingFields : []
+  const rienASignaler = docsSurvolables.length === 0 && champsSurvolables.length === 0
 
   function describeArc(cx, cy, r, startAngle, endAngle) {
     const start = polarToCart(cx, cy, r, startAngle)
@@ -60,10 +69,12 @@ export default function DossierOrbitalRings({
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
   }
 
-  const outerFillDeg = (docsScore / 100) * 340
-  const innerFillDeg = (fieldsScore / 100) * 340
+  const outerFillDeg = docsMesure ? (docsScore / 100) * 340 : 0
+  const innerFillDeg = champsMesure ? (fieldsScore / 100) * 340 : 0
 
-  const scoreColor = globalScore >= 80
+  const scoreColor = globalScore === null
+    ? '#94A3B8'
+    : globalScore >= 80
     ? '#22C55E'
     : globalScore >= 55
     ? '#F59E0B'
@@ -73,7 +84,11 @@ export default function DossierOrbitalRings({
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{clientName}</p>
-        <span className="text-xs text-slate-400">Prêt à tarifer</span>
+        {/* L'état du dossier ne s'annonce que sur des mesures réelles : sans les
+            deux anneaux mesurés, aucun « Prêt à tarifer ». */}
+        {completudeMesuree && (
+          <span className="text-xs text-slate-400">{pretATarifer ? 'Prêt à tarifer' : 'À compléter'}</span>
+        )}
       </div>
 
       <div className="flex items-start gap-6">
@@ -88,8 +103,8 @@ export default function DossierOrbitalRings({
               strokeWidth={strokeOuter}
               className="text-slate-100 dark:text-slate-800"
             />
-            {/* Outer ring fill (docs) */}
-            {docsScore > 0 && (
+            {/* Outer ring fill (docs) — seulement si mesuré */}
+            {docsMesure && docsScore > 0 && (
               <path
                 d={describeArc(cx, cy, outerR, 10, 10 + outerFillDeg)}
                 fill="none"
@@ -99,7 +114,7 @@ export default function DossierOrbitalRings({
               />
             )}
             {/* Outer missing segments pulse */}
-            {docsScore < 100 && (
+            {docsMesure && docsScore < 100 && (
               <path
                 d={describeArc(cx, cy, outerR, 10 + outerFillDeg + 4, 350)}
                 fill="none"
@@ -119,8 +134,8 @@ export default function DossierOrbitalRings({
               strokeWidth={strokeInner}
               className="text-slate-100 dark:text-slate-800"
             />
-            {/* Inner ring fill (fields) */}
-            {fieldsScore > 0 && (
+            {/* Inner ring fill (fields) — seulement si mesuré */}
+            {champsMesure && fieldsScore > 0 && (
               <path
                 d={describeArc(cx, cy, innerR, 10, 10 + innerFillDeg)}
                 fill="none"
@@ -129,7 +144,7 @@ export default function DossierOrbitalRings({
                 strokeLinecap="round"
               />
             )}
-            {fieldsScore < 100 && (
+            {champsMesure && fieldsScore < 100 && (
               <path
                 d={describeArc(cx, cy, innerR, 10 + innerFillDeg + 4, 350)}
                 fill="none"
@@ -145,11 +160,11 @@ export default function DossierOrbitalRings({
             <text
               x={cx} y={cy - 8}
               textAnchor="middle"
-              fontSize={size * 0.14}
+              fontSize={globalScore === null ? size * 0.075 : size * 0.14}
               fontWeight="600"
               fill={scoreColor}
             >
-              {globalScore}%
+              {globalScore === null ? 'non mesuré' : `${globalScore}%`}
             </text>
             <text
               x={cx} y={cy + 10}
@@ -178,13 +193,13 @@ export default function DossierOrbitalRings({
 
         {/* Missing items */}
         <div className="flex-1 flex flex-col gap-3 min-w-0">
-          {missingDocs.length > 0 && (
+          {docsSurvolables.length > 0 && (
             <div>
               <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1.5">
                 Documents manquants
               </p>
               <div className="flex flex-col gap-1">
-                {missingDocs.map(doc => (
+                {docsSurvolables.map(doc => (
                   <button
                     key={doc.id}
                     className="flex items-center gap-2 rounded-lg border border-blue-100 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/30 px-2.5 py-1.5 text-left hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors group"
@@ -201,13 +216,13 @@ export default function DossierOrbitalRings({
             </div>
           )}
 
-          {missingFields.length > 0 && (
+          {champsSurvolables.length > 0 && (
             <div>
               <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1.5">
                 Champs à compléter
               </p>
               <div className="flex flex-col gap-1">
-                {missingFields.map(field => (
+                {champsSurvolables.map(field => (
                   <button
                     key={field.id}
                     className="flex items-center gap-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 text-left hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors group"
@@ -223,11 +238,37 @@ export default function DossierOrbitalRings({
             </div>
           )}
 
-          {missingDocs.length === 0 && missingFields.length === 0 && (
+          {pretATarifer && (
             <div className="flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 px-3 py-2">
               <span className="text-emerald-500 text-sm">✓</span>
               <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
                 Dossier prêt à tarifer
+              </span>
+            </div>
+          )}
+
+          {!docsMesure && (
+            <div className="rounded-lg border border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-950/20 px-3 py-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Documents : non mesuré — aucune pièce attendue n’est transmise
+                par le serveur pour ce dossier.
+              </span>
+            </div>
+          )}
+
+          {!champsMesure && (
+            <div className="rounded-lg border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/60 dark:bg-emerald-950/20 px-3 py-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Champs clés : non mesuré — la complétude de la fiche n’a pas pu
+                être calculée.
+              </span>
+            </div>
+          )}
+
+          {rienASignaler && completudeMesuree && !pretATarifer && (
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/30 px-3 py-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Aucun manque signalé pour ce dossier.
               </span>
             </div>
           )}

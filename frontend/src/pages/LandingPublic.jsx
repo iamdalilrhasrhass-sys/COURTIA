@@ -415,7 +415,7 @@ const pricing = [
     label: 'Cabinets qui veulent scaler',
     headline: 'Pour industrialiser le suivi commercial sur toute l’équipe.',
     note: 'Accompagnement, déploiement, organisation multi-utilisateurs et workflows avancés étudiés avec le cabinet.',
-    externalHref: 'mailto:contact@courtia.fr?subject=COURTIA%20Cabinet',
+    externalHref: 'mailto:contact@courtiark.fr?subject=COURTIA%20Cabinet',
     cta: 'Construire mon déploiement',
     featured: false,
     items: ['Tout Pro', 'Multi-utilisateurs', 'Méthode de déploiement', 'Suivi équipe', 'Support prioritaire'],
@@ -822,7 +822,7 @@ const swissPricing = [
     label: 'Verticale suisse',
     headline: 'Assurance, fiduciaire, TVA suisse, échéances cantonales et GED hashée.',
     note: "Dès 1'500 CHF de setup. Déploiement, flux de données et sécurité nLPD cadrés au cas par cas.",
-    externalHref: 'mailto:contact@courtia.fr?subject=Courtiark%20Suisse%20Fiduciaire',
+    externalHref: 'mailto:contact@courtiark.fr?subject=Courtiark%20Suisse%20Fiduciaire',
     cta: 'Parler du déploiement',
     featured: false,
     items: ['Module Fiduciaire', 'Mandats et échéanciers cantonaux', 'TVA suisse 8,1 / 2,6 / 3,8 %', 'GED versionnée + hash', 'Plan hébergement CH'],
@@ -1580,7 +1580,9 @@ export default function LandingPublic() {
                 routeur SPA — un <Link> la renverrait vers le 404 applicatif.
                 C'est le lien d'entrée du cluster suisse depuis l'accueil. */}
             <a href="/ch" className="hover:text-white">Page suisse (LSA · FINMA · CHF)</a>
-            <a href="mailto:contact@courtia.fr" className="hover:text-white">{copy.footerContact}</a>
+            {/* Domaine réellement servi : les mentions légales publient
+                contact@courtiark.fr — le pied de page pointait une autre boîte. */}
+            <a href="mailto:contact@courtiark.fr" className="hover:text-white">{copy.footerContact}</a>
           </div>
           <MarketSwitcher market={marketContext.market} onChange={changeMarket} />
           <RhasrhassSignature compact />

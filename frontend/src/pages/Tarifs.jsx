@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } from 'lucide-react'
 import { MARKET_PRICING, MARKET_OPTIONS, resolveMarketContext, persistMarketOverride, parseMarketFromSearch, readStoredMarketOverride, getDetectedGeoCountry } from '../market/marketContext'
+import MarketingFooter from '../components/marketing/MarketingFooter'
 import { applySeo } from '../lib/seo'
 import { evenement } from '../lib/analytics'
 // ─── Feature Configuration ────────────────────────────────────────────────────
@@ -140,6 +141,11 @@ const frais = [
 ]
 
 const faq = [
+  // L'essai gratuit manquait sur la page des prix alors que la landing l'annonce
+  // partout. Les termes sont ceux réellement publiés ailleurs (7 jours, 0 €
+  // aujourd'hui, annulation en ligne, carte gérée par Stripe Checkout) : rien de
+  // nouveau n'est promis ici.
+  { q: 'Y a-t-il un essai gratuit ?', a: "Oui : 7 jours d'essai, 0 € aujourd'hui, annulation en ligne. Sans annulation avant la fin de l'essai, l'abonnement démarre. Le paiement passe par Stripe Checkout sécurisé et COURTIA ne stocke aucune donnée bancaire." },
   { q: 'Puis-je résilier à tout moment ?', a: "Oui, sans frais. Votre abonnement reste actif jusqu'à la fin de la période en cours." },
   { q: 'Mes données sont-elles sécurisées ?', a: 'Oui. Hébergement sécurisé, chiffrement SSL, sauvegardes quotidiennes. Conforme RGPD.' },
   { q: 'Puis-je importer mes clients depuis un autre CRM ?', a: 'Oui. Format Excel/CSV supporté. ARK nettoie et dédoublonne avec suivi.' },
@@ -459,6 +465,13 @@ export default function Tarifs() {
             Pas de frais cachés, pas d'engagement. Choisissez le plan adapté à
             votre activité de courtage.
           </p>
+          {/* Essai gratuit : la landing l'annonce (« Essai gratuit 7 jours »,
+              « 7 jours, 0 € aujourd'hui, annulation en ligne ») alors que cette
+              page n'en disait pas un mot. Termes strictement identiques, aucun
+              engagement nouveau. */}
+          <p className="mx-auto mt-3 max-w-xl text-sm font-semibold text-[#534AB7]">
+            Essai gratuit 7 jours — 0 € aujourd'hui, annulation en ligne.
+          </p>
           <div className="mt-6 inline-flex rounded-full border border-gray-200 bg-gray-50 p-1">
             {MARKET_OPTIONS.map(opt => (
               <button
@@ -575,6 +588,15 @@ export default function Tarifs() {
         {/* ── Footer ── */}
         <div className="mt-12 text-center">
           <p className="text-xs text-gray-300">Rhasrhass&reg;</p>
+        </div>
+      </div>
+
+      {/* Pied de page des pages publiques : /tarifs n'en avait AUCUN, donc les
+          mentions légales, la confidentialité et les conditions étaient
+          inatteignables depuis la page des prix. */}
+      <div className="mk-page mk-footer-band">
+        <div className="mk-shell">
+          <MarketingFooter />
         </div>
       </div>
     </div>

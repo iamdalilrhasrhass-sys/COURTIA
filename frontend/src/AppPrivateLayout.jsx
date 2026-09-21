@@ -8,6 +8,10 @@ import CommandPalette from './components/ui/CommandPalette'
 import { AuroraBackground } from './components/aurora/Aurora3D'
 import AuroraMobileTopbar from './components/aurora/AuroraMobileTopbar'
 import AuroraBottomNav from './components/aurora/AuroraBottomNav'
+// Règle de viewport mobile de l'application : le hook partagé utilisé par
+// AuroraMobileLayout/AuroraTableMobile (« max-width: 768px »). Aucune nouvelle
+// détection n'est introduite ici.
+import { useMediaQuery } from './components/aurora/AuroraMobileLayout'
 import { Particles, ScrollGlow } from './components/vibe/VibePage'
 import ArkNeuralPulse from './components/widgets/ArkNeuralPulse'
 import { usePlanStore } from './stores/planStore'
@@ -19,6 +23,7 @@ import { decisionEssai } from './lib/essaiUi'
 export default function AppPrivateLayout() {
   const navigate = useNavigate()
   const fetchPlanInfo = usePlanStore(s => s.fetchPlanInfo)
+  const isMobile = useMediaQuery('(max-width: 768px)')
   const [paywallError, setPaywallError] = useState(null)
   // Statut d'essai : il vient du SERVEUR (/api/billing/status → trial_state).
   // Le bandeau et la modale de fin d'essai ne dépendent jamais d'une date
@@ -83,9 +88,19 @@ export default function AppPrivateLayout() {
       <ScrollGlow />
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       
-      {/* Aurora Mobile Components */}
-      <AuroraMobileTopbar onMenuClick={() => setMobileMenuOpen(true)} />
-      <AuroraBottomNav />
+      {/* Aurora Mobile Components — UNIQUEMENT sur mobile.
+          La barre était montée sans condition : sur desktop, on voyait donc en
+          permanence un second logo COURTIA, un hamburger et une cloche rognée
+          au-dessus du cockpit (relevé en production le 21/09/2026). La condition
+          est la règle de viewport du produit (« max-width: 768px »), la même que
+          celle qui masque déjà la barre de navigation basse et retire le
+          rembourrage `md:` du contenu. */}
+      {isMobile && (
+        <>
+          <AuroraMobileTopbar onMenuClick={() => setMobileMenuOpen(true)} />
+          <AuroraBottomNav />
+        </>
+      )}
 
       <Sidebar mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
       

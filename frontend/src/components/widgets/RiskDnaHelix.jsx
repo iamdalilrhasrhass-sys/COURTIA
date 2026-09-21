@@ -1,19 +1,18 @@
 // RiskDnaHelix.jsx
-// Hélice ADN animée représentant le profil de risque client.
-// Props :
-//   riskFactors {Array} — [{id, label, level: 'clean'|'caution'|'risk'|'critical', value}]
-//   clientName {string}
+// Hélice ADN animée représentant le profil de risque d'un client.
+//
+// Props (toutes issues de DONNÉES SERVEUR, jamais d'un jeu d'exemple) :
+//   riskFactors {Array} — [{id, label, level: 'clean'|'caution'|'risk'|'critical'|'inconnu', value}]
+//   score       {number|null} — score de risque du serveur (0-100) ; null = non mesuré
+//   clientName  {string}
 //   onFactorClick {function(factor)} — callback au clic sur un segment
 //
-// Exemple de données :
-// [
-//   { id: 'bonus', label: 'Bonus/Malus', level: 'risk', value: 'Malus 1.35' },
-//   { id: 'resiliation', label: 'Résiliation', level: 'critical', value: 'Non-paiement' },
-//   { id: 'sinistres', label: 'Sinistres 3 ans', level: 'caution', value: '2 sinistres' },
-//   { id: 'anciennete', label: 'Ancienneté permis', level: 'clean', value: '8 ans' },
-//   { id: 'usage', label: 'Usage véhicule', level: 'clean', value: 'Trajet domicile' },
-//   { id: 'puissance', label: 'Puissance', level: 'caution', value: '7 CV' },
-// ]
+// AUCUNE valeur par défaut n'est dessinée : ce composant dessinait auparavant un
+// jeu de facteurs d'exemple codé en dur (bonus-malus, résiliation, sinistres,
+// ancienneté, usage, puissance) et calculait lui-même un score « / 100 » à partir
+// de la part de facteurs « propres ». Sur une fiche client sans données de
+// risque, l'écran affichait donc un profil inventé (relevé en production le
+// 21/09/2026). Sans facteurs transmis, il n'y a rien à montrer : l'écran le dit.
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -22,19 +21,12 @@ const LEVEL_COLORS = {
   caution:  { fill: '#F59E0B', glow: '#FAC775', label: 'Attention' },
   risk:     { fill: '#EF4444', glow: '#F0997B', label: 'Risque' },
   critical: { fill: '#E24B4A', glow: '#F09595', label: 'Critique' },
+  inconnu:  { fill: '#94A3B8', glow: '#CBD5E1', label: 'Non classé' },
 }
 
-const DEFAULT_FACTORS = [
-  { id: 'bonus',      label: 'Bonus/Malus',        level: 'risk',     value: 'Malus 1.35' },
-  { id: 'resil',      label: 'Résiliation',         level: 'critical', value: 'Non-paiement' },
-  { id: 'sinistres',  label: 'Sinistres 3 ans',     level: 'caution',  value: '2 sinistres' },
-  { id: 'anciennete', label: 'Ancienneté permis',   level: 'clean',    value: '8 ans' },
-  { id: 'usage',      label: 'Usage véhicule',      level: 'clean',    value: 'Domicile-travail' },
-  { id: 'puissance',  label: 'Puissance',           level: 'caution',  value: '7 CV' },
-]
-
 export default function RiskDnaHelix({
-  riskFactors = DEFAULT_FACTORS,
+  riskFactors = [],
+  score = null,
   clientName = 'Client',
   onFactorClick,
   width = 340,
@@ -44,6 +36,10 @@ export default function RiskDnaHelix({
   const rafRef = useRef(null)
   const [hoveredFactor, setHoveredFactor] = useState(null)
   const tRef = useRef(0)
+
+  const facteurs = Array.isArray(riskFactors) ? riskFactors : []
+  const aDesFacteurs = facteurs.length > 0
+  const scoreMesure = Number.isFinite(score) ? Math.round(score) : null
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -88,15 +84,15 @@ export default function RiskDnaHelix({
       ctx.stroke()
 
       // Draw base pairs (rungs) with risk factor colors
-      const rungCount = riskFactors.length
-      riskFactors.forEach((factor, fi) => {
+      const rungCount = facteurs.length
+      facteurs.forEach((factor, fi) => {
         const progress = (fi + 1) / (rungCount + 1)
         const idx = Math.floor(progress * numPoints)
         const pA = strandA[idx]
         const pB = strandB[idx]
         if (!pA || !pB) return
 
-        const col = LEVEL_COLORS[factor.level] ?? LEVEL_COLORS.clean
+        const col = LEVEL_COLORS[factor.level] ?? LEVEL_COLORS.inconnu
         const isHovered = hoveredFactor?.id === factor.id
 
         ctx.beginPath()
@@ -141,13 +137,11 @@ export default function RiskDnaHelix({
 
     draw()
     return () => cancelAnimationFrame(rafRef.current)
-  }, [width, height, riskFactors, hoveredFactor])
+  }, [width, height, facteurs, hoveredFactor])
 
-  const riskScore = Math.round(
-    (riskFactors.filter(f => f.level === 'clean').length / riskFactors.length) * 100
-  )
-
-  const scoreColor = riskScore >= 70 ? 'text-emerald-500' : riskScore >= 45 ? 'text-amber-500' : 'text-red-500'
+  const scoreColor = scoreMesure === null
+    ? 'text-slate-400'
+    : scoreMesure >= 70 ? 'text-emerald-500' : scoreMesure >= 45 ? 'text-amber-500' : 'text-red-500'
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">
@@ -157,48 +151,66 @@ export default function RiskDnaHelix({
           <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{clientName}</p>
         </div>
         <div className="text-right">
-          <p className={`text-2xl font-semibold ${scoreColor}`}>{riskScore}</p>
-          <p className="text-xs text-slate-400">/ 100</p>
+          {scoreMesure === null ? (
+            <p className="text-sm font-medium text-slate-400" data-testid="risque-non-mesure">non mesuré</p>
+          ) : (
+            <>
+              <p className={`text-2xl font-semibold ${scoreColor}`}>{scoreMesure}</p>
+              <p className="text-xs text-slate-400">/ 100</p>
+            </>
+          )}
         </div>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="w-full"
-        style={{ height }}
-      />
+      {!aDesFacteurs && (
+        <p className="px-4 pb-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          Aucune donnée de risque n’est transmise par le serveur pour ce client :
+          ni bonus-malus, ni sinistres, ni ancienneté de permis, ni zone.
+          Rien n’est affiché plutôt qu’un profil d’exemple.
+        </p>
+      )}
 
-      <div className="grid grid-cols-2 gap-1 p-3">
-        {riskFactors.map(factor => {
-          const col = LEVEL_COLORS[factor.level]
-          return (
-            <button
-              key={factor.id}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
-              onMouseEnter={() => setHoveredFactor(factor)}
-              onMouseLeave={() => setHoveredFactor(null)}
-              onClick={() => onFactorClick?.(factor)}
-            >
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: col.fill }} />
-              <span className="flex-1 min-w-0">
-                <span className="block text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{factor.label}</span>
-                <span className="block text-xs text-slate-400 truncate">{factor.value}</span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      {aDesFacteurs && (
+        <>
+          <canvas
+            ref={canvasRef}
+            width={width}
+            height={height}
+            className="w-full"
+            style={{ height }}
+          />
 
-      <div className="flex gap-2 px-3 pb-3">
-        {Object.entries(LEVEL_COLORS).map(([level, col]) => (
-          <div key={level} className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: col.fill }} />
-            <span className="text-xs text-slate-400">{col.label}</span>
+          <div className="grid grid-cols-2 gap-1 p-3">
+            {facteurs.map(factor => {
+              const col = LEVEL_COLORS[factor.level] ?? LEVEL_COLORS.inconnu
+              return (
+                <button
+                  key={factor.id}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onMouseEnter={() => setHoveredFactor(factor)}
+                  onMouseLeave={() => setHoveredFactor(null)}
+                  onClick={() => onFactorClick?.(factor)}
+                >
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: col.fill }} />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{factor.label}</span>
+                    <span className="block text-xs text-slate-400 truncate">{factor.value}</span>
+                  </span>
+                </button>
+              )
+            })}
           </div>
-        ))}
-      </div>
+
+          <div className="flex gap-2 px-3 pb-3">
+            {Object.entries(LEVEL_COLORS).map(([level, col]) => (
+              <div key={level} className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: col.fill }} />
+                <span className="text-xs text-slate-400">{col.label}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

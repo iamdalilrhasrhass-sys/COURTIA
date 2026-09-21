@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import CourtiaMiniLogo from '../brand/CourtiaMiniLogo'
+import MarketingFooter from './MarketingFooter'
 import '../../pages/marketing.css'
 
 const NAV_ITEMS = [
@@ -42,23 +43,7 @@ export default function MarketingShell({ activePath = '/', children }) {
 
         {children}
 
-        <footer className="mk-footer">
-          <div>COURTIA · Cockpit IA des courtiers en assurance — France (DDA · ORIAS · RGPD) et Suisse (LSA · FINMA · nLPD)</div>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link to="/legal/mentions-legales">Mentions légales</Link>
-            <Link to="/legal/confidentialite">Confidentialité</Link>
-            <Link to="/securite">Sécurité</Link>
-            <Link to="/rgpd">RGPD</Link>
-            <Link to="/status">Status</Link>
-            <Link to="/aide">Aide</Link>
-            <Link to="/legal/cookies">Cookies</Link>
-            <Link to="/legal/conditions-utilisation">Conditions</Link>
-            {/* /ch est une page statique servie hors du routeur SPA : lien natif
-                obligatoire (<Link> tomberait sur le 404 applicatif). */}
-            <a href="/ch">Suisse (LSA · FINMA · CHF)</a>
-            <Link to="/login">Se connecter</Link>
-          </div>
-        </footer>
+        <MarketingFooter />
       </div>
     </div>
   )

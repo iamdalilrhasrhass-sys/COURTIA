@@ -8,7 +8,9 @@ const PRO_KEYWORDS = [
   'chef', 'directeur', 'gérant', 'pharmacien', 'ingénieur'
 ]
 
-const CHAMPS_CLES = [
+/* Exporté : la liste des champs clés d'une fiche sert aussi à dire lesquels
+   manquent (fiche client). Une seule liste, jamais recopiée ailleurs. */
+export const CHAMPS_CLES = [
   'nom', 'prenom', 'email', 'telephone', 'adresse', 'profession',
   'situation_familiale', 'bonus_malus', 'annees_permis',
   'nb_sinistres_3ans', 'zone_geographique', 'segment'

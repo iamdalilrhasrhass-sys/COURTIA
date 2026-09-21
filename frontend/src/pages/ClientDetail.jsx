@@ -20,6 +20,8 @@ import {
   normalizeContract,
   normalizeTask,
 } from '../lib/clientViewModel'
+import { facteursRisqueClient, scoreRisqueClient, champsManquants } from '../lib/risqueClient'
+import { computeScores } from '../lib/scoring'
 import { fmtMontant, paysSuisse, contexteCourant } from '../lib/monnaie'
 import { localeCourante } from '../lib/monnaie'
 
@@ -131,6 +133,18 @@ function TabButton({ label, active, onClick, badge }) {
 // ─── Vue 360° ────────────────────────────────────────────────
 function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, navigate }) {
   const st = STATUS[client.statut] || STATUS.actif
+
+  // ── Profil de risque : ce que le SERVEUR a transmis, rien d'autre ──────────
+  // Avant, l'écran passait un jeu de pondérations codé en dur à un composant qui
+  // attendait `riskFactors` et retombait donc sur des constantes d'exemple : un
+  // profil de risque inventé s'affichait, y compris sur un client créé à
+  // l'instant sans aucun contrat (relevé en production le 21/09/2026).
+  const profilRisque = facteursRisqueClient(client)
+  const scoreRisque = scoreRisqueClient(client)
+  // Complétude des champs : la mesure du produit (lib/scoring), jamais un
+  // pourcentage local. Null quand elle n'est pas calculable.
+  const completudeChamps = computeScores(client, contracts)?.completude ?? null
+
   // Identité réglementaire selon le pays : un cabinet suisse (ou un client
   // suisse) ne connaît pas le SIRET mais l'IDE / UID (CHE-xxx.xxx.xxx) et son
   // canton. L'ancien écran affichait « SIRET » pour tout le monde.
@@ -276,13 +290,18 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, n
         </div>
       </GlassPanel>
 
-      {/* Complétude dossier — Orbital Rings */}
+      {/* Complétude dossier — Orbital Rings.
+          Les deux anneaux ne reçoivent QUE des mesures réelles : la complétude
+          des champs (ratio des champs clés remplis) et, pour les documents,
+          rien — le serveur ne transmet encore aucun catalogue de pièces
+          attendues pour ce client, donc l'anneau affiche « non mesuré » au lieu
+          des 40/85/75 fabriqués qui étaient posés ici. */}
       <GlassPanel glow={false} style={{ padding: 16 }}>
         <DossierOrbitalRings
-          docsScore={docs.length >= 3 ? 85 : 40}
-          fieldsScore={75}
-          missingDocs={docs.length < 3 ? [{ id: 'ri', label: "Relevé d'information", action: 'whatsapp' }] : []}
-          missingFields={[{ id: 'bonus_malus', label: 'Bonus/malus' }]}
+          docsScore={null}
+          fieldsScore={completudeChamps}
+          missingDocs={[]}
+          missingFields={champsManquants(client)}
           clientName={client?.name || 'Client'}
           onAction={({ type, item }) => console.log('Orbital action:', type, item)}
           size={200}
@@ -318,17 +337,15 @@ function Vue360Tab({ client, contracts, devis, docs, tasks, relances, history, n
         />
       </GlassPanel>
 
-      {/* Risque dossier — DNA Helix */}
+      {/* Risque dossier — DNA Helix.
+          `riskFactors` (jamais `factors`) : la prop est nommée comme le
+          composant l'attend, et elle ne contient que des faits serveur. */}
       <GlassPanel glow={false} style={{ padding: 16 }}>
         <SectionTitle icon={AlertTriangle} title="Profil de risque" iconColor={T.warning} />
         <RiskDnaHelix
-          factors={[
-            { id: 'sinistres', label: 'Sinistralité', value: 45, weight: 0.3 },
-            { id: 'impayes', label: 'Impayés', value: 20, weight: 0.25 },
-            { id: 'anciennete', label: 'Ancienneté', value: 85, weight: 0.2 },
-            { id: 'diversification', label: 'Diversification', value: 60, weight: 0.15 },
-            { id: 'engagement', label: 'Engagement', value: 70, weight: 0.1 },
-          ]}
+          riskFactors={profilRisque}
+          score={scoreRisque}
+          clientName={client?.name || 'Client'}
         />
       </GlassPanel>
 
@@ -526,6 +543,9 @@ export default function ClientDetail() {
 
   const status = STATUS[client.statut] || STATUS.actif
   const totalPrime = contracts.reduce((s, c) => s + c.prime, 0)
+  // Score de l'en-tête : la valeur transmise par le serveur, jamais le 0 de
+  // repli de `normalizeClient` (un client sans score affichait « Score 0 % »).
+  const scoreAffiche = scoreRisqueClient(client)
   const arkInsight = contracts.length > 0
     ? `${contracts.length} contrat${contracts.length > 1 ? 's' : ''} chargé${contracts.length > 1 ? 's' : ''}. Prime annuelle suivie : ${fmtEur(totalPrime)}.`
     : 'Aucun contrat rattaché à ce client pour le moment.'
@@ -585,11 +605,20 @@ export default function ClientDetail() {
             }}>{client.name}</h1>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
               <ArkStatusBadge label={status.label} variant={statusToVariant(client.statut)} />
-              <span style={{
-                padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                background: T.arkBg, color: T.ark, border: `1px solid ${T.arkBorder}`,
-                display: 'inline-flex', alignItems: 'center', gap: 3,
-              }}><Heart size={10} /> Score {client.score}%</span>
+              {scoreAffiche === null ? (
+                <span style={{
+                  padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: 'rgba(148,163,184,0.10)', color: T.textMuted,
+                  border: `1px solid ${T.cardBorder}`,
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                }}><Heart size={10} /> Score non mesuré</span>
+              ) : (
+                <span style={{
+                  padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: T.arkBg, color: T.ark, border: `1px solid ${T.arkBorder}`,
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                }}><Heart size={10} /> Score {scoreAffiche}%</span>
+              )}
               <span style={{
                 padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
                 background: 'rgba(59,130,246,0.10)', color: T.blue,
