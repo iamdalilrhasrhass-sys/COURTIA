@@ -133,4 +133,28 @@ describe('import — portée cabinet', () => {
     const doublons = metier(requetes).find((r) => /FROM clients c1/.test(r.sql))
     expect(doublons.sql).toMatch(/c1\.cabinet_id = ANY\(\$1::uuid\[\]\)/)
   })
+
+  test('(e) appartenances ILLISIBLES : import refusé (409), aucun client créé', async () => {
+    // Défaut réel du 21/09/2026 : une lecture d'appartenance en échec faisait
+    // retomber la portée en « mono » AVEC droit d'écriture, et l'import créait
+    // des clients sans cabinet (hors cloisonnement). On échoue désormais fermé.
+    const requetes = []
+    pool.query.mockImplementation(async (sql, params) => {
+      requetes.push({ sql: String(sql), params })
+      if (String(sql).includes('cabinet_members')) throw new Error('connexion perdue')
+      return { rows: [], rowCount: 0 }
+    })
+    const req = {
+      app: { locals: { pool: { query: pool.query } } },
+      user: { id: 7, userId: 7 },
+      headers: {}, query: {}, params: {}, body: { mapping: { nom: 0, email: 1 } },
+      file: fichier(),
+    }
+    const res = fausseReponse()
+    await EXECUTER()(req, res)
+
+    expect(res.code).toBe(409)
+    expect(res.corps.error).toBe('portee_indeterminee')
+    expect(ecritures(requetes)).toHaveLength(0)
+  })
 })

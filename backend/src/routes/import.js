@@ -212,6 +212,31 @@ router.post('/execute', verifyToken, upload.single('file'), async (req, res) => 
     })
     const cabinetId = porteeCabinet.cabinetPourCreation(portee)
 
+    // Défaut réel constaté en production le 21/09/2026 : un import avait créé
+    // `clients.cabinet_id = NULL` — une ligne hors cloisonnement. Cause : quand la
+    // lecture des appartenances échoue (base momentanément illisible), la portée
+    // se dégrade silencieusement en « mono » AVEC droit d'écriture, et la ligne
+    // part sans cabinet.
+    //
+    // On distingue les deux cas, volontairement :
+    //   * compte SANS aucune appartenance = comportement historique assumé (portée
+    //     mono-utilisateur, testé) → l'import reste autorisé ;
+    //   * portée DÉGRADÉE (appartenances illisibles, pool indisponible) → on échoue
+    //     fermé : aucun client n'est créé, l'utilisateur relance.
+    const porteeDegradee = Boolean(
+      !cabinetId && portee && portee.mode === 'mono' &&
+      typeof portee.motif === 'string' && !portee.motif.startsWith('aucune appartenance')
+    )
+    if (porteeDegradee) {
+      console.warn('[POST /api/import/execute] import refusé : portée dégradée', portee.motif)
+      return res.status(409).json({
+        error: 'portee_indeterminee',
+        message: "Import refusé : le cabinet du compte n'a pas pu être vérifié " +
+          "(lecture des appartenances impossible à cet instant). Aucun client n'a été créé. " +
+          "Réessayez dans un instant ; si le problème persiste, vérifiez l'appartenance du compte à un cabinet.",
+      })
+    }
+
     let imported = 0, errors = 0, duplicates = 0
     
     for (const row of rows) {
