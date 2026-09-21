@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const { mettreAJourIdentiteCabinet } = require('../lib/marcheCabinet')
 
 const CABINET_ROLES = Object.freeze({
   OWNER: 'owner',
@@ -123,6 +124,37 @@ async function ensureUserCabinet(pool, userOrId, profile = {}) {
     [cabinetName, userId, orias]
   )
   const cabinet = cabinetResult.rows[0]
+
+  // ── L'IDENTITÉ DE MARCHÉ EST REPRISE DU PROFIL DÈS LA CRÉATION ──────────────
+  // MESURE DU 21/09/2026 (production, cabinets pilotes) : la ligne `cabinets` de
+  // Spondeo Sàrl avait `country`, `registre_type`, `registre_numero` et `uid` à
+  // NULL — le cabinet naissait avec un nom et un ORIAS, rien d'autre — alors que
+  // celle de Century Finance portait pays CH, FINMA et UID. Les écrans servaient
+  // malgré tout le bon référentiel (il est relu sur `broker_profiles`), mais
+  // toute lecture directe de `cabinets` obtenait un cabinet sans marché : un
+  // cabinet suisse sans pays est indistinguable d'un cabinet non renseigné.
+  // Les valeurs reprises sont EXACTEMENT celles du profil, et un champ absent
+  // reste absent (aucun défaut « France » ni « ORIAS » n'est inventé).
+  if (typeof mettreAJourIdentiteCabinet === 'function') {
+    try {
+      await mettreAJourIdentiteCabinet(cabinet.id, {
+        cabinet: cabinetName,
+        pays: profile.pays || profile.country,
+        registre_type: profile.registre_type,
+        registre_numero: profile.registre_numero || profile.registre,
+        uid: profile.uid,
+        canton: profile.canton,
+        telephone: profile.telephone || profile.phone,
+        adresse: profile.adresse || profile.address_line1,
+        ville: profile.ville || profile.city,
+        code_postal: profile.code_postal || profile.postal_code,
+        orias: orias,
+      }, pool)
+    } catch (_err) {
+      // Une reprise d'identité impossible ne doit pas empêcher la création du
+      // cabinet : le nom et l'appartenance sont déjà écrits et renvoyés.
+    }
+  }
 
   const memberResult = await pool.query(
     `INSERT INTO cabinet_members (cabinet_id, user_id, role, created_at)
