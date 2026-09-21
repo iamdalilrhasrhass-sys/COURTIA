@@ -178,6 +178,15 @@ router.post('/demo-request', async (req, res) => {
 
     return res.status(201).json({
       success: true,
+      // CONTRAT DE CAPTURE — P0 du 21/09/2026 : le formulaire public
+      // (/demo-public) exigeait {ok:true} ou {lead_id} et lisait donc cet
+      // enregistrement RÉUSSI comme un échec (« Le service de capture n'a pas
+      // confirmé l'enregistrement. »), sans redirection. `ok` et `lead_id` sont
+      // ajoutés AU MÊME VOCABULAIRE que le service de capture, en plus de
+      // `success` et `lead` qui RESTENT : aucun consommateur existant ne casse,
+      // et les deux gardes se comprennent.
+      ok: true,
+      lead_id: insert.rows[0].id,
       lead: insert.rows[0],
       notification_interne: {
         envoye: notifiee,

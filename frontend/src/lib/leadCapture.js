@@ -4,6 +4,19 @@
  * Contrat du service de capture (VPS, exposé en HTTPS) :
  *   POST /api/leads/demo-request  ->  { ok: true, lead_id: 12, redirect: '/demo' }
  *
+ * Le même endpoint est aussi servi par le backend Courtia
+ * (backend/src/routes/leads.js), qui répond :
+ *   { success: true, ok: true, lead_id: 12, lead: { id: 12, ... },
+ *     notification_interne: {...}, message: '...' }
+ * Autrement dit DEUX vocabulaires pour une seule confirmation d'enregistrement :
+ * `ok`/`lead_id` (service de capture) et `success`/`lead` (backend Courtia).
+ * Les deux sont acceptés, et le backend ajoute `ok`/`lead_id` en plus de
+ * `success`/`lead` pour que les deux gardes se comprennent. Une réponse qui ne
+ * porte ni l'un ni l'autre n'est PAS une confirmation : elle est refusée (voir
+ * `assertLeadCaptured`), et le `message` produit par le serveur est affiché tel
+ * quel au prospect (voir `messageConfirmation`) — jamais remplacé par une
+ * formule générique.
+ *
  * Même convention que la mesure publique (`lib/analytics.js` envoie
  * `/api/leads/events` en même origine) : l'endpoint est RELATIF à l'origine du
  * site public. C'est ce que sert la redirection Vercel / le reverse-proxy vers
@@ -128,12 +141,20 @@ function stockageSession() {
   try { return window.sessionStorage } catch { return null }
 }
 
+/** Un identifiant de lead exploitable : entier strictement positif.
+ *  `'12'` (chaîne JSON) est accepté, `'abc'`, `0`, `null` et `undefined` non —
+ *  on ne fabrique jamais un id à partir de rien. */
+function estIdentifiant(brut) {
+  if (brut === null || brut === undefined || brut === '') return false
+  const n = Number(brut)
+  return Number.isInteger(n) && n > 0
+}
+
 /** Extrait l'identifiant de lead d'une réponse de capture, s'il est exploitable. */
 export function identifiantLead(data) {
   if (!data || typeof data !== 'object') return null
   const brut = data.lead_id ?? data.leadId ?? data.lead?.id ?? data.id
-  const n = Number(brut)
-  return Number.isInteger(n) && n > 0 ? n : null
+  return estIdentifiant(brut) ? Number(brut) : null
 }
 
 /** Mémorise l'identifiant de lead de la visite. Renvoie l'id mémorisé, ou null. */
@@ -163,14 +184,55 @@ export function oublierLeadId() {
 
 /**
  * Vérifie que la demande est RÉELLEMENT enregistrée.
- * Une réponse sans {ok:true} ni lead_id (page HTML servie par un rewrite, etc.)
- * est traitée comme un échec : on ne fait jamais semblant d'avoir capturé un lead.
+ *
+ * Deux vocabulaires valent confirmation, parce que le même endpoint est servi
+ * par le service de capture (`{ok:true, lead_id}`) ET par le backend Courtia
+ * (`{success:true, lead:{id}, ...}`) :
+ *   1. `ok === true`                                  — service de capture ;
+ *   2. un `lead_id` (ou `leadId`) exploitable          — service de capture ;
+ *   3. `success === true` ET un objet `lead` ET un identifiant exploitable
+ *      (`lead.id`)                                     — backend Courtia.
+ *
+ * Tout le reste est un ÉCHEC : page HTML servie par un rewrite, objet vide,
+ * `{success:true}` sans lead, un identifiant qui n'en est pas un, ou un refus
+ * EXPLICITE du serveur (`ok:false` / `success:false`) même accompagné d'un id.
+ * On ne fait jamais semblant d'avoir capturé un lead.
  */
 export function assertLeadCaptured(data) {
   const isObject = Boolean(data) && typeof data === 'object' && !Array.isArray(data)
-  if (isObject && (data.ok === true || data.lead_id)) return data
+  if (!isObject) {
+    throw new Error('Le service de capture n\'a pas confirmé l\'enregistrement.')
+  }
+
+  // Un refus explicite prime sur tout identifiant présent.
+  const refusExplicite = data.ok === false || data.success === false
+  if (!refusExplicite) {
+    if (data.ok === true) return data
+    if (estIdentifiant(data.lead_id) || estIdentifiant(data.leadId)) return data
+    const lead = data.lead
+    if (data.success === true && lead && typeof lead === 'object' && identifiantLead(data)) {
+      return data
+    }
+  }
 
   throw new Error('Le service de capture n\'a pas confirmé l\'enregistrement.')
+}
+
+/**
+ * Message de confirmation RÉEL produit par le serveur, quand il existe.
+ *
+ * La réponse du backend distingue « demande enregistrée ET alerte partie » de
+ * « demande enregistrée MAIS alerte non partie » : ce message porte cette vérité
+ * et ne doit jamais être remplacé par une formule générique (le prospect lirait
+ * un état qui n'est pas le sien). `fallback` n'est rendu que si le serveur n'a
+ * rien dit ; il reste vide par défaut — aucun texte inventé.
+ */
+export function messageConfirmation(data, fallback = '') {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return fallback
+  const brut = data.message
+  if (typeof brut !== 'string') return fallback
+  const message = brut.trim()
+  return message ? message.slice(0, 500) : fallback
 }
 
 /** Redirection post-succès : celle du service si elle est interne, sinon /demo. */
@@ -178,6 +240,27 @@ export function resolveRedirect(data, fallback = '/demo') {
   const target = data && typeof data.redirect === 'string' ? data.redirect.trim() : ''
   if (target.startsWith('/') && !target.startsWith('//')) return target
   return fallback
+}
+
+/**
+ * Faut-il emmener le prospect vers la démonstration SANS attendre ?
+ *
+ * Oui dans le cas normal. NON quand le serveur signale explicitement que la
+ * notification interne n'a pas pu partir (`configuration_required: true` ou
+ * `notification_interne.envoye === false`) : le message qu'il produit alors
+ * (« Prévenez l'équipe COURTIA par un autre canal si votre demande est
+ * urgente. ») demande une action au prospect. Le rediriger au bout de 1,4 s
+ * reviendrait à jeter ce message — c'est exactement ce que corrige ce
+ * correctif. La démonstration reste accessible, par un clic explicite.
+ */
+export function redirectionAutomatique(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return true
+  if (data.configuration_required === true) return false
+  const notification = data.notification_interne
+  if (notification && typeof notification === 'object' && notification.envoye === false) {
+    return false
+  }
+  return true
 }
 
 function detailsErreur(data) {

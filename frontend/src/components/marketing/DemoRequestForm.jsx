@@ -5,10 +5,13 @@ import { useNavigate } from 'react-router-dom'
 import {
   CAPTURE_ERROR_MESSAGE,
   captureAcquisition,
+  identifiantLead,
   isHoneypotTripped,
   mergeAcquisition,
+  messageConfirmation,
   postDemoRequest,
   readWindowContext,
+  redirectionAutomatique,
   resolveRedirect,
 } from '../../lib/leadCapture'
 import { libellesMarche, marcheCourante } from '../../lib/marche'
@@ -49,6 +52,10 @@ export default function DemoRequestForm({ compact = false }) {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('idle')
   const [feedback, setFeedback] = useState('')
+  /* Redirection proposée en clair (bouton) quand l'automatique est retenue :
+     le prospect a un message à lire et une action à faire, il ne doit pas être
+     emmené ailleurs avant de l'avoir vu. */
+  const [redirectionProposee, setRedirectionProposee] = useState('')
 
   // Acquisition figée à l'arrivée sur la page (UTM, referrer, landing page).
   const acquisition = useMemo(() => captureAcquisition(readWindowContext()), [])
@@ -68,6 +75,7 @@ export default function DemoRequestForm({ compact = false }) {
     e.preventDefault()
     setStatus('idle')
     setFeedback('')
+    setRedirectionProposee('')
 
     /* Piège anti-robot : rien n'est envoyé, rien n'est affiché, aucune
        redirection — le robot ne peut pas savoir qu'il a été filtré. */
@@ -90,12 +98,36 @@ export default function DemoRequestForm({ compact = false }) {
       const payload = mergeAcquisition({ ...form }, acquisition)
       const data = await postDemoRequest(payload)
       setStatus('success')
-      setFeedback('Votre demande est bien reçue. Nous vous conduisons à la démonstration…')
+      /* Le prospect lit l'état RÉEL produit par le serveur : « demande
+         enregistrée » et, quand c'est le cas, « la notification interne n'a pas
+         pu partir » — message qui était auparavant jeté, remplacé par une
+         formule générique. Le repli n'est utilisé que si le serveur n'a rien dit
+         (cas du service de capture, qui ne renvoie que {ok, lead_id}). */
+      setFeedback(
+        messageConfirmation(
+          data,
+          'Votre demande est bien reçue. Nous vous conduisons à la démonstration…'
+        )
+      )
+      /* Envoi CONFIRMÉ : la mesure doit dire `demo_request_success`. Avant ce
+         correctif, un enregistrement réussi partait dans le `catch` et était
+         journalisé `demo_request_failure` — la mesure elle-même mentait. */
+      evenement('demo_request_success', {
+        variant: compact ? 'contact_compact' : 'demo_page',
+        lead_id: identifiantLead(data) || undefined,
+      })
       setForm(INITIAL_FORM)
       /* Le lead est ENREGISTRÉ avant toute redirection : on ne sacrifie jamais
-         la capture pour naviguer. La démonstration prend le relais aussitôt. */
+         la capture pour naviguer. La démonstration prend le relais aussitôt,
+         SAUF si le serveur signale que la notification interne n'est pas partie
+         — le message demande alors une action au prospect, qui doit pouvoir le
+         lire. */
       const target = resolveRedirect(data)
-      setTimeout(() => navigate(target), 1400)
+      if (redirectionAutomatique(data)) {
+        setTimeout(() => navigate(target), 1400)
+      } else {
+        setRedirectionProposee(target)
+      }
     } catch (err) {
       /* Échec réel d'enregistrement : mesuré comme tel, message d'erreur
          explicite, AUCUNE redirection vers /demo — sinon la demande serait
@@ -255,6 +287,19 @@ export default function DemoRequestForm({ compact = false }) {
       {status === 'success' && (
         <div className="mk-form-result ok" role="status">
           <CheckCircle2 size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} /> {feedback}
+          {/* Notification interne non partie : le message demande une action au
+              prospect. On lui laisse le temps de le lire ; la démonstration
+              reste à un clic. */}
+          {redirectionProposee && (
+            <button
+              type="button"
+              className="mk-cta-inline"
+              onClick={() => navigate(redirectionProposee)}
+              style={{ marginTop: 10, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Continuer vers la démonstration <ArrowRight size={14} />
+            </button>
+          )}
         </div>
       )}
 

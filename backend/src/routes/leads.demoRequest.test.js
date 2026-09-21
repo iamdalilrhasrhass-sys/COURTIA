@@ -82,6 +82,25 @@ describe('POST /api/leads/demo-request — vérité sur la notification interne'
     expect(corps.message).not.toMatch(/recontacte|rapidement/i)
   })
 
+  test('la réponse porte les DEUX vocabulaires : success/lead ET ok/lead_id', async () => {
+    notifierAdmin.mockResolvedValue({ envoye: false, raison: 'configuration_required' })
+
+    const corps = await (await envoyer()).json()
+
+    // Vocabulaire historique du backend Courtia — CONSERVÉ : le correctif est
+    // ADDITIF, aucun consommateur existant ne casse.
+    expect(corps.success).toBe(true)
+    expect(corps.lead).toMatchObject({ id: 77 })
+
+    // Vocabulaire du service de capture — AJOUTÉ : c'est ce que la garde du
+    // formulaire public (/demo-public, frontend/src/lib/leadCapture.js) exige
+    // pour tenir la capture pour confirmée. Sans lui, un enregistrement réussi
+    // était affiché au prospect comme un ÉCHEC (P0 du 21/09/2026).
+    expect(corps.ok).toBe(true)
+    expect(corps.lead_id).toBe(77)
+    expect(corps.lead_id).toBe(corps.lead.id)
+  })
+
   test('notification partie : la promesse de rappel est légitime', async () => {
     notifierAdmin.mockResolvedValue({ envoye: true, provider: 'resend' })
 
