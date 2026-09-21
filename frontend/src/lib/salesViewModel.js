@@ -1,5 +1,4 @@
 /* ============================================================================
-import { localeCourante } from './monnaie'
    COURTIA — Mise en forme de la lecture commerciale (fonctions PURES)
    ----------------------------------------------------------------------------
    Tout ce qui décide de ce qui est AFFICHÉ vit ici, et seulement ici :
@@ -11,6 +10,8 @@ import { localeCourante } from './monnaie'
    Aucune donnée n'est inventée : si le service ne fournit pas la donnée,
    la fonction renvoie l'état « non mesuré » — jamais une valeur plausible.
    ========================================================================== */
+
+import { localeCourante } from './monnaie'
 
 export const NON_MESURE = 'non mesuré'
 

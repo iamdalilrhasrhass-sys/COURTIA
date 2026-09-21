@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   NON_MESURE, lireMesure, lignesFunnel, blocsResume, lireScore, progressionDemo,
-  lireHotLead, etiquetteStatut, formatDate, ouVide, provenance, nomLead, couleurScore,
+  lireHotLead, etiquetteStatut, formatDate, formatDateHeure, ouVide, provenance, nomLead, couleurScore,
 } from './salesViewModel'
 
 describe('lireMesure — aucun zéro fictif', () => {
@@ -155,5 +155,31 @@ describe('champs manquants', () => {
   it('borne la couleur d’un score', () => {
     expect(couleurScore(null)).toBe('#94a3b8')
     expect(couleurScore(80)).toBe('#22c55e')
+  })
+})
+
+describe('formatDate / formatDateHeure — l’identifiant doit être RÉELLEMENT importé', () => {
+  // Régression du 21/09/2026 : l'import de `localeCourante` se trouvait DANS le
+  // commentaire d'en-tête du module, donc jamais exécuté. Les deux fonctions
+  // levaient `ReferenceError: localeCourante is not defined` dès qu'une date
+  // existait — l'écran Acquisition plantait à l'affichage d'une seule date.
+  // Les tests existants passaient parce qu'ils ne couvraient que le cas « non
+  // mesuré », qui sort avant l'appel.
+  it('met en forme une date réelle sans lever d’erreur', () => {
+    const rendu = formatDate('2026-09-21T13:47:13.108Z')
+    expect(rendu).not.toBe(NON_MESURE)
+    expect(rendu).toMatch(/21[./-]09[./-]2026/)
+  })
+
+  it('met en forme un horodatage réel sans lever d’erreur', () => {
+    const rendu = formatDateHeure('2026-09-21T13:47:13.108Z')
+    expect(rendu).not.toBe(NON_MESURE)
+    expect(rendu).toMatch(/2026/)
+  })
+
+  it('garde « non mesuré » pour une date absente ou invalide', () => {
+    expect(formatDate(null)).toBe(NON_MESURE)
+    expect(formatDate('pas-une-date')).toBe(NON_MESURE)
+    expect(formatDateHeure(undefined)).toBe(NON_MESURE)
   })
 })
