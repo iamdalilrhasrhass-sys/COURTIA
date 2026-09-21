@@ -176,9 +176,18 @@ export default function Conformite() {
                     l'absence de réponse elles restent génériques : la liste
                     française nommait « notice, IPID, fiche conseil », propres
                     au marché français. */}
+                {/* Étapes de RÉFÉRENCE du devoir de conseil du marché, pas une
+                    liste de choses faites : les préfixer d'un ✅ laissait croire
+                    que tout était satisfait alors que la couverture réelle est
+                    affichée au-dessus (constat du 21/09/2026 : « DDA CONFORMITÉ
+                    0 % » à côté d'une liste entièrement cochée). */}
+                <p style={{ color: T.textSecondary, fontSize: 12, margin: '0 0 8px' }}>
+                  Étapes de référence du devoir de conseil ({sigleChecklistMarche || 'marché'}) :
+                  la couverture réellement mesurée pour vos dossiers est affichée ci-dessus.
+                </p>
                 <ul style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.8, paddingLeft: 16 }}>
                   {checklistItems.map((item) => (
-                    <li key={item}>✅ {item}</li>
+                    <li key={item}>• {item}</li>
                   ))}
                 </ul>
                 {/* ── MENTIONS DE PROTECTION DES DONNÉES DU MARCHÉ ────────────
