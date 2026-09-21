@@ -187,6 +187,35 @@ describe('assainirErreursInternes (middleware)', () => {
     res.send('Error: connect ECONNREFUSED 127.0.0.1:5432')
     expect(res.corps).toBe(MESSAGE_INTERNE)
   })
+
+  // ── RÉGRESSION MESURÉE EN PRODUCTION LE 21/09/2026 ────────────────────────
+  // Un motif « la chaîne ressemble à du JSON » avait été ajouté aux motifs
+  // d'infrastructure. Il remplaçait le message métier de TOUTE route qui répond
+  // une charge utile JSON en corps TEXTE : `POST /api/auth/login` avec un
+  // mauvais mot de passe affichait « une erreur interne s'est produite » au lieu
+  // de « Email ou mot de passe incorrect ». Ces deux tests figent les deux côtés.
+  it('NE remplace PAS un message métier envoyé en corps texte (JSON légitime)', () => {
+    const res = fauxRes(401)
+    assainirErreursInternes(req, res, () => {})
+    const corps = JSON.stringify({ error: 'Email ou mot de passe incorrect' })
+    res.send(corps)
+    expect(res.corps).toBe(corps)
+  })
+
+  it('NE remplace PAS un message métier court envoyé en corps texte', () => {
+    const res = fauxRes(404)
+    assainirErreursInternes(req, res, () => {})
+    res.send('Client introuvable.')
+    expect(res.corps).toBe('Client introuvable.')
+  })
+
+  it('remplace toujours la réponse brute d’un fournisseur', () => {
+    const res = fauxRes(500)
+    assainirErreursInternes(req, res, () => {})
+    const brut = '{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011"}'
+    res.send(brut)
+    expect(res.corps).toBe(MESSAGE_INTERNE)
+  })
 })
 
 describe('repondreErreur', () => {

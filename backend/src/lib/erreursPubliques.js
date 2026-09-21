@@ -109,11 +109,20 @@ const MOTIFS_INTERNES = [
   /(?:api\.)?anthropic\.com|api\.openai\.com|api\.stripe\.com|api\.resend\.com|graph\.facebook\.com/i,
   /(?:ECONN|ETIMEDOUT|timeout).{0,40}(?:provider|fournisseur|upstream)/i,
   // ── Échafaudage technique ───────────────────────────────────────────────────
+  // NOTE (régression corrigée le 21/09/2026) : un motif « la chaîne ressemble à
+  // du JSON » avait été ajouté ici pour attraper la réponse brute d'un
+  // fournisseur. Il était TROP LARGE : toute route qui répond une charge utile
+  // JSON en corps TEXTE (`res.status(401).send(JSON.stringify({ error: 'Email ou
+  // mot de passe incorrect' }))`) se faisait remplacer son message métier par le
+  // message générique. Un mauvais mot de passe affichait donc « une erreur
+  // interne s'est produite » — mesuré en production sur /api/auth/login.
+  // Les réponses de fournisseur réellement dangereuses portent `x-api-key`,
+  // `request_id`, une URL de fournisseur ou une chaîne de connexion : ces motifs
+  // suffisent et ne confondent pas un message produit avec de l'infrastructure.
   /\bTypeError\b|\bReferenceError\b|\bSyntaxError\b|\bRangeError\b/,
   /is not a function|is not defined|Cannot read propert/i,
   /cannot find module|module not found/i,
   /\bundefined is not\b|\bnull is not\b/,
-  /\{[^{}]*"(?:error|message|code)"\s*:/,
 ]
 
 /**
