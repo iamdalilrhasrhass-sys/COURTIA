@@ -201,6 +201,68 @@ function construirePortee(userId, appartenances) {
 }
 
 /**
+ * Décision de portée à partir des lignes BRUTES de `cabinet_members`. Extrait
+ * pour être partagé par `resoudrePortee` (route HTTP) et
+ * `resoudrePorteeUtilisateur` (service qui ne reçoit qu'un identifiant) : les
+ * deux chemins doivent appliquer EXACTEMENT les mêmes règles, sinon un service
+ * verrait un périmètre différent de celui de la route qui l'appelle.
+ */
+function porteeDepuisLignes(userId, lignes) {
+  const appartenances = normaliserAppartenances(lignes)
+  const revoquees = (lignes || []).filter(
+    (ligne) => ligne && (ligne.retire === true || ligne.removed_at != null)
+  )
+  if (appartenances.length > 0) return construirePortee(userId, appartenances)
+  if (revoquees.length > 0) return porteeRevoquee(userId)
+  return porteeMono(userId)
+}
+
+const REQUETE_APPARTENANCES = `
+  SELECT cm.cabinet_id, cm.role, (cm.removed_at IS NOT NULL) AS retire
+    FROM cabinet_members cm
+   WHERE cm.user_id = $1
+   ORDER BY CASE cm.role
+              WHEN 'owner'     THEN 0
+              WHEN 'manager'   THEN 1
+              WHEN 'broker'    THEN 2
+              WHEN 'assistant' THEN 3
+              WHEN 'viewer'    THEN 4
+              ELSE 5
+            END,
+            cm.created_at ASC
+`
+
+/**
+ * Résout la portée d'un UTILISATEUR (sans requête HTTP).
+ *
+ * POURQUOI : de nombreux services (contexte ARK, veille ARK, compose,
+ * docvision, quote-intel, portail…) ne reçoivent qu'un `userId` — ils n'ont pas
+ * de `req`. Tant qu'ils filtraient `courtier_id = $1`, un collaborateur d'un
+ * cabinet à plusieurs commerciaux voyait un portefeuille VIDE là où le CRM lui
+ * montrait le cabinet entier : deux vérités pour une même donnée. Ce point
+ * d'entrée donne aux services la portée autoritaire, sans dupliquer la règle.
+ *
+ * @param {object} pool pool `pg` (module `../db` ou `req.app.locals.pool`)
+ * @param {number|object} userIdBrut identifiant ou objet porteur de `id`
+ * @param {{portee?: object}} [options] portée déjà résolue par la route (évite
+ *        un aller-retour base supplémentaire quand la route l'a en main)
+ * @returns {Promise<object>} portée (jamais `null` : repli mono si illisible)
+ */
+async function resoudrePorteeUtilisateur(pool, userIdBrut, options = {}) {
+  const userId = identifiantUtilisateur(userIdBrut)
+  if (!userId) return porteeMono(null, 'identifiant utilisateur absent')
+  if (options && options.portee && options.portee.userId === userId) return options.portee
+  if (!pool || typeof pool.query !== 'function') return porteeMono(userId, 'pool indisponible')
+  try {
+    const resultat = await pool.query(REQUETE_APPARTENANCES, [userId])
+    return porteeDepuisLignes(userId, (resultat && resultat.rows) || [])
+  } catch (err) {
+    // Jamais de droits supplémentaires en cas de panne : repli historique.
+    return porteeMono(userId, `appartenance illisible (${err && err.message}) : portée mono-utilisateur`)
+  }
+}
+
+/**
  * Résout la portée d'une requête authentifiée. Mémoïsée sur la requête : un
  * seul aller-retour base par requête HTTP, quel que soit le nombre d'appels.
  *
@@ -222,35 +284,8 @@ async function resoudrePortee(pool, req) {
       // d'appartenance en entier (`removed_at`), sans quoi « aucune
       // appartenance » (repli mono légitime) et « appartenance retirée » (zéro
       // droit) seraient indiscernables — c'est exactement le défaut D3-09.
-      const resultat = await pool.query(
-        `SELECT cm.cabinet_id, cm.role, (cm.removed_at IS NOT NULL) AS retire
-           FROM cabinet_members cm
-          WHERE cm.user_id = $1
-          ORDER BY CASE cm.role
-                     WHEN 'owner'     THEN 0
-                     WHEN 'manager'   THEN 1
-                     WHEN 'broker'    THEN 2
-                     WHEN 'assistant' THEN 3
-                     WHEN 'viewer'    THEN 4
-                     ELSE 5
-                   END,
-                   cm.created_at ASC`,
-        [userId]
-      )
-      const lignes = (resultat && resultat.rows) || []
-      const appartenances = normaliserAppartenances(lignes)
-      const revoquees = lignes.filter(
-        (ligne) => ligne && (ligne.retire === true || ligne.removed_at != null)
-      )
-      let portee
-      if (appartenances.length > 0) {
-        portee = construirePortee(userId, appartenances)
-      } else if (revoquees.length > 0) {
-        // Retiré du cabinet : ni lecture, ni écriture (D3-09).
-        portee = porteeRevoquee(userId)
-      } else {
-        portee = porteeMono(userId)
-      }
+      const resultat = await pool.query(REQUETE_APPARTENANCES, [userId])
+      const portee = porteeDepuisLignes(userId, (resultat && resultat.rows) || [])
       req._porteeCabinet = portee
       return portee
     } catch (err) {
@@ -372,6 +407,7 @@ module.exports = {
   rangRole,
   identifiantUtilisateur,
   resoudrePortee,
+  resoudrePorteeUtilisateur,
   fragment,
   refuserEcriture,
   refuserSuppression,

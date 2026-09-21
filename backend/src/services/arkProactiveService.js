@@ -1,5 +1,6 @@
 const Anthropic = require('@anthropic-ai/sdk')
 const logger = require('../lib/logger')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const DEFAULT_MODEL = process.env.ARK_DEFAULT_MODEL || 'claude-sonnet-4-5'
 const LIGHT_MODEL = process.env.ARK_LIGHT_MODEL || 'claude-haiku-4-5'
@@ -250,14 +251,42 @@ async function chargeArkRun(pool, { userId, feature, model = LIGHT_MODEL, inputT
   return result.rows[0]
 }
 
-async function loadArkContext(pool, userId) {
+/**
+ * Contexte métier d'ARK — PORTÉE DU CABINET, PAS DE LA SEULE PERSONNE.
+ *
+ * DÉFAUT MESURÉ (21/09/2026, P1) : les lectures filtraient `courtier_id = $1` /
+ * `user_id = $1`. Un collaborateur (`broker`) du même cabinet recevait donc un
+ * contexte VIDE (aucun client, aucun contrat, aucune tâche) et ARK lui fabriquait
+ * des cartes de repli hors sujet — deux vérités pour une même donnée.
+ *
+ * RÈGLE TENUE : chaque lecture passe par `lib/porteeCabinet` (seule autorité).
+ * Sans cabinet, la clause est EXACTEMENT la clause historique
+ * (`courtier_id = $1`), les cabinets mono-utilisateur ne changent donc pas.
+ *
+ * RESTE VOLONTAIREMENT PAR-UTILISATEUR : `calendar_events` (agenda personnel
+ * synchronisé, aucune ancre de cabinet), `whatsapp_threads` (session/inbox
+ * WhatsApp) et `client_interactions` (flux collecté par l'intégration mail de
+ * l'utilisateur, sans ancre de cabinet). Ces trois tables ne portent pas
+ * `cabinet_id` : les élargir par jointure changerait aussi le comportement des
+ * cabinets mono-utilisateur.
+ *
+ * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
+ */
+async function loadArkContext(pool, userId, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+  const fClients = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
+
   const clients = (await pool.query(
-    `SELECT id, courtier_id, first_name, last_name, email, phone, status, risk_score, last_contact, created_at, updated_at
-     FROM clients
-     WHERE courtier_id = $1
-     ORDER BY updated_at DESC NULLS LAST
+    `SELECT c.id, c.courtier_id, c.first_name, c.last_name, c.email, c.phone, c.status, c.risk_score, c.last_contact, c.created_at, c.updated_at
+     FROM clients c
+     WHERE ${fClients.sql}
+     ORDER BY c.updated_at DESC NULLS LAST
      LIMIT 300`,
-    [userId]
+    fClients.params
   )).rows
 
   const contracts = (await pool.query(
@@ -267,18 +296,33 @@ async function loadArkContext(pool, userId) {
             CONCAT(c.first_name, ' ', c.last_name) AS client_name
      FROM quotes q
      JOIN clients c ON c.id = q.client_id
-     WHERE c.courtier_id = $1
+     WHERE ${fClients.sql}
      LIMIT 500`,
-    [userId]
+    fClients.params
   ).catch(() => ({ rows: [] }))).rows
 
+  // `taches` porte `cabinet_id` (migration 113). L'affectation PERSONNELLE
+  // (`user_id = $n`) reste acceptée pour ne faire disparaître aucune ligne
+  // existante — sauf pour un compte dont l'appartenance a été RÉVOQUÉE, qui ne
+  // doit plus rien lire (le fragment seul ne peut alors correspondre à rien).
+  const fTaches = porteeCabinet.fragment(portee, {
+    cabinet: 'taches.cabinet_id',
+    proprietaire: 'taches.courtier_id',
+    depart: 1,
+  })
+  const paramsTaches = [...fTaches.params]
+  let clauseAffectation = ''
+  if (portee.mode !== 'revoquee') {
+    paramsTaches.push(userId)
+    clauseAffectation = ` OR taches.user_id = $${paramsTaches.length}`
+  }
   const tasks = (await pool.query(
     `SELECT id, client_id, titre, statut, priorite, echeance
      FROM taches
-     WHERE courtier_id = $1 OR user_id = $1
+     WHERE (${fTaches.sql}${clauseAffectation})
      ORDER BY echeance ASC NULLS LAST
      LIMIT 300`,
-    [userId]
+    paramsTaches
   ).catch(() => ({ rows: [] }))).rows
 
   const events = (await pool.query(
@@ -311,8 +355,8 @@ async function loadArkContext(pool, userId) {
   return { clients, contracts, tasks, events, whatsappThreads, interactions }
 }
 
-async function computeAndStoreRiskScores(pool, userId, now = new Date()) {
-  const context = await loadArkContext(pool, userId)
+async function computeAndStoreRiskScores(pool, userId, now = new Date(), options = {}) {
+  const context = await loadArkContext(pool, userId, options)
   const rows = []
   for (const client of context.clients) {
     const score = computeClientRiskScore({
@@ -352,7 +396,7 @@ async function saveRecommendations(pool, userId, cards = []) {
   return saved
 }
 
-async function buildAndStoreMorningBrief(pool, userId) {
+async function buildAndStoreMorningBrief(pool, userId, options = {}) {
   await ensureArkBudget(pool, userId)
   const budget = (await pool.query('SELECT * FROM ark_budgets WHERE user_id = $1', [userId])).rows[0]
   if (budget?.paused || Number(budget?.current_spend_micro_eur || 0) >= Number(budget?.hard_cap_micro_eur || DEFAULT_HARD_CAP_MICRO_EUR)) {
@@ -361,7 +405,7 @@ async function buildAndStoreMorningBrief(pool, userId) {
     throw err
   }
 
-  const context = await loadArkContext(pool, userId)
+  const context = await loadArkContext(pool, userId, options)
   const cards = buildFallbackMorningBrief(context)
 
   // ── SONDE LLM : LE MODE SE DÉDUIT DE LA RÉUSSITE RÉELLE ──────────────────

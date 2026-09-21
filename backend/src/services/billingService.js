@@ -52,12 +52,34 @@ async function ensureBillingFoundation() {
     );
   `);
 
+  // LE CATALOGUE DE LA BASE EST CELUI DE L'API (planService), pas une liste
+  // recopiée : un plan souscriptible doit exister ici, sans quoi
+  // `subscriptions.plan_id` restait NULL et `/api/billing/status` relisait
+  // « starter » pour un abonné suisse (défaut P1 du 21/09/2026 : les codes de la
+  // grille CHF existaient côté planService mais pas dans `billing_plans`).
+  const codesCatalogue = [
+    ...planService.codesPourMarche('FR').map((code) => [code, 'FR']),
+    ...planService.codesPourMarche('CH').map((code) => [code, 'CH']),
+  ];
+  const lignesPlans = codesCatalogue.map(([code, marche]) => ({
+    code,
+    plan: planService.planPourCode(code, marche),
+  }));
+  const parametresPlans = lignesPlans.flatMap(({ code, plan }) => [
+    code,
+    plan.name,
+    plan.price != null ? Math.round(Number(plan.price) * 100) : null,
+    plan.currency,
+    plan.interval,
+  ]);
+  const valeursPlans = lignesPlans
+    .map((_, index) => `($${index * 5 + 1}, $${index * 5 + 2}, $${index * 5 + 3}, $${index * 5 + 4}, $${index * 5 + 5}, TRUE)`)
+    .join(',\n      ');
+
   await pool.query(`
     INSERT INTO billing_plans (code, display_name, price_amount_cents, currency, interval, is_active)
     VALUES
-      ('starter', 'Starter', 8900, 'EUR', 'month', TRUE),
-      ('pro', 'Pro', 15900, 'EUR', 'month', TRUE),
-      ('cabinet', 'Cabinet', NULL, 'EUR', 'month', TRUE)
+      ${valeursPlans}
     ON CONFLICT (code) DO UPDATE SET
       display_name = EXCLUDED.display_name,
       price_amount_cents = EXCLUDED.price_amount_cents,
@@ -65,7 +87,7 @@ async function ensureBillingFoundation() {
       interval = EXCLUDED.interval,
       is_active = EXCLUDED.is_active,
       updated_at = NOW();
-  `);
+  `, parametresPlans);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS customer_billing_profiles (
@@ -211,11 +233,31 @@ async function ensureBillingFoundation() {
   foundationReady = true;
 }
 
-function normalizePlanCode(code) {
+/**
+ * Résout un code de plan sur le CATALOGUE (`planService`), seule source de
+ * vérité. Retourne le code canonique, ou `null` si le plan n'existe pas.
+ *
+ * POURQUOI CE CHANGEMENT (défaut P1 mesuré le 21/09/2026, 4e passe adverse) :
+ * cette fonction validait sur une liste recopiée `['starter','pro','cabinet']`
+ * (grille euros). Les codes de la grille suisse — `independant`, `cabinet_ch`,
+ * `cabinet_ch_sur_devis` — que `GET /api/billing/plans` sert LUI-MÊME à un
+ * cabinet `pays=CH` étaient donc refusés par le checkout en 400 `invalid_plan` :
+ * un cabinet suisse ne pouvait souscrire aucun de ses plans.
+ *
+ * `marche` restreint la validation à la grille RÉELLEMENT servie à ce cabinet
+ * (ce qui est annoncé est ce qui est acceptable). Sans `marche` — webhooks
+ * Stripe, appels internes — le catalogue complet est accepté, sans quoi un
+ * abonnement suisse déjà payé serait relu comme « starter ».
+ *
+ * `premium` reste l'alias hérité de `cabinet` (comptes antérieurs à la grille
+ * V1) : il n'est jamais servi, mais reste résolu.
+ */
+function normalizePlanCode(code, marche) {
   if (!code) return null;
   const v = String(code).trim().toLowerCase();
   if (v === 'premium') return 'cabinet';
-  return ['starter', 'pro', 'cabinet'].includes(v) ? v : null;
+  const marches = marche ? [marche] : ['FR', 'CH'];
+  return marches.some((m) => planService.planPourCode(v, m)) ? v : null;
 }
 
 /**
@@ -236,6 +278,11 @@ function getPlans(marche = 'FR') {
     // Symbole affiché : le franc suisse s'écrit « CHF », l'euro garde son signe.
     const symbole = devise === 'CHF' ? 'CHF' : '€';
     const montant = p.price ? Number(p.price).toFixed(0) : null;
+    // « Sur devis » (prix non renseigné) n'est pas payable en ligne : le
+    // checkout répond 409 `cabinet_contact_required`. `has_checkout` dit donc
+    // exactement ce que le checkout fera — prix connu ET price ID Stripe
+    // configuré — sans quoi l'écran annoncerait un paiement impossible.
+    const payableEnLigne = montant !== null && !!p.has_stripe_price;
     return {
       display_price_ht: montant ? `${montant} ${symbole} HT / mois` : 'Sur devis',
       // Le total TTC n'est affiché que si un taux est réellement configuré : on
@@ -251,7 +298,8 @@ function getPlans(marche = 'FR') {
       interval: p.interval,
       highlighted: p.highlighted,
       trial_days: p.id === 'cabinet' || p.id === 'cabinet_ch' ? 0 : TRIAL_DAYS,
-      has_checkout: !!p.has_stripe_price,
+      has_checkout: payableEnLigne,
+      sur_devis: montant === null,
       fiscal_label: fiscal.label,
       features: p.features,
     };
@@ -476,6 +524,7 @@ module.exports = {
   TRIAL_DAYS,
   FISCAL_LABEL,
   getPlans,
+  planPourMarche: (code, marche = 'FR') => planService.planPourCode(code, marche),
   safeUserId,
   ensureBillingFoundation,
   normalizePlanCode,

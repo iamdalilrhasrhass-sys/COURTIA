@@ -13,6 +13,40 @@ const { processDocument, applyExtractionToClient, reprocessExtraction, getExtrac
 const { DOCUMENT_TYPES, getTypeName, isValidType } = require('../services/docvision/typeDetector')
 const { getSupportedTypes } = require('../services/docvision/extractors')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET
+//
+// POURQUOI : une extraction documentaire est faite pour un CLIENT (RIB, carte
+// grise → fiche client). Tant que ces routes filtraient `broker_id = moi`, un
+// collaborateur ne voyait AUCUNE extraction de son cabinet et recevait 404 sur
+// celle d'un collègue — alors qu'il traite le même dossier client.
+//
+// COMMENT : `document_extractions` ne porte pas de colonne `cabinet_id` (vérifié
+// dans `information_schema` / migrations), et son `client_id` est facultatif
+// (extraction lancée avant rattachement) : une jointure sur `clients` perdrait
+// ces lignes. Le cabinet d'une extraction est celui de son propriétaire
+// (`broker_id`), résolu dans `cabinet_members` — la règle de rattachement de la
+// migration 113. La DÉCISION de portée reste entièrement dans `lib/porteeCabinet`
+// (seule autorité) ; seule la colonne « cabinet » du fragment change de forme,
+// faute de colonne dédiée. Sans cabinet, le fragment retombe sur
+// `de.broker_id = $n` : comportement historique strictement inchangé.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée sur `document_extractions` (alias `de`). */
+function filtreExtractions(portee, { depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `(SELECT cm.cabinet_id FROM cabinet_members cm
+                WHERE cm.user_id = de.broker_id
+                  AND cm.removed_at IS NULL
+                  AND cm.cabinet_id = ANY($${depart}::uuid[])
+                LIMIT 1)`,
+    proprietaire: 'de.broker_id',
+    depart,
+    ecriture,
+  })
+}
 
 /**
  * POST /api/docvision/extract/:documentId
@@ -80,7 +114,7 @@ router.post('/extract/:documentId', async (req, res) => {
  */
 router.get('/extractions', async (req, res) => {
   try {
-    const brokerId = req.user.id || req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { 
       client_id, 
       document_type, 
@@ -92,10 +126,11 @@ router.get('/extractions', async (req, res) => {
       order = 'DESC'
     } = req.query
     
-    // Construire la requête
-    let whereClause = 'WHERE de.broker_id = $1'
-    const params = [brokerId]
-    let paramIdx = 2
+    // Construire la requête — portée CABINET
+    const f = filtreExtractions(portee, { depart: 1 })
+    let whereClause = `WHERE ${f.sql}`
+    const params = [...f.params]
+    let paramIdx = f.suivant
     
     if (client_id) {
       whereClause += ` AND de.client_id = $${paramIdx++}`
@@ -177,7 +212,8 @@ router.get('/extractions', async (req, res) => {
 router.get('/extractions/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const brokerId = req.user.id || req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = filtreExtractions(portee, { depart: 1 })
     
     const result = await pool.query(`
       SELECT 
@@ -190,8 +226,8 @@ router.get('/extractions/:id', async (req, res) => {
       FROM document_extractions de
       LEFT JOIN clients c ON de.client_id = c.id
       LEFT JOIN client_documents cd ON de.client_document_id = cd.id
-      WHERE de.id = $1 AND de.broker_id = $2
-    `, [id, brokerId])
+      WHERE de.id = $${f.suivant} AND ${f.sql}
+    `, [...f.params, id])
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Extraction non trouvée' })
@@ -311,11 +347,13 @@ router.post('/extractions/:id/reprocess', async (req, res) => {
 router.delete('/extractions/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const brokerId = req.user.id || req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
+    const f = filtreExtractions(portee, { depart: 1, ecriture: true })
     
     const result = await pool.query(
-      'DELETE FROM document_extractions WHERE id = $1 AND broker_id = $2 RETURNING id',
-      [id, brokerId]
+      `DELETE FROM document_extractions de WHERE de.id = $${f.suivant} AND ${f.sql} RETURNING de.id`,
+      [...f.params, id]
     )
     
     if (result.rows.length === 0) {

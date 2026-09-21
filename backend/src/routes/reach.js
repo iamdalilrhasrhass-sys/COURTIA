@@ -8,6 +8,7 @@ const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
 const OpenAI = require('openai');
 const { searchProspects: searchExternalProspects } = require('../services/reachSearchService');
+const porteeCabinet = require('../lib/porteeCabinet');
 const router = express.Router();
 
 // DeepSeek client for AI features
@@ -29,6 +30,28 @@ function scopedQuery(req, baseQuery, params = [], orderBy = 'created_at DESC') {
     `${baseQuery} WHERE user_id = $${params.length + 1} ORDER BY ${orderBy}`,
     [...params, req.user.id]
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET sur les objets MÉTIER créés par ARK REACH.
+//
+// POURQUOI : les PROSPECTS de Reach (`reach_prospects`, `reach_campaigns`…) sont
+// la liste personnelle du courtier (`user_id`) : rien à changer. En revanche les
+// objets CRÉÉS dans le CRM — `clients` et `taches` — sont des objets du CABINET :
+// ils étaient estampillés du seul `courtier_id` sans `cabinet_id`, donc invisibles
+// pour le reste du cabinet (`clients.cabinet_id`, migration 113), et un client
+// « déjà existant » n'était détecté que chez le créateur (le même client était
+// recréé dans le cabinet). Le fragment décide de la portée (`lib/porteeCabinet`).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée sur `clients` (alias `c`) — ancre du tenant. */
+function filtreClient(portee, { depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart,
+    ecriture,
+  })
 }
 
 // ─────────────────── DASHBOARD ───────────────────
@@ -309,11 +332,15 @@ router.post('/prospects/:id/create-task', verifyToken, async (req, res) => {
     const { title, description, due_date, priority } = req.body;
     if (!title) return res.status(400).json(err('title_required'));
 
-    // Créer la tâche dans le système existant
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer une tâche')) return;
+
+    // Créer la tâche dans le système existant — estampillée du CABINET
+    // (`taches.cabinet_id`) pour que tout le cabinet la voie.
     const task = await pool.query(
-      `INSERT INTO taches (courtier_id, titre, description, priorite, echeance, statut, source)
-       VALUES ($1, $2, $3, $4, $5, 'a_faire', 'reach') RETURNING *`,
-      [req.user.id, title, description || '', priority || 'moyenne', due_date || null]
+      `INSERT INTO taches (courtier_id, cabinet_id, titre, description, priorite, echeance, statut, source)
+       VALUES ($1, $2, $3, $4, $5, $6, 'a_faire', 'reach') RETURNING *`,
+      [req.user.id, porteeCabinet.cabinetPourCreation(portee), title, description || '', priority || 'moyenne', due_date || null]
     );
 
     // Log activity
@@ -341,14 +368,19 @@ router.post('/convert-to-client', verifyToken, async (req, res) => {
     );
     if (!p.rows.length) return res.status(404).json(err('prospect_not_found'));
 
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
+    if (porteeCabinet.refuserEcriture(portee, res, 'convertir un prospect en client')) return;
+    const cabinetId = porteeCabinet.cabinetPourCreation(portee);
+    const f = filtreClient(portee, { depart: 1, ecriture: true });
+
     const pp = p.rows[0];
 
-    // Créer le client dans la table clients
+    // Créer le client dans la table clients — estampillé du CABINET
     const client = await pool.query(
-      `INSERT INTO clients (courtier_id, first_name, last_name, email, phone, company_name, city, status, type, notes, source)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'nouveau', 'prospect', $8, 'ARK REACH')
+      `INSERT INTO clients (courtier_id, cabinet_id, first_name, last_name, email, phone, company_name, city, status, type, notes, source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'nouveau', 'prospect', $9, 'ARK REACH')
        ON CONFLICT DO NOTHING RETURNING *`,
-      [req.user.id, pp.contact_first_name, pp.contact_last_name, pp.email, pp.phone, pp.company_name, pp.city, pp.approach_angle || '']
+      [req.user.id, cabinetId, pp.contact_first_name, pp.contact_last_name, pp.email, pp.phone, pp.company_name, pp.city, pp.approach_angle || '']
     );
 
     let clientRecord;
@@ -356,9 +388,11 @@ router.post('/convert-to-client', verifyToken, async (req, res) => {
       clientRecord = client.rows[0];
       // Si conflit (email déjà existant), on récupère le client existant
     } else {
+      // Le client « déjà existant » est cherché dans tout le CABINET : un
+      // prospect déjà converti par un collègue ne doit pas créer un doublon.
       const existingClient = await pool.query(
-        'SELECT * FROM clients WHERE email = $1 AND courtier_id = $2',
-        [pp.email, req.user.id]
+        `SELECT c.* FROM clients c WHERE c.email = $${f.suivant} AND ${f.sql}`,
+        [...f.params, pp.email]
       );
       clientRecord = existingClient.rows[0];
     }
@@ -658,6 +692,17 @@ router.post('/replies/:id/handle', verifyToken, async (req, res) => {
     );
     if (!reply.rows.length) return res.status(404).json(err('reply_not_found'));
 
+    // Les actions `convert_client` et `create_task` ÉCRIVENT des objets du
+    // CABINET (`clients`, `taches`) : elles sont soumises au même droit
+    // d'écriture que le reste du CRM (rôle assistant/viewer refusé, 403).
+    const ECRITURES = ['convert_client', 'create_task'];
+    let portee = null;
+    if (ECRITURES.includes(action)) {
+      portee = await porteeCabinet.resoudrePortee(pool, req);
+      if (porteeCabinet.refuserEcriture(portee, res, 'écrire dans le portefeuille du cabinet')) return;
+    }
+    const cabinetId = portee ? porteeCabinet.cabinetPourCreation(portee) : null;
+
     let result = {};
 
     if (action === 'mark_read') {
@@ -673,9 +718,9 @@ router.post('/replies/:id/handle', verifyToken, async (req, res) => {
       if (prospect.rows.length) {
         const p = prospect.rows[0];
         const client = await pool.query(
-          `INSERT INTO clients (courtier_id, first_name, last_name, email, phone, company_name, city, status, type)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, 'nouveau', 'prospect') RETURNING *`,
-          [req.user.id, p.contact_first_name, p.contact_last_name, p.email, p.phone, p.company_name, p.city]
+          `INSERT INTO clients (courtier_id, cabinet_id, first_name, last_name, email, phone, company_name, city, status, type)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'nouveau', 'prospect') RETURNING *`,
+          [req.user.id, cabinetId, p.contact_first_name, p.contact_last_name, p.email, p.phone, p.company_name, p.city]
         );
         await pool.query("UPDATE reach_prospects SET status = 'converted', converted_client_id = $1, converted_at = NOW() WHERE id = $2", [client.rows[0].id, rr.prospect_id]);
         await pool.query('UPDATE reach_replies SET is_read = true, client_created = true WHERE id = $1', [req.params.id]);
@@ -687,9 +732,9 @@ router.post('/replies/:id/handle', verifyToken, async (req, res) => {
       if (prospect.rows.length) {
         const p = prospect.rows[0];
         const task = await pool.query(
-          `INSERT INTO taches (courtier_id, titre, description, priorite, statut, source)
-           VALUES ($1, $2, $3, $4, 'a_faire', 'reach_reply') RETURNING *`,
-          [req.user.id, `Répondre à ${p.contact_first_name || ''} ${p.contact_last_name || ''} (${p.company_name || ''})`, rr.body?.substring(0, 200) || '', 'haute']
+          `INSERT INTO taches (courtier_id, cabinet_id, titre, description, priorite, statut, source)
+           VALUES ($1, $2, $3, $4, $5, 'a_faire', 'reach_reply') RETURNING *`,
+          [req.user.id, cabinetId, `Répondre à ${p.contact_first_name || ''} ${p.contact_last_name || ''} (${p.company_name || ''})`, rr.body?.substring(0, 200) || '', 'haute']
         );
         result = { status: 'task_created', task_id: task.rows[0].id };
       }

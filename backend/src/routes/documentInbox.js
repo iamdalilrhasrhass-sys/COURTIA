@@ -30,6 +30,7 @@ const path = require('path');
 const verifyToken = require('../middleware/authMiddleware');
 
 const docInboxService = require('../services/documentInboxService');
+const porteeCabinet = require('../lib/porteeCabinet');
 const { messagePublic } = require('../lib/erreursPubliques')
 
 // Multer : stockage temporaire.
@@ -94,6 +95,24 @@ router.get('/client/:clientId', async (req, res) => {
   try {
     const userId = getUserId(req);
     const { clientId } = req.params;
+    // ── LE CLIENT DOIT APPARTENIR AU PÉRIMÈTRE DE L'APPELANT ────────────────
+    // Mesure du 21/09/2026 (Red Team RT4-13) : l'identifiant client d'un AUTRE
+    // cabinet recevait un 200 avec une liste vide — aucune donnée servie, mais
+    // l'existence de la ressource était confirmée. La convention du produit est
+    // un 404 sans divulgation.
+    const portee = await porteeCabinet.resoudrePortee(pool, req);
+    const fClient = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    });
+    const controle = await pool.query(
+      `SELECT 1 FROM clients c WHERE c.id = $${fClient.suivant} AND ${fClient.sql}`,
+      [...fClient.params, Number.parseInt(clientId, 10) || 0]
+    );
+    if (controle.rows.length === 0) {
+      return res.status(404).json({ error: 'not_found', message: 'Client introuvable dans votre cabinet' });
+    }
     const result = await pool.query(
       `SELECT * FROM document_uploads WHERE user_id = $1 AND client_id = $2 ORDER BY created_at DESC`,
       [userId, clientId]

@@ -16,6 +16,7 @@ const verifyToken = require('../middleware/authMiddleware')
 const { requestQuotesMulti, getConnector } = require('../services/connectors')
 const cryptoVault = require('../services/cryptoVault')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 // ============================================================
 // HELPERS
@@ -23,6 +24,39 @@ const { messagePublic } = require('../lib/erreursPubliques')
 
 function getUserId(user) {
   return user?.id || user?.userId || null
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET
+//
+// `quote_requests` porte sa PROPRE colonne `cabinet_id` (migration 113) : la
+// demande de tarification appartient au CABINET, `broker_id` restant le créateur.
+// Tant que ces routes filtraient `qr.broker_id = $1`, un collaborateur voyait
+// 0 demande de tarification et recevait 404 sur celle d'un collègue.
+//
+// Les INTÉGRATIONS (`broker_integrations`, `integration_credentials`) restent
+// PAR UTILISATEUR : elles portent les secrets du compte connecté — hors
+// périmètre de ce correctif, volontairement inchangées.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée sur `quote_requests` (alias `qr`). */
+function filtreDemandes(portee, { depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: 'qr.cabinet_id',
+    proprietaire: 'qr.broker_id',
+    depart,
+    ecriture,
+  })
+}
+
+/** Fragment de portée sur `clients` (alias `c`) — ancre du tenant. */
+function filtreClient(portee, { depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart,
+    ecriture,
+  })
 }
 
 /**
@@ -76,11 +110,14 @@ router.use(verifyToken)
 router.post('/quote-request', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     
     if (!userId) {
       return res.status(401).json({ error: 'unauthorized' })
     }
+
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer une demande de tarification')) return
     
     const {
       client_id,
@@ -93,25 +130,28 @@ router.post('/quote-request', async (req, res) => {
       return res.status(400).json({ error: 'normalized_data_required' })
     }
     
-    // Vérifier que le client appartient au courtier (si fourni)
+    // Vérifier que le client appartient au CABINET (si fourni)
     if (client_id) {
+      const fC = filtreClient(portee, { depart: 1, ecriture: true })
       const clientCheck = await pool.query(
-        'SELECT id FROM clients WHERE id = $1 AND courtier_id = $2',
-        [client_id, userId]
+        `SELECT c.id FROM clients c WHERE c.id = $${fC.suivant} AND ${fC.sql}`,
+        [...fC.params, client_id]
       )
       if (!clientCheck.rows[0]) {
         return res.status(404).json({ error: 'client_not_found' })
       }
     }
     
+    // `broker_id` reste le CRÉATEUR ; `cabinet_id` est le tenant (migration 113).
     const result = await pool.query(`
       INSERT INTO quote_requests (
-        client_id, broker_id, product_type, normalized_data, target_providers, status
-      ) VALUES ($1, $2, $3, $4, $5, 'draft')
+        client_id, broker_id, cabinet_id, product_type, normalized_data, target_providers, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'draft')
       RETURNING *
     `, [
       client_id || null,
       userId,
+      porteeCabinet.cabinetPourCreation(portee),
       product_type || null,
       JSON.stringify(normalized_data),
       target_providers ? JSON.stringify(target_providers) : null
@@ -134,6 +174,7 @@ router.post('/quote-request', async (req, res) => {
 router.get('/quote-request/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const porteeDetail = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     const requestId = parseInt(req.params.id, 10)
     
@@ -141,6 +182,7 @@ router.get('/quote-request/:id', async (req, res) => {
       return res.status(400).json({ error: 'invalid_request' })
     }
     
+    const f = filtreDemandes(porteeDetail, { depart: 1 })
     const result = await pool.query(`
       SELECT 
         qr.*,
@@ -151,8 +193,8 @@ router.get('/quote-request/:id', async (req, res) => {
         (SELECT COUNT(*) FROM quote_comparisons WHERE request_id = qr.id) AS comparisons_count
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.id = $1 AND qr.broker_id = $2
-    `, [requestId, userId])
+      WHERE qr.id = $${f.suivant} AND ${f.sql}
+    `, [...f.params, requestId])
     
     if (!result.rows[0]) {
       return res.status(404).json({ error: 'quote_request_not_found' })
@@ -175,18 +217,22 @@ router.get('/quote-request/:id', async (req, res) => {
 router.post('/quote-request/:id/submit', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     const requestId = parseInt(req.params.id, 10)
     
     if (!userId || !requestId) {
       return res.status(400).json({ error: 'invalid_request' })
     }
+
+    if (porteeCabinet.refuserEcriture(portee, res, 'soumettre une demande de tarification')) return
     
-    // Récupérer la demande
+    // Récupérer la demande — portée CABINET
+    const fDemande = filtreDemandes(portee, { depart: 1, ecriture: true })
     const requestResult = await pool.query(`
-      SELECT * FROM quote_requests 
-      WHERE id = $1 AND broker_id = $2
-    `, [requestId, userId])
+      SELECT qr.* FROM quote_requests qr 
+      WHERE qr.id = $${fDemande.suivant} AND ${fDemande.sql}
+    `, [...fDemande.params, requestId])
     
     if (!requestResult.rows[0]) {
       return res.status(404).json({ error: 'quote_request_not_found' })
@@ -309,17 +355,21 @@ router.post('/quote-request/:id/submit', async (req, res) => {
 router.post('/quote-request/:id/manual-result', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     const requestId = parseInt(req.params.id, 10)
     
     if (!userId || !requestId) {
       return res.status(400).json({ error: 'invalid_request' })
     }
+
+    if (porteeCabinet.refuserEcriture(portee, res, 'ajouter un devis reçu')) return
     
-    // Vérifier la demande
+    // Vérifier la demande — portée CABINET
+    const f = filtreDemandes(portee, { depart: 1, ecriture: true })
     const requestCheck = await pool.query(
-      'SELECT id FROM quote_requests WHERE id = $1 AND broker_id = $2',
-      [requestId, userId]
+      `SELECT qr.id FROM quote_requests qr WHERE qr.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, requestId]
     )
     
     if (!requestCheck.rows[0]) {
@@ -398,6 +448,7 @@ router.post('/quote-request/:id/manual-result', async (req, res) => {
 router.get('/quote-request/:id/results', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     const requestId = parseInt(req.params.id, 10)
     
@@ -405,10 +456,11 @@ router.get('/quote-request/:id/results', async (req, res) => {
       return res.status(400).json({ error: 'invalid_request' })
     }
     
-    // Vérifier la demande
+    // Vérifier la demande — portée CABINET
+    const f = filtreDemandes(portee, { depart: 1 })
     const requestCheck = await pool.query(
-      'SELECT id FROM quote_requests WHERE id = $1 AND broker_id = $2',
-      [requestId, userId]
+      `SELECT qr.id FROM quote_requests qr WHERE qr.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, requestId]
     )
     
     if (!requestCheck.rows[0]) {
@@ -445,20 +497,24 @@ router.get('/quote-request/:id/results', async (req, res) => {
 router.post('/quote-request/:id/compare', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     const requestId = parseInt(req.params.id, 10)
     
     if (!userId || !requestId) {
       return res.status(400).json({ error: 'invalid_request' })
     }
+
+    if (porteeCabinet.refuserEcriture(portee, res, 'comparer une demande de tarification')) return
     
-    // Récupérer la demande et les résultats
+    // Récupérer la demande et les résultats — portée CABINET
+    const fDemande = filtreDemandes(portee, { depart: 1, ecriture: true })
     const requestResult = await pool.query(`
       SELECT qr.*, c.first_name, c.last_name
       FROM quote_requests qr
       LEFT JOIN clients c ON qr.client_id = c.id
-      WHERE qr.id = $1 AND qr.broker_id = $2
-    `, [requestId, userId])
+      WHERE qr.id = $${fDemande.suivant} AND ${fDemande.sql}
+    `, [...fDemande.params, requestId])
     
     if (!requestResult.rows[0]) {
       return res.status(404).json({ error: 'quote_request_not_found' })
@@ -601,6 +657,7 @@ function generateArkInsight(quoteRequest, sortedResults) {
 router.get('/quote-requests', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const userId = getUserId(req.user)
     
     if (!userId) {
@@ -609,9 +666,12 @@ router.get('/quote-requests', async (req, res) => {
     
     const { status, client_id, limit = 50, offset = 0 } = req.query
     
-    let whereClause = 'WHERE qr.broker_id = $1'
-    const params = [userId]
-    let paramIndex = 2
+    // Portée CABINET (quote_requests.cabinet_id), repli `qr.broker_id = $n`
+    // pour un compte sans cabinet.
+    const f = filtreDemandes(portee, { depart: 1 })
+    let whereClause = `WHERE ${f.sql}`
+    const params = [...f.params]
+    let paramIndex = f.suivant
     
     if (status) {
       whereClause += ` AND qr.status = $${paramIndex++}`

@@ -6,16 +6,19 @@ import {
   Sparkles, CheckSquare, PieChart, Settings, Zap, Search, Command, Euro
 } from 'lucide-react'
 import api from '../../api'
+// Même source de libellés que la barre latérale : la palette (Cmd+K) et le menu
+// nomment chaque écran de la même façon, en français (voir lib/libelles.js).
+import { LIBELLES } from '../../lib/libelles'
 
 const ACTIONS = [
-  { id: 'dashboard',     label: 'Tableau de bord',  desc: 'Vue d\'ensemble de votre activité',   path: '/dashboard',     icon: LayoutDashboard, cat: 'Navigation' },
-  { id: 'morning-brief', label: 'Morning Brief',     desc: 'Agenda et actions du jour',           path: '/morning-brief', icon: Sun,             cat: 'Navigation' },
+  { id: 'dashboard',     label: LIBELLES.tableauDeBord, desc: 'Vue d\'ensemble de votre activité',   path: '/dashboard',     icon: LayoutDashboard, cat: 'Navigation' },
+  { id: 'morning-brief', label: LIBELLES.briefDuMatin,   desc: 'Agenda et actions du jour',           path: '/morning-brief', icon: Sun,             cat: 'Navigation' },
   { id: 'clients',       label: 'Clients',           desc: 'Portefeuille clients',                path: '/clients',       icon: Users,           cat: 'Navigation' },
   { id: 'new-client',    label: 'Nouveau client',    desc: 'Créer une nouvelle fiche client',     path: '/clients/new',   icon: UserPlus,        cat: 'Action' },
   { id: 'contrats',      label: 'Contrats',          desc: 'Contrats actifs et à renouveler',     path: '/contrats',      icon: FileText,        cat: 'Navigation' },
-  { id: 'analytics',     label: 'Analyses',         desc: 'KPIs et performance portefeuille',    path: '/analytics',     icon: BarChart2,       cat: 'Navigation' },
+  { id: 'analytics',     label: LIBELLES.analyses,   desc: 'KPIs et performance portefeuille',    path: '/analytics',     icon: BarChart2,       cat: 'Navigation' },
   { id: 'capitia',       label: 'CAPITIA',           desc: 'Module financement IOBSP',            path: '/capitia',       icon: Sparkles,        cat: 'Navigation' },
-  { id: 'taches',        label: 'Tâches',            desc: 'Suivi des tâches en cours',           path: '/taches',        icon: CheckSquare,     cat: 'Navigation' },
+  { id: 'taches',        label: LIBELLES.taches,     desc: 'Suivi des tâches en cours',           path: '/taches',        icon: CheckSquare,     cat: 'Navigation' },
   { id: 'rapports',      label: 'Rapports',          desc: 'Rapports et exports PDF',             path: '/rapports',      icon: PieChart,        cat: 'Navigation' },
   { id: 'commissions',   label: 'Commissions',       desc: 'Suivi par compagnie et apporteur',    path: '/commissions',   icon: Euro,            cat: 'Navigation' },
   { id: 'parametres',    label: 'Paramètres',        desc: 'Configuration du compte',             path: '/parametres',    icon: Settings,        cat: 'Navigation' },

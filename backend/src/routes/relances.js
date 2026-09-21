@@ -54,6 +54,7 @@ function filtreRelances(portee, { depart = 1, ecriture = false, alias = 'c' } = 
 }
 const router = express.Router()
 const pool = require('../db')
+
 const { callArkStructured } = require('../services/arkEngine')
 const {
   resultatIaVide,
@@ -65,6 +66,41 @@ const { sendEmail, getEmailStatus, sendCommercialEmail } = require('../services/
 const { sendSMS, getSmsStatus } = require('../services/smsService')
 const whatsappMeta = require('../services/whatsappMetaService')
 const logger = require('../lib/logger')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UN IDENTIFIANT INVALIDE N'EST PAS UNE PANNE DU SERVEUR
+//
+// DÉFAUT P3 MESURÉ (21/09/2026, 4e passe adverse) : `GET /api/relances/abc`
+// répondait 500 « invalid input syntax for type integer: "NaN" » — un message
+// PostgreSQL dans le corps de la réponse, pour une demande mal formée.
+//
+// Deux pièges évités ici :
+//   * `parseInt("12abc")` vaut 12 : la forme est donc vérifiée sur la CHAÎNE
+//     ENTIÈRE (`^\d+$`), jamais par une conversion approchante ;
+//   * une valeur comme `999999999999999999999999999` est « numérique » mais sort
+//     de la plage de la colonne (`relances.id` est un `integer`) : PostgreSQL
+//     lève alors 22003, donc un 500. La plage est vérifiée AVANT la base.
+// Un identifiant valide mais inexistant reste un 404 (la ressource n'existe
+// pas dans le périmètre), jamais un 400 ni un 500.
+// ─────────────────────────────────────────────────────────────────────────────
+const ID_MAX = 2147483647 // borne haute d'une colonne PostgreSQL `integer`
+
+/**
+ * Valide un identifiant de relance et répond lui-même en cas de refus.
+ * @returns {number|null} l'identifiant, ou `null` si la réponse est déjà écrite.
+ */
+function identifiantValide(valeur, res, quoi = 'Cette relance') {
+  const texte = String(valeur ?? '').trim()
+  const nombre = /^\d+$/.test(texte) ? Number(texte) : NaN
+  if (!Number.isSafeInteger(nombre) || nombre <= 0 || nombre > ID_MAX) {
+    res.status(400).json({
+      error: 'identifiant_invalide',
+      message: `${quoi} n'a pas un identifiant valide.`,
+    })
+    return null
+  }
+  return nombre
+}
 
 // =============================================================================
 // SCHEMAS JSON pour les réponses ARK
@@ -286,8 +322,11 @@ router.get('/stats', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    // L'identifiant est validé AVANT toute lecture : une valeur invalide ne
+    // doit produire ni requête, ni 500 SQL — juste un refus clair.
+    const relanceId = identifiantValide(req.params.id, res)
+    if (relanceId === null) return
     const portee = await porteeCabinet.resoudrePortee(pool, req)
-    const relanceId = parseInt(req.params.id, 10)
     const f = filtreRelances(portee, { depart: 2 })
 
     const result = await pool.query(`
@@ -406,9 +445,10 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    const relanceId = identifiantValide(req.params.id, res)
+    if (relanceId === null) return
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     if (porteeCabinet.refuserEcriture(portee, res, 'modifier une relance')) return
-    const relanceId = parseInt(req.params.id, 10)
     const { status, priority, channel, subject, content, scheduled_at, response_received, metadata } = req.body
 
     // Vérifier appartenance (via le client -> cabinet du client)
@@ -488,9 +528,10 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    const relanceId = identifiantValide(req.params.id, res)
+    if (relanceId === null) return
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     if (porteeCabinet.refuserSuppression(portee, res)) return
-    const relanceId = parseInt(req.params.id, 10)
     const f = filtreRelances(portee, { depart: 2, ecriture: true })
 
     const result = await pool.query(`
@@ -517,10 +558,11 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/:id/send', async (req, res) => {
   try {
+    const relanceId = identifiantValide(req.params.id, res)
+    if (relanceId === null) return
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     if (porteeCabinet.refuserEcriture(portee, res, 'envoyer une relance')) return
     const courtierId = portee.userId || req.user.id
-    const relanceId = parseInt(req.params.id, 10)
     const fSend = filtreRelances(portee, { depart: 2, ecriture: true })
 
     // Charge la relance + coordonnées du client (envoi réel, plus de simulation)
@@ -821,9 +863,10 @@ Génère les relances les plus impactantes.`,
 
 router.post('/:id/ai-content', async (req, res) => {
   try {
+    const relanceId = identifiantValide(req.params.id, res)
+    if (relanceId === null) return
     const portee = await porteeCabinet.resoudrePortee(pool, req)
     const courtierId = portee.userId || req.user.id
-    const relanceId = parseInt(req.params.id, 10)
     const { channel } = req.body // email, sms, whatsapp
     const fAi = filtreRelances(portee, { depart: 2 })
 

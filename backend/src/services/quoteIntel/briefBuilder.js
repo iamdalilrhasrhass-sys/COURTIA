@@ -8,11 +8,25 @@
 const pool = require('../../db')
 const { callArkStructured } = require('../arkEngine')
 const logger = require('../../lib/logger')
+// Référentiel IA du marché (persona FINMA/LSA/CHF ou ORIAS/DDA/€) : source
+// unique partagée par tous les prompts du produit (défaut P0 CH-001).
+const arkPrompts = require('../arkPrompts')
+const marcheCabinet = require('../../lib/marcheCabinet')
 
 /**
- * Prompt système pour génération de brief personnalisé
+ * Prompt système de génération d'un brief, pour le MARCHÉ DU CABINET.
+ *
+ * DÉFAUT P0 CH-001, mesuré le 21/09/2026 : ce prompt se présentait comme
+ * « expert en courtage d'assurance français » pour TOUS les cabinets. Un cabinet
+ * suisse envoyait donc à ses compagnies des demandes rédigées sous un
+ * référentiel français (ORIAS, ACPR, DDA) et en euros.
+ *
+ * Le corps du prompt est commun ; c'est `services/arkPrompts.js` (source unique)
+ * qui apporte le persona du marché, filtre les références françaises et ajoute
+ * le bloc « CONTEXTE MARCHÉ » (FINMA, LSA, nLPD, CHF en Suisse).
  */
-const BRIEF_SYSTEM_PROMPT = `Tu es un expert en courtage d'assurance français. Tu dois générer un email de demande de devis 
+function corpsBrief() {
+  return `Tu dois générer un email de demande de devis 
 personnalisé pour une compagnie d'assurance spécifique.
 
 RÈGLES IMPORTANTES:
@@ -34,6 +48,59 @@ FORMAT DE RÉPONSE (JSON strict):
   "confidence": 0.85,
   "notes": "Notes éventuelles pour le courtier"
 }`
+}
+
+/** Prompt système du brief pour un marché donné (pure, testable). */
+function promptSystemeBrief(marche = 'FR') {
+  const code = arkPrompts.normaliserMarche(marche) || 'FR'
+  return arkPrompts.appliquerMarche(`${arkPrompts.personaDuMarche('FR')}\n\n${corpsBrief()}`, code)
+}
+
+/**
+ * Prompt système pour génération de brief personnalisé (marché français,
+ * comportement historique). Les cabinets suisses passent par
+ * `promptSystemeBrief('CH')`.
+ */
+const BRIEF_SYSTEM_PROMPT = promptSystemeBrief('FR')
+
+/**
+ * Bloc « courtier » du contexte envoyé au modèle.
+ *
+ * FR : identité ORIAS du cabinet, comportement historique inchangé.
+ * CH : JAMAIS d'ORIAS (registre français) — le registre FINMA et l'IDE (UID) du
+ * CABINET sont lus dans `lib/marcheCabinet`, et restent vides s'ils ne sont pas
+ * renseignés : aucune valeur n'est inventée.
+ */
+async function blocCourtier(brokerId, brokerInfo = {}, marche = 'FR') {
+  const base = {
+    nom: brokerInfo.name || 'Courtier',
+    cabinet: brokerInfo.cabinet || '',
+    codes_partenaires: brokerInfo.partner_codes || {},
+  }
+  if (marche !== 'CH') return { ...base, orias: brokerInfo.orias || '' }
+
+  const lecteur = (sql, params) => pool.query(sql, params)
+  let registre = { registre_type: '', registre_numero: '', autorite: 'FINMA' }
+  try {
+    const verdict = await marcheCabinet.marcheUtilisateur(brokerId, lecteur)
+    if (verdict && verdict.cabinet_id) {
+      const identite = await marcheCabinet.identiteCabinet(verdict.cabinet_id, { query: lecteur })
+      registre = {
+        registre_type: identite.registre_type || '',
+        registre_numero: identite.registre_numero || identite.uid || '',
+        autorite: identite.tutelle_authority || 'FINMA',
+      }
+    }
+  } catch (_) {
+    // Lecture impossible : on n'affiche NI ORIAS ni un registre inventé.
+  }
+  return {
+    ...base,
+    registre_type: registre.registre_type,
+    registre_numero: registre.registre_numero,
+    autorite_surveillance: registre.autorite,
+  }
+}
 
 /**
  * Récupère les infos complètes d'un provider
@@ -98,6 +165,12 @@ async function buildBrief(options) {
   
   const startTime = Date.now()
   
+  // MARCHÉ DU CABINET (défaut 'FR' : comportement historique inchangé) : le
+  // persona, les référentiels et l'identité du courtier en dépendent (CH-001).
+  const marche = options.marche
+    ? (arkPrompts.normaliserMarche(options.marche) || 'FR')
+    : await arkPrompts.chargerMarcheCabinet(pool, brokerId)
+  
   // Récupérer provider intel
   const provider = await getProviderIntel(providerId)
   if (!provider) {
@@ -148,12 +221,7 @@ async function buildBrief(options) {
       statut: d.status,
       date: d.created_at
     })),
-    courtier: {
-      nom: brokerInfo.name || 'Courtier',
-      cabinet: brokerInfo.cabinet || '',
-      orias: brokerInfo.orias || '',
-      codes_partenaires: brokerInfo.partner_codes || {}
-    }
+    courtier: await blocCourtier(brokerId, brokerInfo, marche)
   }
   
   const userPrompt = `Génère un email de demande de devis ${quoteRequest.insurance_type || 'assurance'} 
@@ -165,7 +233,7 @@ Contexte complet fourni ci-dessus.`
   
   try {
     const arkResult = await callArkStructured({
-      system: BRIEF_SYSTEM_PROMPT,
+      system: promptSystemeBrief(marche),
       user: userPrompt,
       context,
       userId: brokerId,
@@ -216,7 +284,9 @@ async function buildBriefsBatch(options) {
   
   const results = await Promise.allSettled(
     providerIds.map(providerId => 
-      buildBrief({ quoteRequestId, providerId, brokerId, brokerInfo })
+      // `marche` transmis : chaque brief du lot porte le persona du cabinet,
+      // sans relire le marché une fois par compagnie (CH-001).
+      buildBrief({ quoteRequestId, providerId, brokerId, brokerInfo, marche: options.marche })
     )
   )
   
@@ -275,5 +345,9 @@ module.exports = {
   buildBriefsBatch,
   saveBrief,
   getProviderIntel,
-  getQuoteRequestDetails
+  getQuoteRequestDetails,
+  // Ajoutés pour la non-régression CH-001 : le persona du marché doit être
+  // vérifiable sans appeler le moteur IA ni la base.
+  BRIEF_SYSTEM_PROMPT,
+  promptSystemeBrief,
 }

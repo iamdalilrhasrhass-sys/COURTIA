@@ -5,8 +5,16 @@ import { Mail, Plus, Clock, Users, Play, Pause, Target } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
 import toast from 'react-hot-toast';
 import api from '../api';
+import { REACH, RAYON, TEINTE, pastille } from '../lib/reachTheme';
 
-const accent = '#5B4DF5';
+const accent = 'var(--accent-violet, #5B4DF5)';
+
+/** Statut de campagne → teinte du design system (jamais la palette claire). */
+function statutCampagne(status) {
+  if (status === 'running' || status === 'active') return { teinte: TEINTE.vert, label: 'Actif' };
+  if (status === 'paused') return { teinte: TEINTE.ambre, label: 'Pause' };
+  return { teinte: TEINTE.neutre, label: 'Brouillon' };
+}
 
 export default function ReachCampaigns() {
   const navigate = useNavigate();
@@ -24,18 +32,18 @@ export default function ReachCampaigns() {
   useEffect(() => { fetchCampaigns(); }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="p-6 max-w-7xl mx-auto" style={{ fontFamily: "var(--font-sans, 'Inter', sans-serif)" }}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2" style={REACH.titre}>
             <Mail size={22} color={accent} /> Campagnes
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Étape 3 : Approcher — Gérez vos campagnes de prospection</p>
+          <p className="text-sm mt-1" style={REACH.libelle}>Étape 3 : Approcher — Gérez vos campagnes de prospection</p>
         </div>
         <button
           onClick={() => setShowTemplates(!showTemplates)}
-          className="px-4 py-2.5 text-white rounded-xl text-sm font-medium hover:opacity-90 transition flex items-center gap-2"
-          style={{ background: accent }}
+          className="px-4 py-2.5 rounded-xl text-sm font-medium transition flex items-center gap-2"
+          style={{ ...REACH.boutonPrincipal, borderRadius: RAYON.md }}
         >
           <Plus size={16} /> Nouvelle campagne
         </button>
@@ -43,17 +51,17 @@ export default function ReachCampaigns() {
 
       {/* Templates popup */}
       {showTemplates && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
-          <h3 className="font-semibold text-gray-800 mb-4">Templates prêts à l'emploi</h3>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl p-6 mb-6" style={{ ...REACH.carte, borderRadius: RAYON.lg }}>
+          <h3 className="font-semibold mb-4" style={REACH.titre}>Templates prêts à l&apos;emploi</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {templates.map((t, i) => (
-              <div key={i} className="border border-gray-200 rounded-xl p-4 hover:border-purple-200 hover:shadow-sm transition cursor-pointer">
+              <div key={i} className="rounded-xl p-4 transition cursor-pointer" style={{ ...REACH.carte, border: '1px solid rgba(255,255,255,0.12)', borderRadius: RAYON.md }}>
                 <div className="flex items-center gap-2 mb-2">
                   <Target size={16} color={accent} />
-                  <span className="font-medium text-sm text-gray-800">{t.name}</span>
+                  <span className="font-medium text-sm" style={REACH.titre}>{t.name}</span>
                 </div>
-                <p className="text-xs text-gray-500 mb-3">{t.desc}</p>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
+                <p className="text-xs mb-3" style={REACH.libelle}>{t.desc}</p>
+                <div className="flex items-center gap-3 text-xs" style={REACH.discret}>
                   <span className="flex items-center gap-1"><Mail size={12} /> {t.channel}</span>
                   <span className="flex items-center gap-1"><Clock size={12} /> {t.steps} étapes</span>
                 </div>
@@ -67,7 +75,8 @@ export default function ReachCampaigns() {
                       toast.error('Création de campagne indisponible.');
                     }
                   }}
-                  className="mt-3 w-full py-2 text-xs font-medium text-white rounded-lg hover:opacity-90 transition" style={{ background: accent }}
+                  className="mt-3 w-full py-2 text-xs font-medium transition"
+                  style={{ ...REACH.boutonPrincipal, borderRadius: RAYON.md }}
                 >
                   Utiliser ce template
                 </button>
@@ -79,76 +88,81 @@ export default function ReachCampaigns() {
 
       {/* Campaign list */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {campaignRows.map((c, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-semibold text-gray-900 text-sm">{c.name}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">{c.target_description}</p>
+        {campaignRows.map((c, i) => {
+          const statut = statutCampagne(c.status);
+          const enCours = c.status === 'running' || c.status === 'active';
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="rounded-2xl p-5 transition"
+              style={{ ...REACH.carte, borderRadius: RAYON.lg }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="font-semibold text-sm" style={REACH.titre}>{c.name}</h3>
+                  <p className="text-xs mt-0.5" style={REACH.libelle}>{c.target_description}</p>
+                </div>
+                <span className="text-xs font-medium px-2 py-0.5" style={{ ...pastille(statut.teinte), borderRadius: RAYON.full }}>
+                  {statut.label}
+                </span>
               </div>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                c.status === 'running' || c.status === 'active' ? 'bg-green-50 text-green-700' :
-                c.status === 'paused' ? 'bg-amber-50 text-amber-700' : 'bg-gray-50 text-gray-500'
-              }`}>
-                {c.status === 'running' || c.status === 'active' ? 'Actif' : c.status === 'paused' ? 'Pause' : 'Brouillon'}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-              <span className="flex items-center gap-1"><Users size={12} /> {c.prospect_count} prospects</span>
-              <span className="flex items-center gap-1"><Mail size={12} /> {c.channel}</span>
-            </div>
-            <div className="flex gap-2">
-              {c.status === 'running' || c.status === 'active' ? (
+              <div className="flex items-center gap-4 text-xs mb-4" style={REACH.discret}>
+                <span className="flex items-center gap-1"><Users size={12} /> {c.prospect_count} prospects</span>
+                <span className="flex items-center gap-1"><Mail size={12} /> {c.channel}</span>
+              </div>
+              <div className="flex gap-2">
+                {enCours ? (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' });
+                        toast.success('Campagne mise en pause');
+                      } catch {
+                        toast.error('Mise en pause impossible.');
+                      }
+                    }}
+                    className="text-xs px-3 py-1.5 transition flex items-center gap-1"
+                    style={{ ...pastille(TEINTE.ambre), borderRadius: RAYON.md }}
+                  >
+                    <Pause size={12} /> Pause
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'running' });
+                        toast.success('Campagne lancée !');
+                      } catch {
+                        toast.error('Lancement impossible.');
+                      }
+                    }}
+                    className="text-xs px-3 py-1.5 transition flex items-center gap-1"
+                    style={{ ...REACH.boutonPrincipal, borderRadius: RAYON.md }}
+                  >
+                    <Play size={12} /> Lancer
+                  </button>
+                )}
                 <button
-                  onClick={async () => {
-                    try {
-                      await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'paused' });
-                      toast.success('Campagne mise en pause');
-                    } catch {
-                      toast.error('Mise en pause impossible.');
-                    }
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition flex items-center gap-1"
+                  onClick={() => navigate(`/reach/campaigns/${c.id}`)}
+                  className="text-xs px-3 py-1.5 transition"
+                  style={{ ...REACH.boutonSecondaire, borderRadius: RAYON.md }}
                 >
-                  <Pause size={12} /> Pause
+                  Voir
                 </button>
-              ) : (
-                <button
-                  onClick={async () => {
-                    try {
-                      await api.patch(`/reach/campaigns/${c.id}/status`, { status: 'running' });
-                      toast.success('Campagne lancée !');
-                    } catch {
-                      toast.error('Lancement impossible.');
-                    }
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition flex items-center gap-1" style={{ background: accent }}
-                >
-                  <Play size={12} /> Lancer
-                </button>
-              )}
-              <button
-                onClick={() => navigate(`/reach/campaigns/${c.id}`)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-              >
-                Voir
-              </button>
-            </div>
-          </motion.div>
-        ))}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Empty state */}
       {campaignRows.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16" style={REACH.discret}>
           <Mail size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Aucune campagne pour le moment</p>
+          <p className="font-medium" style={REACH.libelle}>Aucune campagne pour le moment</p>
           <p className="text-sm mt-1">Créez votre première campagne depuis un template, sans envoi automatique.</p>
         </div>
       )}

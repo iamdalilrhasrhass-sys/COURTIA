@@ -33,6 +33,32 @@ const logger = require('../lib/logger')
  * (`courtier_id = $2`) pour les appelants hors requête HTTP (outillage, tests) —
  * ce repli ne peut PAS élargir la portée, il la restreint.
  * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DU PORTEFEUILLE ET DU BRIEF — LE CABINET, PAS LA SEULE PERSONNE
+ * (correction du 21/09/2026 — même défaut P1, autres lectures)
+ *
+ * DÉFAUT MESURÉ : `getPortfolioContext` et `getMorningBriefContext` filtraient
+ * `courtier_id = $1` alors que le reste du produit sert le CABINET. Un
+ * collaborateur (`broker`) du même cabinet lisait donc « 0 client » dans son
+ * portefeuille et dans son brief du matin, là où le propriétaire en lisait 1 :
+ * deux chiffres pour la même donnée, dans le même cabinet.
+ *
+ * RÈGLE TENUE : ces lectures passent désormais par `lib/porteeCabinet` (seule
+ * autorité). Un compte SANS cabinet garde EXACTEMENT la clause historique
+ * (`courtier_id = $1`) ; un compte dont l'appartenance a été retirée ne lit
+ * plus rien. `options` accepte `{ portee }` (portée déjà résolue par la route :
+ * aucune requête supplémentaire) ou `{ req }`.
+ *
+ * RESTENT VOLONTAIREMENT PAR-UTILISATEUR (et pourquoi) :
+ *   * `calendar_events` (`ce.user_id`) — agenda PERSONNEL synchronisé depuis
+ *     l'intégration de l'utilisateur : la table ne porte aucune ancre de
+ *     cabinet (`cabinet_id` absent) et un rendez-vous privé n'est pas un actif
+ *     du cabinet ;
+ *   * `whatsapp_threads` (`wt.user_id`) — session/inbox WhatsApp, explicitement
+ *     hors du périmètre « données du cabinet » ;
+ *   * `ark_recommendations` (`ar.user_id`) — cache d'ARK écrit PAR utilisateur,
+ *     dont l'acquittement (`dismissed_at`) est personnel : la table ne porte pas
+ *     d'ancre de cabinet et le partager effacerait l'acquittement d'autrui.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 async function resoudrePorteeDossier(userId, options = {}) {
   if (options.portee) return options.portee
@@ -41,6 +67,21 @@ async function resoudrePorteeDossier(userId, options = {}) {
     return porteeCabinet.resoudrePortee(ressource, options.req)
   }
   return null
+}
+
+/**
+ * Portée d'un SERVICE qui ne reçoit qu'un identifiant (`{ portee }` déjà
+ * résolue, `{ req }` Express, sinon résolution autoritaire par userId).
+ * Jamais `null` : le repli est la portée mono-utilisateur (comportement
+ * historique), jamais un accès plus large.
+ */
+async function resoudrePorteeService(userId, options = {}) {
+  if (options.portee) return options.portee
+  if (options.req) {
+    const ressource = options.req.app?.locals?.pool || pool
+    return porteeCabinet.resoudrePortee(ressource, options.req)
+  }
+  return porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
 }
 
 /**
@@ -187,23 +228,37 @@ async function getClientContext(clientId, userId, options = {}) {
 /**
  * Récupère le contexte du portefeuille d'un courtier
  * @param {number} userId - ID du courtier
+ * @param {Object} [options] - `{ portee }` (portée déjà résolue) ou `{ req }`
  * @returns {Object} KPIs et alertes portefeuille
  */
-async function getPortfolioContext(userId) {
+async function getPortfolioContext(userId, options = {}) {
   try {
+    // Portée du CABINET (lib/porteeCabinet — seule autorité). Sans cabinet, la
+    // clause retombe sur `courtier_id = $1` : comportement historique exact.
+    const portee = await resoudrePorteeService(userId, options)
+    // Une SEULE clause, réutilisée par les quatre sous-requêtes du bloc KPI et
+    // par les trois lectures suivantes : cette requête n'a AUCUN autre
+    // paramètre, donc les indices $1..$n restent valides partout. Alias `c`
+    // pour `clients`, `q` pour `quotes`, `crs` pour `client_risk_scores`.
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
+
     // KPIs généraux
     const kpisResult = await pool.query(
       `SELECT 
-        (SELECT COUNT(*) FROM clients WHERE courtier_id = $1) as total_clients,
-        (SELECT COUNT(*) FROM clients WHERE courtier_id = $1 AND status = 'actif') as clients_actifs,
+        (SELECT COUNT(*) FROM clients c WHERE ${f.sql}) as total_clients,
+        (SELECT COUNT(*) FROM clients c WHERE ${f.sql} AND c.status = 'actif') as clients_actifs,
         (SELECT COUNT(*) FROM quotes q 
          JOIN clients c ON c.id = q.client_id 
-         WHERE c.courtier_id = $1 AND q.status = 'actif') as contrats_actifs,
+         WHERE ${f.sql} AND q.status = 'actif') as contrats_actifs,
         (SELECT COALESCE(SUM((q.quote_data->>'prime_annuelle')::numeric), 0)
          FROM quotes q 
          JOIN clients c ON c.id = q.client_id 
-         WHERE c.courtier_id = $1 AND q.status = 'actif') as prime_totale_annuelle`,
-      [userId]
+         WHERE ${f.sql} AND q.status = 'actif') as prime_totale_annuelle`,
+      f.params
     )
     
     // Contrats à échéance prochaine (45 jours)
@@ -215,12 +270,12 @@ async function getPortfolioContext(userId) {
               CONCAT(c.first_name, ' ', c.last_name) as client_name
        FROM quotes q
        JOIN clients c ON c.id = q.client_id
-       WHERE c.courtier_id = $1 
+       WHERE ${f.sql}
          AND q.status = 'actif'
          AND (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '45 days'
        ORDER BY (q.quote_data->>'date_echeance')::date ASC
        LIMIT 10`,
-      [userId]
+      f.params
     )
     
     // Clients à risque (score >= 70)
@@ -229,26 +284,29 @@ async function getPortfolioContext(userId) {
               crs.churn_score, crs.factors
        FROM client_risk_scores crs
        JOIN clients c ON c.id = crs.client_id
-       WHERE c.courtier_id = $1 AND crs.churn_score >= 70
+       WHERE ${f.sql} AND crs.churn_score >= 70
        ORDER BY crs.churn_score DESC
        LIMIT 5`,
-      [userId]
+      f.params
     )
     
     // Clients silencieux (pas de contact > 45 jours)
     const silentResult = await pool.query(
-      `SELECT id, CONCAT(first_name, ' ', last_name) as name,
-              last_contact,
-              EXTRACT(days FROM NOW() - last_contact) as days_silent
-       FROM clients
-       WHERE courtier_id = $1 
-         AND last_contact < NOW() - INTERVAL '45 days'
-       ORDER BY last_contact ASC
+      `SELECT c.id, CONCAT(c.first_name, ' ', c.last_name) as name,
+              c.last_contact,
+              EXTRACT(days FROM NOW() - c.last_contact) as days_silent
+       FROM clients c
+       WHERE ${f.sql}
+         AND c.last_contact < NOW() - INTERVAL '45 days'
+       ORDER BY c.last_contact ASC
        LIMIT 5`,
-      [userId]
+      f.params
     )
     
     // Opportunités cross-sell
+    // `ark_recommendations` est un cache écrit PAR utilisateur (l'acquittement
+    // `dismissed_at` est personnel) et ne porte pas d'ancre de cabinet : ce
+    // filtre reste volontairement par utilisateur (cf. commentaire en tête).
     const opportunitiesResult = await pool.query(
       `SELECT ar.id, ar.kind, ar.title, ar.rationale, ar.priority,
               ar.client_id, CONCAT(c.first_name, ' ', c.last_name) as client_name
@@ -288,16 +346,21 @@ async function getPortfolioContext(userId) {
 /**
  * Récupère le contexte pour le Morning Brief
  * @param {number} userId - ID du courtier
+ * @param {Object} [options] - `{ portee }` (portée déjà résolue) ou `{ req }`
  * @returns {Object} Données pour le brief matinal
  */
-async function getMorningBriefContext(userId) {
+async function getMorningBriefContext(userId, options = {}) {
   try {
+    // Portée du CABINET (lib/porteeCabinet — seule autorité) : le brief d'un
+    // collaborateur décrit le portefeuille du cabinet, pas un portefeuille vide.
+    const portee = await resoudrePorteeService(userId, options)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const todayEnd = new Date(today)
     todayEnd.setHours(23, 59, 59, 999)
     
-    // RDV du jour
+    // RDV du jour — agenda PERSONNEL (`calendar_events.user_id`, aucune ancre de
+    // cabinet) : filtre volontairement par utilisateur (cf. commentaire en tête).
     const todayEventsResult = await pool.query(
       `SELECT ce.id, ce.title, ce.start_time, ce.end_time,
               ce.client_id, CONCAT(c.first_name, ' ', c.last_name) as client_name
@@ -310,20 +373,43 @@ async function getMorningBriefContext(userId) {
     )
     
     // Tâches du jour (en retard ou échéance aujourd'hui)
+    // `taches` porte `cabinet_id` (migration 113) : la clause de portée remplace
+    // `t.courtier_id = $1`. L'affectation PERSONNELLE (`t.user_id = $n`) reste
+    // acceptée pour ne faire disparaître aucune donnée existante — SAUF pour un
+    // compte dont l'appartenance a été révoquée (`mode === 'revoquee'`) : ce
+    // compte ne doit plus rien lire, pas même ses propres lignes.
+    const fTaches = porteeCabinet.fragment(portee, {
+      cabinet: 't.cabinet_id',
+      proprietaire: 't.courtier_id',
+      depart: 1,
+    })
+    const paramsTaches = [...fTaches.params]
+    let clauseAffectation = ''
+    if (portee.mode !== 'revoquee') {
+      paramsTaches.push(userId)
+      clauseAffectation = ` OR t.user_id = $${paramsTaches.length}`
+    }
+    paramsTaches.push(todayEnd)
+    const idxEcheance = paramsTaches.length
     const todayTasksResult = await pool.query(
       `SELECT t.id, t.titre, t.priorite, t.echeance,
               t.client_id, CONCAT(c.first_name, ' ', c.last_name) as client_name
        FROM taches t
        LEFT JOIN clients c ON c.id = t.client_id
-       WHERE (t.courtier_id = $1 OR t.user_id = $1)
+       WHERE (${fTaches.sql}${clauseAffectation})
          AND t.statut != 'terminee'
-         AND (t.echeance <= $2 OR t.echeance IS NULL)
+         AND (t.echeance <= $${idxEcheance} OR t.echeance IS NULL)
        ORDER BY t.echeance ASC NULLS LAST
        LIMIT 10`,
-      [userId, todayEnd]
+      paramsTaches
     )
     
-    // Relances urgentes (contrats à échéance 7j)
+    // Relances urgentes (contrats à échéance 7j) — portée du CABINET
+    const fContrats = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     const urgentRelancesResult = await pool.query(
       `SELECT q.id, q.quote_data->>'type_contrat' as type,
               q.quote_data->>'date_echeance' as date_echeance,
@@ -332,14 +418,16 @@ async function getMorningBriefContext(userId) {
               CONCAT(c.first_name, ' ', c.last_name) as client_name
        FROM quotes q
        JOIN clients c ON c.id = q.client_id
-       WHERE c.courtier_id = $1 
+       WHERE ${fContrats.sql}
          AND q.status = 'actif'
          AND (q.quote_data->>'date_echeance')::date BETWEEN NOW() AND NOW() + INTERVAL '7 days'
        ORDER BY (q.quote_data->>'date_echeance')::date ASC`,
-      [userId]
+      fContrats.params
     )
     
     // Messages WhatsApp non lus
+    // `whatsapp_threads.user_id` est la SESSION / inbox de l'utilisateur
+    // (intégration), pas un actif du cabinet : filtre inchangé.
     const unreadWhatsappResult = await pool.query(
       `SELECT wt.id, wt.client_id, wt.last_message_preview,
               CONCAT(c.first_name, ' ', c.last_name) as client_name
@@ -351,8 +439,10 @@ async function getMorningBriefContext(userId) {
       [userId]
     )
     
-    // Contexte portefeuille pour les KPIs
-    const portfolioCtx = await getPortfolioContext(userId)
+    // Contexte portefeuille pour les KPIs.
+    // La portée DÉJÀ résolue est transmise : aucune requête d'appartenance
+    // supplémentaire, et surtout une seule et même portée pour les deux écrans.
+    const portfolioCtx = await getPortfolioContext(userId, { ...options, portee })
     
     // Courtier info
     const brokerResult = await pool.query(

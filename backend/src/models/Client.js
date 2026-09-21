@@ -22,6 +22,17 @@ const pool = require('../db');
  * une portée optionnelle pour rester utilisable en lecture interne, mais toute
  * ÉCRITURE l'exige.
  *
+ * DEUXIÈME DÉFAUT FERMÉ ICI (21/09/2026, P4 SEC-030a — le « piège armé »)
+ * La portée obligatoire ne suffisait pas : `update` construisait sa clause avec
+ * `clausePortee(p, 9)` alors que `$9` était DÉJÀ l'identifiant du client. La
+ * condition devenait `WHERE id = $9 AND courtier_id = $9` — le propriétaire
+ * n'était jamais lié (PostgreSQL refusait même la requête : 10 paramètres pour
+ * 9 emplacements), et si le pilote l'avait tolérée, un client dont l'`id` vaut
+ * celui de l'appelant aurait été modifiable. La portée commence désormais à
+ * `$10`, et le test `Client.portee.test.js` vérifie pour CHAQUE écriture que le
+ * plus grand indice `$n` du SQL égale le nombre de paramètres fournis : un
+ * décalage d'un cran fait échouer la suite.
+ *
  * PORTÉE acceptée : un identifiant utilisateur (number → `courtier_id = id`,
  * sémantique historique, désormais RÉELLEMENT appliquée) ou un objet portée
  * résolu par `lib/porteeCabinet` (`{ userId, cabinetIds }`).
@@ -123,7 +134,13 @@ class Client {
     if (!p) throw new Error('portee_requise : une modification de client ne peut pas être non bornée');
 
     const { first_name, last_name, email, phone, company_name, type, status, risk_score } = data;
-    const f = clausePortee(p, 9);
+    // Les huit champs occupent $1..$8, l'identifiant de la ligne $9 : la portée
+    // commence donc à $10. Un `clausePortee(p, 9)` — l'ancienne écriture —
+    // réutilisait $9, c'est-à-dire l'IDENTIFIANT DU CLIENT : la clause devenait
+    // `courtier_id = $9` et le propriétaire n'était plus jamais lié (PostgreSQL
+    // refusait même la requête, 10 paramètres pour 9 emplacements). La portée
+    // doit lier un paramètre DISTINCT de la ligne modifiée.
+    const f = clausePortee(p, 10);
     const result = await pool.query(
       `UPDATE clients
        SET first_name = COALESCE($1, first_name),

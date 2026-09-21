@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../api'
 import { localeCourante } from '../lib/monnaie'
+import { REACH, RAYON, TEINTE, pastille } from '../lib/reachTheme'
 
 export default function ReachDashboard() {
   const [audiences, setAudiences] = useState([])
@@ -45,56 +46,67 @@ export default function ReachDashboard() {
     } catch (e) { console.error('Start sequence error:', e) }
   }
 
-  if (loading) return <div className="p-8 text-gray-500">Chargement...</div>
+  const statutSequence = (status) => (
+    status === 'running' ? pastille(TEINTE.vert)
+      : status === 'paused' ? pastille(TEINTE.ambre)
+        : pastille(TEINTE.neutre)
+  )
+
+  if (loading) return <div className="p-8" style={REACH.libelle}>Chargement...</div>
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">ARK REACH — Prospection</h1>
-      
+    <div className="p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-primary)' }}>
+      <h1 className="text-2xl font-bold mb-6" style={REACH.titre}>ARK REACH — Prospection</h1>
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Prospects', value: stats.total_prospects, color: 'text-blue-600' },
-          { label: 'Audiences', value: stats.total_audiences, color: 'text-green-600' },
-          { label: 'Campagnes', value: stats.total_campaigns, color: 'text-purple-600' },
-          { label: 'Messages', value: stats.total_messages, color: 'text-amber-600' },
+          { label: 'Prospects', value: stats.total_prospects, teinte: TEINTE.cyan },
+          { label: 'Audiences', value: stats.total_audiences, teinte: TEINTE.vert },
+          { label: 'Campagnes', value: stats.total_campaigns, teinte: TEINTE.violet },
+          { label: 'Messages', value: stats.total_messages, teinte: TEINTE.ambre },
         ].map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <p className="text-xs text-gray-500">{s.label}</p>
-            <p className={`text-2xl font-black mt-1 ${s.color}`}>{s.value || 0}</p>
+          <div key={i} className="rounded-xl p-4" style={{ ...REACH.carte, borderRadius: RAYON.md }}>
+            <p className="text-xs" style={REACH.libelle}>{s.label}</p>
+            <p className="text-2xl font-black mt-1" style={{ color: s.teinte }}>{s.value || 0}</p>
           </div>
         ))}
       </div>
 
       {/* Create Audience */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-lg font-bold mb-4">Nouvelle audience</h2>
+      <div className="rounded-xl p-6 mb-8" style={{ ...REACH.carte, borderRadius: RAYON.md }}>
+        <h2 className="text-lg font-bold mb-4" style={REACH.titre}>Nouvelle audience</h2>
         <div className="flex gap-3">
           <input
             type="text"
             value={newAudienceName}
             onChange={e => setNewAudienceName(e.target.value)}
-            placeholder="Nom de l'audience (ex : courtiers auto région lyonnaise)"
-            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm"
+            placeholder="Nom de l'audience (ex : garages de votre zone)"
+            className="flex-1 px-4 py-2 text-sm outline-none"
+            style={{ ...REACH.champ, borderRadius: RAYON.md }}
           />
-          <button onClick={createAudience} className="px-6 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700">
+          <button
+            onClick={createAudience}
+            className="px-6 py-2 font-semibold text-sm transition"
+            style={{ ...REACH.boutonPrincipal, borderRadius: RAYON.md }}
+          >
             Créer
           </button>
         </div>
       </div>
 
       {/* Audiences */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-lg font-bold mb-4">Audiences ({audiences.length})</h2>
+      <div className="rounded-xl p-6 mb-8" style={{ ...REACH.carte, borderRadius: RAYON.md }}>
+        <h2 className="text-lg font-bold mb-4" style={REACH.titre}>Audiences ({audiences.length})</h2>
         {audiences.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucune audience. Créez-en une ci-dessus.</p>
+          <p className="text-sm" style={REACH.discret}>Aucune audience. Créez-en une ci-dessus.</p>
         ) : (
           <div className="space-y-3">
             {audiences.map(a => (
-              <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={a.id} className="flex items-center justify-between p-3" style={{ ...REACH.carteElevee, borderRadius: RAYON.md }}>
                 <div>
-                  <p className="font-semibold text-sm">{a.name}</p>
-                  <p className="text-xs text-gray-400">Créée le {new Date(a.created_at).toLocaleDateString(localeCourante())}</p>
+                  <p className="font-semibold text-sm" style={REACH.titre}>{a.name}</p>
+                  <p className="text-xs" style={REACH.discret}>Créée le {new Date(a.created_at).toLocaleDateString(localeCourante())}</p>
                 </div>
               </div>
             ))}
@@ -103,19 +115,19 @@ export default function ReachDashboard() {
       </div>
 
       {/* Prospects */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-lg font-bold mb-4">Prospects ({prospects.length})</h2>
+      <div className="rounded-xl p-6 mb-8" style={{ ...REACH.carte, borderRadius: RAYON.md }}>
+        <h2 className="text-lg font-bold mb-4" style={REACH.titre}>Prospects ({prospects.length})</h2>
         {prospects.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucun prospect. Importez un CSV.</p>
+          <p className="text-sm" style={REACH.discret}>Aucun prospect. Importez un CSV.</p>
         ) : (
           <div className="space-y-2">
             {prospects.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={p.id} className="flex items-center justify-between p-3" style={{ ...REACH.carteElevee, borderRadius: RAYON.md }}>
                 <div>
-                  <p className="font-semibold text-sm">{p.contact_first_name} {p.contact_last_name}</p>
-                  <p className="text-xs text-gray-400">{p.email} · {p.city || 'Ville inconnue'}</p>
+                  <p className="font-semibold text-sm" style={REACH.titre}>{p.contact_first_name} {p.contact_last_name}</p>
+                  <p className="text-xs" style={REACH.discret}>{p.email} · {p.city || 'Ville inconnue'}</p>
                 </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">{p.status}</span>
+                <span className="text-xs px-2 py-1" style={{ ...pastille(TEINTE.neutre), borderRadius: RAYON.full }}>{p.status}</span>
               </div>
             ))}
           </div>
@@ -123,26 +135,26 @@ export default function ReachDashboard() {
       </div>
 
       {/* Sequences */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold mb-4">Séquences ({sequences.length})</h2>
+      <div className="rounded-xl p-6" style={{ ...REACH.carte, borderRadius: RAYON.md }}>
+        <h2 className="text-lg font-bold mb-4" style={REACH.titre}>Séquences ({sequences.length})</h2>
         {sequences.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucune séquence.</p>
+          <p className="text-sm" style={REACH.discret}>Aucune séquence.</p>
         ) : (
           <div className="space-y-2">
             {sequences.map(s => (
-              <div key={s.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={s.id} className="flex items-center justify-between p-3" style={{ ...REACH.carteElevee, borderRadius: RAYON.md }}>
                 <div>
-                  <p className="font-semibold text-sm">{s.name}</p>
-                  <p className="text-xs text-gray-400">{s.channel} · {s.template?.substring(0, 50)}...</p>
+                  <p className="font-semibold text-sm" style={REACH.titre}>{s.name}</p>
+                  <p className="text-xs" style={REACH.discret}>{s.channel} · {s.template?.substring(0, 50)}...</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    s.status === 'running' ? 'bg-green-100 text-green-700' :
-                    s.status === 'paused' ? 'bg-amber-100 text-amber-700' :
-                    'bg-gray-200 text-gray-600'
-                  }`}>{s.status}</span>
+                  <span className="text-xs px-2 py-1" style={{ ...statutSequence(s.status), borderRadius: RAYON.full }}>{s.status}</span>
                   {s.status === 'draft' && (
-                    <button onClick={() => startSequence(s.id)} className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <button
+                      onClick={() => startSequence(s.id)}
+                      className="text-xs px-3 py-1 transition"
+                      style={{ ...pastille(TEINTE.cyan), borderRadius: RAYON.md }}
+                    >
                       Démarrer
                     </button>
                   )}

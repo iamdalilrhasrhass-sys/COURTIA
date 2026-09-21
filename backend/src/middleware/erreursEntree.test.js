@@ -78,6 +78,9 @@ describe('traduireErreursEntree — comportement HTTP', () => {
     app.post('/api/mesure', (req, res) => {
       if (req.body.cas === 'entree') return res.status(500).json({ error: req.body.message })
       if (req.body.cas === 'serveur') return res.status(500).json({ error: 'column ct.product_type does not exist' })
+      // Forme du handler d'erreur GLOBAL de server.js (mesure Red Team RT4-08) :
+      // le message d'entrée est dans `details`, pas dans `error`.
+      if (req.body.cas === 'details') return res.status(500).json({ error: 'Erreur serveur', details: req.body.message })
       return res.status(200).json({ ok: true })
     })
     await new Promise((resolve) => { server = app.listen(0, '127.0.0.1', resolve) })
@@ -97,6 +100,18 @@ describe('traduireErreursEntree — comportement HTTP', () => {
     expect(JSON.stringify(corps)).not.toMatch(FUITE_INTERDITE)
     expect(corps.error).toBe('champ_trop_long')
     expect(corps.details.correction).toMatch(/réessayez/i)
+  })
+
+  test('un 500 du handler global (message dans `details`) devient un 400 lisible', async () => {
+    const res = await fetch(`${origin}/api/mesure`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cas: 'details', message: 'invalid input syntax for type integer: "NaN"' }),
+    })
+    const corps = await res.json()
+    expect(res.status).toBe(400)
+    expect(JSON.stringify(corps)).not.toMatch(FUITE_INTERDITE)
+    expect(corps.error).toBe('valeur_numerique_invalide')
   })
 
   test('un 500 de VRAIE erreur serveur reste un 500', async () => {

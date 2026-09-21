@@ -21,22 +21,36 @@ function getWebhookSecret() {
   return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
 
+/**
+ * Price ID Stripe d'un plan.
+ *
+ * Les noms de variables sont EXACTEMENT ceux lus par `planService` (qui peuple
+ * `stripe_price_id` du catalogue affiché) : la grille suisse a ses propres prix
+ * (`STRIPE_PRICE_INDEPENDANT`, `STRIPE_PRICE_CABINET_CH`) et ne peut donc plus
+ * être affichée « sur devis » tout en étant facturable, ni l'inverse. Un plan
+ * sans prix Stripe configuré reste sans price ID — le checkout ne peut pas
+ * inventer un prix.
+ */
+const VARIABLES_PRIX = {
+  starter: ['STRIPE_STARTER_PRICE_ID_TEST', 'STRIPE_PRICE_STARTER'],
+  pro: ['STRIPE_PRO_PRICE_ID_TEST', 'STRIPE_PRICE_PRO'],
+  cabinet: ['STRIPE_CABINET_PRICE_ID_TEST', 'STRIPE_PRICE_CABINET'],
+  independant: ['STRIPE_INDEPENDANT_PRICE_ID_TEST', 'STRIPE_PRICE_INDEPENDANT'],
+  cabinet_ch: ['STRIPE_CABINET_CH_PRICE_ID_TEST', 'STRIPE_PRICE_CABINET_CH'],
+};
+
 function getPriceId(planCode) {
   const mode = getBillingMode();
   const plan = String(planCode || '').toLowerCase();
   if (plan === 'premium') return null;
 
+  const variables = VARIABLES_PRIX[plan];
+  if (!variables) return null;
+  const [variableTest, variableLive] = variables;
   if (mode === 'test') {
-    if (plan === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
-    if (plan === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
-    if (plan === 'cabinet') return process.env.STRIPE_CABINET_PRICE_ID_TEST || process.env.STRIPE_PRICE_CABINET || null;
-    return null;
+    return process.env[variableTest] || process.env[variableLive] || null;
   }
-
-  if (plan === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
-  if (plan === 'pro') return process.env.STRIPE_PRICE_PRO || null;
-  if (plan === 'cabinet') return process.env.STRIPE_PRICE_CABINET || null;
-  return null;
+  return process.env[variableLive] || null;
 }
 
 function isConfigured() {
@@ -44,12 +58,26 @@ function isConfigured() {
   return !!key;
 }
 
-function getConfigurationStatus() {
+/**
+ * Plans dont le PRIX STRIPE doit être configuré pour que le checkout d'un marché
+ * fonctionne. La grille suisse a les siens (indépendant / cabinet) : sans cette
+ * table, un cabinet suisse voyait `checkout_ready: false` à cause des variables
+ * de la grille euros, et l'écran lui interdisait un paiement pourtant possible.
+ * Les offres « sur devis » (aucun prix) n'y figurent pas : elles ne passent pas
+ * par un checkout.
+ */
+const PLANS_FACTURABLES = {
+  FR: ['starter', 'pro', 'cabinet'],
+  CH: ['independant', 'cabinet_ch'],
+};
+
+function getConfigurationStatus(marche = 'FR') {
   const missing = [];
   const mode = getBillingMode();
   const secretKey = getStripeSecretKey();
   const webhookSecret = getWebhookSecret();
-  const requiredPricePlans = ['starter', 'pro', 'cabinet'];
+  const marcheNormalise = String(marche).toUpperCase() === 'CH' ? 'CH' : 'FR';
+  const requiredPricePlans = PLANS_FACTURABLES[marcheNormalise];
 
   if (!secretKey) missing.push('STRIPE_SECRET_KEY');
   for (const plan of requiredPricePlans) {
@@ -61,6 +89,8 @@ function getConfigurationStatus() {
 
   return {
     mode,
+    market: marcheNormalise,
+    required_price_plans: requiredPricePlans,
     configured: !!secretKey,
     checkout_ready: !!secretKey && requiredPricePlans.every((plan) => !!getPriceId(plan)),
     webhook_ready: !!secretKey && !!webhookSecret,

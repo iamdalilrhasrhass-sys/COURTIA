@@ -24,11 +24,20 @@ function getClientIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
 }
 
-function cleanPlanLabel(planCode) {
-  if (planCode === 'pro') return 'Pro';
-  if (planCode === 'cabinet') return 'Cabinet';
-  if (planCode === 'starter') return 'Starter';
-  return 'Cabinet';
+/**
+ * Nom affichable d'un plan, pris dans le CATALOGUE (`planService`).
+ * POURQUOI : cette fonction renvoyait « Cabinet » pour tout code inconnu d'elle
+ * — un message produit pouvait donc nommer un plan qui n'est pas celui demandé.
+ * Un code hors catalogue n'a pas de nom : on affiche le code reçu, sans
+ * l'habiller d'un autre produit.
+ */
+function cleanPlanLabel(planCode, marche = 'FR') {
+  const code = String(planCode || '');
+  // Appel défensif : certains tests montent ce routeur avec planService simulé.
+  const plan = typeof planService.planPourCode === 'function'
+    ? (planService.planPourCode(code, marche) || planService.planPourCode(code))
+    : null;
+  return plan?.name || code;
 }
 
 function isMissingOptionalTableError(err) {
@@ -576,7 +585,9 @@ router.get('/plans', async (req, res) => {
       billing_mode: stripeService.getBillingMode(),
       trial_days: billingService.TRIAL_DAYS,
       fiscal_label: plans[0]?.fiscal_label || billingService.FISCAL_LABEL,
-      stripe_configuration: stripeService.getConfigurationStatus(),
+      // La disponibilité du paiement se lit sur la grille du MÊME marché que les
+      // prix affichés : un cabinet suisse n'attend pas STRIPE_PRICE_STARTER.
+      stripe_configuration: stripeService.getConfigurationStatus(marche),
       plans,
     });
   } catch (_err) {
@@ -630,16 +641,52 @@ async function createCheckoutSessionHandler(req, res) {
 
     await billingService.ensureBillingFoundation();
 
-    const planCode = billingService.normalizePlanCode(req.body?.plan_code || req.body?.plan);
+    // ── LES CODES ACCEPTÉS SONT EXACTEMENT CEUX SERVIS PAR /api/billing/plans ──
+    // DÉFAUT P1 MESURÉ (21/09/2026, 4e passe adverse) : cette route validait sur
+    // une liste recopiée `['starter','pro','cabinet']` (grille euros) alors que
+    // `/api/billing/plans` sert au cabinet suisse `independant`, `cabinet_ch` et
+    // `cabinet_ch_sur_devis` (199/349 CHF HT). Les trois codes étaient refusés en
+    // 400 `invalid_plan` : un cabinet suisse ne pouvait souscrire AUCUN de ses
+    // plans. La validation vient désormais du MÊME catalogue (planService), pour
+    // le marché réel du cabinet — plus de liste à tenir en double.
+    const marche = await marcheDepuisRequete(req);
+    const planDemande = req.body?.plan_code || req.body?.plan;
+    const planCode = billingService.normalizePlanCode(planDemande, marche);
+
     if (!planCode) {
-      return res.status(400).json({ success: false, error: 'invalid_plan' });
+      // La liste annoncée est celle que sert RÉELLEMENT /api/billing/plans pour
+      // ce cabinet (même service), jamais une liste recopiée ici.
+      let disponibles = [];
+      try {
+        disponibles = (billingService.getPlans(marche) || []).map((p) => p.code);
+      } catch (_) {
+        disponibles = [];
+      }
+      return res.status(400).json({
+        success: false,
+        error: 'invalid_plan',
+        plan_recu: planDemande === undefined || planDemande === null ? null : String(planDemande),
+        plans_disponibles: disponibles,
+        message: planDemande
+          ? `Le plan « ${String(planDemande)} » n'existe pas pour votre cabinet. Plans disponibles : ${disponibles.join(', ')}.`
+          : `Aucun plan n'a été transmis. Plans disponibles : ${disponibles.join(', ')}.`,
+      });
     }
-    if (planCode === 'cabinet') {
+
+    // « Sur devis » (aucun prix à encaisser) : c'est un contact commercial, pas
+    // un checkout. La règle vient du CATALOGUE (prix non renseigné) et non d'une
+    // liste de codes recopiée : la grille suisse a son propre code sur devis.
+    const planCatalogue = (typeof billingService.planPourMarche === 'function'
+      ? billingService.planPourMarche(planCode, marche)
+      : null)
+      || (typeof planService.planPourCode === 'function' ? planService.planPourCode(planCode) : null);
+    if (!planCatalogue || planCatalogue.price == null) {
       return res.status(409).json({
         success: false,
         error: 'cabinet_contact_required',
         contact_required: true,
-        message: 'L’offre Cabinet est sur devis. Merci de demander un contact commercial.',
+        plan_code: planCode,
+        message: `L’offre ${cleanPlanLabel(planCode, marche)} est sur devis. Merci de demander un contact commercial.`,
       });
     }
 
@@ -659,7 +706,7 @@ async function createCheckoutSessionHandler(req, res) {
     }
 
     if (!stripeService.isConfigured()) {
-      const configuration = stripeService.getConfigurationStatus();
+      const configuration = stripeService.getConfigurationStatus(marche);
       return res.status(503).json({
         success: false,
         error: 'stripe_configuration_required',
@@ -673,8 +720,11 @@ async function createCheckoutSessionHandler(req, res) {
       return res.status(503).json({
         success: false,
         error: 'stripe_price_configuration_required',
-        message: `Price ID Stripe manquant pour le plan ${cleanPlanLabel(planCode)}.`,
-        stripe_configuration: stripeService.getConfigurationStatus(),
+        // Le plan EXISTE (il est servi à l'écran) : ce qui manque est son price
+        // ID Stripe, et on le nomme au lieu de laisser croire à un plan inconnu.
+        message: `Price ID Stripe manquant pour le plan ${cleanPlanLabel(planCode, marche)}.`,
+        plan_code: planCode,
+        stripe_configuration: stripeService.getConfigurationStatus(marche),
       });
     }
 
@@ -746,7 +796,9 @@ router.get('/status', verifyToken, async (req, res) => {
       market: marche,
       billing_mode: stripeService.getBillingMode(),
       fiscal_label: plans[0]?.fiscal_label || billingService.FISCAL_LABEL,
-      stripe_configuration: stripeService.getConfigurationStatus(),
+      // La disponibilité du paiement se lit sur la grille du MÊME marché que les
+      // prix affichés : un cabinet suisse n'attend pas STRIPE_PRICE_STARTER.
+      stripe_configuration: stripeService.getConfigurationStatus(marche),
       status,
     });
   } catch (_err) {
@@ -777,13 +829,14 @@ async function createPortalSessionHandler(req, res) {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ success: false, error: 'unauthorized' });
     await billingService.ensureBillingFoundation();
+    const marche = await marcheDepuisRequete(req);
 
     if (!stripeService.isConfigured()) {
       return res.status(503).json({
         success: false,
         error: 'stripe_configuration_required',
         message: 'Configuration Stripe requise côté backend avant d’ouvrir le portail client.',
-        stripe_configuration: stripeService.getConfigurationStatus(),
+        stripe_configuration: stripeService.getConfigurationStatus(marche),
       });
     }
 
@@ -806,13 +859,14 @@ router.post('/cancel-trial', verifyToken, async (req, res) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ success: false, error: 'unauthorized' });
+    const marche = await marcheDepuisRequete(req);
 
     if (!stripeService.isConfigured()) {
       return res.status(503).json({
         success: false,
         error: 'stripe_configuration_required',
         message: 'Configuration Stripe requise côté backend avant de gérer l’abonnement.',
-        stripe_configuration: stripeService.getConfigurationStatus(),
+        stripe_configuration: stripeService.getConfigurationStatus(marche),
       });
     }
 

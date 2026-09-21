@@ -1049,4 +1049,170 @@ router.patch('/iobsp/:userId', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/admin/super/users/:id — EFFACEMENT D'UN COMPTE
+//
+// POURQUOI CETTE ROUTE EXISTE (Red Team RT4-12, mesure du 21/09/2026)
+// L'API n'exposait AUCUN chemin d'effacement : cinq formes d'appel ont été
+// essayées avec le jeton super_admin (`DELETE /users/:id`, `/trials/:id`,
+// `POST /users/:id/delete`, …) et toutes répondaient 404. Deux conséquences
+// réelles : le droit à l'effacement du cabinet dépendait d'une intervention
+// manuelle en base, et l'état « compte supprimé » n'était même pas
+// représentable — donc invérifiable.
+//
+// CE QUE FAIT « EFFACER », EXACTEMENT (et pourquoi pas un DELETE de ligne)
+// Un `DELETE FROM users` casserait le référentiel : des dizaines de tables
+// portent `user_id` (documents, commissions, journal d'audit…). Le compte est
+// donc EFFACÉ et BLOQUÉ, pas arraché :
+//   * identité et coordonnées supprimées (e-mail remplacé par une adresse
+//     technique non routable, noms et téléphone vidés) ;
+//   * mot de passe rendu inutilisable (hachage aléatoire, jamais communiqué) ;
+//   * jetons de réinitialisation et jetons OAuth (Google) supprimés ;
+//   * rattachement au cabinet retiré (`cabinet_members.removed_at`) ;
+//   * sessions révoquées (`sessions_revoked_at`) : les jetons déjà émis cessent
+//     d'être acceptés, y compris ceux qui n'expirent pas tout de suite ;
+//   * statut `supprime` : la connexion ne peut plus aboutir (l'e-mail saisi
+//     n'existe plus).
+// Les lignes métier restent attachées à l'identifiant (traçabilité comptable
+// et audit), ce qui est la seule façon de ne pas rendre les documents
+// orphelins — c'est dit explicitement dans la réponse.
+//
+// GARDE-FOUS
+//   * super_admin uniquement (le routeur entier est derrière verifyToken +
+//     superAdminGuard) ;
+//   * `confirmation` DOIT valoir l'e-mail EXACT du compte : une suppression
+//     déclenchée par un identifiant seul est une erreur de frappe qui coûte un
+//     client ;
+//   * auto-suppression refusée ;
+//   * dernier super_admin protégé (sinon la plateforme n'a plus d'exploitant).
+// ─────────────────────────────────────────────────────────────────────────────
+router.delete('/users/:id', async (req, res) => {
+  const cible = Number.parseInt(req.params.id, 10);
+  const demandeur = Number.parseInt(req.user?.id ?? req.user?.userId, 10);
+  const confirmation = String((req.body && req.body.confirmation) || '').trim();
+
+  if (!Number.isFinite(cible) || cible <= 0 || String(cible) !== String(req.params.id).trim()) {
+    return res.status(400).json({ error: 'identifiant_invalide', message: "L'identifiant du compte doit être un nombre." });
+  }
+  if (cible === demandeur) {
+    return res.status(409).json({
+      error: 'auto_suppression_refusee',
+      message: 'Un compte ne peut pas s’effacer lui-même : demandez à un autre administrateur.',
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const cibleRes = await client.query(
+      'SELECT id, email, role FROM users WHERE id = $1 FOR UPDATE',
+      [cible]
+    );
+    if (cibleRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'not_found', message: 'Compte introuvable.' });
+    }
+    const compte = cibleRes.rows[0];
+
+    if (confirmation !== compte.email) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        error: 'confirmation_invalide',
+        message: 'Indiquez dans « confirmation » l’adresse e-mail exacte du compte à effacer. Aucun changement n’a été appliqué.',
+      });
+    }
+
+    if (compte.role === 'super_admin') {
+      const autres = await client.query(
+        "SELECT COUNT(*)::int AS nombre FROM users WHERE role = 'super_admin' AND id <> $1 AND COALESCE(status, 'active') <> 'supprime'",
+        [cible]
+      );
+      if (autres.rows[0].nombre === 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          error: 'dernier_super_admin',
+          message: 'Ce compte est le dernier super administrateur actif : il ne peut pas être effacé.',
+        });
+      }
+    }
+
+    const emailTechnique = `supprime+${cible}@courtia.invalid`;
+    // Hachage inutilisable : chaîne aléatoire qui n'est le hachage d'aucun mot de
+    // passe. Elle n'est jamais communiquée ni journalisée.
+    const hachageInutilisable = `efface:${crypto.randomBytes(32).toString('hex')}`;
+
+    await client.query(
+      `UPDATE users
+          SET email = $2,
+              password_hash = $3,
+              first_name = '',
+              last_name = '',
+              name = NULL,
+              full_name = NULL,
+              phone = NULL,
+              status = 'supprime',
+              suspended_at = COALESCE(suspended_at, NOW()),
+              suspended_reason = 'effacement_demande',
+              sessions_revoked_at = NOW(),
+              password_reset_token = NULL,
+              password_reset_expires = NULL,
+              google_access_token = NULL,
+              google_refresh_token = NULL,
+              stripe_customer_id = NULL,
+              stripe_subscription_id = NULL,
+              updated_at = NOW()
+        WHERE id = $1`,
+      [cible, emailTechnique, hachageInutilisable]
+    );
+
+    const adhesion = await client.query(
+      'UPDATE cabinet_members SET removed_at = COALESCE(removed_at, NOW()) WHERE user_id = $1 RETURNING cabinet_id',
+      [cible]
+    );
+
+    const journal = await client.query(
+      `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, changes, ip_address, user_agent)
+       VALUES ($1, 'compte_efface', 'user', $2, $3, $4, $5)
+       RETURNING id`,
+      [
+        demandeur,
+        cible,
+        JSON.stringify({
+          cabinets_detaches: adhesion.rows.map((l) => l.cabinet_id),
+          champs_effaces: ['email', 'password_hash', 'first_name', 'last_name', 'name', 'full_name', 'phone',
+            'password_reset_token', 'google_access_token', 'google_refresh_token',
+            'stripe_customer_id', 'stripe_subscription_id'],
+          statut: 'supprime',
+        }),
+        req.ip || null,
+        String(req.headers['user-agent'] || '').slice(0, 200),
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    return res.json({
+      success: true,
+      compte_efface: {
+        id: cible,
+        statut: 'supprime',
+        sessions_revoquees: true,
+        cabinets_detaches: adhesion.rows.length,
+        journal_id: journal.rows[0].id,
+      },
+      // Ce qui RESTE, dit sans ambiguïté : les lignes métier rattachées à
+      // l'identifiant (documents, commissions, journal) ne sont pas supprimées —
+      // les effacer rendrait les documents du cabinet orphelins et romprait la
+      // traçabilité comptable. Aucune donnée personnelle n'y subsiste côté compte.
+      reste: 'Les documents et écritures du cabinet rattachés à cet identifiant sont conservés (traçabilité) ; le compte, lui, ne peut plus se connecter ni écrire.',
+    });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) { /* la transaction est déjà terminée */ }
+    logger.error({ err, cible }, 'effacement de compte en échec');
+    return res.status(500).json({ error: 'effacement_echoue', message: messagePublic(err, { statut: 500 }) });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;

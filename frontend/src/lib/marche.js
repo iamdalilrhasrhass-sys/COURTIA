@@ -66,9 +66,17 @@ export function marcheCourante(search) {
  * Libellés qui changent selon le marché. La colonne FR est le comportement
  * historique, inchangée ; la colonne CH ne fait que reprendre les libellés
  * suisses déjà utilisés ailleurs dans l'application.
+ *
+ * `villesExemple` (UX-026) : exemple de saisie affiché dans les écrans de
+ * recherche. Il appartient au marché du cabinet — un cabinet suisse ne doit pas
+ * lire « Sens, Paris, Lyon… ». Les villes citées sont des villes réelles du
+ * pays du marché ; ce tableau est le SEUL endroit où elles sont écrites, aucun
+ * écran ne code un nom de ville en dur.
  */
 export const LIBELLES_MARCHE = {
   FR: {
+    pays: 'France',
+    villesExemple: 'Paris, Lyon, Marseille…',
     identifiantEntreprise: 'SIRET',
     registre: 'Numéro ORIAS',
     email: 'votre@email.fr',
@@ -79,6 +87,8 @@ export const LIBELLES_MARCHE = {
     courtiers: 'Courtiers ORIAS',
   },
   CH: {
+    pays: 'Suisse',
+    villesExemple: 'Genève, Lausanne, Zurich…',
     identifiantEntreprise: 'IDE / UID',
     registre: "N° d'enregistrement FINMA",
     email: 'votre@email.ch',

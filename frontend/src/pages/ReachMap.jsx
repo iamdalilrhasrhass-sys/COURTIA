@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Target, Filter, TrendingUp } from 'lucide-react';
+import { MapPin, Filter, TrendingUp, Search } from 'lucide-react';
 import useReachStore from '../stores/reachStore';
+import { REACH, RAYON, TEINTE, pastille } from '../lib/reachTheme';
+// Montants : devise du cabinet (CHF en Suisse) via le module unique du front.
+// L'ancien « k€ » affichait des euros à un cabinet suisse.
+import { fmtMontantCourt } from '../lib/monnaie';
 
-const accent = '#5B4DF5';
+const accent = 'var(--accent-violet, #5B4DF5)';
 
-// Approximate city coordinates used for the schematic map.
+// Coordonnées réelles utilisées pour placer une ville sur le plan schématique.
+// Ce ne sont pas des données de cabinet : une ville absente de cette table est
+// placée par la disposition en grille, sans invention de coordonnées.
 const CITY_COORDS = {
   'Sens': { lat: 48.2007, lng: 3.2827 },
   'Montereau': { lat: 48.3839, lng: 2.9542 },
@@ -18,11 +25,12 @@ const CITY_COORDS = {
 };
 
 const CITY_COLORS = [
-  '#5B4DF5', '#F59E0B', '#10B981', '#EC4899', '#3B82F6', '#8B5CF6', '#14B8A6', '#F97316',
+  TEINTE.violet, TEINTE.ambre, TEINTE.vert, TEINTE.rose, TEINTE.cyan, '#8B5CF6', '#14B8A6', '#F97316',
 ];
 
 export default function ReachMap() {
-  const { prospects, fetchProspects } = useReachStore();
+  const navigate = useNavigate();
+  const { prospects, fetchProspects, loading } = useReachStore();
   const [selectedCity, setSelectedCity] = useState(null);
 
   useEffect(() => {
@@ -61,13 +69,44 @@ export default function ReachMap() {
     };
   };
 
+  // ── ÉTAT VIDE (UX-032) ────────────────────────────────────────────────────
+  // Modèle de pages/Taches.jsx : un cabinet sans donnée ne voit pas un plan
+  // vide, il lit ce qui manque et l'action qui le remplit. Aucune ville ni
+  // aucun prospect d'exemple n'est affiché.
+  if (!loading && prospects.length === 0) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto" style={{ fontFamily: "var(--font-sans, 'Inter', sans-serif)" }}>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold flex items-center gap-2" style={REACH.titre}>
+            <MapPin size={22} color={accent} /> Carte des prospects
+          </h1>
+        </div>
+        <div className="rounded-2xl text-center" style={{ ...REACH.carte, borderRadius: RAYON.lg, padding: '60px 20px' }}>
+          <MapPin size={38} className="mx-auto mb-3 opacity-30" style={REACH.discret} />
+          <p className="text-sm font-medium" style={REACH.libelle}>Aucun prospect à situer pour ce cabinet.</p>
+          <p className="text-xs mt-1" style={REACH.discret}>
+            La carte ne s&apos;affiche qu&apos;avec de vrais prospects géolocalisés : lancez une recherche
+            REACH pour en constituer une liste.
+          </p>
+          <button
+            onClick={() => navigate('/reach/search')}
+            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold"
+            style={{ ...REACH.boutonPrincipal, borderRadius: RAYON.md }}
+          >
+            <Search size={14} /> Lancer une recherche
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="p-6 max-w-7xl mx-auto" style={{ fontFamily: "var(--font-sans, 'Inter', sans-serif)" }}>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold flex items-center gap-2" style={REACH.titre}>
           <MapPin size={22} color={accent} /> Carte des prospects
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-sm mt-1" style={REACH.libelle}>
           {prospects.length} prospects dans {cities.length} villes
         </p>
       </div>
@@ -78,12 +117,10 @@ export default function ReachMap() {
           <button
             key={city}
             onClick={() => setSelectedCity(selectedCity === city ? null : city)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition border ${
-              selectedCity === city
-                ? 'text-white shadow-sm'
-                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
-            style={selectedCity === city ? { background: CITY_COLORS[i % CITY_COLORS.length], borderColor: 'transparent' } : {}}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition ${selectedCity === city ? '' : ''}`}
+            style={selectedCity === city
+              ? { background: CITY_COLORS[i % CITY_COLORS.length], color: '#FFFFFF', borderRadius: RAYON.md }
+              : { ...REACH.carte, ...REACH.libelle, borderRadius: RAYON.md }}
           >
             {city} <span className="ml-1 opacity-70">{list.length}</span>
           </button>
@@ -92,16 +129,16 @@ export default function ReachMap() {
 
       {/* Schematic map */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 overflow-hidden">
+        className="rounded-2xl p-6 mb-6 overflow-hidden" style={{ ...REACH.carte, borderRadius: RAYON.lg }}>
         <div className="relative" style={{ height: MAP_HEIGHT, maxWidth: '100%' }}>
           {/* Background grid lines */}
           <svg className="absolute inset-0 w-full h-full" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}>
             {/* Subtle grid */}
             {Array.from({ length: 8 }).map((_, i) => (
-              <line key={`h${i}`} x1={PADDING} y1={PADDING + i * ((MAP_HEIGHT - 2 * PADDING) / 7)} x2={MAP_WIDTH - PADDING} y2={PADDING + i * ((MAP_HEIGHT - 2 * PADDING) / 7)} stroke="#F3F4F6" strokeWidth="0.5" />
+              <line key={`h${i}`} x1={PADDING} y1={PADDING + i * ((MAP_HEIGHT - 2 * PADDING) / 7)} x2={MAP_WIDTH - PADDING} y2={PADDING + i * ((MAP_HEIGHT - 2 * PADDING) / 7)} stroke={REACH.svgGrille} strokeWidth="0.5" />
             ))}
             {Array.from({ length: 10 }).map((_, i) => (
-              <line key={`v${i}`} x1={PADDING + i * ((MAP_WIDTH - 2 * PADDING) / 9)} y1={PADDING} x2={PADDING + i * ((MAP_WIDTH - 2 * PADDING) / 9)} y2={MAP_HEIGHT - PADDING} stroke="#F3F4F6" strokeWidth="0.5" />
+              <line key={`v${i}`} x1={PADDING + i * ((MAP_WIDTH - 2 * PADDING) / 9)} y1={PADDING} x2={PADDING + i * ((MAP_WIDTH - 2 * PADDING) / 9)} y2={MAP_HEIGHT - PADDING} stroke={REACH.svgGrille} strokeWidth="0.5" />
             ))}
 
             {/* City dots */}
@@ -120,10 +157,10 @@ export default function ReachMap() {
                   {/* Inner dot */}
                   <circle cx={pos.x} cy={pos.y} r={4} fill={color} />
                   {/* Label */}
-                  <text x={pos.x} y={pos.y - radius - 8} textAnchor="middle" fontSize="11" fontWeight="600" fill="#374151">
+                  <text x={pos.x} y={pos.y - radius - 8} textAnchor="middle" fontSize="11" fontWeight="600" fill={REACH.svgPrincipal}>
                     {city}
                   </text>
-                  <text x={pos.x} y={pos.y - radius + 6} textAnchor="middle" fontSize="10" fill="#6B7280">
+                  <text x={pos.x} y={pos.y - radius + 6} textAnchor="middle" fontSize="10" fill={REACH.svgSecondaire}>
                     {list.length} prospects
                   </text>
                 </g>
@@ -132,15 +169,15 @@ export default function ReachMap() {
           </svg>
         </div>
         <div className="text-center mt-3">
-          <span className="text-xs text-gray-400 bg-amber-50 px-3 py-1 rounded-full">
+          <span className="text-xs px-3 py-1" style={{ ...pastille(TEINTE.ambre), borderRadius: RAYON.full }}>
             Carte schématique · Activez Google Places API pour l’enrichissement externe
           </span>
         </div>
       </motion.div>
 
       {/* City breakdown */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <div className="rounded-2xl p-6" style={{ ...REACH.carte, borderRadius: RAYON.lg }}>
+        <h3 className="font-semibold mb-4 flex items-center gap-2" style={REACH.titre}>
           <Filter size={16} color={accent} /> Détail par ville
         </h3>
         <div className="space-y-2">
@@ -149,21 +186,21 @@ export default function ReachMap() {
             const totalPremium = list.reduce((sum, p) => sum + (p.estimated_annual_premium || 0), 0);
             const avgScore = Math.round(list.reduce((s, p) => s + (p.opportunity_score || 0), 0) / list.length);
             return (
-              <div key={city} className="flex items-center justify-between py-2.5 px-4 rounded-xl hover:bg-gray-50 transition">
+              <div key={city} className="flex items-center justify-between py-2.5 px-4" style={{ borderRadius: RAYON.md }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ background: CITY_COLORS[i % CITY_COLORS.length] }} />
+                  <div className="w-3 h-3" style={{ background: CITY_COLORS[i % CITY_COLORS.length], borderRadius: RAYON.full }} />
                   <div>
-                    <div className="text-sm font-medium text-gray-800">{city}</div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-sm font-medium" style={REACH.libelle}>{city}</div>
+                    <div className="text-xs" style={REACH.discret}>
                       {list.length} prospects · Score moyen {avgScore}/100
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-4 text-xs" style={REACH.libelle}>
                   <span className="flex items-center gap-1">
-                    <TrendingUp size={12} className="text-green-500" /> {hotCount} chauds
+                    <TrendingUp size={12} color={TEINTE.vert} /> {hotCount} chauds
                   </span>
-                  <span className="font-medium text-gray-700">{totalPremium > 0 ? `${Math.round(totalPremium / 1000)}k€` : '-'}</span>
+                  <span className="font-medium" style={REACH.titre}>{totalPremium > 0 ? fmtMontantCourt(totalPremium) : '—'}</span>
                 </div>
               </div>
             );

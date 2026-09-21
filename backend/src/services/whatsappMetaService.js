@@ -15,6 +15,22 @@ const {
 
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0'
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
+const marcheCabinet = require('../lib/marcheCabinet')
+
+/**
+ * Pays à appliquer à un numéro d'envoi (CH/FR) : le marché du CABINET.
+ * POURQUOI (défaut P0 CH-008) : une forme nationale suisse (`078 123 45 67`) et
+ * une forme nationale française ont exactement la même longueur — sans pays, la
+ * normalisation refusait ou (avant correctif) partait vers un `+33` français
+ * inexistant. Le marché du cabinet est la seule autorité disponible ici ; un
+ * appelant qui connaît le pays du client le passe explicitement (`pays`).
+ */
+async function paysDuNumero(pool, userId) {
+  if (!pool || !userId) return null
+  // Une lecture impossible ne fait pas deviner le pays : le numéro international
+  // reste exploitable (son indicatif est dans le numéro), le national est refusé.
+  return marcheCabinet.paysTelephoneNumero({ userId }, (sql, params) => pool.query(sql, params))
+}
 
 function isConfigured() {
   return Boolean(
@@ -37,10 +53,15 @@ function getClient() {
 
 /**
  * Envoie un message WhatsApp (texte ou template)
+ *
+ * `pays` (CH/FR) : indicatif du numéro. Il est résolu, à défaut, depuis le pays
+ * du CLIENT puis depuis le marché du CABINET — un mobile suisse national
+ * (`078 123 45 67`) ne doit jamais partir vers un `+33` français (CH-008).
  */
-async function sendMessage(pool, userId, { phone, message, clientId, templateId, templateVariables }) {
+async function sendMessage(pool, userId, { phone, message, clientId, templateId, templateVariables, pays = null }) {
   const client = getClient()
-  const phoneClean = sanitizeWhatsappPhone(phone)
+  const paysNumero = pays || await paysDuNumero(pool, userId)
+  const phoneClean = sanitizeWhatsappPhone(phone, { pays: paysNumero })
   
   if (!phoneClean) {
     throw new Error('Numéro de téléphone invalide')
@@ -62,7 +83,8 @@ async function sendMessage(pool, userId, { phone, message, clientId, templateId,
       to: phone,
       message,
       templateId,
-      templateVariables
+      templateVariables,
+      pays: paysNumero
     })
 
     const response = await client.post('/messages', payload)
@@ -121,13 +143,17 @@ async function sendMessage(pool, userId, { phone, message, clientId, templateId,
 
 /**
  * Envoie un template WhatsApp
+ *
+ * `pays` (CH/FR), optionnel : pays du numéro (CH-008). Résolu par `sendMessage`
+ * depuis le marché du cabinet quand il n'est pas fourni.
  */
-async function sendTemplate(pool, userId, { phone, templateId, variables, clientId }) {
+async function sendTemplate(pool, userId, { phone, templateId, variables, clientId, pays = null }) {
   return sendMessage(pool, userId, {
     phone,
     templateId,
     templateVariables: variables,
-    clientId
+    clientId,
+    pays
   })
 }
 

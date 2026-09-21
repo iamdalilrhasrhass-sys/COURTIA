@@ -20,6 +20,31 @@ const LEVEL_NAMES = [
   'Courtier Augmenté', 'Architecte de Cabinet', 'Elite COURTIA'
 ]
 
+/**
+ * État vide (UX-032) — modèle de `pages/Taches.jsx` : on dit ce qui manque et
+ * on propose l'action utile. POURQUOI : sans données, l'onglet « Progression »
+ * ne rendait STRICTEMENT rien (le bloc était conditionné à `progress`), et les
+ * onglets « Compétences »/« Formation » affichaient une grille vide : un cabinet
+ * neuf voyait une page blanche. Aucune donnée d'exemple n'est introduite ici.
+ */
+function EtatVideAcademy({ icon: Icon, titre, texte, actionLibelle, onAction }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] py-14 px-6 text-center">
+      <Icon size={38} className="mx-auto mb-3 text-white/25" />
+      <p className="text-sm font-medium text-white/70">{titre}</p>
+      <p className="text-xs mt-1 text-white/40">{texte}</p>
+      {actionLibelle && onAction && (
+        <button
+          onClick={onAction}
+          className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-purple-500/10 text-purple-200 border border-purple-400/20 hover:bg-purple-500/20 transition-all"
+        >
+          <ArrowRight size={14} /> {actionLibelle}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function Academy() {
   const [tab, setTab] = useState('dashboard')
   const [progress, setProgress] = useState(null)
@@ -136,6 +161,15 @@ export default function Academy() {
         ) : (
           <>
             {/* ─── DASHBOARD TAB ─── */}
+            {tab === 'dashboard' && !progress && (
+              <EtatVideAcademy
+                icon={BarChart}
+                titre="Aucune progression enregistrée pour ce cabinet."
+                texte="COURTIA Academy n'affiche que la progression réellement mesurée par vos actions. Commencez une formation : votre niveau, vos XP et vos cartes apparaîtront ici."
+                actionLibelle="Voir les formations"
+                onAction={() => setTab('courses')}
+              />
+            )}
             {tab === 'dashboard' && progress && (
               <div className="space-y-6">
                 {/* Level card */}
@@ -239,17 +273,40 @@ export default function Academy() {
                 </div>
 
                 {/* Cards grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {sortedCards.map(card => (
-                    <SkillCard key={card.id} card={card} onShare={handleShare} />
-                  ))}
-                </div>
+                {sortedCards.length === 0 ? (
+                  <EtatVideAcademy
+                    icon={Award}
+                    titre={cards.length === 0 ? 'Aucune compétence disponible pour le moment.' : 'Aucune compétence dans ce filtre.'}
+                    texte={cards.length === 0
+                      ? 'Les compétences se débloquent par vos actions réelles dans COURTIA : relaisser, signer, compléter un dossier. Aucune carte d\u2019exemple n\u2019est affichée.'
+                      : 'Changez de rareté ou d\u2019état pour retrouver vos compétences.'}
+                    actionLibelle={cards.length === 0 ? 'Voir les formations' : 'Réinitialiser les filtres'}
+                    onAction={cards.length === 0
+                      ? () => setTab('courses')
+                      : () => { setRarityFilter('all'); setUnlockFilter('all') }}
+                  />
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {sortedCards.map(card => (
+                      <SkillCard key={card.id} card={card} onShare={handleShare} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* ─── COURSES TAB ─── */}
             {tab === 'courses' && (
               <div className="space-y-4">
+                {courses.length === 0 && (
+                  <EtatVideAcademy
+                    icon={BookOpen}
+                    titre="Aucune formation disponible pour le moment."
+                    texte="Les formations COURTIA sont servies par le cabinet : aucune n'est encore ouverte ici. Aucune formation d'exemple n'est affichée."
+                    actionLibelle="Voir mes compétences"
+                    onAction={() => setTab('skills')}
+                  />
+                )}
                 {courses.map((course, i) => (
                   <motion.div key={course.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                     className="rounded-xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl p-4 hover:bg-white/[0.05] transition-all duration-200"

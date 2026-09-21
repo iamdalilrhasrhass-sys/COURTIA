@@ -3,7 +3,17 @@
  * 
  * Alerte 30/60/90 jours avant échéance des contrats.
  * Permet d'anticiper les renouvellements et renégociations.
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : la surveillance porte sur le
+ * CABINET, pas sur la seule personne qui la déclenche. Le filtre
+ * `c.courtier_id = $1` devenait, pour un collaborateur (`broker`), une
+ * surveillance VIDE du portefeuille que le CRM lui affiche. Le fragment de
+ * `lib/porteeCabinet` (seule autorité) rend exactement la clause historique
+ * quand le compte n'a pas de cabinet, et `c.cabinet_id = ANY($1::uuid[])` sinon ;
+ * un compte dont l'appartenance a été retirée ne détecte plus rien.
  */
+
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 module.exports = {
   code: 'echeance',
@@ -14,10 +24,17 @@ module.exports = {
    * Détecte les contrats avec échéance dans 30/60/90 jours
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     
     // Définir les fenêtres d'alerte
     const windows = [
@@ -45,7 +62,7 @@ module.exports = {
         )) AS days_until
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
         AND q.status = 'actif'
         AND COALESCE(
           (q.quote_data->>'date_echeance')::DATE,
@@ -55,7 +72,7 @@ module.exports = {
           (q.quote_data->>'date_echeance')::DATE,
           (q.created_at + INTERVAL '1 year')::DATE
         ) <= NOW() + INTERVAL '90 days'
-    `, [brokerId])
+    `, f.params)
     
     const currentMonth = new Date().getMonth() + 1
     

@@ -21,7 +21,14 @@
  * par une règle suisse inventée.
  * NB : le détecteur `echeance` (échéance à venir) reste actif sur tous les
  * marchés — il ne cite aucune loi, il rappelle une date.
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : la surveillance porte sur le
+ * CABINET (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui
+ * la déclenche — sinon un collaborateur recevait 0 signal là où le propriétaire
+ * du même cabinet en recevait. Sans cabinet, la clause reste `c.courtier_id = $1`.
  */
+
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 module.exports = {
   code: 'chatel',
@@ -36,10 +43,17 @@ module.exports = {
    * Détecte les contrats avec échéance dans 60-75 jours
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     
     // Quotes avec échéance (date_echeance dans quote_data ou basée sur created_at + 1 an)
     const result = await pool.query(`
@@ -55,13 +69,13 @@ module.exports = {
         ) AS echeance_date
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
         AND q.status = 'actif'
         AND COALESCE(
           (q.quote_data->>'date_echeance')::DATE,
           (q.created_at + INTERVAL '1 year')::DATE
         ) BETWEEN NOW() + INTERVAL '60 days' AND NOW() + INTERVAL '75 days'
-    `, [brokerId])
+    `, f.params)
     
     const currentMonth = new Date().getMonth() + 1
     

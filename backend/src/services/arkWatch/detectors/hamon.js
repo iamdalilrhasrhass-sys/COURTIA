@@ -22,7 +22,13 @@
  * AUCUNE règle suisse de remplacement n'est inventée ici : la résiliation en
  * droit suisse ne se résume pas à un seuil d'ancienneté, et un équivalent non
  * validé serait exactement le défaut qu'on corrige.
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : la surveillance porte sur le
+ * CABINET (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui la
+ * déclenche. Sans cabinet, la clause reste exactement `c.courtier_id = $1`.
  */
+
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 module.exports = {
   code: 'hamon',
@@ -37,10 +43,17 @@ module.exports = {
    * Détecte les contrats éligibles à la Loi Hamon
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     
     // Récupère les quotes actives > 1 an avec type éligible Hamon
     const result = await pool.query(`
@@ -54,7 +67,7 @@ module.exports = {
         DATE_PART('year', AGE(NOW(), q.created_at)) AS years_active
       FROM quotes q
       JOIN clients c ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
         AND q.status = 'actif'
         AND q.created_at < NOW() - INTERVAL '1 year'
         AND (
@@ -67,7 +80,7 @@ module.exports = {
           q.quote_data->>'type' ILIKE '%habitation%' OR
           q.quote_data->>'type' ILIKE '%mrh%'
         )
-    `, [brokerId])
+    `, f.params)
     
     const currentMonth = new Date().getMonth() + 1
     

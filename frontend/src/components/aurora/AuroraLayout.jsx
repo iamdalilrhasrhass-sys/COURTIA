@@ -35,7 +35,10 @@ import { CosmosBackground, BubbleC, Wordmark, Kicker } from '../../design'
 
 const NAV_GROUPS = [
   {
-    label: 'Cockpit',
+    // Groupe de navigation nommé comme l'univers correspondant de la barre
+    // latérale (« PILOTAGE ») : « Cockpit » ne désigne plus deux choses
+    // différentes d'un menu à l'autre (UX-024/UX-025).
+    label: 'Pilotage',
     items: [
       { to: '/dashboard',  icon: LayoutDashboard, label: 'Tableau de bord' },
       { to: '/clients',    icon: Users,           label: 'Clients' },

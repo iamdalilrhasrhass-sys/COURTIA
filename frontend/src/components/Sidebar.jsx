@@ -14,6 +14,10 @@ import CourtiaMiniLogo from './brand/CourtiaMiniLogo'
 import { clearStoredSession } from '../api/sessionPolicy'
 import { resetSessionUserCache } from '../api/sessionUser'
 import { isAdminRole } from '../lib/roles'
+// Libellés : une notion = un mot, partout (voir lib/libelles.js). La barre
+// latérale ne réécrit plus les noms des écrans de pilotage en dur : ils
+// viennent de cette source unique, la même que celle de la palette Cmd+K.
+import { LIBELLES } from '../lib/libelles'
 
 // ─── Aurora tokens ─────────────────────────────────────────────
 const T = {
@@ -37,11 +41,11 @@ const UNIVERSES = [
     label: 'PILOTAGE',
     glyph: '01',
     items: [
-      { path: '/dashboard',     label: 'Cockpit',       icon: LayoutDashboard },
-      { path: '/morning-brief', label: 'Morning Brief', icon: Sunrise },
+      { path: '/dashboard',     label: LIBELLES.tableauDeBord, icon: LayoutDashboard },
+      { path: '/morning-brief', label: LIBELLES.briefDuMatin,  icon: Sunrise },
       { path: '/objectifs',     label: 'Objectifs',     icon: Target },
       { path: '/rapports',      label: 'Rapports',      icon: BarChart3 },
-      { path: '/analytics',     label: 'Analytics',     icon: BarChart2 },
+      { path: '/analytics',     label: LIBELLES.analyses,      icon: BarChart2 },
     ],
   },
   {
@@ -60,7 +64,7 @@ const UNIVERSES = [
     label: 'ACTIONS',
     glyph: '03',
     items: [
-      { path: '/taches',        label: 'Tâches',         icon: CheckSquare },
+      { path: '/taches',        label: LIBELLES.taches,         icon: CheckSquare },
       { path: '/relances',      label: 'Relances',       icon: Phone },
       { path: '/opportunites',  label: 'Opportunités',   icon: Target },
       { path: '/rendez-vous',   label: 'Rendez-vous',    icon: CalendarDays },

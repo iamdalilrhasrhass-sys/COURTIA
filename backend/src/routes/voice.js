@@ -13,8 +13,43 @@ const logger = require('../lib/logger')
 const transcriber = require('../services/voice/transcriber')
 const intakeProcessor = require('../services/voice/intakeProcessor')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const router = express.Router()
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET
+//
+// POURQUOI : un « voice intake » est une note terrain prise pour un CLIENT
+// (transcription + extraction → fiche client). Tant que ces routes filtraient
+// `broker_id = moi`, l'enregistrement pris par un collègue était invisible : le
+// collaborateur ne voyait aucun intake, et la pièce jointe au dossier client
+// était introuvable. `client_id` de `voice_intakes` n'est pas toujours renseigné
+// (intake pas encore appliqué) : on ne peut donc PAS passer par une jointure sur
+// `clients`, sous peine de perdre les intakes non appliqués.
+//
+// COMMENT : `voice_intakes` ne porte pas de colonne `cabinet_id` (vérifié dans
+// `information_schema` / migrations). Le cabinet d'un intake est celui de son
+// propriétaire (`broker_id`), résolu dans `cabinet_members` — la règle de
+// rattachement de la migration 113. La DÉCISION de portée reste entièrement dans
+// `lib/porteeCabinet` (seule autorité) ; seule la colonne « cabinet » du
+// fragment change de forme, faute de colonne dédiée. Sans cabinet, le fragment
+// retombe sur `vi.broker_id = $n` : comportement historique inchangé.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée sur `voice_intakes` (alias `vi`). */
+function filtreIntakes(portee, { depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `(SELECT cm.cabinet_id FROM cabinet_members cm
+                WHERE cm.user_id = vi.broker_id
+                  AND cm.removed_at IS NULL
+                  AND cm.cabinet_id = ANY($${depart}::uuid[])
+                LIMIT 1)`,
+    proprietaire: 'vi.broker_id',
+    depart,
+    ecriture,
+  })
+}
 
 // Multer en mémoire — on persiste ensuite via transcriber.saveAudioFile
 const upload = multer({
@@ -75,19 +110,22 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
 })
 
 /**
- * GET /api/voice/intakes — Liste des intakes du courtier
+ * GET /api/voice/intakes — Liste des intakes du CABINET
  */
 router.get('/intakes', async (req, res) => {
   try {
-    const brokerId = req.user?.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { status, limit = 50, offset = 0 } = req.query
-    const params = [brokerId]
-    let sql = `SELECT id, client_id, audio_duration_seconds, status, transcript IS NOT NULL AS has_transcript,
-                      extracted_data IS NOT NULL AS has_extraction, ai_cost_usd, transcription_cost_usd,
-                      total_latency_ms, processed_at, applied_at, created_at
-               FROM voice_intakes WHERE broker_id = $1`
-    if (status) { params.push(status); sql += ` AND status = $${params.length}` }
-    sql += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
+    const f = filtreIntakes(portee, { depart: 1 })
+    const params = [...f.params]
+    let sql = `SELECT vi.id, vi.client_id, vi.audio_duration_seconds, vi.status,
+                      vi.transcript IS NOT NULL AS has_transcript,
+                      vi.extracted_data IS NOT NULL AS has_extraction,
+                      vi.ai_cost_usd, vi.transcription_cost_usd,
+                      vi.total_latency_ms, vi.processed_at, vi.applied_at, vi.created_at
+               FROM voice_intakes vi WHERE ${f.sql}`
+    if (status) { params.push(status); sql += ` AND vi.status = $${params.length}` }
+    sql += ` ORDER BY vi.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
     params.push(parseInt(limit), parseInt(offset))
     const result = await pool.query(sql, params)
     res.json({ success: true, count: result.rows.length, intakes: result.rows })
@@ -101,10 +139,11 @@ router.get('/intakes', async (req, res) => {
  */
 router.get('/intakes/:id', async (req, res) => {
   try {
-    const brokerId = req.user?.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = filtreIntakes(portee, { depart: 1 })
     const result = await pool.query(
-      `SELECT * FROM voice_intakes WHERE id = $1 AND broker_id = $2`,
-      [req.params.id, brokerId]
+      `SELECT vi.* FROM voice_intakes vi WHERE vi.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, req.params.id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Intake introuvable' })
     res.json({ success: true, intake: result.rows[0] })
@@ -118,11 +157,12 @@ router.get('/intakes/:id', async (req, res) => {
  */
 router.get('/intakes/:id/transcript', async (req, res) => {
   try {
-    const brokerId = req.user?.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = filtreIntakes(portee, { depart: 1 })
     const result = await pool.query(
-      `SELECT transcript, transcript_language, audio_duration_seconds, status
-       FROM voice_intakes WHERE id = $1 AND broker_id = $2`,
-      [req.params.id, brokerId]
+      `SELECT vi.transcript, vi.transcript_language, vi.audio_duration_seconds, vi.status
+         FROM voice_intakes vi WHERE vi.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, req.params.id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Intake introuvable' })
     res.json({ success: true, ...result.rows[0] })
@@ -136,10 +176,11 @@ router.get('/intakes/:id/transcript', async (req, res) => {
  */
 router.get('/intakes/:id/audio', async (req, res) => {
   try {
-    const brokerId = req.user?.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = filtreIntakes(portee, { depart: 1 })
     const result = await pool.query(
-      `SELECT audio_storage_path FROM voice_intakes WHERE id = $1 AND broker_id = $2`,
-      [req.params.id, brokerId]
+      `SELECT vi.audio_storage_path FROM voice_intakes vi WHERE vi.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, req.params.id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Intake introuvable' })
     const fs = require('fs')
@@ -187,14 +228,19 @@ router.post('/intakes/:id/apply', async (req, res) => {
  */
 router.delete('/intakes/:id', async (req, res) => {
   try {
-    const brokerId = req.user?.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
+    const f = filtreIntakes(portee, { depart: 1, ecriture: true })
     const result = await pool.query(
-      `SELECT audio_storage_path FROM voice_intakes WHERE id = $1 AND broker_id = $2`,
-      [req.params.id, brokerId]
+      `SELECT vi.audio_storage_path FROM voice_intakes vi WHERE vi.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, req.params.id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Intake introuvable' })
     try { await transcriber.deleteAudioFile(result.rows[0].audio_storage_path) } catch (_) {}
-    await pool.query(`DELETE FROM voice_intakes WHERE id = $1 AND broker_id = $2`, [req.params.id, brokerId])
+    await pool.query(
+      `DELETE FROM voice_intakes vi WHERE vi.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, req.params.id]
+    )
     res.json({ success: true, deleted: req.params.id })
   } catch (err) {
     res.status(500).json({ error: messagePublic(err, { statut: 500 }) })

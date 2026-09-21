@@ -234,8 +234,16 @@ router.get('/statement/:year/:month/pdf', async (req, res) => {
     // serveur. Le relevé indisponible répond 403 « fonctionnalité non souscrite »,
     // avec le message du produit — jamais un message d'infrastructure.
     const nonSouscrit = err.code === 'fonctionnalite_non_souscrite'
+    // ── LE CODE D'ERREUR SERT AUSSI À MASQUER L'INFRASTRUCTURE ──────────────
+    // Mesure du 21/09/2026 (Red Team RT4-09) : cette ligne recopiait `err.code`
+    // tel quel, donc le code SQLSTATE PostgreSQL (`22P02`) d'une erreur de
+    // cast arrivait au navigateur sous le nom `error`. Un code métier de ce
+    // dépôt est un slug minuscule ; tout autre code reste serveur.
+    const codeMetier = typeof err.code === 'string' && /^[a-z][a-z0-9_]{3,}$/.test(err.code)
+      ? err.code
+      : 'statement_failed'
     res.status(nonSouscrit ? 403 : (err.statut || 500)).json({
-      error: err.code || 'statement_failed',
+      error: codeMetier,
       ...(nonSouscrit ? { fonctionnalite: err.fonctionnalite || 'releve_commissions_pdf' } : {}),
       message: nonSouscrit
         ? messagePublic(err)

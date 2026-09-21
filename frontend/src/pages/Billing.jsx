@@ -10,6 +10,7 @@ import Button from '../components/ui/Button'
 import GlassCard from '../components/ui/GlassCard'
 import StatusPill from '../components/ui/StatusPill'
 import { fmtMontant, fmtDate } from '../lib/monnaie'
+import { LIBELLES } from '../lib/libelles'
 
 const PLAN_ICON = {
   starter: CreditCard,
@@ -277,7 +278,7 @@ function planFeatures(code) {
   if (code === 'starter') return ['1 utilisateur', '200 clients', 'Dashboard, clients, contrats, tâches', 'Rapports essentiels']
   // « documents DDA » est un intitulé du marché français : ici on décrit la
   // fonction sans sigle national, pour qu'un cabinet suisse lise la même offre.
-  if (code === 'pro') return ['3 utilisateurs', '1 500 clients', 'ARK + Morning Brief', 'Gmail, Agenda, documents de conformité']
+  if (code === 'pro') return ['3 utilisateurs', '1 500 clients', `ARK + ${LIBELLES.briefDuMatin}`, 'Gmail, Agenda, documents de conformité']
   if (code === 'cabinet') return ['10 utilisateurs', 'Clients illimités', 'Commissions et reporting avancé', 'WhatsApp et support prioritaire']
   return ['Multi-cabinet', 'Accompagnement dédié', 'Intégrations avancées', 'Support prioritaire']
 }

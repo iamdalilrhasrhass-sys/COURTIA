@@ -20,6 +20,7 @@
  */
 
 const pool      = require('../db');
+const porteeCabinet = require('../lib/porteeCabinet');
 const Anthropic = require('@anthropic-ai/sdk');
 const {
   getPortfolioInsightColumns,
@@ -29,7 +30,77 @@ const {
 } = require('../utils/portfolioSchema');
 
 const { clientIA } = require('../lib/aiClient')
+// Référentiel IA du marché (persona FINMA/LSA/CHF ou ORIAS/DDA/€) : source
+// unique partagée par tous les prompts du produit (défaut P0 CH-001).
+const arkPrompts = require('./arkPrompts')
+const { appliquerMarche, personaDuMarche } = arkPrompts
 const anthropic = clientIA(Anthropic, { apiKeyVar: 'ANTHROPIC_API_KEY' })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE PROMPT D'ANALYSE PORTE LE PERSONA ET LA DEVISE DU MARCHÉ DU CABINET
+//
+// DÉFAUT P0 CH-001, mesuré le 21/09/2026 : ce prompt s'ouvrait sur « Tu es ARK,
+// expert en courtage d'assurance français. » — y compris pour un cabinet établi
+// en Suisse. Le modèle raisonnait donc en droit français (ACPR, ORIAS, DDA,
+// loi Hamon) et en euros sur des contrats suisses.
+//
+// Source unique du référentiel : `services/arkPrompts.js` (persona par marché,
+// filtre des références françaises, bloc « CONTEXTE MARCHÉ »). Aucun texte de
+// persona n'est recopié ici : le corps du prompt est le même pour les deux
+// marchés, c'est `appliquerMarche` qui le traduit ou le filtre.
+// ─────────────────────────────────────────────────────────────────────────────
+function construirePromptPortefeuille(marche = 'FR', {
+  scoreData = {},
+  clients = [],
+  topClients = [],
+  quoteSummary = {},
+} = {}) {
+  const breakdown = scoreData.breakdown || {}
+  const corps = `Analyse ce portefeuille et génère 10 à 15 actions prioritaires.
+
+CONTEXTE PORTEFEUILLE :
+- Score de santé : ${scoreData.health_score}/100 (grade ${scoreData.grade})
+- Clients : ${clients.length} (dont ${topClients.filter(c=>['actif','active'].includes((c.statut||'').toLowerCase())).length} actifs)
+- Contrats : ${quoteSummary.actifs} actifs / ${quoteSummary.total} total
+- Multi-équipement : ratio ${(breakdown.multi_equipment && breakdown.multi_equipment.detail && breakdown.multi_equipment.detail.ratio) || 'N/A'}
+- Diversification : ${(quoteSummary.companies || []).length} compagnie(s), ${(quoteSummary.products || []).length} produit(s)
+- Compagnies : ${(quoteSummary.companies || []).slice(0,8).join(', ') || 'Non renseigné'}
+- Produits : ${(quoteSummary.products || []).slice(0,8).join(', ') || 'Non renseigné'}
+- Clients sans email : ${topClients.filter(c=>!c.email_ok).length}
+- Clients sans téléphone : ${topClients.filter(c=>!c.phone_ok).length}
+
+ÉCHANTILLON CLIENTS (max 30) :
+${JSON.stringify(topClients, null, 0)}
+
+DIMENSIONS DU SCORE :
+${Object.entries(breakdown).map(([k,v]) => `- ${v.label} : ${v.score ?? 'N/A'}/100 (poids ${v.weight}%)`).join('\n')}
+
+Génère les actions les plus impactantes. Priorise :
+1. Les clients à risque de churn (contrats anciens, aucune interaction récente)
+2. Les opportunités de cross-sell sur les mono-détenteurs
+3. Les renouvellements proches
+4. Les fiches incomplètes prioritaires
+5. Les axes de diversification produits/compagnies
+
+Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc markdown :
+{
+  "actions": [
+    {
+      "client_id": <number|null>,
+      "type": "churn_risk|cross_sell|renewal|birthday|sinistre_followup|document_missing|sleeping_client|diversification|compliance",
+      "priority": "critical|high|medium|low",
+      "title": "<max 80 chars>",
+      "description": "<max 200 chars>",
+      "suggested_action": "<max 200 chars>",
+      "reasoning": "<max 400 chars>",
+      "estimated_impact": <number euros ou null>
+    }
+  ]
+}`;
+  // Le persona FRAMEWORK est mis en tête puis remplacé par celui du marché, à
+  // l'intérieur de `appliquerMarche` (qui le protège des remplacements).
+  return appliquerMarche(`${personaDuMarche('FR')}\n\n${corps}`, marche)
+}
 
 // ─── HELPERS INTERNES ──────────────────────────────────────────────────────
 
@@ -80,7 +151,44 @@ function scoreToRange(score) {
 
 // ─── COLLECTE DES DONNÉES ──────────────────────────────────────────────────
 
-async function collectPortfolioData(userId) {
+/**
+ * Collecte les données du portefeuille — PORTÉE DU CABINET.
+ *
+ * DÉFAUT MESURÉ (21/09/2026, P1) : `clients ... courtier_id = $1` et
+ * `quotes ... c.courtier_id = $1`. Un collaborateur (`broker`) du même cabinet
+ * obtenait un health score calculé sur un portefeuille VIDE (score 0, aucune
+ * action) là où le propriétaire obtenait le vrai score : deux vérités pour la
+ * même donnée.
+ *
+ * RÈGLE TENUE : chaque lecture passe par `lib/porteeCabinet` (seule autorité).
+ * Sans cabinet, la clause est EXACTEMENT `courtier_id = $1`. `appointments`
+ * porte `cabinet_id` (migration 113, « rendez-vous » = actif du cabinet) : sa
+ * clause devient `(a.cabinet_id = ANY($1::uuid[]) OR a.user_id = $2)`, ce qui
+ * laisse un rendez-vous créé avant rattachement visible par son auteur.
+ *
+ * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
+ */
+async function collectPortfolioData(userId, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+  const fClients = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
+  // Clause des lignes `clients` sans alias (première requête) : même alias `c`.
+  const fAppointments = porteeCabinet.fragment(portee, {
+    cabinet: 'a.cabinet_id',
+    proprietaire: 'a.user_id',
+    depart: 1,
+  })
+  // Sous-requête de la portée, sur l'alias `cl` (paramètres $1..$n identiques à
+  // `fClients` : la requête appelante n'a aucun autre paramètre).
+  const fConversations = porteeCabinet.fragment(portee, {
+    cabinet: 'cl.cabinet_id',
+    proprietaire: 'cl.courtier_id',
+    depart: 1,
+  })
+
   const [
     clientsRes,
     quotesRes,
@@ -89,10 +197,10 @@ async function collectPortfolioData(userId) {
     growthRes,
   ] = await Promise.all([
     pool.query(
-      `SELECT id, email, phone, address, profession, situation_familiale,
-              status, created_at, notes
-       FROM clients WHERE courtier_id = $1`,
-      [userId]
+      `SELECT c.id, c.email, c.phone, c.address, c.profession, c.situation_familiale,
+              c.status, c.created_at, c.notes
+       FROM clients c WHERE ${fClients.sql}`,
+      fClients.params
     ),
     pool.query(
       `SELECT q.id, q.client_id, q.status,
@@ -101,25 +209,25 @@ async function collectPortfolioData(userId) {
               q.created_at, q.updated_at
        FROM quotes q
        JOIN clients c ON q.client_id = c.id
-       WHERE c.courtier_id = $1`,
-      [userId]
+       WHERE ${fClients.sql}`,
+      fClients.params
     ),
-    // Dernière interaction par client via rendez-vous
+    // Dernière interaction par client via rendez-vous (`appointments.cabinet_id`)
     pool.query(
       `SELECT a.client_id, MAX(a.start_time) AS last_appt
        FROM appointments a
-       WHERE a.user_id = $1
+       WHERE ${fAppointments.sql}
          AND a.client_id IS NOT NULL
        GROUP BY a.client_id`,
-      [userId]
+      fAppointments.params
     ),
     // Dernière conversation ARK par client
     pool.query(
       `SELECT ac.client_id, MAX(ac.created_at) AS last_ark
        FROM ark_conversations ac
-       WHERE ac.client_id IN (SELECT id FROM clients WHERE courtier_id = $1)
+       WHERE ac.client_id IN (SELECT cl.id FROM clients cl WHERE ${fConversations.sql})
        GROUP BY ac.client_id`,
-      [userId]
+      fConversations.params
     ),
     // Nouvelles souscriptions pour calcul de croissance
     pool.query(
@@ -129,8 +237,8 @@ async function collectPortfolioData(userId) {
                                AND q.created_at <= NOW() - INTERVAL '30 days') AS prev_30
        FROM quotes q
        JOIN clients c ON q.client_id = c.id
-       WHERE c.courtier_id = $1`,
-      [userId]
+       WHERE ${fClients.sql}`,
+      fClients.params
     ),
   ]);
 
@@ -390,8 +498,8 @@ function calcGrowthScore(data) {
 
 // ─── CALCUL FINAL DU HEALTH SCORE ─────────────────────────────────────────
 
-async function calculateHealthScore(userId) {
-  const data = await collectPortfolioData(userId);
+async function calculateHealthScore(userId, options = {}) {
+  const data = await collectPortfolioData(userId, options);
   const { clients, quotes } = data;
 
   // Cas particuliers
@@ -479,7 +587,7 @@ async function calculateHealthScore(userId) {
 
 // ─── ANALYSE COMPLÈTE (CLAUDE OPUS + SAUVEGARDE) ──────────────────────────
 
-async function analyzePortfolio(userId) {
+async function analyzePortfolio(userId, options = {}) {
   console.log(`[portfolioAnalyzer] Début analyse user ${userId}`);
   const insightColumns = await getPortfolioInsightColumns(pool);
   const timestampColumn = await getPortfolioInsightTimestampColumn(pool);
@@ -523,7 +631,7 @@ async function analyzePortfolio(userId) {
 
   try {
     // 3. Calculer le health score
-    const scoreResult = await calculateHealthScore(userId);
+    const scoreResult = await calculateHealthScore(userId, options);
     const { data, score_range, ...scoreData } = scoreResult;
     const { clients, quotes } = data;
 
@@ -544,48 +652,13 @@ async function analyzePortfolio(userId) {
     };
 
     // 5. Appel Claude Opus 4.6 — JSON STRICT
-    const prompt = `Tu es ARK, expert en courtage d'assurance français.
-Analyse ce portefeuille et génère 10 à 15 actions prioritaires.
-
-CONTEXTE PORTEFEUILLE :
-- Score de santé : ${scoreData.health_score}/100 (grade ${scoreData.grade})
-- Clients : ${clients.length} (dont ${topClients.filter(c=>['actif','active'].includes((c.statut||'').toLowerCase())).length} actifs)
-- Contrats : ${quoteSummary.actifs} actifs / ${quoteSummary.total} total
-- Multi-équipement : ratio ${scoreData.breakdown.multi_equipment.detail.ratio || 'N/A'}
-- Diversification : ${quoteSummary.companies.length} compagnie(s), ${quoteSummary.products.length} produit(s)
-- Compagnies : ${quoteSummary.companies.slice(0,8).join(', ') || 'Non renseigné'}
-- Produits : ${quoteSummary.products.slice(0,8).join(', ') || 'Non renseigné'}
-- Clients sans email : ${topClients.filter(c=>!c.email_ok).length}
-- Clients sans téléphone : ${topClients.filter(c=>!c.phone_ok).length}
-
-ÉCHANTILLON CLIENTS (max 30) :
-${JSON.stringify(topClients, null, 0)}
-
-DIMENSIONS DU SCORE :
-${Object.entries(scoreData.breakdown).map(([k,v]) => `- ${v.label} : ${v.score ?? 'N/A'}/100 (poids ${v.weight}%)`).join('\n')}
-
-Génère les actions les plus impactantes. Priorise :
-1. Les clients à risque de churn (contrats anciens, aucune interaction récente)
-2. Les opportunités de cross-sell sur les mono-détenteurs
-3. Les renouvellements proches
-4. Les fiches incomplètes prioritaires
-5. Les axes de diversification produits/compagnies
-
-Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc markdown :
-{
-  "actions": [
-    {
-      "client_id": <number|null>,
-      "type": "churn_risk|cross_sell|renewal|birthday|sinistre_followup|document_missing|sleeping_client|diversification|compliance",
-      "priority": "critical|high|medium|low",
-      "title": "<max 80 chars>",
-      "description": "<max 200 chars>",
-      "suggested_action": "<max 200 chars>",
-      "reasoning": "<max 400 chars>",
-      "estimated_impact": <number euros ou null>
-    }
-  ]
-}`;
+    // Persona, référentiels et devise du MARCHÉ DU CABINET (défaut P0 CH-001) :
+    // marché lu par lib/marcheCabinet (cabinet → référent → profil → France).
+    // `options.marche` reste prioritaire pour un appelant qui le connaît déjà.
+    const marche = options.marche
+      ? (arkPrompts.normaliserMarche(options.marche) || 'FR')
+      : await arkPrompts.chargerMarcheCabinet(pool, userId)
+    const prompt = construirePromptPortefeuille(marche, { scoreData, clients, topClients, quoteSummary })
 
     let actionsData = { actions: [] };
 
@@ -698,15 +771,37 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Collecte les données d'un seul client. */
-async function collectClientData(clientId, courtierId) {
+/**
+ * Collecte les données d'un seul client.
+ *
+ * DÉFAUT MESURÉ (21/09/2026, P1) : `clients ... courtier_id = $2` — un
+ * collaborateur du cabinet ne pouvait pas obtenir le score de santé d'un dossier
+ * que le CRM lui affiche (`getClientScoreBreakdown` renvoyait `null`).
+ *
+ * RÈGLE TENUE : la portée du dossier est celle du CABINET (`lib/porteeCabinet`),
+ * jamais au-delà ; la sous-requête `appointments` suit la même portée
+ * (`appointments.cabinet_id`, migration 113) au lieu de `user_id = $2`, sinon le
+ * collaborateur perdait la date du dernier rendez-vous du dossier.
+ */
+async function collectClientData(clientId, courtierId, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, courtierId, options)
+  const fClient = porteeCabinet.fragment(portee, {
+    cabinet: 'clients.cabinet_id',
+    proprietaire: 'clients.courtier_id',
+    depart: 2,
+  })
+  const fAppointments = porteeCabinet.fragment(portee, {
+    cabinet: 'appointments.cabinet_id',
+    proprietaire: 'appointments.user_id',
+    depart: 2,
+  })
   const [clientRes, quotesRes, apptRes, arkRes] = await Promise.all([
     pool.query(
       `SELECT id, email, phone, address, profession, situation_familiale,
               notes, status, created_at
        FROM clients
-       WHERE id = $1 AND courtier_id = $2`,
-      [clientId, courtierId]
+       WHERE id = $1 AND ${fClient.sql}`,
+      [clientId, ...fClient.params]
     ),
     pool.query(
       `SELECT id, status,
@@ -721,8 +816,8 @@ async function collectClientData(clientId, courtierId) {
     pool.query(
       `SELECT MAX(start_time) AS last_appt
        FROM appointments
-       WHERE client_id = $1 AND user_id = $2`,
-      [clientId, courtierId]
+       WHERE client_id = $1 AND ${fAppointments.sql}`,
+      [clientId, ...fAppointments.params]
     ),
     pool.query(
       `SELECT MAX(created_at) AS last_ark
@@ -964,10 +1059,11 @@ function estimateClientLTV(data, score) {
  * Calcule le score de santé d'un client individuel (0-100).
  * @param {number} clientId
  * @param {number} courtierId  — users.id du courtier (pour vérifier l'ownership)
- * @returns {object|null}  null si le client n'appartient pas au courtier
+ * @param {Object} [options]   — `{ portee }` portée déjà résolue (aucune requête en plus)
+ * @returns {object|null}  null si le client n'appartient pas à la portée
  */
-async function calculateClientScore(clientId, courtierId) {
-  const data = await collectClientData(clientId, courtierId);
+async function calculateClientScore(clientId, courtierId, options = {}) {
+  const data = await collectClientData(clientId, courtierId, options);
   if (!data) return null;
 
   const WEIGHTS = { d1: 0.30, d2: 0.25, d3: 0.20, d4: 0.15, d5: 0.10 };
@@ -1002,10 +1098,11 @@ async function calculateClientScore(clientId, courtierId) {
  * Retourne le breakdown complet avec points perdus, raisons et score potentiel.
  * @param {number} clientId
  * @param {number} courtierId
+ * @param {Object} [options] — `{ portee }` portée déjà résolue (aucune requête en plus)
  * @returns {object|null}
  */
-async function getClientScoreBreakdown(clientId, courtierId) {
-  const raw = await calculateClientScore(clientId, courtierId);
+async function getClientScoreBreakdown(clientId, courtierId, options = {}) {
+  const raw = await calculateClientScore(clientId, courtierId, options);
   if (!raw) return null;
 
   const DIMS = [
@@ -1073,4 +1170,7 @@ module.exports = {
   // Exportée pour la non-régression : l'invariant « aucune prime inventée » doit
   // être vérifiable directement (défaut P2 du 20/09/2026).
   estimateClientLTV,
+  // Exportée pour la non-régression CH-001 : le prompt d'analyse doit porter le
+  // persona et la devise du marché du cabinet, sans aucun texte français en dur.
+  construirePromptPortefeuille,
 };

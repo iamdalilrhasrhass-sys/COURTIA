@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const { normaliserTelephone } = require('../lib/telephone')
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -45,41 +46,23 @@ const WHATSAPP_TEMPLATES = [
   },
 ]
 
+/**
+ * Numéro pour WhatsApp (E.164, ou chiffres seuls si `forMeta`), ou `''` quand
+ * aucun numéro sûr ne peut être produit — LA règle vit dans `lib/telephone.js`.
+ *
+ * Le pays du numéro vient de l'appelant (`options.pays` = pays du CLIENT, ou
+ * marché de son cabinet) : une forme nationale `0XX XXX XX XX` a exactement la
+ * même longueur en France et en Suisse. Sans pays, elle est REFUSÉE. Avant ce
+ * correctif, elle partait en `+33` — un mobile suisse `078 123 45 67` devenait
+ * `+33781234567`, un numéro français inexistant (défaut P0 CH-008).
+ */
 function sanitizeWhatsappPhone(phone, options = {}) {
-  const raw = String(phone || '').trim()
-  if (!raw) return ''
-
-  let digits = raw.replace(/[^\d+]/g, '')
-  digits = digits.replace(/^\+33\(0\)/, '+33')
-  digits = digits.replace(/^\+330/, '+33')
-  digits = digits.replace(/^0033/, '+33')
-  digits = digits.replace(/^33\(0\)/, '33')
-  digits = digits.replace(/^330/, '33')
-  // Préfixe international saisi en « 00 » : on le normalise, sans changer de pays.
-  digits = digits.replace(/^00/, '+')
-
-  if (digits.startsWith('+')) {
-    // Numéro déjà international (+41, +33, …) : on n'y touche PAS. Forcer le
-    // +33 transformait un mobile suisse 079… en numéro français injoignable.
-    digits = digits
-  } else if (digits.startsWith('0') && digits.length === 10) {
-    // Format national français (0X XX XX XX XX) : 10 chiffres.
-    digits = `+33${digits.slice(1)}`
-  } else if (digits.startsWith('0') && digits.length === 9) {
-    // Format national suisse (0XX XXX XX XX) : 9 chiffres.
-    digits = `+41${digits.slice(1)}`
-  } else if (digits.startsWith('41') && digits.length >= 11) {
-    digits = `+${digits}`
-  } else if (digits.startsWith('33')) {
-    digits = `+${digits}`
-  } else if (!digits.startsWith('+') && digits.length >= 8) {
-    digits = `+${digits}`
-  }
-
-  if (options.forMeta) {
-    return digits.replace(/^\+/, '')
-  }
-  return digits
+  const e164 = normaliserTelephone(phone, {
+    pays: options.pays ?? options.country,
+    marche: options.marche ?? options.market,
+  })
+  if (!e164) return ''
+  return options.forMeta ? e164.replace(/^\+/, '') : e164
 }
 
 function verifyMetaSignature({ rawBody, signatureHeader, appSecret }) {
@@ -118,8 +101,11 @@ function buildTemplateComponents(values = []) {
     : undefined
 }
 
-function buildWhatsappPayload({ to, message, templateId, templateVariables = [], language = 'fr' }) {
-  const recipient = sanitizeWhatsappPhone(to, { forMeta: true })
+function buildWhatsappPayload({ to, message, templateId, templateVariables = [], language = 'fr', pays = null }) {
+  // `pays` : pays du numéro (CH/FR), transmis par l'appelant. Une forme
+  // nationale a la même longueur en France et en Suisse — la règle ne devine
+  // pas (défaut P0 CH-008).
+  const recipient = sanitizeWhatsappPhone(to, { forMeta: true, pays })
   if (!recipient) throw new Error('whatsapp_to_missing')
 
   if (templateId) {

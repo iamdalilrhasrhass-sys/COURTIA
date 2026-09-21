@@ -14,6 +14,9 @@ const {
 
 describe('estTexteInterne — textes d’infrastructure reconnus', () => {
   const internes = [
+    '22P02', // SQLSTATE servi comme code d'erreur applicatif (Red Team RT4-09)
+    '23505',
+    '42501',
     'relation "quotes" does not exist',
     'column "filename" does not exist',
     'syntax error at or near "SELECT"',
@@ -155,7 +158,6 @@ function fauxRes(statusCode = 500) {
 
 describe('assainirErreursInternes (middleware)', () => {
   const req = { originalUrl: '/api/clients', method: 'GET' }
-
   it('nettoie une réponse 500 qui recopie err.message', () => {
     const res = fauxRes(500)
     assainirErreursInternes(req, res, () => {})

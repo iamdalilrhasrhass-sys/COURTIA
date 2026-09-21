@@ -453,6 +453,34 @@ function normaliserPays(valeur) {
   return v
 }
 
+/**
+ * PAYS À APPLIQUER À UN NUMÉRO DE TÉLÉPHONE (défaut P0 CH-008).
+ *
+ * POURQUOI ICI : le pays d'un numéro n'est pas une propriété du numéro. Un
+ * numéro national suisse (`078 123 45 67`) et un numéro national français
+ * (`06 12 34 56 78`) s'écrivent sur 10 caractères et commencent tous deux par
+ * 0 : AUCUN préfixe ne permet de trancher. Le pays se lit donc là où il est
+ * connu — la fiche du CLIENT (`clients.country`), sinon le marché de son
+ * CABINET — et jamais dans les chiffres (voir `lib/telephone.js`, qui refuse de
+ * deviner plutôt que de produire un numéro faux).
+ *
+ * @param {{paysClient?: string, userId?: number}} source
+ * @param {Function|Object} [options] lecteur SQL (pour le marché du cabinet)
+ * @returns {Promise<'CH'|'FR'|null>} `null` = pays inconnu (refus, jamais une supposition)
+ */
+async function paysTelephoneNumero({ paysClient = null, userId = null } = {}, options = {}) {
+  const connu = normaliserPays(paysClient)
+  if (connu === 'CH' || connu === 'FR') return connu
+  const uid = identifiantUtilisateur(userId)
+  if (!uid) return null
+  try {
+    const verdict = await marcheUtilisateur(uid, options)
+    return verdict && verdict.marche ? verdict.marche : null
+  } catch (_) {
+    return null
+  }
+}
+
 async function mettreAJourIdentiteCabinet(cabinetId, champs = {}, options = {}) {
   const query = lecteur(options)
   const id = identifiantCabinet(cabinetId)
@@ -505,6 +533,7 @@ module.exports = {
   nomUtilisable,
   paysDecisif,
   normaliserPays,
+  paysTelephoneNumero,
   marcheDuCabinet,
   marcheUtilisateur,
   marcheDeLaRequete,

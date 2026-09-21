@@ -14,6 +14,9 @@ import { GlassPanel, CockpitMetricCard, PriorityHalo, ArkStatusBadge, EmptyState
 import DeviseIcone from '../components/DeviseIcone'
 import useDevise from '../components/useDevise'
 import { libelleSante, variation } from '../lib/cockpitTendances'
+// Nom de l'écran et du widget « tâches du jour » : même source unique que la
+// barre latérale et la palette (UX-025/UX-037).
+import { LIBELLES, TITRE_TACHES_DU_JOUR } from '../lib/libelles'
 import { fmtMontant, fmtNombre, fmtDate, fmtDateLongue } from '../lib/monnaie'
 import { BubbleCMini } from '../design/BubbleC'
 import ArkVoiceCockpit from '../components/voice/ArkVoiceCockpit'
@@ -548,7 +551,7 @@ export default function Dashboard() {
               letterSpacing: '-0.025em',
               color: T.text, margin: 0, lineHeight: 1.15,
             }}>
-              Cockpit
+              {LIBELLES.tableauDeBord}
             </h1>
             <p style={{ fontSize: 13, color: T.textSecondary, margin: '6px 0 0' }}>
               {today[0].toUpperCase() + today.slice(1)} {userName ? `• ${userName}` : ''} • <span style={{ color: T.danger, fontWeight: 600 }}>{urgentCount} urgences ARK</span>
@@ -557,7 +560,7 @@ export default function Dashboard() {
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => navigate('/morning-brief')} style={btnPrimary}>
-              <Sparkles size={13} /> Morning Brief
+              <Sparkles size={13} /> {LIBELLES.briefDuMatin}
             </button>
             <button onClick={() => navigate('/clients/new')} style={btnGhost}>
               <UserPlus size={13} /> Nouveau client
@@ -608,7 +611,7 @@ export default function Dashboard() {
             <SectionTitle
               icon={Zap}
               iconColor={T.ark}
-              title="Priorités ARK aujourd'hui"
+              title={TITRE_TACHES_DU_JOUR}
               count={priorites.length}
               cta="Tout voir"
               onCta={() => navigate('/morning-brief')}

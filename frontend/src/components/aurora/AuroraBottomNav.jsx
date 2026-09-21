@@ -13,17 +13,21 @@ import {
   CheckSquare,
   MoreHorizontal,
 } from 'lucide-react';
+// La navigation mobile (barre basse / tiroir « Plus ») nomme les écrans avec la
+// même source que la barre latérale : /taches ne s'appelle plus « Actions » ici
+// et « Tâches » ailleurs (UX-037).
+import { LIBELLES } from '../../lib/libelles';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Default Navigation Items — COURTIA Aurora-Bubble C
-   Cockpit / Clients / ARK / Actions / Plus
+   Tableau de bord / Clients / ARK / Tâches / Plus
    ───────────────────────────────────────────────────────────────────────────── */
 
 const DEFAULT_ITEMS = [
-  { id: 'cockpit', path: '/dashboard', icon: LayoutDashboard, label: 'Cockpit' },
+  { id: 'cockpit', path: '/dashboard', icon: LayoutDashboard, label: LIBELLES.tableauDeBord },
   { id: 'clients', path: '/clients', icon: Users, label: 'Clients' },
   { id: 'ark', path: '/assistant-ark', icon: Sparkles, label: 'ARK' },
-  { id: 'actions', path: '/taches', icon: CheckSquare, label: 'Actions', badge: true },
+  { id: 'actions', path: '/taches', icon: CheckSquare, label: LIBELLES.taches, badge: true },
   { id: 'more', path: null, icon: MoreHorizontal, label: 'Plus' },
 ];
 

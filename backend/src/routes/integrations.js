@@ -30,6 +30,9 @@ const {
 } = require('../services/integrationsStore')
 const { hasEncryptionKey, encryptSecret, decryptSecret } = require('../services/integrationSecrets')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
+const marcheCabinet = require('../lib/marcheCabinet')
+const { normaliserPays } = require('../lib/telephone')
 const {
   GOOGLE_CALENDAR_SCOPES,
   GMAIL_SCOPES,
@@ -92,8 +95,8 @@ function maskSecretValue(value) {
   return `${text.slice(0, 3)}***${text.slice(-3)}`
 }
 
-function sanitizePhone(phone) {
-  return sanitizeWhatsappPhone(phone)
+function sanitizePhone(phone, options = {}) {
+  return sanitizeWhatsappPhone(phone, options)
 }
 
 function withUserId(req, res) {
@@ -248,6 +251,18 @@ function emailFromAddress(value = '') {
   const text = String(value || '').trim()
   const match = text.match(/<([^>]+)>/)
   return String(match?.[1] || text).trim().toLowerCase()
+}
+
+/**
+ * Deux adresses désignent-elles le même destinataire ? (casse et espaces
+ * ignorés). Sert à comparer l'adresse DEMANDÉE par le corps à celle de la fiche
+ * client : une fois comparées, c'est TOUJOURS l'adresse de la fiche qui est
+ * utilisée, jamais la chaîne fournie par l'appelant.
+ */
+function memeAdresse(a, b) {
+  const gauche = String(a || '').trim().toLowerCase()
+  const droite = String(b || '').trim().toLowerCase()
+  return Boolean(gauche) && gauche === droite
 }
 
 async function recordEmailThread(pool, userId, clientId, summary, direction = 'inbound') {
@@ -1061,20 +1076,40 @@ router.post('/whatsapp/send', requireCabinetFeature('v1_whatsapp_business'), asy
     const templateVariables = Array.isArray(body.templateVariables || body.template_variables)
       ? (body.templateVariables || body.template_variables)
       : []
-    let to = sanitizePhone(body.to)
+    // PAYS DU NUMÉRO (défaut P0 CH-008) : une forme nationale suisse
+    // (`078 123 45 67`) et une forme nationale française s'écrivent sur
+    // 10 caractères — le pays se lit dans la fiche du CLIENT, sinon dans le
+    // marché du CABINET, jamais dans les chiffres. Sans pays connu, un numéro
+    // national est REFUSÉ au lieu de partir vers un « +33 » français inexistant.
+    const marche = await marcheCabinet.marcheDeLaRequete(req, (sql, params) => pool.query(sql, params))
+    const paysCabinet = (marche && marche.marche) || null
+    const pays = normaliserPays(body.pays || body.country) || paysCabinet
+    let to = sanitizePhone(body.to, { pays })
     const clientId = Number(body.clientId || body.client_id || 0)
 
     let client = null
     if (!to && clientId > 0) {
+      // PORTÉE = CABINET : on écrit à un client du CABINET, pas seulement à
+      // « mon » client. Les INTÉGRATIONS elles-mêmes (broker_integrations,
+      // credentials) restent PAR UTILISATEUR : elles portent les secrets du
+      // compte connecté, seul point où un accès par collaborateur est exclu.
+      const portee = await porteeCabinet.resoudrePortee(pool, req)
+      const f = porteeCabinet.fragment(portee, {
+        cabinet: 'c.cabinet_id',
+        proprietaire: 'c.courtier_id',
+        depart: 1,
+      })
       const clientRes = await pool.query(
-        `SELECT id, first_name, last_name, phone
-         FROM clients
-         WHERE id = $1 AND courtier_id = $2
+        `SELECT c.id, c.first_name, c.last_name, c.phone, c.country
+         FROM clients c
+         WHERE c.id = $${f.suivant} AND ${f.sql}
          LIMIT 1`,
-        [clientId, userId]
+        [...f.params, clientId]
       )
       client = clientRes.rows[0] || null
-      to = sanitizePhone(client?.phone || '')
+      // Le pays du CLIENT prime sur celui du cabinet (un client suisse d'un
+      // cabinet français reste un mobile suisse).
+      to = sanitizePhone(client?.phone || '', { pays: normaliserPays(client?.country) || pays })
     }
 
     if (!to) {
@@ -1421,16 +1456,86 @@ router.post('/gmail/send', async (req, res) => {
 
     const body = req.body || {}
     const clientId = Number(body.client_id || body.clientId || 0) || null
-    let to = String(body.to || '').trim()
+    const destinataireDemande = String(body.to || '').trim()
+
+    // ──────────────────────────────────────────────────────────────────────
+    // CLIENT RÉSOLU DANS LA PORTÉE DU CABINET, DESTINATAIRE IMPOSÉ (SEC-020)
+    //
+    // DÉFAUT MESURÉ (21/09/2026) : la requête de résolution du client était
+    // `SELECT id, email FROM clients WHERE id = $1` — AUCUNE condition de portée.
+    // Un appelant qui connaissait l'identifiant d'un client d'un AUTRE cabinet
+    // obtenait donc son adresse e-mail (fuite inter-cabinets), et le corps
+    // pouvait imposer n'importe quel destinataire (`to = to || client?.email`) :
+    // un e-mail partait, depuis la boîte Gmail du cabinet, vers une adresse
+    // choisie par l'appelant.
+    //
+    // RÈGLE TENUE ICI — le corps ne peut plus nommer un destinataire arbitraire :
+    //   • `client_id` fourni → la fiche est résolue DANS la portée du cabinet de
+    //     l'appelant (lib/porteeCabinet, seule autorité) ; hors portée = 404
+    //     `client_not_found`, sans divulgation (ni existence, ni adresse) ;
+    //   • `to` fourni sans `client_id` → l'adresse n'est acceptée que si elle
+    //     est CELLE D'UN CLIENT DU CABINET (résolution par adresse, portée
+    //     appliquée) ; sinon 400 `gmail_destinataire_non_autorise` ;
+    //   • dans tous les cas, le destinataire utilisé est l'adresse ENREGISTRÉE
+    //     SUR LA FICHE (`client.email`), jamais la chaîne du corps : une adresse
+    //     libre n'est jamais recopiée dans l'en-tête MIME (aucune injection
+    //     d'en-tête possible par `to`).
+    // ──────────────────────────────────────────────────────────────────────
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
+
     let client = null
     if (clientId) {
-      const clientResult = await pool.query('SELECT id, email FROM clients WHERE id=$1 LIMIT 1', [clientId])
+      const clientResult = await pool.query(
+        `SELECT c.id, c.email
+           FROM clients c
+          WHERE c.id = $${f.suivant} AND ${f.sql}
+          LIMIT 1`,
+        [...f.params, clientId]
+      )
       client = clientResult.rows[0] || null
-      to = to || client?.email || ''
+      if (!client) {
+        // Même réponse que « client inexistant » : hors portée, l'appelant
+        // n'apprend rien de l'autre cabinet.
+        return res.status(404).json({ error: 'client_not_found' })
+      }
+      if (destinataireDemande && !memeAdresse(destinataireDemande, client.email)) {
+        return res.status(400).json({
+          error: 'gmail_destinataire_non_autorise',
+          details: "Le destinataire est l’adresse enregistrée sur la fiche du client : une autre adresse ne peut pas être imposée.",
+        })
+      }
+    } else if (destinataireDemande) {
+      const clientResult = await pool.query(
+        `SELECT c.id, c.email
+           FROM clients c
+          WHERE LOWER(c.email) = LOWER($${f.suivant}) AND ${f.sql}
+          LIMIT 1`,
+        [...f.params, destinataireDemande]
+      )
+      client = clientResult.rows[0] || null
+      if (!client) {
+        return res.status(400).json({
+          error: 'gmail_destinataire_non_autorise',
+          details: "Le destinataire doit être l’adresse d’un client de votre cabinet. Enregistrez-le sur sa fiche, puis renvoyez l’e-mail.",
+        })
+      }
     }
 
-    if (!to || !body.subject || !body.body) {
-      return res.status(400).json({ error: 'gmail_message_invalid', details: 'Champs requis: to, subject, body.' })
+    const to = String(client && client.email || '').trim()
+    if (!to) {
+      return res.status(400).json({
+        error: 'gmail_destinataire_requis',
+        details: 'Destinataire requis : indiquez `client_id` (ou l’adresse d’un client du cabinet). Si la fiche n’a pas d’adresse, renseignez-la d’abord.',
+      })
+    }
+
+    if (!body.subject || !body.body) {
+      return res.status(400).json({ error: 'gmail_message_invalid', details: 'Champs requis: subject, body.' })
     }
 
     const raw = encodeGmailRawMessage({
@@ -1455,10 +1560,13 @@ router.post('/gmail/send', async (req, res) => {
       snippet: String(body.body).slice(0, 220),
     }
 
-    await recordEmailThread(pool, userId, client?.id || clientId || null, summary, 'outbound')
+    // Le client est TOUJOURS résolu (et dans la portée) avant l'envoi : la trace
+    // d'interaction porte l'identifiant d'une fiche du cabinet, jamais un
+    // identifiant fourni tel quel par le corps.
+    await recordEmailThread(pool, userId, client.id, summary, 'outbound')
     await recordClientInteraction(pool, {
       user_id: userId,
-      client_id: client?.id || clientId || null,
+      client_id: client.id,
       provider: 'gmail',
       direction: 'out',
       external_id: summary.messageId,
@@ -1594,7 +1702,20 @@ router.get('/client/:clientId/interactions', async (req, res) => {
       return res.status(400).json({ error: 'invalid_client_id' })
     }
 
-    const own = await pool.query('SELECT id FROM clients WHERE id = $1 AND courtier_id = $2 LIMIT 1', [clientId, userId])
+    // PORTÉE = CABINET pour l'accès au CLIENT (la fiche client est commune).
+    // La liste d'interactions reste servie par `services/integrationsStore`
+    // (`listClientInteractions(pool, userId, clientId)`, périmètre par
+    // utilisateur) : ce service n'est pas dans le périmètre de ce correctif.
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
+    const own = await pool.query(
+      `SELECT c.id FROM clients c WHERE c.id = $${f.suivant} AND ${f.sql} LIMIT 1`,
+      [...f.params, clientId]
+    )
     if (!own.rowCount) {
       return res.status(404).json({ error: 'client_not_found' })
     }

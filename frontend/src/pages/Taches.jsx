@@ -7,6 +7,7 @@ import {
 import api from '../api'
 import { normaliserTaches, statistiquesTaches } from '../lib/tachesViewModel'
 import { localeCourante } from '../lib/monnaie'
+import { LIBELLES } from '../lib/libelles'
 
 /**
  * Écran Tâches — adossé à la base, sans jeu de données inventé.
@@ -180,7 +181,7 @@ export default function Taches() {
               <ListTodo size={16} color={T.accent} />
               <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Actions</span>
             </div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Tâches</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>{LIBELLES.taches}</h1>
             <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Vos actions réelles, enregistrées dans COURTIA.</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>

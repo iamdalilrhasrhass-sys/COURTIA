@@ -21,6 +21,23 @@ const cron = require('node-cron');
 const { sendEmail, sendCommercialEmail } = require('../services/emailService');
 const { sendSMS, getSmsStatus } = require('../services/smsService');
 const logger = require('../lib/logger');
+const { normaliserPays } = require('../lib/telephone');
+const marcheCabinet = require('../lib/marcheCabinet');
+
+/**
+ * Pays du numéro d'un client (CH-008) : le pays de SA fiche, sinon le marché de
+ * son CABINET (source unique : lib/marcheCabinet). Sans pays, une forme
+ * nationale `0XX XXX XX XX` est ambiguë (même longueur en France et en Suisse)
+ * et la règle refuse de deviner plutôt que de faire partir le SMS vers un
+ * numéro français inexistant.
+ */
+async function paysDuNumero(pool, client) {
+  if (!pool) return null;
+  return marcheCabinet.paysTelephoneNumero(
+    { paysClient: normaliserPays(client && client.country), userId: client && client.courtier_id },
+    (sql, params) => pool.query(sql, params)
+  );
+}
 
 // --- Schéma table relances ---
 const CREATE_RELANCES_TABLE = `
@@ -110,6 +127,8 @@ async function getDossiersARelancer(pool) {
       c.last_name,
       c.email,
       c.phone,
+      c.country,
+      c.courtier_id,
       c.status,
       c.created_at,
       r.id as relance_id,
@@ -198,6 +217,9 @@ async function sendRelance(pool, client, etape) {
         result.sms = await sendSMS({
           to: client.phone,
           message: 'COURTIA: dernier rappel, votre dossier assurance attend des éléments. Répondez à votre conseiller pour finaliser.',
+          // Pays du numéro (CH-008) : le pays du CLIENT, sinon le marché de son
+          // CABINET — un mobile suisse ne part jamais vers un `+33`.
+          pays: await paysDuNumero(pool, client),
         });
         if (result.sms.success) result.success = true;
       }

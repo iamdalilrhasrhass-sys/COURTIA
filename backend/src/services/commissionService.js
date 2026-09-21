@@ -231,10 +231,14 @@ function canSeeAllCommissions(user = {}) {
  * `devise` est la devise RÉELLE du cabinet (CHF ou EUR), passée par l'appelant :
  *   • `expected_amount` / `received_amount` — noms NEUTRES, à utiliser par tout
  *     nouvel écran (aucune devise affirmée dans le nom du champ) ;
- *   • `expected_amount_eur` / `received_amount_eur` — noms HISTORIQUES conservés
- *     parce que des écrans les lisent encore. La VALEUR n'est jamais convertie :
- *     un cabinet suisse reçoit le même nombre, avec `devise: 'CHF'`, donc un nom
- *     de champ historique ne peut pas faire afficher une somme fausse.
+ *   • `expected_amount_eur` / `received_amount_eur` — noms HISTORIQUES
+ *     **DÉPRÉCIÉS** : ils sont conservés parce que des écrans existants les
+ *     lisent encore, et uniquement pour ça. Ils valent EXACTEMENT la même chose
+ *     que les noms neutres (aucune conversion) et ne doivent plus être utilisés
+ *     par du nouveau code : le nom du champ affirme « eur » alors que la devise
+ *     réelle est `devise` (CHF pour un cabinet suisse) — c'est le défaut P1
+ *     CH-013, où un décompte en francs suisses s'affichait sous une étiquette
+ *     euro. Un nouvel écran lit `expected_amount` + `devise`.
  *   • `currency` — reflète la colonne quand elle est renseignée, sinon la devise
  *     du cabinet : une ligne écrite avant ce correctif (colonne NULL) ne doit pas
  *     faire croire à une devise inconnue alors que le cabinet est connu.
@@ -247,6 +251,9 @@ function mapCommissionRow(row = {}, devise = null) {
     received_amount_cents: Number.parseInt(row.received_amount_cents || 0, 10),
     expected_amount: centsToEuros(row.expected_amount_cents),
     received_amount: centsToEuros(row.received_amount_cents),
+    // DÉPRÉCIÉ (P1 CH-013) : même valeur que les noms neutres ci-dessus, gardé
+    // uniquement pour les écrans existants. Le nom affirme « eur » alors que la
+    // devise réelle est `devise` (CHF en Suisse) — jamais utilisé par du code neuf.
     expected_amount_eur: centsToEuros(row.expected_amount_cents),
     received_amount_eur: centsToEuros(row.received_amount_cents),
     ...(deviseLigne ? { devise: String(deviseLigne).toUpperCase() } : {}),
@@ -503,11 +510,12 @@ async function getCommissionStats(pool, user, filters = {}, portee = null) {
     byBroker.set(brokerKey, broker)
   }
 
-  // Noms NEUTRES + noms historiques : voir le commentaire de `deviseDuCabinet`.
+  // Noms NEUTRES + alias DÉPRÉCIÉS : voir le commentaire de `deviseDuCabinet`.
   const withEuros = (row) => ({
     ...row,
     expected_amount: centsToEuros(row.expected_amount_cents),
     received_amount: centsToEuros(row.received_amount_cents),
+    // DÉPRÉCIÉ (P1 CH-013) : même valeur, conservé pour les écrans existants.
     expected_amount_eur: centsToEuros(row.expected_amount_cents),
     received_amount_eur: centsToEuros(row.received_amount_cents),
   })

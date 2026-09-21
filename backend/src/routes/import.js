@@ -6,6 +6,7 @@ const verifyToken = require('../middleware/authMiddleware')
 const importService = require('../services/importService')
 const { trackEvent } = require('../services/analyticsService')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
@@ -193,8 +194,24 @@ router.post('/execute', verifyToken, upload.single('file'), async (req, res) => 
     
     const headers = data[0]
     const rows = data.slice(1).filter(r => r.some(c => c !== undefined && c !== null && c !== ''))
-    const userId = req.user.id
-    
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const userId = req.user.id || req.user.userId
+
+    // Un rôle en LECTURE SEULE (assistant/viewer) ou un accès révoqué n'importe rien.
+    if (porteeCabinet.refuserEcriture(portee, res, 'importer des clients')) return
+
+    // PORTÉE = CABINET : le doublon est cherché dans tout le portefeuille du
+    // cabinet (un client déjà saisi par un collègue ne doit pas être recréé), et
+    // la ligne créée est estampillée du cabinet (`clients.cabinet_id`, migration
+    // 113) pour que tout le cabinet la voie. `courtier_id` reste le CRÉATEUR.
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+      ecriture: true,
+    })
+    const cabinetId = porteeCabinet.cabinetPourCreation(portee)
+
     let imported = 0, errors = 0, duplicates = 0
     
     for (const row of rows) {
@@ -206,16 +223,18 @@ router.post('/execute', verifyToken, upload.single('file'), async (req, res) => 
         
         if (!nom && !prenom && !email && !telephone) { errors++; continue }
         
-        // Vérifier doublon
+        // Vérifier doublon — dans le CABINET
         const existing = await pool.query(
-          'SELECT id FROM clients WHERE courtier_id = $1 AND (email = $2 OR phone = $3) AND email IS NOT NULL AND phone IS NOT NULL',
-          [userId, email, telephone]
+          `SELECT c.id FROM clients c
+            WHERE ${f.sql} AND (c.email = $${f.suivant} OR c.phone = $${f.suivant + 1})
+              AND c.email IS NOT NULL AND c.phone IS NOT NULL`,
+          [...f.params, email, telephone]
         )
         if (existing.rows.length > 0) { duplicates++; continue }
-        
+
         await pool.query(
-          `INSERT INTO clients (courtier_id, nom, prenom, email, phone, adresse, code_postal, ville, date_naissance, segment, created_at, updated_at, documents)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW(), '[]'::jsonb)`,
+          `INSERT INTO clients (courtier_id, nom, prenom, email, phone, adresse, code_postal, ville, date_naissance, segment, cabinet_id, created_at, updated_at, documents)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW(), '[]'::jsonb)`,
           [
             userId,
             nom || null,
@@ -226,7 +245,8 @@ router.post('/execute', verifyToken, upload.single('file'), async (req, res) => 
             mapping.code_postal !== undefined ? String(row[mapping.code_postal] || '') : null,
             mapping.ville !== undefined ? String(row[mapping.ville] || '') : null,
             mapping.date_naissance !== undefined ? row[mapping.date_naissance] || null : null,
-            'import'
+            'import',
+            cabinetId
           ]
         )
         imported++
@@ -249,8 +269,29 @@ router.post('/execute', verifyToken, upload.single('file'), async (req, res) => 
 // POST /api/import/clean — dédoublonnage + normalisation
 router.post('/clean', verifyToken, async (req, res) => {
   try {
-    const userId = req.user.id
-    
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'nettoyer le portefeuille')) return
+
+    // PORTÉE = CABINET pour le périmètre SCANNÉ (`c1`). La comparaison reste
+    // faite à propriétaire égal (`c2.courtier_id = c1.courtier_id`) : élargir la
+    // comparaison au cabinet entier ferait remonter comme « doublon » deux
+    // homonymes de deux commerciaux différents — on ne change ici que ce qui est
+    // en défaut (le collaborateur ne voyait AUCUN doublon de son cabinet).
+    const fDupes = porteeCabinet.fragment(portee, {
+      cabinet: 'c1.cabinet_id',
+      proprietaire: 'c1.courtier_id',
+      depart: 1,
+      ecriture: true,
+    })
+    // Deuxième fragment, sur l'alias RÉEL de la mise à jour (`c`) : un fragment
+    // construit pour `c1` ne s'applique pas à un `UPDATE clients c`.
+    const fMaj = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+      ecriture: true,
+    })
+
     // Trouver les doublons (même nom + téléphone)
     const dupes = await pool.query(`
       SELECT c1.id, c1.nom, c1.prenom, c1.phone, c1.email
@@ -260,20 +301,20 @@ router.post('/clean', verifyToken, async (req, res) => {
         AND LOWER(COALESCE(c1.nom,'')) = LOWER(COALESCE(c2.nom,''))
         AND c1.phone = c2.phone
         AND c1.phone IS NOT NULL
-      WHERE c1.courtier_id = $1
+      WHERE ${fDupes.sql}
       ORDER BY c1.nom
-    `, [userId])
-    
-    // Normaliser téléphones (enlever espaces, tirets)
+    `, [...fDupes.params])
+
+    // Normaliser téléphones (mêmes lignes que la portée d'écriture ci-dessus)
     const normalized = await pool.query(`
-      UPDATE clients
-      SET phone = REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9+]', '', 'g'),
+      UPDATE clients c
+      SET phone = REGEXP_REPLACE(COALESCE(c.phone, ''), '[^0-9+]', '', 'g'),
           updated_at = NOW()
-      WHERE courtier_id = $1
-        AND phone IS NOT NULL
-        AND phone ~ '[^0-9+]'
-      RETURNING id, phone
-    `, [userId])
+      WHERE ${fMaj.sql}
+        AND c.phone IS NOT NULL
+        AND c.phone ~ '[^0-9+]'
+      RETURNING c.id, c.phone
+    `, [...fMaj.params])
     
     return res.json({
       success: true,

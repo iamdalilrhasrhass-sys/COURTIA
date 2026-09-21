@@ -22,6 +22,7 @@ const pool = require('../db')
 const logger = require('../lib/logger')
 const marcheCabinet = require('../lib/marcheCabinet')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 const {
   runArkWatch,
   getSignalStats,
@@ -47,13 +48,47 @@ async function marcheDuCabinet(req) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET
+//
+// POURQUOI : ARK Watch surveille le PORTEFEUILLE DU CABINET (échéances, clients
+// silencieux, sinistres). Tant que ces routes filtraient `s.broker_id = moi`, un
+// collaborateur voyait 0 signal et 0 KPI : la veille du cabinet lui était
+// invisible, alors que les clients qu'elle concerne sont ceux qu'il traite.
+//
+// COMMENT : `ark_watch_signals` et `ark_watch_runs` ne portent pas de colonne
+// `cabinet_id` (vérifié dans `information_schema` / migrations) et le `client_id`
+// d'un signal est facultatif : une jointure sur `clients` perdrait les signaux
+// non rattachés à un client. Le cabinet d'un signal est celui de son
+// propriétaire (`broker_id`), résolu dans `cabinet_members` — la règle de
+// rattachement de la migration 113. La DÉCISION de portée reste entièrement dans
+// `lib/porteeCabinet` (seule autorité) ; seule la colonne « cabinet » du
+// fragment change de forme, faute de colonne dédiée. Sans cabinet, le fragment
+// retombe sur `s.broker_id = $n` : comportement historique inchangé.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée sur une table sans `cabinet_id` (propriétaire = `broker_id`). */
+function filtreProprietaire(portee, { alias, depart = 1, ecriture = false } = {}) {
+  const proprietaire = `${alias}.broker_id`
+  return porteeCabinet.fragment(portee, {
+    cabinet: `(SELECT cm.cabinet_id FROM cabinet_members cm
+                WHERE cm.user_id = ${proprietaire}
+                  AND cm.removed_at IS NULL
+                  AND cm.cabinet_id = ANY($${depart}::uuid[])
+                LIMIT 1)`,
+    proprietaire,
+    depart,
+    ecriture,
+  })
+}
+
 // =============================================================================
 // GET /api/ark-watch/signals — Liste des signaux
 // =============================================================================
 
 router.get('/signals', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const {
       status,
       severity,
@@ -65,7 +100,10 @@ router.get('/signals', async (req, res) => {
       offset = 0,
       sort = 'priority' // priority | date | score
     } = req.query
-    
+
+    // Portée CABINET
+    const f = filtreProprietaire(portee, { alias: 's', depart: 1 })
+
     let sql = `
       SELECT 
         s.*,
@@ -75,10 +113,10 @@ router.get('/signals', async (req, res) => {
         c.email AS client_email
       FROM ark_watch_signals s
       LEFT JOIN clients c ON s.client_id = c.id
-      WHERE s.broker_id = $1
+      WHERE ${f.sql}
     `
-    const params = [brokerId]
-    let paramIndex = 2
+    const params = [...f.params]
+    let paramIndex = f.suivant
     
     if (status) {
       sql += ` AND s.status = $${paramIndex++}`
@@ -126,12 +164,12 @@ router.get('/signals', async (req, res) => {
     
     const result = await pool.query(sql, params)
     
-    // Comptage total
+    // Comptage total — portée CABINET
     let countSql = `
-      SELECT COUNT(*) FROM ark_watch_signals s WHERE s.broker_id = $1
+      SELECT COUNT(*) FROM ark_watch_signals s WHERE ${f.sql}
     `
-    const countParams = [brokerId]
-    let countIndex = 2
+    const countParams = [...f.params]
+    let countIndex = f.suivant
     
     if (status) {
       countSql += ` AND s.status = $${countIndex++}`
@@ -167,8 +205,9 @@ router.get('/signals', async (req, res) => {
 
 router.get('/signals/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const signalId = parseInt(req.params.id)
+    const f = filtreProprietaire(portee, { alias: 's', depart: 1 })
     
     const result = await pool.query(`
       SELECT 
@@ -181,8 +220,8 @@ router.get('/signals/:id', async (req, res) => {
         c.type AS client_type
       FROM ark_watch_signals s
       LEFT JOIN clients c ON s.client_id = c.id
-      WHERE s.id = $1 AND s.broker_id = $2
-    `, [signalId, brokerId])
+      WHERE s.id = $${f.suivant} AND ${f.sql}
+    `, [...f.params, signalId])
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Signal non trouvé' })
@@ -202,15 +241,17 @@ router.get('/signals/:id', async (req, res) => {
 
 router.post('/signals/:id/acknowledge', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'traiter un signal')) return
     const signalId = parseInt(req.params.id)
+    const f = filtreProprietaire(portee, { alias: 's', depart: 1, ecriture: true })
     
     const result = await pool.query(`
-      UPDATE ark_watch_signals
+      UPDATE ark_watch_signals s
       SET status = 'acknowledged', acknowledged_at = NOW()
-      WHERE id = $1 AND broker_id = $2 AND status = 'new'
-      RETURNING *
-    `, [signalId, brokerId])
+      WHERE s.id = $${f.suivant} AND ${f.sql} AND s.status = 'new'
+      RETURNING s.*
+    `, [...f.params, signalId])
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Signal non trouvé ou déjà traité' })
@@ -230,19 +271,21 @@ router.post('/signals/:id/acknowledge', async (req, res) => {
 
 router.post('/signals/:id/resolve', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'résoudre un signal')) return
     const signalId = parseInt(req.params.id)
     const { resolution_note } = req.body
+    const f = filtreProprietaire(portee, { alias: 's', depart: 1, ecriture: true })
     
     const result = await pool.query(`
-      UPDATE ark_watch_signals
+      UPDATE ark_watch_signals s
       SET 
         status = 'resolved', 
         resolved_at = NOW(),
-        metadata = metadata || $3
-      WHERE id = $1 AND broker_id = $2 AND status IN ('new', 'acknowledged')
-      RETURNING *
-    `, [signalId, brokerId, JSON.stringify({ resolution_note })])
+        metadata = s.metadata || $${f.suivant + 1}
+      WHERE s.id = $${f.suivant} AND ${f.sql} AND s.status IN ('new', 'acknowledged')
+      RETURNING s.*
+    `, [...f.params, signalId, JSON.stringify({ resolution_note })])
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Signal non trouvé ou déjà résolu' })
@@ -262,14 +305,16 @@ router.post('/signals/:id/resolve', async (req, res) => {
 
 router.delete('/signals/:id', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserSuppression(portee, res)) return
     const signalId = parseInt(req.params.id)
+    const f = filtreProprietaire(portee, { alias: 's', depart: 1, ecriture: true })
     
     const result = await pool.query(`
-      DELETE FROM ark_watch_signals
-      WHERE id = $1 AND broker_id = $2
-      RETURNING id
-    `, [signalId, brokerId])
+      DELETE FROM ark_watch_signals s
+      WHERE s.id = $${f.suivant} AND ${f.sql}
+      RETURNING s.id
+    `, [...f.params, signalId])
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Signal non trouvé' })
@@ -342,15 +387,16 @@ router.get('/morning-brief', async (req, res) => {
 
 router.get('/runs', async (req, res) => {
   try {
-    const brokerId = req.user.id
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { limit = 20, offset = 0 } = req.query
+    const f = filtreProprietaire(portee, { alias: 'r', depart: 1 })
     
     const result = await pool.query(`
-      SELECT * FROM ark_watch_runs
-      WHERE broker_id = $1
-      ORDER BY started_at DESC
-      LIMIT $2 OFFSET $3
-    `, [brokerId, parseInt(limit), parseInt(offset)])
+      SELECT r.* FROM ark_watch_runs r
+      WHERE ${f.sql}
+      ORDER BY r.started_at DESC
+      LIMIT $${f.suivant} OFFSET $${f.suivant + 1}
+    `, [...f.params, parseInt(limit), parseInt(offset)])
     
     res.json({
       runs: result.rows,

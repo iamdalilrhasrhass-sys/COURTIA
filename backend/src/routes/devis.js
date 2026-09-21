@@ -32,6 +32,9 @@ const {
   validerOffresPourClient,
 } = require('../lib/donneesReelles')
 const porteeCabinet = require('../lib/porteeCabinet')
+// Le MARCHÉ (pays, devise, registre) appartient au CABINET, jamais au profil de
+// la personne connectée : même autorité que les documents (lib/marcheCabinet).
+const marcheCabinet = require('../lib/marcheCabinet')
 // Règle UNIQUE des montants : refus explicite à l'écriture (non numérique,
 // négatif, au-delà du plafond) — partagée avec les contrats (lib/montants.js).
 const { montantOuNull, erreurMontant } = require('../lib/montants')
@@ -290,13 +293,29 @@ async function loadCabinetMeta(userId) {
     const r = rows[0] || {}
     const name = r.cabinet
       || ((r.first_name || r.last_name) ? `Cabinet ${r.first_name || ''} ${r.last_name || ''}`.trim() : 'COURTIA')
+
+    // IDENTITÉ RÉGLEMENTAIRE DU CABINET (correction du 21/09/2026) : le registre
+    // vivait uniquement dans `broker_profiles` de la personne connectée. Le
+    // devis PDF d'un collaborateur dont la fiche est vide — ou d'un cabinet
+    // suisse dont le registre est porté par `cabinets` — n'imprimait donc aucun
+    // identifiant. Les colonnes du CABINET (FINMA / IDE) passent d'abord ; le
+    // profil de l'auteur reste le repli (comportement historique). Un cabinet
+    // suisse n'a jamais d'ORIAS : le champ reste vide (marcheCabinet le garantit).
+    let identite = null
+    try {
+      const appartenance = await marcheCabinet.cabinetDeLUtilisateur(userId, pool)
+      if (appartenance) identite = await marcheCabinet.identiteCabinet(appartenance.cabinet_id, pool)
+    } catch (_) {
+      identite = null
+    }
+
     return {
       name,
       // Champs d'identification réglementaire : vides s'ils ne sont pas saisis.
-      registreType: r.registre_type || null,
-      registreNumero: r.registre_numero || null,
-      uid: r.uid || null,
-      orias: r.orias || null,
+      registreType: (identite && identite.registre_type) || r.registre_type || null,
+      registreNumero: (identite && identite.registre_numero) || r.registre_numero || null,
+      uid: (identite && identite.uid) || r.uid || null,
+      orias: (identite && identite.orias) || r.orias || null,
       ville: r.ville || null,
       codePostal: r.code_postal || null,
       pays: r.pays || null,
@@ -320,9 +339,53 @@ async function loadCabinetMeta(userId) {
  * du cabinet (`cabinets.orias_number`), sinon celui du profil du courtier
  * (`broker_profiles.orias`). Si rien n'est renseigné, la mention disparaît —
  * on n'invente jamais un numéro de registre.
+ *
+ * CORRECTION DU 21/09/2026 (défaut P1 mesuré en production — Red Team, 4e passe)
+ * DÉFAUT MESURÉ : sur un cabinet `pays=CH` (`registre_type=FINMA`,
+ * `registre_numero`/`uid = CHE-123.456.789`, canton VD), l'aperçu d'envoi
+ * (`POST /api/devis/:id/send {"dry_run":true}`) répondait
+ * `registre_imprime: null` et l'HTML client ne portait AUCUNE ligne de registre,
+ * alors que le PDF du même cabinet porte bien « FINMA CHE-… ». Deux causes :
+ *   1. cette fonction ne lisait QUE les colonnes françaises (`cabinets.orias_number`,
+ *      `broker_profiles.orias`) : un registre suisse y est structurellement
+ *      absent — le cabinet suisse avait donc un document client MUET ;
+ *   2. le libellé était écrit en dur (« ORIAS »), donc faux pour tout autre
+ *      registre (un cabinet suisse n'a pas d'ORIAS : son intermédiaire est
+ *      enregistré auprès de la FINMA sous son IDE/UID).
+ *
+ * RÈGLE APPLIQUÉE : le marché est résolu par `lib/marcheCabinet` (le cabinet fait
+ * autorité, tous ses membres reçoivent la même réponse). Pour un marché CH, seul
+ * un identifiant suisse est imprimé, avec son libellé RÉEL (le type de registre
+ * enregistré, sinon « IDE (UID) ») : jamais le mot ORIAS. Pour un marché FR, la
+ * lecture reste exactement celle d'avant (ORIAS du cabinet, sinon du courtier).
+ *
+ * @returns {Promise<{libelle:string, numero:string}|null>} `null` si le cabinet
+ *          n'a renseigné aucun identifiant — aucune valeur n'est fabriquée.
  */
 async function chargerRegistreReel(devisWizard = {}) {
   try {
+    // Cabinet émetteur du devis ; à défaut, celui de son auteur. Aucune création,
+    // aucune supposition : une lecture ne fabrique rien.
+    let cabinetId = devisWizard.cabinet_id || null
+    if (!cabinetId) {
+      const appartenance = await marcheCabinet.cabinetDeLUtilisateur(devisWizard.user_id, pool)
+      cabinetId = appartenance ? appartenance.cabinet_id : null
+    }
+    const identite = cabinetId
+      ? await marcheCabinet.identiteCabinet(cabinetId, pool)
+      : await marcheCabinet.marcheUtilisateur(devisWizard.user_id, pool)
+
+    if (identite.marche === 'CH') {
+      // Référentiel SUISSE : registre FINMA et/ou IDE (UID) — les deux vivent
+      // dans les colonnes du cabinet (`registre_type`, `registre_numero`, `uid`).
+      if (identite.registre_numero) {
+        return { libelle: identite.registre_type || 'Registre', numero: identite.registre_numero }
+      }
+      if (identite.uid) return { libelle: 'IDE (UID)', numero: identite.uid }
+      // Aucun identifiant renseigné : la mention disparaît (aucun numéro inventé).
+      return null
+    }
+
     const { rows } = await pool.query(
       `SELECT COALESCE(NULLIF(c.orias_number, ''), NULLIF(bp.orias, '')) AS registre
          FROM users u
@@ -332,10 +395,18 @@ async function chargerRegistreReel(devisWizard = {}) {
         LIMIT 1`,
       [devisWizard.user_id || null, devisWizard.cabinet_id || null]
     )
-    return (rows[0] && rows[0].registre) || null
+    const numero = (rows[0] && rows[0].registre) || null
+    return numero ? { libelle: 'ORIAS', numero } : null
   } catch (_) {
     return null
   }
+}
+
+/** Neutralise une valeur saisie par le cabinet avant insertion dans l'HTML. */
+function nettoyerRegistre(valeur) {
+  return String(valeur === undefined || valeur === null ? '' : valeur)
+    .replace(/[^\w\s.()-]/g, '')
+    .trim()
 }
 
 async function loadClient(portee, clientId) {
@@ -552,10 +623,53 @@ router.get('/', async (req, res) => {
 // GET /api/devis/:id — Détails d'un devis
 // =============================================================================
 
+/**
+ * Identifiant de devis VALIDE, ou refus 400 immédiat (aucune requête émise).
+ *
+ * POURQUOI (Red Team RT4-08/RT4-10, mesuré en production le 21/09/2026) :
+ * `GET /api/devis/abc` et `GET /api/devis/999999999999999999999999999`
+ * répondaient 500 avec le message brut de PostgreSQL
+ * (« invalid input syntax for type integer: "NaN" », « out of range »).
+ * Trois exigences sont tenues ici, comme dans les autres routeurs corrigés :
+ *   * la CHAÎNE ENTIÈRE est validée (`parseInt('12abc')` vaut 12 : ce n'est pas
+ *     un identifiant de devis, et PostgreSQL l'aurait refusé ou pire, accepté
+ *     comme le devis 12) ;
+ *   * la PLAGE est celle de la colonne réelle (`integer`, borne 2147483647) :
+ *     une valeur numérique hors plage ne peut désigner aucune ligne ;
+ *   * aucune requête SQL n'est émise pour un identifiant refusé — c'est ce qui
+ *     garantit qu'aucun message de moteur ne puisse remonter.
+ */
+function identifiantDevisValide(valeur, res) {
+  const texte = String(valeur == null ? '' : valeur).trim()
+  if (!/^\d+$/.test(texte)) {
+    res.status(400).json({
+      error: 'identifiant_invalide',
+      message: "L'identifiant du devis doit être un nombre entier.",
+    })
+    return null
+  }
+  const nombre = Number(texte)
+  if (!Number.isSafeInteger(nombre) || nombre <= 0 || nombre > 2147483647) {
+    res.status(400).json({
+      error: 'identifiant_invalide',
+      message: "L'identifiant du devis est hors de la plage autorisée.",
+    })
+    return null
+  }
+  return nombre
+}
+
 router.get('/:id', async (req, res) => {
   try {
     const portee = await porteeCabinet.resoudrePortee(pool, req)
-    const devisId = parseInt(req.params.id, 10)
+    // ── L'IDENTIFIANT EST VALIDÉ AVANT LA BASE (mesure du 21/09/2026) ────────
+    // `GET /api/devis/abc` envoyait `NaN` à PostgreSQL : le moteur répondait
+    // « invalid input syntax for type integer: \"NaN\" », la route un 500, et le
+    // message brut du moteur partait au navigateur (Red Team RT4-08/RT4-10).
+    // Un identifiant qui n'est pas un entier de la plage réelle de la colonne
+    // n'est pas une panne du serveur : c'est 400, sans aucune requête émise.
+    const devisId = identifiantDevisValide(req.params.id, res)
+    if (devisId === null) return
     const f = filtreDevis(portee, { depart: 2 })
 
     const result = await pool.query(`
@@ -1286,11 +1400,22 @@ router.post('/:id/send', async (req, res) => {
 
     const pdfLink = `${process.env.FRONTEND_URL || 'https://app.courtiark.fr'}/devis/${devisId}`
     // Registre réel du cabinet — plus JAMAIS de numéro inventé dans un message
-    // client (la version précédente imprimait « ORIAS 12345678 » en dur).
+    // client (la version précédente imprimait « ORIAS 12345678 » en dur), et plus
+    // jamais de libellé faux : un cabinet suisse porte son registre FINMA ou son
+    // IDE (UID), jamais le mot « ORIAS ».
     const registreReel = await chargerRegistreReel(d)
-    // Le numéro affiché est une donnée saisie par le cabinet : on la neutralise
-    // pour l'HTML (aucune balise ne peut être injectée dans l'e-mail).
-    const registreAffiche = registreReel ? String(registreReel).replace(/[^\w\s.-]/g, '').trim() : ''
+    // Le numéro et le libellé affichés sont des données saisies par le cabinet :
+    // on les neutralise pour l'HTML (aucune balise ne peut être injectée).
+    const registreAffiche = registreReel ? nettoyerRegistre(registreReel.numero) : ''
+    const registreLibelle = registreReel ? nettoyerRegistre(registreReel.libelle) : ''
+    // Mention imprimée : la forme historique du courrier français (« ORIAS
+    // 07000000 ») est conservée à l'identique ; un autre référentiel (Suisse)
+    // reprend la forme du document interne (« FINMA : CHE-123.456.789 »).
+    const mentionRegistre = registreAffiche
+      ? (registreLibelle && registreLibelle.toUpperCase() !== 'ORIAS'
+        ? `${registreLibelle} : ${registreAffiche}`
+        : (registreLibelle ? `${registreLibelle} ${registreAffiche}` : registreAffiche))
+      : ''
     const html = `
       <div style="font-family:Inter,Arial;color:#1F2937;max-width:600px;margin:0 auto">
         <div style="background:#050510;padding:24px;border-radius:12px 12px 0 0">
@@ -1303,7 +1428,7 @@ router.post('/:id/send', async (req, res) => {
             <a href="${pdfLink}" style="background:#5B4DF5;color:#FFF;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Consulter & signer ma proposition</a>
           </p>
           <p style="color:#6B7280;font-size:12px">Référence : ${d.reference || 'DV-' + devisId}</p>
-          <p style="color:#6B7280;font-size:12px">Validité ${d.validity_days || 30} jours${registreAffiche ? ` · ORIAS ${registreAffiche}` : ''}</p>
+          <p style="color:#6B7280;font-size:12px">Validité ${d.validity_days || 30} jours${mentionRegistre ? ` · ${mentionRegistre}` : ''}</p>
         </div>
       </div>
     `
@@ -1328,6 +1453,8 @@ router.post('/:id/send', async (req, res) => {
         subject,
         html,
         registre_imprime: registreAffiche || null,
+        registre_libelle: registreLibelle || null,
+        registre_mention: mentionRegistre || null,
         message: "Aperçu : aucun e-mail n'a été envoyé et le devis n'a pas changé de statut.",
       })
     }
@@ -1403,9 +1530,17 @@ router.post('/:id/relance', async (req, res) => {
         VALUES ($1, NOW(), 'email', $2, 'scheduled')
       `, [devisId, template])
 
-      // Tick immédiat
+      // Tick immédiat — BORNÉ AU PÉRIMÈTRE DE L'APPELANT (SEC-029, 21/09/2026).
+      // POURQUOI CE PÉRIMÈTRE : `processDueRelances()` sans argument parcourt
+      // TOUTES les relances échues de la BASE, tous cabinets confondus. Appelée
+      // depuis cette route, c'était un effet de bord hors périmètre : un
+      // utilisateur déclenchait des envois d'e-mails, des écritures et un coût
+      // pour d'autres cabinets — alors que l'appartenance du devis demandé, elle,
+      // était bien vérifiée. Le traitement reste donc limité à CE devis ET au
+      // cabinet de l'appelant (le worker planifié, seule autorité globale,
+      // continue d'appeler la fonction sans argument).
       const { processDueRelances } = require('../services/devisRelanceService')
-      const r = await processDueRelances()
+      const r = await processDueRelances({ portee, devisId })
       return res.json({ ok: true, devis_type: 'wizard', template, ...r })
     }
 

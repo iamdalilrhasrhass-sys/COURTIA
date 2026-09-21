@@ -6,6 +6,31 @@
  * 2. Exécute tous les détecteurs
  * 3. Insère les signaux en bulk (avec dedup ON CONFLICT)
  * 4. Met à jour le run avec les stats
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE : LES DÉTECTEURS LISENT LE CABINET, LES SIGNAUX RESTENT PAR COURTIER
+ * (correction du 21/09/2026 — défaut P1 « deux vérités pour une même donnée »)
+ *
+ * DÉFAUT MESURÉ : chaque détecteur filtrait `clients.courtier_id = $1`. Un
+ * collaborateur (`broker`) d'un cabinet à plusieurs commerciaux lançait donc une
+ * surveillance VIDE du portefeuille que le CRM lui affiche, et lisait 0 signal
+ * là où le propriétaire en lisait douze.
+ *
+ * CORRIGÉ : les huit détecteurs résolvent leur portée avec `lib/porteeCabinet`
+ * (seule autorité) et couvrent donc le CABINET ; sans cabinet, ils gardent
+ * EXACTEMENT la clause historique (`courtier_id = $1`). Les détecteurs acceptent
+ * `options.portee` s'il est fourni, mais `detectors/index.js` appelle
+ * `run(brokerId, pool)` : ils la résolvent donc eux-mêmes (une requête
+ * d'appartenance par détecteur, sur une table indexée).
+ *
+ * LAISSÉ VOLONTAIREMENT PAR COURTIER : `ark_watch_runs` et `ark_watch_signals`
+ * portent `broker_id` et AUCUNE ancre de cabinet (colonne `cabinet_id` absente,
+ * unicité `(broker_id, dedup_key)`). Élargir leur LECTURE par la jointure
+ * `clients` ferait apparaître DEUX FOIS chaque signal d'un cabinet à plusieurs
+ * membres (chaque membre produit sa propre copie, le `dedup_key` étant indexé
+ * par `broker_id`) : le compteur d'alertes doublerait au lieu de devenir
+ * commun. Le défaut n'est pas corrigé à moitié ; il reste ouvert et signalé.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 
 const { runAllDetectors, getDetectorsList } = require('./detectors')

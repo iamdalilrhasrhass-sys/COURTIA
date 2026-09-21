@@ -21,6 +21,8 @@ import {
   Bell,
 } from 'lucide-react';
 
+import { LIBELLES, TITRE_TACHES_DU_JOUR } from '../../lib/libelles';
+
 /* ─────────────────────────────────────────────────────────────────────────────
    Default Menu Items
    ───────────────────────────────────────────────────────────────────────────── */
@@ -64,8 +66,8 @@ const DEFAULT_SECTIONS = [
       {
         id: 'morning',
         icon: Sparkles,
-        label: 'Morning Brief',
-        subtitle: 'Priorités ARK du jour',
+        label: LIBELLES.briefDuMatin,
+        subtitle: TITRE_TACHES_DU_JOUR,
         path: '/morning-brief',
       },
       {

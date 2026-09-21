@@ -9,6 +9,7 @@
 const axios = require('axios');
 const pool = require('../db');
 const logger = require('../lib/logger');
+const porteeCabinet = require('../lib/porteeCabinet');
 // arkBrief est optionnel (module jamais versionné) — dégradation propre si absent
 let arkBrief = null;
 try { arkBrief = require('./arkBrief'); } catch (_) { arkBrief = null; }
@@ -150,18 +151,54 @@ async function placeMorningBriefCall(userId) {
   return { success: true, call: insert.rows[0] };
 }
 
-async function placeClientCall(userId, clientId, callType, extraContext = {}) {
-  const client = await pool.query(`SELECT * FROM clients WHERE id=$1 AND courtier_id=$2`, [clientId, userId]);
+/**
+ * Appel client piloté par ARK.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DU DOSSIER ET DE L'OPPORTUNITÉ : LE CABINET, PAS LA SEULE PERSONNE
+ * (correction du 21/09/2026 — défaut P1 « deux vérités pour une même donnée »)
+ *
+ * DÉFAUT MESURÉ : `clients ... courtier_id=$2` et
+ * `opportunites ... broker_id=$2` : un collaborateur (`broker`) du même cabinet
+ * déclenchait un appel sur un dossier que le CRM lui affichait, et recevait
+ * « Client introuvable » — la même donnée n'existait pas pour lui.
+ *
+ * RÈGLE TENUE : les deux lectures passent par `lib/porteeCabinet` (seule
+ * autorité). Sans cabinet, la clause est EXACTEMENT l'historique
+ * (`courtier_id=$2` / `broker_id=$2`) ; un compte au rattachement retiré ne lit
+ * plus rien. `options.portee` évite une requête d'appartenance supplémentaire.
+ *
+ * RESTENT PAR-UTILISATEUR : `user_voice_settings`, `voice_calls`
+ * (`getCallHistory`, budget quotidien) — préférences et historique d'appels de
+ * l'utilisateur, sans ancre de cabinet.
+ */
+async function placeClientCall(userId, clientId, callType, extraContext = {}, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+  // Le dossier se résout dans la portée du CABINET (le client est un actif du
+  // cabinet, cf. /api/clients/:id) — jamais au-delà.
+  const fClient = porteeCabinet.fragment(portee, {
+    cabinet: 'clients.cabinet_id',
+    proprietaire: 'clients.courtier_id',
+    depart: 2,
+  })
+  const client = await pool.query(`SELECT * FROM clients WHERE id=$1 AND ${fClient.sql}`, [clientId, ...fClient.params]);
   if (!client.rows[0]) throw new Error('Client introuvable');
   if (!client.rows[0].phone) throw new Error('Pas de téléphone client');
 
   const courtier = await pool.query(`SELECT first_name, last_name FROM users WHERE id=$1`, [userId]);
 
+  // `opportunites` porte `cabinet_id` (migration 113) : l'ancre est la colonne de
+  // la ligne, le propriétaire commercial reste `broker_id`.
+  const fOppo = porteeCabinet.fragment(portee, {
+    cabinet: 'opportunites.cabinet_id',
+    proprietaire: 'opportunites.broker_id',
+    depart: 2,
+  })
   const opp = await pool.query(`
     SELECT product_current, estimated_revenue, status FROM opportunites
-    WHERE client_id=$1 AND broker_id=$2 AND status NOT IN ('signe','perdu')
+    WHERE client_id=$1 AND ${fOppo.sql} AND status NOT IN ('signe','perdu')
     ORDER BY estimated_revenue DESC LIMIT 1
-  `, [clientId, userId]);
+  `, [clientId, ...fOppo.params]);
 
   const missing = await pool.query(`
     SELECT STRING_AGG(document_type, ',') docs FROM client_documents

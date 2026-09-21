@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "if [ -d ../landing ]; then mkdir -p dist/landing && cp -r ../landing/* dist/landing/ && cp ../landing/index.html dist/landing/page.html; else echo 'landing assets not found, skipping'; fi",
+    "postbuild": "echo 'landing/ (racine) n est PLUS publiee : page marketing obsolete (grille a 199 EUR perime, lien vers l ancien hote courtia.vercel.app, mentions ORIAS/TVA 20 %% servies a un visiteur suisse). Le fichier reste au depot pour historique ; sa republication exige de reecrire son contenu, pas de le recopier.', true",
     "preview": "vite preview",
     "lint": "eslint src",
     "test": "vitest run"

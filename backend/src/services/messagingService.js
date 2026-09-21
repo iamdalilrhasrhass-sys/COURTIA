@@ -17,6 +17,7 @@ const { sendEmail, getEmailStatus, sendCommercialEmail } = require('./emailServi
 const { sendSMS, sendBulkSMS, getSmsStatus } = require('./smsService');
 const telegramService = require('./telegramService');
 const logger = require('../lib/logger');
+const marcheCabinet = require('../lib/marcheCabinet');
 
 // ==================== CONFIGURATION ====================
 
@@ -35,8 +36,8 @@ const SENDERS = {
       </div>`,
     });
   },
-  sms: async ({ to, message }) => {
-    return sendSMS({ to, message });
+  sms: async ({ to, message, pays }) => {
+    return sendSMS({ to, message, pays });
   },
   telegram: async ({ chatId, message }) => {
     return telegramService.sendMessage(chatId, message);
@@ -108,6 +109,28 @@ async function resolveDestination(clientId, canal) {
 }
 
 /**
+ * Pays du numéro d'un client (CH-008) : le pays de SA fiche, sinon le marché de
+ * son CABINET (source unique : lib/marcheCabinet). Une forme nationale
+ * `0XX XXX XX XX` est ambiguë — même longueur en France et en Suisse — donc le
+ * pays n'est jamais deviné depuis les chiffres.
+ */
+async function paysDuNumeroClient(clientId) {
+  if (!clientId) return null;
+  try {
+    const res = await pool.query('SELECT country, courtier_id FROM clients WHERE id = $1', [clientId]);
+    const client = res.rows[0];
+    if (!client) return null;
+    return marcheCabinet.paysTelephoneNumero(
+      { paysClient: client.country, userId: client.courtier_id },
+      (sql, params) => pool.query(sql, params)
+    );
+  } catch (err) {
+    logger.warn({ error: err.message, client_id: clientId }, 'messaging phone country resolution failed');
+    return null;
+  }
+}
+
+/**
  * Enregistre un message dans l'historique
  */
 async function logMessage({ clientId, canal, direction, content, status, externalId, error }) {
@@ -170,6 +193,9 @@ async function sendMessage({ clientId, canal, message, subject, attachments }) {
     to: destination,
     message,
     subject,
+    // Pays du numéro (CH-008) : ignoré par les canaux qui ne composent pas de
+    // numéro, utilisé par le SMS.
+    pays: await paysDuNumeroClient(clientId),
   };
 
   // Envoyer
@@ -220,7 +246,7 @@ async function sendBulk({ clientIds, canal, message, subject }) {
     for (const clientId of clientIds) {
       const phone = await resolveDestination(clientId, 'sms');
       if (phone) {
-        recipients.push({ clientId, to: phone, message });
+        recipients.push({ clientId, to: phone, message, pays: await paysDuNumeroClient(clientId) });
       } else {
         results.push({ clientId, success: false, error: 'Pas de téléphone', canal: 'sms' });
         failed++;
@@ -228,7 +254,7 @@ async function sendBulk({ clientIds, canal, message, subject }) {
     }
 
     if (recipients.length > 0) {
-      const smsResult = await sendBulkSMS(recipients.map(r => ({ to: r.to, message })));
+      const smsResult = await sendBulkSMS(recipients.map(r => ({ to: r.to, message: r.message, pays: r.pays })));
       for (let i = 0; i < recipients.length; i++) {
         const r = smsResult.results[i];
         const clientId = recipients[i].clientId;

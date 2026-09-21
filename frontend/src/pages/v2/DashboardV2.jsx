@@ -12,6 +12,7 @@ import {
   useToast,
 } from '../../components/aurora';
 import { localeCourante } from '../../lib/monnaie'
+import { LIBELLES } from '../../lib/libelles'
 
 const mockSignals = [
   { id: 1, type: 'hamon', title: 'Loi Hamon - Résiliation possible', description: 'Client Dupont Marie - Contrat auto éligible résiliation', priority: 'high', value: 1200 },
@@ -111,7 +112,7 @@ export function DashboardV2() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--aurora-space-6)' }}>
         <div>
-          <AuroraSectionTitle title="Morning Brief ARK Watch" subtitle="Signaux prioritaires détectés par l'IA" />
+          <AuroraSectionTitle title={`${LIBELLES.briefDuMatin} ARK Watch`} subtitle="Signaux prioritaires détectés par l'IA" />
           <AuroraCard style={{ padding: 0, overflow: 'hidden' }}>
             {mockSignals.map((signal, index) => (
               <motion.div

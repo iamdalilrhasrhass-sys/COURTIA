@@ -15,6 +15,7 @@ const { verifyToken } = require('../middleware/auth');
 const iobspGuard = require('../middleware/iobspGuard');
 const pool       = require('../db');
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const PARTNERS = [
   { id: 1, name: 'BNP Paribas',       specialite: 'Immobilier + Consommation',   taux_min: 3.20, taux_max: 4.80, delai_reponse: '48h', logo_color: '#009966' },
@@ -105,32 +106,44 @@ router.get('/partners', verifyToken, iobspGuard, (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.post('/leads', verifyToken, iobspGuard, async (req, res) => {
   try {
-    const userId = req.user.id || req.user.userId;
-    const { client_id, partner_id, amount, duration_months, notes } = req.body;
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const userId = portee.userId || req.user.id || req.user.userId
+    const { client_id, partner_id, amount, duration_months, notes } = req.body
 
     if (!client_id) {
-      return res.status(400).json({ error: 'client_id est requis' });
+      return res.status(400).json({ error: 'client_id est requis' })
     }
     if (!partner_id) {
-      return res.status(400).json({ error: 'partner_id est requis' });
+      return res.status(400).json({ error: 'partner_id est requis' })
     }
-    const amountNum   = parseFloat(amount);
-    const durationNum = parseInt(duration_months, 10);
+    const amountNum   = parseFloat(amount)
+    const durationNum = parseInt(duration_months, 10)
 
     if (!amount || isNaN(amountNum) || amountNum <= 0) {
-      return res.status(400).json({ error: 'amount doit être un nombre supérieur à 0' });
+      return res.status(400).json({ error: 'amount doit être un nombre supérieur à 0' })
     }
     if (!duration_months || isNaN(durationNum) || durationNum <= 0) {
-      return res.status(400).json({ error: 'duration_months doit être un entier supérieur à 0' });
+      return res.status(400).json({ error: 'duration_months doit être un entier supérieur à 0' })
     }
 
-    // Vérifier que le client appartient au courtier
+    // Un rôle en LECTURE SEULE (assistant/viewer) ou un accès révoqué n'écrit rien.
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer une demande de financement')) return
+
+    // Vérifier que le client appartient au CABINET (et non au seul appelant) :
+    // un collaborateur monte un dossier de financement sur un client traité par
+    // un collègue, comme le CRM le lui montre.
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+      ecriture: true,
+    })
     const clientCheck = await pool.query(
-      'SELECT id FROM clients WHERE id=$1 AND courtier_id=$2',
-      [client_id, userId]
-    );
+      `SELECT c.id FROM clients c WHERE c.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, client_id]
+    )
     if (clientCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Client non trouvé ou accès non autorisé' });
+      return res.status(404).json({ error: 'Client non trouvé ou accès non autorisé' })
     }
 
     // Vérifier que le partenaire existe

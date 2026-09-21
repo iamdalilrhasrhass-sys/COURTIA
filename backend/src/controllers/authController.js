@@ -10,8 +10,9 @@ const pool = require('../db');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const { isSessionRevoked } = require('../middleware/auth');
 const { trackEvent } = require('../services/analyticsService');
-const { sendEmail } = require('../services/emailService');
+const { sendEmail, getEmailStatus } = require('../services/emailService');
 const { notifierAdminSansBloquer } = require('../services/adminNotifier');
+const logger = require('../lib/logger');
 
 // Générer un JWT token
 function generateToken(user) {
@@ -177,6 +178,36 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ error: 'Email requis' });
     }
 
+    // ── ON N'ANNONCE JAMAIS UN ENVOI QUI N'A PAS EU LIEU ──────────────────────
+    // DÉFAUT P1 MESURÉ (21/09/2026, 4e passe adverse) : en production, AUCUN
+    // fournisseur d'e-mail n'est configuré (`provider: "none"`,
+    // `missing: [RESEND_API_KEY]`) et cette route répondait pourtant
+    // « un lien de réinitialisation a été envoyé ». Le jeton était bien écrit en
+    // base, mais rien ne partait : le courtier attendait un e-mail qui n'existe
+    // pas, sans aucun moyen de comprendre pourquoi.
+    //
+    // La réponse reste NON ÉNUMÉRANTE : l'état décrit ici est celui de la
+    // PLATEFORME, identique pour toutes les adresses — il ne dépend jamais de
+    // l'existence du compte. C'est ce qui permet de dire la vérité sans
+    // transformer cette route en oracle d'existence des comptes.
+    const statutEmail = getEmailStatus();
+
+    if (!statutEmail.configured) {
+      // Rien ne peut partir, pour personne : on le dit, et le message n'affirme
+      // aucun envoi (aucun « envoyé », aucun « lien transmis »).
+      logger.warn(
+        { provider: statutEmail.provider, missing: statutEmail.missing },
+        'forgot-password : demande reçue, mais aucun fournisseur e-mail configuré — aucun envoi'
+      );
+      return res.json({
+        message:
+          "Si un compte existe avec cet email, un lien de réinitialisation y sera adressé dès que l'envoi d'e-mails sera configuré. Pour le moment, l'envoi d'e-mails n'est pas configuré sur cette plateforme : aucun e-mail n'a été transmis et votre demande ne peut pas aboutir.",
+        email_transmis: false,
+        raison: 'configuration_required',
+        provider: statutEmail.provider,
+      });
+    }
+
     const user = await User.findByEmail(email);
 
     // Réponse identique que le compte existe ou non (anti-énumération)
@@ -196,7 +227,7 @@ exports.forgotPassword = async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'https://courtiark.fr';
     const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
-    await sendEmail({
+    const envoi = await sendEmail({
       to: email,
       subject: 'COURTIA — Réinitialisation de votre mot de passe',
       html: `<p>Bonjour,</p>
@@ -205,6 +236,24 @@ exports.forgotPassword = async (req, res) => {
         <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`,
       text: `Réinitialisez votre mot de passe COURTIA : ${resetLink} (valable 1 heure). Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.`
     });
+
+    // Le fournisseur a refusé (clé invalide, quota, panne) : on le journalise et
+    // on retire le jeton, qui n'a été transmis à personne. La réponse reste la
+    // réponse générique : un échec d'envoi propre à cette adresse ne doit pas
+    // distinguer un compte existant d'un compte inexistant.
+    if (envoi && envoi.success === false) {
+      // Le jeton n'a été transmis à personne : il est retiré (aucun lien
+      // orphelin valable une heure dans la base).
+      await pool.query(
+        'UPDATE users SET password_reset_token = NULL, password_reset_expires = NULL WHERE email = $1',
+        [email]
+      ).catch(() => {});
+      logger.error(
+        { provider: envoi.provider, raison: envoi.raison },
+        'forgot-password : envoi du lien de réinitialisation en échec — réponse générique conservée'
+      );
+      return res.json(genericResponse);
+    }
 
     res.json(genericResponse);
   } catch (err) {

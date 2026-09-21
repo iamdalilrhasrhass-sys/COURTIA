@@ -9,6 +9,8 @@
 const pool = require('../db')
 const { sendEmail, sendCommercialEmail } = require('./emailService')
 const logger = require('../lib/logger')
+// Clause de périmètre UNIQUE (cabinet / utilisateur) : voir `processDueRelances`.
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const TEMPLATES = {
   J3: {
@@ -76,8 +78,56 @@ async function cancelPendingRelancesForDevis(devisId) {
   )
 }
 
-async function processDueRelances() {
-  // Récupère les relances dues — devis encore "sent" (pas "signed/refused")
+/**
+ * Traite les relances ÉCHUES (`devis_relances.status='scheduled'`).
+ *
+ * PÉRIMÈTRE (correction SEC-029, vérifiée le 21/09/2026) : le traitement global
+ * parcourt TOUS les cabinets. C'est légitime pour le worker planifié
+ * (`startWorker`), qui est le cron de la plateforme — mais pas pour un geste
+ * d'utilisateur : `POST /api/devis/:id/relance` (bouton « Relancer ») appelait
+ * `processDueRelances()` sans périmètre, et un utilisateur déclenchait donc un
+ * envoi d'e-mails (coût, écritures, `devis_activity`) sur les relances ÉCHUES DE
+ * TOUS LES CABINETS. L'appartenance du devis demandé était vérifiée, pas l'effet
+ * de bord.
+ *
+ * La fonction accepte donc un périmètre explicite, appliqué en SQL (c'est la
+ * base qui filtre, pas une vérification a posteriori) :
+ *   * `devisId` → SEULE cette relance de devis est traitée ;
+ *   * `portee`  → clause de cabinet de `lib/porteeCabinet` sur le devis joint
+ *                 (`d.cabinet_id` / `d.user_id`), la même autorité que partout
+ *                 ailleurs : le cabinet du devis, ou l'utilisateur s'il n'a pas
+ *                 de cabinet.
+ * Appelée SANS argument (worker planifié), le comportement reste le traitement
+ * global historique.
+ *
+ * @param {{portee?: object, devisId?: number|null}} [perimetre]
+ */
+async function processDueRelances(perimetre = {}) {
+  const { portee = null, devisId = null } = perimetre || {}
+  const conditions = [
+    `r.status = 'scheduled'`,
+    `r.scheduled_at <= NOW()`,
+    // devis encore "sent" (pas "signed/refused")
+    `d.status IN ('sent', 'opened')`,
+  ]
+  const params = []
+  const idDevis = Number(devisId)
+  if (Number.isFinite(idDevis) && idDevis > 0) {
+    params.push(idDevis)
+    conditions.push(`r.devis_id = $${params.length}`)
+  }
+  if (portee) {
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'd.cabinet_id',
+      proprietaire: 'd.user_id',
+      depart: params.length + 1,
+    })
+    params.push(...f.params)
+    conditions.push(f.sql)
+  }
+
+  // Récupère les relances dues — dans le PÉRIMÈTRE demandé (aucun filtre si la
+  // fonction est appelée par le worker planifié).
   const { rows } = await pool.query(`
     SELECT r.id AS relance_id, r.template_key,
            d.id AS devis_id, d.status, d.product, d.reference,
@@ -85,12 +135,10 @@ async function processDueRelances() {
            d.pdf_path
     FROM devis_relances r
     JOIN devis_wizard d ON d.id = r.devis_id
-    WHERE r.status = 'scheduled'
-      AND r.scheduled_at <= NOW()
-      AND d.status IN ('sent', 'opened')
+    WHERE ${conditions.join('\n      AND ')}
     ORDER BY r.scheduled_at ASC
     LIMIT 50
-  `)
+  `, params)
 
   let sent = 0
   let notSent = 0

@@ -9,6 +9,7 @@ const router = express.Router();
 const pool = require('../db');
 const logger = require('../lib/logger');
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet');
 
 // POST /analyze — analyser une page web
 router.post('/analyze', async (req, res) => {
@@ -103,13 +104,29 @@ function buildProvidedValues(values) {
 }
 
 /**
- * Valeurs réelles du client, lues en base pour le courtier connecté.
- * `SELECT *` : on ne référence jamais une colonne qui n'existe pas.
+ * Valeurs réelles du client, lues en base pour le CABINET du courtier connecté.
+ * `SELECT c.*` : on ne référence jamais une colonne qui n'existe pas.
+ *
+ * PORTÉE = CABINET : l'extension Chrome est un poste de travail du courtier ;
+ * un collaborateur doit pouvoir pré-remplir le formulaire d'un client de son
+ * cabinet (avant ce correctif, la lecture retombait sur `courtier_id = $1` et
+ * renvoyait « aucune donnée client en base pour ce cabinet » sur les dossiers
+ * traités par un collègue).
  */
-async function loadClientValues(clientId, userId) {
+async function loadClientValues(clientId, req) {
   const empty = { found: false, values: new Map() };
-  if (!Number.isFinite(Number(clientId)) || !Number.isFinite(Number(userId))) return empty;
-  const result = await pool.query('SELECT * FROM clients WHERE id = $1 AND courtier_id = $2', [clientId, userId]);
+  if (!Number.isFinite(Number(clientId))) return empty;
+  const portee = await porteeCabinet.resoudrePortee(pool, req);
+  if (!portee.estAuthentifie) return empty;
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  });
+  const result = await pool.query(
+    `SELECT c.* FROM clients c WHERE c.id = $${f.suivant} AND ${f.sql}`,
+    [...f.params, clientId]
+  );
   const client = result.rows[0];
   if (!client) return empty;
 
@@ -141,7 +158,7 @@ router.post('/fill', async (req, res) => {
     const userId = req.user?.userId || req.user?.id;
 
     const provided = buildProvidedValues(values);
-    const dbValues = await loadClientValues(clientId, userId);
+    const dbValues = await loadClientValues(clientId, req);
 
     const filled = [];
     const missing = [];

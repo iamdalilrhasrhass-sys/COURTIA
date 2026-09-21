@@ -2,10 +2,35 @@
  * ARK Predictive Intelligence — Churn / Cross-sell / Renewal optimizer
  * Service déterministe basé sur les données client (heuristiques + scoring).
  * Compatible CRM Aurora (compagnies fictives : Aurora, Novalia, Helios, Serenis, Atlas, Oria, Nivalis, Solenys).
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DES TROIS SCANS : LE CABINET, PAS LA SEULE PERSONNE
+ * (correction du 21/09/2026 — défaut P1 « deux vérités pour une même donnée »)
+ *
+ * DÉFAUT MESURÉ : les trois scans filtraient `c.courtier_id = $1`. Un
+ * collaborateur (`broker`) d'un cabinet à plusieurs commerciaux obtenait donc
+ * « 0 client scanné », un churn moyen de 0, une matrice cross-sell vide et
+ * aucune échéance à optimiser, quand le propriétaire du MÊME cabinet obtenait
+ * les vrais chiffres : deux vérités pour une même donnée.
+ *
+ * RÈGLE TENUE : les trois lectures passent par `lib/porteeCabinet` (seule
+ * autorité de portée). La clause est EXACTEMENT la clause historique
+ * (`c.courtier_id = $1`) si le compte n'a pas de cabinet — les cabinets
+ * mono-utilisateur ne changent pas de comportement — et devient
+ * `(c.cabinet_id = ANY($1::uuid[]) OR c.courtier_id = $2)` sinon. Un compte dont
+ * l'appartenance a été retirée ne lit plus aucun client (donc ne scanne rien).
+ *
+ * Les ÉCRITURES de cache (`ark_churn_scores`, `ark_cross_sell_recommendations`,
+ * `ark_renewal_optimizations`) restent indexées sur `user_id` : la table ne
+ * porte pas d'ancre de cabinet et une ligne de cache n'est pas un actif du
+ * cabinet (elle est recalculée par le scan de chaque membre).
+ * `options` accepte `{ portee }` (portée déjà résolue : aucune requête en plus).
+ * ────────────────────────────────────────────────────────────────────────────
  */
 
 const pool = require('../db')
 const marcheCabinet = require('../lib/marcheCabinet')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 // ──────────────────────────────────────────────────────────────────────────
 // CHURN PREDICTOR
@@ -19,8 +44,16 @@ function daysSince(date) {
 
 function clamp(n, min = 0, max = 100) { return Math.max(min, Math.min(max, n)) }
 
-async function computeChurnForUser(userId) {
-  // Récupère tous les clients du courtier avec leurs métriques associées
+async function computeChurnForUser(userId, options = {}) {
+  // Portée du CABINET (lib/porteeCabinet — seule autorité).
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
+  // Récupère tous les clients de la portée (le cabinet, ou ses seules lignes en
+  // l'absence de cabinet) avec leurs métriques associées
   const { rows: clients } = await pool.query(`
     SELECT
       c.id, c.first_name, c.last_name, c.email, c.phone, c.city, c.status,
@@ -30,9 +63,9 @@ async function computeChurnForUser(userId) {
       (SELECT COUNT(*) FROM appointments a WHERE a.client_id = c.id) AS rdv_count,
       (SELECT MAX(updated_at) FROM quotes q WHERE q.client_id = c.id) AS last_quote_at
     FROM clients c
-    WHERE c.courtier_id = $1
+    WHERE ${f.sql}
     ORDER BY c.id ASC
-  `, [userId])
+  `, f.params)
 
   const results = clients.map((c) => {
     const factors = []
@@ -152,7 +185,13 @@ const PRODUITS_CATALOG = ['Auto', 'MRH', 'Santé', 'Prévoyance', 'RC Pro', 'Dé
 // des compagnies et des variations de tarif. Tous ces usages ont ete supprimes :
 // la fonction n'a plus aucune raison d'exister.
 
-async function computeCrossSellMatrix(userId) {
+async function computeCrossSellMatrix(userId, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
   const { rows: clients } = await pool.query(`
     SELECT c.id, c.first_name, c.last_name, c.type, c.city, c.loyalty_score, c.lifetime_value,
            c.profession, c.situation_familiale,
@@ -162,10 +201,10 @@ async function computeCrossSellMatrix(userId) {
              WHERE q.client_id = c.id AND q.quote_data ? 'produit'
            ) AS souscrits
     FROM clients c
-    WHERE c.courtier_id = $1
+    WHERE ${f.sql}
     ORDER BY c.lifetime_value DESC NULLS LAST
     LIMIT 50
-  `, [userId])
+  `, f.params)
 
   const matrix = clients.map(c => {
     const souscrits = (c.souscrits || []).map(String)
@@ -327,7 +366,66 @@ function totalOpportunite(opportunities = []) {
 // RENEWAL OPTIMIZER
 // ──────────────────────────────────────────────────────────────────────────
 
-async function computeRenewalOptimizations(userId) {
+/**
+ * ÉCHÉANCE : UNE DATE DU DOSSIER N'EST PAS UNE DATE DÉDUITE (IA-031).
+ *
+ * DÉFAUT MESURÉ (P3, 21/09/2026) : l'optimiseur renvoyait dans `echeance_date`
+ * une date CALCULÉE (`created_at` + 12 mois, prolongée tant qu'elle est passée)
+ * même quand le dossier portait sa propre échéance, et l'étiquette technique
+ * (`data_source.echeance`) n'était lue par AUCUN écran (grep `data_source` côté
+ * frontend : 0 occurrence). Un courtier lisait donc une échéance inventée à
+ * côté d'échéances réelles, sans pouvoir les distinguer.
+ *
+ * RÈGLE : la date du dossier fait foi quand elle existe ; sinon la même
+ * échéance DÉDUITE qu'avant est servie (elle reste utile), mais elle est
+ * TOUJOURS signalée comme déduite par un booléen explicite, calculé sur la
+ * source réellement utilisée — jamais sur une intention.
+ *
+ * Champs exposés (contrat d'API, voir la doc de `routes/arkIntelligence.js`) :
+ *   • `echeance_est_deduite` : `true` ⇔ la date servie a été CALCULÉE par
+ *     COURTIA (le dossier n'en portait aucune). `false` ⇔ date du dossier.
+ *     À `true`, un écran doit écrire « échéance estimée (déduite de la date de
+ *     création) », jamais une date nue.
+ *   • `echeance_source` : source lisible ('quote_data.date_echeance' ou
+ *     'derivee_creation_plus_12_mois').
+ *   • `echeance_estimee` : alias historique de `echeance_est_deduite` (même
+ *     valeur, conservé pour les appelants existants).
+ */
+const ECHEANCE_SOURCE_DERIVEE = 'derivee_creation_plus_12_mois'
+const ECHEANCE_SOURCE_DOSSIER = 'quote_data.date_echeance'
+
+/**
+ * Échéance PORTÉE PAR LE DOSSIER (`quote_data.date_echeance`), ou `null`.
+ * Une valeur illisible n'est PAS une date : elle ne doit pas faire passer une
+ * date calculée pour une date réelle, donc on renvoie `null`.
+ */
+function echeanceDuDossier(data = {}) {
+  const brut = data ? data.date_echeance : null
+  if (brut === undefined || brut === null || brut === '') return null
+  const date = new Date(brut)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+/**
+ * Échéance DÉDUITE de la date de création du dossier (+12 mois, prolongée
+ * d'année en année tant qu'elle est passée) — calcul historique inchangé.
+ */
+function echeanceDeriveeDeCreation(createdAt) {
+  const created = new Date(createdAt)
+  const base = Number.isNaN(created.getTime()) ? new Date() : created
+  const echeance = new Date(base)
+  echeance.setFullYear(echeance.getFullYear() + 1)
+  while (echeance < new Date()) echeance.setFullYear(echeance.getFullYear() + 1)
+  return echeance
+}
+
+async function computeRenewalOptimizations(userId, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+  const f = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
   // Heuristique : on génère des renouvellements simulés basés sur les quotes existantes
   // (le schéma "contracts" n'existe pas — on s'appuie sur quotes.quote_data)
   const { rows: quotes } = await pool.query(`
@@ -335,10 +433,10 @@ async function computeRenewalOptimizations(userId) {
            c.first_name, c.last_name, c.city, c.loyalty_score, c.lifetime_value
     FROM quotes q
     JOIN clients c ON c.id = q.client_id
-    WHERE c.courtier_id = $1 AND q.status = 'actif'
+    WHERE ${f.sql} AND q.status = 'actif'
     ORDER BY q.created_at DESC
     LIMIT 80
-  `, [userId])
+  `, f.params)
 
   const renewals = quotes.map(q => {
     const data = q.quote_data || {}
@@ -351,11 +449,12 @@ async function computeRenewalOptimizations(userId) {
       ? Number(data.prime_annuelle)
       : null
 
-    // Date d'échéance simulée à partir de created_at + 12 mois
-    const created = new Date(q.created_at)
-    let echeance = new Date(created)
-    echeance.setFullYear(echeance.getFullYear() + 1)
-    while (echeance < new Date()) echeance.setFullYear(echeance.getFullYear() + 1)
+    // Échéance : la date DU DOSSIER si elle existe, sinon la date DÉDUITE
+    // (created_at + 12 mois, calcul historique conservé) — les deux ne sont
+    // jamais confondues : `echeance_est_deduite` dit laquelle a été servie.
+    const echeanceDossier = echeanceDuDossier(data)
+    const echeanceEstDeduite = echeanceDossier === null
+    const echeance = echeanceDossier || echeanceDeriveeDeCreation(q.created_at)
     const daysToEcheance = Math.floor((echeance.getTime() - Date.now()) / 86400000)
 
     // CORRECTION 2026-09-19 : la compagnie alternative, la variation de tarif
@@ -385,16 +484,23 @@ async function computeRenewalOptimizations(userId) {
       data_source: {
         provider: currentProvider === null ? 'absent_du_dossier' : 'quote_data.compagnie',
         premium: currentPremium === null ? 'absent_du_dossier' : 'quote_data.prime_annuelle',
-        echeance: data.date_echeance ? 'quote_data.date_echeance' : 'derivee (creation + 12 mois)',
+        echeance: echeanceEstDeduite ? 'derivee (creation + 12 mois)' : ECHEANCE_SOURCE_DOSSIER,
       },
       // ── UNE DATE DÉDUITE N'EST PAS UNE DATE DU DOSSIER ────────────────────
-      // POURQUOI ce booléen (défaut P3 signalé le 20/09/2026) : `echeance_date`
-      // vaut `created_at + 12 mois` quand le dossier ne porte AUCUNE échéance.
-      // L'étiquette existait (data_source.echeance, ci-dessus) mais un affichage
-      // peut la manquer et présenter la valeur comme une date réelle. Le drapeau
-      // est explicite et sans ambiguïté : à `true`, l'écran doit écrire
-      // « échéance estimée (déduite de la date de création) », jamais une date nue.
-      echeance_estimee: !data.date_echeance,
+      // POURQUOI ce booléen (défaut P3 IA-031 signalé le 20/09/2026) :
+      // `echeance_date` est CALCULÉE (`created_at` + 12 mois) quand le dossier
+      // ne porte aucune échéance. L'étiquette technique (`data_source.echeance`)
+      // n'était lue par aucun écran, donc un affichage pouvait présenter la
+      // valeur comme une date réelle. Le drapeau est explicite et sans
+      // ambiguïté, et il décrit la source RÉELLEMENT utilisée : à `true`, l'écran
+      // doit écrire « échéance estimée (déduite de la date de création) »,
+      // jamais une date nue.
+      echeance_est_deduite: echeanceEstDeduite,
+      // Source lisible de la date servie (le champ ci-dessus en est le résumé).
+      echeance_source: echeanceEstDeduite ? ECHEANCE_SOURCE_DERIVEE : ECHEANCE_SOURCE_DOSSIER,
+      // Alias historique du même drapeau : les appelants existants ne changent
+      // pas de comportement, et aucun ne peut lire l'un sans lire l'autre.
+      echeance_estimee: echeanceEstDeduite,
       echeance_date: echeance.toISOString().slice(0, 10),
       days_to_echeance: daysToEcheance,
       rationale,

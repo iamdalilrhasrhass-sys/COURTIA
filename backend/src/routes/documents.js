@@ -394,15 +394,18 @@ async function generateDdaDocument(req, res, documentType) {
     properties: { type: definition.type, client_id: clientId },
   }).catch(() => {})
 
+  // La réponse ne porte AUCUN emplacement de stockage (le PDF se récupère par
+  // `download_url`, son identifiant public) : ni chemin serveur, ni URI interne
+  // `db://…`, ni convention de nommage. Voir GET /api/documents (même règle).
   return res.status(201).json({
     success: true,
-    data: {
+    data: sansCheminStockage({
       ...documentRow,
-      storage_path: `db://documents_blob/${documentRow.id}`,
       title: definition.title,
       download_url: `/api/documents/${documentRow.id}/download`,
       file_name: fileName,
-    },
+      document_id: String(documentRow.id),
+    }),
   })
 }
 
@@ -692,62 +695,208 @@ function generatePDF(filePath, template, client, courtier, data) {
   })
 }
 
-// GET /api/documents — liste des documents générés (portée CABINET)
+// ─────────────────────────────────────────────────────────────────────────────
+// LA LISTE DES DOCUMENTS MONTRE CE QUI A RÉELLEMENT ÉTÉ GÉNÉRÉ (défaut P1,
+// mesuré en production par la Red Team le 21/09/2026)
+//
+// DÉFAUT MESURÉ : `POST /api/documents/generate` répondait 201 avec un
+// `download_url` fonctionnel (le PDF se téléchargeait), mais la bibliothèque
+// répondait `{"success":true,"data":[]}` — y compris avec `?client_id=`.
+// En base : `documents` = 0 ligne, `generated_documents` = 6 lignes. Les trois
+// modèles client (attestation_assurance, proposition_commerciale,
+// courrier_resiliation) écrivent dans `generated_documents` (le chemin « v1 »
+// des documents DDA écrit, lui, dans `documents`), et la liste ne lisait QUE
+// `documents` : le geste « générer un document » n'avait donc aucun effet
+// visible. Un repli existait, mais seulement sur l'erreur « table manquante »
+// (42P01) : une base dont les tables existent ne l'empruntait jamais. C'est un
+// repli par l'erreur, pas une lecture de la vérité.
+//
+// RÈGLE APPLIQUÉE : la liste lit les DEUX tables dans son chemin NOMINAL et les
+// fusionne. Aucun repli « silencieux » : si une source est illisible, c'est
+// journalisé (logger.warn) et l'AUTRE source est servie — on n'invente jamais
+// une ligne, et un cabinet qui n'a rien généré reçoit bien `data: []`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Champs qui désignent un emplacement de stockage : ils ne sortent JAMAIS d'une
+ * réponse HTTP (le fichier est lu côté serveur par son identifiant public).
+ * On retire la CLASSE entière, pas seulement `storage_path` de la table du jour.
+ */
+const CHAMPS_CHEMIN_STOCKAGE = ['storage_path', 'signed_storage_path', 'file_path', 'pdf_path', 'absolutePath']
+
+function sansCheminStockage(ligne) {
+  if (!ligne || typeof ligne !== 'object') return ligne
+  const copie = { ...ligne }
+  for (const champ of CHAMPS_CHEMIN_STOCKAGE) delete copie[champ]
+  return copie
+}
+
+/** Libellé lisible d'un document de l'ancien chemin d'impression. */
+const LIBELLES_IMPRESSIONS = {
+  attestation_assurance: 'Attestation d’assurance',
+  proposition_commerciale: 'Proposition commerciale',
+  courrier_resiliation: 'Courrier de résiliation',
+}
+
+function libelleImpression(documentType) {
+  const type = String(documentType || '')
+  // Aucun libellé inventé : un type inconnu s'affiche tel qu'il est enregistré.
+  return LIBELLES_IMPRESSIONS[type] || type || 'Document'
+}
+
+function dateTri(ligne) {
+  const brut = ligne && (ligne.created_at || ligne.generated_at)
+  const temps = brut ? new Date(brut).getTime() : 0
+  return Number.isFinite(temps) ? temps : 0
+}
+
+/** Documents de la table `documents` (chemin « v1 » : documents métier DDA). */
+async function lireDocumentsV1(portee, query = {}) {
+  const fDocs = filtreDocuments(portee, { depart: 1 })
+  // Les filtres supplémentaires s'AJOUTENT à la portée (jamais ne la
+  // remplacent) : les indices commencent donc après les paramètres de portée.
+  const filters = []
+  const params = [...fDocs.params]
+  if (query.client_id) {
+    params.push(Number(query.client_id))
+    filters.push(`d.client_id = $${params.length}`)
+  }
+  if (query.status) {
+    params.push(String(query.status))
+    filters.push(`d.status = $${params.length}`)
+  }
+  if (query.type) {
+    params.push(String(query.type))
+    filters.push(`d.type = $${params.length}`)
+  }
+  const where = filters.length ? ` AND ${filters.join(' AND ')}` : ''
+  const result = await pool.query(
+    `SELECT d.*, db.file_name,
+            CASE d.type
+              WHEN 'fic' THEN 'Fiche d’information et de conseil'
+              WHEN 'mandat_courtage' THEN 'Mandat de courtage'
+              WHEN 'devoir_conseil' THEN 'Devoir de conseil'
+              WHEN 'attestation' THEN 'Attestation / synthèse client'
+              ELSE d.type
+            END AS title,
+            COALESCE(c.company_name, NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), ''), c.email, CONCAT('Client #', c.id)) AS client_name
+     FROM documents d
+     LEFT JOIN documents_blob db ON db.document_id = d.id
+     LEFT JOIN clients c ON c.id = d.client_id
+     WHERE ${fDocs.sql}${where}
+     ORDER BY d.created_at DESC`,
+    params
+  )
+  return result.rows.map((ligne) => sansCheminStockage({
+    ...ligne,
+    source: 'documents',
+    document_id: String(ligne.id),
+    download_url: `/api/documents/${ligne.id}/download`,
+  }))
+}
+
+/**
+ * Documents de l'ancien chemin d'impression (`generated_documents`).
+ *
+ * PORTÉE : cette table ne porte pas de `cabinet_id` (vérifié en base : id,
+ * courtier_id, client_id, document_type, template_id, pdf_url, data,
+ * created_at, updated_at). Un document y appartient au cabinet quand c'est MON
+ * impression ou quand son CLIENT est dans la portée — exactement la règle déjà
+ * appliquée à la suppression (`DELETE /api/documents/:id`). Un document d'un
+ * autre cabinet n'y répond pas : ni son producteur, ni son client ne sont dans
+ * la portée.
+ */
+async function lireImpressionsGenerees(portee, userId, query = {}) {
+  const fClient = filtreClientsDocuments(portee, { depart: 2, alias: 'c' })
+  const params = [userId, ...fClient.params]
+  const filters = []
+  if (query.client_id) {
+    params.push(Number(query.client_id))
+    filters.push(`g.client_id = $${params.length}`)
+  }
+  if (query.type) {
+    params.push(String(query.type))
+    filters.push(`g.document_type = $${params.length}`)
+  }
+  const where = filters.length ? ` AND ${filters.join(' AND ')}` : ''
+  const result = await pool.query(
+    `SELECT g.id, g.client_id, g.document_type, g.template_id, g.pdf_url, g.created_at,
+            CASE WHEN c.id IS NULL THEN NULL
+                 ELSE COALESCE(c.company_name, NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), ''), c.email)
+            END AS client_name
+       FROM generated_documents g
+       LEFT JOIN clients c ON c.id = g.client_id
+      WHERE (g.courtier_id = $1 OR ${fClient.sql})${where}
+      ORDER BY g.created_at DESC`,
+    params
+  )
+  return result.rows.map((ligne) => {
+    // Identifiant PUBLIC : `template_id` (ex. « doc_1789_ab12 »), celui que la
+    // route de téléchargement accepte sans ambiguïté avec un id de `documents`.
+    const identifiantPublic = ligne.template_id || String(ligne.id)
+    const documentType = ligne.document_type || null
+    return {
+      id: ligne.id,
+      source: 'generated_documents',
+      document_id: identifiantPublic,
+      template_id: ligne.template_id || null,
+      type: documentType,
+      document_type: documentType,
+      // `generated_documents` n'a pas de colonne `status` : la ligne PROUVE
+      // qu'un document a été produit (même vocabulaire que `documents.status`).
+      status: 'generated',
+      title: libelleImpression(documentType),
+      file_name: `courtia_${documentType || 'document'}_${identifiantPublic}.pdf`,
+      client_id: ligne.client_id === undefined ? null : ligne.client_id,
+      client_name: ligne.client_name || null,
+      created_at: ligne.created_at,
+      download_url: `/api/documents/${encodeURIComponent(identifiantPublic)}/download`,
+    }
+  })
+}
+
+// GET /api/documents — liste des documents RÉELLEMENT générés (portée CABINET)
 router.get('/', async (req, res) => {
   try {
     const userId = getCurrentUserId(req)
     const portee = await porteeCabinet.resoudrePortee(pool, req)
-    const fDocs = filtreDocuments(portee, { depart: 1 })
-    // Les filtres supplémentaires s'AJOUTENT à la portée (jamais ne la
-    // remplacent) : les indices commencent donc après les paramètres de portée.
-    const filters = []
-    const params = [...fDocs.params]
-    if (req.query.client_id) {
-      params.push(Number(req.query.client_id))
-      filters.push(`d.client_id = $${params.length}`)
+
+    // ── LES DEUX SOURCES RÉELLES, LUES DANS LE CHEMIN NOMINAL ────────────────
+    // Une source illisible (table absente d'une base non migrée) est SIGNALÉE
+    // dans les journaux : l'autre source est quand même servie, et aucune ligne
+    // n'est inventée. `?status` : les impressions anciennes sont toutes
+    // `generated` — un filtre de statut qui ne les accepte pas les écarte.
+    let documentsV1 = null
+    let impressions = null
+    try {
+      documentsV1 = await lireDocumentsV1(portee, req.query)
+    } catch (err) {
+      if (!isMissingTable(err)) throw err
+      logger.warn({ error: err.message }, 'documents list: table `documents` absente de cette base')
     }
-    if (req.query.status) {
-      params.push(String(req.query.status))
-      filters.push(`d.status = $${params.length}`)
-    }
-    if (req.query.type) {
-      params.push(String(req.query.type))
-      filters.push(`d.type = $${params.length}`)
-    }
-    const where = filters.length ? ` AND ${filters.join(' AND ')}` : ''
-    const result = await pool.query(
-      `SELECT d.*, db.file_name,
-              CASE d.type
-                WHEN 'fic' THEN 'Fiche d’information et de conseil'
-                WHEN 'mandat_courtage' THEN 'Mandat de courtage'
-                WHEN 'devoir_conseil' THEN 'Devoir de conseil'
-                WHEN 'attestation' THEN 'Attestation / synthèse client'
-                ELSE d.type
-              END AS title,
-              COALESCE(c.company_name, NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), ''), c.email, CONCAT('Client #', c.id)) AS client_name
-       FROM documents d
-       LEFT JOIN documents_blob db ON db.document_id = d.id
-       LEFT JOIN clients c ON c.id = d.client_id
-       WHERE ${fDocs.sql}${where}
-       ORDER BY d.created_at DESC`,
-      params
-    )
-    return res.json({ success: true, data: result.rows })
-  } catch (err) {
-    if (isMissingTable(err)) {
-      try {
-        const userId = getCurrentUserId(req)
-        const result = await pool.query(
-          'SELECT * FROM generated_documents WHERE courtier_id = $1 ORDER BY created_at DESC',
-          [userId]
-        )
-        return res.json({ success: true, data: result.rows, legacy: true })
-      } catch (legacyErr) {
-        if (isMissingTable(legacyErr)) return res.json({ success: true, data: [], migration_required: true })
-        logger.error({ error: legacyErr.message }, 'documents legacy list failed')
-        return res.status(500).json({ error: 'server_error', message: legacyErr.message })
+    try {
+      if (!req.query.status || String(req.query.status) === 'generated') {
+        impressions = await lireImpressionsGenerees(portee, userId, req.query)
+      } else {
+        impressions = []
       }
+    } catch (err) {
+      if (!isMissingTable(err)) throw err
+      logger.warn({ error: err.message }, 'documents list: table `generated_documents` absente de cette base')
     }
+
+    if (documentsV1 === null && impressions === null) {
+      return res.status(500).json({
+        error: 'server_error',
+        message: 'La liste des documents est momentanément indisponible. Réessayez dans quelques instants.',
+      })
+    }
+
+    const data = [...(documentsV1 || []), ...(impressions || [])]
+      .sort((a, b) => dateTri(b) - dateTri(a))
+
+    return res.json({ success: true, data })
+  } catch (err) {
     logger.error({ error: err.message }, 'documents list failed')
     return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
@@ -1136,10 +1285,22 @@ router.get('/:id/download', async (req, res) => {
       }
     }
 
-    // Récupérer le document — id peut être l'id DB ou le template_id
+    // Documents de l'ancien chemin d'impression (`generated_documents`) : un
+    // collaborateur du cabinet doit pouvoir ouvrir le document que la LISTE lui
+    // montre — la portée est donc la même que celle de la liste et de la
+    // suppression (MON impression, ou un CLIENT de mon cabinet), et non plus
+    // `courtier_id = moi` seul, qui refusait le document du collègue pourtant
+    // affiché dans la bibliothèque. L'identifiant public de la liste est
+    // `template_id` : `id::text = $1` reste accepté pour les liens historiques.
+    const fLegacy = filtreClientsDocuments(portee, { depart: 3, alias: 'c' })
     const result = await pool.query(
-      'SELECT * FROM generated_documents WHERE (id::text = $1 OR template_id = $1) AND courtier_id = $2 LIMIT 1',
-      [id, courtier_id]
+      `SELECT g.*
+         FROM generated_documents g
+         LEFT JOIN clients c ON c.id = g.client_id
+        WHERE (g.id::text = $1 OR g.template_id = $1)
+          AND (g.courtier_id = $2 OR ${fLegacy.sql})
+        LIMIT 1`,
+      [id, courtier_id, ...fLegacy.params]
     )
 
     if (result.rows.length === 0) {

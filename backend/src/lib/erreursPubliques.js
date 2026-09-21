@@ -84,6 +84,14 @@ const MOTIFS_INTERNES = [
   /remaining connection slots/i,
   /terminating connection due to administrator command/i,
   /(?:SELECT|INSERT INTO|UPDATE|DELETE FROM|ALTER TABLE|CREATE TABLE)\b[\s\S]{0,80}\b(?:FROM|SET|WHERE|VALUES|TABLE)\b/i,
+  // ── Code SQLSTATE utilisé comme code d'erreur applicatif ───────────────────
+  // Mesure du 21/09/2026 (Red Team RT4-09) : une route répondait
+  // `{"error":"22P02"}` — le code normalisé de PostgreSQL (invalid text
+  // representation) servi comme identifiant d'erreur. Cinq caractères, deux
+  // chiffres puis trois caractères alphanumériques en MAJUSCULES : la forme
+  // exacte d'un SQLSTATE, et jamais celle d'un code métier de ce dépôt (tous en
+  // minuscules, forme `fonctionnalite_non_souscrite`).
+  /^[0-9]{2}[0-9A-Z]{3}$/,
   // ── Chemin de fichier / système ─────────────────────────────────────────────
   /(?:\/opt\/|\/srv\/|\/root\/|\/home\/|\/Users\/|\/var\/|\/usr\/|\/app\/|\/tmp\/)[\w.\-/]+\.(?:js|ts|mjs|cjs|json|node|so|sql|log)\b/i,
   /\b[A-Za-z]:\\\\[\w.\\-]+/,

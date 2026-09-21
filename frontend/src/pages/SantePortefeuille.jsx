@@ -10,6 +10,7 @@ import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import api from '../api'
 import { fmtMontant } from '../lib/monnaie'
+import { LIBELLES } from '../lib/libelles'
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280', textDim: '#4B5563',
@@ -524,7 +525,7 @@ export default function SantePortefeuille() {
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/morning-brief')} style={btnArk}>
-                <Sparkles size={13} /> Voir le Morning Brief
+                <Sparkles size={13} /> Voir le {LIBELLES.briefDuMatin}
               </button>
               <button onClick={() => navigate('/analytics')} style={btnGhost}>
                 <Activity size={13} /> Analytics détaillé

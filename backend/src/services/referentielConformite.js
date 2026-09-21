@@ -46,6 +46,27 @@ try {
   marcheCabinet = null
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LES FAMILLES DE PRODUITS VIENNENT DE `services/referentielProduits`
+//
+// POURQUOI : les listes de produits restaient françaises pour un cabinet suisse
+// (constat d'audit CH-039 : « les listes restent françaises même pour un
+// cabinet suisse »). Une famille de produits n'est PAS une traduction : IARD et
+// LAMal n'ont pas d'équivalent d'un marché à l'autre. Le référentiel produits
+// est donc une table par marché, et c'est ici — la seule source du vocabulaire
+// de conformité d'un cabinet — qu'elle est rattachée à la réponse servie à
+// l'écran. Le `require` est tolérant, comme celui du marché : si ce module
+// manquait (base de code partielle), on ne sert AUCUNE famille plutôt qu'une
+// liste d'un autre marché.
+// ─────────────────────────────────────────────────────────────────────────────
+let referentielProduits = null
+try {
+  referentielProduits = require('./referentielProduits')
+} catch (_err) {
+  referentielProduits = null
+}
+
+
 /**
  * Libellé d'autorité de tutelle, jamais l'ACPR pour un cabinet suisse.
  * Délègue à `lib/marcheCabinet.autoritePour` quand il est disponible (une seule
@@ -72,9 +93,49 @@ const MARCHES = Object.freeze({
     autorite: 'ACPR',
     autorite_libelle: 'ACPR — Autorité de contrôle prudentiel et de résolution',
     registre: 'ORIAS — registre unique des intermédiaires en assurance',
+    // Cadre de protection des données du marché. C'est un texte de loi, pas un
+    // libellé d'écran : il est repris tel quel par les rapports (le RGPD est un
+    // règlement de l'Union européenne, il ne s'applique pas à un cabinet suisse).
+    donnees: 'RGPD — Règlement (UE) 2016/679',
     // Chapeau de page : identique au libellé historique pour la France.
     chapeau: 'DDA · KYC · Mandats · Audit logs · Export ACPR',
     checklist_titre: 'Checklist DDA (Directive Distribution Assurance)',
+    // ───────────────────────────────────────────────────────────────────────────
+    // MENTIONS DE PROTECTION DES DONNÉES DU MARCHÉ (constat d'audit CH-026)
+    //
+    // POURQUOI : l'écran /conformite affichait « 📋 RGPD & Mentions légales »
+    // avec sa liste CGV/CGU/DPA/RGPD à TOUS les cabinets, y compris suisses. Le
+    // texte ci-dessous est le MÊME qu'avant pour la France (RGPD, CNIL, pages
+    // légales du footer) : rien n'a été retiré ni reformulé, il est seulement
+    // devenu une donnée du marché au lieu d'un littéral de la page.
+    //
+    // CE QUI N'EST JAMAIS FAIT : remplir un élément à la place du cabinet. Les
+    // `elements` ci-dessous sont les informations que le cabinet doit pouvoir
+    // documenter ; leur `valeur` reste `null` tant que le cabinet ne les a pas
+    // renseignées, et l'écran affiche alors explicitement « À renseigner par le
+    // cabinet » — jamais une durée de conservation, un sous-traitant ou une
+    // localisation plausibles mais faux.
+    // ───────────────────────────────────────────────────────────────────────────
+    protection_donnees: Object.freeze({
+      referentiel: 'RGPD',
+      libelle_ecran: '📋 RGPD & Mentions légales',
+      autorite: 'CNIL',
+      autorite_libelle: 'CNIL — Commission nationale de l’informatique et des libertés',
+      resume: 'Toutes les pages légales sont accessibles depuis le footer public.',
+      pages_legales: Object.freeze(['Mentions légales', 'CGV', 'CGU', 'Politique de confidentialité', 'DPA', 'RGPD', 'Sous-traitants']),
+      sources: Object.freeze({
+        cnil: 'https://www.cnil.fr',
+        rgpd: 'https://eur-lex.europa.eu/eli/reg/2016/679/oj',
+      }),
+      elements: Object.freeze([
+        Object.freeze({ cle: 'finalites', libelle: 'Finalités du traitement', reference: 'RGPD, art. 13, § 1, let. c' }),
+        Object.freeze({ cle: 'categories_donnees', libelle: 'Catégories de données personnelles traitées', reference: 'RGPD, art. 13 et art. 14' }),
+        Object.freeze({ cle: 'duree_conservation', libelle: 'Durée de conservation (ou critères qui la déterminent)', reference: 'RGPD, art. 13, § 2, let. a' }),
+        Object.freeze({ cle: 'droits_personne', libelle: 'Droits de la personne concernée (accès, rectification, effacement, opposition)', reference: 'RGPD, art. 13, § 2, let. b et c' }),
+        Object.freeze({ cle: 'sous_traitants', libelle: 'Sous-traitants et destinataires des données', reference: 'RGPD, art. 28, et art. 13, § 1, let. e' }),
+        Object.freeze({ cle: 'localisation_donnees', libelle: 'Localisation des données et transferts hors Union européenne', reference: 'RGPD, art. 13, § 1, let. f, et art. 44 et suivants' }),
+      ]),
+    }),
     export: Object.freeze({
       libelle: 'Export ACPR',
       prefixe_fichier: 'rapport-acpr',
@@ -89,6 +150,9 @@ const MARCHES = Object.freeze({
     autorite: 'FINMA',
     autorite_libelle: "FINMA — Autorité fédérale de surveillance des marchés financiers",
     registre: "Registre des intermédiaires d'assurance tenu par la FINMA (référence : numéro UID/IDE du cabinet)",
+    // Le cadre de protection des données suisse — jamais le RGPD, qui est un
+    // règlement de l'Union européenne et n'a pas cours en Suisse.
+    donnees: 'nLPD — nouvelle loi fédérale sur la protection des données',
     // Aucune obligation française n'est citée : DDA est une directive
     // européenne transposée en droit français, l'ACPR n'a pas de compétence
     // en Suisse. Le vocabulaire reste descriptif.
@@ -96,6 +160,47 @@ const MARCHES = Object.freeze({
     // Aucune directive française n'est citée pour un cabinet suisse : le
     // titre reste descriptif de ce que le cabinet doit réunir.
     checklist_titre: 'Checklist de conformité du cabinet',
+    // ───────────────────────────────────────────────────────────────────────────
+    // MENTIONS SUISSES DE PROTECTION DES DONNÉES (constat d'audit CH-026)
+    //
+    // POURQUOI : l'écran /conformite n'avait AUCUNE mention suisse. Le cabinet
+    // suisse lisait « 📋 RGPD & Mentions légales · CGV · CGU · DPA · RGPD » alors
+    // que le RGPD est un règlement de l'Union européenne : ce n'est pas SON
+    // droit, et la liste des pages de la plateforme ne lui dit pas ce qu'il doit
+    // pouvoir documenter sous la nLPD. Les éléments ci-dessous sont ceux qu'un
+    // cabinet doit réunir, chacun rattaché au texte qui les prévoit.
+    //
+    // AUCUNE VALEUR RÉGLEMENTAIRE N'EST INVENTÉE. Aucune durée de conservation,
+    // aucun sous-traitant, aucun pays d'hébergement n'est écrit ici : ces
+    // informations dépendent du cabinet. Tant qu'il ne les a pas renseignées,
+    // l'écran affiche « À renseigner par le cabinet ». Si l'écran affichait une
+    // durée plausible, elle serait fausse ET présentée comme la sienne.
+    //
+    // Le nom de l'autorité est celui de la loi (PFPDT), jamais un champ libre —
+    // même règle que pour l'autorité de tutelle.
+    // ───────────────────────────────────────────────────────────────────────────
+    protection_donnees: Object.freeze({
+      referentiel: 'nLPD',
+      libelle_ecran: '📋 nLPD & protection des données',
+      autorite: 'PFPDT',
+      autorite_libelle: 'PFPDT — Préposé fédéral à la protection des données et à la transparence',
+      entree_en_vigueur: '1er septembre 2023',
+      resume: "Sous la nLPD (en vigueur depuis le 1er septembre 2023), votre cabinet doit pouvoir documenter les éléments ci-dessous. COURTIA n'en présume aucun : ce qui n'est pas renseigné est indiqué comme tel. Les pages légales de la plateforme restent accessibles depuis le footer public.",
+      pages_legales: Object.freeze(['Mentions légales', 'CGV', 'CGU', 'Politique de confidentialité', 'DPA', 'Sous-traitants']),
+      sources: Object.freeze({
+        lpd: 'https://www.fedlex.admin.ch/eli/cc/2022/491/fr',
+        pfpdt: 'https://www.edoeb.admin.ch/fr',
+        confederation: 'https://www.kmu.admin.ch/fr/nouvelle-loi-sur-la-protection-des-donnees-nlpd',
+      }),
+      elements: Object.freeze([
+        Object.freeze({ cle: 'finalites', libelle: 'Finalités du traitement', reference: 'LPD, art. 12, al. 2, et art. 19, al. 2' }),
+        Object.freeze({ cle: 'categories_donnees', libelle: 'Catégories de données personnelles traitées', reference: 'LPD, art. 12, al. 2, et art. 19, al. 3' }),
+        Object.freeze({ cle: 'duree_conservation', libelle: 'Durée de conservation (ou critères qui la déterminent)', reference: 'LPD, art. 12, al. 2' }),
+        Object.freeze({ cle: 'droits_personne', libelle: 'Droits de la personne concernée (accès, rectification, effacement)', reference: 'LPD, art. 25 et art. 32' }),
+        Object.freeze({ cle: 'sous_traitants', libelle: 'Sous-traitants et destinataires des données', reference: 'LPD, art. 12, et art. 19, al. 2, let. c' }),
+        Object.freeze({ cle: 'localisation_donnees', libelle: 'Localisation des données et communication à l’étranger', reference: 'LPD, art. 16 et art. 17, et art. 19, al. 4' }),
+      ]),
+    }),
     export: Object.freeze({
       libelle: 'Export du registre de conformité',
       prefixe_fichier: 'registre-conformite',
@@ -142,13 +247,73 @@ function marcheDuProfil(profil = {}) {
 }
 
 /**
+ * MENTIONS DE PROTECTION DES DONNÉES DU MARCHÉ — fonction PURE (testée).
+ *
+ * `valeurs` permet de rattacher, plus tard, ce que le cabinet a réellement
+ * déclaré (par clé d'élément : finalites, duree_conservation, …). Ce qui n'est
+ * pas fourni reste `null` avec le statut `a_renseigner` : l'écran affiche alors
+ * « À renseigner par le cabinet ». On ne remplit JAMAIS un élément manquant par
+ * une valeur plausible — c'est la règle qui protège le cabinet d'une déclaration
+ * fausse présentée comme la sienne.
+ *
+ * @param {'FR'|'CH'|string} marche
+ * @param {Record<string, string|number|null|undefined>} [valeurs]
+ */
+function protectionDonneesDuMarche(marche = 'FR', valeurs = {}) {
+  const code = normaliserMarche(marche) || 'FR'
+  const base = (MARCHES[code] || MARCHES.FR).protection_donnees
+  const fournies = valeurs && typeof valeurs === 'object' ? valeurs : {}
+  return {
+    referentiel: base.referentiel,
+    // Libellé du texte : `donnees` du marché (source unique du cadre applicable).
+    referentiel_libelle: MARCHES[code === 'CH' ? 'CH' : 'FR'].donnees,
+    libelle_ecran: base.libelle_ecran,
+    autorite: base.autorite,
+    autorite_libelle: base.autorite_libelle,
+    ...(base.entree_en_vigueur ? { entree_en_vigueur: base.entree_en_vigueur } : {}),
+    resume: base.resume,
+    pages_legales: [...base.pages_legales],
+    sources: { ...base.sources },
+    elements: base.elements.map((element) => {
+      const brut = fournies[element.cle]
+      const valeur = brut === undefined || brut === null ? null : String(brut).trim()
+      return {
+        cle: element.cle,
+        libelle: element.libelle,
+        reference: element.reference,
+        valeur: valeur || null,
+        // Libellé affiché pour un élément non renseigné : l'écran n'a rien à
+        // décider lui-même, il affiche ce champ.
+        a_renseigner: !valeur,
+        statut: valeur ? 'renseigne' : 'a_renseigner',
+      }
+    }),
+  }
+}
+
+/**
+ * Familles de produits du marché. Délègue à `services/referentielProduits`
+ * (source unique). S'il est indisponible, on renvoie une liste VIDE — jamais
+ * les familles d'un autre marché : un cabinet suisse ne doit pas se voir
+ * proposer « IARD » parce qu'un module manquait.
+ *
+ * @param {'FR'|'CH'|string} marche
+ */
+function produitsDuMarche(marche = 'FR') {
+  if (!referentielProduits || typeof referentielProduits.produitsDuMarche !== 'function') {
+    return { marche: normaliserMarche(marche) || 'FR', pays: null, familles: [], mots_cles: [], note: '' }
+  }
+  return referentielProduits.produitsDuMarche(normaliserMarche(marche) || 'FR')
+}
+
+/**
  * Libellés de conformité du marché. `options.tutelle_authority` (colonne
  * `cabinets.tutelle_authority`) permet à un cabinet français d'imposer son
  * propre libellé d'autorité — jamais pour le marché suisse, où le nom de
  * l'autorité vient de la loi, pas d'un champ libre.
  *
  * @param {'FR'|'CH'|string} marche
- * @param {{tutelle_authority?: string}} [options]
+ * @param {{tutelle_authority?: string, valeurs_protection_donnees?: object}} [options]
  */
 function libellesConformite(marche = 'FR', options = {}) {
   const code = normaliserMarche(marche) || 'FR'
@@ -163,8 +328,19 @@ function libellesConformite(marche = 'FR', options = {}) {
     autorite: base.autorite,
     autorite_libelle: autoriteLibelle(code, tutelle),
     registre: base.registre,
+    // Cadre de protection des données du marché ('RGPD …' / 'nLPD …').
+    donnees: base.donnees,
     chapeau: base.chapeau,
     checklist_titre: base.checklist_titre,
+    // Mentions de protection des données du marché : nLPD (finalités, catégories
+    // de données, durée de conservation, droits, sous-traitants, localisation)
+    // pour un cabinet suisse, RGPD / CNIL pour un cabinet français. Les éléments
+    // non renseignés par le cabinet sont servis avec `a_renseigner: true` — la
+    // page ne fabrique aucune valeur réglementaire.
+    protection_donnees: protectionDonneesDuMarche(code, options.valeurs_protection_donnees),
+    // Familles de produits réellement pratiquées sur le marché du cabinet : la
+    // liste n'est PAS celle du marché français pour un cabinet suisse.
+    produits: produitsDuMarche(code),
     export: {
       libelle: base.export.libelle,
       fichier: `${base.export.prefixe_fichier}-${new Date().getFullYear()}.json`,
@@ -256,6 +432,11 @@ module.exports = {
   normaliserMarche,
   marcheDuProfil,
   libellesConformite,
+  // Mentions de protection des données et familles de produits du marché :
+  // exportées pour être testées et réutilisées (rapports, PDF, écrans), sans
+  // qu'un second module ne réinvente la table.
+  protectionDonneesDuMarche,
+  produitsDuMarche,
   chargerProfilConformite,
   chargerMarcheCabinet,
 }

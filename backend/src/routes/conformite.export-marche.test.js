@@ -58,6 +58,11 @@ function simulerCabinet(cabinet) {
       }
     }
     if (requete.includes('COUNT(*)')) return { rows: [{ count: 0 }], rowCount: 1 }
+    // Contrôle « le client appartient-il au périmètre ? », ajouté après la Red
+    // Team RT4-13 : les lectures de conformité répondent 404 pour un client hors
+    // périmètre. Ce test porte sur le VOCABULAIRE du marché, donc le client
+    // existe : on répond présent.
+    if (requete.includes('FROM clients c')) return { rows: [{ id: 92 }], rowCount: 1 }
     return { rows: [], rowCount: 0 }
   })
 }

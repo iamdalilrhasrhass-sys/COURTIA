@@ -14,6 +14,7 @@ import { computeDailyPriorities } from '../lib/priorities'
 import { blocsResume, NON_MESURE } from '../lib/salesViewModel'
 import { EmptyStateAurora, LoadingAurora } from '../components/aurora/Aurora3D'
 import { fmtMontant, fmtNombre, localeCourante } from '../lib/monnaie'
+import { LIBELLES } from '../lib/libelles'
 const INTEGRATIONS_API_ENABLED = String(import.meta.env.VITE_INTEGRATIONS_API_ENABLED || '').trim().toLowerCase() === 'true'
 
 const T = {
@@ -434,7 +435,7 @@ export default function MorningBrief() {
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <Sun size={18} color={T.ark} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Morning Brief ARK</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.ark, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{LIBELLES.briefDuMatin} ARK</span>
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', color: T.text }}>
             {greeting}{userName ? ` ${userName}` : ''}

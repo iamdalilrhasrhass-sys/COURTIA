@@ -12,6 +12,7 @@ const path = require('path')
 const pool = require('../db')
 const logger = require('../lib/logger')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const {
   composeIpid,
@@ -24,6 +25,30 @@ const {
   updateSignatureStatus,
   getBrokerProfile
 } = require('../services/compose/composer')
+
+// Une réponse d'API ne porte JAMAIS d'emplacement de stockage serveur (défaut P2
+// mesuré le 21/09/2026 : `/opt/render/project/src/storage/compliance/…`). Le
+// service retire déjà ces champs de la LISTE ; le routeur applique la même règle
+// à chaque document qu'il sert (liste ET détail) — la garde ne dépend donc pas
+// d'un seul point de code, et elle reste valable si le service est remplacé par
+// un double de test.
+const CHAMPS_CHEMIN_STOCKAGE = ['storage_path', 'signed_storage_path', 'file_path', 'pdf_path', 'absolutePath']
+
+function sansCheminStockage(doc) {
+  if (!doc || typeof doc !== 'object') return doc
+  const copie = { ...doc }
+  for (const champ of CHAMPS_CHEMIN_STOCKAGE) delete copie[champ]
+  return copie
+}
+
+/** Un document, servi au client : identifiant public + lien de téléchargement. */
+function documentPublic(doc) {
+  if (!doc || typeof doc !== 'object') return doc
+  return {
+    ...sansCheminStockage(doc),
+    download_url: `/api/compose/documents/${doc.id}/download`,
+  }
+}
 
 // ============================================
 // DOCUMENTS
@@ -47,7 +72,12 @@ router.get('/documents', async (req, res) => {
       offset: parseInt(offset, 10) || 0
     })
     
-    res.json(result)
+    // Aucun chemin de stockage serveur dans la réponse : chaque document est
+    // servi par son identifiant public et son lien de téléchargement.
+    res.json({
+      ...result,
+      documents: Array.isArray(result?.documents) ? result.documents.map(documentPublic) : result?.documents,
+    })
   } catch (err) {
     logger.error({ error: err.message }, 'compose:list:error')
     res.status(500).json({ error: 'Erreur lors de la récupération des documents' })
@@ -65,14 +95,9 @@ router.get('/documents/:id', async (req, res) => {
     
     const doc = await getDocument(docId, brokerId)
     
-    // Ne pas exposer le chemin complet
-    const response = {
-      ...doc,
-      storage_path: undefined,
-      download_url: `/api/compose/documents/${doc.id}/download`
-    }
-    
-    res.json(response)
+    // Le chemin de stockage reste côté SERVEUR (il sert à lire le fichier au
+    // téléchargement) : il ne figure dans AUCUNE réponse d'API.
+    res.json(documentPublic(doc))
   } catch (err) {
     if (err.message.includes('non trouvé')) {
       return res.status(404).json({ error: messagePublic(err, { statut: 404 }) })
@@ -466,31 +491,52 @@ router.put('/broker-profile', async (req, res) => {
 /**
  * GET /api/compose/stats
  * Statistiques de génération
+ *
+ * PORTÉE = CABINET sur les DOCUMENTS GÉNÉRÉS. `compliance_documents` est une
+ * pièce remise à un CLIENT (donc un objet du cabinet) : elle ne porte pas de
+ * colonne `cabinet_id` (vérifié dans `information_schema` / migrations) mais un
+ * `broker_id` (auteur) et un `client_id` facultatif. Le cabinet d'une pièce est
+ * celui de son propriétaire, résolu dans `cabinet_members` — la règle de la
+ * migration 113 — plutôt qu'une jointure sur `clients` qui perdrait les pièces
+ * sans client. Le fragment vient de `lib/porteeCabinet` (seule autorité) ; sans
+ * cabinet il retombe sur `cd.broker_id = $n` (comportement historique).
+ *
+ * Le PROFIL du cabinet (`broker_profile_settings`, `POST /broker-profile`) reste
+ * PAR UTILISATEUR : il porte l'identité réglementaire du compte connecté.
  */
 router.get('/stats', async (req, res) => {
   try {
-    const brokerId = req.user.id || req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: `(SELECT cm.cabinet_id FROM cabinet_members cm
+                  WHERE cm.user_id = cd.broker_id
+                    AND cm.removed_at IS NULL
+                    AND cm.cabinet_id = ANY($1::uuid[])
+                  LIMIT 1)`,
+      proprietaire: 'cd.broker_id',
+      depart: 1,
+    })
     
     const statsRes = await pool.query(
       `SELECT 
-         document_type,
+         cd.document_type,
          COUNT(*) AS total,
-         COUNT(*) FILTER (WHERE status = 'signed') AS signed,
-         COUNT(*) FILTER (WHERE status = 'generated') AS pending,
-         COUNT(*) FILTER (WHERE ai_generated = true) AS ai_generated
-       FROM compliance_documents
-       WHERE broker_id = $1
-       GROUP BY document_type`,
-      [brokerId]
+         COUNT(*) FILTER (WHERE cd.status = 'signed') AS signed,
+         COUNT(*) FILTER (WHERE cd.status = 'generated') AS pending,
+         COUNT(*) FILTER (WHERE cd.ai_generated = true) AS ai_generated
+       FROM compliance_documents cd
+       WHERE ${f.sql}
+       GROUP BY cd.document_type`,
+      [...f.params]
     )
     
     const recentRes = await pool.query(
-      `SELECT id, document_type, status, generated_at
-       FROM compliance_documents
-       WHERE broker_id = $1
-       ORDER BY generated_at DESC
+      `SELECT cd.id, cd.document_type, cd.status, cd.generated_at
+       FROM compliance_documents cd
+       WHERE ${f.sql}
+       ORDER BY cd.generated_at DESC
        LIMIT 5`,
-      [brokerId]
+      [...f.params]
     )
     
     res.json({

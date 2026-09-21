@@ -7,7 +7,13 @@
  * - Client VIP (lifetime_value > 5000) : > 45 jours
  * 
  * Risque de churn élevé.
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : la surveillance porte sur le
+ * CABINET (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui la
+ * déclenche. Sans cabinet, la clause reste exactement `c.courtier_id = $1`.
  */
+
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 module.exports = {
   code: 'silence',
@@ -18,10 +24,17 @@ module.exports = {
    * Détecte les clients inactifs selon leur profil
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     
     const result = await pool.query(`
       SELECT 
@@ -33,7 +46,7 @@ module.exports = {
         SUM(COALESCE((q.quote_data->>'prime_annuelle')::NUMERIC, 0)) AS total_premium
       FROM clients c
       LEFT JOIN quotes q ON q.client_id = c.id AND q.status = 'actif'
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
         AND c.status != 'inactif'
         AND c.status != 'perdu'
         AND (
@@ -48,7 +61,7 @@ module.exports = {
            AND (NOW() - COALESCE(c.last_contact, c.created_at)) > INTERVAL '90 days')
         )
       GROUP BY c.id
-    `, [brokerId])
+    `, f.params)
     
     const currentWeek = Math.ceil((new Date() - new Date(new Date().getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000))
     

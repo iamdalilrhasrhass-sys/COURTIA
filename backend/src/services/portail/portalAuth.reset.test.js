@@ -5,7 +5,13 @@
  */
 
 jest.mock('../../db', () => ({ query: jest.fn() }));
-jest.mock('../emailService', () => ({ sendEmail: jest.fn().mockResolvedValue({ ok: true }) }));
+jest.mock('../emailService', () => ({
+  sendEmail: jest.fn().mockResolvedValue({ ok: true }),
+  // Un fournisseur CONFIGURÉ est le cas de ces tests : ils portent sur la
+  // non-énumération des comptes, pas sur l'absence de fournisseur (qui a son
+  // propre test plus bas, ajouté après la 4e passe adverse).
+  getEmailStatus: jest.fn(() => ({ status: 'configured', provider: 'test' })),
+}));
 
 const crypto = require('crypto');
 const pool = require('../../db');
@@ -13,7 +19,8 @@ const portalAuth = require('./portalAuth');
 
 const ATTENDU = {
   success: true,
-  message: 'Si ce compte existe, un lien de réinitialisation a été envoyé'
+  message: 'Si ce compte existe, un lien de réinitialisation a été envoyé',
+  email_transmis: true,
 };
 
 beforeEach(() => {
@@ -60,6 +67,23 @@ describe('portalAuth.requestReset — SEC-002', () => {
     await portalAuth.requestReset('inconnu@example.invalid');
     expect(pool.query).toHaveBeenCalledTimes(1);
     expect(pool.query.mock.calls[0][0]).toMatch(/SELECT/);
+  });
+
+  it('sans fournisseur d’e-mail : réponse honnête, aucun jeton écrit, aucune promesse d’envoi', async () => {
+    // Défaut RT4-04 de la 4e passe adverse : la route annonçait « un lien a été
+    // envoyé » alors qu'aucun fournisseur n'est configuré en production.
+    const emailService = require('../emailService');
+    emailService.getEmailStatus.mockReturnValue({ status: 'configuration_required', provider: 'none' });
+    const envoi = emailService.sendEmail;
+
+    const resultat = await portalAuth.requestReset('client@example.invalid');
+
+    expect(resultat.email_transmis).toBe(false);
+    expect(resultat.raison).toBe('configuration_required');
+    expect(resultat.message).not.toMatch(/envoyé/i);
+    expect(envoi).not.toHaveBeenCalled();
+    // Aucune écriture de jeton : pas de lien valable une heure sans destinataire.
+    expect(pool.query.mock.calls.some(([sql]) => /UPDATE client_portal_accounts/i.test(String(sql)))).toBe(false);
   });
 
   it('le chemin INTERNE courtier (requestResetForBroker) est le seul à exposer un jeton', async () => {

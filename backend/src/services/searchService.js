@@ -1,3 +1,27 @@
+/**
+ * searchService — palette de recherche COURTIA.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DE LA RECHERCHE : LE CABINET, PAS LA SEULE PERSONNE
+ * (correction du 21/09/2026 — défaut P1 « deux vérités pour une même donnée »)
+ *
+ * DÉFAUT MESURÉ : la recherche filtrait `c.courtier_id = $1` (clients,
+ * contrats) et `d.user_id = $1` (documents). Un collaborateur (`broker`) du même
+ * cabinet cherchait le nom d'un client que le CRM lui affiche et obtenait
+ * « aucun résultat » : la palette démentait les écrans.
+ *
+ * RÈGLE TENUE : les trois lectures passent par `lib/porteeCabinet` (seule
+ * autorité). `clients` et `documents` portent `cabinet_id` (migration 113) :
+ * la clause redevient EXACTEMENT l'historique (`courtier_id = $1` /
+ * `user_id = $1`) si le compte n'a pas de cabinet, et un compte dont
+ * l'appartenance a été retirée ne trouve plus rien.
+ *
+ * `options.portee` évite une requête d'appartenance supplémentaire.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
+const porteeCabinet = require('../lib/porteeCabinet')
+
 const STATIC_ACTIONS = [
   { type: 'action', id: 'dashboard', title: 'Tableau de bord', subtitle: 'Ouvrir le cockpit courtier', path: '/dashboard' },
   { type: 'action', id: 'morning-brief', title: 'Morning Brief', subtitle: 'Voir les priorités ARK du jour', path: '/morning-brief' },
@@ -32,9 +56,18 @@ async function runOptionalQuery(pool, sql, params) {
   }
 }
 
-async function searchCourtia(pool, userId, query, { limit = 10 } = {}) {
+async function searchCourtia(pool, userId, query, { limit = 10, portee } = {}) {
   const pattern = buildSearchPattern(query)
-  const params = [userId, pattern]
+  const porteeUtilisateur = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, { portee })
+  // Clause « clients / contrats » : alias `c`, même paramètre pour les deux
+  // requêtes (la recherche est le seul autre paramètre, `$n+1`).
+  const fClients = porteeCabinet.fragment(porteeUtilisateur, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
+  const params = [...fClients.params, pattern]
+  const idxPattern = fClients.suivant
   const results = []
 
   const clients = await runOptionalQuery(pool, `
@@ -44,11 +77,11 @@ async function searchCourtia(pool, userId, query, { limit = 10 } = {}) {
            CONCAT('Client · ', COALESCE(c.email, c.phone, c.telephone, 'fiche portefeuille')) AS subtitle,
            CONCAT('/clients/', c.id) AS path
     FROM clients c
-    WHERE c.courtier_id = $1
+    WHERE ${fClients.sql}
       AND (
-        CONCAT(COALESCE(c.first_name, c.prenom, ''), ' ', COALESCE(c.last_name, c.nom, '')) ILIKE $2
-        OR COALESCE(c.email, '') ILIKE $2
-        OR COALESCE(c.phone, c.telephone, '') ILIKE $2
+        CONCAT(COALESCE(c.first_name, c.prenom, ''), ' ', COALESCE(c.last_name, c.nom, '')) ILIKE $${idxPattern}
+        OR COALESCE(c.email, '') ILIKE $${idxPattern}
+        OR COALESCE(c.phone, c.telephone, '') ILIKE $${idxPattern}
       )
     ORDER BY c.updated_at DESC NULLS LAST
     LIMIT 5
@@ -63,17 +96,26 @@ async function searchCourtia(pool, userId, query, { limit = 10 } = {}) {
            CONCAT('/clients/', q.client_id) AS path
     FROM quotes q
     JOIN clients c ON c.id = q.client_id
-    WHERE c.courtier_id = $1
+    WHERE ${fClients.sql}
       AND (
-        COALESCE(q.quote_data->>'type_contrat', q.quote_data->>'type', '') ILIKE $2
-        OR COALESCE(q.quote_data->>'compagnie', '') ILIKE $2
-        OR CONCAT(COALESCE(c.first_name, c.prenom, ''), ' ', COALESCE(c.last_name, c.nom, '')) ILIKE $2
+        COALESCE(q.quote_data->>'type_contrat', q.quote_data->>'type', '') ILIKE $${idxPattern}
+        OR COALESCE(q.quote_data->>'compagnie', '') ILIKE $${idxPattern}
+        OR CONCAT(COALESCE(c.first_name, c.prenom, ''), ' ', COALESCE(c.last_name, c.nom, '')) ILIKE $${idxPattern}
       )
     ORDER BY q.created_at DESC NULLS LAST
     LIMIT 4
   `, params)
   results.push(...contracts)
 
+  // `documents` porte `cabinet_id` (migration 113) : le document appartient au
+  // cabinet, pas à la seule personne qui l'a déposé.
+  const fDocuments = porteeCabinet.fragment(porteeUtilisateur, {
+    cabinet: 'd.cabinet_id',
+    proprietaire: 'd.user_id',
+    depart: 1,
+  })
+  const paramsDocuments = [...fDocuments.params, pattern]
+  const idxPatternDocuments = fDocuments.suivant
   const documents = await runOptionalQuery(pool, `
     SELECT 'document' AS type,
            d.id,
@@ -81,11 +123,11 @@ async function searchCourtia(pool, userId, query, { limit = 10 } = {}) {
            CONCAT('Document ', d.status, ' · client #', d.client_id) AS subtitle,
            CONCAT('/clients/', d.client_id) AS path
     FROM documents d
-    WHERE d.user_id = $1
-      AND (d.type ILIKE $2 OR d.status ILIKE $2)
+    WHERE ${fDocuments.sql}
+      AND (d.type ILIKE $${idxPatternDocuments} OR d.status ILIKE $${idxPatternDocuments})
     ORDER BY d.created_at DESC NULLS LAST
     LIMIT 3
-  `, params)
+  `, paramsDocuments)
   results.push(...documents)
 
   const actions = STATIC_ACTIONS.filter((action) => {

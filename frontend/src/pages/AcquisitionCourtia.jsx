@@ -12,7 +12,7 @@
        par défaut (bascule explicite pour l'inclure).
 
    Ne remplace AUCUN module existant : Prospection, Opportunités, Clients,
-   Tâches, Relances, Morning Brief gardent leur rôle. Cet écran est la porte
+   Tâches, Relances, le brief du matin gardent leur rôle. Cet écran est la porte
    d'entrée commerciale des leads captés par le site public.
 
    Le jeton de lecture n'est pas dans ce fichier : le relais serveur l'ajoute
@@ -26,6 +26,7 @@ import {
   AlertTriangle, ExternalLink, Sun,
 } from 'lucide-react'
 import { chargerLeads, chargerFunnel } from '../lib/salesApi'
+import { LIBELLES } from '../lib/libelles'
 import {
   NON_MESURE, STATUTS, lignesFunnel, lireScore, progressionDemo, lireHotLead,
   etiquetteStatut, etiquetteQualification, formatDate, formatDateHeure, ouVide,
@@ -505,7 +506,7 @@ export default function AcquisitionCourtia() {
           <span><Sun size={11} /> {luA ? `Données lues à ${formatDateHeure(luA.toISOString())}` : 'données non lues'}</span>
           <span>Source : demandes de démo réellement captées</span>
           <span>Demandes de test exclues par défaut</span>
-          <a href="/morning-brief" style={{ color: T.ark, textDecoration: 'none' }}>Voir le Morning Brief →</a>
+          <a href="/morning-brief" style={{ color: T.ark, textDecoration: 'none' }}>Voir le {LIBELLES.briefDuMatin} →</a>
         </footer>
       </div>
     </div>

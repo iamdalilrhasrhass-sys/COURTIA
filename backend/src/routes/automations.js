@@ -12,17 +12,51 @@ const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
 const { checkFeatureAccess } = require('../services/planService')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 router.use(verifyToken)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET (et non « mes automatisations »)
+//
+// POURQUOI : une automatisation est une RÈGLE DU CABINET (« à l'échéance d'un
+// contrat, prévenir le client »). Tant qu'elle était lue et écrite sur
+// `courtier_id = moi`, un collaborateur voyait zéro automatisation et le cabinet
+// n'avait pas de socle commun — la règle posée par un collègue était invisible.
+//
+// COMMENT : la table `automations` ne porte PAS de colonne `cabinet_id` (vérifié
+// dans `information_schema` / migrations). Le cabinet d'une automatisation est
+// donc celui de son propriétaire, résolu dans `cabinet_members` — c'est la règle
+// de rattachement de la migration 113. La DÉCISION de portée reste entièrement
+// dans `lib/porteeCabinet` (seule autorité) ; seule la colonne « cabinet » du
+// fragment change de forme faute de colonne dédiée. Sans cabinet, le fragment
+// retombe sur `a.courtier_id = $n` : comportement historique inchangé.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée sur `automations` (alias `a`). */
+function filtreAutomations(portee, { depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `(SELECT cm.cabinet_id FROM cabinet_members cm
+                WHERE cm.user_id = a.courtier_id
+                  AND cm.removed_at IS NULL
+                  AND cm.cabinet_id = ANY($${depart}::uuid[])
+                LIMIT 1)`,
+    proprietaire: 'a.courtier_id',
+    depart,
+    ecriture,
+  })
+}
 
 // GET /api/automations — liste avec indication locked si plan insuffisant
 router.get('/', async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const courtier_id = porteeCabinet.identifiantUtilisateur(req.user)
 
+    const f = filtreAutomations(portee, { depart: 1 })
     const result = await pool.query(
-      'SELECT * FROM automations WHERE courtier_id = $1 ORDER BY created_at DESC',
-      [courtier_id]
+      `SELECT a.* FROM automations a WHERE ${f.sql} ORDER BY a.created_at DESC`,
+      [...f.params]
     )
 
     // Vérifier si le plan permet 'automations'
@@ -49,7 +83,12 @@ router.get('/', async (req, res) => {
 // POST /api/automations — créer une automation (plan PRO+)
 router.post('/', requireFeature('automations'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'créer une automatisation')) return
+    // `courtier_id` reste le CRÉATEUR de la règle : le cabinet d'une
+    // automatisation est celui de son propriétaire, la règle est donc visible
+    // par tout le cabinet une fois créée.
+    const courtier_id = porteeCabinet.identifiantUtilisateur(req.user)
     const { name, trigger_type, conditions, actions, active } = req.body
 
     if (!name || !trigger_type) {
@@ -83,13 +122,15 @@ router.post('/', requireFeature('automations'), async (req, res) => {
 // PATCH /api/automations/:id — mise à jour partielle (plan PRO+)
 router.patch('/:id', requireFeature('automations'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'modifier une automatisation')) return
     const { id } = req.params
 
-    // Vérifier ownership
+    // Vérifier l'appartenance au CABINET
+    const fL = filtreAutomations(portee, { depart: 1, ecriture: true })
     const ownerCheck = await pool.query(
-      'SELECT id FROM automations WHERE id = $1 AND courtier_id = $2',
-      [id, courtier_id]
+      `SELECT a.id FROM automations a WHERE a.id = $${fL.suivant} AND ${fL.sql}`,
+      [...fL.params, id]
     )
     if (ownerCheck.rows.length === 0) {
       return res.status(404).json({ error: 'not_found', message: 'Automation introuvable' })
@@ -115,9 +156,13 @@ router.patch('/:id', requireFeature('automations'), async (req, res) => {
       return res.status(400).json({ error: 'validation_error', message: 'Aucun champ à mettre à jour' })
     }
 
+    // Portée d'ÉCRITURE : seuls les cabinets où l'appelant a le droit d'écrire.
+    const f = filtreAutomations(portee, { depart: idx, ecriture: true })
+    values.push(...f.params)
+    const idParam = f.suivant
     values.push(id)
     const result = await pool.query(
-      `UPDATE automations SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`,
+      `UPDATE automations a SET ${updates.join(', ')} WHERE a.id = $${idParam} AND ${f.sql} RETURNING a.*`,
       values
     )
 
@@ -131,15 +176,17 @@ router.patch('/:id', requireFeature('automations'), async (req, res) => {
 // POST /api/automations/:id/toggle — activer/désactiver (plan PRO+)
 router.post('/:id/toggle', requireFeature('automations'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'activer ou désactiver une automatisation')) return
     const { id } = req.params
 
+    const f = filtreAutomations(portee, { depart: 1, ecriture: true })
     const result = await pool.query(
-      `UPDATE automations
-       SET active = NOT active
-       WHERE id = $1 AND courtier_id = $2
-       RETURNING *`,
-      [id, courtier_id]
+      `UPDATE automations a
+       SET active = NOT a.active
+       WHERE a.id = $${f.suivant} AND ${f.sql}
+       RETURNING a.*`,
+      [...f.params, id]
     )
 
     if (result.rows.length === 0) {
@@ -156,13 +203,14 @@ router.post('/:id/toggle', requireFeature('automations'), async (req, res) => {
 // GET /api/automations/:id/runs — historique d'exécutions
 router.get('/:id/runs', async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const { id } = req.params
 
-    // Vérifier ownership de l'automation
+    // Vérifier l'appartenance de l'automation au CABINET
+    const f = filtreAutomations(portee, { depart: 1 })
     const ownerCheck = await pool.query(
-      'SELECT id FROM automations WHERE id = $1 AND courtier_id = $2',
-      [id, courtier_id]
+      `SELECT a.id FROM automations a WHERE a.id = $${f.suivant} AND ${f.sql}`,
+      [...f.params, id]
     )
     if (ownerCheck.rows.length === 0) {
       return res.status(404).json({ error: 'not_found', message: 'Automation introuvable' })
@@ -251,7 +299,9 @@ router.get('/templates', async (_req, res) => {
 // POST /api/automations/from-template — Instancier une automation depuis un template
 router.post('/from-template', requireFeature('automations'), async (req, res) => {
   try {
-    const courtier_id = req.user.userId
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'instancier une automatisation')) return
+    const courtier_id = porteeCabinet.identifiantUtilisateur(req.user)
     const { template_key } = req.body || {}
     const tpl = TEMPLATES.find(t => t.key === template_key)
     if (!tpl) return res.status(404).json({ error: 'template_not_found' })

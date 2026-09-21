@@ -14,6 +14,12 @@
 
 const express = require('express')
 const porteeCabinet = require('../lib/porteeCabinet')
+// DEVISE ET IDENTIFIANT D'ENTREPRISE DU MARCHÉ (défaut P3 CH-038) : les prompts
+// envoyés au modèle ne doivent jamais porter « € » ni « SIRET » pour un cabinet
+// suisse. Sources uniques : lib/marcheCabinet / lib/devise (marché et devise) et
+// lib/identifiantEntreprise (SIRET en France, IDE (UID) en Suisse).
+const marcheCabinet = require('../lib/marcheCabinet')
+const { ligneIdentifiantEntreprise } = require('../lib/identifiantEntreprise')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES OPPORTUNITÉS : LE CABINET
@@ -49,6 +55,52 @@ const { potentielDepuisDonneesReelles } = require('../lib/donneesReelles')
 // elles vivent dans routes/dashboard.js et sont importées, jamais réécrites
 // (une seule vérité pour la prime, cf. P0 du 20/09/2026 sur les montants).
 const { kpi } = require('./dashboard')
+
+/**
+ * Identifiant de ressource VALIDE, ou refus 400 immédiat.
+ * POURQUOI (mesure du 21/09/2026) : `GET /api/opportunites/abc` répondait 500
+ * (« Le détail de cette opportunité n'a pas pu être chargé ») parce que la
+ * chaîne partait telle quelle dans une requête SQL (`invalid input syntax for
+ * type integer: "abc"`). Un identifiant qui n'est pas un nombre n'est pas une
+ * panne du serveur : c'est une demande mal formée, donc 400 — et l'écran ne
+ * doit pas afficher « indisponible » pour une faute de frappe dans l'URL.
+ */
+function identifiantValide(valeur, res, quoi = 'Cette ressource') {
+  const nombre = Number.parseInt(valeur, 10)
+  if (!Number.isFinite(nombre) || nombre <= 0 || String(nombre) !== String(valeur).trim()) {
+    res.status(400).json({
+      error: 'identifiant_invalide',
+      message: `${quoi} n'a pas un identifiant valide.`,
+    })
+    return null
+  }
+  return nombre
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CH-038 — LES COLONNES HISTORIQUES DE `quotes` NE SONT PLUS LA SOURCE
+//
+// Mesure du 21/09/2026 : la détection d'opportunités lisait `q.product_type`,
+// `q.premium` et `q.end_date` — les colonnes de la version HISTORIQUE de la
+// table `quotes` — alors que les définitions KPI uniques (importées ci-dessus
+// depuis routes/dashboard.js) décrivent où la donnée est RÉELLEMENT écrite par
+// le produit : `quote_data` (POST /api/contrats), puis `prime_annuelle` /
+// `date_echeance`. Mesure en production : `premium`, `product_type` et
+// `end_date` valent NULL sur les 21 lignes de `quotes`, donc la détection
+// travaillait sur des contrats vides — sans erreur, ce qui est le pire cas.
+// Second défaut trouvé sur le même bloc : le joint filtrait `q.status =
+// 'active'` alors que le produit ÉCRIT `'actif'` (la constante
+// STATUTS_CONTRAT_ACTIF couvre les deux graphies). Aucun contrat n'était donc
+// joint, même en présence de contrats réels.
+//
+// Les deux requêtes ci-dessous utilisent désormais la MÊME source que le
+// cockpit, le reporting et l'analytique : une seule définition de « contrat
+// actif », de « prime d'un contrat » et d' « échéance d'un contrat ».
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Libellé de produit d'un contrat, alias `q` sur `quotes`. Canonique d'abord. */
+const PRODUIT_CONTRAT =
+  `COALESCE(NULLIF(q.quote_data->>'type_contrat', ''), NULLIF(q.quote_data->>'produit', ''), NULLIF(q.product_type, ''))`
 
 // =============================================================================
 // SCHEMAS JSON pour les réponses ARK
@@ -278,7 +330,8 @@ router.get('/stats', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const portee = await porteeCabinet.resoudrePortee(pool, req)
-    const oppoId = parseInt(req.params.id, 10)
+    const oppoId = identifiantValide(req.params.id, res, "Cette opportunité")
+    if (oppoId === null) return
     const f = filtreOpportunites(portee, { depart: 2, alias: 'o' })
 
     const result = await pool.query(`
@@ -498,12 +551,14 @@ router.post('/detect', async (req, res) => {
     const clientsRes = await pool.query(`
       SELECT c.id, c.first_name, c.last_name, c.company_name, c.type,
              c.lifetime_value, c.risk_score, c.silent_alert,
-             ARRAY_AGG(DISTINCT q.product_type) FILTER (WHERE q.product_type IS NOT NULL) AS products,
-             SUM(q.premium) AS total_premium,
+             ARRAY_AGG(DISTINCT ${PRODUIT_CONTRAT}) FILTER (WHERE ${PRODUIT_CONTRAT} IS NOT NULL) AS products,
+             SUM(${kpi.PRIME_CONTRAT}) AS total_premium,
              COUNT(q.id) AS contracts_count,
-             MAX(q.end_date) AS next_renewal
+             MAX(${kpi.ECHEANCE_CONTRAT}) AS next_renewal
       FROM clients c
-      LEFT JOIN quotes q ON q.client_id = c.id AND q.status = 'active'
+      LEFT JOIN quotes q ON q.client_id = c.id
+        AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
+        AND ${kpi.NATURE_CONTRAT}
       WHERE ${fClients.sql}
       GROUP BY c.id
       ORDER BY c.lifetime_value DESC NULLS LAST
@@ -513,12 +568,15 @@ router.post('/detect', async (req, res) => {
     // 2. Clients mono-produit (opportunité cross-sell évidente)
     const monoProduitRes = await pool.query(`
       SELECT c.id, c.first_name, c.last_name, c.company_name, c.type,
-             q.product_type, q.premium
+             ${PRODUIT_CONTRAT} AS product_type,
+             ${kpi.PRIME_CONTRAT} AS premium
       FROM clients c
-      JOIN quotes q ON q.client_id = c.id AND q.status = 'active'
+      JOIN quotes q ON q.client_id = c.id
+        AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
+        AND ${kpi.NATURE_CONTRAT}
       WHERE ${fClients.sql}
-      GROUP BY c.id, q.product_type, q.premium
-      HAVING COUNT(DISTINCT q.product_type) = 1
+      GROUP BY c.id, ${PRODUIT_CONTRAT}, ${kpi.PRIME_CONTRAT}
+      HAVING COUNT(DISTINCT ${PRODUIT_CONTRAT}) = 1
       LIMIT 50
     `, [...fClients.params])
 
@@ -529,6 +587,14 @@ router.post('/detect', async (req, res) => {
       WHERE ${fOppo.sql} AND status = 'detected'
     `, [...fOppo.params])
     const existingSet = new Set(existingRes.rows.map(r => `${r.client_id}_${r.product_target}`))
+
+    // DEVISE DU CABINET (défaut P3 CH-038) : les montants injectés dans le
+    // prompt portent la devise RÉELLE du cabinet — CHF pour un cabinet suisse,
+    // € pour un cabinet français. Aucun montant n'est créé, converti ni
+    // arrondi ici : seul le libellé qui suit le nombre change.
+    const marche = await marcheCabinet.marcheDeLaRequete(req, (sql, params) => pool.query(sql, params))
+    const devise = (marche && marche.devise) || 'EUR'
+    const symboleDevise = (marche && marche.symbole) || '€'
 
     // Appel ARK pour analyse
     const arkResponse = await callArkStructured({
@@ -541,8 +607,9 @@ Tu dois analyser le portefeuille et détecter les opportunités commerciales:
 - Mono-produit: Client avec un seul contrat = fort potentiel multi-équipement
 
 Score chaque opportunité de 0 à 100 (confiance).
-N'ESTIME AUCUN MONTANT en euros : aucun revenu, aucune prime, aucune valeur
+N'ESTIME AUCUN MONTANT en ${devise} : aucun revenu, aucune prime, aucune valeur
 potentielle. Ces chiffres seraient inventés et présentés comme réels.
+Tous les montants du portefeuille sont exprimés en ${devise}.
 Suggère l'action concrète à mener.`,
       user: `Analyse ce portefeuille et détecte jusqu'à ${max_opportunites} opportunités:
 
@@ -550,14 +617,14 @@ CLIENTS ET LEURS CONTRATS (${clientsRes.rows.length}):
 ${clientsRes.rows.slice(0, 50).map(c => 
   `- ID ${c.id}: ${c.company_name || `${c.first_name} ${c.last_name}`} (${c.type || 'particulier'})
    Produits: ${(c.products || []).join(', ') || 'aucun actif'}
-   Primes: ${c.total_premium || 0}€ | LTV: ${c.lifetime_value || 0}€
+   Primes: ${c.total_premium || 0} ${symboleDevise} | LTV: ${c.lifetime_value || 0} ${symboleDevise}
    Proch. renouvellement: ${c.next_renewal || 'N/A'}
    ${c.silent_alert ? '⚠️ Alerte silence' : ''} | Risque: ${c.risk_score || 50}`
 ).join('\n')}
 
 CLIENTS MONO-PRODUIT (${monoProduitRes.rows.length}):
 ${monoProduitRes.rows.slice(0, 30).map(c =>
-  `- ID ${c.id}: ${c.company_name || `${c.first_name} ${c.last_name}`} - Seul produit: ${c.product_type} (${c.premium}€)`
+  `- ID ${c.id}: ${c.company_name || `${c.first_name} ${c.last_name}`} - Seul produit: ${c.product_type} (${c.premium} ${symboleDevise})`
 ).join('\n')}
 
 Détecte les meilleures opportunités commerciales.`,
@@ -694,6 +761,17 @@ router.post('/:id/ai-pitch', async (req, res) => {
     const opp = oppoRes.rows[0]
     const clientName = opp.company_name || `${opp.first_name || ''} ${opp.last_name || ''}`.trim()
 
+    // DEVISE ET IDENTIFIANT DU MARCHÉ (défaut P3 CH-038) : le montant injecté
+    // dans le prompt porte la devise du CABINET (CHF en Suisse) et la ligne
+    // d'identification d'entreprise est celle du marché — jamais « € » ni
+    // « SIRET » pour un cabinet suisse. Aucun montant n'est inventé : LTV et
+    // potentiel sont ceux de la base (potentiel = null tant qu'il n'est pas
+    // recalculable depuis des données réelles).
+    const marche = await marcheCabinet.marcheDeLaRequete(req, (sql, params) => pool.query(sql, params))
+    const devise = (marche && marche.devise) || 'EUR'
+    const symboleDevise = (marche && marche.symbole) || '€'
+    const ligneIdentifiant = ligneIdentifiantEntreprise(marche && marche.marche, opp)
+
     // Récupérer contrats actuels (portée cabinet sur le client)
     // ───────────────────────────────────────────────────────────────────────
     // ALIAS RÉEL DE LA JOINTURE (correction du 20/09/2026 — défaut D3-03)
@@ -713,13 +791,15 @@ router.post('/:id/ai-pitch', async (req, res) => {
     // Mêmes colonnes RÉELLES que GET /:id (défaut D3-03 : `q.start_date` n'existe
     // pas dans le schéma — la route d'argumentaire répondait 500 elle aussi).
     const contratsRes = await pool.query(`
-      SELECT q.product_type,
+      SELECT ${PRODUIT_CONTRAT} AS product_type,
              ${kpi.PRIME_CONTRAT} AS premium,
              CASE WHEN q.quote_data->>'date_effet' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
                   THEN (q.quote_data->>'date_effet')::date END AS start_date
       FROM quotes q
       JOIN clients c ON c.id = q.client_id AND ${fClient.sql}
-      WHERE q.client_id = $1 AND q.status = 'active'
+      WHERE q.client_id = $1
+        AND q.status IN ${kpi.STATUTS_CONTRAT_ACTIF}
+        AND ${kpi.NATURE_CONTRAT}
     `, [opp.client_id, ...fClient.params])
 
     const arkResponse = await callArkStructured({
@@ -732,20 +812,20 @@ Fournis des questions de découverte pour engager la conversation.`,
 CLIENT: ${clientName}
 Type: ${opp.client_type || 'particulier'}
 ${opp.city ? `Ville: ${opp.city}` : ''}
-${opp.siret ? `SIRET: ${opp.siret} (professionnel)` : ''}
-Valeur client: ${opp.lifetime_value || 0}€
+${ligneIdentifiant}
+Valeur client: ${opp.lifetime_value || 0} ${symboleDevise}
 
 OPPORTUNITÉ:
 Type: ${opp.type}
 Produit actuel: ${opp.product_current || 'N/A'}
 Produit cible: ${opp.product_target}
 Score confiance: ${opp.score}%
-${opp.estimated_revenue ? `Potentiel: ${opp.estimated_revenue}€/an` : 'Potentiel monétaire: non calculé (ne pas en inventer)'}
+${opp.estimated_revenue ? `Potentiel: ${opp.estimated_revenue} ${symboleDevise}/an` : 'Potentiel monétaire: non calculé (ne pas en inventer)'}
 Analyse: ${opp.reasoning}
 Action suggérée: ${opp.suggested_action || 'Contacter'}
 
 CONTRATS ACTUELS:
-${contratsRes.rows.map(c => `- ${c.product_type}: ${c.premium}€ (depuis ${c.start_date})`).join('\n') || 'Aucun contrat actif'}
+${contratsRes.rows.map(c => `- ${c.product_type}: ${c.premium} ${symboleDevise} (depuis ${c.start_date})`).join('\n') || 'Aucun contrat actif'}
 
 Génère un argumentaire complet avec objections anticipées.`,
       schema: SCHEMA_PITCH,

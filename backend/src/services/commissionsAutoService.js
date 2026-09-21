@@ -183,10 +183,21 @@ async function calculateCommission(pool, userId, contractId, period, portee = nu
 
   return {
     ...result.rows[0],
+    // Devise RÉELLE du cabinet (CHF en Suisse, EUR en France) — même nom de
+    // champ que `commissionService` : un écran lit `expected_amount` + `devise`,
+    // et n'a plus à supposer l'euro.
+    devise,
+    expected_amount: centsToEuros(expectedAmountCents),
+    received_amount: centsToEuros(result.rows[0].received_amount_cents),
+    // DÉPRÉCIÉ (P1 CH-013) : conservé à la même valeur pour les écrans existants
+    // qui lisent encore le suffixe « _eur ». Le nom affirme une devise ; la
+    // valeur n'est JAMAIS convertie. Ne pas l'utiliser dans du code neuf.
     expected_amount_eur: centsToEuros(expectedAmountCents),
     rule_applied: rule ? {
       id: rule.id,
       rate_percent: rule.rate_percent,
+      flat_fee: centsToEuros(rule.flat_fee_cents),
+      // DÉPRÉCIÉ (P1 CH-013) : même valeur que `flat_fee`.
       flat_fee_eur: centsToEuros(rule.flat_fee_cents)
     } : null,
     contract: {

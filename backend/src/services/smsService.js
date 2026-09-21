@@ -1,19 +1,21 @@
 const axios = require('axios');
 const logger = require('../lib/logger');
+const { normaliserTelephone } = require('../lib/telephone');
 
-function sanitizePhone(phone) {
-  if (!phone) return null;
-  let cleaned = String(phone).replace(/[\s.\-()]/g, '');
-  cleaned = cleaned.replace(/^\+33\(0\)/, '+33');
-  if (cleaned.startsWith('00')) cleaned = `+${cleaned.slice(2)}`;
-  // Un numéro national suisse (9 chiffres commençant par 0) devient +41 : le
-  // convertir en +33 rendait le numéro injoignable (constat CH-008).
-  if (/^0\d{8}$/.test(cleaned)) cleaned = `+41${cleaned.slice(1)}`;
-  else if (/^0\d{9}$/.test(cleaned)) cleaned = `+33${cleaned.slice(1)}`;
-  if (/^33[1-9]/.test(cleaned)) cleaned = `+${cleaned}`;
-  if (/^41[2-9]/.test(cleaned)) cleaned = `+${cleaned}`;
-  if (!cleaned.startsWith('+')) cleaned = `+${cleaned}`;
-  return /^\+[1-9]\d{7,14}$/.test(cleaned) ? cleaned : null;
+/**
+ * Numéro prêt à envoyer (E.164), ou `null` si aucun numéro sûr ne peut être
+ * produit — voir `lib/telephone.js`, qui porte LA règle.
+ *
+ * @param {string} phone numéro du destinataire
+ * @param {{pays?: string, marche?: string}} [options] pays du CLIENT
+ *        (`clients.country`) ou, à défaut, marché de son cabinet. Sans pays,
+ *        un numéro NATIONAL (0XX XXX XX XX — forme identique en France et en
+ *        Suisse) est REFUSÉ plutôt que converti en `+33` à l'aveugle : c'est
+ *        exactement ce qui faisait partir les SMS suisses vers un numéro
+ *        français inexistant (constat CH-008).
+ */
+function sanitizePhone(phone, options = {}) {
+  return normaliserTelephone(phone, options);
 }
 
 function getSmsStatus() {
@@ -80,8 +82,10 @@ async function sendViaTwilio({ phone, message }) {
   return { success: true, provider: 'twilio', id: response.data?.sid || null };
 }
 
-async function sendSMS({ to, message }) {
-  const phone = sanitizePhone(to);
+async function sendSMS({ to, message, pays = null }) {
+  // `pays` (CH/FR) : indicatif du pays du CLIENT, fourni par l'appelant. Un
+  // numéro national suisse ne peut pas être distingué d'un français sans lui.
+  const phone = sanitizePhone(to, { pays });
   if (!phone) {
     return { success: false, error: 'invalid_phone', provider: getSmsStatus().provider };
   }
@@ -120,8 +124,8 @@ async function sendBulkSMS(recipients = []) {
   let failed = 0;
 
   for (const item of recipients) {
-    const result = await sendSMS({ to: item.to, message: item.message });
-    results.push({ to: sanitizePhone(item.to), ...result });
+    const result = await sendSMS({ to: item.to, message: item.message, pays: item.pays });
+    results.push({ to: sanitizePhone(item.to, { pays: item.pays }), ...result });
     if (result.success) sent += 1;
     else failed += 1;
   }

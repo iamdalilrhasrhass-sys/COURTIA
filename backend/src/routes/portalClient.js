@@ -426,24 +426,31 @@ router.post('/signatures', portalAuth.verifyClientPortalToken, async (req, res) 
 router.get('/messages', portalAuth.verifyClientPortalToken, async (req, res) => {
   try {
     const clientId = req.portalUser.clientId;
-    const brokerId = req.portalUser.brokerId;
     const { limit = 50, offset = 0 } = req.query;
 
+    // PORTÉE = CABINET (vu du client).
+    // Le fil était borné à `broker_id = <le courtier du compte portail>` : dès
+    // qu'un AUTRE membre du cabinet répondait au client (route courtier
+    // `POST /api/portail/messages`, qui estampille son propre identifiant), la
+    // réponse n'apparaissait JAMAIS dans l'espace du client — un message envoyé
+    // qui ne parvient pas à son destinataire. Le fil appartient au CLIENT :
+    // tous les messages de ce client, quel que soit le membre du cabinet qui
+    // les a écrits, forment une seule conversation.
     const messagesRes = await pool.query(
       `SELECT id, sender, body, attachments, read_at, created_at
        FROM client_portal_messages
-       WHERE client_id = $1 AND broker_id = $2
+       WHERE client_id = $1
        ORDER BY created_at DESC
-       LIMIT $3 OFFSET $4`,
-      [clientId, brokerId, parseInt(limit, 10), parseInt(offset, 10)]
+       LIMIT $2 OFFSET $3`,
+      [clientId, parseInt(limit, 10), parseInt(offset, 10)]
     );
 
-    // Marquer comme lus les messages du courtier
+    // Marquer comme lus les messages du courtier (toute la conversation du client)
     await pool.query(
       `UPDATE client_portal_messages
        SET read_at = NOW()
-       WHERE client_id = $1 AND broker_id = $2 AND sender = 'broker' AND read_at IS NULL`,
-      [clientId, brokerId]
+       WHERE client_id = $1 AND sender = 'broker' AND read_at IS NULL`,
+      [clientId]
     );
 
     // Compter non lus

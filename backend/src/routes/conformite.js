@@ -29,10 +29,55 @@ const { verifyToken } = require('../middleware/auth')
 const pool = require('../db')
 const referentielConformite = require('../services/referentielConformite')
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 router.use(verifyToken)
 
 function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTÉE = CABINET (et non « mes lignes de conformité »)
+//
+// POURQUOI : la conformité (DDA, KYC, mandats) est un dossier DU CABINET,
+// adossé à un client du cabinet. Tant que ces tables étaient lues et écrites sur
+// `user_id = moi`, un collaborateur voyait une conformité VIDE — 0 checklist,
+// 0 KYC, 0 mandat — alors que `total_clients` annonçait le portefeuille complet :
+// le taux de couverture affiché (dda.conforme / clients) était donc faux.
+//
+// COMMENT : ni `dda_checklists`, ni `kyc_records`, ni `mandats` ne portent de
+// colonne `cabinet_id` (vérifié dans `information_schema` / migrations). Le
+// cabinet d'une de ces lignes est celui de son propriétaire (`user_id`), résolu
+// dans `cabinet_members` — la règle de rattachement de la migration 113. La
+// DÉCISION de portée reste dans `lib/porteeCabinet` (seule autorité) ; seule la
+// colonne « cabinet » du fragment change de forme, faute de colonne dédiée.
+// Sans cabinet, le fragment retombe sur `colonne = $n` : comportement
+// historique strictement inchangé pour les cabinets mono-utilisateur.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Fragment de portée pour une table métier sans `cabinet_id` (propriétaire = `user_id`). */
+function filtreProprietaire(portee, { alias, colonne = 'user_id', depart = 1, ecriture = false } = {}) {
+  const proprietaire = `${alias}.${colonne}`
+  return porteeCabinet.fragment(portee, {
+    cabinet: `(SELECT cm.cabinet_id FROM cabinet_members cm
+                WHERE cm.user_id = ${proprietaire}
+                  AND cm.removed_at IS NULL
+                  AND cm.cabinet_id = ANY($${depart}::uuid[])
+                LIMIT 1)`,
+    proprietaire,
+    depart,
+    ecriture,
+  })
+}
+
+/** Fragment de portée sur `clients` (ancre du tenant : `clients.cabinet_id`). */
+function filtreClients(portee, { alias = 'c', depart = 1, ecriture = false } = {}) {
+  return porteeCabinet.fragment(portee, {
+    cabinet: `${alias}.cabinet_id`,
+    proprietaire: `${alias}.courtier_id`,
+    depart,
+    ecriture,
+  })
+}
 
 /**
  * Libellés de conformité du CABINET de l'appelant : FINMA pour un cabinet
@@ -40,6 +85,18 @@ function uid(req) { return Number(req.user?.userId || req.user?.id || 0) }
  * unique du produit (`lib/marcheCabinet`, via `referentielConformite`) : tous
  * les membres d'un même cabinet voient le même vocabulaire, et une donnée
  * manquante fait retomber sur la France — jamais sur un référentiel étranger.
+ *
+ * CE BLOC EST AUSSI LA SOURCE DU RÉFÉRENTIEL PRODUITS ET DES MENTIONS DE
+ * PROTECTION DES DONNÉES (constat d'audit CH-039 / CH-026). Il porte :
+ *   • `produits`           — familles de produits du marché (LAMal, LCA, LAA,
+ *                            LPP, 3e pilier… en Suisse ; IARD, santé, auto… en
+ *                            France), servies par `services/referentielProduits` ;
+ *   • `protection_donnees` — nLPD / PFPDT en Suisse, RGPD / CNIL en France, avec
+ *                            les éléments à documenter par le cabinet.
+ * POURQUOI ICI ET PAS UNE ROUTE DE PLUS : `/conformite/dashboard` EST déjà la
+ * route de lecture du référentiel de conformité de l'écran `/conformite`. Une
+ * seconde route servirait la même table par un autre chemin et finirait par
+ * diverger. Un consommateur qui a besoin de ce référentiel lit ce bloc.
  */
 async function libellesDuCabinet(req) {
   return referentielConformite.libellesDeLaRequete(req, { pool })
@@ -47,25 +104,35 @@ async function libellesDuCabinet(req) {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const userId = uid(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+
+    // Portée CABINET sur les trois registres de conformité (tables sans
+    // `cabinet_id` : cabinet du propriétaire, cf. helper ci-dessus).
+    const fDda = filtreProprietaire(portee, { alias: 'd' })
+    const fKyc = filtreProprietaire(portee, { alias: 'k' })
+    const fMand = filtreProprietaire(portee, { alias: 'm' })
 
     const [{ rows: ddaStats }, { rows: kycStats }, { rows: mandatStats }] = await Promise.all([
       pool.query(`
-        SELECT status, COUNT(*)::int AS count FROM dda_checklists
-        WHERE user_id = $1 GROUP BY status
-      `, [userId]).catch(() => ({ rows: [] })),
+        SELECT d.status, COUNT(*)::int AS count FROM dda_checklists d
+        WHERE ${fDda.sql} GROUP BY d.status
+      `, [...fDda.params]).catch(() => ({ rows: [] })),
       pool.query(`
-        SELECT status, COUNT(*)::int AS count FROM kyc_records
-        WHERE user_id = $1 GROUP BY status
-      `, [userId]).catch(() => ({ rows: [] })),
+        SELECT k.status, COUNT(*)::int AS count FROM kyc_records k
+        WHERE ${fKyc.sql} GROUP BY k.status
+      `, [...fKyc.params]).catch(() => ({ rows: [] })),
       pool.query(`
-        SELECT status, COUNT(*)::int AS count FROM mandats
-        WHERE user_id = $1 GROUP BY status
-      `, [userId]).catch(() => ({ rows: [] })),
+        SELECT m.status, COUNT(*)::int AS count FROM mandats m
+        WHERE ${fMand.sql} GROUP BY m.status
+      `, [...fMand.params]).catch(() => ({ rows: [] })),
     ])
 
+    // Le portefeuille compté est celui du CABINET : sans cela, le taux de
+    // couverture DDA/KYC était calculé sur le dénominateur d'un autre périmètre
+    // que le numérateur (conformité du collaborateur ÷ clients du cabinet).
+    const fClients = filtreClients(portee, { alias: 'c' })
     const { rows: clientsTotal } = await pool.query(
-      `SELECT COUNT(*)::int AS total FROM clients WHERE courtier_id = $1`, [userId]
+      `SELECT COUNT(*)::int AS total FROM clients c WHERE ${fClients.sql}`, [...fClients.params]
     ).catch(() => ({ rows: [{ total: 0 }] }))
 
     const dda = { conforme: 0, pending: 0, incomplete: 0 }
@@ -98,13 +165,37 @@ router.get('/dashboard', async (req, res) => {
   }
 })
 
+/**
+ * Le client visé appartient-il au périmètre de l'appelant ?
+ * POURQUOI (Red Team RT4-13, mesuré en production le 21/09/2026) :
+ * `GET /api/conformite/dda/checklist/183` répondait 200 avec une checklist vide
+ * alors que 183 était le client d'un AUTRE cabinet. Aucune donnée n'était
+ * servie, mais la convention du produit (« on ne confirme jamais l'existence
+ * d'une ressource d'un autre cabinet ») était rompue — un identifiant suffisait
+ * à apprendre qu'il existe. Toute lecture de conformité KYC/DDA répond
+ * désormais 404 pour un client hors périmètre.
+ */
+async function clientDuCabinet(pool, portee, clientId, { ecriture = false } = {}) {
+  if (!Number.isFinite(clientId) || clientId <= 0) return false
+  const f = filtreClients(portee, { alias: 'c', ecriture })
+  const { rows } = await pool.query(
+    `SELECT 1 FROM clients c WHERE c.id = $${f.suivant} AND ${f.sql}`,
+    [...f.params, clientId]
+  )
+  return rows.length > 0
+}
+
 router.get('/dda/checklist/:client_id', async (req, res) => {
   try {
-    const userId = uid(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const clientId = Number(req.params.client_id)
+    if (!(await clientDuCabinet(pool, portee, clientId))) {
+      return res.status(404).json({ error: 'client_not_found', message: 'Client introuvable dans votre cabinet' })
+    }
+    const f = filtreProprietaire(portee, { alias: 'd' })
     const { rows } = await pool.query(`
-      SELECT * FROM dda_checklists WHERE user_id = $1 AND client_id = $2
-    `, [userId, clientId])
+      SELECT d.* FROM dda_checklists d WHERE ${f.sql} AND d.client_id = $${f.suivant}
+    `, [...f.params, clientId])
     // Le titre de la checklist suit le marché : « Checklist DDA (Directive
     // Distribution Assurance) » est un intitulé FRANÇAIS (transposition d'une
     // directive européenne) qui n'a pas à être affiché à un cabinet suisse, qui
@@ -127,8 +218,20 @@ router.get('/dda/checklist/:client_id', async (req, res) => {
 
 router.post('/dda/checklist/:client_id', async (req, res) => {
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'mettre à jour la checklist de conformité')) return
     const userId = uid(req)
     const clientId = Number(req.params.client_id)
+
+    // Le client visé doit appartenir au CABINET (l'ancre du tenant).
+    const fClient = filtreClients(portee, { alias: 'c', ecriture: true })
+    const control = await pool.query(
+      `SELECT c.id FROM clients c WHERE c.id = $${fClient.suivant} AND ${fClient.sql}`,
+      [...fClient.params, clientId]
+    )
+    if (control.rows.length === 0) {
+      return res.status(404).json({ error: 'client_not_found', message: 'Client introuvable dans votre cabinet' })
+    }
     const { besoin_exprime, devoir_conseil, document_remis, informations_marche, fiche_synthese, notes } = req.body || {}
 
     const allOk = besoin_exprime && devoir_conseil && document_remis && informations_marche && fiche_synthese
@@ -160,11 +263,15 @@ router.post('/dda/checklist/:client_id', async (req, res) => {
 
 router.get('/kyc/:client_id', async (req, res) => {
   try {
-    const userId = uid(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
     const clientId = Number(req.params.client_id)
+    if (!(await clientDuCabinet(pool, portee, clientId))) {
+      return res.status(404).json({ error: 'client_not_found', message: 'Client introuvable dans votre cabinet' })
+    }
+    const f = filtreProprietaire(portee, { alias: 'k' })
     const { rows } = await pool.query(`
-      SELECT * FROM kyc_records WHERE user_id = $1 AND client_id = $2
-    `, [userId, clientId])
+      SELECT k.* FROM kyc_records k WHERE ${f.sql} AND k.client_id = $${f.suivant}
+    `, [...f.params, clientId])
     res.json({ ok: true, kyc: rows[0] || null })
   } catch (err) {
     res.status(500).json({ error: 'fetch_failed', message: messagePublic(err, { statut: 500 }) })
@@ -173,9 +280,21 @@ router.get('/kyc/:client_id', async (req, res) => {
 
 router.post('/kyc/verify', async (req, res) => {
   try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'enregistrer une vérification KYC')) return
     const userId = uid(req)
     const { client_id, identity_document_type, identity_document_number, identity_verified, address_verified, pep, sanction_check, document_path } = req.body || {}
     if (!client_id) return res.status(400).json({ error: 'missing_client_id' })
+
+    // Le client visé doit appartenir au CABINET (l'ancre du tenant).
+    const fClient = filtreClients(portee, { alias: 'c', ecriture: true })
+    const control = await pool.query(
+      `SELECT c.id FROM clients c WHERE c.id = $${fClient.suivant} AND ${fClient.sql}`,
+      [...fClient.params, client_id]
+    )
+    if (control.rows.length === 0) {
+      return res.status(404).json({ error: 'client_not_found', message: 'Client introuvable dans votre cabinet' })
+    }
     const status = identity_verified && address_verified ? 'verified' : 'pending'
     const { rows } = await pool.query(`
       INSERT INTO kyc_records (user_id, client_id, identity_document_type, identity_document_number, identity_verified, address_verified, pep, sanction_check, document_path, status, verified_at)
@@ -200,13 +319,14 @@ router.post('/kyc/verify', async (req, res) => {
 
 router.get('/mandats', async (req, res) => {
   try {
-    const userId = uid(req)
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const f = filtreProprietaire(portee, { alias: 'm' })
     const { rows } = await pool.query(`
       SELECT m.*, c.first_name, c.last_name FROM mandats m
-      JOIN clients c ON c.id = m.client_id
-      WHERE m.user_id = $1
+      LEFT JOIN clients c ON c.id = m.client_id
+      WHERE ${f.sql}
       ORDER BY m.created_at DESC LIMIT 200
-    `, [userId])
+    `, [...f.params])
     res.json({ ok: true, mandats: rows })
   } catch (err) {
     res.status(500).json({ error: 'list_failed', message: messagePublic(err, { statut: 500 }) })
@@ -245,6 +365,7 @@ router.get('/audit-logs', async (req, res) => {
 router.get(['/export-acpr', '/export-registre'], async (req, res) => {
   try {
     const userId = uid(req)
+    const porteeExport = await porteeCabinet.resoudrePortee(pool, req)
     const year = Number(req.query.year || new Date().getFullYear())
     const libelles = await libellesDuCabinet(req)
     const suisse = libelles.marche === 'CH'
@@ -264,17 +385,23 @@ router.get(['/export-acpr', '/export-registre'], async (req, res) => {
     const { rows: meRows } = await pool.query(`SELECT id, email, orias_id, raison_sociale FROM users WHERE id = $1`, [userId]).catch(() => ({ rows: [] }))
     const me = meRows[0] || { email: 'n/a' }
 
+    // Le registre exporté est celui du CABINET (cf. §PORTÉE en tête de fichier) :
+    // un collaborateur exportait sinon un registre à zéro, en contradiction avec
+    // l'écran de conformité qui lui montre celui du cabinet.
+    const fDda = filtreProprietaire(porteeExport, { alias: 'd' })
     const { rows: ddaConforme } = await pool.query(`
-      SELECT COUNT(*)::int AS count FROM dda_checklists WHERE user_id = $1 AND status = 'conforme'
-    `, [userId]).catch(() => ({ rows: [{ count: 0 }] }))
+      SELECT COUNT(*)::int AS count FROM dda_checklists d
+       WHERE ${fDda.sql} AND d.status = 'conforme'
+    `, [...fDda.params]).catch(() => ({ rows: [{ count: 0 }] }))
 
+    const fClients = filtreClients(porteeExport, { alias: 'c' })
     const { rows: clientsTotal } = await pool.query(`
-      SELECT COUNT(*)::int AS count FROM clients WHERE courtier_id = $1
-    `, [userId]).catch(() => ({ rows: [{ count: 0 }] }))
+      SELECT COUNT(*)::int AS count FROM clients c WHERE ${fClients.sql}
+    `, [...fClients.params]).catch(() => ({ rows: [{ count: 0 }] }))
 
     const { rows: contractsTotal } = await pool.query(`
-      SELECT COUNT(*)::int AS count, COALESCE(SUM(lifetime_value),0)::numeric AS ca FROM clients WHERE courtier_id = $1
-    `, [userId]).catch(() => ({ rows: [{ count: 0, ca: 0 }] }))
+      SELECT COUNT(*)::int AS count, COALESCE(SUM(c.lifetime_value),0)::numeric AS ca FROM clients c WHERE ${fClients.sql}
+    `, [...fClients.params]).catch(() => ({ rows: [{ count: 0, ca: 0 }] }))
 
     return res.json({
       ok: true,

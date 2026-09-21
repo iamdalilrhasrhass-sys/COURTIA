@@ -28,6 +28,8 @@ import LegalSubprocessors from './pages/LegalSubprocessors'
 import { SecurityPublic, RgpdPublic, ChangelogPublic, RoadmapPublic, StatusPublic } from './pages/TrustPages'
 import { applySeo, absoluteUrl } from './lib/seo'
 import AdminRoute from './components/AdminRoute'
+// Noms d'écrans : source unique partagée avec la barre latérale et la palette.
+import { LIBELLES } from './lib/libelles'
 
 // Private app is code-split so the public landing does not pull the whole cockpit.
 const AppPrivateLayout = lazy(() => import('./AppPrivateLayout'))
@@ -241,11 +243,13 @@ const ROUTES_PRIVEES = [
 ]
 
 // ── Titre d'onglet de l'espace privé (§33) ───────────────────────────────────
-// Chaque route du cockpit annonce son propre titre (« Cockpit — COURTIA »,
-// « Clients — COURTIA »…), sans emoji. Sans cela, l'onglet conservait le dernier
-// titre public — « Connexion — COURTIA » — après la connexion : le courtier
-// lisait le nom d'une page qu'il avait déjà quittée. Ces routes ne sont jamais
-// indexables (noindex), elles ne doivent donc pas apparaître dans les SERP.
+// Chaque route du cockpit annonce son propre titre (« Tableau de bord — COURTIA »,
+// « Clients — COURTIA »…), sans emoji. Les noms d'écrans de la barre latérale,
+// de la palette (Cmd+K), de l'onglet et du titre de l'écran viennent de la MÊME
+// source (lib/libelles.js) : une notion = un seul mot (UX-024/UX-025/UX-037).
+// Sans cela, l'onglet conservait le dernier titre public — « Connexion —
+// COURTIA » — après la connexion : le courtier lisait le nom d'une page qu'il
+// avait déjà quittée. Ces routes ne sont jamais indexables (noindex).
 const TITRES_PRIVES = [
   ['/admin/users', 'Courtiers'],
   ['/admin/essais', 'Suivi des essais'],
@@ -264,12 +268,12 @@ const TITRES_PRIVES = [
   ['/contrats', 'Contrats'],
   ['/devis/new', 'Nouveau devis'],
   ['/devis', 'Devis'],
-  ['/dashboard', 'Cockpit'],
-  ['/morning-brief', 'Morning Brief'],
+  ['/dashboard', LIBELLES.tableauDeBord],
+  ['/morning-brief', LIBELLES.briefDuMatin],
   ['/sante-portefeuille', 'Santé du portefeuille'],
   ['/ark-intelligence', 'Intelligence prédictive'],
   ['/assistant-ark', 'Assistant ARK'],
-  ['/taches', 'Tâches'],
+  ['/taches', LIBELLES.taches],
   ['/rapports', 'Rapports'],
   ['/objectifs', 'Objectifs'],
   ['/documents', 'Documents'],
@@ -277,7 +281,7 @@ const TITRES_PRIVES = [
   ['/opportunites', 'Opportunités'],
   ['/prospection', 'Prospection'],
   ['/analyses', 'Analyses'],
-  ['/analytics', 'Analytics'],
+  ['/analytics', LIBELLES.analyses],
   ['/abonnement', 'Abonnement'],
   ['/billing', 'Facturation'],
   ['/partenaires', 'Partenaires'],
@@ -304,7 +308,7 @@ function titreEspacePrive(pathname = '/') {
   const trouve = TITRES_PRIVES.find(([prefixe]) => (
     pathname === prefixe || pathname.startsWith(`${prefixe}/`)
   ))
-  return trouve ? trouve[1] : 'Cockpit'
+  return trouve ? trouve[1] : LIBELLES.tableauDeBord
 }
 
 function TitreEspacePrive({ children }) {

@@ -62,6 +62,21 @@ function AnimatedNumber({ value, format = 'number' }) {
   return <span>{displayValue}</span>
 }
 
+// ─── Surface de carte du cockpit ─────────────────────────────────────────────
+// POURQUOI : `BubbleCard` est une carte CLAIRE (fond blanc translucide) partagée
+// avec les pages PUBLIQUES de paiement (PaiementSucces / PaiementAnnule), qui
+// vivent hors du layout sombre. Dans le cockpit, le thème global force les
+// titres en clair (index.css : `h1…h4 { color:#f8fafc !important }`) : sur une
+// carte blanche, un titre #f8fafc était illisible, et les libellés codés en dur
+// (quasi noirs, ou noirs translucides) juraient avec le fond sombre de
+// l'application. L'écran impose donc à la même carte les jetons du design
+// system : plus aucune couleur quasi noire codée en dur.
+const CARTE_COCKPIT = {
+  background: 'linear-gradient(150deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025))',
+  border: '1px solid rgba(255, 255, 255, 0.10)',
+  boxShadow: 'var(--shadow-card)',
+}
+
 // ─── KPI Bubble Card ─────────────────────────────────────────────────────────
 // `subtitle` porte la DÉFINITION de la mesure (numérateur / dénominateur) :
 // un intitulé seul ne suffit pas à savoir ce qui est mesuré (voir D2-07).
@@ -72,9 +87,9 @@ function KPICard({ icon: Icon, title, subtitle, value, format = 'number', loadin
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08, ease: 'easeOut' }}
     >
-      <BubbleCard hover padding={22}>
+      <BubbleCard hover padding={22} style={CARTE_COCKPIT}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(0,0,0,0.5)', margin: 0, lineHeight: 1.3 }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary, rgba(248,250,252,0.65))', margin: 0, lineHeight: 1.3 }}>
             {title}
           </p>
           <div
@@ -94,21 +109,21 @@ function KPICard({ icon: Icon, title, subtitle, value, format = 'number', loadin
           </div>
         </div>
         {loading ? (
-          <div style={{ height: 32, width: '70%', background: 'rgba(0,0,0,0.04)', borderRadius: 8, animation: 'pulse 1.5s ease-in-out infinite' }} />
+          <div style={{ height: 32, width: '70%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, animation: 'pulse 1.5s ease-in-out infinite' }} />
         ) : (
           <p style={{
             fontSize: 26,
             fontWeight: 700,
-            color: '#0a0a0a',
+            color: 'var(--text-primary, #f8fafc)',
             margin: 0,
-            fontFamily: 'var(--c-font-body, Inter, sans-serif)',
+            fontFamily: 'var(--font-sans, Inter, sans-serif)',
             letterSpacing: '-0.02em',
           }}>
             <AnimatedNumber value={value} format={format} />
           </p>
         )}
         {subtitle && (
-          <p style={{ fontSize: 11, color: 'rgba(0,0,0,0.42)', margin: '6px 0 0', lineHeight: 1.45 }}>{subtitle}</p>
+          <p style={{ fontSize: 11, color: 'var(--text-tertiary, rgba(248,250,252,0.45))', margin: '6px 0 0', lineHeight: 1.45 }}>{subtitle}</p>
         )}
       </BubbleCard>
     </motion.div>
@@ -176,7 +191,7 @@ function MiniLineChart({ data = [], color = '#2563eb', height = 180 }) {
           x2={chartW - padding.right}
           y1={yScale(min + range * pct)}
           y2={yScale(min + range * pct)}
-          stroke="rgba(0,0,0,0.05)"
+          stroke="rgba(255,255,255,0.07)"
           strokeWidth="0.3"
         />
       ))}
@@ -197,10 +212,10 @@ function MiniLineChart({ data = [], color = '#2563eb', height = 180 }) {
             x={xScale(idx)}
             y={chartH - 4}
             textAnchor="middle"
-            fill="rgba(0,0,0,0.35)"
+            fill="rgba(248,250,252,0.55)"
             fontSize="4"
             fontWeight="500"
-            fontFamily="var(--c-font-body, Inter, sans-serif)"
+            fontFamily="var(--font-sans, Inter, sans-serif)"
           >
             {d.month}
           </text>
@@ -244,10 +259,10 @@ function ProductBars({ data = [] }) {
       {data.map((item) => (
         <div key={item.label}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(0,0,0,0.65)' }}>{item.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#0a0a0a' }}>{item.value}%</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary, rgba(248,250,252,0.65))' }}>{item.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #f8fafc)' }}>{item.value}%</span>
           </div>
-          <div style={{ height: 8, background: 'rgba(0,0,0,0.04)', borderRadius: 9999, overflow: 'hidden' }}>
+          <div style={{ height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${(item.value / maxVal) * 100}%` }}
@@ -270,7 +285,7 @@ function NonMesure({ children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <BubbleBadge color="#94a3b8" size="sm">non mesuré</BubbleBadge>
-      <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', margin: 0 }}>{children}</p>
+      <p style={{ fontSize: 13, color: 'var(--text-tertiary, rgba(248,250,252,0.45))', margin: 0 }}>{children}</p>
     </div>
   )
 }
@@ -393,10 +408,10 @@ export default function AnalyticsExecutive() {
           transition={{ duration: 0.4 }}
           style={{ marginBottom: 28 }}
         >
-          <h1 className="ae-title" style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 28, color: 'var(--c-text-primary, #f4f6ff)', margin: 0 }}>
+          <h1 className="ae-title" style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontWeight: 700, fontSize: 28, color: 'var(--text-primary, #f8fafc)', margin: 0 }}>
             Analyses dirigeants
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--c-text-secondary, rgba(244,246,255,0.72))', marginTop: 4 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary, rgba(248,250,252,0.65))', marginTop: 4 }}>
             Vue d'ensemble et indicateurs clés de votre portefeuille.
           </p>
         </motion.div>
@@ -421,9 +436,9 @@ export default function AnalyticsExecutive() {
         {/* Chart + bottom sections */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Monthly evolution chart */}
-          <BubbleCard hover={false} padding={24}>
+          <BubbleCard hover={false} padding={24} style={CARTE_COCKPIT}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
+              <h3 style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary, #f8fafc)', margin: 0 }}>
                 Évolution mensuelle du CA
               </h3>
               {serieCa.length > 1
@@ -432,7 +447,7 @@ export default function AnalyticsExecutive() {
             </div>
             {serieCa.length > 1
               ? <MiniLineChart data={serieCa} color="#2563eb" height={200} />
-              : <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', margin: 0 }}>
+              : <p style={{ fontSize: 13, color: 'var(--text-tertiary, rgba(248,250,252,0.45))', margin: 0 }}>
                   Pas encore d'historique de primes : la courbe s'affichera dès que des contrats
                   seront enregistrés sur plusieurs mois. Aucune courbe d'exemple n'est affichée.
                 </p>}
@@ -441,9 +456,9 @@ export default function AnalyticsExecutive() {
           {/* 2-column bottom section */}
           <div className="ae-bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             {/* Product repartition — mesurée, ou déclarée non mesurée */}
-            <BubbleCard hover={false} padding={24}>
+            <BubbleCard hover={false} padding={24} style={CARTE_COCKPIT}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-                <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>
+                <h3 style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary, #f8fafc)', margin: 0 }}>
                   Répartition par type de produit
                 </h3>
                 {repartitionProduits.length > 0 && (
@@ -463,8 +478,8 @@ export default function AnalyticsExecutive() {
             </BubbleCard>
 
             {/* Activité hebdomadaire — aucune source de mesure : on le dit */}
-            <BubbleCard hover={false} padding={24}>
-              <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 18 }}>
+            <BubbleCard hover={false} padding={24} style={CARTE_COCKPIT}>
+              <h3 style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary, #f8fafc)', margin: 0, marginBottom: 18 }}>
                 Activité hebdomadaire
               </h3>
               {/* L'ancien écran dessinait ici une grille de 35 cases colorées par
@@ -481,11 +496,11 @@ export default function AnalyticsExecutive() {
 
         {/* Fallback if no data */}
         {!loading && !stats && (
-          <BubbleCard hover={false} padding={40} style={{ marginTop: 24, textAlign: 'center' }}>
-            <h3 style={{ fontFamily: 'var(--c-font-display, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0, marginBottom: 8 }}>
+          <BubbleCard hover={false} padding={40} style={{ ...CARTE_COCKPIT, marginTop: 24, textAlign: 'center' }}>
+            <h3 style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary, #f8fafc)', margin: 0, marginBottom: 8 }}>
               Données non disponibles
             </h3>
-            <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary, rgba(248,250,252,0.65))', margin: 0 }}>
               Nous ne pouvons pas afficher les analyses pour le moment. Veuillez réessayer plus tard ou contacter le support.
             </p>
           </BubbleCard>

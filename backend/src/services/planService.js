@@ -7,18 +7,34 @@ const pool = require('../db');
 const logger = require('../lib/logger');
 const BILLING_MODE = process.env.BILLING_MODE || 'test';
 
+/**
+ * Price ID Stripe d'un plan, depuis la CONFIGURATION uniquement.
+ *
+ * POURQUOI UNE TABLE : les plans FACTURABLES sont exactement ceux listés ici.
+ * Un plan absent de cette table (« Sur devis », alias hérité) n'a aucun prix à
+ * encaisser, et c'est cette absence qui fait foi — pas une liste recopiée dans
+ * la route de checkout.
+ *
+ * La grille suisse est facturée en francs sur ses propres prix Stripe : elle a
+ * donc ses propres variables (`stripeService.getPriceId` lit les MÊMES noms, la
+ * synchronisation des deux grilles se fait par la configuration, jamais par une
+ * recopie de prix).
+ */
+const VARIABLES_PRIX = {
+  starter: ['STRIPE_STARTER_PRICE_ID_TEST', 'STRIPE_PRICE_STARTER'],
+  pro: ['STRIPE_PRO_PRICE_ID_TEST', 'STRIPE_PRICE_PRO'],
+  independant: ['STRIPE_INDEPENDANT_PRICE_ID_TEST', 'STRIPE_PRICE_INDEPENDANT'],
+  cabinet_ch: ['STRIPE_CABINET_CH_PRICE_ID_TEST', 'STRIPE_PRICE_CABINET_CH'],
+};
+
 function stripePriceFor(planCode) {
+  const variables = VARIABLES_PRIX[planCode];
+  if (!variables) return null; // sur devis, alias hérité, code inconnu
+  const [variableTest, variableLive] = variables;
   if (BILLING_MODE === 'test') {
-    if (planCode === 'starter') return process.env.STRIPE_STARTER_PRICE_ID_TEST || process.env.STRIPE_PRICE_STARTER || null;
-    if (planCode === 'pro') return process.env.STRIPE_PRO_PRICE_ID_TEST || process.env.STRIPE_PRICE_PRO || null;
-    if (planCode === 'cabinet') return null;
-    if (planCode === 'premium') return null;
+    return process.env[variableTest] || process.env[variableLive] || null;
   }
-  if (planCode === 'starter') return process.env.STRIPE_PRICE_STARTER || null;
-  if (planCode === 'pro') return process.env.STRIPE_PRICE_PRO || null;
-  if (planCode === 'cabinet') return null;
-  if (planCode === 'premium') return null;
-  return null;
+  return process.env[variableLive] || null;
 }
 
 const PLANS = {
@@ -242,7 +258,7 @@ const PLANS_CH = {
     highlighted: false,
     features: { ...PLANS.pro.features },
     limits: { ...PLANS.pro.limits },
-    stripe_price_id: null,
+    stripe_price_id: stripePriceFor('independant'),
   },
   cabinet_ch: {
     name: 'Cabinet',
@@ -253,7 +269,7 @@ const PLANS_CH = {
     highlighted: true,
     features: { ...PLANS.cabinet.features },
     limits: { ...PLANS.cabinet.limits },
-    stripe_price_id: null,
+    stripe_price_id: stripePriceFor('cabinet_ch'),
   },
   cabinet_ch_sur_devis: {
     name: 'Sur devis',
@@ -264,6 +280,7 @@ const PLANS_CH = {
     highlighted: false,
     features: { ...PLANS.cabinet.features },
     limits: { ...PLANS.cabinet.limits },
+    // Aucun prix à encaisser : l'offre est sur devis (contact commercial).
     stripe_price_id: null,
   },
 };
@@ -294,12 +311,52 @@ function getPlan(name) {
 }
 
 /**
+ * CATALOGUE D'UN MARCHÉ — SEULE SOURCE DE VÉRITÉ DES CODES DE PLAN.
+ *
+ * POURQUOI CETTE FONCTION EXISTE (défaut P1 mesuré le 21/09/2026, 4e passe
+ * adverse) : `GET /api/billing/plans` servait au cabinet suisse les codes
+ * `independant`, `cabinet_ch` et `cabinet_ch_sur_devis` (grille CHF, 199/349
+ * CHF HT, TVA suisse 8,1 %), mais `POST /api/billing/create-checkout-session`
+ * les refusait en 400 `invalid_plan` : la route validait ses codes sur une liste
+ * recopiée (starter/pro/cabinet). Un cabinet suisse ne pouvait donc souscrire
+ * AUCUN de ses plans, même Stripe configuré — la grille affichée était une
+ * grille morte.
+ *
+ * La validation du checkout dérive DÉSORMAIS de cette liste (voir
+ * `billingService.normalizePlanCode`) : ce qui est servi est ce qui est
+ * acceptable, et un code retiré du catalogue est refusé des deux côtés.
+ */
+function cataloguePourMarche(marche = 'FR') {
+  return String(marche).toUpperCase() === 'CH' ? PLANS_CH : PLANS;
+}
+
+/**
+ * Codes de plan RÉELLEMENT servis pour un marché.
+ * `premium` est exclu : c'est un alias de base historique, jamais un plan
+ * présenté (les comptes anciens sont résolus vers `cabinet`).
+ */
+function codesPourMarche(marche = 'FR') {
+  return Object.keys(cataloguePourMarche(marche)).filter((code) => code !== 'premium');
+}
+
+/**
+ * Plan du catalogue pour un code donné, ou `null` si ce code n'existe pas dans
+ * ce marché. Utilisé par la route de checkout : un code inconnu reste refusé.
+ */
+function planPourCode(code, marche = 'FR') {
+  if (!code) return null;
+  const normalise = String(code).trim().toLowerCase();
+  if (normalise === 'premium') return PLANS.cabinet; // alias hérité
+  return cataloguePourMarche(marche)[normalise] || null;
+}
+
+/**
  * Retourne tous les plans (sans secrets Stripe pour les routes publiques)
  */
 function getAllPlans(marche = 'FR') {
   // Un cabinet suisse reçoit la grille CHF ; tout le reste garde la grille
   // historique en euros. Aucune page ne doit coder ses prix en dur.
-  const source = String(marche).toUpperCase() === 'CH' ? PLANS_CH : PLANS
+  const source = cataloguePourMarche(marche)
   return Object.entries(source).filter(([key]) => key !== 'premium').map(([key, plan]) => ({
     id: key,
     name: plan.name,
@@ -583,6 +640,10 @@ module.exports = {
   FISCALITE,
   TRIAL_FEATURES,
   DEFAULT_PLAN,
+  VARIABLES_PRIX,
+  cataloguePourMarche,
+  codesPourMarche,
+  planPourCode,
   getPlan,
   getAllPlans,
   getFeatureGate,

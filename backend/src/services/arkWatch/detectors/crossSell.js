@@ -8,9 +8,14 @@
  * - Pro mono-produit → multi-produits
  * 
  * Utilise ARK IA pour scoring et reasoning avancé.
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : le pré-filtre porte sur le
+ * CABINET (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui
+ * lance le run. Sans cabinet, la clause reste exactement `c.courtier_id = $1`.
  */
 
 const { callArkStructured } = require('../../arkEngine')
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 const CROSS_SELL_MATRIX = {
   auto: ['habitation', 'mrh', 'moto', '2_roues'],
@@ -52,10 +57,17 @@ module.exports = {
    * Détecte les opportunités cross-sell (SQL pré-filtre + ARK scoring)
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     
     // Pré-filtre SQL : clients avec 1-2 produits actifs
     const clientsResult = await pool.query(`
@@ -71,12 +83,12 @@ module.exports = {
           FILTER (WHERE q.status = 'actif') AS total_premium
       FROM clients c
       LEFT JOIN quotes q ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
         AND c.status NOT IN ('inactif', 'perdu')
       GROUP BY c.id
       HAVING COUNT(DISTINCT q.id) FILTER (WHERE q.status = 'actif') BETWEEN 1 AND 3
       LIMIT 100
-    `, [brokerId])
+    `, f.params)
     
     const currentMonth = new Date().getMonth() + 1
     const candidates = []

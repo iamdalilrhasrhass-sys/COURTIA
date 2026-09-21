@@ -7,7 +7,16 @@
  * - RIB (validité bancaire)
  * - Carte d'identité
  * - Attestations diverses
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : la surveillance porte sur le
+ * CABINET (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui
+ * lance le run. `client_documents` ne porte pas `cabinet_id` : son ancre est
+ * celle de son CLIENT (`client_documents.client_id` est NOT NULL), donc
+ * `c.cabinet_id` via la jointure déjà présente. Sans cabinet, la clause reste
+ * exactement `d.broker_id = $1`.
  */
+
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 module.exports = {
   code: 'documents_expired',
@@ -18,10 +27,17 @@ module.exports = {
    * Détecte les documents expirés ou expirant bientôt
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'd.broker_id',
+      depart: 1,
+    })
     
     // Documents avec date d'expiration dans metadata ou analysis_result
     const result = await pool.query(`
@@ -36,7 +52,7 @@ module.exports = {
         c.first_name, c.last_name, c.company_name, c.email
       FROM client_documents d
       JOIN clients c ON d.client_id = c.id
-      WHERE d.broker_id = $1
+      WHERE ${f.sql}
         AND d.deleted_at IS NULL
         AND d.status != 'rejected'
         AND (
@@ -52,7 +68,7 @@ module.exports = {
           (d.document_type IN ('permis_conduire', 'carte_identite', 'passeport')
            AND d.uploaded_at < NOW() - INTERVAL '2 years')
         )
-    `, [brokerId])
+    `, f.params)
     
     const currentMonth = new Date().getMonth() + 1
     

@@ -10,6 +10,7 @@ import StatusPill from '../components/ui/StatusPill'
 import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
 import { libellesMarche, marcheCourante } from '../lib/marche'
+import { LIBELLES } from '../lib/libelles'
 
 const STEP_META = {
   profile: {
@@ -34,7 +35,7 @@ const STEP_META = {
   },
   first_brief: {
     icon: Sparkles,
-    title: 'Morning Brief ARK',
+    title: `${LIBELLES.briefDuMatin} ARK`,
     subtitle: 'Lancez votre plan d’action quotidien.',
   },
 }
@@ -105,7 +106,7 @@ export default function CabinetOnboarding() {
           <p style={{ ...eyebrowStyle, marginTop: 14 }}>Onboarding cabinet</p>
           <h1 style={titleStyle}>Votre cabinet prend vie dans COURTIA.</h1>
           <p style={leadStyle}>
-            En moins de trois minutes, posez le profil cabinet, préparez l’import clients, connectez vos outils et lancez votre premier Morning Brief ARK.
+            En moins de trois minutes, posez le profil cabinet, préparez l’import clients, connectez vos outils et lancez votre premier {LIBELLES.briefDuMatin} ARK.
           </p>
         </div>
         <GlassCard style={progressCardStyle}>
@@ -210,7 +211,7 @@ function renderStepAction(key, done, savingStep, completeStep, navigate) {
   }
   return (
     <div style={actionRowStyle}>
-      <Button variant="secondary" onClick={() => navigate('/morning-brief')}>Lancer Morning Brief</Button>
+      <Button variant="secondary" onClick={() => navigate('/morning-brief')}>Lancer {LIBELLES.briefDuMatin}</Button>
       <Button variant="ghost" onClick={() => completeStep('first_brief')} disabled={done || savingStep === key}>{done ? 'Brief prêt' : 'Valider le brief'}</Button>
     </div>
   )

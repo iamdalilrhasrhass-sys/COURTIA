@@ -4,86 +4,15 @@ import { VibeBackdrop, VibeScrollSection } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import PageHeader from '../components/PageHeader'
 import SimpleCard from '../components/SimpleCard'
+import {
+  CONFORMITE_NEUTRE,
+  protectionDonneesAffichee,
+  produitsAffiches,
+  referentielConformite,
+  sigleChecklist,
+} from '../lib/affichageConformite'
 import api from '../api'
 import toast from 'react-hot-toast'
-
-const CONFORMITE_NEUTRE = {
-  marche: null,
-  autorite: null,
-  chapeau: 'Registre de conformité · KYC · Mandats · Audit logs · Export',
-  checklist_titre: 'Checklist de conformité',
-  // Étapes génériques du devoir de conseil : vraies en France comme en
-  // Suisse, elles ne nomment ni autorité, ni texte, ni pièce propre à un
-  // marché (pas d'IPID, pas de « fiche conseil »).
-  checklist_items: [
-    'Besoin client exprimé',
-    'Devoir de conseil documenté',
-    'Documents remis au client',
-    'Informations marché transmises',
-    'Fiche synthèse signée',
-  ],
-  export: {
-    libelle: 'Exporter le registre de conformité',
-    fichier: `registre-conformite-${new Date().getFullYear()}.json`,
-    // Aucune route par défaut : sans réponse de l'API on ne sait pas quel
-    // registre exporter, et on n'en invente pas un.
-    route: null,
-  },
-}
-
-/**
- * Repli FRANÇAIS — utilisé UNIQUEMENT quand l'API a répondu en annonçant le
- * marché FR (elle seule connaît le pays du cabinet). Il n'est plus le repli
- * par défaut : c'est exactement ce qui faisait apparaître « ACPR » chez un
- * cabinet suisse quand l'API tardait ou échouait.
- */
-const CONFORMITE_DEFAUT_FR = {
-  marche: 'FR',
-  autorite: 'ACPR',
-  chapeau: 'DDA · KYC · Mandats · Audit logs · Export ACPR',
-  checklist_titre: 'Checklist DDA (Directive Distribution Assurance)',
-  checklist_items: [
-    'Besoin client exprimé',
-    'Devoir de conseil documenté',
-    'Documents remis au client (notice, IPID, fiche conseil)',
-    'Informations marché transmises',
-    'Fiche synthèse signée',
-  ],
-  export: {
-    libelle: 'Export ACPR',
-    fichier: `rapport-acpr-${new Date().getFullYear()}.json`,
-    route: '/conformite/export-acpr',
-  },
-}
-
-/**
- * Référentiel affiché par l'écran.
- *
- * POURQUOI cette fonction : le repli est le point où l'ACPR s'imposait à un
- * cabinet suisse. Ici, le repli français n'est retenu que si l'API a répondu
- * en annonçant `marche: 'FR'` ; dans TOUS les autres cas (API en attente, API
- * en échec, marché CH, marché absent) on affiche un libellé neutre, sans
- * autorité nommée. On ne fabrique jamais un référentiel plausible mais faux.
- */
-function referentielConformite(dashboard) {
-  const reponse = dashboard?.conformite
-  if (reponse && typeof reponse === 'object') {
-    const repli = String(reponse.marche || '').toUpperCase() === 'FR'
-      ? CONFORMITE_DEFAUT_FR
-      : CONFORMITE_NEUTRE
-    return {
-      ...repli,
-      ...reponse,
-      checklist_items: reponse.checklist_items || repli.checklist_items,
-      export: { ...repli.export, ...(reponse.export || {}) },
-    }
-  }
-  // Pas de bloc conformite : la seule chose que l'API peut nous avoir dite du
-  // marché est `dashboard.marche`. Elle n'a rien dit → neutre.
-  return String(dashboard?.marche || '').toUpperCase() === 'FR'
-    ? CONFORMITE_DEFAUT_FR
-    : CONFORMITE_NEUTRE
-}
 
 const T = {
   text: '#FFFFFF', textSecondary: '#9CA3AF', textMuted: '#6B7280',
@@ -121,14 +50,20 @@ export default function Conformite() {
   useEffect(() => { load() }, [])
 
   // Référentiel affiché (marche, autorité, libellés d'export) : il vient de
-  // l'API seule, sinon il est neutre. Voir `referentielConformite` plus haut :
-  // l'écran n'écrit plus « ACPR » en dur — c'était le défaut mesuré sur un
-  // cabinet suisse, où l'ACPR n'a aucune compétence.
+  // l'API seule, sinon il est neutre. Voir `referentielConformite`
+  // (lib/affichageConformite.js) : l'écran n'écrit plus « ACPR » en dur — c'était
+  // le défaut mesuré sur un cabinet suisse, où l'ACPR n'a aucune compétence.
   const conformite = referentielConformite(dashboard)
   const conformiteExport = conformite.export || CONFORMITE_NEUTRE.export
   const checklistItems = conformite.checklist_items || CONFORMITE_NEUTRE.checklist_items
   // Sigle de la checklist : « DDA » n'a de sens que sur le marché français.
-  const sigleChecklist = conformite.marche === 'FR' ? 'DDA' : null
+  const sigleChecklistMarche = sigleChecklist(conformite)
+  // Mentions de protection des données du marché (nLPD/PFPDT en Suisse,
+  // RGPD/CNIL en France) et familles de produits du marché : l'écran ne les
+  // compose pas lui-même, il affiche ce que l'API a servi pour CE cabinet
+  // (constats d'audit CH-026 et CH-039).
+  const protectionDonnees = protectionDonneesAffichee(conformite)
+  const produits = produitsAffiches(conformite)
 
   async function exporterConformite() {
     // Sans route connue, on ne sait pas quel registre exporter : le dire est
@@ -208,7 +143,7 @@ export default function Conformite() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
           {/* Les intitulés de conformité suivent le référentiel du marché :
               « DDA » est un sigle français, il n'est affiché qu'en France. */}
-          <ComplianceCard icon={FileCheck} title={sigleChecklist ? `${sigleChecklist} Conformité` : 'Conformité'} value={`${dashboard.dda.coverage_pct}%`} subtitle={`${dashboard.dda.conforme || 0} clients conformes / ${dashboard.total_clients}`} color={T.success} />
+          <ComplianceCard icon={FileCheck} title={sigleChecklistMarche ? `${sigleChecklistMarche} Conformité` : 'Conformité'} value={`${dashboard.dda.coverage_pct}%`} subtitle={`${dashboard.dda.conforme || 0} clients conformes / ${dashboard.total_clients}`} color={T.success} />
           <ComplianceCard icon={UserCheck} title="KYC Vérifié" value={`${dashboard.kyc.coverage_pct}%`} subtitle={`${dashboard.kyc.verified || 0} clients vérifiés`} color={T.cyan} />
           <ComplianceCard icon={FileText} title="Mandats actifs" value={dashboard.mandats.active || 0} subtitle={`${dashboard.mandats.expired || 0} expirés`} color={T.accent} />
           <ComplianceCard icon={AlertCircle} title="À traiter" value={(dashboard.dda.pending || 0) + (dashboard.dda.incomplete || 0)} subtitle="checklists de conformité" color={T.warning} />
@@ -246,13 +181,25 @@ export default function Conformite() {
                     <li key={item}>✅ {item}</li>
                   ))}
                 </ul>
-                <div style={{ marginTop: 20, padding: 14, background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.20)', borderRadius: 8 }}>
-                  <strong style={{ color: T.cyan }}>📋 RGPD & Mentions légales</strong>
-                  <p style={{ color: T.textSecondary, fontSize: 12, margin: '6px 0 0' }}>
-                    Toutes les pages légales sont accessibles depuis le footer public :
-                    Mentions légales · CGV · CGU · Politique de confidentialité · DPA · RGPD · Sous-traitants
-                  </p>
-                </div>
+                {/* ── MENTIONS DE PROTECTION DES DONNÉES DU MARCHÉ ────────────
+                    Constat d'audit CH-026 : ce bloc était écrit en dur
+                    (« 📋 RGPD & Mentions légales · CGV · CGU · DPA · RGPD »)
+                    et s'affichait à TOUS les cabinets, suisses compris. Il est
+                    maintenant servi par l'API pour le marché du cabinet :
+                    nLPD / PFPDT (finalités, catégories de données, durée de
+                    conservation, droits, sous-traitants, localisation) en
+                    Suisse, RGPD / CNIL en France. Un élément que le cabinet n'a
+                    pas renseigné est affiché comme tel — jamais rempli par une
+                    valeur plausible. */}
+                <BlocProtectionDonnees protection={protectionDonnees} />
+
+                {/* ── FAMILLES DE PRODUITS DU MARCHÉ ──────────────────────────
+                    Constat d'audit CH-039 : la liste de produits restait
+                    française pour un cabinet suisse. Elle vient désormais de
+                    `backend/services/referentielProduits` (LAMal, LCA, LAA,
+                    LPP, 3e pilier… en Suisse ; IARD, santé, auto… en France).
+                    Sans réponse de l'API, aucune famille n'est affichée. */}
+                <BlocProduits produits={produits} />
               </div>
             )}
             {tab === 'mandats' && (
@@ -314,6 +261,94 @@ export default function Conformite() {
         </SimpleCard>
       </div>
     </>
+  )
+}
+
+/**
+ * Mentions de protection des données du marché (constat d'audit CH-026).
+ *
+ * Composant SÉPARÉ et exporté pour une raison précise : il est rendu tel quel
+ * par le test `Conformite.blocs.test.jsx` (`renderToStaticMarkup`), qui prouve
+ * sans navigateur qu'un cabinet suisse voit la nLPD (et aucun mot du RGPD) et
+ * qu'un cabinet français voit le RGPD et la CNIL. Le composant ne décide RIEN :
+ * tout ce qu'il affiche vient du référentiel servi par l'API.
+ */
+export function BlocProtectionDonnees({ protection }) {
+  const bloc = protection || {}
+  const elements = Array.isArray(bloc.elements) ? bloc.elements : []
+  const pages = Array.isArray(bloc.pages_legales) ? bloc.pages_legales : []
+  const sources = bloc.sources && typeof bloc.sources === 'object' ? Object.values(bloc.sources) : []
+
+  return (
+    <div style={{ marginTop: 20, padding: 14, background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.20)', borderRadius: 8 }}>
+      <strong style={{ color: T.cyan }}>{bloc.libelle_ecran}</strong>
+      {bloc.referentiel_libelle ? (
+        <p style={{ color: T.textSecondary, fontSize: 12, margin: '6px 0 0' }}>
+          {bloc.referentiel_libelle}
+          {bloc.autorite_libelle ? ` · Autorité : ${bloc.autorite_libelle}` : ''}
+        </p>
+      ) : null}
+      {bloc.resume ? (
+        <p style={{ color: T.textSecondary, fontSize: 12, margin: '6px 0 0' }}>{bloc.resume}</p>
+      ) : null}
+      {pages.length > 0 ? (
+        <p style={{ color: T.textMuted, fontSize: 12, margin: '6px 0 0' }}>{pages.join(' · ')}</p>
+      ) : null}
+      {elements.length > 0 ? (
+        <ul style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.7, paddingLeft: 16, margin: '10px 0 0' }}>
+          {elements.map((element) => (
+            <li key={element.cle}>
+              {element.libelle}
+              {element.reference ? <span style={{ color: T.textMuted }}> — {element.reference}</span> : null}
+              {' : '}
+              {/* Un élément non renseigné est affiché comme tel : la page ne
+                  fabrique ni durée de conservation, ni sous-traitant. */}
+              <span style={{ color: element.a_renseigner ? T.warning : T.text, fontWeight: element.a_renseigner ? 600 : 500 }}>
+                {element.texte}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {sources.length > 0 ? (
+        <p style={{ color: T.textMuted, fontSize: 11, margin: '10px 0 0' }}>Sources : {sources.join(' · ')}</p>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * Familles de produits du marché (constat d'audit CH-039). Composant exporté
+ * pour être rendu par le test, comme le bloc de protection des données. Sans
+ * réponse de l'API, la liste est VIDE et la page le dit : elle ne retombe pas
+ * sur une liste française.
+ */
+export function BlocProduits({ produits }) {
+  const bloc = produits || {}
+  const familles = Array.isArray(bloc.familles) ? bloc.familles : []
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      <h4 style={{ color: T.text, fontSize: 14, margin: '0 0 4px' }}>
+        Produits du marché{bloc.pays ? ` — ${bloc.pays}` : ''}
+      </h4>
+      {familles.length > 0 ? (
+        <>
+          <ul style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.8, paddingLeft: 16, margin: 0 }}>
+            {familles.map((famille) => (
+              <li key={famille.code || famille.libelle}>{famille.libelle}</li>
+            ))}
+          </ul>
+          {bloc.note ? (
+            <p style={{ color: T.textMuted, fontSize: 11, margin: '8px 0 0' }}>{bloc.note}</p>
+          ) : null}
+        </>
+      ) : (
+        <p style={{ color: T.warning, fontSize: 12, margin: 0 }}>
+          {bloc.message_indisponible || "Le référentiel de produits du marché n'a pas pu être chargé."}
+        </p>
+      )}
+    </div>
   )
 }
 

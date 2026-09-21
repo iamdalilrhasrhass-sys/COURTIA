@@ -4,6 +4,7 @@ import { CheckCircle2, ShieldCheck, CreditCard, Sparkles, CalendarDays, MessageS
 import api from '../api'
 import CourtiaBubbleLogo from '../components/brand/CourtiaBubbleLogo'
 import { libellesMarche, marcheCourante } from '../lib/marche'
+import { LIBELLES } from '../lib/libelles'
 
 const BILLING_TEST_UI_ENABLED = import.meta.env.VITE_BILLING_TEST_MODE !== 'false'
 
@@ -259,8 +260,8 @@ export default function BillingOnboarding() {
             <StepCard
               index={4}
               title="Lancer ARK"
-              description="Générer vos premières priorités du jour depuis Morning Brief."
-              actionLabel="Ouvrir Morning Brief"
+              description={`Générer vos premières priorités du jour depuis ${LIBELLES.briefDuMatin}.`}
+              actionLabel={`Ouvrir ${LIBELLES.briefDuMatin}`}
               onClick={() => navigate('/morning-brief')}
             />
           </div>

@@ -9,6 +9,7 @@ import CourtiaLogoLoader from '../components/brand/CourtiaLogoLoader'
 import { VibeBackdrop } from '../components/vibe'
 import { Particles, ScrollGlow } from '../components/vibe/VibePage'
 import { fmtMontant, localeCourante } from '../lib/monnaie'
+import { LIBELLES } from '../lib/libelles'
 
 const NAV_ITEMS = [
   { id: 'profil', label: 'Profil', icon: User },
@@ -46,7 +47,7 @@ const INTEGRATION_META = {
     connectPath: '/integrations/google-calendar/connect',
     syncPath: '/integrations/google-calendar/sync',
     disconnectPath: '/integrations/google-calendar/disconnect',
-    description: 'Synchronisez vos rendez-vous courtier et enrichissez Morning Brief.',
+    description: `Synchronisez vos rendez-vous courtier et enrichissez ${LIBELLES.briefDuMatin}.`,
   },
   whatsapp_business: {
     title: 'WhatsApp Business',
@@ -648,7 +649,7 @@ export default function Parametres() {
                 )}
                 <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} busy={notifsEtat.enCours === 'echeances'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('echeances')}/>
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} busy={notifsEtat.enCours === 'taches'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('taches')}/>
-                <Toggle icon={Sunrise} label="Morning Brief quotidien" description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} busy={notifsEtat.enCours === 'morning_brief'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('morning_brief')}/>
+                <Toggle icon={Sunrise} label={`${LIBELLES.briefDuMatin} quotidien`} description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} busy={notifsEtat.enCours === 'morning_brief'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('morning_brief')}/>
                 <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} busy={notifsEtat.enCours === 'news'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('news')}/>
               </div>
             </section>

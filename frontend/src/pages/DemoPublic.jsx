@@ -69,7 +69,7 @@ export default function DemoPublic() {
             <ul className="mk-plain-list">
               <li>Checklist d'implémentation cabinet (Semaine 1 à 3).</li>
               <li>Recommandation de plan (Starter / Pro / Cabinet).</li>
-              <li>Priorités ARK adaptées à votre portefeuille.</li>
+              <li>Tâches prioritaires adaptées à votre portefeuille.</li>
               <li>Plan d'onboarding et de migration des données.</li>
             </ul>
             <button

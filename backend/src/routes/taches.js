@@ -52,6 +52,34 @@ function refuserTropLong(res, champs) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// UN IDENTIFIANT INVALIDE N'EST PAS UNE PANNE DU SERVEUR
+//
+// DÉFAUT P3 MESURÉ (21/09/2026, 4e passe adverse) : `PUT /api/taches/<id>`
+// répondait 500 avec le message brut de PostgreSQL. La garde précédente
+// (`/^\d+$/`) laissait passer une valeur comme `999999999999999999999999999` :
+// elle EST numérique, mais sort de la plage de `appointments.id` (colonne
+// `integer`), et PostgreSQL lève 22003 « value out of range ». La plage est
+// donc vérifiée AVANT la base, sur la chaîne entière (`parseInt("12abc")` vaut
+// 12 : ce n'est pas un identifiant valide, et ce n'est pas ainsi qu'on valide).
+// Réponse : 400 `identifiant_invalide`, message produit, jamais un 500 SQL.
+// ─────────────────────────────────────────────────────────────────────────────
+const ID_TACHE_MAX = 2147483647 // borne haute d'une colonne PostgreSQL `integer`
+
+/** Identifiant de tâche valide, ou `null` (la réponse 400 est déjà écrite). */
+function identifiantTacheValide(valeur, res) {
+  const texte = String(valeur ?? '').trim();
+  const nombre = /^\d+$/.test(texte) ? Number(texte) : NaN;
+  if (!Number.isSafeInteger(nombre) || nombre <= 0 || nombre > ID_TACHE_MAX) {
+    res.status(400).json({
+      error: 'identifiant_invalide',
+      message: "L'identifiant de cette tâche n'est pas valide.",
+    });
+    return null;
+  }
+  return nombre;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES TÂCHES / RENDEZ-VOUS (`appointments`) : LE CABINET
 //
 // POURQUOI : la tâche appartenait à UN utilisateur (`COALESCE(user_id,
@@ -240,11 +268,10 @@ router.post('/', verifyToken, async (req, res) => {
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    // Un identifiant non numérique produisait un 500 « invalid input syntax for
-    // type integer » : l'écran recevait une erreur de base au lieu d'un refus clair.
-    if (!/^\d+$/.test(String(req.params.id))) {
-      return res.status(400).json({ error: 'invalid_id', message: 'Identifiant de tâche invalide.' });
-    }
+    // Un identifiant non numérique — ou hors plage — produisait un 500 SQL :
+    // l'écran recevait une erreur de base au lieu d'un refus clair.
+    const tacheId = identifiantTacheValide(req.params.id, res);
+    if (tacheId === null) return;
 
     const { titre, description, statut, echeance } = req.body;
     const portee = await porteeCabinet.resoudrePortee(pool, req);
@@ -281,7 +308,7 @@ router.put('/:id', verifyToken, async (req, res) => {
            start_time = COALESCE($4, start_time)
       WHERE id = $5 AND ${fEcriture.sql}
       RETURNING *`,
-      [titre ?? null, description ?? null, statut ?? null, echeance ?? null, req.params.id, ...fEcriture.params]
+      [titre ?? null, description ?? null, statut ?? null, echeance ?? null, tacheId, ...fEcriture.params]
     );
 
     if (result.rows.length === 0) {
@@ -317,11 +344,10 @@ router.post('/auto-generate', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    // Un identifiant non numérique produisait un 500 « invalid input syntax for
-    // type integer » : l'écran recevait une erreur de base au lieu d'un refus clair.
-    if (!/^\d+$/.test(String(req.params.id))) {
-      return res.status(400).json({ error: 'invalid_id', message: 'Identifiant de tâche invalide.' });
-    }
+    // Un identifiant non numérique — ou hors plage — produisait un 500 SQL :
+    // l'écran recevait une erreur de base au lieu d'un refus clair.
+    const tacheId = identifiantTacheValide(req.params.id, res);
+    if (tacheId === null) return;
 
     const portee = await porteeCabinet.resoudrePortee(pool, req);
     if (porteeCabinet.refuserSuppression(portee, res)) return;
@@ -330,7 +356,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
       `DELETE FROM appointments a
        WHERE id = $1 AND ${f.sql}
        RETURNING id`,
-      [req.params.id, ...f.params]
+      [tacheId, ...f.params]
     );
     // Une suppression qui ne supprime rien doit le DIRE : l'écran affichait
     // « supprimé » alors que la ligne existait toujours.

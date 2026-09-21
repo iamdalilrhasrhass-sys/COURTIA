@@ -6,7 +6,16 @@
  * - Habitation : justificatif domicile, RIB
  * - Santé/Prévoyance : carte identité, RIB
  * - Pro : Kbis, statuts, RIB
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : la surveillance porte sur le
+ * CABINET (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui
+ * lance le run. Deux filtres : `clients.cabinet_id` pour les dossiers, et —
+ * pour les documents — l'ancre de leur CLIENT (jointure), `client_documents`
+ * n'ayant pas d'ancre de cabinet propre. Sans cabinet, les clauses restent
+ * exactement `c.courtier_id = $1` / `broker_id = $1`.
  */
+
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 const REQUIRED_DOCS = {
   auto: ['permis_conduire', 'carte_grise', 'rib'],
@@ -28,10 +37,24 @@ module.exports = {
    * Détecte les clients avec dossier incomplet
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const fClients = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
+    // Document : l'ancre est celle de son client (jointure), `client_id` est
+    // NOT NULL — aucune ligne ne peut donc être perdue par le rattachement.
+    const fDocuments = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'cd.broker_id',
+      depart: 1,
+    })
     
     // Clients avec contrats actifs
     const clientsResult = await pool.query(`
@@ -41,23 +64,24 @@ module.exports = {
         ARRAY_AGG(DISTINCT LOWER(COALESCE(q.quote_data->>'product_type', q.quote_data->>'type', ''))) AS product_types
       FROM clients c
       JOIN quotes q ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${fClients.sql}
         AND q.status = 'actif'
         AND c.status != 'inactif'
       GROUP BY c.id
-    `, [brokerId])
+    `, fClients.params)
     
     // Documents par client
     const docsResult = await pool.query(`
       SELECT 
-        client_id,
-        ARRAY_AGG(DISTINCT document_type) AS doc_types
-      FROM client_documents
-      WHERE broker_id = $1
-        AND deleted_at IS NULL
-        AND status NOT IN ('rejected', 'expired')
-      GROUP BY client_id
-    `, [brokerId])
+        cd.client_id,
+        ARRAY_AGG(DISTINCT cd.document_type) AS doc_types
+      FROM client_documents cd
+      JOIN clients c ON c.id = cd.client_id
+      WHERE ${fDocuments.sql}
+        AND cd.deleted_at IS NULL
+        AND cd.status NOT IN ('rejected', 'expired')
+      GROUP BY cd.client_id
+    `, fDocuments.params)
     
     const docsByClient = {}
     for (const row of docsResult.rows) {

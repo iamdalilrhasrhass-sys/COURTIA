@@ -182,14 +182,42 @@ async function requestReset(email) {
     throw new Error('Email requis');
   }
 
+  // ── LA RÉPONSE NE DOIT PAS ANNONCER UN ENVOI QUI N'A PAS EU LIEU ──────────
+  // Même correction que sur /api/auth/forgot-password (Red Team RT4-04, mesuré
+  // le 21/09/2026) : le message « un lien de réinitialisation a été envoyé »
+  // était servi alors qu'aucun fournisseur d'e-mail n'est configuré en
+  // production (provider « none », RESEND_API_KEY absente). Un jeton de
+  // réinitialisation valable une heure restait même en base sans destinataire.
+  // L'état annoncé dépend donc de la PLATEFORME, jamais de l'existence du compte
+  // (la réponse reste non énumérante : elle est identique que le compte existe
+  // ou non).
+  const { getEmailStatus } = require('../emailService');
+  const etatEmail = typeof getEmailStatus === 'function' ? getEmailStatus() : { status: 'inconnu' };
+  const fournisseurAbsent = !etatEmail || etatEmail.status === 'configuration_required';
+
+  if (fournisseurAbsent) {
+    return {
+      success: true,
+      message: "La réinitialisation de mot de passe du portail n'est pas disponible pour le moment : aucun envoi d'e-mail n'est configuré sur cette installation. Demandez un nouveau lien à votre courtier.",
+      email_transmis: false,
+      raison: 'configuration_required',
+    };
+  }
+
   const accountRes = await pool.query(
     "SELECT * FROM client_portal_accounts WHERE email = $1 AND status = 'active'",
     [email.toLowerCase().trim()]
   );
 
   // Compte inexistant : même réponse, aucune écriture.
+  // ── LA FORME DE LA RÉPONSE NE DÉPEND PAS DE L'EXISTENCE DU COMPTE ─────────
+  // Le champ `email_transmis` est présent dans LES DEUX branches, avec la même
+  // valeur : l'ajouter seulement quand le compte existe aurait recréé une
+  // énumération des comptes par la forme de la réponse (défaut relevé par le
+  // test SEC-002 lui-même). La valeur annoncée décrit la PLATEFORME (un
+  // fournisseur est configuré), pas le sort de l'adresse demandée.
   if (accountRes.rows.length === 0) {
-    return { ...RESET_REQUEST_RESPONSE };
+    return { ...RESET_REQUEST_RESPONSE, email_transmis: true };
   }
 
   const account = accountRes.rows[0];
@@ -197,9 +225,22 @@ async function requestReset(email) {
 
   // L'envoi du lien reste optionnel : sans configuration e-mail, le courtier
   // peut réémettre un lien via le chemin interne (requestResetForBroker).
-  await envoyerLienReset(account, issued.resetLink);
+  const envoi = await envoyerLienReset(account, issued.resetLink);
+  if (envoi && envoi.transmis === false) {
+    // L'envoi a échoué : le jeton ne doit pas rester valable sans destinataire.
+    await pool.query(
+      `UPDATE client_portal_accounts SET reset_token = NULL, reset_token_expires_at = NULL, updated_at = NOW() WHERE id = $1`,
+      [account.id]
+    );
+    return {
+      success: true,
+      message: "La demande a été enregistrée mais l'e-mail n'a pas pu être envoyé. Demandez un nouveau lien à votre courtier.",
+      email_transmis: false,
+      raison: envoi.raison || 'envoi_impossible',
+    };
+  }
 
-  return { ...RESET_REQUEST_RESPONSE };
+  return { ...RESET_REQUEST_RESPONSE, email_transmis: true };
 }
 
 /**
@@ -266,14 +307,25 @@ async function envoyerLienReset(account, resetLink) {
     const { sendEmail } = require('../emailService');
     const frontendUrl = process.env.FRONTEND_URL || 'https://courtiark.fr';
     const lien = resetLink.startsWith('http') ? resetLink : `${frontendUrl}${resetLink}`;
-    await sendEmail({
+    const resultat = await sendEmail({
       to: account.email,
       subject: 'COURTIA — Réinitialisation de votre mot de passe',
       html: `<p>Bonjour,</p><p>Un lien de réinitialisation de votre mot de passe portail COURTIA a été demandé.</p><p><a href="${lien}">Choisir un nouveau mot de passe</a> (valable 1 heure).</p><p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.</p>`,
       text: `Réinitialisez votre mot de passe portail COURTIA : ${lien} (valable 1 heure).`
     });
+    // Le service d'e-mail ne lève pas quand aucun fournisseur n'est configuré :
+    // il renvoie un échec EXPLICITE. L'ignorer faisait annoncer un envoi qui
+    // n'avait pas eu lieu (défaut RT4-04 de la 4e passe adverse).
+    if (resultat && (resultat.success === false || resultat.skipped === true)) {
+      return {
+        transmis: false,
+        raison: resultat.error || resultat.reason || 'envoi_impossible',
+      };
+    }
+    return { transmis: true };
   } catch (err) {
     console.warn('[PortalAuth] envoi du lien de réinitialisation impossible:', err.message);
+    return { transmis: false, raison: 'envoi_impossible' };
   }
 }
 

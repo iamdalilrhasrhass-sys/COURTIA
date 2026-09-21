@@ -9,7 +9,10 @@ const {
 
 describe('whatsappBusinessService', () => {
   test('normalizes phone numbers for storage and Meta recipients', () => {
-    expect(sanitizeWhatsappPhone('06 12 34 56 78')).toBe('+33612345678')
+    // Le pays du numéro est FOURNI (pays du client ou marché de son cabinet) :
+    // une forme nationale suisse et une forme nationale française ont la même
+    // longueur, donc la règle ne devine pas (défaut P0 CH-008).
+    expect(sanitizeWhatsappPhone('06 12 34 56 78', { pays: 'FR' })).toBe('+33612345678')
     expect(sanitizeWhatsappPhone('+33 (0)6 12 34 56 78')).toBe('+33612345678')
     expect(sanitizeWhatsappPhone('33612345678', { forMeta: true })).toBe('33612345678')
   })
@@ -49,6 +52,19 @@ describe('whatsappBusinessService', () => {
         language: { code: 'fr' },
       },
     })
+  })
+
+  test('un mobile suisse N’EST JAMAIS servi comme numéro français (CH-008)', () => {
+    // Défaut mesuré avant correctif : ce numéro devenait '+33781234567'.
+    expect(sanitizeWhatsappPhone('078 123 45 67', { pays: 'CH' })).toBe('+41781234567')
+    expect(sanitizeWhatsappPhone('079 123 45 67', { country: 'Suisse' })).toBe('+41791234567')
+    expect(sanitizeWhatsappPhone('+41 78 123 45 67')).toBe('+41781234567')
+    expect(sanitizeWhatsappPhone('0041 78 123 45 67')).toBe('+41781234567')
+    // Forme nationale sans pays connu : ambiguë (10 caractères dans les deux
+    // pays) ⇒ refusée, jamais convertie en +33.
+    expect(sanitizeWhatsappPhone('078 123 45 67')).toBe('')
+    expect(sanitizeWhatsappPhone('078.123.45.67', { pays: 'CH', forMeta: true })).toBe('41781234567')
+    expect(sanitizeWhatsappPhone('', { pays: 'CH' })).toBe('')
   })
 
   test('detects the 24h customer care window', () => {

@@ -235,31 +235,41 @@ function produire(code, message) {
  * l'entrée envoyée.
  */
 function reecrireReponse(corps, codeHttp) {
-  // Les routes exposent le message SQL tantôt dans `message`, tantôt dans
-  // `error` (`res.status(500).json({ error: err.message })` — forme historique de
+  // Les routes exposent le message SQL tantôt dans `message`, tantôt dans `error`
+  // (`res.status(500).json({ error: err.message })` — forme historique de
   // ce dépôt) : les deux champs sont examinés, sinon la moitié du défaut
   // passerait au travers.
-  const texte = typeof corps.message === 'string' && corps.message
-    ? corps.message
-    : (typeof corps.error === 'string' ? corps.error : '')
-  // Un `code` SQLSTATE éventuellement transmis par la route est prioritaire :
-  // il ne dépend pas de la langue du moteur.
-  const analyse = analyserErreurEntree({ code: corps.code, message: texte })
+  // ── `details` AUSSI (mesure du 21/09/2026, Red Team RT4-08) ────────────────
+  // Le handler d'erreur global répond `{ error: 'Erreur serveur', details:
+  // err.message }`. Le message d'entrée était donc dans `details`, champ que
+  // cette fonction n'examinait pas — et comme `error` contient toujours
+  // « Erreur serveur », examiner `error` AVANT `details` ne suffit pas : c'est
+  // le premier champ qui RÉPOND à l'analyse qui doit décider, pas le premier
+  // champ non vide. `GET /api/devis/abc` répondait donc 500 « invalid input
+  // syntax for type integer: \"NaN\" » sur tous les points d'entrée passant par
+  // ce handler.
+  const candidats = [corps.message, corps.details, corps.error]
+    .filter((valeur) => typeof valeur === 'string' && valeur.length > 0)
+  let analyse = null
+  for (const candidat of candidats) {
+    // Un `code` SQLSTATE éventuellement transmis par la route est prioritaire :
+    // il ne dépend pas de la langue du moteur.
+    analyse = analyserErreurEntree({ code: corps.code, message: candidat })
+    if (analyse) break
+  }
   if (!analyse) return null
-  return {
-    statusHttp: analyse.statusHttp,
-    corps: {
-      ...corps,
-      error: analyse.code,
-      message: analyse.message,
-      // Le code HTTP d'origine n'est PAS reproduit dans le corps : il
-      // induirait en erreur (« 500 » annoncé alors que la réponse est 400).
-      details: {
-        cause: 'donnees_invalides',
-        correction: "Corrigez la valeur envoyée puis réessayez — aucun changement n'a été enregistré.",
-      },
+  const corpsReecrit = {
+    ...corps,
+    error: analyse.code,
+    message: analyse.message,
+    // Le code HTTP d'origine n'est PAS reproduit dans le corps : il
+    // induirait en erreur (« 500 » annoncé alors que la réponse est 400).
+    details: {
+      cause: 'donnees_invalides',
+      correction: "Corrigez la valeur envoyée puis réessayez — aucun changement n'a été enregistré.",
     },
   }
+  return { statusHttp: analyse.statusHttp, corps: corpsReecrit }
 }
 
 /**

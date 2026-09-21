@@ -2,7 +2,29 @@
  * arkBrief — Brief matinal du courtier, calculé sur données réelles.
  * Reconstruit le 03/07/2026 : le module original n'avait jamais été versionné.
  * Consommé par arkVoice.buildMorningBriefAssistant (appel vocal ARK).
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * PORTÉE DES TROIS LECTURES : LE CABINET, PAS LA SEULE PERSONNE
+ * (correction du 21/09/2026 — défaut P1 « deux vérités pour une même donnée »)
+ *
+ * DÉFAUT MESURÉ : les trois requêtes filtraient `r.broker_id = $1` /
+ * `c.courtier_id = $1`. Un collaborateur (`broker`) d'un cabinet à plusieurs
+ * commerciaux recevait donc un brief matinal VIDE (« Journée calme : aucune
+ * action urgente détectée ») là où le propriétaire du même cabinet recevait six
+ * actions : le brief affirmait une absence d'activité qui n'existait pas.
+ *
+ * RÈGLE TENUE : les trois lectures passent par `lib/porteeCabinet` (seule
+ * autorité de portée). La clause du fragment est EXACTEMENT la clause
+ * historique (`r.broker_id = $1`) quand le compte n'a pas de cabinet — les
+ * cabinets mono-utilisateur ne changent pas de comportement — et devient
+ * `(<cabinet de la ligne> = ANY($1::uuid[]) OR <propriétaire> = $2)` sinon.
+ * Un compte dont l'appartenance a été retirée ne lit plus rien.
+ * `options` accepte `{ portee }` (portée déjà résolue par la route : aucune
+ * requête supplémentaire) ou `{ req }`.
+ * ────────────────────────────────────────────────────────────────────────────
  */
+
+const porteeCabinet = require('../lib/porteeCabinet')
 
 async function safeQuery(pool, sql, params) {
   try {
@@ -13,18 +35,32 @@ async function safeQuery(pool, sql, params) {
   }
 }
 
-async function generateMorningBrief(userId, pool) {
+async function generateMorningBrief(userId, pool, options = {}) {
+  const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options)
+
   // 1. Relances en attente d'envoi
+  // `relances` porte `cabinet_id` (migration 113) : l'ancre du cabinet est la
+  // colonne de la ligne, le propriétaire reste `broker_id`.
+  const fRelances = porteeCabinet.fragment(portee, {
+    cabinet: 'r.cabinet_id',
+    proprietaire: 'r.broker_id',
+    depart: 1,
+  })
   const relances = await safeQuery(pool, `
     SELECT r.priority, r.subject, r.channel,
            COALESCE(NULLIF(c.company_name, ''), TRIM(CONCAT(c.first_name, ' ', c.last_name))) AS client_name
     FROM relances r
     LEFT JOIN clients c ON r.client_id = c.id
-    WHERE r.broker_id = $1 AND r.status <> 'sent'
+    WHERE ${fRelances.sql} AND r.status <> 'sent'
     ORDER BY CASE r.priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END, r.created_at ASC
-    LIMIT 5`, [userId]);
+    LIMIT 5`, fRelances.params);
 
-  // 2. Échéances de contrats sous 30 jours (quotes actives)
+  // 2. Échéances de contrats sous 30 jours (quotes actives) — portée du CABINET
+  const fContrats = porteeCabinet.fragment(portee, {
+    cabinet: 'c.cabinet_id',
+    proprietaire: 'c.courtier_id',
+    depart: 1,
+  })
   const echeances = await safeQuery(pool, `
     SELECT TRIM(CONCAT(c.first_name, ' ', c.last_name)) AS client_name,
            q.quote_data->>'type_contrat' AS type_contrat,
@@ -32,19 +68,20 @@ async function generateMorningBrief(userId, pool) {
            EXTRACT(DAY FROM NULLIF(q.quote_data->>'date_echeance', '')::date - NOW())::int AS jours
     FROM quotes q
     JOIN clients c ON q.client_id = c.id
-    WHERE c.courtier_id = $1 AND q.status = 'actif'
+    WHERE ${fContrats.sql} AND q.status = 'actif'
       AND NULLIF(q.quote_data->>'date_echeance', '')::date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
     ORDER BY jours ASC
-    LIMIT 5`, [userId]);
+    LIMIT 5`, fContrats.params);
 
-  // 3. Clients récents sans contrat actif (opportunités)
+  // 3. Clients récents sans contrat actif (opportunités) — portée du CABINET
+  //    Même clause que ci-dessus : alias identique (`c`), aucun autre paramètre.
   const sansContrat = await safeQuery(pool, `
     SELECT TRIM(CONCAT(c.first_name, ' ', c.last_name)) AS client_name
     FROM clients c
-    WHERE c.courtier_id = $1
+    WHERE ${fContrats.sql}
       AND NOT EXISTS (SELECT 1 FROM quotes q WHERE q.client_id = c.id AND q.status = 'actif')
     ORDER BY c.created_at DESC
-    LIMIT 3`, [userId]);
+    LIMIT 3`, fContrats.params);
 
   const actions = [];
   echeances.forEach((e) => actions.push({

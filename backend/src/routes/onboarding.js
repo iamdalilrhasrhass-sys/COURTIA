@@ -9,6 +9,7 @@ const { isFeatureEnabled } = require('../lib/featureFlags');
 const logger = require('../lib/logger');
 const telegramService = require('../services/telegramService');
 const { messagePublic } = require('../lib/erreursPubliques')
+const porteeCabinet = require('../lib/porteeCabinet')
 
 const router = express.Router();
 
@@ -422,9 +423,21 @@ router.post('/gamified/auto-check', async (req, res) => {
     // CORRECTION 2026-09-19 : les clients sont ecrits avec `courtier_id`
     // (routes/clients.js:261-268). Les compter sur `user_id` renvoyait toujours 0 :
     // l'etape « premier client » n'etait JAMAIS validee automatiquement.
+    // CORRECTION 2026-09-21 (portée) : le portefeuille est celui du CABINET.
+    // Un collaborateur qui ouvre un cabinet déjà peuplé voyait 0 client et ne
+    // validait jamais l'étape « premier client », alors que le CRM lui montre
+    // tout le portefeuille. Le fragment vient de `lib/porteeCabinet` (seule
+    // autorité) ; sans cabinet, la clause reste « mes lignes » (propriétaire =
+    // courtier_id, à défaut user_id) : comportement historique préservé.
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const fClients = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'COALESCE(c.courtier_id, c.user_id)',
+      depart: 1,
+    })
     const clientsRes = await pool.query(
-      'SELECT COUNT(*) as count FROM clients WHERE courtier_id = $1 OR user_id = $1',
-      [userId]
+      `SELECT COUNT(*) as count FROM clients c WHERE ${fClients.sql}`,
+      [...fClients.params]
     );
     if (parseInt(clientsRes.rows[0].count) > 0) {
       const upd = await pool.query(

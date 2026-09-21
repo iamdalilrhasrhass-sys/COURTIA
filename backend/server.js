@@ -177,10 +177,24 @@ app.use((req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const { traduireErreursEntree } = require('./src/middleware/erreursEntree')
 const { creerGardeEcritureRole } = require('./src/middleware/gardeEcritureRole')
+// 3. `creerGardeChangementMotDePasse` : tant que `users.must_change_password`
+//    est vrai, le mot de passe est celui que COURTIA a remis — dérivé du NOM DU
+//    CABINET (lib/motDePasseInitial.js), donc devinable. Les deux cabinets
+//    pilotes sont dans cet état (utilisateurs 11 et 14, mesuré le 21/09/2026) et
+//    utilisaient pourtant l'application entière : le drapeau n'était qu'une
+//    invitation affichée à l'écran. Les routes MÉTIER répondent désormais 403
+//    `changement_mot_de_passe_requis`, SAUF une liste d'exemptions EXPLICITE
+//    (le changement de mot de passe, la déconnexion, /api/auth/me,
+//    l'authentification, /api/billing/*, /api/health, /api/status) : le compte
+//    reste utilisable pour se mettre en règle, rien d'autre. Montée sur « /api »
+//    et avant les routeurs, comme les deux gardes ci-dessus : aucune route ne
+//    peut la contourner, y compris une route ajoutée demain.
+const { creerGardeChangementMotDePasse } = require('./src/middleware/changementMotDePasseRequis')
 app.use('/api', traduireErreursEntree)
+app.use('/api', creerGardeChangementMotDePasse(pool))
 app.use('/api', creerGardeEcritureRole(pool))
 
-// 3. `journaliserEcritures` : toutes les ÉCRITURES sous /api laissent une trace
+// 4. `journaliserEcritures` : toutes les ÉCRITURES sous /api laissent une trace
 //    dans `audit_logs` (append-only, garantie posée en base par la migration
 //    119). Avant, `audit_logs` contenait 0 ligne et le middleware n'était monté
 //    nulle part (P3 SEC-024, mesuré le 20/09/2026). Monté ici, il couvre toutes
@@ -726,10 +740,41 @@ app.use((req, res) => {
 })
 
 app.use((err, req, res, next) => {
+  // ── CORPS JSON MAL FORMÉ (mesure du 21/09/2026) ────────────────────────────
+  // Express répondait `{"error":"Erreur serveur","details":"Expected property
+  // name or '}' in JSON at position 1 (line 1 column 2)"}` : le bon code HTTP
+  // (400) mais un message technique EN ANGLAIS, qui décrit l'analyseur interne.
+  // Un corps illisible est une erreur de la DEMANDE : 400, message produit.
+  if (err && err.type === 'entity.parse.failed') {
+    logger.warn({ path: req.originalUrl, method: req.method }, 'corps JSON illisible')
+    return res.status(400).json({
+      error: 'corps_json_invalide',
+      message: "Le corps de la requête n'est pas un JSON valide.",
+    })
+  }
   logger.error({ err, path: req.originalUrl, method: req.method }, 'Erreur non gérée')
   captureException(err, { path: req.originalUrl, method: req.method, userId: req.user?.id || req.user?.userId })
   res.status(err.status || 500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: err.status || 500 }) })
 })
+
+// ── DERNIER RECOURS : middleware/errorHandler.js (défaut P4 SEC-030b) ────────
+// Mesure du 21/09/2026 : ce fichier existait depuis l'origine et n'était monté
+// NULLE PART — tout passait par le gestionnaire global ci-dessus, ou par celui
+// d'Express quand celui-ci ne répondait pas.
+//
+// POURQUOI ICI, ET PAS À LA PLACE DU GESTIONNAIRE GLOBAL : Express appelle les
+// gestionnaires d'erreur DANS L'ORDRE de déclaration et s'arrête au premier qui
+// répond. Monté après, ce gestionnaire ne masque donc AUCUN comportement
+// existant : la traduction des erreurs d'entrée (`corps_json_invalide`), le
+// message produit et le filtrage des messages d'infrastructure
+// (`lib/erreursPubliques`) du gestionnaire global restent ceux qui répondent.
+// Il ferme ce qui restait réellement ouvert : si le gestionnaire global lève à
+// son tour (journal ou filtre en panne, écriture de réponse impossible), la
+// requête tombait dans le gestionnaire PAR DÉFAUT d'Express — celui qui renvoie
+// la pile d'appels et les chemins du serveur. Ici, la réponse reste un 500
+// produit, sans pile ni chemin, et un en-tête déjà envoyé n'est jamais réécrit.
+const errorHandler = require('./src/middleware/errorHandler')
+app.use(errorHandler)
 
 // ==================== SERVER START ====================
 

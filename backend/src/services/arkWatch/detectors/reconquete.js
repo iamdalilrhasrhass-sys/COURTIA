@@ -10,9 +10,14 @@
  * - Historique de valeur significative
  * 
  * Utilise ARK IA pour scoring et approche personnalisée.
+ *
+ * PORTÉE (correction du 21/09/2026, défaut P1) : le filtre porte sur le CABINET
+ * (`lib/porteeCabinet`, seule autorité), pas sur la seule personne qui lance le
+ * run. Sans cabinet, la clause reste exactement `c.courtier_id = $1`.
  */
 
 const { callArkStructured } = require('../../arkEngine')
+const porteeCabinet = require('../../../lib/porteeCabinet')
 
 const SCHEMA_RECONQUETE = {
   type: 'object',
@@ -44,10 +49,17 @@ module.exports = {
    * Détecte les ex-clients à reconquérir
    * @param {number} brokerId 
    * @param {Pool} pool 
+   * @param {Object} [options] `{ portee }` déjà résolue (aucune requête en plus)
    * @returns {Array} Signaux détectés
    */
-  async run(brokerId, pool) {
+  async run(brokerId, pool, options = {}) {
     const signals = []
+    const portee = await porteeCabinet.resoudrePorteeUtilisateur(pool, brokerId, options)
+    const f = porteeCabinet.fragment(portee, {
+      cabinet: 'c.cabinet_id',
+      proprietaire: 'c.courtier_id',
+      depart: 1,
+    })
     
     // Ex-clients résiliés depuis 6-24 mois avec historique
     const result = await pool.query(`
@@ -64,7 +76,7 @@ module.exports = {
           FILTER (WHERE q.quote_data IS NOT NULL) AS past_products
       FROM clients c
       LEFT JOIN quotes q ON q.client_id = c.id
-      WHERE c.courtier_id = $1
+      WHERE ${f.sql}
         AND (
           c.status IN ('perdu', 'résilie', 'resilie', 'churned', 'inactif')
           OR c.resigned_at IS NOT NULL
@@ -76,7 +88,7 @@ module.exports = {
       GROUP BY c.id
       ORDER BY c.lifetime_value DESC NULLS LAST
       LIMIT 50
-    `, [brokerId])
+    `, f.params)
     
     if (result.rows.length === 0) return signals
     

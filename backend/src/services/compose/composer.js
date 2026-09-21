@@ -451,7 +451,34 @@ async function getDocument(docId, brokerId) {
 }
 
 /**
- * Liste les documents avec filtres
+ * Champs qui désignent un EMPLACEMENT DE STOCKAGE côté serveur. Aucun d'eux ne
+ * doit sortir d'une réponse HTTP.
+ *
+ * POURQUOI (défaut P2, mesuré en production le 21/09/2026) : `GET
+ * /api/compose/documents` renvoyait
+ * `storage_path: "/opt/render/project/src/storage/compliance/165/187/dda_187_1789977893068.pdf"`
+ * — l'arborescence du serveur, l'identifiant interne du cabinet et la
+ * convention de nommage du produit, servis à tout client authentifié. La
+ * correction retire la CLASSE entière (tout champ désignant un fichier), pas
+ * seulement le champ mesuré, et sur TOUTES les réponses (liste, détail), tandis
+ * que le chemin reste disponible côté serveur pour lire le fichier.
+ */
+const CHAMPS_CHEMIN_STOCKAGE = ['storage_path', 'signed_storage_path', 'file_path', 'pdf_path', 'absolutePath']
+
+/** Copie d'une ligne SANS aucun champ d'emplacement de stockage. */
+function champsPublics(ligne) {
+  if (!ligne || typeof ligne !== 'object') return ligne
+  const copie = { ...ligne }
+  for (const champ of CHAMPS_CHEMIN_STOCKAGE) delete copie[champ]
+  return copie
+}
+
+/**
+ * Liste les documents avec filtres.
+ *
+ * La réponse est une réponse d'API : elle ne contient donc aucun chemin de
+ * stockage (voir `champsPublics`). Le fichier reste lisible par le serveur via
+ * `getDocument` + `storage_path`, jamais par le client.
  */
 async function listDocuments({ brokerId, clientId, documentType, status, limit = 50, offset = 0 }) {
   let query = `
@@ -506,7 +533,8 @@ async function listDocuments({ brokerId, clientId, documentType, status, limit =
   const countRes = await pool.query(countQuery, countParams)
   
   return {
-    documents: res.rows,
+    // Aucun chemin de stockage dans une réponse d'API (voir `champsPublics`).
+    documents: res.rows.map(champsPublics),
     total: parseInt(countRes.rows[0].count, 10),
     limit,
     offset
@@ -564,5 +592,6 @@ module.exports = {
   deleteDocument,
   updateSignatureStatus,
   getBrokerProfile,
+  champsPublics,
   STORAGE_BASE
 }

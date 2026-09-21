@@ -1,5 +1,6 @@
 // Gamification Service — XP, niveaux, déblocage de cartes
 const pool = require('../db');
+const porteeCabinet = require('../lib/porteeCabinet');
 
 const LEVELS = [
   { level: 1, name: 'Découverte', xp_needed: 0 },
@@ -120,13 +121,38 @@ async function unlockCard(userId, cardId) {
   return { card: card.rows[0], xpGained: reward };
 }
 
-async function checkUnlocks(userId, eventType, payload) {
+/**
+ * Déblocage de cartes sur compteurs métier.
+ *
+ * DÉFAUT MESURÉ (21/09/2026, P1) : les compteurs filtraient
+ * `clients.courtier_id = $1` et `appointments.user_id = $1`. Un collaborateur
+ * (`broker`) du même cabinet comptait donc 0 client et 0 rendez-vous : la carte
+ * « 10 clients » qu'il voyait débloquée chez son collègue ne se débloquait jamais
+ * pour lui, alors que le CRM lui montre le portefeuille du cabinet.
+ *
+ * RÈGLE TENUE : les deux compteurs passent par `lib/porteeCabinet` (seule
+ * autorité) ; `clients` et `appointments` portent tous deux `cabinet_id`
+ * (migration 113). Sans cabinet, la clause est EXACTEMENT `courtier_id = $1` /
+ * `user_id = $1` — aucun changement pour les cabinets mono-utilisateur.
+ *
+ * RESTE PAR-UTILISATEUR : `user_progress`, `user_skill_cards`,
+ * `user_course_progress`, `referrals` — progression et parrainage personnels,
+ * sans ancre de cabinet.
+ */
+async function checkUnlocks(userId, eventType, payload, options = {}) {
   const cards = await pool.query(
     `SELECT * FROM skill_cards WHERE is_published = true AND unlock_condition_type = $1`,
     [eventType]
   );
 
   const unlocked = [];
+  // Portée résolue AU PLUS UNE FOIS par appel (plusieurs cartes peuvent viser le
+  // même compteur) : `{ portee }` déjà fournie n'entraîne aucune requête.
+  let porteeCompteurs = options.portee || null;
+  const porteeDesCompteurs = async () => {
+    if (!porteeCompteurs) porteeCompteurs = await porteeCabinet.resoudrePorteeUtilisateur(pool, userId, options);
+    return porteeCompteurs;
+  };
   for (const card of cards.rows) {
     const existing = await pool.query(
       'SELECT id FROM user_skill_cards WHERE user_id = $1 AND skill_card_id = $2',
@@ -137,14 +163,29 @@ async function checkUnlocks(userId, eventType, payload) {
     let shouldUnlock = false;
     if (card.unlock_condition_value) {
       if (eventType === 'client_count') {
-        const res = await pool.query('SELECT COUNT(*) as c FROM clients WHERE courtier_id = $1', [userId]);
+        const f = porteeCabinet.fragment(await porteeDesCompteurs(), {
+          cabinet: 'cl.cabinet_id',
+          proprietaire: 'cl.courtier_id',
+          depart: 1,
+        })
+        const res = await pool.query(`SELECT COUNT(*) as c FROM clients cl WHERE ${f.sql}`, f.params)
         shouldUnlock = parseInt(res.rows[0].c) >= card.unlock_condition_value;
       } else if (eventType === 'task_count') {
-        const res = await pool.query('SELECT COUNT(*) as c FROM appointments WHERE user_id = $1', [userId]);
+        const f = porteeCabinet.fragment(await porteeDesCompteurs(), {
+          cabinet: 'a.cabinet_id',
+          proprietaire: 'a.user_id',
+          depart: 1,
+        })
+        const res = await pool.query(`SELECT COUNT(*) as c FROM appointments a WHERE ${f.sql}`, f.params)
         shouldUnlock = parseInt(res.rows[0].c) >= card.unlock_condition_value;
       } else if (eventType === 'reminder_count') {
         // Use appointment count as proxy
-        const res = await pool.query('SELECT COUNT(*) as c FROM appointments WHERE user_id = $1', [userId]);
+        const f = porteeCabinet.fragment(await porteeDesCompteurs(), {
+          cabinet: 'a.cabinet_id',
+          proprietaire: 'a.user_id',
+          depart: 1,
+        })
+        const res = await pool.query(`SELECT COUNT(*) as c FROM appointments a WHERE ${f.sql}`, f.params)
         shouldUnlock = parseInt(res.rows[0].c) >= card.unlock_condition_value;
       } else {
         // Default: unlock if payload value matches

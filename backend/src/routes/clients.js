@@ -76,16 +76,49 @@ function filtreClients(portee, { depart = 1, ecriture = false, alias = 'clients'
 }
 
 /**
- * Identifiant numérique strict.
+ * Identifiant de client VALIDE, ou refus écrit par cette fonction.
+ *
  * POURQUOI : `GET /api/clients/duplicates` tombait dans `GET /api/clients/:id`
  * et PostgreSQL répondait « invalid input syntax for type integer: "duplicates" »
  * — un 500 pour une entrée invalide. Un identifiant qui n'est pas un entier ne
  * peut désigner AUCUN client : la réponse est un 404 (et une route inexistante
  * reçoit le 404 du routeur, plus jamais une erreur de base).
+ *
+ * DÉFAUT P3 MESURÉ (21/09/2026, 4e passe adverse) : `GET /api/clients/
+ * 999999999999999999999999999` répondait 500 avec le message brut de PostgreSQL.
+ * Un tel identifiant passe le contrôle de forme (`^\d+$`) mais sort de la plage
+ * de `clients.id` (colonne `integer`) : la base refusait la requête, donc l'écran
+ * recevait une panne serveur pour une demande mal formée.
+ *
+ * DEUX CONTRATS DISTINCTS, volontairement :
+ *   * NON NUMÉRIQUE (`/api/clients/abc`, `/api/clients/duplicates`) : aucune
+ *     ligne ne peut porter cet identifiant, et l'URL désigne une ressource
+ *     inexistante → 404 (comportement historique du produit, déjà testé : le
+ *     client reçoit « introuvable », jamais un message SQL) ;
+ *   * NUMÉRIQUE HORS PLAGE : la demande est MAL FORMÉE (aucun identifiant de
+ *     cette forme ne peut exister dans la base) → 400 `identifiant_invalide`.
+ * Dans les deux cas : aucune requête n'est émise et aucun message PostgreSQL ne
+ * sort de la route.
+ *
+ * @returns {number|null} l'identifiant, ou `null` si la réponse est déjà écrite.
  */
-function identifiantClient(valeur) {
+const ID_CLIENT_MAX = 2147483647 // borne haute d'une colonne PostgreSQL `integer`
+
+function identifiantClientOuRefus(valeur, res) {
   const texte = String(valeur ?? '').trim()
-  return /^\d+$/.test(texte) ? Number(texte) : null
+  if (!/^\d+$/.test(texte)) {
+    res.status(404).json({ error: 'not_found', message: 'Client introuvable.' })
+    return null
+  }
+  const nombre = Number(texte)
+  if (!Number.isSafeInteger(nombre) || nombre <= 0 || nombre > ID_CLIENT_MAX) {
+    res.status(400).json({
+      error: 'identifiant_invalide',
+      message: "L'identifiant de ce client n'est pas valide.",
+    })
+    return null
+  }
+  return nombre
 }
 
 /**
@@ -611,10 +644,8 @@ router.get('/duplicates', async (req, res) => {
 router.get('/:id/tags', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const clientId = identifiantClient(req.params.id);
-    if (clientId === null) {
-      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
-    }
+    const clientId = identifiantClientOuRefus(req.params.id, res);
+    if (clientId === null) return;
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     const f = filtreClients(portee, { depart: 2 });
 
@@ -649,12 +680,12 @@ router.get('/:id/tags', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const clientId = identifiantClient(req.params.id);
+    const clientId = identifiantClientOuRefus(req.params.id, res);
     // Un identifiant non numérique ne peut désigner aucun client : 404 (et non
-    // un 500 SQL « invalid input syntax for type integer »).
-    if (clientId === null) {
-      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
-    }
+    // un 500 SQL « invalid input syntax for type integer »). Un identifiant
+    // numérique hors plage est refusé en 400 `identifiant_invalide` : il ne peut,
+    // lui non plus, jamais atteindre la base.
+    if (clientId === null) return;
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     // Le client doit appartenir au CABINET de l'utilisateur (404 sinon : un 403
     // révélerait l'existence du client d'un autre cabinet).
@@ -691,6 +722,11 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/contrats', async (req, res) => {
   try {
     const pool = req.app.locals.pool
+    // L'identifiant est validé AVANT toute requête : une valeur non numérique ou
+    // hors plage faisait échouer le paramètre côté PostgreSQL (« invalid input
+    // syntax for type integer »), donc un 500 au lieu d'un refus clair.
+    const clientId = identifiantClientOuRefus(req.params.id, res)
+    if (clientId === null) return
     const portee = await porteeCabinet.resoudrePortee(poolModule, req)
     const f = filtreClients(portee, { depart: 2, alias: 'c' })
 
@@ -704,7 +740,7 @@ router.get('/:id/contrats', async (req, res) => {
     // ────────────────────────────────────────────────────────────────────────
     const dossier = await pool.query(
       `SELECT c.id FROM clients c WHERE c.id = $1 AND ${f.sql} LIMIT 1`,
-      [req.params.id, ...f.params]
+      [clientId, ...f.params]
     )
     if (!dossier.rows.length) {
       return res.status(404).json({ error: 'client_introuvable', message: 'Client introuvable.' })
@@ -731,7 +767,7 @@ router.get('/:id/contrats', async (req, res) => {
          -- client (même frontière que kpi.NATURE_CONTRAT).
          AND COALESCE(q.status, '') NOT IN ${kpi.STATUTS_DEVIS_V1}
        ORDER BY ${kpi.ECHEANCE_CONTRAT} ASC NULLS LAST`,
-      [req.params.id, ...f.params]
+      [clientId, ...f.params]
     )
     res.json(result.rows)
   } catch (err) {
@@ -746,14 +782,11 @@ router.get('/:id/contrats', async (req, res) => {
 router.get('/:id/interactions', async (req, res) => {
   try {
     const pool = req.app.locals.pool
-    const clientId = Number.parseInt(req.params.id, 10)
+    const clientId = identifiantClientOuRefus(req.params.id, res)
+    if (clientId === null) return
     const portee = await porteeCabinet.resoudrePortee(poolModule, req)
     const userId = portee.userId || req.user.id
     const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 300)
-
-    if (!Number.isFinite(clientId) || clientId <= 0) {
-      return res.status(400).json({ error: 'invalid_client_id' })
-    }
 
     // Lecture d'un client du CABINET (l'historique d'interactions reste, lui,
     // celui du courtier qui a réalisé l'échange : c'est une trace, pas un
@@ -1018,12 +1051,10 @@ router.post('/', requireUnderLimit('clients'), async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const clientId = identifiantClient(req.params.id);
     // Un identifiant non numérique ne peut désigner aucun client : 404, jamais
-    // un 500 SQL.
-    if (clientId === null) {
-      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
-    }
+    // un 500 SQL ; un identifiant hors plage est une demande mal formée (400).
+    const clientId = identifiantClientOuRefus(req.params.id, res);
+    if (clientId === null) return;
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     if (porteeCabinet.refuserEcriture(portee, res, 'modifier un client')) return;
     const {
@@ -1106,10 +1137,8 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
-    const clientId = identifiantClient(req.params.id);
-    if (clientId === null) {
-      return res.status(404).json({ error: 'not_found', message: 'Client introuvable.' });
-    }
+    const clientId = identifiantClientOuRefus(req.params.id, res);
+    if (clientId === null) return;
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     if (porteeCabinet.refuserSuppression(portee, res)) return;
     // La suppression ne renvoie un succès QUE si une ligne a réellement été
@@ -1140,8 +1169,11 @@ router.get('/:id/score', async (req, res) => {
   try {
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     const courtierId = portee.userId || req.user.id;
-    const clientId   = parseInt(req.params.id);
-    if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
+    // `parseInt` + `isNaN` laissaient passer 999999999999999999999999999 : la
+    // requête partait et PostgreSQL levait une erreur de plage (500). Le
+    // contrôle porte maintenant sur la forme ET sur la plage.
+    const clientId   = identifiantClientOuRefus(req.params.id, res);
+    if (clientId === null) return;
 
     // Le client est-il dans le CABINET de l'appelant ? Si oui, l'analyse porte
     // sur le dossier de son courtier en charge (le score récompense le suivi
@@ -1197,8 +1229,11 @@ router.get('/:id/ark-action-plan', async (req, res) => {
   try {
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     const courtierId = portee.userId || req.user.id;
-    const clientId   = parseInt(req.params.id);
-    if (isNaN(clientId)) return res.status(400).json({ error: 'ID invalide' });
+    // `parseInt` + `isNaN` laissaient passer 999999999999999999999999999 : la
+    // requête partait et PostgreSQL levait une erreur de plage (500). Le
+    // contrôle porte maintenant sur la forme ET sur la plage.
+    const clientId   = identifiantClientOuRefus(req.params.id, res);
+    if (clientId === null) return;
 
     // Contrôle de portée CABINET (et non plus de propriété utilisateur) : le
     // dossier doit appartenir au cabinet de l'appelant.
@@ -1431,8 +1466,10 @@ router.get('/:id/cross-sell', async (req, res) => {
   try {
     const portee = await porteeCabinet.resoudrePortee(poolModule, req);
     const courtierId = portee.userId || req.user.userId;
-    const clientId   = parseInt(req.params.id, 10);
-    if (!Number.isFinite(clientId)) return res.status(400).json({ error: 'ID invalide' });
+    // `Number.isFinite` acceptait 1e27 (numérique, mais hors plage de `integer`) :
+    // la requête partait et PostgreSQL répondait une erreur de plage (500).
+    const clientId   = identifiantClientOuRefus(req.params.id, res);
+    if (clientId === null) return;
 
     // Vérifier l'accès : portée CABINET (le client du collègue du même cabinet
     // est légitime pour une analyse de portefeuille).
