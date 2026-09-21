@@ -16,8 +16,8 @@
    Ce module n'invente RIEN sur le régime suisse : il ne nomme aucune autorité
    suisse et ne crée pas de fait réglementaire. Pour la Suisse il réutilise
    uniquement les libellés déjà en place dans le produit (registre FINMA, IDE /
-   UID — cf. pages/Parametres.jsx et market/marketContext.js, où le marché CH
-   est déclaré « LSA · FINMA · nLPD »).
+   UID — cf. les écrans de paramètres réellement servis et market/marketContext.js,
+   où le marché CH est déclaré « LSA · FINMA · nLPD »).
 
    Détermination du marché :
    - profil cabinet connu (`broker_profiles.pays`, cf. lib/monnaie.js) : source

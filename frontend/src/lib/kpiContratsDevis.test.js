@@ -17,7 +17,7 @@
        jamais un rapport calculé sur des contrats.
    ========================================================================== */
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -25,42 +25,63 @@ import { describe, expect, it } from 'vitest'
 const RACINE_SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const lire = (chemin) => readFileSync(resolve(RACINE_SRC, chemin), 'utf8')
 
-const REPORTING_V2 = 'pages/v2/ReportingV2.jsx'
 const RAPPORTS = 'pages/Rapports.jsx'
 
+/**
+ * GARDE-FOU ÉLARGI (21/09/2026). Deux cas de ce fichier lisaient
+ * `pages/v2/ReportingV2.jsx` — un fichier jamais embarqué (absent de toutes les
+ * cartes de source du build), donc jamais exécuté. La protection est reprise
+ * MAIS portée sur l'ensemble des sources de `src/` : toute page ou tout composant
+ * du dépôt reste soumis à la même interdiction. C'est une protection plus large
+ * que celle qu'elle remplace : un nouvel écran ne peut pas non plus réintroduire
+ * une valeur de repli fabriquée ni un montant en euros en dur.
+ */
+const INTERDITS_GLOBAUX = [
+  { motif: /avgScore\s*(\|\||\?\?)\s*75/, pourquoi: 'score de repli fabriqué (75)' },
+  { motif: /currency:\s*'EUR'/, pourquoi: 'montant en euros en dur', sauf: 'market/marketContext.js' },
+  { motif: /overview\?\.quotes\?\.conversionRate/, pourquoi: 'taux de conversion lu sur l’alias déprécié `quotes`' },
+  { motif: /devis:\s*\d+,\s*contrats:\s*\d+/, pourquoi: 'série de mesures en dur' },
+]
+
+function sourcesDeLEcran() {
+  const fichiers = []
+  const parcourir = (dossier) => {
+    for (const entree of readdirSync(dossier, { withFileTypes: true })) {
+      const chemin = resolve(dossier, entree.name)
+      if (entree.isDirectory()) parcourir(chemin)
+      else if (/\.(jsx?|tsx?)$/.test(entree.name) && !/\.test\./.test(entree.name)) fichiers.push(chemin)
+    }
+  }
+  parcourir(RACINE_SRC)
+  return fichiers
+}
+
 describe('écrans d’indicateurs — contrats (actifs / toutes lignes) et devis', () => {
-  it('Reporting Avancé lit la clé `devis` et nomme les deux notions de contrat', () => {
-    const source = lire(REPORTING_V2)
-
-    // Clé juste, avec repli explicite sur l'alias déprécié (jamais `quotes` seul).
-    expect(source).toContain('overview?.devis')
-    expect(source).toContain('overview?.quotes')
-    expect(source).toMatch(/const devis = overview\?\.devis \?\? overview\?\.quotes/)
-
-    // Les deux notions sont affichées, chacune nommée.
-    expect(source).toContain('label="Contrats actifs"')
-    expect(source).toContain('Contrats (toutes lignes, résiliés compris)')
-    expect(source).toContain('Prime annuelle des contrats actifs')
-
-    // Le taux de conversion porte sur les DEVIS (et le libellé le dit).
-    expect(source).toContain('Taux de conversion devis (signés / devis)')
-    expect(source).toContain('formatTaux(devis?.conversionRate)')
-    // …et il n'est plus lu sur l'alias `quotes`, ni sur un compteur de contrats.
-    expect(source).not.toContain('overview?.quotes?.conversionRate')
-    expect(source).not.toMatch(/conversionRate[^\n]*contrats/)
+  it('aucune source de src/ ne réintroduit une mesure fabriquée ni un montant en euros', () => {
+    const fautes = []
+    for (const fichier of sourcesDeLEcran()) {
+      const texte = readFileSync(fichier, 'utf8')
+      for (const { motif, pourquoi, sauf } of INTERDITS_GLOBAUX) {
+        if (sauf && fichier.endsWith(sauf)) continue
+        if (motif.test(texte)) fautes.push(`${pourquoi} → ${fichier.replace(RACINE_SRC, 'src')}`)
+      }
+    }
+    expect(fautes).toEqual([])
   })
 
-  it('Reporting Avancé n’invente plus de valeur de repli (75, 0 %)', () => {
-    const source = lire(REPORTING_V2)
-    // L'ancien « score ARK par défaut 75 » et le « 0 % » d'un taux sans
-    // dénominateur étaient des mesures fabriquées.
-    expect(source).not.toMatch(/avgScore \|\| 75/)
-    expect(source).not.toMatch(/avgScore \?\? 75/)
-    expect(source).toContain('VALEUR_ABSENTE')
-    // Montants dans la devise du cabinet, pas en euros en dur.
-    expect(source).toContain("from '../../lib/monnaie'")
-    expect(source).not.toContain('Intl.NumberFormat')
-    expect(source).not.toContain("currency: 'EUR'")
+  it('les écrans morts retirés le 21/09/2026 ne reviennent pas au dépôt', () => {
+    // Ces fichiers étaient versionnés mais absents de TOUTES les cartes de source
+    // du build : jamais embarqués, jamais exécutés. Les remettre sans les câbler
+    // recréerait exactement le défaut CH-037 / UX-030 (code mort portant du
+    // vocabulaire réglementaire français et des mesures de démonstration).
+    const morts = [
+      'pages/v2',
+      'pages/Login.jsx', 'pages/Landing.jsx', 'pages/Beta.jsx',
+      'components/Settings.jsx', 'components/Reports.jsx',
+      'components/Parametres.jsx', 'components/Pricing.jsx',
+    ]
+    const revenus = morts.filter((chemin) => existsSync(resolve(RACINE_SRC, chemin)))
+    expect(revenus).toEqual([])
   })
 
   it('Rapports (modèle) emploie les mêmes mots que l’API', () => {
