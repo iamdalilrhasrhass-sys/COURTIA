@@ -30,6 +30,7 @@ const path = require('path');
 const verifyToken = require('../middleware/authMiddleware');
 
 const docInboxService = require('../services/documentInboxService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Multer : stockage temporaire.
 // CORRECTION 2026-09-19 : limite de taille appliquée A LA RECEPTION (le service
@@ -84,7 +85,7 @@ router.get('/', async (req, res) => {
     return res.json({ success: true, data: enriched, total: enriched.length });
   } catch (err) {
     console.error('[GET /api/document-inbox]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -106,14 +107,14 @@ router.get('/client/:clientId', async (req, res) => {
     return res.json({ success: true, data: enriched });
   } catch (err) {
     console.error('[GET /api/document-inbox/client/:clientId]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
 // POST /upload — upload manuel par le courtier
 router.post('/upload', (req, res, next) => {
   tmpSingle(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: 'upload_error', message: err.message });
+    if (err) return res.status(400).json({ error: 'upload_error', message: messagePublic(err, { statut: 400 }) });
     try {
       const userId = getUserId(req);
       const { client_id, category } = req.body;
@@ -124,7 +125,7 @@ router.post('/upload', (req, res, next) => {
       return res.status(201).json({ success: true, data: doc });
     } catch (err) {
       console.error('[POST /api/document-inbox/upload]', err.message);
-      return res.status(400).json({ error: 'upload_error', message: err.message });
+      return res.status(400).json({ error: 'upload_error', message: messagePublic(err, { statut: 400 }) });
     }
   });
 });
@@ -153,7 +154,7 @@ router.patch('/:id/status', async (req, res) => {
     return res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error('[PATCH /api/document-inbox/:id/status]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -165,7 +166,7 @@ router.delete('/:id', async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error('[DELETE /api/document-inbox/:id]', err.message);
-    return res.status(err.message === 'Document introuvable' ? 404 : 500).json({ error: 'server_error', message: err.message });
+    return res.status(err.message === 'Document introuvable' ? 404 : 500).json({ error: 'server_error', message: messagePublic(err) });
   }
 });
 
@@ -181,7 +182,7 @@ router.post('/request', async (req, res) => {
     return res.status(201).json({ success: true, data: result });
   } catch (err) {
     console.error('[POST /api/document-inbox/request]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -201,7 +202,7 @@ router.get('/request', async (req, res) => {
     return res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error('[GET /api/document-inbox/request]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -224,7 +225,7 @@ router.get('/request/:id', async (req, res) => {
     return res.json({ success: true, data: { ...result.rows[0], uploads: uploads.rows } });
   } catch (err) {
     console.error('[GET /api/document-inbox/request/:id]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -253,7 +254,7 @@ router.post('/request/:id/send', async (req, res) => {
     });
   } catch (err) {
     console.error('[POST /api/document-inbox/request/:id/send]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -268,7 +269,7 @@ router.get('/checklist/:clientId', async (req, res) => {
     return res.json({ success: true, data: result.rows[0] || null });
   } catch (err) {
     console.error('[GET /api/document-inbox/checklist/:clientId]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -307,7 +308,7 @@ router.post('/checklist', async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error('[POST /api/document-inbox/checklist]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -323,7 +324,7 @@ router.post('/submission', async (req, res) => {
     return res.status(201).json({ success: true, data: result });
   } catch (err) {
     console.error('[POST /api/document-inbox/submission]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -343,7 +344,7 @@ router.get('/submission', async (req, res) => {
     return res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error('[GET /api/document-inbox/submission]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -359,7 +360,7 @@ router.get('/submission/:id', async (req, res) => {
     return res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error('[GET /api/document-inbox/submission/:id]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -371,7 +372,7 @@ router.post('/submission/:id/submit', async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error('[POST /api/document-inbox/submission/:id/submit]', err.message);
-    return res.status(err.message === 'Soumission introuvable' ? 404 : 500).json({ error: 'server_error', message: err.message });
+    return res.status(err.message === 'Soumission introuvable' ? 404 : 500).json({ error: 'server_error', message: messagePublic(err) });
   }
 });
 
@@ -404,7 +405,7 @@ router.get('/stats', async (req, res) => {
     return res.json({ success: true, data: { documents: stats.rows[0], requests: requestStats.rows[0] } });
   } catch (err) {
     console.error('[GET /api/document-inbox/stats]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -415,7 +416,7 @@ router.get('/stats', async (req, res) => {
 // POST /public/upload/:token — upload via lien client
 router.post('/public/upload/:token', (req, res, next) => {
   tmpSingle(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: 'upload_error', message: err.message });
+    if (err) return res.status(400).json({ error: 'upload_error', message: messagePublic(err, { statut: 400 }) });
     try {
       const { token } = req.params;
       if (!req.file) return res.status(400).json({ error: 'validation_error', message: 'Fichier requis' });
@@ -424,7 +425,7 @@ router.post('/public/upload/:token', (req, res, next) => {
       return res.status(201).json({ success: true, data: doc });
     } catch (err) {
       console.error('[POST /api/document-inbox/public/upload/:token]', err.message);
-      return res.status(400).json({ error: 'upload_error', message: err.message });
+      return res.status(400).json({ error: 'upload_error', message: messagePublic(err, { statut: 400 }) });
     }
   });
 });
@@ -478,7 +479,7 @@ router.get('/public/request/:token', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /api/document-inbox/public/request/:token]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -490,7 +491,7 @@ router.get('/email-status', async (req, res) => {
     return res.json({ success: true, data: status });
   } catch (err) {
     console.error('[GET /api/document-inbox/email-status]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 

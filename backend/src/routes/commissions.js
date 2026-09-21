@@ -7,6 +7,7 @@ const {
 } = require('../services/commissionService')
 const { requireCabinetFeature } = require('../middleware/cabinetAccess')
 const porteeCabinet = require('../lib/porteeCabinet')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router()
 
@@ -35,7 +36,7 @@ async function saveCommissionForContract(req, res) {
   } catch (err) {
     const status = err.statusCode || (err.message === 'invalid_period' || err.message === 'insurer_required' ? 400 : 500)
     res.status(status).json({
-      error: err.message || 'commission_save_failed',
+      error: messagePublic(err) || 'commission_save_failed',
       message: status === 404
         ? 'Contrat introuvable ou non rattaché à votre cabinet.'
         : 'Impossible d’enregistrer cette commission.',
@@ -60,7 +61,7 @@ router.get('/', async (req, res) => {
     res.json({ data: rows, total: rows.length, ...(devise ? { devise } : {}) })
   } catch (err) {
     res.status(err.statusCode || 500).json({
-      error: err.message || 'commissions_unavailable',
+      error: messagePublic(err) || 'commissions_unavailable',
       message: 'Impossible de charger les commissions pour le moment.',
     })
   }
@@ -73,7 +74,7 @@ router.get('/stats', async (req, res) => {
     res.json(stats)
   } catch (err) {
     res.status(err.statusCode || 500).json({
-      error: err.message || 'commission_stats_unavailable',
+      error: messagePublic(err) || 'commission_stats_unavailable',
       message: 'Impossible de calculer les statistiques commissions.',
     })
   }
@@ -111,7 +112,7 @@ router.post('/import', async (req, res) => {
     res.status(201).json(report)
   } catch (err) {
     res.status(err.statusCode || 500).json({
-      error: err.message || 'commission_import_failed',
+      error: messagePublic(err) || 'commission_import_failed',
       message: 'Import commissions impossible pour le moment.',
     })
   }
@@ -128,7 +129,7 @@ router.get('/rules', async (req, res) => {
     const rules = await commissionsAutoService.listRules(req.app.locals.pool, req.user.id || req.user.userId)
     res.json({ data: rules, total: rules.length })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -138,7 +139,7 @@ router.post('/rules', async (req, res) => {
     const rule = await commissionsAutoService.upsertRule(req.app.locals.pool, req.user.id || req.user.userId, req.body)
     res.status(201).json(rule)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -165,7 +166,7 @@ router.post('/calculate/:contractId', async (req, res) => {
     )
     res.json(result)
   } catch (err) {
-    res.status(err.message === 'Contrat introuvable' ? 404 : 500).json({ error: err.message })
+    res.status(err.message === 'Contrat introuvable' ? 404 : 500).json({ error: messagePublic(err) })
   }
 })
 
@@ -186,7 +187,7 @@ router.post('/calculate-period', async (req, res) => {
     )
     res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -205,7 +206,7 @@ router.get('/reconcile/:year/:month', async (req, res) => {
     )
     res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -237,7 +238,7 @@ router.get('/statement/:year/:month/pdf', async (req, res) => {
       error: err.code || 'statement_failed',
       ...(nonSouscrit ? { fonctionnalite: err.fonctionnalite || 'releve_commissions_pdf' } : {}),
       message: nonSouscrit
-        ? err.message
+        ? messagePublic(err)
         : 'Le relevé de commissions est momentanément indisponible. Réessayez dans quelques instants.',
     })
   }

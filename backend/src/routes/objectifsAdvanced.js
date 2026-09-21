@@ -11,6 +11,7 @@ const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
 const porteeCabinet = require('../lib/porteeCabinet')
 const pool = require('../db')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // CORRECTION 2026-09-19 : ce routeur est monte sur '/api' (server.js:435) et
 // appliquait verifyToken a TOUT ce qui passe par ce prefixe. Consequence mesuree :
@@ -82,7 +83,7 @@ router.get('/objectifs/current', async (req, res) => {
       },
     })
   } catch (err) {
-    res.status(500).json({ error: 'objectifs_failed', message: err.message })
+    res.status(500).json({ error: 'objectifs_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -248,7 +249,7 @@ router.get('/commissions/dashboard', async (req, res) => {
       by_month: byMonth.map(r => ({ ...r, commission_eur: Math.round(Number(r.commission_eur || 0)) })),
     })
   } catch (err) {
-    res.status(500).json({ error: 'commissions_failed', message: err.message })
+    res.status(500).json({ error: 'commissions_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -322,7 +323,7 @@ router.get('/objectifs/ranking', async (req, res) => {
       ranking,
     })
   } catch (err) {
-    res.status(500).json({ error: 'ranking_failed', message: err.message })
+    res.status(500).json({ error: 'ranking_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

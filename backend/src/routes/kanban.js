@@ -9,6 +9,7 @@ const pool = require('../db')
 const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
 const porteeCabinet = require('../lib/porteeCabinet')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 router.use(requireFeature('kanban'))
@@ -153,7 +154,7 @@ router.get('/', async (req, res) => {
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     console.error('[GET /api/kanban]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -183,7 +184,7 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[POST /api/kanban]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -228,7 +229,7 @@ router.get('/:id', async (req, res) => {
     return res.json({ success: true, data: { board, cards_by_column } })
   } catch (err) {
     console.error('[GET /api/kanban/:id]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -293,7 +294,7 @@ router.post('/cards', async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[POST /api/kanban/cards]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -385,7 +386,7 @@ router.patch('/cards/:id', async (req, res) => {
     })
   } catch (err) {
     console.error('[PATCH /api/kanban/cards/:id]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -413,7 +414,7 @@ router.delete('/cards/:id', async (req, res) => {
     return res.json({ success: true, data: { deleted_id: id } })
   } catch (err) {
     console.error('[DELETE /api/kanban/cards/:id]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

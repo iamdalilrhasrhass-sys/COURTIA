@@ -4,6 +4,7 @@ const pool = require('../db')
 const cabinetService = require('../services/cabinetMembershipService')
 const { logAudit } = require('../lib/audit')
 const { isFeatureEnabled } = require('../lib/featureFlags')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router()
 
@@ -40,7 +41,7 @@ router.post('/:token/accept', verifyToken, async (req, res) => {
     await logAudit({ cabinetId: accepted.membership.cabinet_id, userId, entityType: 'cabinet_invitation', entityId: accepted.invitation.id, action: 'accepted', metadata: { role: accepted.membership.role }, req }).catch(() => {})
     res.json({ success: true, invitation: cabinetService.sanitizeInvitation(accepted.invitation), membership: accepted.membership })
   } catch (err) {
-    res.status(err.status || 500).json({ error: err.code || 'invite_accept_failed', message: err.message || 'Acceptation invitation impossible.' })
+    res.status(err.status || 500).json({ error: err.code || 'invite_accept_failed', message: messagePublic(err) || 'Acceptation invitation impossible.' })
   }
 })
 

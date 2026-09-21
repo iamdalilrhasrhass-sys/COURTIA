@@ -9,6 +9,7 @@ const pool = require('../db');
 const verifyToken = require('../middleware/authMiddleware');
 const { getAuditLogs, logAction } = require('../middleware/auditLogger');
 const { getSafeUserId, normalizeCabinetRole } = require('../services/cabinetMembershipService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ==================== GARDE CABINET (SEC-005 / SEC-010) ====================
 //
@@ -71,7 +72,7 @@ async function requireCabinetAdmin(req, res, next) {
     return next();
   } catch (error) {
     console.error('requireCabinetAdmin error:', error);
-    return res.status(500).json({ error: 'internal_error', message: error.message });
+    return res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 }
 
@@ -125,7 +126,7 @@ router.get('/audit-logs', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('GET /audit-logs error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -177,7 +178,7 @@ router.get('/audit-logs/stats', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('GET /audit-logs/stats error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -201,7 +202,7 @@ router.get('/roles', verifyToken, async (req, res) => {
     res.json({ roles: result.rows });
   } catch (error) {
     console.error('GET /roles error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -243,7 +244,7 @@ router.post('/roles', verifyToken, requireCabinetAdmin, async (req, res) => {
     res.status(201).json({ role: result.rows[0] });
   } catch (error) {
     console.error('POST /roles error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -296,7 +297,7 @@ router.put('/roles/:id', verifyToken, requireCabinetAdmin, async (req, res) => {
     res.json({ role: result.rows[0] });
   } catch (error) {
     console.error('PUT /roles/:id error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -335,7 +336,7 @@ router.delete('/roles/:id', verifyToken, requireCabinetAdmin, async (req, res) =
     res.json({ message: 'Rôle supprimé' });
   } catch (error) {
     console.error('DELETE /roles/:id error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -395,7 +396,7 @@ router.post('/users/:userId/roles', verifyToken, requireCabinetAdmin, async (req
     res.json({ message: 'Rôle assigné', userId: targetUserId, roleId: role_id });
   } catch (error) {
     console.error('POST /users/:userId/roles error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -425,7 +426,7 @@ router.get('/users/:userId/roles', verifyToken, requireCabinetAdmin, async (req,
     res.json({ roles: result.rows });
   } catch (error) {
     console.error('GET /users/:userId/roles error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -457,7 +458,7 @@ router.delete('/users/:userId/roles/:roleId', verifyToken, requireCabinetAdmin, 
     res.json({ message: 'Rôle retiré' });
   } catch (error) {
     console.error('DELETE /users/:userId/roles/:roleId error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -484,7 +485,7 @@ router.get('/sso', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('GET /sso error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -524,7 +525,7 @@ router.post('/sso', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('POST /sso error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 

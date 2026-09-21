@@ -8,6 +8,7 @@ const { logAudit } = require('../lib/audit');
 const { isFeatureEnabled } = require('../lib/featureFlags');
 const logger = require('../lib/logger');
 const telegramService = require('../services/telegramService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router();
 
@@ -164,7 +165,7 @@ router.post('/step', exigerRoleIdentiteCabinet, exigerEcritureCabinet(pool, 'mod
   } catch (error) {
     res.status(error.status || 500).json({
       error: error.code || 'onboarding_step_failed',
-      message: error.message || 'Étape onboarding impossible.',
+      message: messagePublic(error) || 'Étape onboarding impossible.',
     });
   }
 });
@@ -318,7 +319,7 @@ router.get('/gamified/progress', async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'Gamified progress error');
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -375,7 +376,7 @@ router.post('/gamified/step/:step/complete', async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'Gamified step complete error');
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -407,7 +408,7 @@ router.get('/gamified/badges', async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'Badges list error');
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -491,7 +492,7 @@ router.post('/gamified/auto-check', async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'Gamified auto-check error');
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

@@ -35,6 +35,7 @@ const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
 const porteeCabinet = require('../lib/porteeCabinet')
 const { kpi } = require('./dashboard')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -124,7 +125,7 @@ router.get('/executive', requireFeature('executive_dashboard'), async (req, res)
     })
   } catch (err) {
     console.error('[GET /api/analytics/executive]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -205,7 +206,7 @@ router.get('/compliance', requireFeature('compliance_dashboard'), async (req, re
     })
   } catch (err) {
     console.error('[GET /api/analytics/compliance]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -230,7 +231,7 @@ router.get('/lead-scoring', requireFeature('lead_scoring'), async (req, res) => 
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     console.error('[GET /api/analytics/lead-scoring]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -299,7 +300,7 @@ router.get('/benchmarks', requireFeature('benchmarks'), async (req, res) => {
     })
   } catch (err) {
     console.error('[GET /api/analytics/benchmarks]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

@@ -18,6 +18,7 @@ const voice = require('../services/arkVoice');
 const email = require('../services/emailParser');
 const dda = require('../services/ddaAudit');
 const secretsEntrants = require('../lib/secretsEntrants');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ============================================================
 // FEATURE 6 — ARK VOICE
@@ -39,14 +40,14 @@ router.get('/voice/settings', verifyToken, async (req, res) => {
     const settings = { ...s, devise, daily_budget: s.daily_budget_eur };
     if (devise === 'EUR') settings.daily_budget_eur = s.daily_budget_eur; else delete settings.daily_budget_eur;
     res.json({ success: true, settings, marche: marche ? marche.marche : 'FR' });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) { res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) }); }
 });
 
 router.post('/voice/settings', verifyToken, async (req, res) => {
   try {
     await voice.updateVoiceSettings(req.user.userId, req.body);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) { res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) }); }
 });
 
 router.post('/voice/morning-brief', verifyToken, async (req, res) => {
@@ -55,7 +56,7 @@ router.post('/voice/morning-brief', verifyToken, async (req, res) => {
     res.json({ success: result.success, ...result });
   } catch (e) {
     console.error('[voice/morning-brief]', e);
-    res.status(500).json({ success: false, error: e.message });
+    res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -66,7 +67,7 @@ router.post('/voice/call-client', verifyToken, async (req, res) => {
     res.json({ success: true, call });
   } catch (e) {
     console.error('[voice/call-client]', e);
-    res.status(500).json({ success: false, error: e.message });
+    res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -74,7 +75,7 @@ router.get('/voice/history', verifyToken, async (req, res) => {
   try {
     const history = await voice.getCallHistory(req.user.userId, pool, { limit: parseInt(req.query.limit) || 20 });
     res.json({ success: true, history });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) { res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) }); }
 });
 
 // ============================================================
@@ -141,7 +142,7 @@ router.get('/email/settings', verifyToken, async (req, res) => {
     const s = await email.getEmailSettings(req.user.userId);
     if (s) delete s.imap_password;
     res.json({ success: true, settings: s });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) { res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) }); }
 });
 
 router.post('/email/settings', verifyToken, async (req, res) => {
@@ -150,7 +151,7 @@ router.post('/email/settings', verifyToken, async (req, res) => {
     if (req.body.enabled) email.startAutoScan(req.user.userId);
     else email.stopAutoScan(req.user.userId);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) { res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) }); }
 });
 
 router.post('/email/scan', verifyToken, async (req, res) => {
@@ -159,7 +160,7 @@ router.post('/email/scan', verifyToken, async (req, res) => {
     res.json({ success: true, ...result });
   } catch (e) {
     console.error('[email/scan]', e);
-    res.status(500).json({ success: false, error: e.message });
+    res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -167,7 +168,7 @@ router.get('/email/inbox', verifyToken, async (req, res) => {
   try {
     const inbox = await email.getInbox(req.user.userId, { status: req.query.status, limit: parseInt(req.query.limit) || 50 });
     res.json({ success: true, inbox });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) { res.status(500).json({ success: false, error: messagePublic(e, { statut: 500 }) }); }
 });
 
 router.post('/email/:id/replied', verifyToken, async (req, res) => {

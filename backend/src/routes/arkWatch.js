@@ -21,6 +21,7 @@ const router = express.Router()
 const pool = require('../db')
 const logger = require('../lib/logger')
 const marcheCabinet = require('../lib/marcheCabinet')
+const { messagePublic } = require('../lib/erreursPubliques')
 const {
   runArkWatch,
   getSignalStats,
@@ -156,7 +157,7 @@ router.get('/signals', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch signals list error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -191,7 +192,7 @@ router.get('/signals/:id', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch signal detail error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -219,7 +220,7 @@ router.post('/signals/:id/acknowledge', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch acknowledge error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -251,7 +252,7 @@ router.post('/signals/:id/resolve', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch resolve error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -278,7 +279,7 @@ router.delete('/signals/:id', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch delete error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -301,7 +302,7 @@ router.post('/run', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch run error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -316,7 +317,7 @@ router.get('/stats', async (req, res) => {
     res.json(stats)
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch stats error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -331,7 +332,7 @@ router.get('/morning-brief', async (req, res) => {
     res.json(brief)
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch morning brief error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -359,7 +360,7 @@ router.get('/runs', async (req, res) => {
     
   } catch (err) {
     logger.error({ error: err.message }, 'ARK Watch runs error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -375,7 +376,7 @@ router.get('/detectors', async (req, res) => {
     const detectors = getDetectorsList(marche)
     res.json({ detectors, marche })
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 

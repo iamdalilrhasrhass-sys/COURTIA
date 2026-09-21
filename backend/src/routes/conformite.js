@@ -28,6 +28,7 @@ const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
 const pool = require('../db')
 const referentielConformite = require('../services/referentielConformite')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -93,7 +94,7 @@ router.get('/dashboard', async (req, res) => {
       conformite,
     })
   } catch (err) {
-    res.status(500).json({ error: 'dashboard_failed', message: err.message })
+    res.status(500).json({ error: 'dashboard_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -120,7 +121,7 @@ router.get('/dda/checklist/:client_id', async (req, res) => {
       },
     })
   } catch (err) {
-    res.status(500).json({ error: 'fetch_failed', message: err.message })
+    res.status(500).json({ error: 'fetch_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -153,7 +154,7 @@ router.post('/dda/checklist/:client_id', async (req, res) => {
     `, [userId, clientId, !!besoin_exprime, !!devoir_conseil, !!document_remis, !!informations_marche, !!fiche_synthese, notes || '', status])
     res.json({ ok: true, checklist: rows[0] })
   } catch (err) {
-    res.status(500).json({ error: 'update_failed', message: err.message })
+    res.status(500).json({ error: 'update_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -166,7 +167,7 @@ router.get('/kyc/:client_id', async (req, res) => {
     `, [userId, clientId])
     res.json({ ok: true, kyc: rows[0] || null })
   } catch (err) {
-    res.status(500).json({ error: 'fetch_failed', message: err.message })
+    res.status(500).json({ error: 'fetch_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -193,7 +194,7 @@ router.post('/kyc/verify', async (req, res) => {
     `, [userId, client_id, identity_document_type, identity_document_number, !!identity_verified, !!address_verified, !!pep, !!sanction_check, document_path || null, status])
     res.json({ ok: true, kyc: rows[0] })
   } catch (err) {
-    res.status(500).json({ error: 'verify_failed', message: err.message })
+    res.status(500).json({ error: 'verify_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -208,7 +209,7 @@ router.get('/mandats', async (req, res) => {
     `, [userId])
     res.json({ ok: true, mandats: rows })
   } catch (err) {
-    res.status(500).json({ error: 'list_failed', message: err.message })
+    res.status(500).json({ error: 'list_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -222,7 +223,7 @@ router.get('/audit-logs', async (req, res) => {
     `, [userId]).catch(() => ({ rows: [] }))
     res.json({ ok: true, logs: rows })
   } catch (err) {
-    res.status(500).json({ error: 'audit_failed', message: err.message })
+    res.status(500).json({ error: 'audit_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -308,7 +309,7 @@ router.get(['/export-acpr', '/export-registre'], async (req, res) => {
       },
     })
   } catch (err) {
-    res.status(500).json({ error: 'export_failed', message: err.message })
+    res.status(500).json({ error: 'export_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

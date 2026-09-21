@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getUserPlanInfo } = require('../services/planService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.get('/info', async (req, res) => {
   try {
@@ -23,7 +24,7 @@ router.get('/info', async (req, res) => {
     res.json(planInfo);
   } catch (err) {
     console.error('GET /api/plans/info error:', err.message);
-    res.status(500).json({ error: 'Failed to retrieve plan information', details: err.message });
+    res.status(500).json({ error: 'Failed to retrieve plan information', details: messagePublic(err, { statut: 500 }) });
   }
 });
 

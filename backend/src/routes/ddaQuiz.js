@@ -8,6 +8,7 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const { verifyToken } = require('../middleware/auth')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -20,7 +21,7 @@ router.get('/quizzes', async (req, res) => {
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     console.error('[GET /api/dda/quizzes]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -53,7 +54,7 @@ router.get('/quizzes/:id/start', async (req, res) => {
     })
   } catch (err) {
     console.error('[GET /api/dda/quizzes/:id/start]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -131,7 +132,7 @@ router.post('/quizzes/:id/attempt', async (req, res) => {
     })
   } catch (err) {
     console.error('[POST /api/dda/quizzes/:id/attempt]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -164,7 +165,7 @@ router.get('/progress', async (req, res) => {
     })
   } catch (err) {
     console.error('[GET /api/dda/progress]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

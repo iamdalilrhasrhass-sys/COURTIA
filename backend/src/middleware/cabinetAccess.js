@@ -1,6 +1,7 @@
 const pool = require('../db')
 const cabinetMembershipService = require('../services/cabinetMembershipService')
 const { isFeatureEnabled } = require('../lib/featureFlags')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 function getUserId(req) {
   return cabinetMembershipService.getSafeUserId(req.user)
@@ -14,7 +15,7 @@ async function attachCabinet(req, res, next) {
     req.cabinetId = req.cabinetMembership.cabinet_id
     next()
   } catch (err) {
-    res.status(err.status || 500).json({ error: err.code || 'cabinet_context_failed', message: err.message || 'Contexte cabinet indisponible.' })
+    res.status(err.status || 500).json({ error: err.code || 'cabinet_context_failed', message: messagePublic(err) || 'Contexte cabinet indisponible.' })
   }
 }
 
@@ -32,7 +33,7 @@ function requireRole(...roles) {
       if (currentRole === 'super_admin' || allowed.includes(currentRole)) return next()
       return res.status(403).json({ error: 'forbidden_role', message: 'Rôle insuffisant pour cette action cabinet.' })
     } catch (err) {
-      return res.status(err.status || 500).json({ error: err.code || 'role_check_failed', message: err.message || 'Vérification du rôle impossible.' })
+      return res.status(err.status || 500).json({ error: err.code || 'role_check_failed', message: messagePublic(err) || 'Vérification du rôle impossible.' })
     }
   }
 }

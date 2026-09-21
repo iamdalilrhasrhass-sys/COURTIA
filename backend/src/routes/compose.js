@@ -11,6 +11,7 @@ const fs = require('fs').promises
 const path = require('path')
 const pool = require('../db')
 const logger = require('../lib/logger')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const {
   composeIpid,
@@ -74,7 +75,7 @@ router.get('/documents/:id', async (req, res) => {
     res.json(response)
   } catch (err) {
     if (err.message.includes('non trouvé')) {
-      return res.status(404).json({ error: err.message })
+      return res.status(404).json({ error: messagePublic(err, { statut: 404 }) })
     }
     logger.error({ error: err.message }, 'compose:get:error')
     res.status(500).json({ error: 'Erreur lors de la récupération du document' })
@@ -115,7 +116,7 @@ router.get('/documents/:id/download', async (req, res) => {
     res.send(fileBuffer)
   } catch (err) {
     if (err.message.includes('non trouvé')) {
-      return res.status(404).json({ error: err.message })
+      return res.status(404).json({ error: messagePublic(err, { statut: 404 }) })
     }
     logger.error({ error: err.message }, 'compose:download:error')
     res.status(500).json({ error: 'Erreur lors du téléchargement' })
@@ -136,7 +137,7 @@ router.delete('/documents/:id', async (req, res) => {
     res.json(result)
   } catch (err) {
     if (err.message.includes('non trouvé')) {
-      return res.status(404).json({ error: err.message })
+      return res.status(404).json({ error: messagePublic(err, { statut: 404 }) })
     }
     logger.error({ error: err.message }, 'compose:delete:error')
     res.status(500).json({ error: 'Erreur lors de la suppression' })
@@ -177,7 +178,7 @@ router.post('/ipid', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'compose:ipid:error')
-    res.status(500).json({ error: 'Erreur lors de la génération de l\'IPID', details: err.message })
+    res.status(500).json({ error: 'Erreur lors de la génération de l\'IPID', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -206,7 +207,7 @@ router.post('/dda', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'compose:dda:error')
-    res.status(500).json({ error: 'Erreur lors de la génération du document DDA', details: err.message })
+    res.status(500).json({ error: 'Erreur lors de la génération du document DDA', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -241,7 +242,7 @@ router.post('/devoir-conseil', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'compose:devoir-conseil:error')
-    res.status(500).json({ error: 'Erreur lors de la génération du Devoir de Conseil', details: err.message })
+    res.status(500).json({ error: 'Erreur lors de la génération du Devoir de Conseil', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -285,7 +286,7 @@ router.post('/pack', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'compose:pack:error')
-    res.status(500).json({ error: 'Erreur lors de la génération du pack', details: err.message })
+    res.status(500).json({ error: 'Erreur lors de la génération du pack', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -324,7 +325,7 @@ router.post('/documents/:id/sign', async (req, res) => {
     })
   } catch (err) {
     if (err.message.includes('non trouvé')) {
-      return res.status(404).json({ error: err.message })
+      return res.status(404).json({ error: messagePublic(err, { statut: 404 }) })
     }
     logger.error({ error: err.message }, 'compose:sign:error')
     res.status(500).json({ error: 'Erreur lors de la mise à jour de la signature' })

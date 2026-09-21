@@ -29,6 +29,7 @@ const {
   findClientByEmail,
 } = require('../services/integrationsStore')
 const { hasEncryptionKey, encryptSecret, decryptSecret } = require('../services/integrationSecrets')
+const { messagePublic } = require('../lib/erreursPubliques')
 const {
   GOOGLE_CALENDAR_SCOPES,
   GMAIL_SCOPES,
@@ -957,7 +958,7 @@ async function syncGoogleCalendarHandler(req, res) {
     logger.error({ error: err.message }, 'integrations google calendar sync failed')
     return res.status(500).json({
       error: 'google_calendar_sync_failed',
-      details: err.response?.data?.error?.message || err.message,
+      details: err.response?.data?.error?.message || messagePublic(err, { statut: 500 }),
     })
   }
 }
@@ -1117,7 +1118,7 @@ router.post('/whatsapp/send', requireCabinetFeature('v1_whatsapp_business'), asy
         language: body.language || 'fr',
       })
     } catch (err) {
-      return res.status(400).json({ error: err.message || 'whatsapp_payload_invalid' })
+      return res.status(400).json({ error: messagePublic(err, { statut: 400 }) || 'whatsapp_payload_invalid' })
     }
     const response = await axios.post(
       url,
@@ -1214,7 +1215,7 @@ router.post('/whatsapp/send', requireCabinetFeature('v1_whatsapp_business'), asy
     logger.error({ error: err.message }, 'integrations whatsapp send failed')
     return res.status(500).json({
       error: 'whatsapp_send_failed',
-      details: err.response?.data?.error?.message || err.message,
+      details: err.response?.data?.error?.message || messagePublic(err, { statut: 500 }),
     })
   }
 })
@@ -1398,7 +1399,7 @@ router.post('/gmail/sync', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'integrations gmail sync failed')
-    return res.status(500).json({ error: 'gmail_sync_failed', details: err.response?.data?.error?.message || err.message })
+    return res.status(500).json({ error: 'gmail_sync_failed', details: err.response?.data?.error?.message || messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1470,7 +1471,7 @@ router.post('/gmail/send', async (req, res) => {
     return res.json({ success: true, provider: 'gmail', message_id: summary.messageId, thread_id: summary.threadId })
   } catch (err) {
     logger.error({ error: err.message }, 'integrations gmail send failed')
-    return res.status(500).json({ error: 'gmail_send_failed', details: err.response?.data?.error?.message || err.message })
+    return res.status(500).json({ error: 'gmail_send_failed', details: err.response?.data?.error?.message || messagePublic(err, { statut: 500 }) })
   }
 })
 

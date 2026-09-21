@@ -37,6 +37,7 @@ const pool = require('../db');
 const { apiKeyAuth } = require('../middleware/apiKeyAuth');
 const apiKeyService = require('../services/apiKeyService');
 const porteeCabinet = require('../lib/porteeCabinet');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 /** Portée de l'appelant (celle de la clé d'API : son porteur). */
 function porteeDe(req) {
@@ -112,7 +113,7 @@ router.get('/me', apiKeyAuth(), async (req, res) => {
     });
   } catch (error) {
     console.error('GET /me error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -173,7 +174,7 @@ router.get('/clients', apiKeyAuth(['read:clients']), async (req, res) => {
     });
   } catch (error) {
     console.error('GET /clients error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -214,7 +215,7 @@ router.get('/clients/:id', apiKeyAuth(['read:clients']), async (req, res) => {
     res.json({ data: result.rows[0] });
   } catch (error) {
     console.error('GET /clients/:id error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -290,7 +291,7 @@ router.get('/contracts', apiKeyAuth(['read:contracts']), async (req, res) => {
     });
   } catch (error) {
     console.error('GET /contracts error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -380,7 +381,7 @@ router.get('/commissions', apiKeyAuth(['read:commissions']), async (req, res) =>
     });
   } catch (error) {
     console.error('GET /commissions error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -436,7 +437,7 @@ router.post('/webhooks', apiKeyAuth(['write:webhooks']), async (req, res) => {
     });
   } catch (error) {
     console.error('POST /webhooks error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -450,7 +451,7 @@ router.get('/webhooks', apiKeyAuth(), async (req, res) => {
     res.json({ data: webhooks });
   } catch (error) {
     console.error('GET /webhooks error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -469,7 +470,7 @@ router.delete('/webhooks/:id', apiKeyAuth(['write:webhooks']), async (req, res) 
     res.json({ message: 'Webhook deleted successfully' });
   } catch (error) {
     console.error('DELETE /webhooks/:id error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 

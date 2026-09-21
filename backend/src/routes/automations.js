@@ -11,6 +11,7 @@ const pool = require('../db')
 const { verifyToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/planGuard')
 const { checkFeatureAccess } = require('../services/planService')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -41,7 +42,7 @@ router.get('/', async (req, res) => {
     return res.json({ success: true, data })
   } catch (err) {
     console.error('[GET /api/automations]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -75,7 +76,7 @@ router.post('/', requireFeature('automations'), async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[POST /api/automations]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -123,7 +124,7 @@ router.patch('/:id', requireFeature('automations'), async (req, res) => {
     return res.json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[PATCH /api/automations/:id]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -148,7 +149,7 @@ router.post('/:id/toggle', requireFeature('automations'), async (req, res) => {
     return res.json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[POST /api/automations/:id/toggle]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -175,7 +176,7 @@ router.get('/:id/runs', async (req, res) => {
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     console.error('[GET /api/automations/:id/runs]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -264,7 +265,7 @@ router.post('/from-template', requireFeature('automations'), async (req, res) =>
     return res.json({ ok: true, automation: result.rows[0] })
   } catch (err) {
     console.error('[POST /automations/from-template]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

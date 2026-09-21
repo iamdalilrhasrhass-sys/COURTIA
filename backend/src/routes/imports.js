@@ -3,6 +3,7 @@ const multer = require('multer');
 
 const importService = require('../services/importService');
 const { trackEvent } = require('../services/analyticsService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router();
 
@@ -68,7 +69,7 @@ router.post('/preview', upload.single('file'), async (req, res) => {
       });
     }
     if (['import_empty_sheet', 'import_empty_file', 'import_missing_headers'].includes(error.message)) {
-      return res.status(400).json({ error: error.message, message: 'Le fichier importé est invalide ou incomplet.' });
+      return res.status(400).json({ error: messagePublic(error, { statut: 400 }), message: 'Le fichier importé est invalide ou incomplet.' });
     }
     return res.status(500).json({ error: 'import_preview_failed', message: 'Prévisualisation import indisponible pour le moment.' });
   }

@@ -14,6 +14,7 @@ const router     = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const iobspGuard = require('../middleware/iobspGuard');
 const pool       = require('../db');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const PARTNERS = [
   { id: 1, name: 'BNP Paribas',       specialite: 'Immobilier + Consommation',   taux_min: 3.20, taux_max: 4.80, delai_reponse: '48h', logo_color: '#009966' },
@@ -159,7 +160,7 @@ router.post('/leads', verifyToken, iobspGuard, async (req, res) => {
 
   } catch (err) {
     console.error('POST /api/financing/tools/leads error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

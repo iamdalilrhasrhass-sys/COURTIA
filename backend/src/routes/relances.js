@@ -31,6 +31,7 @@
 
 const express = require('express')
 const porteeCabinet = require('../lib/porteeCabinet')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES RELANCES : LE CABINET DE LEUR CLIENT
@@ -201,7 +202,7 @@ router.get('/', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/relances error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -275,7 +276,7 @@ router.get('/stats', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/relances/stats error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -337,7 +338,7 @@ router.get('/:id', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/relances/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -395,7 +396,7 @@ router.post('/', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -477,7 +478,7 @@ router.put('/:id', async (req, res) => {
     res.json({ success: true, relance: result.rows[0] })
   } catch (err) {
     logger.error({ error: err.message }, 'PUT /api/relances/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -506,7 +507,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true, deleted_id: relanceId })
   } catch (err) {
     logger.error({ error: err.message }, 'DELETE /api/relances/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -638,7 +639,7 @@ router.post('/:id/send', async (req, res) => {
     res.json({ success: true, relance: result.rows[0], delivery, email_sent: delivery.email_sent === true })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/relances/:id/send error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -810,7 +811,7 @@ Génère les relances les plus impactantes.`,
     if (estErreurIa(err)) {
       return repondreIaIndisponible(res, err, { route: 'relances-auto-generate' })
     }
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    res.status(500).json({ error: 'Erreur ARK', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -913,7 +914,7 @@ Génère le contenu avec variantes si possible.`,
     if (estErreurIa(err)) {
       return repondreIaIndisponible(res, err, { route: 'relances-ai-content' })
     }
-    res.status(500).json({ error: 'Erreur ARK', details: err.message })
+    res.status(500).json({ error: 'Erreur ARK', details: messagePublic(err, { statut: 500 }) })
   }
 })
 

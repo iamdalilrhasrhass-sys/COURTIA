@@ -4,6 +4,7 @@ const { verifyToken } = require('../middleware/auth')
 // Montants : cast tolérant, une valeur fautive est IGNORÉE par l'agrégat au lieu
 // de faire tomber l'écran (« invalid input syntax for type numeric »).
 const { montantSur } = require('../lib/montants')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 /**
  * GET /api/stats/portfolio
@@ -94,7 +95,7 @@ router.get('/portfolio', verifyToken, async (req, res) => {
     })
   } catch (err) {
     console.error('GET /api/stats/portfolio error:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

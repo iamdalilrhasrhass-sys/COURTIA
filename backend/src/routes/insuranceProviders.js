@@ -16,6 +16,7 @@ const router = express.Router()
 const verifyToken = require('../middleware/authMiddleware')
 const cryptoVault = require('../services/cryptoVault')
 const { listConnectors, getConnector } = require('../services/connectors')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ============================================================
 // HELPERS
@@ -62,7 +63,7 @@ router.get('/insurance-providers', async (req, res) => {
     })
   } catch (err) {
     console.error('[insuranceProviders] GET /insurance-providers error:', err.message)
-    return res.status(500).json({ error: 'providers_fetch_failed', details: err.message })
+    return res.status(500).json({ error: 'providers_fetch_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -159,7 +160,7 @@ router.get('/broker-integrations', async (req, res) => {
     })
   } catch (err) {
     console.error('[insuranceProviders] GET /broker-integrations error:', err.message)
-    return res.status(500).json({ error: 'integrations_fetch_failed', details: err.message })
+    return res.status(500).json({ error: 'integrations_fetch_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -243,7 +244,7 @@ router.post('/broker-integrations', async (req, res) => {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'integration_already_exists' })
     }
-    return res.status(500).json({ error: 'integration_create_failed', details: err.message })
+    return res.status(500).json({ error: 'integration_create_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -308,7 +309,7 @@ router.put('/broker-integrations/:id', async (req, res) => {
     })
   } catch (err) {
     console.error('[insuranceProviders] PUT /broker-integrations/:id error:', err.message)
-    return res.status(500).json({ error: 'integration_update_failed', details: err.message })
+    return res.status(500).json({ error: 'integration_update_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -343,7 +344,7 @@ router.delete('/broker-integrations/:id', async (req, res) => {
     })
   } catch (err) {
     console.error('[insuranceProviders] DELETE /broker-integrations/:id error:', err.message)
-    return res.status(500).json({ error: 'integration_delete_failed', details: err.message })
+    return res.status(500).json({ error: 'integration_delete_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -415,7 +416,7 @@ router.post('/broker-integrations/:id/credentials', async (req, res) => {
     })
   } catch (err) {
     console.error('[insuranceProviders] POST credentials error:', err.message)
-    return res.status(500).json({ error: 'credential_store_failed', details: err.message })
+    return res.status(500).json({ error: 'credential_store_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -477,7 +478,7 @@ router.delete('/broker-integrations/:id/credentials/:credId', async (req, res) =
     })
   } catch (err) {
     console.error('[insuranceProviders] DELETE credentials error:', err.message)
-    return res.status(500).json({ error: 'credential_delete_failed', details: err.message })
+    return res.status(500).json({ error: 'credential_delete_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 

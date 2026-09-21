@@ -1,3 +1,4 @@
+const { messagePublic } = require('../lib/erreursPubliques')
 /**
  * Routes Reporting Avancé — LOT 20
  * Dashboard analytics personnalisable + exports CSV/PDF
@@ -238,7 +239,7 @@ router.get('/overview', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] overview error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -284,7 +285,7 @@ router.get('/clients/evolution', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] clients evolution error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -349,7 +350,7 @@ router.get('/revenue/forecast', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] revenue forecast error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -429,7 +430,7 @@ router.get('/ark-performance', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] ark performance error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -464,7 +465,7 @@ router.get('/products', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] products error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -534,7 +535,7 @@ router.get('/export/csv', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] export CSV error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -593,7 +594,7 @@ router.get('/export/pdf', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Reporting] export PDF error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

@@ -4,6 +4,7 @@
  */
 
 const Client = require('../models/Client');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Créer un client
 exports.create = async (req, res) => {
@@ -17,7 +18,7 @@ exports.create = async (req, res) => {
     });
   } catch (err) {
     console.error('Create client error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 };
 
@@ -52,7 +53,7 @@ exports.getAll = async (req, res) => {
     });
   } catch (err) {
     console.error('Get clients error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 };
 
@@ -73,7 +74,7 @@ exports.getById = async (req, res) => {
     res.json(client);
   } catch (err) {
     console.error('Get client error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 };
 
@@ -101,7 +102,7 @@ exports.update = async (req, res) => {
     });
   } catch (err) {
     console.error('Update client error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 };
 
@@ -129,7 +130,7 @@ exports.delete = async (req, res) => {
     });
   } catch (err) {
     console.error('Delete client error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 };
 
@@ -155,6 +156,6 @@ exports.search = async (req, res) => {
     res.json({ results: clients });
   } catch (err) {
     console.error('Search error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 };

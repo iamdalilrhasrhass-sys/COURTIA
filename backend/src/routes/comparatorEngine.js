@@ -18,6 +18,7 @@ const pool = require('../db')
 const { computeAllQuotes, SIMULATION_NOTICE } = require('../services/comparatorEngine')
 const { buildComparatorPdf } = require('../services/comparatorPdfService')
 const { estOffreReelle, MESSAGE_OFFRES_SIMULEES } = require('../lib/donneesReelles')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -63,7 +64,7 @@ router.post('/compute', async (req, res) => {
       created_at: rows[0].created_at,
     })
   } catch (err) {
-    res.status(500).json({ error: 'compute_failed', message: err.message })
+    res.status(500).json({ error: 'compute_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -110,7 +111,7 @@ router.post('/export-pdf', async (req, res) => {
 
     res.json({ ok: true, pdf_url: `/api/comparator/download/${run_id}`, filename })
   } catch (err) {
-    res.status(500).json({ error: 'export_pdf_failed', message: err.message })
+    res.status(500).json({ error: 'export_pdf_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

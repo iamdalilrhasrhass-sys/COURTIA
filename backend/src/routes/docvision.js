@@ -12,6 +12,7 @@ const logger = require('../lib/logger')
 const { processDocument, applyExtractionToClient, reprocessExtraction, getExtractionStats } = require('../services/docvision/visionPipeline')
 const { DOCUMENT_TYPES, getTypeName, isValidType } = require('../services/docvision/typeDetector')
 const { getSupportedTypes } = require('../services/docvision/extractors')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 /**
  * POST /api/docvision/extract/:documentId
@@ -69,7 +70,7 @@ router.post('/extract/:documentId', async (req, res) => {
     }
   } catch (err) {
     logger.error({ error: err.message, documentId: req.params.documentId }, 'Extract endpoint error')
-    res.status(500).json({ error: 'Erreur lors de l\'extraction', details: err.message })
+    res.status(500).json({ error: 'Erreur lors de l\'extraction', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -261,7 +262,7 @@ router.post('/extractions/:id/apply', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message, id: req.params.id }, 'Apply extraction error')
-    res.status(400).json({ error: err.message })
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) })
   }
 })
 
@@ -299,7 +300,7 @@ router.post('/extractions/:id/reprocess', async (req, res) => {
     }
   } catch (err) {
     logger.error({ error: err.message, id: req.params.id }, 'Reprocess extraction error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

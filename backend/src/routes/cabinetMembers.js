@@ -4,6 +4,7 @@ const { attachCabinet, requireCabinetFeature, requireRole } = require('../middle
 const cabinetService = require('../services/cabinetMembershipService')
 const { sendEmail } = require('../services/emailService')
 const { logAudit } = require('../lib/audit')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router()
 
@@ -142,7 +143,7 @@ router.patch('/:id', requireRole('owner'), async (req, res) => {
     await logAudit({ cabinetId: req.cabinetId, userId: cabinetService.getSafeUserId(req.user), entityType: 'cabinet_member', entityId: req.params.id, action: 'role_updated', metadata: { role }, req }).catch(() => {})
     res.json({ member: result.rows[0] })
   } catch (err) {
-    res.status(err.status || 500).json({ error: err.code || 'member_update_failed', message: err.message || 'Mise à jour membre impossible.' })
+    res.status(err.status || 500).json({ error: err.code || 'member_update_failed', message: messagePublic(err) || 'Mise à jour membre impossible.' })
   }
 })
 

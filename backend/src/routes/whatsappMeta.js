@@ -8,6 +8,7 @@ const router = express.Router()
 const verifyToken = require('../middleware/authMiddleware')
 const whatsappService = require('../services/whatsappMetaService')
 const secretsEntrants = require('../lib/secretsEntrants')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Webhook verification (GET) - Public pour Meta
 //
@@ -79,7 +80,7 @@ router.post('/webhook', async (req, res) => {
   } catch (err) {
     console.error('[WhatsApp Webhook] Erreur:', err.message)
     // Toujours répondre 200 à Meta pour éviter les retries
-    res.json({ success: false, error: err.message })
+    res.json({ success: false, error: messagePublic(err) })
   }
 })
 
@@ -97,7 +98,7 @@ router.get('/conversations', async (req, res) => {
     )
     res.json({ data: conversations, total: conversations.length })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -113,7 +114,7 @@ router.get('/conversations/:phone/messages', async (req, res) => {
     )
     res.json({ data: messages, total: messages.length })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -135,7 +136,7 @@ router.post('/send', async (req, res) => {
 
     res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -158,7 +159,7 @@ router.post('/template', async (req, res) => {
 
     res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -186,7 +187,7 @@ router.post('/reminder/echeance', async (req, res) => {
 
     res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

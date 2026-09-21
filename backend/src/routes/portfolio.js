@@ -29,6 +29,7 @@ const {
   selectPortfolioColumn,
 } = require('../utils/portfolioSchema');
 const pool = require('../db');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ─── HELPER : plan de l'utilisateur ────────────────────────────────────────
 
@@ -217,7 +218,7 @@ router.get('/actions', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('GET /portfolio/actions error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -256,7 +257,7 @@ router.patch('/actions/:id', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('PATCH /portfolio/actions/:id error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -420,7 +421,7 @@ router.post('/regenerate', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('POST /portfolio/regenerate error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -455,7 +456,7 @@ router.get('/preferences', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('GET /portfolio/preferences error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -505,7 +506,7 @@ router.put('/preferences', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('PUT /portfolio/preferences error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

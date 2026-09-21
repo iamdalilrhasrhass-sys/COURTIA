@@ -27,6 +27,7 @@ const cabinetMembershipService = require('../services/cabinetMembershipService')
 // production le 20/09/2026).
 const { kpi } = require('./dashboard');
 const Anthropic = require('@anthropic-ai/sdk');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PORTÉE DES CLIENTS : LE CABINET, PAS L'UTILISATEUR
@@ -1353,7 +1354,7 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
       // 20/09/2026 — deuxième QA adverse).
       //
       // DÉFAUT : l'appel au modèle n'était pas protégé ici, et le `catch` de la
-      // route répondait `res.status(500).json({ error: err.message })`. Avec une
+      // route répondait `res.status(500).json({ error: messagePublic(err, { statut: 500 }) })`. Avec une
       // clé refusée, `err.message` de l'SDK Anthropic EST le corps brut du
       // fournisseur : la réponse HTTP était
       //   500 {"error":"401 {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",
@@ -1408,10 +1409,10 @@ Réponds UNIQUEMENT en JSON valide, aucun texte avant ou après, aucun bloc mark
   } catch (err) {
     // Le corps d'erreur d'un fournisseur ne sort JAMAIS par ce `catch` : on
     // journalise le détail côté serveur et on répond un message produit. Un
-    // `err.message` de SDK (« 401 {"type":"error",...} ») ou un message SQL
+    // `messagePublic(err)` de SDK (« 401 {"type":"error",...} ») ou un message SQL
     // finissait tel quel dans la réponse HTTP de cette route (P1 et P2 de la
     // deuxième QA adverse).
-    console.error('GET /api/clients/:id/ark-action-plan error:', err.message);
+    console.error('GET /api/clients/:id/ark-action-plan error:', messagePublic(err));
     if (estErreurIa(err) || estErreurIa({ code: err && err.code })) {
       return repondreIaIndisponible(res, err, { route: 'client_ark_action_plan' });
     }

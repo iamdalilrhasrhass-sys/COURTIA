@@ -11,6 +11,7 @@ const calendarService = require('../services/calendarService')
 const verifyToken = require('../middleware/authMiddleware')
 const { getJwtSecret } = require('../utils/jwtSecret')
 const { captureException } = require('../sentry')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ==================== STATE OAUTH SIGNÉ (SEC-008) ====================
 //
@@ -129,7 +130,7 @@ router.post('/events', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Calendar] create event error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -222,7 +223,7 @@ router.get('/events', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Calendar] list events error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -262,7 +263,7 @@ router.get('/events/today', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Calendar] today events error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -320,7 +321,7 @@ router.delete('/events/:id', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Calendar] delete event error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -386,7 +387,7 @@ router.put('/events/:id', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Calendar] update event error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -401,7 +402,7 @@ router.get('/auth-url', verifyToken, (req, res) => {
   } catch (err) {
     console.error('[Calendar] auth URL error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

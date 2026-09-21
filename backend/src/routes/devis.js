@@ -35,6 +35,7 @@ const porteeCabinet = require('../lib/porteeCabinet')
 // Règle UNIQUE des montants : refus explicite à l'écriture (non numérique,
 // négatif, au-delà du plafond) — partagée avec les contrats (lib/montants.js).
 const { montantOuNull, erreurMontant } = require('../lib/montants')
+const { messagePublic } = require('../lib/erreursPubliques')
 const {
   estErreurIa,
   repondreIaIndisponible,
@@ -543,7 +544,7 @@ router.get('/', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/devis error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -621,7 +622,7 @@ router.get('/:id', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'GET /api/devis/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -662,7 +663,7 @@ router.post('/', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'POST /api/devis error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -734,7 +735,7 @@ router.put('/:id', async (req, res) => {
     res.json({ success: true, devis: result.rows[0] })
   } catch (err) {
     logger.error({ error: err.message }, 'PUT /api/devis/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -789,7 +790,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true, deleted_id: devisId, source: 'v1' })
   } catch (err) {
     logger.error({ error: err.message }, 'DELETE /api/devis/:id error')
-    res.status(500).json({ error: 'Erreur serveur', details: err.message })
+    res.status(500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1100,7 +1101,7 @@ router.post('/wizard/init', async (req, res) => {
     res.json({ ok: true, devis: rows[0] })
   } catch (err) {
     logger.error({ err: err.message }, 'devis wizard init')
-    res.status(500).json({ error: 'wizard_init_failed', message: err.message })
+    res.status(500).json({ error: 'wizard_init_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1225,7 +1226,7 @@ router.post('/wizard/finalize', async (req, res) => {
     })
   } catch (err) {
     logger.error({ err: err.message, stack: err.stack }, 'devis wizard finalize')
-    res.status(500).json({ error: 'wizard_finalize_failed', message: err.message })
+    res.status(500).json({ error: 'wizard_finalize_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1362,7 +1363,7 @@ router.post('/:id/send', async (req, res) => {
     res.json({ ok: true, sent_to: email, relances_planifiees: ['J+3', 'J+7', 'J+14'] })
   } catch (err) {
     logger.error({ err: err.message }, 'devis send')
-    res.status(500).json({ error: 'send_failed', message: err.message })
+    res.status(500).json({ error: 'send_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1470,7 +1471,7 @@ router.post('/:id/relance', async (req, res) => {
     })
   } catch (err) {
     logger.error({ err: err.message }, 'devis relance force')
-    res.status(500).json({ error: 'relance_failed', message: err.message })
+    res.status(500).json({ error: 'relance_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1720,7 +1721,7 @@ router.post('/:id/duplicate', async (req, res) => {
     ])
     res.json({ ok: true, devis: created[0] })
   } catch (err) {
-    res.status(500).json({ error: 'duplicate_failed', message: err.message })
+    res.status(500).json({ error: 'duplicate_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

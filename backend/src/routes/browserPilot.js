@@ -18,6 +18,7 @@ const fs = require('fs');
 const verifyToken = require('../middleware/authMiddleware');
 
 const browserPilotService = require('../services/browserPilotService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken);
 
@@ -84,7 +85,7 @@ router.post('/task', async (req, res) => {
     });
   } catch (err) {
     console.error('[POST /api/browser-pilot/task]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -98,7 +99,7 @@ router.get('/task', async (req, res) => {
     return res.json({ success: true, data: sessions });
   } catch (err) {
     console.error('[GET /api/browser-pilot/task]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -129,7 +130,7 @@ router.get('/task/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /api/browser-pilot/task/:id]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -178,7 +179,7 @@ router.post('/task/:id/approve', async (req, res) => {
     })
   } catch (err) {
     console.error('[POST /api/browser-pilot/task/:id/approve]', err.message);
-    return res.status(400).json({ error: 'approve_error', message: err.message });
+    return res.status(400).json({ error: 'approve_error', message: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -208,7 +209,7 @@ router.delete('/task/:id', async (req, res) => {
     })
   } catch (err) {
     console.error('[DELETE /api/browser-pilot/task/:id]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -234,7 +235,7 @@ router.get('/screenshot/:taskId/:fileName', async (req, res) => {
     return res.sendFile(filePath);
   } catch (err) {
     console.error('[GET /api/browser-pilot/screenshot]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -255,7 +256,7 @@ router.get('/status', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /api/browser-pilot/status]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 

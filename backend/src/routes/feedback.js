@@ -1,6 +1,7 @@
 const express = require('express');
 const feedbackService = require('../services/feedbackService');
 const { trackEvent } = require('../services/analyticsService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.post('/', async (req, res) => {
     return res.status(err.status || 500).json({
       success: false,
       error: err.code || 'feedback_failed',
-      message: err.message || 'Feedback indisponible.',
+      message: messagePublic(err) || 'Feedback indisponible.',
     });
   }
 });

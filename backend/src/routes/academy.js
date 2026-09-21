@@ -3,6 +3,7 @@ const express = require('express');
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
 const gamification = require('../services/gamificationService');
+const { messagePublic } = require('../lib/erreursPubliques')
 const router = express.Router();
 
 router.use(verifyToken);
@@ -13,7 +14,7 @@ router.get('/progress', async (req, res) => {
     const data = await gamification.getUserProgress(req.user.userId || req.user.id);
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -23,7 +24,7 @@ router.get('/cards', async (req, res) => {
     const cards = await gamification.getCards(req.user.userId || req.user.id);
     res.json({ success: true, data: cards });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -32,7 +33,7 @@ router.post('/cards/:id/share', async (req, res) => {
     const result = await gamification.markCardShared(req.user.userId || req.user.id, req.params.id);
     res.json({ success: true, ...result });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -56,7 +57,7 @@ router.get('/courses', async (req, res) => {
     }));
     res.json({ success: true, data: result });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -69,7 +70,7 @@ router.get('/courses/:slug', async (req, res) => {
     if (!course.rows.length) return res.status(404).json({ error: 'Cours introuvable' });
     res.json({ success: true, data: course.rows[0] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -80,7 +81,7 @@ router.post('/courses/:id/complete', async (req, res) => {
     const result = await gamification.completeCourse(userId, parseInt(req.params.id), answers);
     res.json({ success: true, data: result });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -99,7 +100,7 @@ router.post('/events', async (req, res) => {
 
     res.json({ success: true, xpAdded: payload?.xp || 10, unlockedCards: unlocked.length, unlocked });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -109,7 +110,7 @@ router.get('/referral', async (req, res) => {
     const data = await gamification.getReferralInfo(req.user.userId || req.user.id);
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 
@@ -120,7 +121,7 @@ router.post('/referral/invite', async (req, res) => {
     const data = await gamification.createReferral(req.user.userId || req.user.id, email);
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: messagePublic(e, { statut: 500 }) });
   }
 });
 

@@ -36,8 +36,13 @@ export default function AdminSystem() {
 
     // État réel renvoyé par le backend (dont la base de données et les
     // intégrations). Rien n'est affiché qui ne vienne de cette mesure.
+    // Depuis le 21/09/2026 (SEC-026) le détail (fournisseurs configurés,
+    // uptime, maintenance) n'est plus public : il est servi par
+    // /api/admin/status, qui exige un rôle d'administration. Le point d'entrée
+    // public /api/status ne dit plus que « le service répond, la base est
+    // joignable », ce qui est tout ce qu'un appelant non authentifié doit savoir.
     try {
-      const r = await publicApiFetch('/api/status')
+      const r = await publicApiFetch('/api/admin/status')
       results.status = r.ok || r.status === 503 ? await r.json() : null
     } catch { results.status = null }
 

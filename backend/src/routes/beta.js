@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const verifyToken = require('../middleware/authMiddleware');
 const { isAdminRole } = require('../constants/roles');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 /**
  * SEC-006 — /stats était monté sans aucune authentification dans server.js
@@ -66,7 +67,7 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('POST /api/beta/register error:', err.message);
-    res.status(500).json({ error: 'signup_failed', message: err.message });
+    res.status(500).json({ error: 'signup_failed', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -94,7 +95,7 @@ router.get('/stats', verifyToken, requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('GET /api/beta/stats error:', err.message);
-    res.status(500).json({ error: 'stats_failed', message: err.message });
+    res.status(500).json({ error: 'stats_failed', message: messagePublic(err, { statut: 500 }) });
   }
 });
 

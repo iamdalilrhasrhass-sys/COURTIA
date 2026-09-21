@@ -10,6 +10,65 @@ initSentry()
 
 app.use(helmet({ contentSecurityPolicy: false }))
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SEC-026 — CSP, EN-TÊTES ET ORIGINES (mesure du 21/09/2026)
+//
+// Ce qui était constaté avant : `contentSecurityPolicy: false` (aucune CSP),
+// aucune politique de référent, aucune Permissions-Policy, et surtout les
+// origines LOCALES (`http://localhost:5173`) acceptées EN PRODUCTION — une page
+// servie sur la machine du courtier pouvait donc appeler l'API de production
+// avec l'identité du courtier. Aucun de ces trois points n'est une hypothèse :
+// ils sont lus dans les en-têtes réels de la production (voir EVIDENCE/12-security).
+//
+// La CSP est construite sur les ressources RÉELLEMENT servies par ce backend :
+//   • l'immense majorité des réponses est du JSON → aucune ressource à charger,
+//     donc `default-src 'none'` (le réglage le plus strict possible) ;
+//   • `/landing` sert une page HTML statique (style.css, deux modules ES, un
+//     importmap inline) → politique dédiée, `'self'` + `'unsafe-inline'` pour le
+//     seul importmap, sinon la page ne se charge plus.
+// Le front principal est servi par Vercel : sa CSP est posée dans vercel.json,
+// pas ici — poser une CSP arbitraire ici ne changerait rien pour le navigateur
+// et risquerait de casser les ressources du front.
+// ─────────────────────────────────────────────────────────────────────────────
+const estProduction = String(process.env.NODE_ENV || '').toLowerCase() === 'production'
+
+const CSP_API = [
+  "default-src 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ')
+
+const CSP_LANDING = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+].join('; ')
+
+app.use((req, res, next) => {
+  const chemin = String(req.path || '')
+  res.setHeader('Content-Security-Policy', chemin.startsWith('/landing') ? CSP_LANDING : CSP_API)
+  res.setHeader('Referrer-Policy', 'no-referrer')
+  res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=(), payment=(), usb=()')
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site')
+  next()
+})
+
+// ── SEC-025 : FILET UNIQUE CONTRE LA FUITE D'ERREUR ─────────────────────────
+// 324 réponses d'erreur recopiaient `err.message` (60 routeurs). Le balayage a
+// remplacé les citations, mais ce filet-ci ferme la CLASSE : il est monté avant
+// tous les routeurs, donc une route écrite demain qui recopierait de nouveau un
+// message brut de PostgreSQL, un chemin de fichier ou une réponse de fournisseur
+// ne peut pas le servir. Le texte d'origine reste dans le journal serveur.
+app.use(assainirErreursInternes)
+
 const trustProxyEnv = process.env.TRUST_PROXY
 if (trustProxyEnv === undefined || trustProxyEnv === '') {
   app.set('trust proxy', 1)
@@ -27,11 +86,22 @@ app.locals.pool = pool
 
 // Rate limiting
 const { apiLimiter, healthLimiter, arkLimiter } = require('./src/middleware/rateLimit')
+const { messagePublic, assainirErreursInternes } = require('./src/lib/erreursPubliques')
 app.use('/api', apiLimiter)
 app.use('/health', healthLimiter)
 app.use('/api/health', healthLimiter)
 
-const defaultCorsOrigins = ['https://app.courtiark.fr', 'https://courtiark.fr', 'https://www.courtiark.fr', 'http://localhost:3000', 'http://localhost:5173']
+// ── ORIGINES AUTORISÉES ─────────────────────────────────────────────────────
+// En production, seules les origines réellement servies au courtier sont
+// acceptées. Les origines locales ne sont ajoutées QUE hors production (ou si
+// l'exploitant l'exige explicitement avec CORS_ALLOW_LOCALHOST=true, cas d'un
+// frontal de développement pointé sur l'API de production).
+const originesProduction = ['https://app.courtiark.fr', 'https://courtiark.fr', 'https://www.courtiark.fr']
+const originesDeveloppement = ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173']
+const localhostAutorise = !estProduction || String(process.env.CORS_ALLOW_LOCALHOST || '').toLowerCase() === 'true'
+const defaultCorsOrigins = localhostAutorise
+  ? [...originesProduction, ...originesDeveloppement]
+  : [...originesProduction]
 const envCorsOrigins = String(process.env.CORS_ORIGIN || '')
   .split(',')
   .map((v) => v.trim())
@@ -187,7 +257,7 @@ app.get('/health', async (req, res) => {
       status: 'degraded',
       api: 'ok',
       db: 'error',
-      error: err.message,
+      error: messagePublic(err, { statut: 503 }),
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     })
@@ -202,7 +272,42 @@ app.get('/ping', (req, res) => {
   res.json({ pong: true, time: new Date().toISOString() })
 })
 
+// ── /api/status — CE QU'UN POINT D'ENTRÉE PUBLIC PEUT DIRE ──────────────────
+// Mesure du 20/09/2026 (SEC-026) : `/api/status` est public et annonçait, sans
+// authentification, la liste des fournisseurs configurés (e-mail, SMS, Stripe,
+// Google, WhatsApp, Yousign), la séquence de démarrage (`uptime`) et l'état du
+// mode maintenance. Un appelant non authentifié apprenait ainsi quels services
+// sont branchés — donc lesquels ne le sont pas. Ces informations ne servent
+// qu'à l'exploitant : elles sont désormais servies par `/api/admin/status`,
+// derrière une authentification. Ce qui reste public est ce qu'un client a
+// besoin de savoir : le service répond, et la base est joignable.
 app.get('/api/status', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()')
+    res.json({
+      status: 'running',
+      api: 'ready',
+      database: 'connected',
+      timestamp: result.rows[0].now,
+    })
+  } catch (err) {
+    res.status(503).json({
+      status: 'degraded',
+      api: 'ready',
+      database: 'disconnected',
+      timestamp: new Date().toISOString(),
+    })
+  }
+})
+
+// ── /api/admin/status — ÉTAT DÉTAILLÉ, AUTHENTIFIÉ ──────────────────────────
+// Même mesure que ci-dessus, mais réservée à un rôle d'administration du
+// cabinet (ou super_admin) : fournisseurs configurés, mode maintenance, uptime.
+app.get('/api/admin/status', verifyToken, async (req, res) => {
+  const { isAdminRole } = require('./src/constants/roles')
+  if (!isAdminRole(req.user?.role)) {
+    return res.status(403).json({ error: 'forbidden', message: 'Rôle insuffisant pour consulter l’état détaillé.' })
+  }
   try {
     const result = await pool.query('SELECT NOW()')
     const { getEmailStatus } = require('./src/services/emailService')
@@ -213,7 +318,6 @@ app.get('/api/status', async (req, res) => {
     const yousignConfigured = Boolean(process.env.YOUSIGN_API_KEY)
     res.json({
       status: 'running',
-      frontend: 'ready',
       api: 'ready',
       database: 'connected',
       timestamp: result.rows[0].now,
@@ -234,7 +338,6 @@ app.get('/api/status', async (req, res) => {
   } catch (err) {
     res.status(503).json({
       status: 'degraded',
-      frontend: 'ready',
       api: 'ready',
       database: 'disconnected',
       timestamp: new Date().toISOString(),
@@ -284,7 +387,7 @@ app.post('/api/clients/:id/score/refresh', verifyToken, async (req, res) => {
 
     res.json({ risk: riskResult })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -625,7 +728,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   logger.error({ err, path: req.originalUrl, method: req.method }, 'Erreur non gérée')
   captureException(err, { path: req.originalUrl, method: req.method, userId: req.user?.id || req.user?.userId })
-  res.status(err.status || 500).json({ error: 'Erreur serveur', details: err.message })
+  res.status(err.status || 500).json({ error: 'Erreur serveur', details: messagePublic(err, { statut: err.status || 500 }) })
 })
 
 // ==================== SERVER START ====================

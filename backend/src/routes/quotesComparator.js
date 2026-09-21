@@ -15,6 +15,7 @@ const router = express.Router()
 const verifyToken = require('../middleware/authMiddleware')
 const { requestQuotesMulti, getConnector } = require('../services/connectors')
 const cryptoVault = require('../services/cryptoVault')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // ============================================================
 // HELPERS
@@ -122,7 +123,7 @@ router.post('/quote-request', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] POST /quote-request error:', err.message)
-    return res.status(500).json({ error: 'quote_request_create_failed', details: err.message })
+    return res.status(500).json({ error: 'quote_request_create_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -163,7 +164,7 @@ router.get('/quote-request/:id', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] GET /quote-request/:id error:', err.message)
-    return res.status(500).json({ error: 'quote_request_fetch_failed', details: err.message })
+    return res.status(500).json({ error: 'quote_request_fetch_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -297,7 +298,7 @@ router.post('/quote-request/:id/submit', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] POST /quote-request/:id/submit error:', err.message)
-    return res.status(500).json({ error: 'quote_submit_failed', details: err.message })
+    return res.status(500).json({ error: 'quote_submit_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -386,7 +387,7 @@ router.post('/quote-request/:id/manual-result', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] POST manual-result error:', err.message)
-    return res.status(500).json({ error: 'manual_result_add_failed', details: err.message })
+    return res.status(500).json({ error: 'manual_result_add_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -433,7 +434,7 @@ router.get('/quote-request/:id/results', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] GET results error:', err.message)
-    return res.status(500).json({ error: 'results_fetch_failed', details: err.message })
+    return res.status(500).json({ error: 'results_fetch_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -507,7 +508,7 @@ router.post('/quote-request/:id/compare', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] POST compare error:', err.message)
-    return res.status(500).json({ error: 'comparison_failed', details: err.message })
+    return res.status(500).json({ error: 'comparison_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -645,7 +646,7 @@ router.get('/quote-requests', async (req, res) => {
     })
   } catch (err) {
     console.error('[quotesComparator] GET /quote-requests error:', err.message)
-    return res.status(500).json({ error: 'quote_requests_fetch_failed', details: err.message })
+    return res.status(500).json({ error: 'quote_requests_fetch_failed', details: messagePublic(err, { statut: 500 }) })
   }
 })
 

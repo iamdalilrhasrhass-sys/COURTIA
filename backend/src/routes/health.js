@@ -1,4 +1,5 @@
 const express = require('express');
+const { messagePublic } = require('../lib/erreursPubliques')
 const router = express.Router();
 
 /**
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
     res.status(503).json({
       status: 'error',
       db: 'disconnected',
-      error: err.message,
+      error: messagePublic(err, { statut: 503 }),
       timestamp: new Date().toISOString(),
       version: '2.0'
     });

@@ -13,6 +13,7 @@ const router  = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const { submitAttestation, getAttestationStatus } = require('../services/iobspService');
 const pool = require('../db');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://app.courtiark.fr';
 
@@ -47,10 +48,10 @@ router.post('/iobsp/submit', verifyToken, async (req, res) => {
 
   } catch (err) {
     if (err.status === 400 || err.status === 409) {
-      return res.status(err.status).json({ error: err.message });
+      return res.status(err.status).json({ error: messagePublic(err) });
     }
     console.error('POST /api/financing/iobsp/submit error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -65,7 +66,7 @@ router.get('/iobsp/status', verifyToken, async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error('GET /api/financing/iobsp/status error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -90,7 +91,7 @@ router.get('/iobsp/decisions/history', verifyToken, async (req, res) => {
     return res.json({ history: result.rows });
   } catch (err) {
     console.error('GET /api/financing/iobsp/decisions/history error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -134,7 +135,7 @@ router.post('/capitia/checkout', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('POST /api/financing/capitia/checkout error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -183,7 +184,7 @@ router.post('/capitia/cancel', verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error('POST /api/financing/capitia/cancel error:', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

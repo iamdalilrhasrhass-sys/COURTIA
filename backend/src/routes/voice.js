@@ -12,6 +12,7 @@ const pool = require('../db')
 const logger = require('../lib/logger')
 const transcriber = require('../services/voice/transcriber')
 const intakeProcessor = require('../services/voice/intakeProcessor')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router()
 
@@ -69,7 +70,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
     })
   } catch (err) {
     logger.error({ err: err.message }, 'POST /api/voice/upload failed')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -91,7 +92,7 @@ router.get('/intakes', async (req, res) => {
     const result = await pool.query(sql, params)
     res.json({ success: true, count: result.rows.length, intakes: result.rows })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -108,7 +109,7 @@ router.get('/intakes/:id', async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'Intake introuvable' })
     res.json({ success: true, intake: result.rows[0] })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -126,7 +127,7 @@ router.get('/intakes/:id/transcript', async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'Intake introuvable' })
     res.json({ success: true, ...result.rows[0] })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -147,7 +148,7 @@ router.get('/intakes/:id/audio', async (req, res) => {
     res.setHeader('Content-Type', 'audio/mpeg')
     fs.createReadStream(abs).pipe(res)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -160,7 +161,7 @@ router.post('/intakes/:id/reprocess', async (req, res) => {
     const out = await intakeProcessor.reprocessIntake(req.params.id, brokerId)
     res.json({ success: true, ...out })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -177,7 +178,7 @@ router.post('/intakes/:id/apply', async (req, res) => {
     })
     res.json({ success: true, ...out })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -196,7 +197,7 @@ router.delete('/intakes/:id', async (req, res) => {
     await pool.query(`DELETE FROM voice_intakes WHERE id = $1 AND broker_id = $2`, [req.params.id, brokerId])
     res.json({ success: true, deleted: req.params.id })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -209,7 +210,7 @@ router.get('/stats', async (req, res) => {
     const out = await intakeProcessor.getStats(brokerId)
     res.json({ success: true, stats: out })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

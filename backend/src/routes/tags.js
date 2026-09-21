@@ -6,6 +6,7 @@
 const express = require('express')
 const pool = require('../db')
 const { verifyToken } = require('../middleware/auth')
+const { messagePublic } = require('../lib/erreursPubliques')
 // tags is available on all plans — no requireFeature needed
 
 // ── Router principal : /api/tags ──────────────────────────────────────────────
@@ -24,7 +25,7 @@ router.get('/', async (req, res) => {
     return res.json({ success: true, data: result.rows })
   } catch (err) {
     console.error('[GET /api/tags]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -68,7 +69,7 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
     console.error('[POST /api/tags]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -90,7 +91,7 @@ router.delete('/:id', async (req, res) => {
     return res.json({ success: true, data: { deleted_id: id } })
   } catch (err) {
     console.error('[DELETE /api/tags/:id]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -149,7 +150,7 @@ clientTagsRouter.post('/:clientId/tags', async (req, res) => {
     return res.status(201).json({ success: true, data: { client_id: clientId, tag_ids: inserted } })
   } catch (err) {
     console.error('[POST /api/clients/:clientId/tags]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -176,7 +177,7 @@ clientTagsRouter.delete('/:clientId/tags/:tagId', async (req, res) => {
     return res.json({ success: true, data: { client_id: clientId, tag_id: tagId } })
   } catch (err) {
     console.error('[DELETE /api/clients/:clientId/tags/:tagId]', err.message)
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

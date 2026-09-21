@@ -1,3 +1,4 @@
+const { messagePublic } = require('../lib/erreursPubliques')
 /**
  * Error Handler Middleware
  */
@@ -10,7 +11,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(err.status).json({
       success: false,
       error: err.name,
-      message: err.message,
+      message: messagePublic(err),
       field: err.field || null
     });
   }
@@ -34,7 +35,7 @@ const errorHandler = (err, req, res, next) => {
     error: 'InternalServerError',
     message: process.env.NODE_ENV === 'production' 
       ? 'Internal server error' 
-      : err.message
+      : messagePublic(err, { statut: 500 })
   });
 };
 

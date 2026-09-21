@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const claimsService = require('../services/claimsService');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // GET /api/claims — Liste des sinistres
 router.get('/', async (req, res) => {
@@ -15,7 +16,7 @@ router.get('/', async (req, res) => {
     res.json(claims);
   } catch (err) {
     console.error('GET /api/claims error:', err.message);
-    res.status(500).json({ error: 'claims_fetch_failed', message: err.message });
+    res.status(500).json({ error: 'claims_fetch_failed', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -35,7 +36,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(claim);
   } catch (err) {
     console.error('POST /api/claims error:', err.message);
-    res.status(400).json({ error: 'claim_creation_failed', message: err.message });
+    res.status(400).json({ error: 'claim_creation_failed', message: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -47,7 +48,7 @@ router.get('/:id', async (req, res) => {
     res.json(claim);
   } catch (err) {
     console.error('GET /api/claims/:id error:', err.message);
-    res.status(500).json({ error: 'claim_fetch_failed', message: err.message });
+    res.status(500).json({ error: 'claim_fetch_failed', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -62,7 +63,7 @@ router.patch('/:id', async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.error('PATCH /api/claims/:id error:', err.message);
-    res.status(400).json({ error: 'claim_update_failed', message: err.message });
+    res.status(400).json({ error: 'claim_update_failed', message: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -74,7 +75,7 @@ router.post('/:id/ark-summary', async (req, res) => {
     res.json({ summary });
   } catch (err) {
     console.error('POST /api/claims/:id/ark-summary error:', err.message);
-    res.status(500).json({ error: 'ark_summary_failed', message: err.message });
+    res.status(500).json({ error: 'ark_summary_failed', message: messagePublic(err, { statut: 500 }) });
   }
 });
 

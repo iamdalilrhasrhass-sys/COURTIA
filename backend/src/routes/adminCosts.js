@@ -12,6 +12,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const { isAdminRole } = require('../constants/roles');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Middleware admin
 const requireAdmin = (req, res, next) => {
@@ -129,7 +130,7 @@ router.get('/costs', verifyToken, requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ADMIN COSTS ERROR]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -192,7 +193,7 @@ router.get('/costs/by-user', verifyToken, requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ADMIN COSTS BY USER ERROR]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -240,7 +241,7 @@ router.get('/costs/export', verifyToken, requireAdmin, async (req, res) => {
     res.json(data.rows);
   } catch (err) {
     console.error('[ADMIN EXPORT ERROR]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -298,7 +299,7 @@ router.get('/quota-status/:userId', verifyToken, requireAdmin, async (req, res) 
     });
   } catch (err) {
     console.error('[QUOTA STATUS ERROR]', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

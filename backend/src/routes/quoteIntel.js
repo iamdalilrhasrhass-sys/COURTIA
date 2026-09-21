@@ -23,6 +23,7 @@ const logger = require('../lib/logger')
 // Autorité UNIQUE de portée : un client appartient à un CABINET (jamais à
 // `clients.broker_id`, colonne que le produit n'écrit pas).
 const porteeCabinet = require('../lib/porteeCabinet')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const {
   buildBrief,
@@ -87,7 +88,7 @@ router.post('/briefs', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'POST /quote-intel/briefs error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -163,7 +164,7 @@ router.get('/briefs', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'GET /quote-intel/briefs error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -199,7 +200,7 @@ router.get('/briefs/:id', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'GET /quote-intel/briefs/:id error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -266,7 +267,7 @@ router.put('/briefs/:id', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'PUT /quote-intel/briefs/:id error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -286,7 +287,7 @@ router.post('/briefs/:id/send', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'POST /quote-intel/briefs/:id/send error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -357,7 +358,7 @@ router.post('/briefs/:id/regenerate', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'POST /quote-intel/briefs/:id/regenerate error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -399,7 +400,7 @@ router.delete('/briefs/:id', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'DELETE /quote-intel/briefs/:id error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -466,7 +467,7 @@ router.post('/check-pieces', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'POST /quote-intel/check-pieces error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -504,7 +505,7 @@ router.get('/providers/:id/profile', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'GET /quote-intel/providers/:id/profile error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -548,7 +549,7 @@ router.get('/stats', async (req, res) => {
     
   } catch (err) {
     logger.error({ err }, 'GET /quote-intel/stats error')
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

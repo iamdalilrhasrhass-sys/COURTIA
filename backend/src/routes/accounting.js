@@ -33,6 +33,7 @@ const router = express.Router()
 const verifyToken = require('../middleware/authMiddleware')
 const fecService = require('../services/fecService')
 const marcheCabinet = require('../lib/marcheCabinet')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -259,7 +260,7 @@ router.post('/entries', async (req, res) => {
     res.status(statut).json({
       error: err.code || 'accounting_entry_failed',
       message: statut === 400
-        ? err.message
+        ? messagePublic(err)
         : "Impossible d'enregistrer cette écriture pour le moment.",
       ...(err.champ ? { champs: [err.champ] } : {}),
     })

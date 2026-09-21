@@ -9,6 +9,7 @@ const router = express.Router()
 const { verifyToken } = require('../middleware/auth')
 const intel = require('../services/arkIntelligenceService')
 const logger = require('../lib/logger')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 router.use(verifyToken)
 
@@ -22,7 +23,7 @@ router.post('/churn-predict', async (req, res) => {
     res.json({ ok: true, ...data })
   } catch (err) {
     logger?.error?.('[ark/churn-predict]', err)
-    res.status(500).json({ error: 'churn_predict_failed', message: err.message })
+    res.status(500).json({ error: 'churn_predict_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -34,7 +35,7 @@ router.get('/cross-sell/matrix', async (req, res) => {
     res.json({ ok: true, ...data })
   } catch (err) {
     logger?.error?.('[ark/cross-sell]', err)
-    res.status(500).json({ error: 'cross_sell_failed', message: err.message })
+    res.status(500).json({ error: 'cross_sell_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -46,7 +47,7 @@ router.get('/renewals/optimize', async (req, res) => {
     res.json({ ok: true, ...data })
   } catch (err) {
     logger?.error?.('[ark/renewals]', err)
-    res.status(500).json({ error: 'renewals_failed', message: err.message })
+    res.status(500).json({ error: 'renewals_failed', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const verifyToken = require('../middleware/authMiddleware');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Connecteurs disponibles (mock)
 const CONNECTORS = [
@@ -156,7 +157,7 @@ router.get('/', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('GET /marketplace error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -186,7 +187,7 @@ router.get('/:connectorId', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('GET /marketplace/:id error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -244,7 +245,7 @@ router.post('/:connectorId/install', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('POST /marketplace/:id/install error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -268,7 +269,7 @@ router.delete('/:connectorId', verifyToken, async (req, res) => {
     res.json({ message: 'Connecteur désinstallé', id: result.rows[0].id });
   } catch (error) {
     console.error('DELETE /marketplace/:id error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 
@@ -315,7 +316,7 @@ router.post('/:connectorId/sync', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('POST /marketplace/:id/sync error:', error);
-    res.status(500).json({ error: 'internal_error', message: error.message });
+    res.status(500).json({ error: 'internal_error', message: messagePublic(error, { statut: 500 }) });
   }
 });
 

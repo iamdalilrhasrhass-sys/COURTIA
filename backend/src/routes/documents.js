@@ -24,6 +24,7 @@ const marcheCabinet = require('../lib/marcheCabinet')
 const { incrementUsage } = require('../services/planService')
 const { trackEvent } = require('../services/analyticsService')
 const { isFeatureEnabled } = require('../lib/featureFlags')
+const { messagePublic } = require('../lib/erreursPubliques')
 const {
   DDA_DOCUMENT_TYPES,
   normalizeDocumentType,
@@ -748,7 +749,7 @@ router.get('/', async (req, res) => {
       }
     }
     logger.error({ error: err.message }, 'documents list failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -928,7 +929,7 @@ router.post('/generate', requireUnderLimit('pdf_generations'), async (req, res) 
     })
   } catch (err) {
     logger.error({ error: err.message }, 'documents generate failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1045,7 +1046,7 @@ router.delete('/:id', async (req, res) => {
     return res.json({ success: true, deleted_id: id, source: 'generated_documents' })
   } catch (err) {
     logger.error({ error: err.message }, 'documents delete failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1080,7 +1081,7 @@ router.post('/:id/archive', async (req, res) => {
     return res.json({ success: true, data: result.rows[0] })
   } catch (err) {
     logger.error({ error: err.message }, 'documents archive failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1159,7 +1160,7 @@ router.get('/:id/download', async (req, res) => {
     return res.download(filePath, `courtia_${doc.document_type}_${docId}.pdf`)
   } catch (err) {
     logger.error({ error: err.message }, 'documents download failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1188,7 +1189,7 @@ router.post('/analyze', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'documents analyze failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1212,7 +1213,7 @@ router.post('/classify', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'documents classify failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1242,7 +1243,7 @@ router.post('/bulk', async (req, res) => {
     })
   } catch (err) {
     logger.error({ error: err.message }, 'documents bulk analyze failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -1332,7 +1333,7 @@ router.post('/client/:clientId', async (req, res) => {
     return res.status(201).json({ success: true, data: result.rows[0] })
   } catch (err) {
     logger.error({ error: err.message, client_id: req.params?.clientId }, 'documents client index insert failed')
-    return res.status(500).json({ error: 'server_error', message: err.message })
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) })
   }
 })
 

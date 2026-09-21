@@ -16,6 +16,7 @@ const documentStorage = require('../services/documentStorage')
 const documentAnalysis = require('../services/documentAnalysis')
 const documentLinks = require('../services/documentLinks')
 const logger = require('../lib/logger')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Configuration Multer (stockage en mémoire pour traitement)
 const upload = multer({
@@ -226,7 +227,7 @@ router.post('/clients/:id/documents',
       })
     } catch (err) {
       logger.error({ error: err.message }, 'document upload error')
-      res.status(500).json({ error: 'Erreur upload document', details: err.message })
+      res.status(500).json({ error: 'Erreur upload document', details: messagePublic(err, { statut: 500 }) })
     }
   }
 )

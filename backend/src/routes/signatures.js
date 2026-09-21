@@ -9,6 +9,7 @@ const router = express.Router()
 const yousignService = require('../services/yousignService')
 const verifyToken = require('../middleware/authMiddleware')
 const { captureException } = require('../sentry')
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // POST /api/signatures/create — Crée une demande de signature
 router.post('/create', verifyToken, async (req, res) => {
@@ -87,7 +88,7 @@ router.post('/create', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] create error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -124,7 +125,7 @@ router.get('/', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] list error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -166,7 +167,7 @@ router.get('/:id/status', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] status error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -190,7 +191,7 @@ router.get('/:id/download', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] download error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -216,7 +217,7 @@ router.post('/:id/remind', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] remind error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -240,7 +241,7 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] cancel error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -287,7 +288,7 @@ router.post('/webhook', async (req, res) => {
   } catch (err) {
     console.error('[Yousign Webhook] Error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -312,7 +313,7 @@ router.get('/stats', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[Signatures] stats error:', err)
     captureException(err)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

@@ -12,6 +12,7 @@ const { insertStripePaymentEventIfNew } = require('../services/billingWebhookSer
 // Marché du CABINET : seule autorité (lib/marcheCabinet.js). La grille tarifaire
 // et la mention fiscale d'un membre ne dépendent jamais de SA fiche personnelle.
 const marcheCabinet = require('../lib/marcheCabinet');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 const router = express.Router();
 
@@ -616,7 +617,7 @@ router.post('/legal-acceptance', verifyToken, async (req, res) => {
     return res.json({ success: true, ...result, organization_id: org.id });
   } catch (err) {
     if (err.code === 'CONSENT_REQUIRED') {
-      return res.status(400).json({ success: false, error: 'consent_required', message: err.message });
+      return res.status(400).json({ success: false, error: 'consent_required', message: messagePublic(err, { statut: 400 }) });
     }
     return res.status(500).json({ success: false, error: 'legal_acceptance_failed' });
   }

@@ -38,6 +38,7 @@ const {
 const { buildAccessTemplate, LOGIN_URL } = require('../emails/templates/accessTemplates');
 const pool = require('../db');
 const crypto = require('crypto');
+const { messagePublic } = require('../lib/erreursPubliques')
 const User = require('../models/User');
 const logger = require('../lib/logger');
 
@@ -182,7 +183,7 @@ router.post('/trials/invite', async (req, res) => {
       },
     });
   } catch (err) {
-    logger.error({ err: err.message }, '[adminSuperAdmin] POST /trials/invite');
+    logger.error({ err: messagePublic(err) }, '[adminSuperAdmin] POST /trials/invite');
     return res.status(500).json({ success: false, error: 'invitation_failed', message: 'Création du cabinet en essai impossible.' });
   }
 });
@@ -276,7 +277,7 @@ router.get('/trials', async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err: err.message }, '[adminSuperAdmin] GET /trials');
-    return res.status(500).json({ success: false, error: 'trials_unavailable', details: err.message });
+    return res.status(500).json({ success: false, error: 'trials_unavailable', details: messagePublic(err, { statut: 500 }) });
   }
 });
 

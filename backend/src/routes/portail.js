@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const portalInvite = require('../services/portail/portalInvite');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 /**
  * POST /api/portail/invitations
@@ -30,7 +31,7 @@ router.post('/invitations', async (req, res) => {
 
     res.status(201).json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -51,7 +52,7 @@ router.get('/accounts', async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -72,7 +73,7 @@ router.get('/accounts/:id', async (req, res) => {
 
     res.json({ account });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -98,7 +99,7 @@ router.post('/accounts/:id/reinvite', async (req, res) => {
     const result = await portalInvite.regenerateInvitation(accountId);
     res.json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -114,7 +115,7 @@ router.delete('/accounts/:id', async (req, res) => {
     const result = await portalInvite.deactivateAccount(accountId, brokerId);
     res.json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -177,7 +178,7 @@ router.get('/messages', async (req, res) => {
       unreadTotal: parseInt(unreadRes.rows[0].count, 10)
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -213,7 +214,7 @@ router.post('/messages', async (req, res) => {
 
     res.status(201).json({ message: insertRes.rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -233,7 +234,7 @@ router.get('/unread-count', async (req, res) => {
 
     res.json({ unreadCount: parseInt(countRes.rows[0].count, 10) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -268,7 +269,7 @@ router.post('/document-requests', async (req, res) => {
 
     res.status(201).json({ request: insertRes.rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -304,7 +305,7 @@ router.get('/document-requests', async (req, res) => {
 
     res.json({ requests: result.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

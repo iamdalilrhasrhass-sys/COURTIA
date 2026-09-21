@@ -26,6 +26,7 @@ async function verifyClientToken(req, res, next) {
   
   try {
     const jwt = require('jsonwebtoken')
+const { messagePublic } = require('../lib/erreursPubliques')
     const decoded = jwt.verify(token, getJwtSecret())
     
     // Vérifier que c'est un token client portail
@@ -105,7 +106,7 @@ router.get('/history/:clientId', verifyClientToken, async (req, res) => {
 
     res.json({ data: history, total: history.length })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -119,7 +120,7 @@ router.delete('/history/:clientId', verifyClientToken, async (req, res) => {
     await arkChatService.clearHistory(req.app.locals.pool, req.clientId)
     res.json({ success: true })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -135,7 +136,7 @@ router.get('/suggestions', verifyClientToken, async (req, res) => {
     const suggestions = arkChatService.getSuggestions(context)
     res.json({ suggestions })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 
@@ -156,7 +157,7 @@ router.get('/context', verifyClientToken, async (req, res) => {
       upcomingDeadlinesCount: context.upcomingDeadlines?.length || 0
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) })
   }
 })
 

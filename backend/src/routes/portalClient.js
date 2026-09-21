@@ -11,6 +11,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const portalAuth = require('../services/portail/portalAuth');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // Configuration multer pour upload documents
 const storage = multer.diskStorage({
@@ -52,7 +53,7 @@ router.post('/auth/activate', async (req, res) => {
     const result = await portalAuth.activate(token, password);
     res.json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -66,7 +67,7 @@ router.post('/auth/login', async (req, res) => {
     const result = await portalAuth.login(email, password);
     res.json(result);
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    res.status(401).json({ error: messagePublic(err, { statut: 401 }) });
   }
 });
 
@@ -85,7 +86,7 @@ router.post('/auth/request-reset', async (req, res) => {
     res.json({ success, message });
   } catch (err) {
     // Requête invalide (email absent) : ne dépend pas de l'existence du compte.
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -99,7 +100,7 @@ router.post('/auth/reset', async (req, res) => {
     const result = await portalAuth.resetPassword(token, password);
     res.json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: messagePublic(err, { statut: 400 }) });
   }
 });
 
@@ -114,7 +115,7 @@ router.get('/me', portalAuth.verifyClientPortalToken, async (req, res) => {
     const account = await portalAuth.getAccountInfo(req.portalUser.portalAccountId);
     res.json({ account });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -170,7 +171,7 @@ router.get('/contracts', portalAuth.verifyClientPortalToken, async (req, res) =>
       legacyContracts
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -224,7 +225,7 @@ router.get('/documents', portalAuth.verifyClientPortalToken, async (req, res) =>
       }))
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -262,7 +263,7 @@ router.get('/documents/:id/download', portalAuth.verifyClientPortalToken, async 
     const fileName = `${doc.document_type}_${docId}.pdf`;
     res.download(doc.storage_path, fileName);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -314,7 +315,7 @@ router.post('/documents/upload', portalAuth.verifyClientPortalToken, upload.sing
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -339,7 +340,7 @@ router.get('/document-requests', portalAuth.verifyClientPortalToken, async (req,
       pendingCount: requestsRes.rows.filter(r => r.status === 'pending').length
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -414,7 +415,7 @@ router.post('/signatures', portalAuth.verifyClientPortalToken, async (req, res) 
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -457,7 +458,7 @@ router.get('/messages', portalAuth.verifyClientPortalToken, async (req, res) => 
       unreadCount: parseInt(unreadRes.rows[0].count, 10)
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -484,7 +485,7 @@ router.post('/messages', portalAuth.verifyClientPortalToken, async (req, res) =>
 
     res.status(201).json({ message: insertRes.rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -522,7 +523,7 @@ router.get('/quote-requests', portalAuth.verifyClientPortalToken, async (req, re
       }))
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -566,7 +567,7 @@ router.post('/quote-requests', portalAuth.verifyClientPortalToken, async (req, r
       message: 'Votre demande de devis a été transmise à votre courtier.'
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: messagePublic(err, { statut: 500 }) });
   }
 });
 

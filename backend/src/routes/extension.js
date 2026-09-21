@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const logger = require('../lib/logger');
+const { messagePublic } = require('../lib/erreursPubliques')
 
 // POST /analyze — analyser une page web
 router.post('/analyze', async (req, res) => {
@@ -47,7 +48,7 @@ router.post('/analyze', async (req, res) => {
     });
   } catch (err) {
     console.error('[POST /api/extension/analyze]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
@@ -178,7 +179,7 @@ router.post('/fill', async (req, res) => {
     });
   } catch (err) {
     console.error('[POST /api/extension/fill]', err.message);
-    return res.status(500).json({ error: 'server_error', message: err.message });
+    return res.status(500).json({ error: 'server_error', message: messagePublic(err, { statut: 500 }) });
   }
 });
 
