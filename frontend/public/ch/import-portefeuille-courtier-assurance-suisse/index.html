@@ -120,7 +120,23 @@ de ses propres fichiers. Nous ne promettons pas de durée sans avoir vu les donn
   <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
   le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
   jusqu'à la souscription.</p>
-  <div class="cta">
+  <!-- faibles-enrichi:jev-20260922 -->
+<h2>L'ordre de travail qui évite les pertes pendant une reprise</h2>
+<p>Reprendre un portefeuille se joue sur l'ordre des opérations, pas sur la vitesse de saisie. L'ordre
+qui limite les pertes :</p>
+<ol>
+<li><strong>Les clients d'abord, avec leur identifiant légal</strong> — pour un cabinet suisse, le
+rattachement se fait sur des traits stables, pas sur une adresse qui a changé trois fois.</li>
+<li><strong>Les contrats ensuite, avec leurs dates</strong> — ce sont les échéances qui déclenchent
+tout le reste ; une reprise sans dates oblige à revenir sur chaque dossier plus tard.</li>
+<li><strong>Les pièces en troisième</strong> — rattachées au dossier, jamais dans un dossier partagé
+hors outil, sinon le lien avec le dossier se perd au premier changement d'ordinateur.</li>
+<li><strong>Les doublons en dernier</strong> — on ne fusionne qu'après avoir tout importé : fusionner
+pendant l'import fait disparaître des contrats rattachés à la mauvaise fiche.</li>
+</ol>
+<p>L'import accepte un fichier tabulaire ; il n'automatise ni la déduplication ni le rapprochement avec
+la compagnie : ces deux contrôles restent des décisions du cabinet, et c'est volontaire.</p>
+<div class="cta">
     <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
     <a href="https://courtiark.fr/demo">Demander une démonstration</a>
     <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>

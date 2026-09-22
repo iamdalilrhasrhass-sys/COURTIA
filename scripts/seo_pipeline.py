@@ -21,6 +21,7 @@ ETAPES = [
     ("2. données publiques réelles sur les pages locales", ["python3", "scripts/enrichir_pages_villes.py"]),
     ("3. enrichissement des pages métier faibles", ["python3", "scripts/enrichir_pages_metier.py"]),
     ("4. enrichissement des guides réglementaires", ["python3", "scripts/enrichir_guides.py"]),
+    ("4bis. enrichissement des pages sous 530 mots", ["python3", "scripts/enrichir_pages_faibles.py"]),
     ("5. désambiguïsation (sections de périmètre JEV)", ["python3", "scripts/desambiguiser_pages.py"]),
     ("6. maillage interne validé par JEV", ["python3", "scripts/appliquer_maillage_jev.py"]),
     ("7. hygiène des pages locales + sitemaps", ["python3", "scripts/seo_hygiene_pages_villes.py"]),
@@ -44,6 +45,11 @@ def controler():
         "frontend/public/fr/logiciel-courtier-assurance-paris/index.html": "données publiques",
         "frontend/public/fr/logiciel-courtier-mutuelle/index.html": "spécifique",
         "frontend/public/fr/guide/lcb-ft/index.html": "ce que cela change",
+        "frontend/public/ch/import-portefeuille-courtier-assurance-suisse/index.html": "l'ordre de travail",
+        "frontend/public/fr/logiciel-courtier-transport-flotte/index.html": "véhicule",
+        "frontend/public/fr/logiciel-courtier-decennale/index.html": "ouverture de chantier",
+        "frontend/public/fr/comparatif/automatisation-vs-gestion-manuelle/index.html": "ne doit pas faire",
+        "frontend/public/ch/gestion-documentaire-courtier-assurance-suisse/index.html": "conservation, accès et durée",
     }
     manquants = []
     for chemin, motif in attendus.items():
