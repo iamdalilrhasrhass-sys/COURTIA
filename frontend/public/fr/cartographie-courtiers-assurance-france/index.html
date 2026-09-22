@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartographie des courtiers d&#x27;assurance en France : les chiffres SIRENE</title>
+<meta name="description" content="Comptages réels des établissements de courtage d&#x27;assurance en France par région et département (base SIRENE, code NAF 66.22Z, extraction 19/09/2026). Source et limites.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/cartographie-courtiers-assurance-france">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/cartographie-courtiers-assurance-france">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cartographie des courtiers d&#x27;assurance en France : les chiffres SIRENE">
+<meta property="og:description" content="Comptages réels des établissements de courtage d&#x27;assurance en France par région et département (base SIRENE, code NAF 66.22Z, extraction 19/09/2026). Source et limites.">
+<meta property="og:url" content="https://courtiark.fr/fr/cartographie-courtiers-assurance-france">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cartographie des courtiers d&#x27;assurance en France : les chiffres SIRENE">
+<meta name="twitter:description" content="Comptages réels des établissements de courtage d&#x27;assurance en France par région et département (base SIRENE, code NAF 66.22Z, extraction 19/09/2026). Source et limites.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Comptages réels des établissements de courtage d'assurance en France par région et département (base SIRENE, code NAF 66.22Z, extraction 19/09/2026). Source et limites.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Cartographie du courtage", "item": "https://courtiark.fr/fr/cartographie-courtiers-assurance-france"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "D'où viennent ces chiffres ?", "acceptedAnswer": {"@type": "Answer", "text": "De la base SIRENE (DINUM), filtrée sur le code d'activité 66.22Z, extraction du 19 septembre 2026. Les comptages sont publiés tels quels, sans extrapolation."}}, {"@type": "Question", "name": "Un établissement, c'est un cabinet ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. C'est un lieu d'activité : une structure avec plusieurs implantations compte plusieurs établissements. Le fichier ne permet pas de compter les collaborateurs."}}, {"@type": "Question", "name": "Puis-je réutiliser ces données ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, avec mention de la source. Le détail par département ou par commune peut être transmis sur demande motivée."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/cartographie-courtiers-assurance-france">Cartographie du courtage</a></p>
+<h1>Où sont les courtiers d&#x27;assurance en France : ce que disent les données publiques</h1>
+
+<p>Cette page publie des <strong>comptages réels</strong> d'établissements de courtage d'assurance en
+France, calculés à partir de la base publique des entreprises (code d'activité 66.22Z). Elle sert
+deux usages : situer la densité du courtage sur le territoire, et donner un ordre de grandeur à un
+cabinet qui se demande s'il est seul sur son marché.</p>
+
+<div class="section">
+<h2>Méthode, source et date</h2>
+<ul>
+<li><strong>Source :</strong> base SIRENE diffusée par la DINUM, filtrée sur le code d'activité
+NAF 66.22Z (activités des agents et courtiers d'assurances).</li>
+<li><strong>Extraction :</strong> 19 septembre 2026, sur le fichier national complet.</li>
+<li><strong>Total mesuré :</strong> <strong>43,037 établissements</strong>, répartis par région et
+par département.</li>
+<li><strong>Ce qu'un établissement n'est pas :</strong> une entreprise. Un cabinet avec trois
+implantations compte trois établissements. Ces chiffres mesurent des <em>lieux d'activité</em>, pas
+des sociétés, et ils incluent des structures de toute taille — y compris des groupes.</li>
+</ul>
+<p class="doux">Aucun chiffre de cette page n'est estimé ni extrapolé : tous proviennent du fichier
+source, et les pourcentages sont un simple rapport au total.</p>
+</div>
+
+<h2>Répartition par région</h2>
+<table>
+<tr><th>Région</th><th>Établissements</th><th>Part du total</th></tr>
+<tr><td>Île-de-France</td><td>10 050</td><td>23.4 %</td></tr>
+<tr><td>Auvergne-Rhône-Alpes</td><td>4 666</td><td>10.8 %</td></tr>
+<tr><td>Nouvelle-Aquitaine</td><td>4 396</td><td>10.2 %</td></tr>
+<tr><td>Provence-Alpes-Côte d'Azur</td><td>4 062</td><td>9.4 %</td></tr>
+<tr><td>Occitanie</td><td>4 053</td><td>9.4 %</td></tr>
+<tr><td>Grand Est</td><td>2 926</td><td>6.8 %</td></tr>
+<tr><td>Hauts-de-France</td><td>2 860</td><td>6.6 %</td></tr>
+<tr><td>Pays de la Loire</td><td>2 078</td><td>4.8 %</td></tr>
+<tr><td>Normandie</td><td>1 970</td><td>4.6 %</td></tr>
+<tr><td>Bretagne</td><td>1 753</td><td>4.1 %</td></tr>
+<tr><td>Bourgogne-Franche-Comté</td><td>1 684</td><td>3.9 %</td></tr>
+<tr><td>Centre-Val de Loire</td><td>1 394</td><td>3.2 %</td></tr>
+<tr><td>La Réunion</td><td>336</td><td>0.8 %</td></tr>
+<tr><td>Guadeloupe</td><td>291</td><td>0.7 %</td></tr>
+<tr><td>Corse</td><td>199</td><td>0.5 %</td></tr>
+<tr><td>Martinique</td><td>192</td><td>0.4 %</td></tr>
+<tr><td>Guyane</td><td>84</td><td>0.2 %</td></tr>
+<tr><td>Mayotte</td><td>43</td><td>0.1 %</td></tr>
+</table>
+
+<h2>Les vingt premiers départements</h2>
+<table>
+<tr><th>Département</th><th>Établissements</th></tr>
+<tr><td>Paris</td><td>4 498</td></tr>
+<tr><td>Hauts-de-Seine</td><td>1 631</td></tr>
+<tr><td>Rhône</td><td>1 494</td></tr>
+<tr><td>Bouches-du-Rhône</td><td>1 432</td></tr>
+<tr><td>Gironde</td><td>1 369</td></tr>
+<tr><td>Alpes-Maritimes</td><td>1 322</td></tr>
+<tr><td>Nord</td><td>1 273</td></tr>
+<tr><td>Haute-Garonne</td><td>997</td></tr>
+<tr><td>Yvelines</td><td>855</td></tr>
+<tr><td>Hérault</td><td>843</td></tr>
+<tr><td>Seine-Maritime</td><td>839</td></tr>
+<tr><td>Loire-Atlantique</td><td>799</td></tr>
+<tr><td>Var</td><td>795</td></tr>
+<tr><td>Val-de-Marne</td><td>775</td></tr>
+<tr><td>Seine-Saint-Denis</td><td>691</td></tr>
+<tr><td>Département 95</td><td>660</td></tr>
+<tr><td>Bas-Rhin</td><td>643</td></tr>
+<tr><td>Ille-et-Vilaine</td><td>625</td></tr>
+<tr><td>Département 62</td><td>612</td></tr>
+<tr><td>Isère</td><td>573</td></tr>
+</table>
+
+<h2>Comment lire ces chiffres</h2>
+<ol>
+<li><strong>La densité ne dit rien de la concurrence réelle.</strong> Deux cabinets peuvent être
+implantés dans la même ville sans viser les mêmes clients : particuliers, professionnels, entreprises.</li>
+<li><strong>Un établissement n'est pas un poste de travail.</strong> Le fichier ne dit pas combien de
+personnes travaillent dans chaque structure.</li>
+<li><strong>La concentration urbaine domine</strong> — la région capitale représente à elle seule une
+part importante du total, ce qui reflète l'organisation du marché plutôt qu'une supériorité.</li>
+</ol>
+
+<h2>Ce que ces données permettent de faire</h2>
+<p>Pour un cabinet : situer son marché, vérifier qu'il n'est pas isolé, et préparer une
+argumentation de proximité sans inventer de statistique. Pour un éditeur : comprendre pourquoi un
+outil de courtage doit fonctionner pour un cabinet d'une personne comme pour une structure
+multi-sites — c'est exactement le cas d'usage de COURTIA.</p>
+
+<h2>Réutilisation</h2>
+<p>Ces comptages sont réutilisables avec mention de la source (base SIRENE, code NAF 66.22Z,
+extraction du 19/09/2026). Nous pouvons fournir le détail par département ou par commune sur demande
+motivée : c'est plus utile qu'une reprise approximative.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>D&#x27;où viennent ces chiffres ?</h3>
+<p>De la base SIRENE (DINUM), filtrée sur le code d'activité 66.22Z, extraction du 19 septembre 2026. Les comptages sont publiés tels quels, sans extrapolation.</p>
+<h3>Un établissement, c&#x27;est un cabinet ?</h3>
+<p>Non. C'est un lieu d'activité : une structure avec plusieurs implantations compte plusieurs établissements. Le fichier ne permet pas de compter les collaborateurs.</p>
+<h3>Puis-je réutiliser ces données ?</h3>
+<p>Oui, avec mention de la source. Le détail par département ou par commune peut être transmis sur demande motivée.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/logiciel-courtier-assurance">Logiciel courtier assurance</a> — l'outil conçu pour ces cabinets</li>
+<li><a href="/fr/crm-courtier-assurance">CRM courtier assurance</a> — le dossier client au centre</li>
+<li><a href="/fr/logiciel-gestion-cabinet-courtage">Gestion de cabinet</a> — commissions et pilotage</li>
+<li><a href="/ch/logiciel-courtier-assurance-suisse">Pilier suisse</a> — le marché suisse, séparément</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA documentaire pour courtier : lire les pièces sans les recopier — COURTIA</title>
+<meta name="description" content="Ce qu&#x27;une lecture assistée de documents fait réellement dans un cabinet de courtage : extraire les informations utiles d&#x27;une pièce, laisser le courtier confirmer. Sans promesse.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/ia-gestion-documentaire-assurance">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/ia-gestion-documentaire-assurance">
+<meta property="og:type" content="website">
+<meta property="og:title" content="IA documentaire pour courtier : lire les pièces sans les recopier — COURTIA">
+<meta property="og:description" content="Ce qu&#x27;une lecture assistée de documents fait réellement dans un cabinet de courtage : extraire les informations utiles d&#x27;une pièce, laisser le courtier confirmer. Sans promesse.">
+<meta property="og:url" content="https://courtiark.fr/fr/ia-gestion-documentaire-assurance">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="IA documentaire pour courtier : lire les pièces sans les recopier — COURTIA">
+<meta name="twitter:description" content="Ce qu&#x27;une lecture assistée de documents fait réellement dans un cabinet de courtage : extraire les informations utiles d&#x27;une pièce, laisser le courtier confirmer. Sans promesse.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Ce qu'une lecture assistée de documents fait réellement dans un cabinet de courtage : extraire les informations utiles d'une pièce, laisser le courtier confirmer. Sans promesse.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "IA documentaire", "item": "https://courtiark.fr/fr/ia-gestion-documentaire-assurance"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Les pièces sont-elles envoyées à un service externe ?", "acceptedAnswer": {"@type": "Answer", "text": "Le traitement se fait dans le périmètre du cabinet, avec des prestataires techniques décrits dans les mentions relatives aux sous-traitants. Aucune donnée de dossier n'est utilisée pour entraîner un modèle public."}}, {"@type": "Question", "name": "L'extraction est-elle fiable à 100 % ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, et aucun outil de ce type ne peut le promettre. C'est pourquoi chaque information extraite est présentée pour confirmation avant d'entrer dans le dossier."}}, {"@type": "Question", "name": "Faut-il un volume important pour que ce soit utile ?", "acceptedAnswer": {"@type": "Answer", "text": "L'intérêt apparaît dès qu'un même document doit être recopié dans plusieurs champs, ce qui arrive sur presque tous les dossiers."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/ia-gestion-documentaire-assurance">IA documentaire</a></p>
+<h1>IA documentaire : lire une pièce, extraire l&#x27;utile, laisser confirmer</h1>
+
+<p>« IA documentaire » recouvre souvent deux choses très différentes : un outil qui
+<strong>propose</strong> des informations à confirmer, et un outil qui écrit dans un dossier sans
+que personne ne regarde. Le second est dangereux dans un métier où une erreur de date ou de montant
+se retrouve devant un client.</p>
+
+<div class="section">
+<h2>Ce que la lecture assistée fait dans COURTIA</h2>
+<ul>
+<li><strong>Elle lit une pièce déposée</strong> — pièce d'identité, justificatif, relevé — reçue via
+le lien de dépôt ou ajoutée au dossier.</li>
+<li><strong>Elle en extrait les informations utiles</strong> — ce qui sert au dossier : identité,
+dates, références, montants selon la nature de la pièce.</li>
+<li><strong>Elle les présente au courtier</strong> pour confirmation ou correction. Rien n'est
+considéré comme acquis sans ce passage.</li>
+<li><strong>Elle évite la recopie</strong> — c'est le seul bénéfice revendiqué, et il est réel :
+la ressaisie d'un même document dans trois champs différents disparaît.</li>
+</ul>
+</div>
+
+<h2>Ce qu'elle ne fait pas</h2>
+<ul>
+<li>Elle ne <strong>valide</strong> pas l'authenticité d'un document : elle extrait, elle ne certifie pas.</li>
+<li>Elle ne <strong>décide</strong> rien : ni une garantie, ni une acceptation, ni un tarif.</li>
+<li>Elle ne remplace pas la lecture du courtier quand la pièce est ambiguë, illisible ou hors du cas
+prévu : là, l'outil doit le dire au lieu de deviner.</li>
+</ul>
+
+<h2>Pourquoi confirmer reste la règle</h2>
+<p>Dans le courtage, la valeur d'un dossier tient à la confiance qu'on peut lui accorder des années
+plus tard. Une donnée extraite automatiquement mais non vérifiée introduit une faiblesse invisible ;
+un clic de confirmation la supprime. Ce clic coûte quelques secondes, une erreur coûte un litige.</p>
+
+<h2>Où cela se branche</h2>
+<p>La lecture assistée n'est pas un outil isolé : elle alimente le dossier client, à côté de la
+collecte de pièces et de la génération de documents. Voir
+<a href="/fr/gestion-documentaire-courtier-assurance">la gestion documentaire</a> et
+<a href="/fr/ia-courtier-assurance">les usages de l'assistant</a>.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Les pièces sont-elles envoyées à un service externe ?</h3>
+<p>Le traitement se fait dans le périmètre du cabinet, avec des prestataires techniques décrits dans les mentions relatives aux sous-traitants. Aucune donnée de dossier n'est utilisée pour entraîner un modèle public.</p>
+<h3>L&#x27;extraction est-elle fiable à 100 % ?</h3>
+<p>Non, et aucun outil de ce type ne peut le promettre. C'est pourquoi chaque information extraite est présentée pour confirmation avant d'entrer dans le dossier.</p>
+<h3>Faut-il un volume important pour que ce soit utile ?</h3>
+<p>L'intérêt apparaît dès qu'un même document doit être recopié dans plusieurs champs, ce qui arrive sur presque tous les dossiers.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/gestion-documentaire-courtier-assurance">Gestion documentaire</a> — la collecte et la traçabilité des pièces</li>
+<li><a href="/fr/ia-courtier-assurance">IA pour courtier</a> — les autres usages de l'assistant</li>
+<li><a href="/fr/crm-courtier-assurance">CRM courtier assurance</a> — le dossier alimenté par les pièces</li>
+<li><a href="/fr/gagner-du-temps-courtier-assurance">Gain de temps</a> — ce que ce traitement remplace</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

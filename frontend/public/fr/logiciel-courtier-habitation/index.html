@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logiciel pour courtier habitation et MRH : suivi et échéances — COURTIA</title>
+<meta name="description" content="Suivre un portefeuille habitation (MRH, propriétaire, locataire, PNO) dans un cabinet de courtage : multi-contrats, pièces, échéances et renouvellements. COURTIA, essai 7 jours.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/logiciel-courtier-habitation">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/logiciel-courtier-habitation">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Logiciel pour courtier habitation et MRH : suivi et échéances — COURTIA">
+<meta property="og:description" content="Suivre un portefeuille habitation (MRH, propriétaire, locataire, PNO) dans un cabinet de courtage : multi-contrats, pièces, échéances et renouvellements. COURTIA, essai 7 jours.">
+<meta property="og:url" content="https://courtiark.fr/fr/logiciel-courtier-habitation">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Logiciel pour courtier habitation et MRH : suivi et échéances — COURTIA">
+<meta name="twitter:description" content="Suivre un portefeuille habitation (MRH, propriétaire, locataire, PNO) dans un cabinet de courtage : multi-contrats, pièces, échéances et renouvellements. COURTIA, essai 7 jours.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Suivre un portefeuille habitation (MRH, propriétaire, locataire, PNO) dans un cabinet de courtage : multi-contrats, pièces, échéances et renouvellements. COURTIA, essai 7 jours.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Courtier habitation", "item": "https://courtiark.fr/fr/logiciel-courtier-habitation"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Peut-on gérer un propriétaire bailleur avec plusieurs logements ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui : les contrats sont rattachés au client, chacun avec son bien, sa compagnie et son échéance."}}, {"@type": "Question", "name": "Les attestations demandées par les locataires sont-elles gérées ?", "acceptedAnswer": {"@type": "Answer", "text": "Les documents se génèrent depuis le dossier et ce qui a été remis reste tracé."}}, {"@type": "Question", "name": "Et le PNO ?", "acceptedAnswer": {"@type": "Answer", "text": "Le suivi est le même que pour les autres contrats de la branche : le type de garantie est une information du dossier, pas un objet à part."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/logiciel-courtier-habitation">Courtier habitation</a></p>
+<h1>Portefeuille habitation : MRH, PNO, proprio, locataire — sans confusion</h1>
+
+<p>L'habitation est une branche où le même client peut avoir plusieurs contrats aux logiques
+différentes : sa résidence principale, un logement loué, une résidence secondaire. Le dossier doit
+distinguer ces situations, parce que les pièces et les échéances ne sont pas les mêmes.</p>
+
+<div class="section">
+<h2>Ce qui est spécifique à l'habitation</h2>
+<ul>
+<li><strong>La qualité du client</strong> — propriétaire, locataire, bailleur : elle change ce qui est
+demandé et ce qui doit être tracé.</li>
+<li><strong>Les biens multiples</strong> — plusieurs adresses, parfois dans des régions différentes.</li>
+<li><strong>Les pièces de situation</strong> — bail, état des lieux, attestation de copropriété selon
+le cas.</li>
+<li><strong>Les événements</strong> — déménagement, travaux, mise en location : autant de moments où
+le contrat doit être revu.</li>
+</ul>
+</div>
+
+<h2>Avant / avec, sur une semaine</h2>
+<table>
+<tr><th>Situation</th><th>Sans outil dédié</th><th>Avec COURTIA</th></tr>
+<tr><td>Un client met son appartement en location</td><td>L'information reste dans un e-mail</td><td>Le dossier porte le changement et l'historique</td></tr>
+<tr><td>Un bail doit être récupéré</td><td>Demande par mail, relance, classement</td><td>Lien de dépôt, pièce rattachée</td></tr>
+<tr><td>Trois contrats, trois échéances</td><td>Trois rappels à poser soi-même</td><td>Les échéances remontent ensemble dans la liste du jour</td></tr>
+<tr><td>Fin d'année</td><td>Tableur reconstitué</td><td>États de commissions par période</td></tr>
+</table>
+
+<h2>Ce que le produit ne fait pas</h2>
+<p>Il ne produit pas de devis de prime calculée, ni d'expertise de sinistre. Il organise le suivi du
+portefeuille, la collecte des pièces, la préparation des renouvellements et la traçabilité des
+échanges. Pour le sinistre, le sujet n'a pas de page dédiée sur ce site : le périmètre produit n'est
+pas suffisant pour en faire une promesse.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Peut-on gérer un propriétaire bailleur avec plusieurs logements ?</h3>
+<p>Oui : les contrats sont rattachés au client, chacun avec son bien, sa compagnie et son échéance.</p>
+<h3>Les attestations demandées par les locataires sont-elles gérées ?</h3>
+<p>Les documents se génèrent depuis le dossier et ce qui a été remis reste tracé.</p>
+<h3>Et le PNO ?</h3>
+<p>Le suivi est le même que pour les autres contrats de la branche : le type de garantie est une information du dossier, pas un objet à part.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/logiciel-courtier-assurance">Logiciel courtier assurance</a> — le produit dans son ensemble</li>
+<li><a href="/fr/gestion-portefeuille-courtier">Gestion de portefeuille</a> — échéances et renouvellements</li>
+<li><a href="/fr/logiciel-courtier-iard">Courtier IARD</a> — le risque dommage de façon générale</li>
+<li><a href="/fr/gestion-documentaire-courtier-assurance">Gestion documentaire</a> — pièces et traçabilité</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

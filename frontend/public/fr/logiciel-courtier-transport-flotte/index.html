@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logiciel courtier transport et flotte : suivi multi-véhicules — COURTIA</title>
+<meta name="description" content="Suivre un portefeuille transport ou flotte : véhicules, échéances décalées, pièces d&#x27;exploitation, renouvellements groupés. COURTIA, essai 7 jours.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/logiciel-courtier-transport-flotte">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/logiciel-courtier-transport-flotte">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Logiciel courtier transport et flotte : suivi multi-véhicules — COURTIA">
+<meta property="og:description" content="Suivre un portefeuille transport ou flotte : véhicules, échéances décalées, pièces d&#x27;exploitation, renouvellements groupés. COURTIA, essai 7 jours.">
+<meta property="og:url" content="https://courtiark.fr/fr/logiciel-courtier-transport-flotte">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Logiciel courtier transport et flotte : suivi multi-véhicules — COURTIA">
+<meta name="twitter:description" content="Suivre un portefeuille transport ou flotte : véhicules, échéances décalées, pièces d&#x27;exploitation, renouvellements groupés. COURTIA, essai 7 jours.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Suivre un portefeuille transport ou flotte : véhicules, échéances décalées, pièces d'exploitation, renouvellements groupés. COURTIA, essai 7 jours.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Transport et flotte", "item": "https://courtiark.fr/fr/logiciel-courtier-transport-flotte"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Peut-on suivre les entrées et sorties de véhicules ?", "acceptedAnswer": {"@type": "Answer", "text": "Le dossier conserve l'historique des opérations ; les contrats et leurs échéances sont mis à jour au fil des mouvements."}}, {"@type": "Question", "name": "Faut-il une offre spécifique pour les flottes ?", "acceptedAnswer": {"@type": "Answer", "text": "Non : la logique du produit est le suivi multi-contrats par client, ce qui couvre une flotte comme un portefeuille multi-branches."}}, {"@type": "Question", "name": "Et la prévoyance des conducteurs ?", "acceptedAnswer": {"@type": "Answer", "text": "Elle se suit comme n'importe quel autre contrat du même client."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/logiciel-courtier-transport-flotte">Transport et flotte</a></p>
+<h1>Transport et flotte : quand un client vaut trente échéances</h1>
+
+<p>Dans le transport, un seul client peut représenter des dizaines de véhicules, avec des dates
+d'effet décalées et des mises en circulation en cours d'année. Une échéance manquée sur une flotte ne
+se rattrape pas comme sur un contrat auto isolé.</p>
+
+<div class="section">
+<h2>Les trois particularités d'un portefeuille flotte</h2>
+<ol>
+<li><strong>Le volume dans un seul dossier</strong> — beaucoup de véhicules, un interlocuteur, des
+échéances réparties sur l'année.</li>
+<li><strong>Les mouvements permanents</strong> — entrées et sorties de véhicules, remorques, matériel :
+le dossier ne se fige jamais.</li>
+<li><strong>Les pièces d'exploitation</strong> — permis par conducteur, cartes grises, attestations :
+le suivi documentaire pèse plus qu'ailleurs.</li>
+</ol>
+</div>
+
+<h2>Ce que le produit apporte, sans promesse tarifaire</h2>
+<table>
+<tr><th>Besoin</th><th>Dans COURTIA</th></tr>
+<tr><td>Voir les échéances de tous les véhicules d'un client</td><td>Contrats rattachés au même dossier, avec leurs dates</td></tr>
+<tr><td>Savoir ce qui arrive dans 30 ou 90 jours</td><td>Listes d'échéances et actions du jour</td></tr>
+<tr><td>Récupérer les pièces attendues</td><td>Demandes suivies, dépôt par lien, rattachement au dossier</td></tr>
+<tr><td>Suivre les commissions</td><td>Barèmes et états par période</td></tr>
+<tr><td>Travailler le renouvellement groupé</td><td>Échéances triées par enjeu, préparées ensemble</td></tr>
+</table>
+
+<h2>Ce que le produit ne fait pas</h2>
+<p>Il ne tarife pas, ne remplace pas un extranet de compagnie, et ne gère pas la gestion de parc
+(carburant, entretien, amendes). Ces sujets appartiennent à d'autres outils. COURTIA tient le
+portefeuille d'assurance et son administration.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Peut-on suivre les entrées et sorties de véhicules ?</h3>
+<p>Le dossier conserve l'historique des opérations ; les contrats et leurs échéances sont mis à jour au fil des mouvements.</p>
+<h3>Faut-il une offre spécifique pour les flottes ?</h3>
+<p>Non : la logique du produit est le suivi multi-contrats par client, ce qui couvre une flotte comme un portefeuille multi-branches.</p>
+<h3>Et la prévoyance des conducteurs ?</h3>
+<p>Elle se suit comme n'importe quel autre contrat du même client.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/logiciel-courtier-entreprise">Courtier entreprises</a> — le portefeuille professionnel</li>
+<li><a href="/fr/logiciel-courtier-auto">Courtier auto</a> — le risque véhicule particulier</li>
+<li><a href="/fr/gestion-portefeuille-courtier">Gestion de portefeuille</a> — les échéances dans le produit</li>
+<li><a href="/fr/prioriser-dossiers-courtier-assurance">Prioriser ses dossiers</a> — l'ordre de traitement</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur : manipulations administratives d&#x27;un cabinet — COURTIA</title>
+<meta name="description" content="Saisissez vos quatre comptages (outils ouverts, pièces redemandées, échéances tardives, devis sans relance) et voyez par quoi commencer. Aucun chiffre inventé, rien n&#x27;est envoyé.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/outils/calculateur-manipulations-administratives">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/outils/calculateur-manipulations-administratives">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calculateur : manipulations administratives d&#x27;un cabinet — COURTIA">
+<meta property="og:description" content="Saisissez vos quatre comptages (outils ouverts, pièces redemandées, échéances tardives, devis sans relance) et voyez par quoi commencer. Aucun chiffre inventé, rien n&#x27;est envoyé.">
+<meta property="og:url" content="https://courtiark.fr/fr/outils/calculateur-manipulations-administratives">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calculateur : manipulations administratives d&#x27;un cabinet — COURTIA">
+<meta name="twitter:description" content="Saisissez vos quatre comptages (outils ouverts, pièces redemandées, échéances tardives, devis sans relance) et voyez par quoi commencer. Aucun chiffre inventé, rien n&#x27;est envoyé.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Saisissez vos quatre comptages (outils ouverts, pièces redemandées, échéances tardives, devis sans relance) et voyez par quoi commencer. Aucun chiffre inventé, rien n'est envoyé.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Outils", "item": "https://courtiark.fr/fr/outils/calculateur-manipulations-administratives"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "D'où viennent les quatre mesures ?", "acceptedAnswer": {"@type": "Answer", "text": "De la méthode publiée sur ce site : elles se comptent en une semaine, sans logiciel. L'outil ne fait que les ordonner."}}, {"@type": "Question", "name": "Le calculateur estime-t-il des heures économisées ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Aucun coefficient n'est appliqué : nous ne publions pas de gain chiffré que nous ne pouvons pas mesurer."}}, {"@type": "Question", "name": "Mes saisies sont-elles conservées ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, tout reste dans votre navigateur et disparaît au rechargement de la page."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/outils/calculateur-manipulations-administratives">Outils</a></p>
+<h1>Calculateur : vos chiffres, votre ordre de priorité</h1>
+<p>Un cabinet n'a pas besoin d'un calcul de retour sur investissement pour savoir où il perd du temps : il a besoin de quatre nombres. Cet outil les met en ordre — et n'invente rien d'autre.</p>
+
+<div class="section">
+  <h2>Vos quatre comptages</h2>
+  <p>Saisissez ce que vous avez compté dans votre cabinet (les quatre mesures de la méthode). Le
+  calculateur ne fait que mettre en évidence le plus lourd et rappeler la fonction correspondante.</p>
+  <label>Nombre d'outils à ouvrir pour répondre à « où en est ce contrat ? »
+    <input type="number" min="0" id="m1" value="0" style="width:100px;padding:8px;margin-left:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0b0b1a;color:#fff"></label><br><br>
+  <label>Pièces justificatives redemandées au moins deux fois (ce mois)
+    <input type="number" min="0" id="m2" value="0" style="width:100px;padding:8px;margin-left:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0b0b1a;color:#fff"></label><br><br>
+  <label>Échéances découvertes trop tard (ce mois)
+    <input type="number" min="0" id="m3" value="0" style="width:100px;padding:8px;margin-left:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0b0b1a;color:#fff"></label><br><br>
+  <label>Devis sans réponse depuis plus de 15 jours
+    <input type="number" min="0" id="m4" value="0" style="width:100px;padding:8px;margin-left:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#0b0b1a;color:#fff"></label><br><br>
+  <div class="cta"><a class="principal" href="#" id="lire">Lire mes chiffres</a></div>
+  <div id="lecture"></div>
+</div>
+<script>
+document.getElementById('lire').addEventListener('click', (e) => {
+  e.preventDefault();
+  const v = id => Math.max(0, parseInt(document.getElementById(id).value || '0', 10) || 0);
+  const m = [v('m1'), v('m2'), v('m3'), v('m4')];
+  const libelles = [
+    'outils ouverts pour répondre à une question simple',
+    'pièces redemandées au même client',
+    'échéances découvertes trop tard',
+    'devis sans réponse et sans relance'
+  ];
+  const suite = [
+    ['Un dossier client unique : tout au même endroit.', '/fr/crm-courtier-assurance'],
+    ['Un dépôt de pièces par lien, rattaché au dossier.', '/fr/gestion-documentaire-courtier-assurance'],
+    ['Les échéances portées par le contrat et remontées chaque jour.', '/fr/gestion-portefeuille-courtier'],
+    ['Un registre des devis avec relance préparée.', '/fr/logiciel-devis-courtier-assurance']
+  ];
+  const total = m.reduce((a, b) => a + b, 0);
+  let html = '<h3>Vos chiffres</h3><table><tr><th>Ce que vous avez compté</th><th>Votre valeur</th><th>Ce que cela indique</th></tr>';
+  m.forEach((x, i) => {
+    html += '<tr><td>' + libelles[i] + '</td><td><strong>' + x + '</strong></td><td>' +
+      (x === 0 ? 'Rien à traiter ici' : 'À traiter') + '</td></tr>';
+  });
+  html += '</table>';
+  if (total === 0) {
+    html += '<p>Aucun des quatre comptages ne ressort : votre organisation tient. La priorité ' +
+      'redevient la surveillance — refaire ces comptages dans trois mois.</p>';
+  } else {
+    const ordre = m.map((x, i) => [x, i]).filter(p => p[0] > 0).sort((a, b) => b[0] - a[0]);
+    html += '<h3>Par où commencer</h3><ol>' + ordre.map(p =>
+      '<li><strong>' + libelles[p[1]] + '</strong> (' + p[0] + ') — ' + suite[p[1]][0] +
+      ' <a href="' + suite[p[1]][1] + '">voir</a></li>').join('') + '</ol>';
+    html += '<p class="doux">Le classement vient de vos chiffres, pas d\'un barème. Aucun temps ' +
+      'économisé n\'est estimé ici : la comparaison utile se fait en refaisant ces quatre comptages ' +
+      'après un mois d\'usage.</p>';
+  }
+  document.getElementById('lecture').innerHTML = html;
+});
+</script>
+
+<div class="section">
+<h2>Les quatre comptages, et ce qu'ils disent</h2>
+<table>
+<tr><th>Ce que vous comptez</th><th>Ce que cela indique</th><th>Ce qui se met en place ensuite</th></tr>
+<tr><td>Outils à ouvrir pour répondre à « où en est ce contrat ? »</td><td>L'information est dispersée</td><td>Un dossier client unique</td></tr>
+<tr><td>Pièces redemandées au moins deux fois au même client</td><td>La collecte ne laisse pas de trace</td><td>Un dépôt de pièces par lien, rattaché au dossier</td></tr>
+<tr><td>Échéances découvertes trop tard</td><td>Le suivi dépend de la mémoire ou d'un agenda séparé</td><td>Des échéances portées par le contrat</td></tr>
+<tr><td>Devis sans réponse depuis plus de quinze jours</td><td>Le suivi commercial n'a pas d'état consolidé</td><td>Un registre des devis avec relance préparée</td></tr>
+</table>
+<h2>Pourquoi ces quatre-là</h2>
+<p>Elles se comptent sans chronomètre, sans interprétation et sans outil : un nombre, pas une
+impression. C'est ce qui les rend comparables d'un mois sur l'autre — et c'est la seule manière
+honnête de savoir si une organisation a réellement changé.</p>
+<h2>Comment s'en servir</h2>
+<ol>
+<li>Comptez sur un mois complet, pas sur une semaine exceptionnelle.</li>
+<li>Notez les quatre chiffres quelque part, avec la date.</li>
+<li>Reprenez le même comptage après un mois d'usage d'un outil, et comparez.</li>
+</ol>
+<p class="doux">Cet outil ne conserve rien : vos saisies restent dans votre navigateur. Il ne
+convertit aucun de vos chiffres en heures, et n'applique aucun coefficient.</p>
+</div>
+
+<h2>Questions fréquentes</h2>
+<h3>D&#x27;où viennent les quatre mesures ?</h3>
+<p>De la méthode publiée sur ce site : elles se comptent en une semaine, sans logiciel. L'outil ne fait que les ordonner.</p>
+<h3>Le calculateur estime-t-il des heures économisées ?</h3>
+<p>Non. Aucun coefficient n'est appliqué : nous ne publions pas de gain chiffré que nous ne pouvons pas mesurer.</p>
+<h3>Mes saisies sont-elles conservées ?</h3>
+<p>Non, tout reste dans votre navigateur et disparaît au rechargement de la page.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/mesurer-temps-administratif-cabinet">Mesurer son temps administratif</a> — la méthode des quatre comptages</li>
+<li><a href="/fr/reduire-double-saisie-cabinet-courtage">Réduire la double saisie</a> — la conséquence directe</li>
+<li><a href="/fr/outils/diagnostic-automatisation-cabinet">Diagnostic d'automatisation</a> — l'autre outil gratuit</li>
+<li><a href="/fr/organisation-cabinet-courtage">Organisation du cabinet</a> — ce qui se décide ensuite</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

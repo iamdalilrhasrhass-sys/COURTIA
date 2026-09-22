@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faire travailler une équipe de courtage dans un seul outil — COURTIA</title>
+<meta name="description" content="Plusieurs collaborateurs, des rôles distincts, des données cloisonnées par cabinet, des tâches affectées : ce que COURTIA permet réellement dans un cabinet de plusieurs personnes.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/logiciel-courtier-equipe">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/logiciel-courtier-equipe">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Faire travailler une équipe de courtage dans un seul outil — COURTIA">
+<meta property="og:description" content="Plusieurs collaborateurs, des rôles distincts, des données cloisonnées par cabinet, des tâches affectées : ce que COURTIA permet réellement dans un cabinet de plusieurs personnes.">
+<meta property="og:url" content="https://courtiark.fr/fr/logiciel-courtier-equipe">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Faire travailler une équipe de courtage dans un seul outil — COURTIA">
+<meta name="twitter:description" content="Plusieurs collaborateurs, des rôles distincts, des données cloisonnées par cabinet, des tâches affectées : ce que COURTIA permet réellement dans un cabinet de plusieurs personnes.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Plusieurs collaborateurs, des rôles distincts, des données cloisonnées par cabinet, des tâches affectées : ce que COURTIA permet réellement dans un cabinet de plusieurs personnes.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Travail en équipe", "item": "https://courtiark.fr/fr/logiciel-courtier-equipe"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Combien d'utilisateurs sont possibles ?", "acceptedAnswer": {"@type": "Answer", "text": "La grille prévoit plusieurs utilisateurs selon l'offre ; les rôles et le cloisonnement par cabinet sont prévus dans le produit."}}, {"@type": "Question", "name": "Un collaborateur peut-il voir une fiche sans pouvoir la modifier ?", "acceptedAnswer": {"@type": "Answer", "text": "Les rôles permettent de distinguer consultation et modification. Le périmètre exact se règle avec le cabinet."}}, {"@type": "Question", "name": "Les données restent-elles au cabinet si un collaborateur part ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui : les dossiers appartiennent au cabinet, pas au compte d'un collaborateur."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/logiciel-courtier-equipe">Travail en équipe</a></p>
+<h1>Plusieurs personnes dans le cabinet, un seul état des dossiers</h1>
+
+<p>À partir de deux personnes, la question n'est plus « où est le dossier ? » mais « qui le suit, et
+où en est-il ? ». C'est un problème d'organisation, pas de logiciel — mais aucun logiciel ne peut le
+résoudre s'il n'a pas été pensé pour plusieurs utilisateurs.</p>
+
+<div class="section">
+<h2>Ce qui change vraiment avec une équipe</h2>
+<ul>
+<li><strong>L'affectation</strong> — un dossier ou une tâche a un responsable visible. Sans cela, la
+tâche est « à tout le monde », donc à personne.</li>
+<li><strong>Les rôles</strong> — accès différenciés selon la fonction : tout le monde n'a pas à voir
+ou à modifier tout.</li>
+<li><strong>Le cloisonnement par cabinet</strong> — les données d'un cabinet ne sont pas visibles
+depuis un autre. C'est une exigence de base, pas un argument commercial.</li>
+<li><strong>Le suivi collectif</strong> — la file de travail du jour est partagée, ce qui permet de
+répartir la charge au lieu de la subir.</li>
+</ul>
+</div>
+
+<h2>Avant / avec, dans un cabinet de trois personnes</h2>
+<table>
+<tr><th>Situation</th><th>Sans outil partagé</th><th>Avec un état partagé</th></tr>
+<tr><td>Un client appelle pour un dossier suivi par un collègue</td><td>« Il faut lui demander »</td><td>La fiche montre l'état, les échéances, les pièces</td></tr>
+<tr><td>Une tâche est créée à l'oral</td><td>Oubliée une fois sur deux</td><td>Elle existe avec un responsable et une échéance</td></tr>
+<tr><td>Un collaborateur part</td><td>Son portefeuille est à reconstituer</td><td>Les dossiers restent dans le cabinet</td></tr>
+<tr><td>Un nouveau collaborateur arrive</td><td>Formation au bouche-à-oreille</td><td>Le dossier s'explique par son historique</td></tr>
+</table>
+
+<h2>Ce qu'un outil ne réglera pas</h2>
+<p>Il ne dira pas qui doit faire quoi à la place du dirigeant, il ne remplace pas une réunion de
+répartition, et il ne compense pas un cabinet qui n'a pas de règles de nommage ni de suivi commun.
+Les fonctions d'équipe rendent l'organisation visible ; elles ne créent pas l'organisation.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Combien d&#x27;utilisateurs sont possibles ?</h3>
+<p>La grille prévoit plusieurs utilisateurs selon l'offre ; les rôles et le cloisonnement par cabinet sont prévus dans le produit.</p>
+<h3>Un collaborateur peut-il voir une fiche sans pouvoir la modifier ?</h3>
+<p>Les rôles permettent de distinguer consultation et modification. Le périmètre exact se règle avec le cabinet.</p>
+<h3>Les données restent-elles au cabinet si un collaborateur part ?</h3>
+<p>Oui : les dossiers appartiennent au cabinet, pas au compte d'un collaborateur.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/logiciel-gestion-cabinet-courtage">Gestion de cabinet</a> — commissions, coûts et pilotage</li>
+<li><a href="/fr/reporting-pilotage-cabinet-courtage">Reporting et pilotage</a> — voir l'activité du cabinet</li>
+<li><a href="/fr/logiciel-courtier-multi-agences">Multi-agences</a> — plusieurs sites, une organisation</li>
+<li><a href="/fr/crm-courtier-assurance">CRM courtier assurance</a> — le dossier partagé</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

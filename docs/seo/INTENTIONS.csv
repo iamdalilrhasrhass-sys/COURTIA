@@ -1,0 +1,120 @@
+INTENTION,PAYS,FUNNEL,VALEUR_COMMERCIALE,PAGE_EXISTANTE,QUALITE,GAP,ACTION
+CRM courtier assurance,FR,commercial,5,fr/crm-courtier-assurance,1067 mots — solide,Aucun,COVERED
+CRM assurance,FR,commercial,5,,—,Aucune page,A_ARBITRER
+logiciel courtier assurance,FR,commercial,5,fr/logiciel-courtier-assurance,1881 mots — solide,Aucun,COVERED
+logiciel courtage assurance,FR,commercial,5,,—,Aucune page,A_ARBITRER
+logiciel cabinet courtage,FR,commercial,5,fr/logiciel-gestion-cabinet-courtage,597 mots — faible,Enrichir en priorité,ENRICHIR
+CRM cabinet assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+logiciel gestion courtier,FR,commercial,4,,—,Aucune page,A_ARBITRER
+logiciel intermédiaire assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+outil courtier assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+plateforme courtier assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+logiciel gestion clients assurance,FR,commercial,4,fr/crm-courtier-assurance,1067 mots — solide,Aucun,COVERED
+logiciel gestion prospects assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+logiciel gestion portefeuille assurance,FR,commercial,4,fr/gestion-portefeuille-courtier,571 mots — faible,Enrichir en priorité,ENRICHIR
+gagner du temps courtier assurance,FR,informationnel,4,fr/gagner-du-temps-courtier-assurance,794 mots — correcte,Enrichissement possible,COVERED
+productivité courtier assurance,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+organisation cabinet de courtage,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+réduire l'administratif assurance,FR,informationnel,4,fr/mesurer-temps-administratif-cabinet,777 mots — correcte,Enrichissement possible,COVERED
+automatiser les tâches d'un courtier,FR,informationnel,4,fr/automatisation-courtier-assurance,816 mots — correcte,Enrichissement possible,COVERED
+automatiser un cabinet de courtage,FR,informationnel,4,fr/automatisation-courtier-assurance,816 mots — correcte,Enrichissement possible,COVERED
+centraliser l'activité d'un courtier,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+réduire la double saisie,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+prioriser les dossiers,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+prioriser les prospects,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+suivre ses relances clients,FR,informationnel,4,fr/relance-client-assurance,631 mots — correcte,Enrichissement possible,COVERED
+automatiser le suivi client,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+automatiser les renouvellements,FR,informationnel,4,fr/gestion-portefeuille-courtier,571 mots — faible,Enrichir en priorité,ENRICHIR
+gestion des tâches cabinet,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+workflow courtier assurance,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+IA courtier assurance,FR,commercial,5,fr/ia-courtier-assurance,768 mots — correcte,Enrichissement possible,COVERED
+IA assurance,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+assistant IA courtier,FR,commercial,4,fr/ia-courtier-assurance,768 mots — correcte,Enrichissement possible,COVERED
+CRM assurance IA,FR,commercial,5,fr/ia-courtier-assurance,768 mots — correcte,Enrichissement possible,COVERED
+automatisation IA assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+IA prospection assurance,FR,commercial,3,,—,Aucune page,A_ARBITRER
+IA relation client assurance,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+IA gestion documentaire assurance,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+IA analyse de dossiers,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+IA relance clients,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+IA cabinet de courtage,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+logiciel gestion des prospects courtier,FR,commercial,4,,—,Aucune page,A_ARBITRER
+logiciel gestion clients courtier,FR,commercial,4,fr/crm-courtier-assurance,1067 mots — solide,Aucun,COVERED
+pipeline commercial courtier assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+relance client assurance,FR,commercial,4,fr/relance-client-assurance,631 mots — correcte,Enrichissement possible,COVERED
+gestion des emails courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+gestion des appels courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+WhatsApp courtier assurance,FR,commercial,3,,—,Aucune page,A_ARBITRER
+gestion documentaire courtier assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+gestion des tâches courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+gestion des rendez-vous courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+devis assurance courtier,FR,commercial,5,fr/logiciel-devis-courtier-assurance,657 mots — correcte,Enrichissement possible,COVERED
+comparateur devis assurance courtier,FR,commercial,4,fr/comparateur-assurance-courtier,601 mots — correcte,Enrichissement possible,COVERED
+suivi des renouvellements assurance,FR,commercial,4,fr/gestion-portefeuille-courtier,571 mots — faible,Enrichir en priorité,ENRICHIR
+gestion des commissions courtier,FR,commercial,4,fr/logiciel-gestion-cabinet-courtage,597 mots — faible,Enrichir en priorité,ENRICHIR
+logiciel facturation courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel gestion des leads assurance,FR,commercial,3,,—,Aucune page,A_ARBITRER
+reporting cabinet courtage,FR,commercial,3,fr/logiciel-gestion-cabinet-courtage,597 mots — faible,Enrichir en priorité,ENRICHIR
+automatisations cabinet assurance,FR,commercial,4,fr/automatisation-courtier-assurance,816 mots — correcte,Enrichissement possible,COVERED
+logiciel équipe cabinet courtage,FR,commercial,3,,—,Aucune page,A_ARBITRER
+import portefeuille logiciel courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel conformité courtier assurance,FR,commercial,4,,—,Aucune page,A_ARBITRER
+portail client assurance courtier,FR,commercial,3,,—,Aucune page,A_ARBITRER
+signature électronique devis assurance,FR,commercial,3,fr/logiciel-devis-courtier-assurance,657 mots — correcte,Enrichissement possible,COVERED
+logiciel courtier RC Pro,FR,commercial,4,fr/logiciel-courtier-iard,770 mots — correcte,Enrichissement possible,COVERED
+logiciel courtier santé,FR,commercial,4,fr/logiciel-courtier-sante,483 mots — faible,Enrichir en priorité,ENRICHIR
+logiciel courtier prévoyance,FR,commercial,4,fr/logiciel-courtier-prevoyance,746 mots — correcte,Enrichissement possible,COVERED
+logiciel courtier auto,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel courtier habitation,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel courtier emprunteur,FR,commercial,4,fr/logiciel-courtier-emprunteur,793 mots — correcte,Enrichissement possible,COVERED
+logiciel courtier entreprises,FR,commercial,4,,—,Aucune page,A_ARBITRER
+logiciel courtier TPE PME,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel courtier transport,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel courtier flotte automobile,FR,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel courtier taxi VTC,FR,commercial,2,,—,Aucune page,A_ARBITRER
+logiciel courtier décennale,FR,commercial,3,,—,Aucune page,A_ARBITRER
+CRM spécialisé courtage vs CRM généraliste,FR,comparaison,4,,—,Aucune page,A_ARBITRER
+CRM courtier vs Excel,FR,comparaison,4,,—,Aucune page,A_ARBITRER
+automatisation vs gestion manuelle assurance,FR,comparaison,3,,—,Aucune page,A_ARBITRER
+alternative à CourtiGo,FR,comparaison,3,fr/alternative-courtigo,515 mots — faible,Enrichir en priorité,ENRICHIR
+alternative à Lya,FR,comparaison,3,fr/alternative-lya,520 mots — faible,Enrichir en priorité,ENRICHIR
+alternative à Kase,FR,comparaison,3,fr/alternative-kase,509 mots — faible,Enrichir en priorité,ENRICHIR
+alternative à Oggo Data,FR,comparaison,3,fr/alternative-oggo-data,503 mots — faible,Enrichir en priorité,ENRICHIR
+comment choisir un CRM pour cabinet de courtage,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+comment structurer son pipeline commercial,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+comment automatiser ses relances clients,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+comment organiser ses renouvellements,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+comment centraliser ses dossiers clients,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+comment réduire la double saisie,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+comment mesurer son temps administratif,FR,informationnel,3,fr/mesurer-temps-administratif-cabinet,777 mots — correcte,Enrichissement possible,COVERED
+comment intégrer l'IA dans un cabinet,FR,informationnel,4,,—,Aucune page,A_ARBITRER
+comment structurer l'onboarding client,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+comment suivre ses prospects,FR,informationnel,3,,—,Aucune page,A_ARBITRER
+diagnostic automatisation cabinet,FR,outil,4,,—,Aucune page,A_ARBITRER
+calculateur coût administratif cabinet,FR,outil,4,,—,Aucune page,A_ARBITRER
+calculateur ROI CRM courtier,FR,outil,4,,—,Aucune page,A_ARBITRER
+score maturité digitale cabinet,FR,outil,3,,—,Aucune page,A_ARBITRER
+audit productivité cabinet courtage,FR,outil,3,,—,Aucune page,A_ARBITRER
+générateur checklist onboarding client,FR,outil,3,,—,Aucune page,A_ARBITRER
+cartographie des courtiers en assurance par région,FR,actif,4,,—,Aucune page,A_ARBITRER
+observatoire digital du courtage,FR,actif,3,,—,Aucune page,A_ARBITRER
+baromètre du temps administratif en cabinet,FR,actif,3,,—,Aucune page,A_ARBITRER
+CRM courtier assurance Suisse,CH,commercial,5,ch/crm-courtier-assurance-suisse,1136 mots — solide,Aucun,COVERED
+logiciel courtier assurance Suisse,CH,commercial,5,ch/logiciel-courtier-assurance-suisse,789 mots — correcte,Enrichissement possible,COVERED
+logiciel courtage Suisse,CH,commercial,5,,—,Aucune page,A_ARBITRER
+CRM assurance Suisse,CH,commercial,4,,—,Aucune page,A_ARBITRER
+IA courtier assurance Suisse,CH,commercial,4,ch/ia-courtier-assurance-suisse,1437 mots — solide,Aucun,COVERED
+automatisation courtier Suisse,CH,commercial,4,ch/automatisation-courtier-assurance-suisse,800 mots — correcte,Enrichissement possible,COVERED
+gestion cabinet courtage Suisse,CH,commercial,4,ch/gestion-commissions-courtier-assurance-suisse,1245 mots — solide,Aucun,COVERED
+logiciel intermédiaire assurance Suisse,CH,commercial,4,,—,Aucune page,A_ARBITRER
+registre FINMA intermédiaire assurance,CH,informationnel,4,ch/conformite-intermediaire-assurance-lsa-finma,1200 mots — solide,Aucun,COVERED
+nLPD courtier assurance,CH,informationnel,3,,—,Aucune page,A_ARBITRER
+tarifs logiciel courtier CHF,CH,commercial,4,ch/tarifs-logiciel-courtier-chf,668 mots — correcte,Enrichissement possible,COVERED
+courtage romand logiciel,CH,commercial,3,,—,Aucune page,A_ARBITRER
+logiciel courtier suisse romande,CH,commercial,4,,—,Aucune page,A_ARBITRER
+gestion sinistres courtier Suisse,CH,commercial,3,,—,Aucune page,A_ARBITRER
+devis assurance Suisse courtier,CH,commercial,4,ch/logiciel-devis-courtier-assurance-suisse,1169 mots — solide,Aucun,COVERED
+prospection courtier assurance Suisse,CH,commercial,4,ch/logiciel-prospection-courtier-assurance-suisse,1193 mots — solide,Aucun,COVERED
+Versicherungsbroker Software (de-CH),CH-DE,commercial,4,,—,Aucune page,A_ARBITRER
+Broker Software Schweiz (de-CH),CH-DE,commercial,4,,—,Aucune page,A_ARBITRER
+programma broker assicurativo (it-CH),CH-IT,commercial,3,,—,Aucune page,A_ARBITRER

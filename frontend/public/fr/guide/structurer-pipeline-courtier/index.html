@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Structurer un pipeline commercial de courtage : méthode — COURTIA</title>
+<meta name="description" content="Comment structurer un pipeline dans un cabinet de courtage : étapes utiles, critères de sortie, relances associées, et pourquoi un pipeline trop fin ne sert à rien.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/guide/structurer-pipeline-courtier">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/guide/structurer-pipeline-courtier">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Structurer un pipeline commercial de courtage : méthode — COURTIA">
+<meta property="og:description" content="Comment structurer un pipeline dans un cabinet de courtage : étapes utiles, critères de sortie, relances associées, et pourquoi un pipeline trop fin ne sert à rien.">
+<meta property="og:url" content="https://courtiark.fr/fr/guide/structurer-pipeline-courtier">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Structurer un pipeline commercial de courtage : méthode — COURTIA">
+<meta name="twitter:description" content="Comment structurer un pipeline dans un cabinet de courtage : étapes utiles, critères de sortie, relances associées, et pourquoi un pipeline trop fin ne sert à rien.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Comment structurer un pipeline dans un cabinet de courtage : étapes utiles, critères de sortie, relances associées, et pourquoi un pipeline trop fin ne sert à rien.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Guides", "item": "https://courtiark.fr/fr/guide/structurer-pipeline-courtier"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Faut-il un CRM pour avoir un pipeline ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, mais il faut un endroit unique où l'état des dossiers est visible. C'est la fonction que remplit le pipeline dans un outil."}}, {"@type": "Question", "name": "Combien d'étapes au maximum ?", "acceptedAnswer": {"@type": "Answer", "text": "Au-delà de cinq ou six, les étapes deviennent indiscernables et les dossiers s'y accumulent sans distinction."}}, {"@type": "Question", "name": "Comment mesurer la qualité du pipeline ?", "acceptedAnswer": {"@type": "Answer", "text": "Par le nombre de dossiers sans action depuis plus de quinze jours. C'est un indicateur qui se calcule sans interprétation."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/guide/structurer-pipeline-courtier">Guides</a></p>
+<h1>Structurer son pipeline commercial sans y passer ses journées</h1>
+
+<div class="section">
+<h2>Un pipeline n'est pas un tableau de vœux</h2>
+<p>Un pipeline sert à répondre à trois questions : combien de dossiers sont en cours, à quelle étape,
+et lequel n'a pas bougé. S'il ne répond pas à ces questions, c'est un décor. Beaucoup de cabinets
+abandonnent leur pipeline parce qu'il demandait plus de saisie qu'il n'apportait d'information.</p>
+</div>
+
+<h2>Quatre étapes suffisent</h2>
+<table>
+<tr><th>Étape</th><th>Critère d'entrée</th><th>Critère de sortie</th></tr>
+<tr><td>Contact établi</td><td>Un échange a eu lieu, le besoin est connu</td><td>Un devis peut être produit</td></tr>
+<tr><td>Devis envoyé</td><td>Une proposition est partie</td><td>Réponse du client, ou relance due</td></tr>
+<tr><td>Décision attendue</td><td>Le client a les éléments en main</td><td>Signature ou refus explicite</td></tr>
+<tr><td>Client</td><td>Signature obtenue</td><td>Sortie du pipeline, entrée en portefeuille</td></tr>
+</table>
+<p>Deux règles : une étape doit correspondre à un fait vérifiable (et non à une impression), et chaque
+étape doit avoir une action par défaut quand rien ne bouge.</p>
+
+<h2>Les relances font partie du pipeline</h2>
+<p>Un pipeline sans relance programmée est une photographie. La question à se poser pour chaque
+étape : « si rien ne se passe dans X jours, que fait-on ? ». Si la réponse est « on verra », l'étape
+n'apporte rien.</p>
+
+<h2>La saisie minimale</h2>
+<ol>
+<li>Le contact et la provenance.</li>
+<li>Le besoin tel qu'il est exprimé (une phrase, pas un roman).</li>
+<li>Les éléments de situation utiles à la proposition.</li>
+<li>La date du dernier échange.</li>
+</ol>
+<p>Tout le reste se déduit : l'état du devis vient du devis, l'échéance vient du contrat, la
+commission vient du barème. Un pipeline qui demande de ressaisir ces éléments est un pipeline qui
+sera abandonné.</p>
+
+<h2>Ce qui fait vivre un pipeline</h2>
+<p>Un point hebdomadaire court sur les dossiers immobiles, et rien d'autre. Vingt minutes par semaine
+suffisent s'ils sont listés automatiquement ; deux heures si l'on doit les retrouver.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Faut-il un CRM pour avoir un pipeline ?</h3>
+<p>Non, mais il faut un endroit unique où l'état des dossiers est visible. C'est la fonction que remplit le pipeline dans un outil.</p>
+<h3>Combien d&#x27;étapes au maximum ?</h3>
+<p>Au-delà de cinq ou six, les étapes deviennent indiscernables et les dossiers s'y accumulent sans distinction.</p>
+<h3>Comment mesurer la qualité du pipeline ?</h3>
+<p>Par le nombre de dossiers sans action depuis plus de quinze jours. C'est un indicateur qui se calcule sans interprétation.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/gestion-prospects-clients-courtier-assurance">Prospects et clients</a> — l'outil derrière le pipeline</li>
+<li><a href="/fr/guide/suivre-prospects-courtier">Suivre ses prospects</a> — le suivi au quotidien</li>
+<li><a href="/fr/logiciel-devis-courtier-assurance">Devis</a> — l'étape où le pipeline se joue</li>
+<li><a href="/fr/relance-client-assurance">Relances</a> — ce qui empêche le pipeline de dormir</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>
