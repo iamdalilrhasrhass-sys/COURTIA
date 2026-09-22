@@ -304,10 +304,32 @@ const TRIAL_FEATURES = PLANS.pro.features; // Essai = features Pro
 const TRIAL_LIMITS = PLANS.pro.limits;
 
 /**
+ * PLAN D'UN CODE, TOUS MARCHÉS CONFONDUS.
+ *
+ * POURQUOI CETTE FONCTION EXISTE (défaut P1 mesuré le 22/09/2026, audit Stripe) :
+ * `users.plan` reçoit le code RÉELLEMENT souscrit, y compris les codes de la
+ * grille suisse (`independant`, `cabinet_ch`, `cabinet_ch_sur_devis`) écrits par
+ * le webhook `checkout.session.completed`. Les résolutions qui ne consultaient
+ * que le catalogue FRANÇAIS `PLANS` retombaient sur `DEFAULT_PLAN = 'starter'` :
+ * un cabinet suisse ABONNÉ (199 CHF/mois, statut `active`) était servi avec
+ * `plan: 'starter'`, `price: 89`, `ark_full: false`, `multi_user: false` — soit
+ * une rétrogradation au plan d'entrée français APRÈS avoir payé l'offre suisse.
+ * `getFeatureGate` et `getUsageLimit` (utilisés par `middleware/planGating`)
+ * avaient le même angle mort.
+ *
+ * Un code inconnu (ex. `trial`) reste inconnu : le repli appartient à l'appelant.
+ */
+function planParCode(code) {
+  if (!code) return null;
+  const normalise = String(code).trim().toLowerCase();
+  return PLANS[normalise] || PLANS_CH[normalise] || null;
+}
+
+/**
  * Retourne un plan complet par son nom
  */
 function getPlan(name) {
-  return PLANS[name] || null;
+  return planParCode(name);
 }
 
 /**
@@ -375,7 +397,7 @@ function getAllPlans(marche = 'FR') {
  * Vérifie si un plan a accès à une fonctionnalité donnée
  */
 function getFeatureGate(planName, feature) {
-  const plan = PLANS[planName];
+  const plan = planParCode(planName);
   if (!plan) return false;
   return !!plan.features[feature];
 }
@@ -384,7 +406,7 @@ function getFeatureGate(planName, feature) {
  * Retourne la limite d'utilisation pour un plan donné
  */
 function getUsageLimit(planName, limitKey) {
-  const plan = PLANS[planName];
+  const plan = planParCode(planName);
   if (!plan) return 0;
   return plan.limits[limitKey] || 0;
 }
@@ -402,9 +424,13 @@ async function getUserPlanInfo(userId) {
       return { plan: DEFAULT_PLAN, ...PLANS[DEFAULT_PLAN], subscription_status: null };
     }
     const user = rows[0];
-    const planKey = PLANS[user.plan] ? user.plan : DEFAULT_PLAN;
+    // Le code souscrit vient de la base (`users.plan`) : il peut appartenir à la
+    // grille suisse (`independant`, `cabinet_ch`) comme à la grille française. On
+    // résout donc dans les DEUX catalogues ; seul un code réellement inconnu
+    // (ex. `trial`) retombe sur DEFAULT_PLAN.
+    const planKey = planParCode(user.plan) ? String(user.plan).trim().toLowerCase() : DEFAULT_PLAN;
     const publicPlanKey = planKey === 'premium' ? 'cabinet' : planKey;
-    const plan = { ...PLANS[planKey] };
+    const plan = { ...planParCode(planKey) };
 
     // Vérifier si l'utilisateur est en période d'essai
     const onTrial = user.subscription_status === 'trialing' &&
