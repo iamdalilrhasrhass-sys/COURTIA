@@ -106,10 +106,27 @@ argumentation de proximité sans inventer de statistique. Pour un éditeur : com
 outil de courtage doit fonctionner pour un cabinet d'une personne comme pour une structure
 multi-sites — c'est exactement le cas d'usage de COURTIA.</p>
 
-<h2>Réutilisation</h2>
-<p>Ces comptages sont réutilisables avec mention de la source (base SIRENE, code NAF 66.22Z,
-extraction du 19/09/2026). Nous pouvons fournir le détail par département ou par commune sur demande
-motivée : c'est plus utile qu'une reprise approximative.</p>
+<h2>Réutilisation de ces données</h2>
+<p>Ces comptages peuvent être repris par un tiers — journaliste, consultant, formateur, association
+professionnelle, autre éditeur — sous deux conditions simples : <strong>citer la source</strong> (base
+SIRENE, code d'activité NAF 66.22Z, extraction du 19 septembre 2026) et <strong>mentionner
+COURTIA</strong> comme producteur de la mise en forme. Aucune autorisation préalable n'est nécessaire
+pour une reprise partielle avec ces mentions.</p>
+<p>Le détail par département ou par commune, ainsi que le script d'extraction, sont transmissibles sur
+demande motivée à <strong>contact@courtiark.fr</strong> : c'est plus utile qu'une reprise
+approximative, et cela évite les erreurs d'interprétation.</p>
+
+<h2>Mise à jour</h2>
+<p>La date d'extraction affichée en tête de cette page fait foi : nous ne publions pas de chiffre plus
+récent que notre extraction. Une nouvelle extraction remplacera intégralement les tableaux ci-dessus,
+avec sa date. Tant qu'aucune mise à jour n'a eu lieu, les chiffres publiés restent ceux du
+19 septembre 2026 — et cette page le dit plutôt que de laisser croire à une donnée « en temps réel ».</p>
+
+<h2>Éditeur et limites de responsabilité</h2>
+<p>Page éditée par <strong>COURTIA</strong> (contact@courtiark.fr), à partir d'une base publique
+administrée par la DINUM. Les erreurs de la base source — activité mal déclarée, établissement fermé
+non radié, code d'activité inexact — se retrouvent mécaniquement dans nos comptages. Ces chiffres
+décrivent une photographie administrative, pas la réalité commerciale d'un marché local.</p>
 """
     return dict(
         marche="FR",

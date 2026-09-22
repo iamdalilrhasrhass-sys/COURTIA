@@ -20,7 +20,6 @@ avant application. Format : source -> cible | ancre prévue
 /fr/comparateur-assurance-courtier -> /fr/logiciel-gestion-cabinet-courtage | la gestion de cabinet
 /fr/comparateur-assurance-courtier -> /fr/gestion-portefeuille-courtier | la gestion de portefeuille
 /fr/crm-courtier-assurance -> /fr/relance-client-assurance | les relances clients
-/fr/gagner-du-temps-courtier-assurance -> /fr/mesurer-temps-administratif-cabinet | mesurer son temps administratif
 /fr/gestion-portefeuille-courtier -> /fr/logiciel-courtier-assurance | le logiciel de courtage
 /fr/gestion-portefeuille-courtier -> /fr/logiciel-devis-courtier-assurance | produire et suivre les devis
 /fr/gestion-portefeuille-courtier -> /fr/comparateur-assurance-courtier | comparer des propositions
