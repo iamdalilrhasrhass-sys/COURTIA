@@ -859,19 +859,29 @@ if ((morceaux[0] === 'contracts' || morceaux[0] === 'contrats') && morceaux[2] =
      `data.products.map()` et `c.opportunities.find()` — leur absence le fait
      planter dès qu'un client est présent. */
   if (chemin === '/ark-intelligence/churn-predict') {
-    const top = CLIENTS.slice(0, 5).map((c, i) => ({
+    /* Le bloc « Churn Predictor » de pages/ArkIntelligence.jsx affiche QUATRE compteurs :
+       `total_clients_scanned`, `at_risk_count`, `average_score` et la liste des risques.
+       Seuls `at_risk_count` et la liste étaient fournis : la démonstration publique
+       affichait donc « Clients scannés » vide et « Score moyen undefined/100 ».
+       Les valeurs ci-dessous sont calculées sur les données de démonstration, jamais inventées. */
+    const SCORES_CHURN = [52, 38, 68, 88, 72, 61, 47, 79]
+    const NIVEAUX_CHURN = ['eleve', 'critique', 'modere', 'faible', 'modere', 'modere', 'eleve', 'faible']
+    const evalues = CLIENTS.map((c, i) => ({
       client_id: c.id,
       client_name: c.nom,
-      risk_level: ['eleve', 'critique', 'modere', 'faible', 'modere'][i],
-      score: [52, 38, 68, 88, 72][i],
-      churn_score: [52, 38, 68, 88, 72][i],
+      risk_level: NIVEAUX_CHURN[i % NIVEAUX_CHURN.length],
+      score: SCORES_CHURN[i % SCORES_CHURN.length],
+      churn_score: SCORES_CHURN[i % SCORES_CHURN.length],
       lifetime_value: CONTRATS_DETAIL.filter((k) => k.clientId === c.id).reduce((a, k) => a + k.prime, 0),
       city: c.ville,
       factors: ['Aucun contact depuis 45 jours', 'Échéance à moins de 30 jours'],
       retention_plan: { steps: ['Appeler sous 48 h', 'Proposer une révision de garantie'], cost_eur: 0 },
     }))
+    const top = [...evalues].sort((a, b) => a.score - b.score).slice(0, 5)
     return { statut: 200, donnees: {
-      at_risk_count: top.filter((t) => t.risk_level !== 'faible').length,
+      total_clients_scanned: evalues.length,
+      average_score: Math.round(evalues.reduce((a, c) => a + c.score, 0) / evalues.length),
+      at_risk_count: evalues.filter((c) => c.risk_level !== 'faible').length,
       top_risks: top, data: top, total: top.length,
     } }
   }

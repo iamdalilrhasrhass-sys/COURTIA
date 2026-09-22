@@ -1,0 +1,72 @@
+Liens internes PROPOSÉS (absents aujourd'hui), à soumettre au jugement JEV
+avant application. Format : source -> cible | ancre prévue
+
+/ch/automatisation-courtier-assurance-suisse -> /ch/crm-courtier-assurance-suisse | le CRM courtier en Suisse
+/ch/conformite-intermediaire-assurance-lsa-finma -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/conformite-intermediaire-assurance-lsa-finma -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/crm-courtier-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/crm-courtier-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/gestion-commissions-courtier-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/gestion-commissions-courtier-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/gestion-portefeuille-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/gestion-portefeuille-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/ia-courtier-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/ia-courtier-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/logiciel-courtier-assurance-suisse -> /ch/gestion-portefeuille-assurance-suisse | la gestion de portefeuille en Suisse
+/ch/logiciel-devis-courtier-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/logiciel-devis-courtier-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/logiciel-prospection-courtier-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/logiciel-prospection-courtier-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/relances-courtier-assurance-suisse -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/relances-courtier-assurance-suisse -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/ch/tarifs-logiciel-courtier-chf -> /ch/logiciel-courtier-assurance-suisse | le logiciel de courtage en Suisse
+/ch/tarifs-logiciel-courtier-chf -> /ch/automatisation-courtier-assurance-suisse | l'automatisation en Suisse
+/fr/automatisation-courtier-assurance -> /fr/gagner-du-temps-courtier-assurance | où le temps se perd au cabinet
+/fr/automatisation-courtier-assurance -> /fr/mesurer-temps-administratif-cabinet | mesurer son temps administratif
+/fr/automatisation-courtier-assurance -> /fr/gagner-du-temps-courtier-assurance | où le temps se perd au cabinet
+/fr/comparateur-assurance-courtier -> /fr/logiciel-devis-courtier-assurance | produire et suivre les devis
+/fr/comparateur-assurance-courtier -> /fr/logiciel-gestion-cabinet-courtage | la gestion de cabinet
+/fr/comparateur-assurance-courtier -> /fr/gestion-portefeuille-courtier | la gestion de portefeuille
+/fr/crm-courtier-assurance -> /fr/relance-client-assurance | les relances clients
+/fr/gagner-du-temps-courtier-assurance -> /fr/mesurer-temps-administratif-cabinet | mesurer son temps administratif
+/fr/gestion-portefeuille-courtier -> /fr/logiciel-courtier-assurance | le logiciel de courtage
+/fr/gestion-portefeuille-courtier -> /fr/logiciel-devis-courtier-assurance | produire et suivre les devis
+/fr/gestion-portefeuille-courtier -> /fr/comparateur-assurance-courtier | comparer des propositions
+/fr/gestion-portefeuille-courtier -> /fr/logiciel-courtier-assurance | le logiciel de courtage
+/fr/ia-courtier-assurance -> /fr/mesurer-temps-administratif-cabinet | mesurer son temps administratif
+/fr/logiciel-courtier-assurance -> /fr/gestion-portefeuille-courtier | la gestion de portefeuille
+/fr/logiciel-courtier-emprunteur -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-emprunteur -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-emprunteur -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-courtier-grossiste -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-grossiste -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-grossiste -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-courtier-iard -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-iard -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-courtier-iard -> /fr/logiciel-courtier-emprunteur | fr/logiciel-courtier-emprunteur
+/fr/logiciel-courtier-mandataire -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-mandataire -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-mandataire -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-courtier-multi-agences -> /fr/logiciel-courtier-assurance | le logiciel de courtage
+/fr/logiciel-courtier-multi-agences -> /fr/logiciel-devis-courtier-assurance | produire et suivre les devis
+/fr/logiciel-courtier-multi-agences -> /fr/logiciel-gestion-cabinet-courtage | la gestion de cabinet
+/fr/logiciel-courtier-multi-agences -> /fr/gestion-portefeuille-courtier | la gestion de portefeuille
+/fr/logiciel-courtier-multi-agences -> /fr/logiciel-courtier-assurance | le logiciel de courtage
+/fr/logiciel-courtier-mutuelle -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-mutuelle -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-mutuelle -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-courtier-prevoyance -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-prevoyance -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-prevoyance -> /fr/logiciel-courtier-emprunteur | fr/logiciel-courtier-emprunteur
+/fr/logiciel-courtier-sante -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-sante -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-courtier-sante -> /fr/logiciel-courtier-emprunteur | fr/logiciel-courtier-emprunteur
+/fr/logiciel-courtier-tns -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
+/fr/logiciel-courtier-tns -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
+/fr/logiciel-courtier-tns -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
+/fr/logiciel-devis-courtier-assurance -> /fr/logiciel-gestion-cabinet-courtage | la gestion de cabinet
+/fr/logiciel-devis-courtier-assurance -> /fr/gestion-portefeuille-courtier | la gestion de portefeuille
+/fr/logiciel-gestion-cabinet-courtage -> /fr/logiciel-devis-courtier-assurance | produire et suivre les devis
+/fr/logiciel-gestion-cabinet-courtage -> /fr/comparateur-assurance-courtier | comparer des propositions
+/fr/mesurer-temps-administratif-cabinet -> /fr/ia-courtier-assurance | l'IA pour courtier
+/fr/relance-client-assurance -> /fr/logiciel-courtier-assurance | le logiciel de courtage
