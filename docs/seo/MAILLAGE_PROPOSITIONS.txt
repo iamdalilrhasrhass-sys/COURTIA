@@ -38,11 +38,9 @@ avant application. Format : source -> cible | ancre prévue
 /fr/logiciel-courtier-mandataire -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
 /fr/logiciel-courtier-mandataire -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
 /fr/logiciel-courtier-mandataire -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
-/fr/logiciel-courtier-multi-agences -> /fr/logiciel-courtier-assurance | le logiciel de courtage
 /fr/logiciel-courtier-multi-agences -> /fr/logiciel-devis-courtier-assurance | produire et suivre les devis
 /fr/logiciel-courtier-multi-agences -> /fr/logiciel-gestion-cabinet-courtage | la gestion de cabinet
 /fr/logiciel-courtier-multi-agences -> /fr/gestion-portefeuille-courtier | la gestion de portefeuille
-/fr/logiciel-courtier-multi-agences -> /fr/logiciel-courtier-assurance | le logiciel de courtage
 /fr/logiciel-courtier-mutuelle -> /fr/logiciel-courtier-iard | fr/logiciel-courtier-iard
 /fr/logiciel-courtier-mutuelle -> /fr/logiciel-courtier-sante | fr/logiciel-courtier-sante
 /fr/logiciel-courtier-mutuelle -> /fr/logiciel-courtier-prevoyance | fr/logiciel-courtier-prevoyance
