@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dicter un compte rendu d&#x27;appel et préremplir la fiche — COURTIA</title>
+<meta name="description" content="Déposer un enregistrement d&#x27;appel : il est transcrit, les informations utiles sont extraites, et vous validez le préremplissage de la fiche client.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/dicter-compte-rendu-appel-assurance">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/dicter-compte-rendu-appel-assurance">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dicter un compte rendu d&#x27;appel et préremplir la fiche — COURTIA">
+<meta property="og:description" content="Déposer un enregistrement d&#x27;appel : il est transcrit, les informations utiles sont extraites, et vous validez le préremplissage de la fiche client.">
+<meta property="og:url" content="https://courtiark.fr/fr/dicter-compte-rendu-appel-assurance">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dicter un compte rendu d&#x27;appel et préremplir la fiche — COURTIA">
+<meta name="twitter:description" content="Déposer un enregistrement d&#x27;appel : il est transcrit, les informations utiles sont extraites, et vous validez le préremplissage de la fiche client.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Déposer un enregistrement d'appel : il est transcrit, les informations utiles sont extraites, et vous validez le préremplissage de la fiche client.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Dicter après un appel au lieu de tout saisir", "item": "https://courtiark.fr/fr/dicter-compte-rendu-appel-assurance"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Faut-il installer une application ?", "acceptedAnswer": {"@type": "Answer", "text": "Le dépôt se fait dans l'outil, depuis un appareil qui peut enregistrer. Le fichier audio est ensuite traité côté produit."}}, {"@type": "Question", "name": "Le préremplissage est-il fiable ?", "acceptedAnswer": {"@type": "Answer", "text": "Il est <em>proposé</em> : le courtier relit et applique. C'est une aide à la saisie, pas une écriture automatique du dossier."}}, {"@type": "Question", "name": "Que devient l'enregistrement ?", "acceptedAnswer": {"@type": "Answer", "text": "Il est conservé avec sa transcription pour pouvoir être repris ou audité plus tard."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/dicter-compte-rendu-appel-assurance">Dicter après un appel au lieu de tout saisir</a></p>
+<h1>Dicter après un appel au lieu de tout saisir</h1>
+
+<p>La saisie après appel est le moment où l'information est encore fraîche et où le temps manque. Le
+portable est dans la main : il est plus rapide de dicter trente secondes que d'ouvrir un formulaire.</p>
+<h2>Ce que la prise vocale fait exactement</h2>
+<ul>
+<li><strong>Déposer un enregistrement</strong> dans l'outil, depuis le téléphone ou l'ordinateur.</li>
+<li><strong>Transcription automatique</strong> de l'audio en texte.</li>
+<li><strong>Extraction des informations utiles</strong> (ce dont on a parlé, les éléments à retenir)
+pour préparer la fiche.</li>
+<li><strong>Préremplissage</strong> : les champs proposés sont revus par le courtier, qui applique —
+ou corrige — ce qui doit entrer dans le dossier.</li>
+<li><strong>Conservation de l'entrée</strong> : la transcription et l'audio restent disponibles pour
+être repris plus tard.</li>
+</ul>
+<h2>Ce que la fonction ne fait pas</h2>
+<p>Elle n'enregistre pas vos appels à votre insu : vous fournissez l'audio. Elle ne décide pas de ce
+qui est vrai — le préremplissage est proposé, jamais appliqué sans validation. Et elle ne remplace pas
+un compte rendu rédigé quand le dossier l'exige.</p>
+<h2>Un usage réaliste</h2>
+<p>Trois usages tiennent dans une semaine de cabinet : le compte rendu d'appel, la reformulation après
+un rendez-vous, et la note de synthèse d'un dossier complexe. Dans les trois cas, l'intérêt est le
+même : ne plus perdre ce qui a été dit faute de temps pour l'écrire.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Faut-il installer une application ?</h3>
+<p>Le dépôt se fait dans l'outil, depuis un appareil qui peut enregistrer. Le fichier audio est ensuite traité côté produit.</p>
+<h3>Le préremplissage est-il fiable ?</h3>
+<p>Il est <em>proposé</em> : le courtier relit et applique. C'est une aide à la saisie, pas une écriture automatique du dossier.</p>
+<h3>Que devient l&#x27;enregistrement ?</h3>
+<p>Il est conservé avec sa transcription pour pouvoir être repris ou audité plus tard.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/logiciel-courtier-assurance">Le logiciel de courtage, fonction par fonction</a> — à lire aussi</li>
+<li><a href="/fr/ia-courtier-assurance">Ce que l'IA fait réellement dans COURTIA</a> — à lire aussi</li>
+<li><a href="/fr/ia-gestion-documentaire-assurance">Extraire des données d'un document</a> — à lire aussi</li>
+<li><a href="/fr/mesurer-temps-administratif-cabinet">Mesurer son temps administratif</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

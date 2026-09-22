@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi des sinistres en cabinet de courtage — COURTIA</title>
+<meta name="description" content="Déclarer, suivre et retrouver les sinistres de vos clients dans le même dossier que le contrat : historique, pièces, résumé assisté, relances.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/sinistres-courtier-assurance">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/sinistres-courtier-assurance">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Suivi des sinistres en cabinet de courtage — COURTIA">
+<meta property="og:description" content="Déclarer, suivre et retrouver les sinistres de vos clients dans le même dossier que le contrat : historique, pièces, résumé assisté, relances.">
+<meta property="og:url" content="https://courtiark.fr/fr/sinistres-courtier-assurance">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Suivi des sinistres en cabinet de courtage — COURTIA">
+<meta name="twitter:description" content="Déclarer, suivre et retrouver les sinistres de vos clients dans le même dossier que le contrat : historique, pièces, résumé assisté, relances.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Déclarer, suivre et retrouver les sinistres de vos clients dans le même dossier que le contrat : historique, pièces, résumé assisté, relances.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Suivre les sinistres sans sortir du dossier clie", "item": "https://courtiark.fr/fr/sinistres-courtier-assurance"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Le sinistre est-il rattaché au contrat ou au client ?", "acceptedAnswer": {"@type": "Answer", "text": "Aux deux : le sinistre appartient au client et référence le contrat concerné, ce qui permet de le retrouver par l'un ou par l'autre."}}, {"@type": "Question", "name": "Faut-il saisir le sinistre à la main ?", "acceptedAnswer": {"@type": "Answer", "text": "La création est manuelle — c'est le cabinet qui décide qu'un événement est un sinistre à suivre. Le résumé de situation est assisté, la qualification reste humaine."}}, {"@type": "Question", "name": "Est-ce prévu pour les particuliers seulement ?", "acceptedAnswer": {"@type": "Answer", "text": "Non : le dossier porte le client et ses contrats, quelle que soit la branche — un sinistre professionnel se suit exactement de la même manière."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/sinistres-courtier-assurance">Suivre les sinistres sans sortir du dossier clie</a></p>
+<h1>Suivre les sinistres sans sortir du dossier client</h1>
+
+<p>Un sinistre se traite vite et se retrouve des mois plus tard. Le problème n'est pas de déclarer :
+c'est de garder, au même endroit, ce qui s'est passé, quand, avec quelles pièces, et où en est le
+dossier — sans ouvrir un tableur parallèle ni fouiller sa boîte mail.</p>
+<h2>Ce que le module sinistres fait exactement</h2>
+<ul>
+<li><strong>Déclarer un sinistre sur le dossier du client</strong> : le sinistre est rattaché à la
+personne et au contrat concerné, pas à un dossier isolé.</li>
+<li><strong>Suivre l'état du dossier</strong> : ce qui est ouvert, mis à jour, clos — et ce qui attend
+une pièce ou une réponse.</li>
+<li><strong>Résumé assisté</strong> : la situation du sinistre peut être résumée à partir des éléments
+saisis, pour préparer un échange avec le client ou la compagnie.</li>
+<li><strong>Pièces rattachées</strong> : constat, factures, photos, expertises — la collecte passe par
+le même mécanisme de pièces que le reste du dossier.</li>
+<li><strong>Historique disponible au renouvellement</strong> : ce qui s'est passé sur les deux
+dernières années est visible au moment de reparler du contrat.</li>
+</ul>
+<h2>Ce que le module ne fait pas</h2>
+<p>Il ne déclare pas à votre place auprès de la compagnie, ne gère pas la relation avec l'expert, ne
+calcule pas d'indemnisation et ne remplace pas l'espace assureur. Il tient le dossier côté cabinet.</p>
+<h2>Pourquoi c'est utile au renouvellement</h2>
+<p>Un client dont le sinistre a été mal clos, ou dont la franchise n'était pas claire, revient toujours
+au même moment : quand on lui parle d'argent. Avoir le dossier sous les yeux au moment de l'échéance
+change la conversation — et évite la mauvaise surprise.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Le sinistre est-il rattaché au contrat ou au client ?</h3>
+<p>Aux deux : le sinistre appartient au client et référence le contrat concerné, ce qui permet de le retrouver par l'un ou par l'autre.</p>
+<h3>Faut-il saisir le sinistre à la main ?</h3>
+<p>La création est manuelle — c'est le cabinet qui décide qu'un événement est un sinistre à suivre. Le résumé de situation est assisté, la qualification reste humaine.</p>
+<h3>Est-ce prévu pour les particuliers seulement ?</h3>
+<p>Non : le dossier porte le client et ses contrats, quelle que soit la branche — un sinistre professionnel se suit exactement de la même manière.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/logiciel-courtier-assurance">Le logiciel de courtage, fonction par fonction</a> — à lire aussi</li>
+<li><a href="/fr/gestion-documentaire-courtier-assurance">Gérer les pièces et les documents</a> — à lire aussi</li>
+<li><a href="/fr/relance-client-assurance">Organiser les relances clients</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

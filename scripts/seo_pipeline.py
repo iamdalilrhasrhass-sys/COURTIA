@@ -24,6 +24,7 @@ ETAPES = [
     ("4bis. enrichissement des pages sous 530 mots", ["python3", "scripts/enrichir_pages_faibles.py"]),
     ("5. désambiguïsation (sections de périmètre JEV)", ["python3", "scripts/desambiguiser_pages.py"]),
     ("6. maillage interne validé par JEV", ["python3", "scripts/appliquer_maillage_jev.py"]),
+    ("6bis. maillage complémentaire (orphelines, liens sortants, fonctions écartées)", ["python3", "scripts/mailler_complementaire.py"]),
     ("7. hygiène des pages locales + sitemaps", ["python3", "scripts/seo_hygiene_pages_villes.py"]),
     ("8. graphe de maillage (artefact)", ["python3", "scripts/maillage_interne.py"]),
     ("9. suivi des pages", ["python3", "scripts/generer_suivi_seo.py"]),
@@ -50,6 +51,10 @@ def controler():
         "frontend/public/fr/logiciel-courtier-decennale/index.html": "ouverture de chantier",
         "frontend/public/fr/comparatif/automatisation-vs-gestion-manuelle/index.html": "ne doit pas faire",
         "frontend/public/ch/gestion-documentaire-courtier-assurance-suisse/index.html": "conservation, accès et durée",
+        "frontend/public/fr/sinistres-courtier-assurance/index.html": "module sinistres",
+        "frontend/public/fr/conformite-courtier-assurance/index.html": "checklist DDA",
+        "frontend/public/fr/logiciel-courtier-assurance/index.html": "logiciel-courtier-grossiste",
+        "frontend/public/fr/ia-gestion-documentaire-assurance/index.html": "carte grise",
     }
     manquants = []
     for chemin, motif in attendus.items():
