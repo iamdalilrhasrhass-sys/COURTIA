@@ -9,6 +9,11 @@ const legalAcceptanceService = require('../services/legalAcceptanceService');
 const emailService = require('../services/emailService');
 const logger = require('../lib/logger');
 const { insertStripePaymentEventIfNew } = require('../services/billingWebhookService');
+// ÉTAT D'ABONNEMENT : un seul point d'écriture, partagé avec la réconciliation
+// (services/billingSubscriptionState.js). Sans cela, un abonnement réparé par la
+// réconciliation ne donnerait pas les mêmes droits qu'un abonnement reçu par
+// webhook — deux chemins, deux vérités.
+const etatAbonnement = require('../services/billingSubscriptionState');
 // Marché du CABINET : seule autorité (lib/marcheCabinet.js). La grille tarifaire
 // et la mention fiscale d'un membre ne dépendent jamais de SA fiche personnelle.
 const marcheCabinet = require('../lib/marcheCabinet');
@@ -60,50 +65,16 @@ async function resolveBillingOwnerContext(organizationId) {
   return result.rows[0] || { owner_user_id: null, cabinet_id: null };
 }
 
-async function upsertBillingSubscriptionRecord({
-  organizationId,
-  planCode,
-  status,
-  stripeCustomerId,
-  stripeSubscriptionId,
-  currentPeriodEnd,
-  cancelAtPeriodEnd,
-}) {
-  try {
-    const context = await resolveBillingOwnerContext(organizationId);
-    await pool.query(
-      `INSERT INTO billing_subscriptions (
-        organization_id, cabinet_id, user_id, stripe_customer_id, stripe_subscription_id,
-        plan, status, current_period_end, cancel_at_period_end, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
-      ON CONFLICT (organization_id) DO UPDATE SET
-        cabinet_id = EXCLUDED.cabinet_id,
-        user_id = EXCLUDED.user_id,
-        stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, billing_subscriptions.stripe_customer_id),
-        stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, billing_subscriptions.stripe_subscription_id),
-        plan = EXCLUDED.plan,
-        status = EXCLUDED.status,
-        current_period_end = EXCLUDED.current_period_end,
-        cancel_at_period_end = EXCLUDED.cancel_at_period_end,
-        updated_at = NOW()`,
-      [
-        organizationId,
-        context.cabinet_id || null,
-        context.owner_user_id || null,
-        stripeCustomerId || null,
-        stripeSubscriptionId || null,
-        planCode,
-        status,
-        currentPeriodEnd || null,
-        !!cancelAtPeriodEnd,
-      ]
-    );
-  } catch (err) {
-    if (!isMissingOptionalTableError(err)) {
-      logger.warn({ error: err.message, organization_id: organizationId }, 'billing_subscriptions sync skipped');
-    }
-  }
-}
+// (l'écriture de la vue historique vit désormais dans
+// services/billingSubscriptionState.js, avec le reste de l'état d'abonnement)
+
+// NOTE (audit Stripe du 22/09/2026) : `upsertSubscriptionFromCheckout` et
+// `markUserSubscription` vivaient ici, avec leur propre copie des règles
+// d'écriture de l'état d'abonnement. Elles ont été SUPPRIMÉES au profit de
+// `services/billingSubscriptionState.js`, utilisé par le webhook ET par la
+// réconciliation : deux copies des mêmes règles finissent par diverger, et une
+// correction appliquée à une seule copie laisse l'autre produire un état faux
+// (droits accordés à tort, ou retirés à tort).
 
 async function upsertBillingInvoiceRecord({ organizationId, invoice, status }) {
   try {
@@ -210,84 +181,8 @@ async function getOrCreateStripeCustomerForUser({ userId, organizationId }) {
   return { customerId, user };
 }
 
-async function upsertSubscriptionFromCheckout({
-  organizationId,
-  planCode,
-  providerSubscriptionId,
-  status,
-  trialStartAt,
-  trialEndAt,
-  currentPeriodStart,
-  currentPeriodEnd,
-  cancelAtPeriodEnd,
-}) {
-  const planId = await billingService.getPlanId(planCode);
-
-  const existing = await pool.query(
-    'SELECT id FROM subscriptions WHERE provider_subscription_id=$1 LIMIT 1',
-    [providerSubscriptionId]
-  );
-
-  if (!existing.rows[0]) {
-    const inserted = await pool.query(
-      `INSERT INTO subscriptions (
-        organization_id, plan_id, provider, provider_subscription_id, status,
-        trial_start_at, trial_end_at, current_period_start, current_period_end, cancel_at_period_end,
-        created_at, updated_at
-      ) VALUES ($1,$2,'stripe',$3,$4,$5,$6,$7,$8,$9,NOW(),NOW())
-      RETURNING id`,
-      [
-        organizationId,
-        planId,
-        providerSubscriptionId,
-        status,
-        trialStartAt,
-        trialEndAt,
-        currentPeriodStart,
-        currentPeriodEnd,
-        !!cancelAtPeriodEnd,
-      ]
-    );
-    return inserted.rows[0].id;
-  }
-
-  await pool.query(
-    `UPDATE subscriptions
-       SET organization_id=$1, plan_id=$2, status=$3,
-           trial_start_at=$4, trial_end_at=$5,
-           current_period_start=$6, current_period_end=$7,
-           cancel_at_period_end=$8, updated_at=NOW()
-     WHERE id=$9`,
-    [
-      organizationId,
-      planId,
-      status,
-      trialStartAt,
-      trialEndAt,
-      currentPeriodStart,
-      currentPeriodEnd,
-      !!cancelAtPeriodEnd,
-      existing.rows[0].id,
-    ]
-  );
-  return existing.rows[0].id;
-}
-
-async function markUserSubscription({ userId, planCode, status, stripeCustomerId, stripeSubscriptionId, trialEndAt, currentPeriodEnd }) {
-  await pool.query(
-    `UPDATE users
-       SET plan=$1,
-           subscription_status=$2,
-           stripe_customer_id=COALESCE($3, stripe_customer_id),
-           stripe_subscription_id=COALESCE($4, stripe_subscription_id),
-           trial_ends_at=COALESCE($5, trial_ends_at),
-           current_period_end=COALESCE($6, current_period_end),
-           updated_at=NOW()
-     WHERE id=$7`,
-    [planCode, status, stripeCustomerId || null, stripeSubscriptionId || null, trialEndAt || null, currentPeriodEnd || null, userId]
-  );
-}
-
+// (supprime : ecriture de l'etat d'abonnement deplacee dans
+//  services/billingSubscriptionState.js — un seul point d'ecriture)
 async function findOrganizationByStripeCustomer(customerId) {
   const row = await pool.query(
     'SELECT organization_id FROM customer_billing_profiles WHERE stripe_customer_id=$1 LIMIT 1',
@@ -324,7 +219,12 @@ async function handleStripeEvent(event) {
     const metadata = session.metadata || {};
     const userId = Number(metadata.user_id || 0) || null;
     let organizationId = Number(metadata.organization_id || 0) || null;
-    const planCode = billingService.normalizePlanCode(metadata.plan_code || metadata.plan) || 'starter';
+    // AUCUN PLAN PAR DÉFAUT ICI (audit Stripe du 22/09/2026) : le repli
+    // `|| 'starter'` masquait les abonnements SANS nos métadonnées — le défaut
+    // « starter » court-circuitait la déduction par le price ID, donc un cabinet
+    // suisse créé depuis Stripe était écrit en « starter ». Un code de plan
+    // inconnu reste inconnu : la déduction par prix, puis le refus d'écrire.
+    const planCode = billingService.normalizePlanCode(metadata.plan_code || metadata.plan);
     const subscriptionId = session.subscription || null;
     const customerId = session.customer || null;
 
@@ -337,38 +237,53 @@ async function handleStripeEvent(event) {
     }
     if (!organizationId) return;
 
-    let trialStartAt = null;
-    let trialEndAt = null;
-    let currentPeriodStart = null;
-    let currentPeriodEnd = null;
-    let subStatus = 'active';
-    let cancelAtPeriodEnd = false;
-
+    // ── ÉCRITURE DE L'ÉTAT : UN SEUL CHEMIN, PARTAGÉ AVEC LA RÉCONCILIATION ──
+    // Avant le 22/09/2026, cette branche écrivait elle-même l'abonnement, la vue
+    // historique et les droits, avec sa propre copie des règles. La
+    // réconciliation n'existant pas, personne ne pouvait corriger un état perdu.
+    let abonnementStripe = null;
     if (subscriptionId) {
       try {
-        const sub = await stripeService.retrieveSubscription(subscriptionId);
-        trialStartAt = sub.trial_start ? new Date(sub.trial_start * 1000).toISOString() : null;
-        trialEndAt = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
-        currentPeriodStart = sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null;
-        currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
-        subStatus = sub.status || 'active';
-        cancelAtPeriodEnd = !!sub.cancel_at_period_end;
-      } catch (err) {
-        // fallback sans blocage
+        abonnementStripe = await stripeService.retrieveSubscription(subscriptionId);
+      } catch (_err) {
+        // Le webhook reste traité avec l'état minimal porté par la session :
+        // échouer ici ferait rejouer Stripe sans jamais rien écrire.
+        abonnementStripe = null;
       }
     }
 
-    const subRowId = await upsertSubscriptionFromCheckout({
-      organizationId,
-      planCode,
-      providerSubscriptionId: subscriptionId,
-      status: subStatus,
-      trialStartAt,
-      trialEndAt,
-      currentPeriodStart,
-      currentPeriodEnd,
-      cancelAtPeriodEnd,
-    });
+    // Plan souscrit : métadonnées d'abord (posées par NOTRE checkout), puis le
+    // price ID — les grilles FR et CH ont des price IDs distincts, la déduction
+    // n'est donc jamais ambiguë. Sans plan identifiable, on n'écrit rien.
+    const codeSouscrit = planCode
+      || (abonnementStripe ? etatAbonnement.normaliserAbonnement(abonnementStripe).plan_code_metadata : null)
+      || stripeService.getPlanCodePourPriceId(abonnementStripe?.items?.data?.[0]?.price?.id);
+
+    if (!subscriptionId) {
+      logger.warn({ session_id: session.id, organization_id: organizationId },
+        'checkout.session.completed sans abonnement Stripe — état non écrit (paiement unique ?)');
+    } else if (!codeSouscrit) {
+      logger.warn({ session_id: session.id, subscription_id: subscriptionId, organization_id: organizationId },
+        'checkout.session.completed sans plan identifiable — état non écrit (aucun plan deviné)');
+    } else {
+      await etatAbonnement.appliquerEtatAbonnement({
+        query: (sql, params) => pool.query(sql, params),
+        getPlanId: (c) => billingService.getPlanId(c),
+        organizationId,
+        planCode: codeSouscrit,
+        userId,
+        abonnement: abonnementStripe
+          ? { ...abonnementStripe, customer: customerId, metadata: { ...(abonnementStripe.metadata || {}), plan_code: codeSouscrit } }
+          : {
+            id: subscriptionId,
+            status: 'active',
+            customer: customerId,
+            metadata: { ...metadata, plan_code: codeSouscrit },
+          },
+        eventCreatedAt: new Date((event.created || Math.floor(Date.now() / 1000)) * 1000).toISOString(),
+        eventId: event.id,
+      });
+    }
 
     await updateCheckoutSessionStatus(session.id, 'completed', session);
 
@@ -391,28 +306,6 @@ async function handleStripeEvent(event) {
       );
     }
 
-    await upsertBillingSubscriptionRecord({
-      organizationId,
-      planCode,
-      status: subStatus,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId,
-      currentPeriodEnd,
-      cancelAtPeriodEnd,
-    });
-
-    if (userId) {
-      await markUserSubscription({
-        userId,
-        planCode,
-        status: subStatus,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId,
-        trialEndAt,
-        currentPeriodEnd,
-      });
-    }
-
     return;
   }
 
@@ -421,7 +314,12 @@ async function handleStripeEvent(event) {
     const metadata = sub.metadata || {};
     const userId = Number(metadata.user_id || 0) || null;
     let organizationId = Number(metadata.organization_id || 0) || null;
-    const planCode = billingService.normalizePlanCode(metadata.plan_code || metadata.plan) || 'starter';
+    // AUCUN PLAN PAR DÉFAUT ICI (audit Stripe du 22/09/2026) : le repli
+    // `|| 'starter'` masquait les abonnements SANS nos métadonnées — le défaut
+    // « starter » court-circuitait la déduction par le price ID, donc un cabinet
+    // suisse créé depuis Stripe était écrit en « starter ». Un code de plan
+    // inconnu reste inconnu : la déduction par prix, puis le refus d'écrire.
+    const planCode = billingService.normalizePlanCode(metadata.plan_code || metadata.plan);
     const providerSubscriptionId = sub.id;
     const customerId = sub.customer || null;
 
@@ -434,45 +332,36 @@ async function handleStripeEvent(event) {
     }
     if (!organizationId) return;
 
-    const trialStartAt = sub.trial_start ? new Date(sub.trial_start * 1000).toISOString() : null;
-    const trialEndAt = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
-    const currentPeriodStart = sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null;
-    const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
-    const subStatus = sub.status || (type === 'customer.subscription.deleted' ? 'canceled' : 'active');
+    // MÊME CHEMIN D'ÉCRITURE que le webhook de paiement et que la réconciliation.
+    // Plan : métadonnées d'abord, puis le price ID (déduction non ambiguë, les
+    // grilles FR et CH ayant des price IDs distincts) ; sinon on n'écrit RIEN.
+    const codeAbonnement = planCode
+      || sub.metadata?.plan_code
+      || sub.metadata?.plan
+      || stripeService.getPlanCodePourPriceId(sub.items?.data?.[0]?.price?.id);
 
-    const subRowId = await upsertSubscriptionFromCheckout({
-      organizationId,
-      planCode,
-      providerSubscriptionId,
-      status: subStatus,
-      trialStartAt,
-      trialEndAt,
-      currentPeriodStart,
-      currentPeriodEnd,
-      cancelAtPeriodEnd: !!sub.cancel_at_period_end,
-    });
-
-    await upsertBillingSubscriptionRecord({
-      organizationId,
-      planCode,
-      status: subStatus,
-      stripeCustomerId: customerId || null,
-      stripeSubscriptionId: providerSubscriptionId,
-      currentPeriodEnd,
-      cancelAtPeriodEnd: !!sub.cancel_at_period_end,
-    });
-
-    if (userId) {
-      await markUserSubscription({
-        userId,
-        planCode,
-        status: subStatus,
-        stripeCustomerId: customerId || null,
-        stripeSubscriptionId: providerSubscriptionId,
-        trialEndAt,
-        currentPeriodEnd,
-      });
+    if (!codeAbonnement) {
+      logger.warn(
+        { subscription_id: providerSubscriptionId, organization_id: organizationId, type },
+        'abonnement Stripe sans plan identifiable — état non écrit (aucun plan deviné)'
+      );
+      return;
     }
+
+    await etatAbonnement.appliquerEtatAbonnement({
+      query: (sql, params) => pool.query(sql, params),
+      getPlanId: (c) => billingService.getPlanId(c),
+      organizationId,
+      planCode: codeAbonnement,
+      userId,
+      abonnement: {
+        ...sub,
+        customer: customerId,
+        metadata: { ...(sub.metadata || {}), plan_code: codeAbonnement },
+      },
+      eventCreatedAt: new Date((event.created || Math.floor(Date.now() / 1000)) * 1000).toISOString(),
+      eventId: event.id,
+    });
 
     return;
   }
@@ -499,11 +388,6 @@ async function handleStripeEvent(event) {
         'stripe invoice: organisation introuvable — facture NON enregistree');
       return;
     }
-
-    const subRow = invoice.subscription
-      ? await pool.query('SELECT id FROM subscriptions WHERE provider_subscription_id=$1 LIMIT 1', [invoice.subscription])
-      : { rows: [] };
-    const subRowId = subRow.rows[0]?.id || null;
 
     await pool.query(
       `INSERT INTO invoices (
@@ -534,12 +418,21 @@ async function handleStripeEvent(event) {
       status: invoice.status || (type === 'invoice.paid' ? 'paid' : 'payment_failed'),
     });
 
-    if (subRowId) {
-      const nextStatus = type === 'invoice.paid' ? 'active' : 'past_due';
-      await pool.query(
-        'UPDATE subscriptions SET status=$1, updated_at=NOW() WHERE id=$2',
-        [nextStatus, subRowId]
-      );
+    // Statut porté par la FACTURE, avec la même protection contre les événements
+    // en retard que le reste du webhook : une facture rejouée par Stripe ne doit
+    // pas repasser en « past_due » un abonnement déjà régularisé.
+    if (invoice.subscription) {
+      const resultatFacture = await etatAbonnement.appliquerStatutFacture({
+        query: (sql, params) => pool.query(sql, params),
+        providerSubscriptionId: invoice.subscription,
+        statut: type === 'invoice.paid' ? 'active' : 'past_due',
+        eventCreatedAt: new Date((event.created || Math.floor(Date.now() / 1000)) * 1000).toISOString(),
+        eventId: event.id,
+      });
+      if (!resultatFacture.applied) {
+        logger.info({ invoice_id: invoice.id, raison: resultatFacture.reason },
+          'facture Stripe : état d\'abonnement inchangé');
+      }
     }
 
   }

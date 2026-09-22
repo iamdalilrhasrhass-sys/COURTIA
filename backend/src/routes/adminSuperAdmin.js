@@ -1215,4 +1215,58 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// RÉCONCILIATION STRIPE -> BASE (audit Stripe du 22/09/2026)
+//
+// POURQUOI : le webhook était le SEUL chemin d'écriture de l'état d'abonnement.
+// Un webhook perdu laissait un cabinet payant sans droits (ou résilié avec
+// droits) sans que rien ne le signale. Cette route compare l'état Stripe réel à
+// la base et corrige la base — jamais l'inverse.
+//
+// GARANTIES : Stripe est lu seul (aucune écriture chez Stripe), la base n'est
+// jamais purgée (un abonnement absent de Stripe est SIGNALÉ, pas supprimé), un
+// abonnement dont le plan n'est pas identifiable n'est jamais deviné, et le
+// rapport est conservé (billing_reconciliation_runs) pour être relu.
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/billing/reconciliation', async (_req, res) => {
+  try {
+    const stripeService = require('../services/stripeService');
+    if (!stripeService.isConfigured()) {
+      return res.status(503).json({
+        success: false,
+        error: 'stripe_configuration_required',
+        message: 'Réconciliation impossible : la clé secrète Stripe n\'est pas configurée sur ce serveur.',
+        stripe_configuration: stripeService.getConfigurationStatus(),
+      });
+    }
+    const reconciliation = require('../services/billingReconciliationService');
+    const rapport = await reconciliation.reconcilierTous({
+      stripe: stripeService.getStripeClient(),
+      query: (sql, params) => pool.query(sql, params),
+      getPlanId: (code) => billingService.getPlanId(code),
+      prixVersPlan: stripeService.getPrixVersPlan(),
+      journaliser: (resume, message) => logger.info(resume, message),
+    });
+    return res.json({ success: true, mode: stripeService.getBillingMode(), rapport });
+  } catch (err) {
+    logger.error({ err: err.message }, '[admin] réconciliation Stripe en échec');
+    return res.status(500).json({ success: false, error: 'reconciliation_echouee', message: messagePublic(err, { statut: 500 }) });
+  }
+});
+
+router.get('/billing/reconciliation/runs', async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, started_at, finished_at, mode, clients_examines, abonnements_examines, corrections, erreurs
+         FROM billing_reconciliation_runs
+        ORDER BY started_at DESC
+        LIMIT 20`
+    );
+    return res.json({ success: true, runs: rows });
+  } catch (err) {
+    if (err?.code === '42P01') return res.json({ success: true, runs: [], note: 'aucune réconciliation enregistrée (table absente)' });
+    return res.status(500).json({ success: false, error: 'runs_indisponibles', message: messagePublic(err, { statut: 500 }) });
+  }
+});
+
 module.exports = router;

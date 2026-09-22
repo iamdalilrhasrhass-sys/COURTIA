@@ -689,6 +689,41 @@ app.use('/api',                 require('./src/routes/killerFeatures2'))  // Vag
 const cron = require('node-cron')
 const { analyzePortfolio } = require('./src/services/portfolioAnalyzer')
 
+// ── RÉCONCILIATION STRIPE (audit Stripe du 22/09/2026) ───────────────────────
+// DÉSACTIVÉE PAR DÉFAUT : une fréquence d'exploitation n'est pas une décision
+// de code. Elle s'active en posant BILLING_RECONCILIATION_CRON (expression cron,
+// ex. « 30 4 * * * »). La route /api/admin/super/billing/reconciliation permet de
+// la déclencher à la main en attendant ; Stripe y reste la source de vérité.
+try {
+  const { reconciliationCron } = require('./src/services/billingConfig')
+  const expression = reconciliationCron()
+  if (expression && cron.validate(expression)) {
+    const stripeService = require('./src/services/stripeService')
+    const billingService = require('./src/services/billingService')
+    const reconciliation = require('./src/services/billingReconciliationService')
+    cron.schedule(expression, async () => {
+      if (!stripeService.isConfigured()) {
+        console.warn('[billingReconciliation] ignorée : Stripe non configuré')
+        return
+      }
+      try {
+        const rapport = await reconciliation.reconcilierTous({
+          stripe: stripeService.getStripeClient(),
+          query: (sql, params) => pool.query(sql, params),
+          getPlanId: (code) => billingService.getPlanId(code),
+          prixVersPlan: stripeService.getPrixVersPlan(),
+        })
+        console.log(`[billingReconciliation] ${rapport.cabinets_examines} cabinet(s), ${rapport.appliques} corrigé(s), ${rapport.erreurs.length} erreur(s)`)
+      } catch (err) {
+        console.error('[billingReconciliation] échec :', err.message)
+      }
+    })
+    console.log(`[billingReconciliation] planifiée (${expression})`)
+  }
+} catch (err) {
+  console.warn('[billingReconciliation] planification impossible :', err.message)
+}
+
 cron.schedule('0 3 * * *', async () => {
   console.log('[portfolioCron] Lancement analyse nocturne portefeuilles...')
   try {

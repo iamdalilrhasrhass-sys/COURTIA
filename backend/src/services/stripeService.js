@@ -71,6 +71,34 @@ const PLANS_FACTURABLES = {
   CH: ['independant', 'cabinet_ch'],
 };
 
+/** Tous les codes de plan facturables, les deux grilles confondues. */
+function getPlansFacturables() {
+  return [...new Set([...PLANS_FACTURABLES.FR, ...PLANS_FACTURABLES.CH])];
+}
+
+/**
+ * Table `price ID -> code de plan` du mode courant.
+ *
+ * POURQUOI : un abonnement créé ou modifié HORS de notre Checkout (tableau de
+ * bord Stripe, portail client) peut ne pas porter nos métadonnées. Le prix, lui,
+ * est toujours là — et les grilles FR et CH utilisent des price IDs distincts,
+ * donc la déduction n'est jamais ambiguë. Aucun prix n'est inventé : seuls les
+ * price IDs réellement configurés entrent dans la table.
+ */
+function getPrixVersPlan() {
+  const table = new Map();
+  for (const code of getPlansFacturables()) {
+    const priceId = getPriceId(code);
+    if (priceId) table.set(priceId, code);
+  }
+  return table;
+}
+
+function getPlanCodePourPriceId(priceId) {
+  if (!priceId) return null;
+  return getPrixVersPlan().get(String(priceId)) || null;
+}
+
 function getConfigurationStatus(marche = 'FR') {
   const missing = [];
   const mode = getBillingMode();
@@ -201,4 +229,7 @@ module.exports = {
   createPortalSession,
   constructWebhookEvent,
   retrieveSubscription,
+  getPlansFacturables,
+  getPrixVersPlan,
+  getPlanCodePourPriceId,
 };

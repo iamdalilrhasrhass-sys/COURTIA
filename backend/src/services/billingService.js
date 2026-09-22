@@ -1,5 +1,6 @@
 const pool = require('../db');
 const planService = require('./planService');
+const billingConfig = require('./billingConfig');
 
 const TRIAL_DAYS = Number(process.env.BILLING_TRIAL_DAYS || 7);
 const FISCAL_LABEL = process.env.BILLING_FISCAL_LABEL || 'Prix indiqués hors taxes. TVA applicable au taux en vigueur.';
@@ -230,6 +231,37 @@ async function ensureBillingFoundation() {
     );
   `);
 
+  // ── COLONNES D'ORDRE ET D'IMPAYÉ (audit Stripe du 22/09/2026) ─────────────
+  // `past_due_since` : sans date de début d'impayé, aucun délai de grâce n'est
+  // calculable (le statut était toléré indéfiniment, sans trace).
+  // `last_event_created_at` / `last_event_id` : les webhooks arrivent dans le
+  // désordre ; sans horodatage du dernier événement appliqué, un événement en
+  // retard pouvait écraser un état plus récent (résiliation rejouée après une
+  // réactivation, par exemple).
+  // Ajout idempotent ICI aussi (et non seulement par la migration) : le service
+  // doit démarrer sur une base dont les migrations n'ont pas encore été rejouées.
+  await pool.query(`
+    ALTER TABLE subscriptions
+      ADD COLUMN IF NOT EXISTS past_due_since TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS last_event_created_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS last_event_id TEXT;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS billing_reconciliation_runs (
+      id SERIAL PRIMARY KEY,
+      started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      finished_at TIMESTAMPTZ,
+      mode VARCHAR(32) NOT NULL DEFAULT 'manuel',
+      clients_examines INTEGER NOT NULL DEFAULT 0,
+      abonnements_examines INTEGER NOT NULL DEFAULT 0,
+      corrections INTEGER NOT NULL DEFAULT 0,
+      erreurs INTEGER NOT NULL DEFAULT 0,
+      report_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
   foundationReady = true;
 }
 
@@ -392,7 +424,7 @@ async function getBillingStatus(userId) {
   const org = await getOrCreateOrganization(userId);
   const row = await pool.query(
     `SELECT s.status, s.trial_start_at, s.trial_end_at, s.current_period_start,
-            s.current_period_end, s.cancel_at_period_end,
+            s.current_period_end, s.cancel_at_period_end, s.past_due_since,
             bp.code AS plan_code, bp.display_name AS plan_name,
             cbp.stripe_customer_id
       FROM subscriptions s
@@ -494,19 +526,38 @@ async function getBillingStatus(userId) {
   }
 
   const sub = row.rows[0];
+  // ── IMPAYÉ ET DÉLAI DE GRÂCE (audit Stripe du 22/09/2026) ──────────────────
+  // Le statut `past_due` était toléré sans borne et sans date de début : on ne
+  // pouvait ni le mesurer ni le borner. On expose désormais la date de début
+  // d'impayé et la fin du délai de grâce ; la garde d'écriture applique
+  // EXACTEMENT les mêmes règles (middleware/subscriptionGuard).
+  const impayeDepuis = sub.status === 'past_due' ? (sub.past_due_since || null) : null;
+  const delaiGraceJours = billingConfig.graceDays();
+  const finDelaiGrace = billingConfig.graceDeadline(impayeDepuis, { jours: delaiGraceJours });
+  const graceDepassee = billingConfig.graceExcedee(impayeDepuis, { jours: delaiGraceJours });
+  const statutAutorise = ['trialing', 'active', 'past_due'].includes(sub.status) && !graceDepassee;
+
   return {
     organization_id: org.id,
     plan_code: sub.plan_code || 'starter',
     plan_name: sub.plan_name || 'Starter',
     status: sub.status,
     // Une souscription Stripe existe : c'est elle qui fait foi (essai Stripe ou
-    // abonnement paye). `lecture_seule` est faux des que le statut est actif.
-    trial_state: sub.status === 'trialing'
-      ? 'TRIAL_ACTIVE'
-      : (['active', 'past_due'].includes(sub.status) ? 'SUBSCRIPTION_ACTIVE' : 'TRIAL_EXPIRED'),
+    // abonnement paye). `lecture_seule` est faux des que le statut est actif ET
+    // que le délai de grâce d'impayé (s'il est configuré) n'est pas dépassé.
+    trial_state: graceDepassee
+      ? 'PAST_DUE_EXPIRED'
+      : (sub.status === 'trialing'
+        ? 'TRIAL_ACTIVE'
+        : (['active', 'past_due'].includes(sub.status) ? 'SUBSCRIPTION_ACTIVE' : 'TRIAL_EXPIRED')),
     trial_active: sub.status === 'trialing',
-    trial_expired: !['trialing', 'active', 'past_due'].includes(sub.status),
-    lecture_seule: !['trialing', 'active', 'past_due'].includes(sub.status),
+    trial_expired: !statutAutorise,
+    lecture_seule: !statutAutorise,
+    impaye_depuis: impayeDepuis,
+    delai_grace_jours: delaiGraceJours,
+    fin_delai_grace: finDelaiGrace ? finDelaiGrace.toISOString() : null,
+    grace_configuree: delaiGraceJours !== null,
+    grace_depassee: graceDepassee,
     duree_essai_jours: TRIAL_DAYS,
     trial_start_at: sub.trial_start_at,
     trial_end_at: sub.trial_end_at,

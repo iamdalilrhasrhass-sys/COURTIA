@@ -19,9 +19,15 @@
 const pool = require('../db')
 const logger = require('../lib/logger')
 const { verifyToken } = require('./auth')
+const billingConfig = require('../services/billingConfig')
 
 // Statuts qui autorisent l'écriture. `past_due` est toléré : une carte refusée
 // ne doit pas couper l'accès du jour au lendemain sans passer par le portail.
+// DEPUIS L'AUDIT STRIPE DU 22/09/2026, cette tolérance est BORNÉE si — et
+// seulement si — une durée commerciale est configurée (`BILLING_GRACE_DAYS`).
+// Sans valeur configurée, le comportement reste celui d'avant (aucune coupure) :
+// on n'invente pas une durée à la place du commerce, mais la date de début
+// d'impayé est désormais stockée, donc la borne est applicable à tout moment.
 const STATUTS_AUTORISES = new Set(['active', 'trialing', 'past_due'])
 
 async function etatAcces(userId) {
@@ -57,6 +63,48 @@ async function etatAcces(userId) {
       trial_end_at: null,
     }
   }
+  // IMPAYÉ : toléré, mais borné si une durée de grâce est configurée. La date de
+  // début d'impayé vit dans `subscriptions.past_due_since` (écrite par le
+  // webhook ET par la réconciliation) ; elle est lue ici pour la MÊME règle que
+  // celle exposée par /api/billing/status.
+  if (u.subscription_status === 'past_due') {
+    const jours = billingConfig.graceDays()
+    let depuis = null
+    try {
+      const { rows: impayes } = await pool.query(
+        `SELECT s.past_due_since
+           FROM subscriptions s
+           JOIN organization_profiles op ON op.id = s.organization_id
+          WHERE op.owner_user_id = $1 AND s.status = 'past_due'
+          ORDER BY s.updated_at DESC, s.id DESC
+          LIMIT 1`,
+        [userId]
+      )
+      depuis = impayes[0]?.past_due_since || null
+    } catch (e) {
+      logger.warn({ err: e.message, user_id: userId }, '[subscriptionGuard] date d\'impayé indisponible — grâce non applicable')
+      depuis = null
+    }
+    const delaiDepasse = billingConfig.graceExcedee(depuis, { jours })
+    if (delaiDepasse) {
+      return {
+        ecriture_autorisee: false,
+        raison: 'impaye_grace_depassee',
+        trial_state: 'PAST_DUE_EXPIRED',
+        trial_end_at: null,
+        impaye_depuis: depuis ? new Date(depuis).toISOString() : null,
+        delai_grace_jours: jours,
+      }
+    }
+    return {
+      ecriture_autorisee: true,
+      raison: depuis ? 'impaye_tolere' : 'abonnement_actif',
+      trial_state: 'SUBSCRIPTION_ACTIVE',
+      trial_end_at: null,
+      impaye_depuis: depuis ? new Date(depuis).toISOString() : null,
+      delai_grace_jours: jours,
+    }
+  }
   if (STATUTS_AUTORISES.has(u.subscription_status)) {
     return { ecriture_autorisee: true, raison: 'abonnement_actif', trial_state: 'SUBSCRIPTION_ACTIVE', trial_end_at: null }
   }
@@ -88,10 +136,17 @@ function requireActiveSubscription(req, res, next) {
         trial_end_at: etat.trial_end_at,
         raison: etat.raison,
         lecture_seule: true,
+        // Champs d'impayé (audit Stripe du 22/09/2026) : l'écran peut dire DEPUIS
+        // QUAND le paiement est en échec au lieu d'annoncer une fin d'essai qui
+        // n'a pas eu lieu.
+        impaye_depuis: etat.impaye_depuis || null,
+        delai_grace_jours: etat.delai_grace_jours ?? null,
         message:
           etat.raison === 'activation_requise'
             ? "Votre accès n'est pas encore activé : ouvrez le lien d'invitation reçu pour choisir votre mot de passe, puis votre essai COURTIA de 7 jours démarrera à ce moment-là. Vos données restent consultables."
-            : "Votre essai COURTIA de 7 jours est terminé. Vos données sont conservées et restent consultables : choisissez un abonnement pour reprendre les modifications.",
+            : (etat.raison === 'impaye_grace_depassee'
+              ? "Le paiement de votre abonnement est en échec depuis plus longtemps que le délai toléré. Vos données sont conservées et restent consultables : régularisez le moyen de paiement depuis votre espace facturation pour reprendre les modifications."
+              : "Votre essai COURTIA de 7 jours est terminé. Vos données sont conservées et restent consultables : choisissez un abonnement pour reprendre les modifications."),
       })
     } catch (e) {
       // Défaut sûr : panne de base => on laisse passer (les autres gardes font pareil).
