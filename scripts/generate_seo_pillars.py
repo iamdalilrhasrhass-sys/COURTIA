@@ -767,6 +767,264 @@ reproductible à citer, et nous n'en inventons pas.</p>
 )
 
 
+# ── 7-10. FR — PAGES MONEY COMPLÉMENTAIRES prévues par la « SEO & GEO Bible » du coffre ─────────
+# (ces URL répondaient jusqu'ici la coquille vide du SPA : un crawler n'y voyait aucun contenu)
+
+PAGES["fr/relance-client-assurance"] = dict(
+    marche="FR",
+    titre="Relances clients pour courtiers : suivre, préparer, envoyer — COURTIA",
+    description=(
+        "Relances clients en cabinet de courtage : pièces manquantes, devis sans réponse, échéances "
+        "de contrat. Ce qui se suit dans COURTIA, ce qui se prépare, ce qui reste à valider."
+    ),
+    h1="Relances clients : arrêter de relancer de mémoire",
+    fil=[("Accueil", "/"), ("France", "/fr"), ("Relances clients", "/fr/relance-client-assurance")],
+    maillage=[
+        ("CRM courtier assurance", "/fr/crm-courtier-assurance", "le dossier sur lequel les relances s'appuient"),
+        ("Automatisation du cabinet", "/fr/automatisation-courtier-assurance", "ce qui se déclenche seul, et ce qui se valide"),
+        ("Gestion des renouvellements", "/fr/gestion-portefeuille-courtier", "échéances et campagnes de renouvellement"),
+        ("Relances en Suisse", "/ch/relances-courtier-assurance-suisse", "le même sujet dans un cabinet suisse"),
+    ],
+    corps="""
+<div class="section">
+<h2>Pourquoi les relances se perdent</h2>
+<p>Une relance ne se perd pas parce qu'on l'oublie franchement : elle se perd parce que personne ne
+sait, sans chercher, <strong>quel dossier attend quoi, et depuis quand</strong>. Trois situations
+reviennent dans tous les cabinets :</p>
+<ul>
+<li>une pièce justificative demandée au client, jamais arrivée ;</li>
+<li>un devis envoyé, resté sans réponse ;</li>
+<li>un contrat qui arrive à échéance, découvert trop tard.</li>
+</ul>
+<p>Dans les trois cas, l'information existe : elle est simplement rangée là où elle ne se signale pas.</p>
+</div>
+
+<h2>Ce que COURTIA fait sur les relances</h2>
+<ul>
+<li><strong>Relances rattachées au dossier</strong> — une relance n'est pas une note personnelle : elle
+vit sur le dossier concerné, avec ce qui est attendu et la date.</li>
+<li><strong>Brouillons préparés</strong> — le message est rédigé à partir du dossier (client, contrat,
+pièce manquante) et reste <strong>à valider par le cabinet</strong> avant envoi.</li>
+<li><strong>Suivi des devis</strong> — le registre des devis porte l'état de chaque proposition,
+y compris celles qui restent sans réponse.</li>
+<li><strong>Échéances de contrat</strong> — les échéances remontent dans les listes de travail et dans
+le briefing du matin plutôt que de dépendre d'un agenda séparé.</li>
+<li><strong>Collecte de pièces</strong> — un lien de dépôt permet au client de déposer la pièce
+directement dans le dossier, sans compte à créer.</li>
+<li><strong>Canaux</strong> — e-mail, messagerie et modèles de messages ; le contenu des modèles se
+prépare, l'envoi se décide.</li>
+</ul>
+
+<h2>Avant / avec</h2>
+<table>
+<tr><th>Situation</th><th>Sans suivi dédié</th><th>Avec COURTIA</th></tr>
+<tr><td>Pièce manquante depuis 3 semaines</td><td>Retrouver l'échange, relancer, espérer</td><td>Le dossier signale ce qui est attendu ; la relance est préparée</td></tr>
+<tr><td>Devis sans réponse</td><td>S'en souvenir au hasard d'un appel</td><td>Le devis garde son état et peut être relancé</td></tr>
+<tr><td>Renouvellement à préparer</td><td>S'y reprendre tard, en urgence</td><td>L'échéance remonte dans les actions du jour</td></tr>
+</table>
+
+<h2>Le choix assumé : rien ne part tout seul</h2>
+<p>COURTIA ne met pas de relance automatique « en aveugle » vers vos clients. Un message envoyé au
+mauvais moment, ou à un client qui vient précisément de répondre, coûte plus cher que le temps gagné.
+Le produit prépare, suit et trace ; l'envoi reste une décision du cabinet.</p>
+""",
+    faq=[
+        ("Les relances partent-elles automatiquement ?",
+         "Non. COURTIA prépare le message et suit la relance ; l'envoi est validé par le cabinet. C'est un choix : une relance envoyée à contretemps abîme la relation client."),
+        ("Peut-on relancer sur une pièce manquante en particulier ?",
+         "Oui. Le lien de dépôt de pièces permet au client de transmettre le document attendu, qui arrive directement dans le dossier."),
+        ("Comment savoir quels devis attendent une réponse ?",
+         "Le registre des devis conserve l'état de chaque proposition, y compris celles restées sans réponse."),
+    ],
+)
+
+PAGES["fr/gestion-portefeuille-courtier"] = dict(
+    marche="FR",
+    titre="Gestion de portefeuille courtier : contrats, échéances, renouvellements — COURTIA",
+    description=(
+        "Gérer un portefeuille de courtage : contrats, échéances, renouvellements, concentration par "
+        "branche, opportunités. Ce que COURTIA suit réellement dans le portefeuille."
+    ),
+    h1="Gestion d'un portefeuille de courtage : ce qu'il faut voir, et quand",
+    fil=[("Accueil", "/"), ("France", "/fr"), ("Gestion de portefeuille", "/fr/gestion-portefeuille-courtier")],
+    maillage=[
+        ("CRM courtier assurance", "/fr/crm-courtier-assurance", "le dossier client qui porte le portefeuille"),
+        ("Relances clients", "/fr/relance-client-assurance", "les relances qui découlent des échéances"),
+        ("Logiciel de gestion de cabinet", "/fr/logiciel-gestion-cabinet-courtage", "la vue cabinet : commissions, coûts, pilotage"),
+        ("Gestion de portefeuille en Suisse", "/ch/gestion-portefeuille-assurance-suisse", "échéances et renouvellements côté suisse"),
+    ],
+    corps="""
+<div class="section">
+<h2>Un portefeuille ne se gère pas au nombre de contrats</h2>
+<p>Deux cabinets peuvent avoir le même nombre de contrats et une santé de portefeuille très
+différente. Ce qui compte : ce qui arrive à échéance dans les prochaines semaines, ce qui n'a pas été
+renouvelé, et où l'activité est concentrée.</p>
+</div>
+
+<h2>Ce que COURTIA suit dans le portefeuille</h2>
+<ul>
+<li><strong>Contrats et échéances</strong> — chaque contrat porte ses dates et ses montants dans la
+devise du cabinet, France ou Suisse.</li>
+<li><strong>Renouvellements à venir</strong> — les échéances remontent dans les actions du jour et
+dans le briefing du matin, au lieu de dépendre d'un agenda tenu à part.</li>
+<li><strong>Concentration par branche</strong> — la répartition de l'activité est lisible, y compris
+pour un cabinet multi-branches (IARD, santé, prévoyance, emprunteur).</li>
+<li><strong>Documents et historique</strong> — les documents du dossier et l'historique des échanges
+sont rattachés au client, donc restituables.</li>
+<li><strong>Opportunités</strong> — les ouvertures détectées dans un portefeuille existant sont
+listées comme pistes de travail, pas comme promesse commerciale.</li>
+<li><strong>Indicateurs</strong> — les écrans de pilotage calculent sur les données réellement
+saisies ; un indicateur qui n'a rien à calculer s'affiche « — » plutôt qu'une valeur inventée.</li>
+</ul>
+
+<h2>Trois questions auxquelles un cabinet doit pouvoir répondre vite</h2>
+<ol>
+<li>Combien de contrats arrivent à échéance dans les 90 jours ?</li>
+<li>Quels dossiers n'ont eu aucun contact depuis six mois ?</li>
+<li>Sur quelles branches mon activité est-elle concentrée — et est-ce voulu ?</li>
+</ol>
+<p>Si ces trois réponses demandent une consolidation manuelle, le portefeuille n'est pas géré : il est
+subi.</p>
+
+<h2>Ce que la page ne promet pas</h2>
+<p>Aucun taux de rétention ni aucun gain de chiffre d'affaires n'est annoncé ici. Ces chiffres
+dépendent du portefeuille, du marché et du travail commercial du cabinet ; nous n'avons pas de mesure
+publiable à citer.</p>
+""",
+    faq=[
+        ("COURTIA gère-t-il plusieurs branches dans un même cabinet ?",
+         "Oui. Un portefeuille multi-branches est le cas normal : chaque contrat porte sa compagnie et son échéance, et les vues se filtrent par branche."),
+        ("Peut-on reprendre un portefeuille existant ?",
+         "Oui. L'import de portefeuille permet de démarrer avec les dossiers déjà détenus (offres principales et cabinet)."),
+        ("Les échéances sont-elles calculées automatiquement ?",
+         "Les échéances suivies proviennent des dates portées par les contrats du cabinet. Le produit ne devine pas une date qu'il n'a pas."),
+    ],
+)
+
+PAGES["fr/logiciel-gestion-cabinet-courtage"] = dict(
+    marche="FR",
+    titre="Logiciel de gestion de cabinet de courtage : équipe, commissions, pilotage — COURTIA",
+    description=(
+        "Gérer un cabinet de courtage : suivi des commissions, coûts, pilotage, objectifs, équipe et "
+        "rôles. Ce que COURTIA couvre réellement côté cabinet, en France comme en Suisse."
+    ),
+    h1="Gestion d'un cabinet de courtage : ce qui se pilote, et avec quoi",
+    fil=[("Accueil", "/"), ("France", "/fr"), ("Logiciel de gestion de cabinet", "/fr/logiciel-gestion-cabinet-courtage")],
+    maillage=[
+        ("Logiciel courtier assurance", "/fr/logiciel-courtier-assurance", "la vue d'ensemble du produit"),
+        ("Gestion de portefeuille", "/fr/gestion-portefeuille-courtier", "les contrats et leurs échéances"),
+        ("Commissions en Suisse", "/ch/gestion-commissions-courtier-assurance-suisse", "barèmes et rétrocessions côté suisse"),
+        ("Gagner du temps au cabinet", "/fr/gagner-du-temps-courtier-assurance", "les postes où le temps se perd"),
+    ],
+    corps="""
+<div class="section">
+<h2>Gérer un cabinet, ce n'est pas gérer des dossiers</h2>
+<p>Un courtier seul peut tenir son activité dans sa tête et quelques outils. Dès qu'il y a deux
+personnes, une question apparaît : qui fait quoi, qui a accès à quoi, et où en est l'activité. C'est
+un autre métier que le suivi client — et cela demande d'autres écrans.</p>
+</div>
+
+<h2>Ce que COURTIA couvre côté cabinet</h2>
+<ul>
+<li><strong>Commissions</strong> — barèmes par partenaire, import des relevés, états par période,
+calculateur. Le suivi des commissions ne dépend plus d'un tableur tenu à part.</li>
+<li><strong>Coûts et administration</strong> — les coûts du cabinet se suivent dans le même outil que
+l'activité, pour ne pas recomposer une marge à la main.</li>
+<li><strong>Pilotage</strong> — tableau de bord, reporting, objectifs et arbitrages calculés sur les
+données saisies.</li>
+<li><strong>Équipe et rôles</strong> — plusieurs utilisateurs par cabinet, avec des rôles distincts et
+des données <strong>cloisonnées par cabinet</strong> : un cabinet ne voit que ses données.</li>
+<li><strong>Conformité par marché</strong> — référentiels et listes de contrôle adaptés au marché du
+cabinet plutôt qu'une liste générique.</li>
+<li><strong>Suivi opérationnel</strong> — tâches, affectations et file d'actions du jour, pour que la
+répartition du travail soit visible.</li>
+</ul>
+
+<h2>Avant / avec, pour un cabinet de deux à dix personnes</h2>
+<table>
+<tr><th>Question du dirigeant</th><th>Sans outil de pilotage</th><th>Avec COURTIA</th></tr>
+<tr><td>Où en sont les commissions de ce trimestre ?</td><td>Consolidation manuelle des relevés</td><td>Relevés importés, états par période</td></tr>
+<tr><td>Qui suit ce dossier ?</td><td>À demander à l'oral</td><td>Affectation visible dans le tableau de travail</td></tr>
+<tr><td>Où va l'activité ?</td><td>Reconstituer des chiffres</td><td>Tableau de bord et reporting sur les données saisies</td></tr>
+</table>
+
+<h2>Ce que cette page ne prétend pas</h2>
+<p>COURTIA n'est ni un logiciel de paie, ni un outil de comptabilité générale — et il ne remplace pas
+un expert-comptable. Il couvre le suivi de l'activité de courtage : dossiers, commissions, coûts
+d'exploitation du cabinet, pilotage et équipe.</p>
+""",
+    faq=[
+        ("Peut-on donner des accès différents aux collaborateurs ?",
+         "Oui. Plusieurs utilisateurs peuvent être rattachés au cabinet avec des rôles distincts, et les données sont cloisonnées par cabinet."),
+        ("Les commissions sont-elles calculées automatiquement ?",
+         "Le produit applique les barèmes saisis par partenaire et importe les relevés. Un barème non renseigné ne donne pas lieu à un calcul inventé."),
+        ("COURTIA gère-t-il la comptabilité du cabinet ?",
+         "Non. Le suivi des commissions et des coûts d'exploitation sert le pilotage du cabinet ; la comptabilité reste tenue par le professionnel qui en a la charge."),
+    ],
+)
+
+PAGES["fr/comparateur-assurance-courtier"] = dict(
+    marche="FR",
+    titre="Comparateur pour courtier d'assurance : comparer des propositions, pas des marques",
+    description=(
+        "Comparer les propositions reçues pour un même besoin client : garanties, exclusions, "
+        "cotisations, écarts. COURTIA est un outil de cabinet, pas un comparateur grand public."
+    ),
+    h1="Comparer des propositions d'assurance : ce qu'un cabinet doit pouvoir mettre côte à côte",
+    fil=[("Accueil", "/"), ("France", "/fr"), ("Comparateur", "/fr/comparateur-assurance-courtier")],
+    maillage=[
+        ("Devis et suivi des propositions", "/fr/relance-client-assurance", "suivre les devis envoyés"),
+        ("CRM courtier assurance", "/fr/crm-courtier-assurance", "le dossier sur lequel les propositions sont comparées"),
+        ("Logiciel courtier assurance", "/fr/logiciel-courtier-assurance", "la vue d'ensemble du produit"),
+        ("Devis en Suisse", "/ch/logiciel-devis-courtier-assurance-suisse", "produire et suivre les propositions"),
+    ],
+    corps="""
+<div class="section">
+<h2>Une mise au point nécessaire</h2>
+<p>COURTIA <strong>n'est pas un comparateur grand public</strong> : il n'affiche pas de palmarès
+d'assureurs et ne vend pas de leads. C'est un outil de cabinet, pour comparer les propositions reçues
+pour un besoin client donné.</p>
+<p>La confusion est fréquente, parce que le mot « comparateur » recouvre deux métiers très différents :
+le site qui met en relation un particulier et des assureurs, et l'outil qui aide un courtier à
+présenter une comparaison défendable à son client.</p>
+</div>
+
+<h2>Ce que la comparaison doit faire apparaître</h2>
+<ul>
+<li><strong>Le besoin, tel qu'il est formulé</strong> — la comparaison ne vaut que rattachée au besoin
+exprimé et aux informations du dossier (situation, garanties attendues, budget).</li>
+<li><strong>Les garanties et leurs limites</strong> — plafonds, franchises, exclusions : ce qui
+distingue réellement deux propositions que le prix seul rendrait comparables à tort.</li>
+<li><strong>Les cotisations</strong> — dans la devise du marché du cabinet, et selon la périodicité
+réelle de la proposition reçue.</li>
+<li><strong>Les écarts</strong> — ce qui justifie une recommandation plutôt qu'une autre, et ce qui
+doit être dit au client.</li>
+<li><strong>La trace</strong> — ce qui a été présenté, à quelle date, et depuis quelles données. C'est
+ce qui rend l'entretien de conseil restituable plus tard.</li>
+</ul>
+
+<h2>Où cela se passe dans COURTIA</h2>
+<p>La comparaison s'appuie sur le dossier du client et sur les propositions qui y sont enregistrées :
+les devis produits, les documents reçus des partenaires, et les éléments du contrat. Le cabinet garde
+donc la comparaison au même endroit que le conseil, l'historique et la pièce justificative — au lieu
+d'un tableur séparé qu'il faut reconstituer à chaque rendez-vous.</p>
+
+<h2>Ce que cette page ne promet pas</h2>
+<p>COURTIA ne garantit pas un meilleur résultat de comparaison qu'un autre outil : le résultat dépend
+de la qualité des propositions reçues et du travail d'analyse du courtier. Et aucun classement
+d'assureurs n'est publié ici — nous n'aurions pas de données mesurées pour le faire honnêtement.</p>
+""",
+    faq=[
+        ("COURTIA est-il un comparateur d'assurance pour particuliers ?",
+         "Non. COURTIA est un outil destiné aux courtiers et cabinets de courtage. Il n'y a ni palmarès d'assureurs, ni mise en relation de particuliers."),
+        ("Peut-on comparer deux propositions pour un même client ?",
+         "Oui, et la comparaison reste rattachée au dossier : besoin exprimé, propositions reçues, pièces et historique."),
+        ("Le cabinet peut-il tracer ce qu'il a recommandé ?",
+         "Oui. Les éléments présentés au client restent rattachés au dossier, avec leur date, ce qui permet de les restituer plus tard."),
+    ],
+)
+
+
 def main():
     parseur = argparse.ArgumentParser()
     parseur.add_argument("--dry-run", action="store_true")

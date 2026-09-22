@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion de portefeuille courtier : contrats, échéances, renouvellements — COURTIA</title>
+<meta name="description" content="Gérer un portefeuille de courtage : contrats, échéances, renouvellements, concentration par branche, opportunités. Ce que COURTIA suit réellement dans le portefeuille.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/gestion-portefeuille-courtier">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/gestion-portefeuille-courtier">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gestion de portefeuille courtier : contrats, échéances, renouvellements — COURTIA">
+<meta property="og:description" content="Gérer un portefeuille de courtage : contrats, échéances, renouvellements, concentration par branche, opportunités. Ce que COURTIA suit réellement dans le portefeuille.">
+<meta property="og:url" content="https://courtiark.fr/fr/gestion-portefeuille-courtier">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gestion de portefeuille courtier : contrats, échéances, renouvellements — COURTIA">
+<meta name="twitter:description" content="Gérer un portefeuille de courtage : contrats, échéances, renouvellements, concentration par branche, opportunités. Ce que COURTIA suit réellement dans le portefeuille.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Gérer un portefeuille de courtage : contrats, échéances, renouvellements, concentration par branche, opportunités. Ce que COURTIA suit réellement dans le portefeuille.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Gestion de portefeuille", "item": "https://courtiark.fr/fr/gestion-portefeuille-courtier"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "COURTIA gère-t-il plusieurs branches dans un même cabinet ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui. Un portefeuille multi-branches est le cas normal : chaque contrat porte sa compagnie et son échéance, et les vues se filtrent par branche."}}, {"@type": "Question", "name": "Peut-on reprendre un portefeuille existant ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui. L'import de portefeuille permet de démarrer avec les dossiers déjà détenus (offres principales et cabinet)."}}, {"@type": "Question", "name": "Les échéances sont-elles calculées automatiquement ?", "acceptedAnswer": {"@type": "Answer", "text": "Les échéances suivies proviennent des dates portées par les contrats du cabinet. Le produit ne devine pas une date qu'il n'a pas."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/gestion-portefeuille-courtier">Gestion de portefeuille</a></p>
+<h1>Gestion d&#x27;un portefeuille de courtage : ce qu&#x27;il faut voir, et quand</h1>
+
+<div class="section">
+<h2>Un portefeuille ne se gère pas au nombre de contrats</h2>
+<p>Deux cabinets peuvent avoir le même nombre de contrats et une santé de portefeuille très
+différente. Ce qui compte : ce qui arrive à échéance dans les prochaines semaines, ce qui n'a pas été
+renouvelé, et où l'activité est concentrée.</p>
+</div>
+
+<h2>Ce que COURTIA suit dans le portefeuille</h2>
+<ul>
+<li><strong>Contrats et échéances</strong> — chaque contrat porte ses dates et ses montants dans la
+devise du cabinet, France ou Suisse.</li>
+<li><strong>Renouvellements à venir</strong> — les échéances remontent dans les actions du jour et
+dans le briefing du matin, au lieu de dépendre d'un agenda tenu à part.</li>
+<li><strong>Concentration par branche</strong> — la répartition de l'activité est lisible, y compris
+pour un cabinet multi-branches (IARD, santé, prévoyance, emprunteur).</li>
+<li><strong>Documents et historique</strong> — les documents du dossier et l'historique des échanges
+sont rattachés au client, donc restituables.</li>
+<li><strong>Opportunités</strong> — les ouvertures détectées dans un portefeuille existant sont
+listées comme pistes de travail, pas comme promesse commerciale.</li>
+<li><strong>Indicateurs</strong> — les écrans de pilotage calculent sur les données réellement
+saisies ; un indicateur qui n'a rien à calculer s'affiche « — » plutôt qu'une valeur inventée.</li>
+</ul>
+
+<h2>Trois questions auxquelles un cabinet doit pouvoir répondre vite</h2>
+<ol>
+<li>Combien de contrats arrivent à échéance dans les 90 jours ?</li>
+<li>Quels dossiers n'ont eu aucun contact depuis six mois ?</li>
+<li>Sur quelles branches mon activité est-elle concentrée — et est-ce voulu ?</li>
+</ol>
+<p>Si ces trois réponses demandent une consolidation manuelle, le portefeuille n'est pas géré : il est
+subi.</p>
+
+<h2>Ce que la page ne promet pas</h2>
+<p>Aucun taux de rétention ni aucun gain de chiffre d'affaires n'est annoncé ici. Ces chiffres
+dépendent du portefeuille, du marché et du travail commercial du cabinet ; nous n'avons pas de mesure
+publiable à citer.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>COURTIA gère-t-il plusieurs branches dans un même cabinet ?</h3>
+<p>Oui. Un portefeuille multi-branches est le cas normal : chaque contrat porte sa compagnie et son échéance, et les vues se filtrent par branche.</p>
+<h3>Peut-on reprendre un portefeuille existant ?</h3>
+<p>Oui. L'import de portefeuille permet de démarrer avec les dossiers déjà détenus (offres principales et cabinet).</p>
+<h3>Les échéances sont-elles calculées automatiquement ?</h3>
+<p>Les échéances suivies proviennent des dates portées par les contrats du cabinet. Le produit ne devine pas une date qu'il n'a pas.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/crm-courtier-assurance">CRM courtier assurance</a> — le dossier client qui porte le portefeuille</li>
+<li><a href="/fr/relance-client-assurance">Relances clients</a> — les relances qui découlent des échéances</li>
+<li><a href="/fr/logiciel-gestion-cabinet-courtage">Logiciel de gestion de cabinet</a> — la vue cabinet : commissions, coûts, pilotage</li>
+<li><a href="/ch/gestion-portefeuille-assurance-suisse">Gestion de portefeuille en Suisse</a> — échéances et renouvellements côté suisse</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>
