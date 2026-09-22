@@ -153,6 +153,46 @@ def ecrire_sitemap(fichier, urls, commentaire):
     return len(urls)
 
 
+def sitemap_ch():
+    """
+    Toutes les pages statiques de /ch réellement indexables.
+
+    Corrigé le 22/09/2026 : cette fonction ajoutait auparavant des entrées DÉCLARÉES dans une liste
+    (PILIERS_CH), ce qui laissait hors du sitemap suisse toutes les pages créées ensuite (intermédiaire
+    d'assurance, gestion de cabinet, documentaire, dépôt de pièces, import, pilotage, nLPD, sinistres,
+    partenaires). La source de vérité est désormais le fichier, exactement comme pour la France.
+    """
+    urls = []
+    d = os.path.join(PUBLIC, "ch")
+    for nom in sorted(os.listdir(d)):
+        chemin = os.path.join(d, nom)
+        if nom == "index.html":
+            urls.append((f"{SITE}/ch", "0.8", "weekly"))
+            continue
+        if not os.path.isdir(chemin):
+            continue
+        f = os.path.join(chemin, "index.html")
+        if os.path.isfile(f) and est_indexable(f):
+            urls.append((f"{SITE}/ch/{nom}", "0.8", "monthly"))
+        for sous in sorted(os.listdir(chemin)):
+            fs = os.path.join(chemin, sous, "index.html")
+            if os.path.isdir(os.path.join(chemin, sous)) and os.path.isfile(fs) and est_indexable(fs):
+                urls.append((f"{SITE}/ch/{nom}/{sous}", "0.7", "monthly"))
+    vus, uniques = set(), []
+    for u, p, fr in urls:
+        if u not in vus:
+            vus.add(u)
+            uniques.append((u, p, fr))
+    return uniques
+
+
+def ecrire_sitemap_ch():
+    urls = sitemap_ch()
+    return ecrire_sitemap(
+        "sitemap-ch.xml", urls,
+        "Sitemap Suisse — pages statiques réellement présentes et indexables (source : les fichiers)")
+
+
 def maj_sitemap_ch():
     f = os.path.join(PUBLIC, "sitemap-ch.xml")
     xml = open(f, encoding="utf-8").read()
@@ -269,7 +309,7 @@ def main():
         "     elles partageaient un bloc de contenu commun et n'avaient pas de valeur propre suffisante.",
     )
     print(f"sitemap-seo.xml : {n} URL indexables déclarées")
-    print(f"sitemap-ch.xml : {maj_sitemap_ch()} URL suisse(s) ajoutée(s)")
+    print(f"sitemap-ch.xml : {ecrire_sitemap_ch()} URL suisse(s) (régénéré depuis les fichiers)")
 
     mortes = []
     for sm in ("sitemap.xml", "sitemap-seo.xml", "sitemap-ch.xml"):
