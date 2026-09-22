@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Densité du courtage dans les grandes villes de France (données sourcées)</title>
+<meta name="description" content="Le nombre d&#x27;établissements de courtage et d&#x27;agents d&#x27;assurance dans les quarante premières villes françaises, avec la population et la densité pour 10 000 habitants.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/densite-courtage-grandes-villes-france">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/densite-courtage-grandes-villes-france">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Densité du courtage dans les grandes villes de France (données sourcées)">
+<meta property="og:description" content="Le nombre d&#x27;établissements de courtage et d&#x27;agents d&#x27;assurance dans les quarante premières villes françaises, avec la population et la densité pour 10 000 habitants.">
+<meta property="og:url" content="https://courtiark.fr/fr/densite-courtage-grandes-villes-france">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Densité du courtage dans les grandes villes de France (données sourcées)">
+<meta name="twitter:description" content="Le nombre d&#x27;établissements de courtage et d&#x27;agents d&#x27;assurance dans les quarante premières villes françaises, avec la population et la densité pour 10 000 habitants.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Le nombre d'établissements de courtage et d'agents d'assurance dans les quarante premières villes françaises, avec la population et la densité pour 10 000 habitants.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Où le courtage est concentré en France : les", "item": "https://courtiark.fr/fr/densite-courtage-grandes-villes-france"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Pourquoi seulement quarante villes ?", "acceptedAnswer": {"@type": "Answer", "text": "Parce que ce sont les quarante communes qui comptent le plus d'établissements dans notre relevé ; au-delà, l'information devient moins utile pour une lecture d'ensemble."}}, {"@type": "Question", "name": "Ces chiffres incluent-ils les agents généraux ?", "acceptedAnswer": {"@type": "Answer", "text": "Le code NAF 66.22Z regroupe les activités des agents et courtiers d'assurances. La base ne distingue pas, dans notre extraction, les statuts d'exercice."}}, {"@type": "Question", "name": "Puis-je citer ces chiffres dans un article ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, avec la source (SIRENE, code NAF 66.22Z, extraction du 19/09/2026) et un lien vers cette page ou vers la cartographie."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/densite-courtage-grandes-villes-france">Où le courtage est concentré en France : les</a></p>
+<h1>Où le courtage est concentré en France : les quarante premières villes</h1>
+
+<p>Cette page complète la <a href="/fr/cartographie-courtiers-assurance-france">cartographie par région et
+département</a> : elle descend au niveau de la commune, pour les quarante villes qui comptent le plus
+d'établissements de courtage et d'agents d'assurance en France. Tous les chiffres proviennent de la base
+SIRENE (code d'activité NAF 66.22Z) et des populations INSEE, extraction du 19 septembre 2026.</p>
+
+<h2>Les quarante premières villes</h2>
+<table>
+<tr><th>Commune</th><th>Département</th><th>Région</th><th>Établissements</th><th>Population</th>
+<th>Pour 10 000 hab.</th></tr>
+<tr><td>Paris</td><td>Paris</td><td>Île-de-France</td><td>4 347</td><td>2 103 778</td><td>20,7</td></tr>
+<tr><td>Lyon</td><td>Rhône</td><td>Auvergne-Rhône-Alpes</td><td>634</td><td>519 127</td><td>12,2</td></tr>
+<tr><td>Marseille</td><td>Bouches-du-Rhône</td><td>Provence-Alpes-Côte d'Azur</td><td>632</td><td>886 040</td><td>7,1</td></tr>
+<tr><td>Nice</td><td>Alpes-Maritimes</td><td>Provence-Alpes-Côte d'Azur</td><td>505</td><td>357 737</td><td>14,1</td></tr>
+<tr><td>Toulouse</td><td>Haute-Garonne</td><td>Occitanie</td><td>477</td><td>514 819</td><td>9,3</td></tr>
+<tr><td>Bordeaux</td><td>Gironde</td><td>Nouvelle-Aquitaine</td><td>398</td><td>267 991</td><td>14,9</td></tr>
+<tr><td>Nantes</td><td>Loire-Atlantique</td><td>Pays de la Loire</td><td>282</td><td>327 734</td><td>8,6</td></tr>
+<tr><td>Montpellier</td><td>Hérault</td><td>Occitanie</td><td>233</td><td>310 240</td><td>7,5</td></tr>
+<tr><td>Strasbourg</td><td>Bas-Rhin</td><td>Grand Est</td><td>209</td><td>293 771</td><td>7,1</td></tr>
+<tr><td>Lille</td><td>Nord</td><td>Hauts-de-France</td><td>190</td><td>238 246</td><td>8,0</td></tr>
+<tr><td>Dijon</td><td>Côte-d'Or</td><td>Bourgogne-Franche-Comté</td><td>173</td><td>161 830</td><td>10,7</td></tr>
+<tr><td>Nîmes</td><td>Gard</td><td>Occitanie</td><td>169</td><td>151 839</td><td>11,1</td></tr>
+<tr><td>Rennes</td><td>Ille-et-Vilaine</td><td>Bretagne</td><td>169</td><td>230 890</td><td>7,3</td></tr>
+<tr><td>Aix-en-Provence</td><td>Bouches-du-Rhône</td><td>Provence-Alpes-Côte d'Azur</td><td>166</td><td>149 695</td><td>11,1</td></tr>
+<tr><td>Perpignan</td><td>Pyrénées-Orientales</td><td>Occitanie</td><td>165</td><td>121 616</td><td>13,6</td></tr>
+<tr><td>Levallois-Perret</td><td>Hauts-de-Seine</td><td>Île-de-France</td><td>156</td><td>68 092</td><td>22,9</td></tr>
+<tr><td>Rouen</td><td>Seine-Maritime</td><td>Normandie</td><td>151</td><td>117 662</td><td>12,8</td></tr>
+<tr><td>Toulon</td><td>Var</td><td>Provence-Alpes-Côte d'Azur</td><td>137</td><td>179 116</td><td>7,6</td></tr>
+<tr><td>Cannes</td><td>Alpes-Maritimes</td><td>Provence-Alpes-Côte d'Azur</td><td>136</td><td>74 350</td><td>18,3</td></tr>
+<tr><td>Caen</td><td>Calvados</td><td>Normandie</td><td>131</td><td>109 400</td><td>12,0</td></tr>
+<tr><td>Annecy</td><td>Haute-Savoie</td><td>Auvergne-Rhône-Alpes</td><td>129</td><td>132 117</td><td>9,8</td></tr>
+<tr><td>Reims</td><td>Marne</td><td>Grand Est</td><td>127</td><td>177 674</td><td>7,1</td></tr>
+<tr><td>Nancy</td><td>Meurthe-et-Moselle</td><td>Grand Est</td><td>126</td><td>103 671</td><td>12,2</td></tr>
+<tr><td>Angers</td><td>Maine-et-Loire</td><td>Pays de la Loire</td><td>125</td><td>159 022</td><td>7,9</td></tr>
+<tr><td>Saint-Étienne</td><td>Loire</td><td>Auvergne-Rhône-Alpes</td><td>121</td><td>173 136</td><td>7,0</td></tr>
+<tr><td>Metz</td><td>Moselle</td><td>Grand Est</td><td>119</td><td>122 572</td><td>9,7</td></tr>
+<tr><td>Tours</td><td>Indre-et-Loire</td><td>Centre-Val de Loire</td><td>118</td><td>139 259</td><td>8,5</td></tr>
+<tr><td>Versailles</td><td>Yvelines</td><td>Île-de-France</td><td>118</td><td>84 095</td><td>14,0</td></tr>
+<tr><td>Besançon</td><td>Doubs</td><td>Bourgogne-Franche-Comté</td><td>113</td><td>118 489</td><td>9,5</td></tr>
+<tr><td>Amiens</td><td>Somme</td><td>Hauts-de-France</td><td>111</td><td>136 449</td><td>8,1</td></tr>
+<tr><td>Courbevoie</td><td>Hauts-de-Seine</td><td>Île-de-France</td><td>111</td><td>82 902</td><td>13,4</td></tr>
+<tr><td>Le Havre</td><td>Seine-Maritime</td><td>Normandie</td><td>111</td><td>166 687</td><td>6,7</td></tr>
+<tr><td>Antibes</td><td>Alpes-Maritimes</td><td>Provence-Alpes-Côte d'Azur</td><td>105</td><td>77 637</td><td>13,5</td></tr>
+<tr><td>Grenoble</td><td>Isère</td><td>Auvergne-Rhône-Alpes</td><td>105</td><td>156 140</td><td>6,7</td></tr>
+<tr><td>Clermont-Ferrand</td><td>Puy-de-Dôme</td><td>Auvergne-Rhône-Alpes</td><td>103</td><td>146 351</td><td>7,0</td></tr>
+<tr><td>La Rochelle</td><td>Charente-Maritime</td><td>Nouvelle-Aquitaine</td><td>102</td><td>79 851</td><td>12,8</td></tr>
+<tr><td>Limoges</td><td>Haute-Vienne</td><td>Nouvelle-Aquitaine</td><td>101</td><td>129 937</td><td>7,8</td></tr>
+<tr><td>Orléans</td><td>Loiret</td><td>Centre-Val de Loire</td><td>101</td><td>116 357</td><td>8,7</td></tr>
+<tr><td>Villeurbanne</td><td>Rhône</td><td>Auvergne-Rhône-Alpes</td><td>99</td><td>163 684</td><td>6,0</td></tr>
+<tr><td>Le Mans</td><td>Sarthe</td><td>Pays de la Loire</td><td>94</td><td>146 249</td><td>6,4</td></tr>
+</table>
+<p class="doux">Total mesuré sur les communes renseignées à la fois par SIRENE et par l'INSEE :
+<strong>17 121</strong> établissements. Les communes sans population INSEE dans notre relevé sont
+écartées plutôt qu'estimées : cette page ne contient donc aucune valeur reconstituée.</p>
+
+<h2>Ce que la densité dit, et ce qu'elle ne dit pas</h2>
+<p>La densité — nombre d'établissements pour 10 000 habitants — est un indicateur administratif. Elle ne
+mesure pas la concurrence réelle : deux cabinets de la même ville peuvent viser des clientèles totalement
+différentes, et un établissement n'est pas une entreprise (une structure avec trois implantations compte
+trois fois). Les villes les plus denses de notre relevé, rapportées à leur population :
+<strong>Paris (20,7 pour 10 000 hab.), Bordeaux (14,9 pour 10 000 hab.), Nice (14,1 pour 10 000 hab.), Perpignan (13,6 pour 10 000 hab.), Rouen (12,8 pour 10 000 hab.), Lyon (12,2 pour 10 000 hab.), Nancy (12,2 pour 10 000 hab.), Caen (12,0 pour 10 000 hab.)</strong>.</p>
+<p>Ce que la densité aide à faire : situer un marché local, préparer un argumentaire auprès d'un partenaire,
+ou vérifier une intuition avant de s'installer — avec la source et la date, ce qui permet à quiconque de
+refaire le calcul.</p>
+
+<h2>Méthode, source et réutilisation</h2>
+<ul>
+<li><strong>Source :</strong> base SIRENE diffusée par la DINUM, filtrée sur le code d'activité NAF 66.22Z
+(activités des agents et courtiers d'assurances) ; populations INSEE.</li>
+<li><strong>Extraction :</strong> 19 septembre 2026, sur le fichier national complet.</li>
+<li><strong>Réutilisation :</strong> libre avec mention de la source, de la date et un lien vers cette page.
+Le détail par commune est disponible sur demande motivée à contact@courtiark.fr.</li>
+<li><strong>Mise à jour :</strong> cette page sera réextraite à la prochaine publication de la base ; aucune
+valeur plus récente que notre extraction n'est affichée.</li>
+</ul>
+
+<h2>Questions fréquentes</h2>
+<h3>Pourquoi seulement quarante villes ?</h3>
+<p>Parce que ce sont les quarante communes qui comptent le plus d'établissements dans notre relevé ; au-delà, l'information devient moins utile pour une lecture d'ensemble.</p>
+<h3>Ces chiffres incluent-ils les agents généraux ?</h3>
+<p>Le code NAF 66.22Z regroupe les activités des agents et courtiers d'assurances. La base ne distingue pas, dans notre extraction, les statuts d'exercice.</p>
+<h3>Puis-je citer ces chiffres dans un article ?</h3>
+<p>Oui, avec la source (SIRENE, code NAF 66.22Z, extraction du 19/09/2026) et un lien vers cette page ou vers la cartographie.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/cartographie-courtiers-assurance-france">La cartographie par région et département</a> — à lire aussi</li>
+<li><a href="/fr/sources-courtia">Nos sources</a> — à lire aussi</li>
+<li><a href="/fr/methode-editoriale-courtia">Notre méthode éditoriale</a> — à lire aussi</li>
+<li><a href="/fr/logiciel-courtier-assurance-paris">Le courtage à Paris</a> — à lire aussi</li>
+<li><a href="/fr/logiciel-courtier-assurance-lyon">Le courtage à Lyon</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

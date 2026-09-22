@@ -23,6 +23,7 @@ ETAPES = [
     ("4. enrichissement des guides réglementaires", ["python3", "scripts/enrichir_guides.py"]),
     ("4bis. enrichissement des pages sous 530 mots", ["python3", "scripts/enrichir_pages_faibles.py"]),
     ("5. désambiguïsation (sections de périmètre JEV)", ["python3", "scripts/desambiguiser_pages.py"]),
+    ("5bis. individualisation des rappels répétés (sur-production JEV)", ["python3", "scripts/dedoublonner_suisse.py"]),
     ("6. maillage interne validé par JEV", ["python3", "scripts/appliquer_maillage_jev.py"]),
     ("6bis. maillage complémentaire (orphelines, liens sortants, fonctions écartées)", ["python3", "scripts/mailler_complementaire.py"]),
     ("7. hygiène des pages locales + sitemaps", ["python3", "scripts/seo_hygiene_pages_villes.py"]),

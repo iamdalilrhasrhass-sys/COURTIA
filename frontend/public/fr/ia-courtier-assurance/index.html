@@ -123,6 +123,48 @@ l'indique au lieu de la fabriquer.</li>
 ce qu'un devis de courtage doit contenir. ARK est branché sur le modèle de données du cabinet : c'est
 cette liaison qui rend la réponse utilisable, et c'est aussi elle qui impose les garde-fous ci-dessus.</p>
 
+
+<h2>Quatre usages réels, dans l'ordre où ils se présentent dans une journée</h2>
+<p>La question « que fait l'IA dans un logiciel de courtage ? » trouve une réponse concrète en suivant une
+journée de travail. Voici les quatre usages réellement implémentés, avec ce que chacun produit — et ce
+qu'il ne produit pas.</p>
+<ol>
+<li><strong>Après un appel : la dictée plutôt que la saisie.</strong> Un enregistrement est déposé,
+transcrit, et les éléments utiles sont extraits pour préparer la fiche. Le courtier relit, corrige et
+applique : rien n'est écrit dans le dossier sans validation.</li>
+<li><strong>À l'arrivée d'un document : l'extraction plutôt que la recopie.</strong> Les données d'un RIB ou
+d'une carte grise sont lues et proposées, ce qui supprime la ressaisie — mais un IBAN mal lu reste un IBAN
+faux si personne ne vérifie.</li>
+<li><strong>Avant un rendez-vous : le résumé plutôt que la recherche.</strong> La situation du dossier peut
+être résumée à partir des éléments saisis : échéances, échanges, propositions. Le résumé sert à préparer,
+il ne remplace pas la lecture du dossier quand l'enjeu est élevé.</li>
+<li><strong>En fin de journée : la liste d'actions plutôt que la mémoire.</strong> Les dossiers à traiter
+remontent dans un brief (échéances, propositions sans réponse, dossiers sans contact). L'appréciation de la
+priorité reste humaine — un client stratégique n'est pas un dossier à risque comme les autres.</li>
+</ol>
+
+<h2>Ce que nous ne ferons pas au nom de l'IA</h2>
+<ul>
+<li><strong>Décider à la place du courtier</strong> : aucune garantie n'est validée automatiquement, aucun
+refus n'est prononcé par un modèle.</li>
+<li><strong>Écrire dans un dossier sans contrôle</strong> : toute proposition passe par une validation
+humaine, c'est une règle de conception, pas un réglage.</li>
+<li><strong>Promettre des gains chiffrés</strong> : nous n'avons aucune mesure du temps des cabinets, donc
+aucun pourcentage d'économie n'est annoncé.</li>
+<li><strong>Envoyer des messages automatiquement</strong> : les relances sont préparées, le cabinet décide
+de l'envoi et du moment.</li>
+</ul>
+
+<h2>Les trois questions à poser à n'importe quel éditeur qui parle d'IA</h2>
+<ol>
+<li><strong>Quelle donnée sort de mon cabinet, et vers quel service ?</strong> Une réponse vague est un
+signal.</li>
+<li><strong>Que se passe-t-il si le résultat est faux ?</strong> Si la réponse est « il est validé avant
+application », c'est un bon signe ; si c'est « le modèle est fiable », c'est un mauvais signe.</li>
+<li><strong>Puis-je refuser l'IA et continuer à travailler ?</strong> Un outil utilisable sans IA est un
+outil dont l'IA est un ajout, pas une dépendance.</li>
+</ol>
+
 <h2>Questions fréquentes</h2>
 <h3>L&#x27;IA prend-elle des décisions à la place du courtier ?</h3>
 <p>Non. Elle prépare, résume et propose. Les actions (envoi, décision, engagement) restent déclenchées par un humain.</p>
