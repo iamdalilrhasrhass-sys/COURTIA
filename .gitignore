@@ -73,3 +73,7 @@ tmp-uploads/
 
 # Test files (LOT 5)
 backend/test-vault.js
+
+# artefacts Python
+__pycache__/
+*.pyc
