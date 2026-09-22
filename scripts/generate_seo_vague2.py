@@ -68,7 +68,7 @@ PAGES["fr/logiciel-courtier-assurance"] = dict(
     titre="Logiciel courtier assurance : dossier, relances, commissions — COURTIA",
     description=(
         "Logiciel de courtage pour courtiers et cabinets d'assurance : CRM, contrats, échéances, "
-        "devis, relances, commissions et conformité dans un seul outil. Essai 7 jours, France et Suisse."
+        "devis, relances et commissions dans un seul outil. France et Suisse."
     ),
     h1="Arrêtez de chercher vos dossiers : contrats, relances et commissions dans un seul outil de courtage",
     fil=[("Accueil", "/"), ("France", "/fr"), ("Logiciel courtier assurance", "/fr/logiciel-courtier-assurance")],

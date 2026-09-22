@@ -167,7 +167,7 @@ décrivent une photographie administrative, pas la réalité commerciale d'un ma
 
 def main():
     modules = [f[:-3] for f in sorted(os.listdir(os.path.join(BASE, "seo_pages")))
-               if f.startswith("v3_") and f.endswith(".py")]
+               if (f.startswith("v3_") or f.startswith("v5_")) and f.endswith(".py")]
     total = 0
     for m in modules:
         mod = importlib.import_module(m)
@@ -190,8 +190,8 @@ def main():
             f.write(rendu)
         ecrits.append(chemin)
 
-    print(f"\n{len(ecrits)} page(s) rendues au total (vague 1 + 2 + 3)")
-    print(f"  dont {total} issues des modules de la vague 3")
+    print(f"\n{len(ecrits)} page(s) rendues au total (vagues 1 a 5)")
+    print(f"  dont {total} issues des modules de vagues 3 et 5")
     return 0
 
 

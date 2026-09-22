@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur du temps administratif en Suisse (CHF) — COURTIA</title>
+<meta name="description" content="Le même calcul qu&#x27;en France, en francs suisses : volumes, minutes par opération, coût horaire, temps hebdomadaire et mensuel. Hypothèses visibles et modifiables.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/ch/outils/calculateur-temps-administratif-suisse">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/ch/outils/calculateur-temps-administratif-suisse">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calculateur du temps administratif en Suisse (CHF) — COURTIA">
+<meta property="og:description" content="Le même calcul qu&#x27;en France, en francs suisses : volumes, minutes par opération, coût horaire, temps hebdomadaire et mensuel. Hypothèses visibles et modifiables.">
+<meta property="og:url" content="https://courtiark.fr/ch/outils/calculateur-temps-administratif-suisse">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_CH">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calculateur du temps administratif en Suisse (CHF) — COURTIA">
+<meta name="twitter:description" content="Le même calcul qu&#x27;en France, en francs suisses : volumes, minutes par opération, coût horaire, temps hebdomadaire et mensuel. Hypothèses visibles et modifiables.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Le même calcul qu'en France, en francs suisses : volumes, minutes par opération, coût horaire, temps hebdomadaire et mensuel. Hypothèses visibles et modifiables.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "Suisse", "item": "https://courtiark.fr/ch"}, {"@type": "ListItem", "position": 3, "name": "Calculer le temps administratif d'un cabinet", "item": "https://courtiark.fr/ch/outils/calculateur-temps-administratif-suisse"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Les valeurs par défaut sont-elles des moyennes suisses ?", "acceptedAnswer": {"@type": "Answer", "text": "Non : ce sont des hypothèses de départ, à remplacer par vos propres valeurs."}}, {"@type": "Question", "name": "Pourquoi un coût horaire en francs ?", "acceptedAnswer": {"@type": "Answer", "text": "Parce que les salaires et les charges d'un cabinet suisse se raisonnent en francs : le calcul reste le même, la devise change."}}, {"@type": "Question", "name": "Mes données sortent-elles du navigateur ?", "acceptedAnswer": {"@type": "Answer", "text": "Non : le calcul est local, rien n'est transmis et aucun compte n'est nécessaire."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/fr">France</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/ch">Suisse</a> › <a href="/ch/outils/calculateur-temps-administratif-suisse">Calculer le temps administratif d&#x27;un cabinet</a></p>
+<h1>Calculer le temps administratif d&#x27;un cabinet suisse</h1>
+
+<p>Ce calculateur fait exactement la même chose que la version française, en francs : il transforme vos
+volumes et vos minutes en heures par semaine, par mois, et en coût — avec un coût horaire que
+<strong>vous</strong> fixez. Aucune moyenne de marché suisse n'est appliquée : nous n'en avons pas, et
+nous ne l'inventerons pas.</p>
+<div class="section" id="outil-temps-ch">
+<style>
+#outil-temps-ch label{display:block;margin:10px 0 2px;font-weight:600}
+#outil-temps-ch input{width:120px;padding:4px}
+#outil-temps-ch .aide{font-size:.9em;color:#555}
+#outil-temps-ch .res{margin-top:18px;padding:12px;border-left:3px solid #1f6feb;background:#f6f8fa}
+#outil-temps-ch table{border-collapse:collapse;width:100%;margin-top:10px}
+#outil-temps-ch th,#outil-temps-ch td{border:1px solid #ddd;padding:6px;text-align:left;font-size:.95em}
+</style>
+<label for="tch-clients">Clients actifs</label>
+<input id="tch-clients" type="number" min="0" value="250">
+<label for="tch-relances">Relances par mois</label>
+<input id="tch-relances" type="number" min="0" value="30">
+<label for="tch-appels">Appels entrants par semaine</label>
+<input id="tch-appels" type="number" min="0" value="20">
+<label for="tch-documents">Documents reçus par mois</label>
+<input id="tch-documents" type="number" min="0" value="50">
+<label for="tch-renouv">Renouvellements par an</label>
+<input id="tch-renouv" type="number" min="0" value="200">
+<label for="tch-decomptes">Décomptes de commissions à rapprocher par trimestre</label>
+<input id="tch-decomptes" type="number" min="0" value="6">
+<label for="tch-equipe">Personnes concernées</label>
+<input id="tch-equipe" type="number" min="1" value="2">
+<label for="tch-cout">Coût horaire chargé (CHF)</label>
+<input id="tch-cout" type="number" min="0" value="70">
+<label for="tch-relance-min">Minutes par relance</label>
+<input id="tch-relance-min" type="number" min="0" step="0.5" value="6">
+<label for="tch-appel-min">Minutes par appel (recherche comprise)</label>
+<input id="tch-appel-min" type="number" min="0" step="0.5" value="7">
+<label for="tch-doc-min">Minutes par document</label>
+<input id="tch-doc-min" type="number" min="0" step="0.5" value="5">
+<label for="tch-renouv-min">Minutes par renouvellement</label>
+<input id="tch-renouv-min" type="number" min="0" step="0.5" value="25">
+<label for="tch-decompte-min">Minutes par décompte rapproché</label>
+<input id="tch-decompte-min" type="number" min="0" step="0.5" value="45">
+<button id="tch-calc" type="button">Calculer</button>
+<div class="res" id="tch-resultat" aria-live="polite">
+  <p>Entrez vos nombres puis lancez le calcul. Les formules sont écrites sous le tableau.</p>
+</div>
+</div>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var n=function(id){var v=parseFloat($(id).value);return isNaN(v)||v<0?0:v};
+  var fr=function(v){return v.toLocaleString('fr-CH',{maximumFractionDigits:1})};
+  function calculer(){
+    var cout=n('tch-cout'), equipe=Math.max(1,n('tch-equipe'));
+    var lignes=[
+      {t:'Relances', hebdo:n('tch-relances')/4.33, min:n('tch-relance-min')},
+      {t:'Appels entrants', hebdo:n('tch-appels'), min:n('tch-appel-min')},
+      {t:'Documents', hebdo:n('tch-documents')/4.33, min:n('tch-doc-min')},
+      {t:'Renouvellements', hebdo:n('tch-renouv')/52, min:n('tch-renouv-min')},
+      {t:'Décomptes de commissions', hebdo:n('tch-decomptes')/13, min:n('tch-decompte-min')}
+    ];
+    var total=0, html='<table><tr><th>Tâche</th><th>Volume / semaine</th><th>Minutes / unité</th><th>Heures / semaine</th></tr>';
+    lignes.forEach(function(l){var h=(l.hebdo*l.min)/60; total+=h;
+      html+='<tr><td>'+l.t+'</td><td>'+fr(l.hebdo)+'</td><td>'+fr(l.min)+'</td><td>'+fr(h)+'</td></tr>';});
+    html+='</table>';
+    html+='<p><strong>Total :</strong> '+fr(total)+' heures par semaine, soit '+fr(total*4.33)+' heures par mois.</p>';
+    html+='<p><strong>Coût estimé :</strong> '+fr(total*4.33*cout)+' CHF par mois, au coût horaire de '+fr(cout)+' CHF que vous avez fixé.</p>';
+    html+='<p><strong>Par personne :</strong> '+fr(total/equipe)+' heures par semaine pour '+fr(equipe)+' personne(s).</p>';
+    html+='<p class="aide">Ces montants ne mesurent que vos saisies. Aucune moyenne suisse n\'est appliquée, aucune économie n\'est promise.</p>';
+    $('tch-resultat').innerHTML=html;
+  }
+  $('tch-calc').addEventListener('click',calculer);
+})();
+</script>
+
+<h2>Les formules</h2>
+<ul>
+<li>Heures par semaine = volume hebdomadaire × minutes par unité ÷ 60.</li>
+<li>Total mensuel = total hebdomadaire × 4,33 · Coût mensuel = total mensuel × coût horaire saisi.</li>
+<li>Volumes mensuels ramenés à la semaine (÷ 4,33) et annuels ramenés à la semaine (÷ 52).</li>
+</ul>
+
+<h2>Ce que cette page ne fait pas</h2>
+<p>Elle ne dit rien du temps récupérable ni du prix d'un logiciel : c'est le rôle du
+<a href="/ch/tarifs-logiciel-courtier-chf">calcul de seuil</a>, avec la grille suisse. Les nombres
+pré-remplis sont des hypothèses de départ à corriger — les vôtres décrivent votre cabinet, les nôtres ne
+décrivent rien.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Les valeurs par défaut sont-elles des moyennes suisses ?</h3>
+<p>Non : ce sont des hypothèses de départ, à remplacer par vos propres valeurs.</p>
+<h3>Pourquoi un coût horaire en francs ?</h3>
+<p>Parce que les salaires et les charges d'un cabinet suisse se raisonnent en francs : le calcul reste le même, la devise change.</p>
+<h3>Mes données sortent-elles du navigateur ?</h3>
+<p>Non : le calcul est local, rien n'est transmis et aucun compte n'est nécessaire.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/ch/workflows-courtier-assurance-suisse">Les processus suisses</a> — à lire aussi</li>
+<li><a href="/ch/gestion-cabinet-courtage-suisse">La gestion du cabinet suisse</a> — à lire aussi</li>
+<li><a href="/ch/tarifs-logiciel-courtier-chf">Les tarifs en CHF</a> — à lire aussi</li>
+<li><a href="/fr/outils/calculateur-temps-administratif">Le calculateur France (version EUR)</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

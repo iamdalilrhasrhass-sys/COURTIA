@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Processus : collecte de pièces — bibliothèque courtier</title>
+<meta name="description" content="Le processus de collecte documentaire en cabinet de courtage : demande unique, état suivi, relances, clôture. Utile même sans logiciel.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/workflows/collecte-de-pieces">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/workflows/collecte-de-pieces">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Processus : collecte de pièces — bibliothèque courtier">
+<meta property="og:description" content="Le processus de collecte documentaire en cabinet de courtage : demande unique, état suivi, relances, clôture. Utile même sans logiciel.">
+<meta property="og:url" content="https://courtiark.fr/fr/workflows/collecte-de-pieces">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Processus : collecte de pièces — bibliothèque courtier">
+<meta name="twitter:description" content="Le processus de collecte documentaire en cabinet de courtage : demande unique, état suivi, relances, clôture. Utile même sans logiciel.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Le processus de collecte documentaire en cabinet de courtage : demande unique, état suivi, relances, clôture. Utile même sans logiciel.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Processus", "item": "https://courtiark.fr/fr/workflows-courtier-assurance"}, {"@type": "ListItem", "position": 4, "name": "Processus : collecte de pièces, de la de", "item": "https://courtiark.fr/fr/workflows/collecte-de-pieces"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Le client peut-il déposer des pièces sans compte ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui, par un lien : le client n'a ni compte à créer ni application à installer."}}, {"@type": "Question", "name": "Faut-il relancer automatiquement ?", "acceptedAnswer": {"@type": "Answer", "text": "La relance peut être préparée automatiquement ; son envoi doit rester une décision du cabinet pour le ton et le moment."}}, {"@type": "Question", "name": "Que faire des pièces reçues hors dossier ?", "acceptedAnswer": {"@type": "Answer", "text": "Les rattacher au dossier dès la réception : une pièce sans dossier est une pièce perdue."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/workflows-courtier-assurance">Processus</a> › <a href="/fr/workflows/collecte-de-pieces">Processus : collecte de pièces, de la de</a></p>
+<h1>Processus : collecte de pièces, de la demande à la clôture</h1>
+
+<h2>Objectif du processus</h2>
+<p>Savoir à tout moment, dossier par dossier, ce qui a été demandé, ce qui est reçu, ce qui manque et qui doit relancer — sans recherche dans les boîtes mail.</p>
+<h2>Déclencheur</h2>
+<p>Une ouverture de dossier, une échéance proche, une souscription, un sinistre, une mise à jour de situation.</p>
+<h2>Étapes</h2>
+<ol><li><strong>Établir la liste exacte</strong> des pièces nécessaires, en fonction de la situation et non d'une liste générique.</li><li><strong>Envoyer une demande unique</strong> qui contient tout : pièce par pièce, avec la date de retour souhaitée.</li><li><strong>Marquer chaque pièce comme demandée</strong>, puis reçue ou manquante, dès la réception.</li><li><strong>Relancer sur l'état</strong>, pas sur la mémoire : uniquement les pièces encore manquantes, avec un rythme décidé à l'avance.</li><li><strong>Clore la demande</strong> explicitement quand tout est là — sinon elle reste ouverte et finit par être ignorée.</li></ol>
+<h2>Qui fait quoi</h2>
+<p>Une personne est responsable de la demande et de son état, même si plusieurs relancent. Le transfert d'un dossier s'accompagne du transfert de l'état des pièces.</p>
+<h2>Informations nécessaires</h2>
+<p>Liste des pièces attendues, date de demande, date de réception, état par pièce, responsable, historique des relances.</p>
+<h2>Les points de rupture (là où le processus échoue en vrai)</h2>
+<ul><li>La demande est envoyée au fil de l'eau, par plusieurs canaux, sans vue consolidée.</li><li>Le cabinet ne sait pas qu'une pièce a été reçue parce qu'elle est arrivée sur une autre boîte mail.</li><li>La relance est faite « au feeling », ce qui produit soit aucune relance, soit trois en deux jours.</li><li>Une pièce reçue n'est rattachée à aucun dossier : elle est perdue alors qu'elle est arrivée.</li></ul>
+<h2>Ce que COURTIA fait dans ce processus</h2>
+<p>La demande de pièces part par un lien transmis au client ; ce qui est déposé arrive dans le dossier, l'état se met à jour, et les pièces restées manquantes peuvent déclencher une relance préparée que le cabinet valide.</p>
+<h2>Ce qui reste humain</h2>
+<p>La liste des pièces réellement nécessaires, la lecture de la situation du client, et le ton des relances — tout ne se demande pas de la même façon selon le contexte.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Le client peut-il déposer des pièces sans compte ?</h3>
+<p>Oui, par un lien : le client n'a ni compte à créer ni application à installer.</p>
+<h3>Faut-il relancer automatiquement ?</h3>
+<p>La relance peut être préparée automatiquement ; son envoi doit rester une décision du cabinet pour le ton et le moment.</p>
+<h3>Que faire des pièces reçues hors dossier ?</h3>
+<p>Les rattacher au dossier dès la réception : une pièce sans dossier est une pièce perdue.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/workflows-courtier-assurance">La bibliothèque de processus</a> — à lire aussi</li>
+<li><a href="/fr/gain-de-temps/documents-et-pieces">Gagner du temps : documents et pièces</a> — à lire aussi</li>
+<li><a href="/fr/gestion-documentaire-courtier-assurance">La gestion documentaire</a> — à lire aussi</li>
+<li><a href="/fr/checklists/collecte-documentaire">Checklist de collecte documentaire</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

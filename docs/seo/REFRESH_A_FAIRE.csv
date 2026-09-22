@@ -1,0 +1,5 @@
+type,element,constat,action,priorite
+prix,fr/tarifs-logiciel-courtier,"grille FR lue dans le produit : ['159', '89'] | publiés : ['159', '89']",aucune,3-info
+prix,ch/tarifs-logiciel-courtier-chf,"montants publiés hors abonnement (CH) : ['000', '111', '178', '188', '388', '475', '49', '500', '597', '878']",relire ces montants et vérifier leur source,3-info
+prix,ch/tarifs-logiciel-courtier-chf,"grille CH lue dans le produit : ['199', '349'] | publiés : ['000', '111', '1500', '178', '188', '199', '349', '388', '475', '49', '490', '500', '597', '878', '990']",corriger,3-info
+prix,contrôle croisé,"montants produit ['159', '199', '349', '89'] tous couverts par les grilles ['159', '199', '349', '89']",aucune,3-info

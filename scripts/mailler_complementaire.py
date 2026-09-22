@@ -31,6 +31,18 @@ ANCRES = ['<div class="cta">', '<p><a class="cta"', "</main>", "<footer"]
 
 # Pages hôtes → liens à ajouter (chemin cible, libellé, phrase de contexte)
 HOSTS = {
+    "fr": [
+        ("fr/outils/", "Les trois outils gratuits",
+         "mesurer le temps administratif, calculer un seuil de rentabilité, diagnostiquer l'automatisation"),
+        ("fr/workflows-courtier-assurance", "La bibliothèque de processus",
+         "quatorze enchaînements de travail détaillés, utilisables sans logiciel"),
+        ("fr/checklists/", "Les checklists du cabinet",
+         "onboarding, renouvellement, collecte documentaire, sinistre, organisation, contrôle"),
+        ("fr/glossaire/", "Le glossaire du courtage",
+         "quinze notions expliquées avec leur usage réel dans un cabinet"),
+        ("fr/gagner-du-temps-courtier-assurance", "Gagner du temps : le cluster complet",
+         "dix-huit tâches traitées une par une, du process manuel au process tenu"),
+    ],
     "fr/logiciel-courtier-assurance": [
         ("fr/logiciel-courtier-grossiste", "Logiciel pour courtier grossiste",
          "le suivi de plusieurs apporteurs et de leurs portefeuilles"),

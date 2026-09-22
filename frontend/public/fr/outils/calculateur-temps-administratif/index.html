@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur du temps administratif d&#x27;un cabinet de courtage — COURTIA</title>
+<meta name="description" content="Entrez vos volumes et vos minutes : le calculateur donne le temps hebdomadaire et mensuel, le coût estimé et les postes les plus lourds. Hypothèses visibles et modifiables.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/outils/calculateur-temps-administratif">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/outils/calculateur-temps-administratif">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calculateur du temps administratif d&#x27;un cabinet de courtage — COURTIA">
+<meta property="og:description" content="Entrez vos volumes et vos minutes : le calculateur donne le temps hebdomadaire et mensuel, le coût estimé et les postes les plus lourds. Hypothèses visibles et modifiables.">
+<meta property="og:url" content="https://courtiark.fr/fr/outils/calculateur-temps-administratif">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calculateur du temps administratif d&#x27;un cabinet de courtage — COURTIA">
+<meta name="twitter:description" content="Entrez vos volumes et vos minutes : le calculateur donne le temps hebdomadaire et mensuel, le coût estimé et les postes les plus lourds. Hypothèses visibles et modifiables.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Entrez vos volumes et vos minutes : le calculateur donne le temps hebdomadaire et mensuel, le coût estimé et les postes les plus lourds. Hypothèses visibles et modifiables.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Outils gratuits", "item": "https://courtiark.fr/fr/outils/"}, {"@type": "ListItem", "position": 4, "name": "Calculer le temps administratif de votre", "item": "https://courtiark.fr/fr/outils/calculateur-temps-administratif"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Les valeurs par défaut sont-elles des moyennes du marché ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Ce sont des hypothèses de départ, choisies pour que l'outil soit utilisable immédiatement — et à remplacer par vos chiffres."}}, {"@type": "Question", "name": "Mes données sont-elles envoyées quelque part ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Le calcul se fait dans votre navigateur, rien n'est transmis, aucun compte n'est demandé."}}, {"@type": "Question", "name": "Le calculateur peut-il mesurer un gain de COURTIA ?", "acceptedAnswer": {"@type": "Answer", "text": "Non, et il ne le prétend pas : il mesure l'existant. La part récupérable se fixe dans le calculateur de retour sur investissement, et c'est vous qui la choisissez."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/outils/">Outils gratuits</a> › <a href="/fr/outils/calculateur-temps-administratif">Calculer le temps administratif de votre</a></p>
+<h1>Calculer le temps administratif de votre cabinet</h1>
+
+<p>Ce calculateur répond à une seule question : <strong>combien d'heures représentent les tâches
+administratives d'un cabinet, avec les chiffres du cabinet</strong> — pas avec des moyennes de marché.
+Il ne promet aucune économie : il met des heures et un coût en face de volumes que vous connaissez.</p>
+
+<h2>Le calculateur</h2>
+<div class="section" id="outil-temps">
+<style>
+#outil-temps label{display:block;margin:10px 0 2px;font-weight:600}
+#outil-temps input{width:120px;padding:4px}
+#outil-temps .aide{font-size:.9em;color:#555}
+#outil-temps .res{margin-top:18px;padding:12px;border-left:3px solid #1f6feb;background:#f6f8fa}
+#outil-temps table{border-collapse:collapse;width:100%;margin-top:10px}
+#outil-temps th,#outil-temps td{border:1px solid #ddd;padding:6px;text-align:left;font-size:.95em}
+</style>
+<p>Entrez vos propres nombres. <strong>Les valeurs pré-remplies sont des hypothèses de départ</strong>
+— corrigez-les avec vos valeurs réelles, sinon le résultat ne décrit que nos hypothèses.</p>
+
+<label for="t-clients">Clients actifs dans le cabinet</label>
+<input id="t-clients" type="number" min="0" value="300">
+<label for="t-prospects">Nouveaux prospects par mois</label>
+<input id="t-prospects" type="number" min="0" value="8">
+<label for="t-relances">Relances envoyées par mois</label>
+<input id="t-relances" type="number" min="0" value="40">
+<label for="t-appels">Appels entrants par semaine</label>
+<input id="t-appels" type="number" min="0" value="25">
+<label for="t-documents">Documents reçus par mois</label>
+<input id="t-documents" type="number" min="0" value="60">
+<label for="t-renouv">Renouvellements par an</label>
+<input id="t-renouv" type="number" min="0" value="240">
+<label for="t-equipe">Personnes qui prennent part à l'administratif</label>
+<input id="t-equipe" type="number" min="1" value="2">
+<label for="t-cout">Coût horaire chargé d'une personne (€)</label>
+<input id="t-cout" type="number" min="0" value="35">
+<p class="aide">Le coût horaire est une valeur que vous fixez : salaire chargé divisé par les heures
+travaillées. Nous ne fournissons aucune moyenne de marché.</p>
+
+<h3>Minutes moyennes par opération (à corriger)</h3>
+<label for="t-relance-min">Une relance (rédaction, envoi, suivi)</label>
+<input id="t-relance-min" type="number" min="0" step="0.5" value="6">
+<label for="t-appel-min">Un appel entrant (recherche du dossier comprise)</label>
+<input id="t-appel-min" type="number" min="0" step="0.5" value="7">
+<label for="t-doc-min">Un document (demande, réception, classement)</label>
+<input id="t-doc-min" type="number" min="0" step="0.5" value="5">
+<label for="t-renouv-min">Un renouvellement (préparation et suivi)</label>
+<input id="t-renouv-min" type="number" min="0" step="0.5" value="25">
+<label for="t-prospect-min">Un nouveau prospect (enregistrement et qualification)</label>
+<input id="t-prospect-min" type="number" min="0" step="0.5" value="15">
+<label for="t-saisie-min">Saisie ou ressaisie d'un contrat</label>
+<input id="t-saisie-min" type="number" min="0" step="0.5" value="10">
+
+<button id="t-calc" type="button">Calculer</button>
+
+<div class="res" id="t-resultat" aria-live="polite">
+  <p>Entrez vos nombres puis lancez le calcul. Les formules utilisées sont écrites sous le tableau :
+  rien n'est caché.</p>
+</div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var nombre = function(id){ var v = parseFloat($(id).value); return isNaN(v) || v < 0 ? 0 : v; };
+  var fr = function(v){ return v.toLocaleString('fr-FR', {maximumFractionDigits: 1}); };
+
+  function calculer(){
+    var relanceMin = nombre('t-relance-min'), appelMin = nombre('t-appel-min'), docMin = nombre('t-doc-min');
+    var renouvMin = nombre('t-renouv-min'), prospectMin = nombre('t-prospect-min'), saisieMin = nombre('t-saisie-min');
+    var cout = nombre('t-cout'), equipe = Math.max(1, nombre('t-equipe'));
+
+    // volumes ramenés à l'échelle hebdomadaire
+    var lignes = [
+      {t:'Relances', hebdo: nombre('t-relances') / 4.33, min: relanceMin, auto: 'préparation automatique, envoi validé'},
+      {t:'Appels entrants', hebdo: nombre('t-appels'), min: appelMin, auto: 'compte rendu transcrit, action tracée'},
+      {t:'Documents', hebdo: nombre('t-documents') / 4.33, min: docMin, auto: 'demande et collecte par lien, extraction des données'},
+      {t:'Renouvellements', hebdo: nombre('t-renouv') / 52, min: renouvMin, auto: 'échéances détectées, relances préparées'},
+      {t:'Nouveaux prospects', hebdo: nombre('t-prospects') / 4.33, min: prospectMin, auto: 'enregistrement et statut suivis'},
+      {t:'Saisie / ressaisie de contrats', hebdo: nombre('t-clients') / 52 / 3, min: saisieMin, auto: 'extraction proposée, validation humaine'}
+    ];
+
+    var totalHebdo = 0, html = '<table><tr><th>Tâche</th><th>Volume / semaine</th><th>Minutes / unité</th><th>Heures / semaine</th><th>Ce qui est partiellement automatisable</th></tr>';
+    lignes.forEach(function(l){
+      var heures = (l.hebdo * l.min) / 60;
+      totalHebdo += heures;
+      html += '<tr><td>' + l.t + '</td><td>' + fr(l.hebdo) + '</td><td>' + fr(l.min) + '</td><td>' + fr(heures) + '</td><td>' + l.auto + '</td></tr>';
+    });
+    var totalMois = totalHebdo * 4.33, coutMois = totalMois * cout, parPersonne = totalHebdo / equipe;
+
+    html += '</table>';
+    html += '<p><strong>Total administratif :</strong> ' + fr(totalHebdo) + ' heures par semaine, soit ' +
+            fr(totalMois) + ' heures par mois.</p>';
+    html += '<p><strong>Coût estimé :</strong> ' + fr(coutMois) + ' € par mois, sur la base d\'un coût horaire de ' +
+            fr(cout) + ' € que vous avez fixé.</p>';
+    html += '<p><strong>Par personne :</strong> ' + fr(parPersonne) + ' heures par semaine pour ' + fr(equipe) +
+            ' personne(s) prenant part à l\'administratif.</p>';
+    html += '<p class="aide">Ces chiffres ne mesurent rien d\'autre que ce que vous venez de saisir. Aucune ' +
+            'moyenne de marché n\'est appliquée, aucune économie n\'est promise.</p>';
+
+    // zones les plus lourdes = priorité de travail
+    lignes.sort(function(a,b){ return (b.hebdo*b.min) - (a.hebdo*a.min); });
+    html += '<p><strong>Par où commencer :</strong> les trois postes les plus lourds dans votre saisie sont ' +
+            lignes.slice(0,3).map(function(l){ return l.t.toLowerCase(); }).join(', ') + '.</p>';
+    $('t-resultat').innerHTML = html;
+  }
+  $('t-calc').addEventListener('click', calculer);
+})();
+</script>
+
+<h2>Les formules, en clair</h2>
+<ul>
+<li>Volume hebdomadaire = volume mensuel ÷ 4,33 (semaines par mois) ou volume annuel ÷ 52.</li>
+<li>Heures par semaine d'une tâche = volume hebdomadaire × minutes par unité ÷ 60.</li>
+<li>Total mensuel = total hebdomadaire × 4,33. Coût mensuel = total mensuel × coût horaire saisi.</li>
+<li>Aucun coefficient d'économie n'est appliqué : ce calculateur mesure l'existant, il ne promet rien.</li>
+</ul>
+
+<h2>Ce que les valeurs par défaut sont — et ne sont pas</h2>
+<p>Les nombres pré-remplis sont des <strong>hypothèses de départ</strong> pour que l'outil soit utilisable
+immédiatement. Ils ne proviennent d'aucune étude, d'aucun panel de cabinets : nous n'avons pas de mesure
+du temps des cabinets de courtage et nous ne l'inventerons pas. Si vous ne modifiez rien, le résultat
+décrit nos hypothèses — c'est écrit ici pour que personne ne s'y trompe.</p>
+
+<h2>Comment l'utiliser sérieusement</h2>
+<p>Deux façons. La rapide : entrez vos volumes estimés, corrigez les minutes, regardez quels postes
+pèsent le plus. La rigoureuse : pendant une semaine, notez le temps réel passé sur chaque famille de
+tâches (le <a href="/fr/mesurer-temps-administratif-cabinet">protocole de mesure</a> explique comment),
+puis remplacez les valeurs.</p>
+<p>Une fois le temps connu, deux suites logiques : le
+<a href="/fr/outils/calculateur-roi-courtia">calculateur de retour sur investissement</a> pour traduire
+en euros, et le <a href="/fr/outils/diagnostic-automatisation-cabinet">diagnostic d'automatisation</a>
+pour savoir par quelle tâche commencer.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Les valeurs par défaut sont-elles des moyennes du marché ?</h3>
+<p>Non. Ce sont des hypothèses de départ, choisies pour que l'outil soit utilisable immédiatement — et à remplacer par vos chiffres.</p>
+<h3>Mes données sont-elles envoyées quelque part ?</h3>
+<p>Non. Le calcul se fait dans votre navigateur, rien n'est transmis, aucun compte n'est demandé.</p>
+<h3>Le calculateur peut-il mesurer un gain de COURTIA ?</h3>
+<p>Non, et il ne le prétend pas : il mesure l'existant. La part récupérable se fixe dans le calculateur de retour sur investissement, et c'est vous qui la choisissez.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/mesurer-temps-administratif-cabinet">Le protocole de mesure</a> — à lire aussi</li>
+<li><a href="/fr/outils/calculateur-roi-courtia">Le calculateur de retour sur investissement</a> — à lire aussi</li>
+<li><a href="/fr/gagner-du-temps-courtier-assurance">Le cluster gagner du temps</a> — à lire aussi</li>
+<li><a href="/fr/outils/diagnostic-automatisation-cabinet">Le diagnostic d'automatisation</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

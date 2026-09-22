@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de retour sur investissement — COURTIA</title>
+<meta name="description" content="Un calcul transparent : coût administratif actuel, part de temps récupérable que vous choisissez, seuil de rentabilité en heures, trois scénarios. Formules affichées.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/outils/calculateur-roi-courtia">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/outils/calculateur-roi-courtia">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calculateur de retour sur investissement — COURTIA">
+<meta property="og:description" content="Un calcul transparent : coût administratif actuel, part de temps récupérable que vous choisissez, seuil de rentabilité en heures, trois scénarios. Formules affichées.">
+<meta property="og:url" content="https://courtiark.fr/fr/outils/calculateur-roi-courtia">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calculateur de retour sur investissement — COURTIA">
+<meta name="twitter:description" content="Un calcul transparent : coût administratif actuel, part de temps récupérable que vous choisissez, seuil de rentabilité en heures, trois scénarios. Formules affichées.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Un calcul transparent : coût administratif actuel, part de temps récupérable que vous choisissez, seuil de rentabilité en heures, trois scénarios. Formules affichées.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Outils gratuits", "item": "https://courtiark.fr/fr/outils/"}, {"@type": "ListItem", "position": 4, "name": "Retour sur investissement : le calcul, s", "item": "https://courtiark.fr/fr/outils/calculateur-roi-courtia"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Le tarif pré-rempli est-il le bon ?", "acceptedAnswer": {"@type": "Answer", "text": "Le montant pré-rempli correspond au tarif public de l'offre Starter en France ; remplacez-le si vous examinez une autre offre. Les tarifs publics sont sur la page tarifs."}}, {"@type": "Question", "name": "Le produit change-t-il la part récupérable ?", "acceptedAnswer": {"@type": "Answer", "text": "Non : c'est votre hypothèse. Le produit décrit ce qu'il fait réellement sur chaque tâche, à vous de juger ce que cela change chez vous."}}, {"@type": "Question", "name": "Puis-je utiliser ce calculateur pour comparer deux outils ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui : c'est de l'arithmétique. Remplacez le montant de l'abonnement et la part de temps récupérable que vous estimez pour chaque solution."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/outils/">Outils gratuits</a> › <a href="/fr/outils/calculateur-roi-courtia">Retour sur investissement : le calcul, s</a></p>
+<h1>Retour sur investissement : le calcul, sans promesse</h1>
+
+<p>La plupart des pages de « ROI » posent une hypothèse invisible puis annoncent un résultat spectaculaire.
+Ici, c'est l'inverse : <strong>la seule hypothèse est celle que vous choisissez</strong> — la part de
+temps administratif que vous jugez réellement récupérable. Tout le reste est de l'arithmétique, affichée
+étape par étape.</p>
+
+<h2>Le calculateur</h2>
+<div class="section" id="outil-roi">
+<style>
+#outil-roi label{display:block;margin:10px 0 2px;font-weight:600}
+#outil-roi input{width:120px;padding:4px}
+#outil-roi .res{margin-top:18px;padding:12px;border-left:3px solid #1f6feb;background:#f6f8fa}
+#outil-roi table{border-collapse:collapse;width:100%;margin-top:10px}
+#outil-roi th,#outil-roi td{border:1px solid #ddd;padding:6px;text-align:left;font-size:.95em}
+</style>
+<p>Ce calculateur fait de l'arithmétique, rien d'autre. Vous décidez vous-même de la part de temps
+réellement récupérable : c'est le seul paramètre qui change le résultat.</p>
+
+<label for="r-heures">Temps administratif estimé par semaine (heures)</label>
+<input id="r-heures" type="number" min="0" step="0.5" value="20">
+<label for="r-cout">Coût horaire chargé (€)</label>
+<input id="r-cout" type="number" min="0" value="35">
+<label for="r-part">Part de ce temps que vous jugez récupérable (%)</label>
+<input id="r-part" type="number" min="0" max="100" value="20">
+<label for="r-prix">Abonnement mensuel COURTIA à comparer (€ HT)</label>
+<input id="r-prix" type="number" min="0" value="89">
+<p class="aide">Le montant pré-rempli correspond au tarif public de l'offre Starter en France ; remplacez-le
+si vous regardez une autre offre, ou 0 pour ignorer l'abonnement.</p>
+
+<button id="r-calc" type="button">Calculer</button>
+<div class="res" id="r-resultat" aria-live="polite">
+  <p>Entrez vos nombres puis lancez le calcul. Le détail du calcul est affiché à chaque étape.</p>
+</div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var nombre = function(id){ var v = parseFloat($(id).value); return isNaN(v) || v < 0 ? 0 : v; };
+  var fr = function(v){ return v.toLocaleString('fr-FR', {maximumFractionDigits: 1}); };
+  var euros = function(v){ return v.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' €'; };
+
+  function calculer(){
+    var heures = nombre('r-heures'), cout = nombre('r-cout');
+    var part = Math.min(100, nombre('r-part')) / 100, prix = nombre('r-prix');
+
+    var coutHebdo = heures * cout, coutMois = coutHebdo * 4.33;
+    var heuresRecupereesMois = heures * part * 4.33;
+    var valeurMois = heuresRecupereesMois * cout;
+    var net = valeurMois - prix;
+    var seuilHeures = cout > 0 ? prix / cout : 0;              // heures à récupérer pour couvrir l'abonnement
+    var seuilPart = heures > 0 ? (prix / cout) / (heures * 4.33) : 1;
+
+    var html = '<table><tr><th>Étape</th><th>Calcul</th><th>Résultat</th></tr>';
+    html += '<tr><td>Coût administratif hebdomadaire</td><td>' + fr(heures) + ' h × ' + euros(cout) + '</td><td>' + euros(coutHebdo) + '</td></tr>';
+    html += '<tr><td>Coût administratif mensuel</td><td>' + euros(coutHebdo) + ' × 4,33</td><td>' + euros(coutMois) + '</td></tr>';
+    html += '<tr><td>Heures récupérées par mois</td><td>' + fr(heures) + ' h × ' + fr(part*100) + ' % × 4,33</td><td>' + fr(heuresRecupereesMois) + ' h</td></tr>';
+    html += '<tr><td>Valeur de ces heures</td><td>' + fr(heuresRecupereesMois) + ' h × ' + euros(cout) + '</td><td>' + euros(valeurMois) + '</td></tr>';
+    html += '<tr><td>Seuil de rentabilité</td><td>' + euros(prix) + ' ÷ ' + euros(cout) + '</td><td>' + fr(seuilHeures) + ' h par mois</td></tr>';
+    html += '<tr><td>Résultat net mensuel</td><td>' + euros(valeurMois) + ' − ' + euros(prix) + '</td><td>' + euros(net) + '</td></tr>';
+    html += '</table>';
+
+    if (seuilPart <= part) {
+      html += '<p><strong>Au taux que vous avez choisi, le seuil est atteint :</strong> il faut récupérer ' +
+              fr(seuilHeures) + ' heures par mois (' + fr(seuilPart*100) + ' % de votre temps administratif) pour couvrir l\'abonnement saisi.</p>';
+    } else {
+      html += '<p><strong>Avec la part que vous avez choisie, le seuil n\'est pas atteint :</strong> il faudrait ' +
+              fr(seuilPart*100) + ' % de votre temps administratif pour couvrir l\'abonnement saisi. C\'est votre estimation, pas une promesse : changez la part pour voir les autres scénarios.</p>';
+    }
+
+    html += '<h3>Trois scénarios, mêmes chiffres</h3><table><tr><th>Part récupérée</th><th>Heures / mois</th><th>Valeur</th><th>Net après abonnement</th></tr>';
+    [0.05, 0.10, 0.20].forEach(function(p){
+      var h = heures * p * 4.33, v = h * cout;
+      html += '<tr><td>' + fr(p*100) + ' %</td><td>' + fr(h) + ' h</td><td>' + euros(v) + '</td><td>' + euros(v - prix) + '</td></tr>';
+    });
+    html += '</table>';
+    html += '<p class="aide">Tout est reproductible : les formules sont sous le tableau et les nombres viennent ' +
+            'de vos saisies. Rien ne quitte votre navigateur.</p>';
+    $('r-resultat').innerHTML = html;
+  }
+  $('r-calc').addEventListener('click', calculer);
+})();
+</script>
+
+<h2>Les formules, en clair</h2>
+<ul>
+<li>Coût administratif mensuel = heures par semaine × coût horaire × 4,33.</li>
+<li>Heures récupérées par mois = heures par semaine × part choisie × 4,33.</li>
+<li>Seuil de rentabilité = abonnement mensuel ÷ coût horaire (en heures à récupérer par mois).</li>
+<li>Résultat net = valeur des heures récupérées − abonnement.</li>
+</ul>
+
+<h2>Ce que ce calculateur ne fait pas</h2>
+<p>Il ne prédit pas ce que vous récupérerez réellement : il traduit votre propre hypothèse en euros. Si la
+part de temps récupérable est fausse, le résultat l'est aussi — c'est le seul paramètre qui compte, et
+c'est vous qui le fixez.</p>
+
+<h2>Pourquoi commencer par le seuil, pas par le gain</h2>
+<p>La question utile n'est pas « combien vais-je gagner ? » mais « <strong>combien d'heures par mois dois-je
+récupérer pour que l'abonnement soit couvert ?</strong> ». Ce seuil est un fait arithmétique : abonnement
+divisé par votre coût horaire. Si le seuil vous paraît atteignable, la décision se discute ; s'il ne l'est
+pas, aucune promesse marketing ne le rendra atteignable.</p>
+<p>Pour estimer le temps administratif de départ, utilisez le
+<a href="/fr/outils/calculateur-temps-administratif">calculateur de temps administratif</a> : ses
+résultats s'importent ici en une valeur, que vous restez libre de corriger.</p>
+
+<h2>Ce que ce calcul ne dit pas</h2>
+<p>Il ne dit rien de la qualité du service, de la satisfaction des clients, ni du temps que vous passerez à
+apprendre un nouvel outil — trois éléments réels dans une décision, et absents de toute formule. Il ne dit
+pas non plus si vous récupérerez la part que vous avez choisie : c'est une hypothèse, la vôtre, et elle est
+affichée comme telle.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Le tarif pré-rempli est-il le bon ?</h3>
+<p>Le montant pré-rempli correspond au tarif public de l'offre Starter en France ; remplacez-le si vous examinez une autre offre. Les tarifs publics sont sur la page tarifs.</p>
+<h3>Le produit change-t-il la part récupérable ?</h3>
+<p>Non : c'est votre hypothèse. Le produit décrit ce qu'il fait réellement sur chaque tâche, à vous de juger ce que cela change chez vous.</p>
+<h3>Puis-je utiliser ce calculateur pour comparer deux outils ?</h3>
+<p>Oui : c'est de l'arithmétique. Remplacez le montant de l'abonnement et la part de temps récupérable que vous estimez pour chaque solution.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/outils/calculateur-temps-administratif">Le calculateur de temps administratif</a> — à lire aussi</li>
+<li><a href="/fr/mesurer-temps-administratif-cabinet">Le protocole de mesure</a> — à lire aussi</li>
+<li><a href="/fr/gagner-du-temps-courtier-assurance">Le cluster gagner du temps</a> — à lire aussi</li>
+<li><a href="/fr/tarifs-logiciel-courtier">Les tarifs publics</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Processus : suivre un sinistre jusqu&#x27;à la clôture — bibliothèque courtier</title>
+<meta name="description" content="Le processus de suivi d&#x27;un sinistre en cabinet de courtage : déclaration, pièces, instruction, clôture, trace au renouvellement.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/workflows/sinistre">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/workflows/sinistre">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Processus : suivre un sinistre jusqu&#x27;à la clôture — bibliothèque courtier">
+<meta property="og:description" content="Le processus de suivi d&#x27;un sinistre en cabinet de courtage : déclaration, pièces, instruction, clôture, trace au renouvellement.">
+<meta property="og:url" content="https://courtiark.fr/fr/workflows/sinistre">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Processus : suivre un sinistre jusqu&#x27;à la clôture — bibliothèque courtier">
+<meta name="twitter:description" content="Le processus de suivi d&#x27;un sinistre en cabinet de courtage : déclaration, pièces, instruction, clôture, trace au renouvellement.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Le processus de suivi d'un sinistre en cabinet de courtage : déclaration, pièces, instruction, clôture, trace au renouvellement.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Processus", "item": "https://courtiark.fr/fr/workflows-courtier-assurance"}, {"@type": "ListItem", "position": 4, "name": "Processus : sinistre, de la déclaration ", "item": "https://courtiark.fr/fr/workflows/sinistre"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Qui déclare le sinistre à l'assureur ?", "acceptedAnswer": {"@type": "Answer", "text": "Cela dépend de l'organisation convenue : le client, le cabinet, ou les deux. Le processus doit le dire explicitement."}}, {"@type": "Question", "name": "Le cabinet peut-il voir l'avancement de l'instruction ?", "acceptedAnswer": {"@type": "Answer", "text": "Il suit l'état du dossier côté cabinet ; l'instruction reste chez l'assureur, qui n'ouvre pas son système."}}, {"@type": "Question", "name": "Pourquoi relier le sinistre au renouvellement ?", "acceptedAnswer": {"@type": "Answer", "text": "Parce que c'est le moment où la question revient : un sinistre mal clos devient un argument de négociation — ou de départ."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/workflows-courtier-assurance">Processus</a> › <a href="/fr/workflows/sinistre">Processus : sinistre, de la déclaration </a></p>
+<h1>Processus : sinistre, de la déclaration à la clôture</h1>
+
+<h2>Objectif du processus</h2>
+<p>Que le client soit suivi, que les pièces ne soient pas perdues, et que le dossier reste lisible des mois plus tard — y compris au renouvellement.</p>
+<h2>Déclencheur</h2>
+<p>Annonce d'un sinistre par le client, quel que soit le canal.</p>
+<h2>Étapes</h2>
+<ol><li><strong>Ouvrir le sinistre dans le dossier du client</strong>, avec la date, la nature et le contrat concerné.</li><li><strong>Déclarer ou accompagner la déclaration</strong> selon la répartition des rôles convenue avec l'assureur.</li><li><strong>Constituer le dossier de pièces</strong> : constat, photos, factures, documents demandés par la compagnie ou l'expert.</li><li><strong>Suivre l'état</strong> : en instruction, en attente de pièce, expertise, clôture — avec un responsable identifié.</li><li><strong>Tenir le client informé</strong> aux moments utiles, sans le laisser sans nouvelles pendant l'instruction.</li><li><strong>Clore explicitement</strong> et vérifier la suite : résiliation, franchise, répercussion sur la prime.</li></ol>
+<h2>Qui fait quoi</h2>
+<p>Un responsable du dossier côté cabinet, l'expert et la compagnie côté assureur. Le client est informé par le cabinet.</p>
+<h2>Informations nécessaires</h2>
+<p>Date et nature du sinistre, contrat concerné, pièces attendues et reçues, interlocuteur assureur, état, décision.</p>
+<h2>Les points de rupture (là où le processus échoue en vrai)</h2>
+<ul><li>Le sinistre vit dans la boîte mail : personne ne sait où en est le dossier.</li><li>Une pièce demandée par l'expert n'est jamais réclamée au client.</li><li>Le sinistre est oublié puis redécouvert au renouvellement, quand le client parle de sa prime.</li><li>Le dossier reste « ouvert » des années après la clôture réelle.</li></ul>
+<h2>Ce que COURTIA fait dans ce processus</h2>
+<p>Le sinistre est rattaché au client et au contrat, son état est suivi, les pièces conservées avec leur date, et une synthèse de la situation peut être préparée à partir des éléments saisis pour un échange avec le client ou l'assureur.</p>
+<h2>Ce qui reste humain</h2>
+<p>L'appréciation de ce qui est couvert, la relation avec le client en situation difficile, et les échanges avec l'expert.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Qui déclare le sinistre à l&#x27;assureur ?</h3>
+<p>Cela dépend de l'organisation convenue : le client, le cabinet, ou les deux. Le processus doit le dire explicitement.</p>
+<h3>Le cabinet peut-il voir l&#x27;avancement de l&#x27;instruction ?</h3>
+<p>Il suit l'état du dossier côté cabinet ; l'instruction reste chez l'assureur, qui n'ouvre pas son système.</p>
+<h3>Pourquoi relier le sinistre au renouvellement ?</h3>
+<p>Parce que c'est le moment où la question revient : un sinistre mal clos devient un argument de négociation — ou de départ.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/workflows-courtier-assurance">La bibliothèque de processus</a> — à lire aussi</li>
+<li><a href="/fr/gain-de-temps/sinistres-et-conformite">Gagner du temps : sinistres et conformité</a> — à lire aussi</li>
+<li><a href="/fr/sinistres-courtier-assurance">Le suivi des sinistres dans COURTIA</a> — à lire aussi</li>
+<li><a href="/fr/checklists/suivi-sinistre">Checklist de suivi de sinistre</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

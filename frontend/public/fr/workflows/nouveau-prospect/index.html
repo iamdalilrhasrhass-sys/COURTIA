@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Processus : traiter un nouveau prospect — bibliothèque courtier</title>
+<meta name="description" content="Le processus complet d&#x27;un nouveau prospect en cabinet de courtage : déclencheur, étapes, responsabilités, données nécessaires, points de rupture, ce que le produit fait.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/workflows/nouveau-prospect">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/workflows/nouveau-prospect">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Processus : traiter un nouveau prospect — bibliothèque courtier">
+<meta property="og:description" content="Le processus complet d&#x27;un nouveau prospect en cabinet de courtage : déclencheur, étapes, responsabilités, données nécessaires, points de rupture, ce que le produit fait.">
+<meta property="og:url" content="https://courtiark.fr/fr/workflows/nouveau-prospect">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Processus : traiter un nouveau prospect — bibliothèque courtier">
+<meta name="twitter:description" content="Le processus complet d&#x27;un nouveau prospect en cabinet de courtage : déclencheur, étapes, responsabilités, données nécessaires, points de rupture, ce que le produit fait.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Le processus complet d'un nouveau prospect en cabinet de courtage : déclencheur, étapes, responsabilités, données nécessaires, points de rupture, ce que le produit fait.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "Processus", "item": "https://courtiark.fr/fr/workflows-courtier-assurance"}, {"@type": "ListItem", "position": 4, "name": "Processus : nouveau prospect, de la prem", "item": "https://courtiark.fr/fr/workflows/nouveau-prospect"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Faut-il enregistrer aussi les prospects qu'on refuse ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui : la trace du refus évite le débat ultérieur et permet de reconnaître une demande qui revient."}}, {"@type": "Question", "name": "Combien de temps garder un prospect sans réponse ?", "acceptedAnswer": {"@type": "Answer", "text": "Il n'y a pas de règle universelle : ce qui compte est que la décision soit prise à l'avance, pas au cas par cas."}}, {"@type": "Question", "name": "Le produit qualifie-t-il les prospects ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Il enregistre le statut et l'action ; la qualification reste un jugement humain."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/workflows-courtier-assurance">Processus</a> › <a href="/fr/workflows/nouveau-prospect">Processus : nouveau prospect, de la prem</a></p>
+<h1>Processus : nouveau prospect, de la première demande à la décision</h1>
+
+<h2>Objectif du processus</h2>
+<p>Aucune demande entrante ne reste sans réponse ni sans trace, et chaque demande reçoit une décision explicite : ouvrir un dossier, orienter, ou refuser.</p>
+<h2>Déclencheur</h2>
+<p>Un appel, un message, un formulaire, une recommandation, un passage au cabinet — tout canal confondu.</p>
+<h2>Étapes</h2>
+<ol><li><strong>Enregistrer la demande le jour même</strong>, avec le canal d'origine, le besoin exprimé et un moyen de contact.</li><li><strong>Qualifier en trois questions</strong> : de quoi s'agit-il, quand le besoin doit-il être couvert, qui décide ?</li><li><strong>Décider du statut</strong> : dossier à ouvrir, orientation vers un confrère, refus. Chaque statut a une trace.</li><li><strong>Fixer la prochaine action datée</strong>, même si cette action est « rappeler dans trois semaines ».</li><li><strong>Faire la première demande de pièces</strong> si le dossier s'ouvre, pour éviter l'aller-retour plus tard.</li></ol>
+<h2>Qui fait quoi</h2>
+<p>Toute personne qui reçoit l'appel enregistre ; la qualification revient à celui qui ouvrira le dossier. Le point de contrôle est la fin de journée : ce qui est entré doit exister.</p>
+<h2>Informations nécessaires</h2>
+<p>Nom, moyen de contact, canal d'origine, besoin, date souhaitée de couverture, statut, prochaine action datée.</p>
+<h2>Les points de rupture (là où le processus échoue en vrai)</h2>
+<ul><li>La demande arrive pendant un rendez-vous et n'est notée nulle part.</li><li>Le prospect est enregistré mais sans prochaine action : il disparaît jusqu'à ce qu'il rappelle.</li><li>Deux personnes rappellent le même prospect — ou aucune.</li><li>Un canal (WhatsApp, formulaire, recommandation) échappe au suivi parce qu'il n'a pas d'endroit prévu.</li></ul>
+<h2>Ce que COURTIA fait dans ce processus</h2>
+<p>Le prospect est enregistré dans le dossier, avec son canal d'origine et son statut. Le pipeline suit l'avancement par étapes, l'affectation indique qui agit, et les tâches rattachées portent la prochaine action. Les conversations WhatsApp reçues peuvent être rattachées au dossier.</p>
+<h2>Ce qui reste humain</h2>
+<p>La qualification réelle, le conseil, et la décision de refuser un dossier : un prospect mal qualifié coûte plus cher que le temps passé à le qualifier.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>Faut-il enregistrer aussi les prospects qu&#x27;on refuse ?</h3>
+<p>Oui : la trace du refus évite le débat ultérieur et permet de reconnaître une demande qui revient.</p>
+<h3>Combien de temps garder un prospect sans réponse ?</h3>
+<p>Il n'y a pas de règle universelle : ce qui compte est que la décision soit prise à l'avance, pas au cas par cas.</p>
+<h3>Le produit qualifie-t-il les prospects ?</h3>
+<p>Non. Il enregistre le statut et l'action ; la qualification reste un jugement humain.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/workflows-courtier-assurance">La bibliothèque de processus</a> — à lire aussi</li>
+<li><a href="/fr/workflows/collecte-de-pieces">Processus : collecte de pièces</a> — à lire aussi</li>
+<li><a href="/fr/gestion-prospects-clients-courtier-assurance">Prospects et clients dans COURTIA</a> — à lire aussi</li>
+<li><a href="/fr/pipeline-kanban-courtier-assurance">Le suivi visuel des opportunités</a> — à lire aussi</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>

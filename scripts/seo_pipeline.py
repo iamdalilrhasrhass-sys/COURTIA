@@ -28,6 +28,9 @@ ETAPES = [
     ("7. hygiène des pages locales + sitemaps", ["python3", "scripts/seo_hygiene_pages_villes.py"]),
     ("8. graphe de maillage (artefact)", ["python3", "scripts/maillage_interne.py"]),
     ("9. suivi des pages", ["python3", "scripts/generer_suivi_seo.py"]),
+    ("10. carte sémantique du marché", ["python3", "scripts/carte_semantique.py"]),
+    ("11. contrôle qualité automatique des pages", ["python3", "scripts/qa_seo.py"]),
+    ("12. moteur de rafraîchissement", ["python3", "scripts/refresh_seo.py"]),
 ]
 
 

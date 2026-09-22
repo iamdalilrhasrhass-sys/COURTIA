@@ -68,9 +68,40 @@ footer a{color:var(--doux);margin-right:12px}
 """
 
 
+def _titre_affichable(t):
+    """Titre ≤ 80 caractères, coupé à la frontière de mot (politique issue d'une décision JEV)."""
+    t = t.strip()
+    if len(t) <= 80:
+        return t
+    coupe = t[:80].rsplit(" ", 1)[0].rstrip(" ,;:—-")
+    if " — COURTIA" in t and len(coupe) < 80 and "COURTIA" not in coupe:
+        coupe += " — COURTIA"
+        if len(coupe) > 80:
+            coupe = coupe[:-len(coupe) + 80].rsplit(" ", 1)[0]
+    return coupe
+
+
+def _meta_affichable(d):
+    """Description ≤ 175 caractères, coupée de préférence en fin de phrase."""
+    d = " ".join(d.split())
+    if len(d) <= 175:
+        return d
+    phrases = re.split(r"(?<=[.!?]) ", d)
+    accu = ""
+    for ph in phrases:
+        if len(accu) + len(ph) + (1 if accu else 0) <= 175:
+            accu = (accu + " " + ph).strip()
+        else:
+            break
+    if len(accu) >= 80:
+        return accu
+    return d[:175].rsplit(" ", 1)[0].rstrip(" ,;:—-") + "."
+
+
 def page(chemin, titre, description, h1, corps, marche="FR", faq=None, schema_offres=None, fil=None, date=MAJ, maillage=None):
     """Construit une page complète. `corps` est du HTML déjà rédigé."""
     chemin = chemin.strip("/")
+    titre, description = _titre_affichable(titre), _meta_affichable(description)
     url = f"{SITE}/{chemin}"
     langue = "fr-CH" if marche == "CH" else "fr-FR"
     og_locale = "fr_CH" if marche == "CH" else "fr_FR"
