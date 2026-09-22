@@ -112,8 +112,7 @@ annuelles, la tâche prioritaire du jour et les échéances à 30 jours.</p>
 <p><img src="{CAPTURE}" width="1280" height="519"
   alt="Tableau de bord de COURTIA : dossiers actifs, contrats, primes annuelles, score de santé du portefeuille, tâches prioritaires du jour et échéances à 30 jours, sur un cabinet de démonstration aux données synthétiques"
   loading="lazy" style="width:100%;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.10)"></p>
-<p class="doux">Capture réelle de la démonstration publique (cabinet fictif, données synthétiques).
-La démonstration est ouverte à tous : <a href="{SITE}/demo-public">l'essayer sans compte</a>.</p>
+<p class="doux">Capture réelle de la démonstration publique : cabinet fictif, données synthétiques, <strong>aucune donnée client réelle</strong>. La démonstration est ouverte à tous : <a href="{SITE}/demo-public">l'essayer sans compte</a>.</p>
 
 <section>
 <h2>Un cabinet multi-branches, un seul cockpit</h2>
@@ -189,8 +188,9 @@ dossiers à traiter avec le motif et le plan de rétention :</p>
 <p><img src="/img/demo-courtia-ark-intelligence.jpg" width="1280" height="398"
   alt="Écran ARK Intelligence de la démonstration COURTIA : clients évalués, dossiers à risque, score moyen du portefeuille et liste des clients à risque avec leur score, sur un cabinet de démonstration aux données synthétiques"
   loading="lazy" style="width:100%;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.10)"></p>
-<p class="doux">Ces deux captures viennent de la démonstration publique (cabinet fictif, données
-synthétiques) : elles sont vérifiables par n'importe qui, sans création de compte.</p>
+<p class="doux">Ces deux captures viennent de la démonstration publique : cabinet fictif, données
+synthétiques, <strong>aucune donnée client réelle</strong>. Elles sont vérifiables par n'importe qui,
+sans création de compte — c'est ce qui les distingue d'une illustration marketing.</p>
 
 <h2>Ce que ça change au quotidien</h2>
 <p>Les renouvellements ne se perdent plus dans un tableur, les commissions se rapprochent des relevés
