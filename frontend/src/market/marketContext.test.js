@@ -35,6 +35,18 @@ describe('frontend market context', () => {
     expect(pricing.taxNote).toContain('TVA suisse 8,1')
   })
 
+  it('porte les codes BACKEND suisses, plus les anciens codes français inventés', () => {
+    // Défaut corrigé le 22/09/2026 : la grille suisse réutilisait
+    // starter/pro/premium, des codes qui n'existent pas côté backend suisse.
+    expect(getMarketPricing('CH').plans.map((plan) => plan.code)).toEqual([
+      'independant',
+      'cabinet_ch',
+      'cabinet_ch_sur_devis',
+    ])
+    expect(getMarketPricing('FR').plans.map((plan) => plan.code)).toEqual(['starter', 'pro', 'cabinet'])
+    expect(getMarketPricing('CH').plans[2].surDevis).toBe(true)
+  })
+
   it('formats Swiss francs and normalizes invalid market values', () => {
     expect(normalizeMarket('foo')).toBe('FR')
     expect(formatMarketPrice(1500, 'CH')).toBe("1'500 CHF")

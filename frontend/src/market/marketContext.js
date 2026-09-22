@@ -1,3 +1,5 @@
+import { MARKET_META, PLANS_BY_MARKET, formatAmountHt, getMarketReference } from './plansReference'
+
 export const MARKET_CODES = ['FR', 'CH']
 export const DEFAULT_MARKET = 'FR'
 
@@ -6,37 +8,15 @@ export const MARKET_OPTIONS = [
   { code: 'CH', flag: '🇨🇭', label: 'Suisse', shortLabel: 'CH' },
 ]
 
+/**
+ * Grille publique par marché. Les MONTANTS et les CODES viennent tous de
+ * market/plansReference.js (référentiel unique des offres publiques, aux codes
+ * du backend) : cet objet n'ajoute que la devise de facturation du marché, seule
+ * lecture utilisée par les écrans privés.
+ */
 export const MARKET_PRICING = {
-  FR: {
-    market: 'FR',
-    country: 'France',
-    locale: 'fr-FR',
-    currency: 'EUR',
-    currencySymbol: '€',
-    compliance: 'DDA · ORIAS · RGPD',
-    taxNote: 'Prix indiqués hors taxes. TVA applicable au taux en vigueur.',
-    cta: 'Démarrer maintenant',
-    plans: [
-      { code: 'starter', name: 'Starter', monthly: 89, setup: 0, setupLabel: 'Aucun frais d’inscription', description: 'Pour courtier indépendant', features: ['Cockpit de base', 'ARK limité', 'Relances essentielles', 'DDA / ORIAS conservés'] },
-      { code: 'pro', name: 'Pro', monthly: 159, setup: 0, setupLabel: 'Aucun frais d’inscription', highlighted: true, description: 'Pour cabinet en croissance', features: ['Cockpit complet', 'ARK quotidien', 'Opportunités portefeuille', 'Conformité DDA / RGPD'] },
-      { code: 'premium', name: 'Cabinet', monthly: null, setup: 0, setupLabel: 'Sur devis', description: 'Pour équipe structurée', features: ['Tout Pro', 'Multi-utilisateurs', 'Déploiement accompagné', 'Support prioritaire'] },
-    ],
-  },
-  CH: {
-    market: 'CH',
-    country: 'Suisse',
-    locale: 'fr-CH',
-    currency: 'CHF',
-    currencySymbol: 'CHF',
-    compliance: 'LSA · FINMA · nLPD',
-    taxNote: 'Prix HT. TVA suisse 8,1 % en sus.',
-    cta: 'Réserver une démo',
-    plans: [
-      { code: 'starter', name: 'Indépendant', monthly: 199, setup: 490, setupLabel: '490 CHF setup', description: 'Courtier indépendant suisse', features: ['Onboarding suisse', 'Paramétrage conformité LSA', 'Langues FR-CH / DE-CH / IT-CH', 'Caisse-maladie, LAA, LCA/LAMal'] },
-      { code: 'pro', name: 'Cabinet', monthly: 349, setup: 990, setupLabel: '990 CHF setup', highlighted: true, description: 'Cabinet avec 3 accès inclus', features: ['3 accès inclus', 'Journal de conseil LSA', 'Préparation document précontractuel', '+49 CHF / mois / user supp.'] },
-      { code: 'premium', name: 'Sur-Mesure / Fiduciaire', monthly: null, setup: 1500, setupPrefix: 'dès', setupLabel: "dès 1'500 CHF setup", description: 'Cabinets avancés et fiduciaires', features: ['Module Fiduciaire', 'TVA suisse et échéanciers cantonaux', 'GED avec hash', 'Déploiement sur devis'] },
-    ],
-  },
+  FR: { ...MARKET_META.FR, currency: 'EUR', plans: PLANS_BY_MARKET.FR },
+  CH: { ...MARKET_META.CH, currency: 'CHF', plans: PLANS_BY_MARKET.CH },
 }
 
 export function normalizeMarket(value) {
@@ -138,9 +118,8 @@ export function parseMarketFromSearch(search = '') {
 }
 
 export function formatMarketPrice(amount, market = DEFAULT_MARKET) {
-  if (amount === null || amount === undefined) return 'Sur devis'
-  const normalized = normalizeMarket(market)
-  const rounded = Math.round(Number(amount))
-  const formatted = String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, "'")
-  return normalized === 'CH' ? `${formatted} CHF` : `${formatted} €`
+  // Un montant absent n'est PAS zéro : c'est une offre sur devis (libellé unique
+  // du référentiel public). Le formatage lui-même vient aussi de ce référentiel,
+  // pour qu'aucune règle de devise ne soit recopiée ici.
+  return formatAmountHt(amount, getMarketReference(normalizeMarket(market)).currencySymbol)
 }

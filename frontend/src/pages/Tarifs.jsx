@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, ChevronDown, Mail, ArrowRight, Star, Shield, Zap, Users } from 'lucide-react'
-import { MARKET_PRICING, MARKET_OPTIONS, resolveMarketContext, persistMarketOverride, parseMarketFromSearch, readStoredMarketOverride, getDetectedGeoCountry } from '../market/marketContext'
+import { MARKET_OPTIONS, resolveMarketContext, persistMarketOverride, parseMarketFromSearch, readStoredMarketOverride, getDetectedGeoCountry } from '../market/marketContext'
+import {
+  SUR_DEVIS_LABEL,
+  formatAmountHt,
+  getMarketReference,
+  plansSeoDescription,
+  plansSeoTitle,
+} from '../market/plansReference'
 import MarketingFooter from '../components/marketing/MarketingFooter'
 import { applySeo } from '../lib/seo'
 import { evenement } from '../lib/analytics'
@@ -61,12 +68,16 @@ const featureRows = [
   { key: 'max_clients', label: 'Nombre de clients max', type: 'text' }
 ]
 
-const plans = [
+/**
+ * Détails d'ÉCRAN par code backend : descriptif commercial et matrice de
+ * fonctionnalités. AUCUN montant ici — la grille (codes, montants, devises,
+ * setup, « sur devis ») vient de market/plansReference.js, elle-même alignée sur
+ * ce que sert GET /api/billing/plans.
+ */
+const planDetails = [
   {
-    name: "Starter",
-    price: '89',
+    code: 'starter',
     desc: 'Pour structurer les premiers suivis',
-    popular: false,
     features: {
       morning_brief: true,
       client_score: true,
@@ -86,10 +97,8 @@ const plans = [
     }
   },
   {
-    name: 'Pro',
-    price: '159',
+    code: 'pro',
     desc: 'Pour piloter réellement le cabinet avec ARK',
-    popular: true,
     features: {
       morning_brief: true,
       client_score: true,
@@ -109,10 +118,8 @@ const plans = [
     }
   },
   {
-    name: 'Cabinet',
-    price: 'Sur devis',
+    code: 'cabinet',
     desc: 'Pour cabinets structurés et multi-utilisateurs',
-    popular: false,
     features: {
       morning_brief: true,
       client_score: true,
@@ -133,12 +140,39 @@ const plans = [
   }
 ]
 
-const frais = [
-  { type: 'Mise en service', montant: '0€', desc: "Gratuit — pas de frais d'activation" },
-  { type: 'Migration portefeuille', montant: '0€', desc: 'Import Excel/CSV gratuit, accompagné si nécessaire' },
-  { type: 'Résiliation', montant: '0€', desc: 'Sans frais, résiliable à tout moment' },
-  { type: 'Frais SMS/WhatsApp', montant: '0€', desc: 'Inclus dans tous les plans' }
-]
+/**
+ * Cartes de la page des prix, construites à partir du référentiel public :
+ * les montants et les codes ne sont plus recopiés dans la page. Le marché suisse
+ * porte ses codes backend (independant / cabinet_ch / cabinet_ch_sur_devis).
+ */
+function displayPlansPour(market) {
+  return getMarketReference(market).plans.map((reference) => {
+    const detail = planDetails.find((item) => item.code === reference.code)
+    return {
+      name: reference.name,
+      desc: detail?.desc || reference.description,
+      popular: !!reference.highlighted,
+      price: reference.surDevis ? SUR_DEVIS_LABEL : String(reference.monthly),
+      currency: reference.currencySymbol,
+      // Libellé de frais d'installation : publié pour la Suisse uniquement
+      // (la page France n'affiche rien sous le prix, comme avant).
+      setupLabel: market === 'CH' ? reference.setupLabel : undefined,
+      chFeatures: market === 'CH' ? reference.features : undefined,
+      features: detail?.features,
+    }
+  })
+}
+
+/** Frais de mise en service : montant NUL formaté avec la devise du marché. */
+function fraisDeMiseEnService(market) {
+  const gratuit = formatAmountHt(0, getMarketReference(market).currencySymbol)
+  return [
+    { type: 'Mise en service', montant: gratuit, desc: "Gratuit — pas de frais d'activation" },
+    { type: 'Migration portefeuille', montant: gratuit, desc: 'Import Excel/CSV gratuit, accompagné si nécessaire' },
+    { type: 'Résiliation', montant: gratuit, desc: 'Sans frais, résiliable à tout moment' },
+    { type: 'Frais SMS/WhatsApp', montant: gratuit, desc: 'Inclus dans tous les plans' },
+  ]
+}
 
 const faq = [
   // L'essai gratuit manquait sur la page des prix alors que la landing l'annonce
@@ -283,7 +317,7 @@ function FAQItem({ q, a }) {
 
 // ─── Comparison Table ─────────────────────────────────────────────────────────
 
-function ComparisonTable() {
+function ComparisonTable({ plans }) {
   const categories = [...new Set(featureRows.map(r => featureCategory[r.key]))]
 
   return (
@@ -402,31 +436,20 @@ export default function Tarifs() {
     geoCountry: getDetectedGeoCountry(),
   }).market)
   const isCH = market === 'CH'
-  const marketCfg = MARKET_PRICING[market]
-  const displayPlans = isCH
-    ? marketCfg.plans.map(p => ({
-        name: p.name,
-        desc: p.description,
-        popular: !!p.highlighted,
-        price: p.monthly === null ? 'Sur devis' : String(p.monthly),
-        currency: 'CHF',
-        setupLabel: p.setupLabel,
-        chFeatures: p.features,
-      }))
-    : plans
+  const marketCfg = getMarketReference(market)
+  const displayPlans = displayPlansPour(market)
+  const frais = fraisDeMiseEnService(market)
   const switchMarket = (code) => { persistMarketOverride(code); setMarket(code) }
 
   // /tarifs n'avait AUCUNE métadonnée propre : la page héritait du title, de la
   // description et du canonical de l'accueil (duplication). Le title reflète le
   // marché affiché, et l'alternance pointe vers la page tarifs CHF du cluster /ch.
+  // Les montants cités dans le titre et la description sont DÉRIVÉS de la grille
+  // publique (market/plansReference.js) : plus aucun montant recopié ici.
   useEffect(() => {
     applySeo({
-      title: isCH
-        ? 'Tarifs COURTIA Suisse — CHF 199 Indépendant / 349 Cabinet (TVA 8,1 % en sus)'
-        : 'Tarifs COURTIA — Starter 89 € / Pro 159 € / Cabinet sur devis',
-      description: isCH
-        ? 'Grille tarifaire COURTIA en francs suisses pour courtiers d’assurance en Suisse : Indépendant 199 CHF/mois, Cabinet 349 CHF/mois, Sur-Mesure sur devis. Setup et TVA 8,1 % indiqués.'
-        : 'Grille tarifaire COURTIA pour courtiers d’assurance : Starter 89 € HT/mois, Pro 159 € HT/mois, Cabinet sur devis. Sans frais cachés ni engagement.',
+      title: plansSeoTitle(market),
+      description: plansSeoDescription(market),
       canonicalPath: '/tarifs',
       robots: 'index, follow',
       alternates: [
@@ -435,7 +458,7 @@ export default function Tarifs() {
         { hreflang: 'x-default', href: '/tarifs' },
       ],
     })
-  }, [isCH])
+  }, [market])
 
   /* Vue de la page tarifs : maillon du funnel qui n'était mesuré par personne.
      Une seule fois par affichage (jamais à chaque bascule FR/CH), pour ne pas
@@ -514,7 +537,7 @@ export default function Tarifs() {
             Comparez toutes les fonctionnalités
           </h2>
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <ComparisonTable />
+            <ComparisonTable plans={displayPlans} />
           </div>
         </motion.div>
 

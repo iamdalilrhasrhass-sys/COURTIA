@@ -43,6 +43,14 @@ import {
   readStoredMarketOverride,
   resolveMarketContext,
 } from '../market/marketContext'
+import {
+  VAT_LABEL,
+  formatAmountHt,
+  formatPlanPrice,
+  formatTtcFrance,
+  getMarketPlans,
+  structuredDataOffers,
+} from '../market/plansReference'
 
 const styles = `
 html { scroll-behavior: smooth; }
@@ -383,41 +391,60 @@ const solutionTakeover = [
   ['Échéances', 'contrats à surveiller avant qu’il soit trop tard'],
 ]
 
+/* ---------------------------------------------------------------------------
+   Grilles tarifaires PUBLIQUES dérivées de market/plansReference.js : les
+   montants, devises, périodicités et codes CI-DESSOUS ne sont plus recopiés à la
+   main. Les codes sont ceux du BACKEND (FR starter/pro/cabinet, CH independant/
+   cabinet_ch/cabinet_ch_sur_devis) : les liens d'onboarding suisses ne pointent
+   donc plus vers des codes français.
+   ------------------------------------------------------------------------- */
+const [starterFR, proFR, cabinetFR] = getMarketPlans('FR')
+const [independantCH, cabinetCH, surMesureCH] = getMarketPlans('CH')
+
+/** « 89 € HT » — montant publié + mention hors taxes. */
+const prixHtFR = (reference) => `${formatAmountHt(reference.monthly, reference.currencySymbol)} HT`
+
+/** Note d'essai FR (7 jours, 0 aujourd'hui) avec le TTC dérivé du HT publié. */
+const noteEssaiFR = (reference) =>
+  `0 € aujourd’hui, puis ${prixHtFR(reference)} / mois après le 7e jour. Soit ${formatTtcFrance(reference.monthly)} TTC / mois avec TVA ${VAT_LABEL.FR}.`
+
+const capitaliser = (mot = '') => (mot ? mot.charAt(0).toUpperCase() + mot.slice(1) : '')
+
 const pricing = [
   {
-    name: 'Starter',
-    price: '89 € HT',
+    name: starterFR.name,
+    price: prixHtFR(starterFR),
     period: '/ mois',
     label: 'Pour reprendre la main',
     headline: 'Pour sortir des tableurs, des post-it et des relances dans la tête.',
-    note: '0 € aujourd’hui, puis 89 € HT / mois après le 7e jour. Soit 106,80 € TTC / mois avec TVA 20 %.',
-    href: '/register?plan=starter',
+    note: noteEssaiFR(starterFR),
+    href: `/register?plan=${starterFR.code}`,
     cta: 'Structurer mon cabinet',
-    featured: false,
+    featured: !!starterFR.highlighted,
     items: ['Clients et contrats centralisés', 'Relances et tâches visibles', 'Échéances sous contrôle', 'Tableau de bord essentiel', 'Essai gratuit 7 jours'],
   },
   {
-    name: 'Pro',
-    price: '159 € HT',
+    name: proFR.name,
+    price: prixHtFR(proFR),
     period: '/ mois',
     label: 'Le vrai levier commercial',
     headline: 'Pour ne plus porter la gestion, les relances et les dossiers à bout de bras.',
-    note: '0 € aujourd’hui, puis 159 € HT / mois après le 7e jour. Soit 190,80 € TTC / mois avec TVA 20 %. Un seul renouvellement sauvé peut déjà justifier le mois.',
-    href: '/register?plan=pro',
+    note: `${noteEssaiFR(proFR)} Un seul renouvellement sauvé peut déjà justifier le mois.`,
+    href: `/register?plan=${proFR.code}`,
     cta: 'Gagner du temps maintenant',
-    featured: true,
+    featured: !!proFR.highlighted,
     items: ['Gestion quotidienne prise en charge', 'Brief ARK chaque matin', 'Appels et relances priorisés', 'Dossiers incomplets suivis', 'Opportunités multi-équipement', 'Rapports commerciaux avancés'],
   },
   {
-    name: 'Cabinet',
-    price: 'Sur devis',
+    name: cabinetFR.name,
+    price: formatPlanPrice(cabinetFR),
     period: '',
     label: 'Cabinets qui veulent scaler',
     headline: 'Pour industrialiser le suivi commercial sur toute l’équipe.',
     note: 'Accompagnement, déploiement, organisation multi-utilisateurs et workflows avancés étudiés avec le cabinet.',
     externalHref: 'mailto:contact@courtiark.fr?subject=COURTIA%20Cabinet',
     cta: 'Construire mon déploiement',
-    featured: false,
+    featured: !!cabinetFR.highlighted,
     items: ['Tout Pro', 'Multi-utilisateurs', 'Méthode de déploiement', 'Suivi équipe', 'Support prioritaire'],
   },
 ]
@@ -792,39 +819,45 @@ function MarketSwitcher({ market, onChange, mobile = false }) {
 
 const swissPricing = [
   {
-    name: 'Indépendant',
-    price: '199 CHF',
+    name: independantCH.name,
+    price: formatPlanPrice(independantCH),
     period: '/ mois',
     label: 'Courtier suisse solo',
     headline: 'CHF, LSA, nLPD et vocabulaire suisse romand dès le premier écran.',
-    note: '490 CHF de frais d’inscription one-shot : onboarding, migration, paramétrage LSA et formation. TVA 8,1 % en sus.',
-    href: '/onboarding?plan=starter&market=CH',
+    note: `${independantCH.setup} CHF de frais d’inscription one-shot : onboarding, migration, paramétrage LSA et formation. TVA ${VAT_LABEL.CH} en sus.`,
+    href: `/onboarding?plan=${independantCH.code}&market=CH`,
     cta: 'Réserver une démo',
-    featured: false,
-    items: ['Conformité LSA de base', 'Langues FR-CH / DE-CH / IT-CH', 'Caisse-maladie, LAA, LCA/LAMal', 'Document précontractuel préparé', 'Setup 490 CHF'],
+    featured: !!independantCH.highlighted,
+    items: [
+      'Conformité LSA de base',
+      'Langues FR-CH / DE-CH / IT-CH',
+      'Caisse-maladie, LAA, LCA/LAMal',
+      'Document précontractuel préparé',
+      `Setup ${formatAmountHt(independantCH.setup, independantCH.currencySymbol)}`,
+    ],
   },
   {
-    name: 'Cabinet',
-    price: '349 CHF',
+    name: cabinetCH.name,
+    price: formatPlanPrice(cabinetCH),
     period: '/ mois',
     label: '3 accès inclus',
     headline: 'Le cockpit complet pour cabinet suisse avec traçabilité du conseil.',
-    note: '990 CHF de setup one-shot. Utilisateur supplémentaire : +49 CHF / mois. TVA 8,1 % en sus.',
-    href: '/onboarding?plan=pro&market=CH',
+    note: `${cabinetCH.setup} CHF de setup one-shot. Utilisateur supplémentaire : +${cabinetCH.extraUserMonthly} CHF / mois. TVA ${VAT_LABEL.CH} en sus.`,
+    href: `/onboarding?plan=${cabinetCH.code}&market=CH`,
     cta: 'Réserver une démo',
-    featured: true,
+    featured: !!cabinetCH.highlighted,
     items: ['3 accès inclus', 'Journal de conseil LSA', 'Informations rémunération et données', 'Export preuve de conseil', 'ARK portefeuille CH'],
   },
   {
-    name: 'Sur-Mesure / Fiduciaire',
-    price: 'Sur devis',
+    name: surMesureCH.name,
+    price: formatPlanPrice(surMesureCH),
     period: '',
     label: 'Verticale suisse',
     headline: 'Assurance, fiduciaire, TVA suisse, échéances cantonales et GED hashée.',
-    note: "Dès 1'500 CHF de setup. Déploiement, flux de données et sécurité nLPD cadrés au cas par cas.",
+    note: `${capitaliser(surMesureCH.setupPrefix)} ${formatAmountHt(surMesureCH.setup, surMesureCH.currencySymbol)} de setup. Déploiement, flux de données et sécurité nLPD cadrés au cas par cas.`,
     externalHref: 'mailto:contact@courtiark.fr?subject=Courtiark%20Suisse%20Fiduciaire',
     cta: 'Parler du déploiement',
-    featured: false,
+    featured: !!surMesureCH.highlighted,
     items: ['Module Fiduciaire', 'Mandats et échéanciers cantonaux', 'TVA suisse 8,1 / 2,6 / 3,8 %', 'GED versionnée + hash', 'Plan hébergement CH'],
   },
 ]
@@ -1204,12 +1237,7 @@ export default function LandingPublic() {
         { '@type': 'Country', name: 'France' },
         { '@type': 'Country', name: 'Suisse' },
       ],
-      offers: [
-        { '@type': 'Offer', name: 'Starter', price: '89', priceCurrency: 'EUR' },
-        { '@type': 'Offer', name: 'Pro', price: '159', priceCurrency: 'EUR' },
-        { '@type': 'Offer', name: 'Indépendant (Suisse)', price: '199', priceCurrency: 'CHF' },
-        { '@type': 'Offer', name: 'Cabinet (Suisse)', price: '349', priceCurrency: 'CHF' },
-      ],
+      offers: structuredDataOffers(),
     })
   }, [])
 

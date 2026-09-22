@@ -11,12 +11,38 @@ import GlassCard from '../components/ui/GlassCard'
 import StatusPill from '../components/ui/StatusPill'
 import { fmtMontant, fmtDate } from '../lib/monnaie'
 import { LIBELLES } from '../lib/libelles'
+import {
+  findPublicPlanByCode,
+  isQuoteOnlyPlan,
+  planActionLabel,
+  QUOTE_CONTACT_PATH,
+  SUR_DEVIS_LABEL,
+} from '../market/plansReference'
 
 const PLAN_ICON = {
   starter: CreditCard,
   pro: Sparkles,
   cabinet: Building2,
   premium: Crown,
+  // Codes suisses servis par le backend : même correspondance icône/offre.
+  independant: CreditCard,
+  cabinet_ch: Building2,
+  cabinet_ch_sur_devis: Crown,
+  cabinet_sur_devis: Building2,
+}
+
+/**
+ * Décision d'envoi d'une offre, PURE et testable : une offre sur devis part vers
+ * le parcours CONTACT existant (route déjà utilisée pour 'premium'), jamais vers
+ * Checkout — le serveur refuse ces plans par 409 `cabinet_contact_required`.
+ * Couvre les codes FR et CH : cabinet, cabinet_sur_devis, cabinet_ch_sur_devis,
+ * premium.
+ */
+export function resoudreEnvoiOffre(planCode) {
+  if (isQuoteOnlyPlan(planCode)) {
+    return { action: 'contact', path: QUOTE_CONTACT_PATH, endpoint: null }
+  }
+  return { action: 'checkout', path: null, endpoint: '/billing/checkout-session' }
 }
 
 export default function Billing() {
@@ -54,21 +80,29 @@ export default function Billing() {
   }, [load])
 
   const selectedPlan = searchParams.get('plan') || status?.plan_code || 'pro'
+  // Une offre sur devis ne passe JAMAIS par Checkout : le serveur la refuse
+  // (409 `cabinet_contact_required`). Le bouton principal doit donc dire la
+  // même chose que ce que fait réellement le serveur.
+  const selectedIsQuoteOnly = isQuoteOnlyPlan(selectedPlan)
   const missingConfiguration = useMemo(
     () => stripeConfiguration?.missing?.filter(Boolean) || [],
     [stripeConfiguration]
   )
 
   async function startCheckout(planCode) {
-    if (planCode === 'premium') {
-      navigate('/contact?type=premium')
+    // Une seule décision, prise par `resoudreEnvoiOffre` : sur devis → contact.
+    const envoi = resoudreEnvoiOffre(planCode)
+    if (envoi.action === 'contact') {
+      // Parcours CONTACT déjà en place pour l'offre sur devis 'premium' :
+      // même route, même paramètre. Aucun Checkout, aucune page nouvelle.
+      navigate(envoi.path)
       return
     }
 
     setWorkingPlan(planCode)
     setError('')
     try {
-      const res = await api.post('/billing/checkout-session', { plan_code: planCode })
+      const res = await api.post(envoi.endpoint, { plan_code: planCode })
       if (res.data?.url) {
         window.location.href = res.data.url
         return
@@ -172,7 +206,7 @@ export default function Billing() {
 
             <div className="mt-5 flex flex-wrap gap-3">
               <Button type="button" onClick={() => startCheckout(selectedPlan)} disabled={!!workingPlan}>
-                <CreditCard size={16} /> {workingPlan ? 'Ouverture...' : 'Ouvrir Checkout'}
+                <CreditCard size={16} /> {workingPlan ? 'Ouverture...' : selectedIsQuoteOnly ? 'Demander une offre' : 'Ouvrir Checkout'}
               </Button>
               <Button type="button" variant="secondary" onClick={manageSubscription}>
                 <ShieldCheck size={16} /> Portail client
@@ -201,9 +235,12 @@ export default function Billing() {
   )
 }
 
-function PlanCard({ plan, selected, loading, onSelect }) {
+export function PlanCard({ plan, selected, loading, onSelect }) {
   const Icon = PLAN_ICON[plan.code] || CreditCard
-  const contactOnly = plan.code === 'premium'
+  // Offre sur devis : ni Checkout ni choix self-serve — le serveur la refuse
+  // par 409 `cabinet_contact_required`. La grille des codes vient du référentiel
+  // public, on ne recopie pas la liste ici (couverture FR + CH).
+  const contactOnly = isQuoteOnlyPlan(plan.code)
   return (
     <GlassCard className={`flex min-h-[330px] flex-col p-5 ${plan.highlighted ? 'ring-1 ring-cyan-200/30' : ''}`}>
       <div className="flex items-start justify-between gap-3">
@@ -223,7 +260,7 @@ function PlanCard({ plan, selected, loading, onSelect }) {
       <div className="mt-4">
         <div className="text-3xl font-black tracking-tight text-white">
           {contactOnly
-            ? 'Sur devis'
+            ? SUR_DEVIS_LABEL
             : (plan.display_price_ht || fmtMontant(plan.price, { maximumFractionDigits: 0 }))}
         </div>
         {/* `display_price_ht` vient du serveur et porte DÉJÀ « HT / mois » avec la
@@ -242,7 +279,7 @@ function PlanCard({ plan, selected, loading, onSelect }) {
       </ul>
 
       <Button type="button" variant={plan.highlighted ? 'primary' : 'secondary'} onClick={onSelect} disabled={loading} className="mt-5 w-full">
-        {loading ? 'Préparation...' : contactOnly ? 'Demander une offre' : 'Choisir ce plan'}
+        {loading ? 'Préparation...' : planActionLabel(plan.code)}
       </Button>
     </GlassCard>
   )
@@ -271,6 +308,10 @@ function planSummary(code) {
   if (code === 'starter') return 'Pour lancer COURTIA avec les fondations CRM et rapports simples.'
   if (code === 'pro') return 'L’offre principale avec ARK, documents, intégrations et cockpit complet.'
   if (code === 'cabinet') return 'Pour équipes multi-collaborateurs avec pilotage avancé et support renforcé.'
+  // Codes suisses : le descriptif PUBLIÉ de l'offre (référentiel public) plutôt
+  // qu'un texte inventé — sinon une offre suisse héritait d'un texte français.
+  const reference = findPublicPlanByCode(code)
+  if (reference?.description) return reference.description
   return 'Accompagnement sur mesure, intégrations avancées et déploiement cabinet.'
 }
 
@@ -280,5 +321,7 @@ function planFeatures(code) {
   // fonction sans sigle national, pour qu'un cabinet suisse lise la même offre.
   if (code === 'pro') return ['3 utilisateurs', '1 500 clients', `ARK + ${LIBELLES.briefDuMatin}`, 'Gmail, Agenda, documents de conformité']
   if (code === 'cabinet') return ['10 utilisateurs', 'Clients illimités', 'Commissions et reporting avancé', 'WhatsApp et support prioritaire']
+  const reference = findPublicPlanByCode(code)
+  if (reference?.features?.length) return reference.features
   return ['Multi-cabinet', 'Accompagnement dédié', 'Intégrations avancées', 'Support prioritaire']
 }
