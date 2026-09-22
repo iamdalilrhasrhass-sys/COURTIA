@@ -1,33 +1,89 @@
+# robots.txt — courtiark.fr (COURTIA)
+# Mise à jour 2026-09-22.
+
 User-agent: *
 Allow: /
 
-# Routes privees : elles repondent 200 dans le HTML initial (coquille SPA) et
-# n'ont rien a faire dans un index. Le noindex JS de NoIndex.jsx n'agit
-# qu'apres execution du JavaScript.
+# ── Espace public indexable ──────────────────────────────────────────────────
+# Routes marketing de l'application (SPA) : /, /fonctionnalites, /tarifs, /demo,
+# /demo-public, /contact, /securite, /rgpd, /changelog, /roadmap, /status,
+# /legal/*.
+# Pages SEO statiques servies telles quelles : /fr/* et /ch/* (piliers, pages
+# métier, alternatives, guide, 10 villes retenues, univers suisse).
+
+# ── Routes privées : jamais indexables ───────────────────────────────────────
+# Elles répondent 200 dans le HTML initial (coquille SPA vide) et n'ont rien à
+# faire dans un index : le noindex côté JavaScript n'agit qu'après exécution du
+# JavaScript, donc un crawler les verrait comme des pages vides indexables.
 Disallow: /dashboard
 Disallow: /login
+Disallow: /connexion
+Disallow: /register
 Disallow: /onboarding
 Disallow: /parametres
 Disallow: /abonnement
+Disallow: /billing
+Disallow: /paiement-succes
+Disallow: /paiement-annule
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /invite/
+Disallow: /upload/
+Disallow: /admin
+Disallow: /equipe
+Disallow: /clients
+Disallow: /contrats
+Disallow: /devis
+Disallow: /documents
+Disallow: /commissions
+Disallow: /taches
+Disallow: /objectifs
+Disallow: /opportunites
+Disallow: /rapports
+Disallow: /analyses
+Disallow: /analytics
+Disallow: /ark-intelligence
+Disallow: /assistant-ark
+Disallow: /morning-brief
+Disallow: /reach
+Disallow: /prospection
+Disallow: /relances
+Disallow: /partenaires
+Disallow: /sante-portefeuille
+Disallow: /rendez-vous
+Disallow: /import
+Disallow: /academy
+Disallow: /acquisition
+Disallow: /capitia
+Disallow: /browser-pilot
+Disallow: /design-system
+Disallow: /prise-en-main
+Disallow: /api/
 
-# Sitemaps
-# sitemap.xml         : pages publiques FR réellement servies
-# sitemap-ch.xml      : cluster suisse fr-CH (/ch)
+# ── Sitemaps ─────────────────────────────────────────────────────────────────
+# sitemap.xml      : routes publiques de l'application (servies par le SPA)
+# sitemap-seo.xml  : pages SEO statiques indexables de /fr (piliers, métiers,
+#                    alternatives, guide, 10 villes retenues)
+# sitemap-ch.xml   : univers suisse (/ch)
+# Les ~1 075 pages locales `logiciel-courtier-<métier>-<ville>` sont désormais en
+# `noindex, follow` et ne figurent plus dans aucun sitemap : elles partageaient un
+# bloc de contenu commun et n'avaient pas de valeur propre suffisante.
 Sitemap: https://courtiark.fr/sitemap.xml
 Sitemap: https://courtiark.fr/sitemap-ch.xml
-
-# sitemap-seo.xml : 1 109 URL, dont ~1 086 pages de ville /fr/* qui partagent un
-# bloc de contenu identique (686 pages sur 1 086 contiennent le même paragraphe).
-# Il reste déclaré ici parce qu'il est publié, mais ce sont des pages quasi
-# dupliquées : à arbitrer avant toute nouvelle production de pages locales.
 Sitemap: https://courtiark.fr/sitemap-seo.xml
 
-# --- IA crawlers (ajout GEO) ---
+# ── Robots IA (citations et réponses génératives) ────────────────────────────
 User-agent: GPTBot
 Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
 User-agent: PerplexityBot
 Allow: /
+
 User-agent: ClaudeBot
 Allow: /
+
 User-agent: Google-Extended
 Allow: /

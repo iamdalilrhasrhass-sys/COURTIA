@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA pour courtier d&#x27;assurance : à quoi ça sert vraiment — COURTIA</title>
+<meta name="description" content="Usages concrets de l&#x27;IA dans un cabinet de courtage : synthèse de portefeuille, priorisation des actions, préparation d&#x27;appels, lecture de pièces. COURTIA (ARK). Essai 7 jours.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://courtiark.fr/fr/ia-courtier-assurance">
+<meta name="author" content="COURTIA">
+<link rel="alternate" hreflang="fr" href="https://courtiark.fr/fr/ia-courtier-assurance">
+<meta property="og:type" content="website">
+<meta property="og:title" content="IA pour courtier d&#x27;assurance : à quoi ça sert vraiment — COURTIA">
+<meta property="og:description" content="Usages concrets de l&#x27;IA dans un cabinet de courtage : synthèse de portefeuille, priorisation des actions, préparation d&#x27;appels, lecture de pièces. COURTIA (ARK). Essai 7 jours.">
+<meta property="og:url" content="https://courtiark.fr/fr/ia-courtier-assurance">
+<meta property="og:image" content="https://courtiark.fr/og-courtia.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="COURTIA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="IA pour courtier d&#x27;assurance : à quoi ça sert vraiment — COURTIA">
+<meta name="twitter:description" content="Usages concrets de l&#x27;IA dans un cabinet de courtage : synthèse de portefeuille, priorisation des actions, préparation d&#x27;appels, lecture de pièces. COURTIA (ARK). Essai 7 jours.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIA", "url": "https://courtiark.fr", "logo": "https://courtiark.fr/og-courtia.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIA est un logiciel de gestion et cockpit d'assistance IA pour courtiers et cabinets de courtage en assurance."}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIA", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr", "description": "Usages concrets de l'IA dans un cabinet de courtage : synthèse de portefeuille, priorisation des actions, préparation d'appels, lecture de pièces. COURTIA (ARK). Essai 7 jours.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Dossier client centralisé", "Gestion des contrats et échéances", "Devis et registre", "Relances et suivi des tâches", "Commissions et rétrocessions", "Documents et dépôt de pièces par lien", "Conformité par marché (France et Suisse)", "Assistant IA ARK (synthèse, priorisation, appels)"], "offers": [{"@type": "Offer", "name": "Pro", "price": "159", "priceCurrency": "EUR", "description": "Offre incluant l'assistant complet, par mois, hors taxes (France)."}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://courtiark.fr/"}, {"@type": "ListItem", "position": 2, "name": "France", "item": "https://courtiark.fr/fr"}, {"@type": "ListItem", "position": 3, "name": "IA courtier assurance", "item": "https://courtiark.fr/fr/ia-courtier-assurance"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "L'IA prend-elle des décisions à la place du courtier ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Elle prépare, résume et propose. Les actions (envoi, décision, engagement) restent déclenchées par un humain."}}, {"@type": "Question", "name": "Les données du cabinet servent-elles à entraîner un modèle public ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. Les données du cabinet servent à produire la réponse demandée, dans le périmètre du cabinet, et restent cloisonnées par cabinet."}}, {"@type": "Question", "name": "Faut-il saisir beaucoup de choses pour que l'IA soit utile ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. L'assistant travaille sur ce que le cabinet a déjà : clients, contrats, échéances, documents et historique. Quand une donnée manque, il l'indique."}}]}</script>
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--bord:rgba(255,255,255,.10);--texte:#eef0ff;--doux:#a8adcb;--accent:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+header,main,footer{max-width:980px;margin:0 auto;padding:22px 20px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header a{color:var(--texte);text-decoration:none;font-weight:600}
+nav a{color:var(--doux);font-weight:500;margin-right:14px;font-size:15px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:26px 0 10px;letter-spacing:-.02em}
+h2{font-size:clamp(21px,2.8vw,28px);margin:38px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:20px;margin:18px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.cta a{display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+ul{padding-left:20px}
+footer{border-top:1px solid var(--bord);margin-top:40px;font-size:14px}
+footer a{color:var(--doux);margin-right:12px}
+.fil{font-size:14px;color:var(--doux);margin-top:8px}
+.fil a{color:var(--doux)}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://courtiark.fr/">COURTIA</a>
+  <nav>
+    <a href="https://courtiark.fr/fonctionnalites">Fonctionnalités</a>
+    <a href="https://courtiark.fr/tarifs">Tarifs</a>
+    <a href="https://courtiark.fr/ch">Univers suisse</a>
+    <a href="https://courtiark.fr/demo-public">Démo</a>
+    <a href="https://courtiark.fr/contact">Contact</a>
+  </nav>
+</header>
+<main>
+<p class="fil"><a href="/">Accueil</a> › <a href="/fr">France</a> › <a href="/fr/ia-courtier-assurance">IA courtier assurance</a></p>
+<h1>IA pour courtier d&#x27;assurance : des usages concrets, pas un argument</h1>
+
+<div class="section">
+<h2>Le malentendu à lever</h2>
+<p>« IA » ne veut rien dire en soi pour un cabinet. Ce qui compte, c'est la tâche précise que
+l'assistant prend en charge, et ce que le courtier peut vérifier ensuite. Un assistant qui écrit du
+texte plausible mais faux fait perdre plus de temps qu'il n'en fait gagner.</p>
+<p>La règle que COURTIA s'impose : <strong>l'assistant travaille sur les données du cabinet</strong>
+(clients, contrats, échéances, documents, historique) et rend un résultat qu'un humain contrôle avant
+d'agir. Aucune donnée de portefeuille n'est inventée, et un écran qui n'a rien à calculer affiche
+« — » plutôt qu'une valeur de remplissage.</p>
+</div>
+
+<h2>Ce que l'assistant ARK fait dans le produit</h2>
+<ul>
+<li><strong>Briefing de début de journée</strong> — ce qui doit être traité aujourd'hui : échéances
+proches, dossiers sans suite, relances dues.</li>
+<li><strong>Synthèse de portefeuille</strong> — lecture d'ensemble d'un portefeuille et des points
+d'attention, à partir des données réellement présentes.</li>
+<li><strong>Priorisation</strong> — classement des actions par urgence et par enjeu, pour ne pas
+traiter au hasard.</li>
+<li><strong>Préparation d'appel</strong> — l'essentiel du dossier avant de décrocher, pour ne pas
+chercher en direct.</li>
+<li><strong>Brouillons de messages</strong> — relances et réponses préparées dans le ton du cabinet,
+relues par le courtier avant envoi.</li>
+<li><strong>Lecture assistée de pièces</strong> — extraction des informations utiles d'un document
+reçu (pièce d'identité, justificatif) pour limiter la ressaisie.</li>
+<li><strong>Veille ciblée</strong> — suivi d'informations utiles au cabinet, présenté sous forme de
+signaux et non de flux.</li>
+<li><strong>Assistance vocale</strong> — préparation et compte rendu d'échanges, pour que l'écrit du
+dossier se fasse pendant l'appel plutôt qu'après.</li>
+</ul>
+
+<h2>Les garde-fous, parce qu'ils comptent plus que la démonstration</h2>
+<ul>
+<li><strong>Les données du cabinet restent cloisonnées</strong> : un cabinet ne voit que ses
+données.</li>
+<li><strong>Rien n'est envoyé au client sans validation humaine.</strong></li>
+<li><strong>Les documents produits sont tracés</strong> : qui, quand, sur quelle base.</li>
+<li><strong>L'assistant dit ce qu'il ne sait pas</strong> : quand la donnée manque, l'écran
+l'indique au lieu de la fabriquer.</li>
+</ul>
+
+<h2>Avant / avec : une matinée de courtier</h2>
+<table>
+<tr><th>Moment</th><th>Sans assistance</th><th>Avec ARK</th></tr>
+<tr><td>Ouvrir la journée</td><td>Parcourir agenda, boîte e-mail et notes pour décider par où commencer</td><td>Le briefing liste ce qui doit être traité, avec les dossiers concernés</td></tr>
+<tr><td>Appeler un client</td><td>Rouvrir plusieurs écrans pendant l'appel</td><td>La fiche et les points saillants sont prêts avant l'appel</td></tr>
+<tr><td>Relancer un dossier</td><td>Rédiger, vérifier, envoyer</td><td>Le brouillon est préparé, le courtier le valide</td></tr>
+<tr><td>Traiter une pièce reçue</td><td>Ouvrir, lire, recopier</td><td>Les informations utiles sont extraites, le courtier confirme</td></tr>
+</table>
+
+<h2>Pourquoi c'est différent d'un assistant généraliste</h2>
+<p>Un assistant généraliste ne connaît ni les échéances de vos contrats, ni l'état de vos devis, ni
+ce qu'un devis de courtage doit contenir. ARK est branché sur le modèle de données du cabinet : c'est
+cette liaison qui rend la réponse utilisable, et c'est aussi elle qui impose les garde-fous ci-dessus.</p>
+
+<h2>Questions fréquentes</h2>
+<h3>L&#x27;IA prend-elle des décisions à la place du courtier ?</h3>
+<p>Non. Elle prépare, résume et propose. Les actions (envoi, décision, engagement) restent déclenchées par un humain.</p>
+<h3>Les données du cabinet servent-elles à entraîner un modèle public ?</h3>
+<p>Non. Les données du cabinet servent à produire la réponse demandée, dans le périmètre du cabinet, et restent cloisonnées par cabinet.</p>
+<h3>Faut-il saisir beaucoup de choses pour que l&#x27;IA soit utile ?</h3>
+<p>Non. L'assistant travaille sur ce que le cabinet a déjà : clients, contrats, échéances, documents et historique. Quand une donnée manque, il l'indique.</p>
+<h2>Pour aller plus loin</h2>
+<ul>
+<li><a href="/fr/crm-courtier-assurance">CRM courtier assurance</a> — le dossier client 360° sur lequel l'assistant s'appuie</li>
+<li><a href="/fr/automatisation-courtier-assurance">Automatisation courtier assurance</a> — les tâches qui se déclenchent seules, par opposition à celles qui demandent une décision</li>
+<li><a href="/ch/ia-courtier-assurance-suisse">IA courtier assurance en Suisse</a> — les usages de l'assistant dans un cabinet suisse</li>
+<li><a href="/fr/gagner-du-temps-courtier-assurance">Gagner du temps en cabinet de courtage</a> — où le temps se perd et comment le récupérer</li>
+</ul>
+<div class="section">
+  <h2>Voir le produit et l'essayer</h2>
+  <p>L'essai COURTIA dure 7 jours. À l'expiration, <strong>aucune donnée n'est supprimée</strong> :
+  le cabinet garde la consultation de ses dossiers et cesse seulement de pouvoir les modifier
+  jusqu'à la souscription.</p>
+  <div class="cta">
+    <a class="principal" href="https://courtiark.fr/onboarding">Créer un accès</a>
+    <a href="https://courtiark.fr/demo">Demander une démonstration</a>
+    <a href="https://courtiark.fr/demo-public">Visiter la démo publique</a>
+    <a href="https://courtiark.fr/tarifs">Voir les tarifs</a>
+  </div>
+  <p class="doux">Page mise à jour le 2026-09-22. Les fonctionnalités décrites ici sont celles qui sont
+  réellement présentes dans le produit ; aucune durée ni aucun gain chiffré n'est promis sans mesure.</p>
+</div>
+</main>
+<footer>
+  <p>
+    <a href="https://courtiark.fr/legal/mentions-legales">Mentions légales</a>
+    <a href="https://courtiark.fr/legal/confidentialite">Confidentialité</a>
+    <a href="https://courtiark.fr/legal/conditions-utilisation">Conditions</a>
+    <a href="https://courtiark.fr/rgpd">Données et RGPD</a>
+    <a href="https://courtiark.fr/securite">Sécurité</a>
+    <a href="https://courtiark.fr/status">État du service</a>
+  </p>
+  <p class="doux">COURTIA — logiciel de gestion et cockpit d'assistance pour les courtiers et cabinets
+  de courtage en assurance. France et Suisse. Contact : contact@courtiark.fr</p>
+</footer>
+</body>
+</html>
