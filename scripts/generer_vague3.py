@@ -44,6 +44,16 @@ DEPARTEMENTS = {
 }
 
 
+def nfr(valeur):
+    """Entier au format français (espace insécable fine comme séparateur de milliers)."""
+    return f"{valeur:,}".replace(",", "\u202f")
+
+
+def pfr(valeur):
+    """Pourcentage au format français (virgule décimale)."""
+    return f"{valeur:.1f}".replace(".", ",")
+
+
 def page_cartographie():
     d = json.load(open(SOURCES, encoding="utf-8"))
     regions, departements = d["regions"], d["departements"]
@@ -51,10 +61,10 @@ def page_cartographie():
     rangs = sorted(regions.items(), key=lambda x: -x[1])
     top_dep = sorted(departements.items(), key=lambda x: -x[1])[:20]
     lignes_reg = "\n".join(
-        f"<tr><td>{REGIONS.get(k, 'Code ' + k)}</td><td>{v:,}</td><td>{100 * v / total:.1f} %</td></tr>".replace(",", " ")
+        f"<tr><td>{REGIONS.get(k, 'Code ' + k)}</td><td>{nfr(v)}</td><td>{pfr(100 * v / total)} %</td></tr>"
         for k, v in rangs)
     lignes_dep = "\n".join(
-        f"<tr><td>{DEPARTEMENTS.get(k, 'Département ' + k)}</td><td>{v:,}</td></tr>".replace(",", " ")
+        f"<tr><td>{DEPARTEMENTS.get(k, 'Département ' + k)}</td><td>{nfr(v)}</td></tr>"
         for k, v in top_dep)
     corps = f"""
 <p>Cette page publie des <strong>comptages réels</strong> d'établissements de courtage d'assurance en
@@ -68,7 +78,7 @@ cabinet qui se demande s'il est seul sur son marché.</p>
 <li><strong>Source :</strong> base SIRENE diffusée par la DINUM, filtrée sur le code d'activité
 NAF 66.22Z (activités des agents et courtiers d'assurances).</li>
 <li><strong>Extraction :</strong> 19 septembre 2026, sur le fichier national complet.</li>
-<li><strong>Total mesuré :</strong> <strong>{total:,} établissements</strong>, répartis par région et
+<li><strong>Total mesuré :</strong> <strong>{nfr(total)} établissements</strong>, répartis par région et
 par département.</li>
 <li><strong>Ce qu'un établissement n'est pas :</strong> une entreprise. Un cabinet avec trois
 implantations compte trois établissements. Ces chiffres mesurent des <em>lieux d'activité</em>, pas
