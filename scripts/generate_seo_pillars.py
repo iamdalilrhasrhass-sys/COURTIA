@@ -295,6 +295,19 @@ publie pas de durée économisée qui n'aurait pas été mesurée.</p>
 principale ajoute les intégrations, les documents métier et l'assistant complet ; l'offre Cabinet
 ajoute le multi-utilisateurs, les commissions et le reporting avancé.</p>
 
+<h2>Périmètre de cette page (pour éviter les confusions)</h2>
+<p>Deux pages de COURTIA se ressemblent et ne répondent pas à la même question :</p>
+<ul>
+<li><a href="/fr/crm-courtier-assurance">cette page</a> répond à « CRM courtier assurance » : la
+relation client et le travail quotidien (dossier, contrats, échéances, relances, tâches,
+documents) ;</li>
+<li><a href="/fr/logiciel-courtier-assurance">la page du logiciel de courtage</a> répond à « logiciel
+courtier assurance » : la vue d'ensemble de l'outil (devis, commissions, conformité,
+intégrations, équipe) et le choix de l'offre.</li>
+</ul>
+<p>Si vous cherchez un outil pour reprendre la main sur le suivi client, commencez ici. Si vous
+comparez des logiciels de courtage pour un cabinet complet, commencez par la page du logiciel.</p>
+
 <h2>Ce que cette page ne prétend pas</h2>
 <p>COURTIA n'est ni un expert-comptable, ni un service juridique. Le produit structure, trace et
 prépare le travail administratif ; il ne remplace pas l'avis d'un professionnel, et aucun classement

@@ -170,9 +170,96 @@ def maj_sitemap_ch():
     return len(ajouts)
 
 
+def nettoyer_blocs_villes():
+    """
+    Les 6 piliers nationaux portaient un bloc `seo-noyau:villes-prioritaires` qui listait les 179
+    pages locales — désormais en noindex. Laisser ces 1 064 liens serait incohérent (une page ne
+    peut pas annoncer « villes couvertes » en pointant vers des pages retirées de l'index) et
+    gaspillerait du budget de crawl. Le bloc est donc réécrit : villes retenues uniquement, plus
+    une phrase qui dit la réalité.
+    """
+    villes_liens = "\n".join(
+        f'      <li><a href="/fr/logiciel-courtier-assurance-{v}">{v.capitalize().replace("-", " ")}</a></li>'
+        for v in VILLES_RETENUES
+    )
+    nouveau = """<!-- seo-noyau:villes-prioritaires:start -->
+  <section id="villes-prioritaires">
+    <h2>Le courtage, ville par ville</h2>
+    <p>COURTIA est un cockpit destiné aux cabinets de courtage en assurance exerçant en France
+    entière, et non dans une ville en particulier. Le produit ne dépend pas de la localisation du
+    cabinet : les pages ci-dessous sont les seules entrées locales conservées, parce qu'elles
+    portent un contenu propre sur leur tissu de courtage.</p>
+    <ul class="links">
+{villes_liens}
+    </ul>
+    <p>Les autres entrées locales ont été retirées de l'index : un même gabarit décliné sur
+    plusieurs centaines de villes n'apporte rien à un courtier et n'a pas sa place dans un moteur
+    de recherche. La réponse utile à la question « quel outil pour mon cabinet » se trouve dans la
+    page nationale.</p>
+  </section>
+<!-- seo-noyau:villes-prioritaires:end -->""".replace("{villes_liens}", villes_liens)
+    remplaces = []
+    d = os.path.join(PUBLIC, "fr")
+    for nom in sorted(os.listdir(d)):
+        f = os.path.join(d, nom, "index.html")
+        if not os.path.isfile(f) or not est_indexable(f):
+            continue
+        html = open(f, encoding="utf-8").read()
+        if "seo-noyau:villes-prioritaires" not in html:
+            continue
+        nouveau_html = re.sub(
+            r"<!-- seo-noyau:villes-prioritaires:start -->.*?<!-- seo-noyau:villes-prioritaires:end -->",
+            lambda _m: nouveau, html, count=1, flags=re.S)
+        if nouveau_html != html:
+            open(f, "w", encoding="utf-8").write(nouveau_html)
+            remplaces.append(nom)
+    return remplaces
+
+
+def nettoyer_sections_villes():
+    """
+    Les mêmes piliers portaient une SECONDE liste de villes (`<section id="villes">`, « Villes
+    couvertes par cette page », « COURTIA accompagne les courtiers de N villes sur ce segment »).
+    Elle aussi pointait vers des pages désormais en noindex et annonçait une couverture qui n'existe
+    plus dans l'index : elle est remplacée par une réponse honnête, avec les liens qui comptent.
+    """
+    remplacement = """<section id="villes">
+      <h2>Faut-il une page par ville pour couvrir la France ?</h2>
+      <p>Non, et COURTIA n'en publie plus. Un cabinet exerce en France entière : la réponse utile à
+      sa question est nationale, et le même texte décliné sur des centaines de villes n'apporte rien
+      au courtier qui le lit. Les seules entrées locales conservées sont celles qui portent un
+      contenu propre sur leur tissu de courtage ; elles figurent dans la section suivante.</p>
+      <p>Pour aller à l'essentiel : <a href="/fr/logiciel-courtier-assurance">le logiciel de courtage</a>
+      pour comparer les offres, <a href="/fr/crm-courtier-assurance">le CRM courtier assurance</a>
+      pour le suivi client, <a href="/fr/automatisation-courtier-assurance">l'automatisation du cabinet</a>
+      pour le travail répétitif — et l'<a href="/ch">univers suisse</a> pour un cabinet en Suisse.</p>
+    </section>"""
+    modifiees = []
+    d = os.path.join(PUBLIC, "fr")
+    for nom in sorted(os.listdir(d)):
+        f = os.path.join(d, nom, "index.html")
+        if not os.path.isfile(f) or not est_indexable(f):
+            continue
+        html = open(f, encoding="utf-8").read()
+        if '<section id="villes">' not in html:
+            continue
+        nouveau = re.sub(r'<section id="villes">.*?</section>', lambda _m: remplacement, html,
+                         count=1, flags=re.S)
+        if nouveau != html:
+            open(f, "w", encoding="utf-8").write(nouveau)
+            modifiees.append(nom)
+    return modifiees
+
+
 def main():
     modifiees, deja = appliquer_noindex()
     print(f"noindex appliqué : {len(modifiees)} page(s) locale(s) | déjà conformes : {deja}")
+
+    sections = nettoyer_sections_villes()
+    print(f"sections « villes couvertes » réécrites : {len(sections)} page(s) -> {', '.join(sections)}")
+
+    blocs = nettoyer_blocs_villes()
+    print(f"blocs « villes prioritaires » réécrits : {len(blocs)} page(s) nationale(s) -> {', '.join(blocs)}")
 
     urls = sitemap_seo()
     n = ecrire_sitemap(
