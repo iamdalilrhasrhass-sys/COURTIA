@@ -18,6 +18,7 @@ import sys
 
 ETAPES = [
     ("1. génération des pages (vagues 1, 2, 3)", ["python3", "scripts/generer_vague3.py"]),
+    ("1bis. génération des pages de la vague 2 (pilier logiciel, devis, mesure)", ["python3", "scripts/generate_seo_vague2.py"]),
     ("2. données publiques réelles sur les pages locales", ["python3", "scripts/enrichir_pages_villes.py"]),
     ("3. enrichissement des pages métier faibles", ["python3", "scripts/enrichir_pages_metier.py"]),
     ("4. enrichissement des guides réglementaires", ["python3", "scripts/enrichir_guides.py"]),
