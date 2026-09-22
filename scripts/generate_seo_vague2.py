@@ -159,6 +159,39 @@ cloisonnées par cabinet (un cabinet ne voit que ses données).</li>
 qu'avec une page blanche.</li>
 </ul>
 
+<h2>Un dossier, de bout en bout</h2>
+<p>Plutôt qu'une liste de fonctions, voici le trajet réel d'un dossier dans le produit — sans
+chiffre, sans durée promise :</p>
+<ol>
+<li><strong>Le client appelle.</strong> Le courtier ouvre sa fiche : contrats en cours, échéances à
+venir, documents reçus, derniers échanges. Rien à chercher ailleurs pendant l'appel.</li>
+<li><strong>Une échéance approche.</strong> Elle remonte dans les tâches du jour et dans le briefing
+du matin, avec ce qui doit être préparé. Le renouvellement ne se découvre plus après coup.</li>
+<li><strong>Une pièce manque.</strong> Un lien de dépôt est transmis au client ; la pièce déposée
+arrive dans le dossier, sans ressaisie ni classement manuel.</li>
+<li><strong>Un devis doit être produit.</strong> Il se construit dans le parcours guidé à partir du
+dossier, entre dans le registre, et son état reste visible — y compris s'il reste sans réponse.</li>
+<li><strong>Le devis est accepté.</strong> La signature électronique se recueille dans le parcours ;
+le devis, ses pièces et son historique restent attachés au client.</li>
+<li><strong>Le contrat vit.</strong> Il porte sa compagnie, sa prime et sa date d'échéance ; la
+commission qui en découle se suit dans les états du cabinet.</li>
+<li><strong>Un contrôle arrive.</strong> Ce qui a été fait, quand et sur quelle base reste
+consultable dans le dossier — sans reconstituer trois ans d'échanges.</li>
+</ol>
+<p class="doux">Ce déroulé décrit des enchaînements de travail, pas des durées : COURTIA ne publie
+aucun gain chiffré qui n'aurait pas été mesuré. Pour le constater, la démonstration publique est
+ouverte et l'essai dure 7 jours.</p>
+
+<h2>Deux écrans réels</h2>
+<p>Le premier montre le tableau de bord ; le second, l'écran d'assistance ARK, qui compte les
+clients évalués, ceux à risque et le score moyen du portefeuille de démonstration, puis liste les
+dossiers à traiter avec le motif et le plan de rétention :</p>
+<p><img src="/img/demo-courtia-ark-intelligence.jpg" width="1280" height="398"
+  alt="Écran ARK Intelligence de la démonstration COURTIA : clients évalués, dossiers à risque, score moyen du portefeuille et liste des clients à risque avec leur score, sur un cabinet de démonstration aux données synthétiques"
+  loading="lazy" style="width:100%;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.10)"></p>
+<p class="doux">Ces deux captures viennent de la démonstration publique (cabinet fictif, données
+synthétiques) : elles sont vérifiables par n'importe qui, sans création de compte.</p>
+
 <h2>Ce que ça change au quotidien</h2>
 <p>Les renouvellements ne se perdent plus dans un tableur, les commissions se rapprochent des relevés
 par compagnie, et le registre des contrats reste consultable en un clic le jour d'un contrôle. Le
