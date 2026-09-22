@@ -55,6 +55,8 @@ def controler():
         "frontend/public/fr/conformite-courtier-assurance/index.html": "checklist DDA",
         "frontend/public/fr/logiciel-courtier-assurance/index.html": "logiciel-courtier-grossiste",
         "frontend/public/fr/ia-gestion-documentaire-assurance/index.html": "carte grise",
+        "frontend/public/ch/sinistres-courtier-assurance-suisse/index.html": "expertise",
+        "frontend/public/ch/partenaires-apporteurs-courtier-assurance-suisse/index.html": "rétrocession",
     }
     manquants = []
     for chemin, motif in attendus.items():

@@ -94,6 +94,12 @@ recevoir ces rendez-vous, par une autorisation que vous accordez explicitement.<
 <p>Elle ne fixe pas de rendez-vous à votre place, ne propose pas de créneaux aux clients et n'ouvre
 aucun accès à votre agenda personnel : la synchronisation repose sur une autorisation que vous
 donnez, et que vous pouvez retirer.</p>
+<h2>Préparer un rendez-vous en cinq minutes</h2>
+<p>Un rendez-vous client se prépare avec trois informations : ce qui a changé depuis le dernier
+échange, ce qui arrive à échéance dans les mois qui viennent, et ce qui reste en attente de sa part. Ces
+trois éléments sont dans le dossier — à condition que le dossier soit tenu. La préparation n'est donc
+pas un travail supplémentaire : c'est la conséquence d'un suivi à jour.</p>
+
 <h2>La suite logique du rendez-vous</h2>
 <p>Un rendez-vous utile produit deux choses : une tâche (ce qu'on a promis) et une trace (ce qui s'est
 dit). C'est là que se joue le gain réel — pas dans le fait d'avoir un agenda de plus.</p>
@@ -230,6 +236,21 @@ collaborateurs.</li>
 <p>Ce n'est pas un organisme de formation certifié et cela ne remplace ni la formation obligatoire ni
 l'obligation de compétence professionnelle : c'est un support interne, en complément des formations
 réglementaires que le cabinet doit suivre.</p>
+<h2>Le coût réel d'une formation interne improvisée</h2>
+<p>Quand la formation des nouveaux arrivants repose sur une seule personne, ce n'est pas seulement son
+temps qui est consommé : c'est celui de la personne formée, qui attend. Les trois coûts les plus
+souvent constatés dans un cabinet :</p>
+<ul>
+<li><strong>La dépendance</strong> — la personne qui explique est la même qui détient la connaissance ;
+son absence bloque l'arrivée du nouveau.</li>
+<li><strong>La répétition</strong> — les mêmes questions reviennent à chaque arrivée, sur les mêmes
+écrans et les mêmes réflexes du cabinet.</li>
+<li><strong>L'irrégularité</strong> — ce qui est expliqué en mars n'est plus expliqué en septembre, et
+les écarts d'usage s'installent sans que personne ne le décide.</li>
+</ul>
+<p>Un support accessible dans l'outil ne remplace pas l'accompagnement humain : il retire la répétition
+et laisse l'accompagnement là où il a de la valeur — sur les cas réels, pas sur les bases.</p>
+
 <h2>L'usage qui marche</h2>
 <p>Deux usages concrets : le parcours d'arrivée (les bases, les écrans, les réflexes du cabinet) et le
 rappel avant une échéance sensible — une session de révision avant un contrôle ou un temps fort de
