@@ -40,6 +40,12 @@ const { callArkVision } = require('../arkEngine')
 const { detectType, getTypeName, DOCUMENT_TYPES } = require('./typeDetector')
 
 // ── Limites (décision JEV passe 2 : 50 pages / 15 Mo, pages ignorées signalées) ──
+// RÉTENTION (décision JEV passe 3, confiance 0.60) : le contenu des documents est stocké
+// en base (client_document_blobs) parce que le disque de Render est éphémère. La
+// suppression du document client supprime son contenu en cascade
+// (client_document_id REFERENCES client_documents(id) ON DELETE CASCADE), et la limite
+// de taille est appliquée avant tout stockage : aucun fichier n'est conservé sans
+// document associé, et aucun fichier plus gros que la limite n'entre dans la base.
 const LIMITE_OCTETS = 15 * 1024 * 1024
 const MAX_FICHIERS = 5
 const PAGES_MAX = 50
@@ -461,12 +467,17 @@ Pour le champ "page" de chaque information, indique la page réelle du bloc où 
       [clientDocumentId, statut, JSON.stringify({ extraction_id: extractionId, champs_detectes: detectes.length })]
     )
 
+    // Décision JEV (passe 3, confiance 0.99) : quand le modèle ne tranche pas le type,
+    // le produit retombait silencieusement sur une détection par NOM DE FICHIER. Le
+    // courtier doit le savoir : `typeConfirme` est faux tant que le modèle n'a rien dit.
+    const typeConfirme = Boolean(brut.type_document)
     return {
       ok: true,
       extractionId,
       documentId: clientDocumentId,
       typeDocument: brut.type_document || typeDetecte,
-      typeLibelle: getTypeName(brut.type_document || typeDetecte),
+      typeConfirme,
+      typeLibelle: getTypeName(brut.type_document || typeDetecte) + (typeConfirme ? '' : ' (à confirmer)'),
       resume: brut.resume || null,
       champs,
       champsDetectes: detectes.length,
