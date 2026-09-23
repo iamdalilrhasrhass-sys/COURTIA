@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, Maximize2, Minimize2, Paperclip, FileText, Trash2, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { ArkVoiceButton } from './ArkVoiceButton';
@@ -67,7 +68,26 @@ export function ArkBubbleV2() {
   const selectedClient = useClientStore((s) => s.selectedClient);
   const clients = useClientStore((s) => s.clients);
   const fetchClients = useClientStore((s) => s.fetchClients);
-  const clientCible = clientForce || (selectedClient && selectedClient.id ? selectedClient : null);
+  // ── DOSSIER CIBLÉ D'APRÈS LA PAGE CONSULTÉE (défaut mesuré le 23/09/2026) ────
+  // Sur une fiche client (/clients/123), la bulle ne ciblait AUCUN dossier : le courtier
+  // qui demandait « quel est le bonus-malus de ce client ? » recevait « je ne peux pas
+  // répondre : je n'ai aucune donnée client » alors que la fiche était ouverte devant lui.
+  // La page affichée devient donc le dossier ciblé par défaut ; le choix explicite du
+  // courtier (liste déroulante) et le dossier forcé restent prioritaires.
+  const { pathname } = useLocation();
+  const clientIdRoute = (() => {
+    const m = (pathname || '').match(/^\/clients\/(\d+)/);
+    return m ? Number(m[1]) : null;
+  })();
+  useEffect(() => {
+    if (clientIdRoute && clients.length === 0 && getToken()) {
+      fetchClients(getToken()).catch(() => {});
+    }
+  }, [clientIdRoute, clients.length, fetchClients]);
+  const clientRoute = clientIdRoute
+    ? (clients.find((c) => Number(c.id) === clientIdRoute) || { id: clientIdRoute })
+    : null;
+  const clientCible = clientForce || clientRoute || (selectedClient && selectedClient.id ? selectedClient : null);
 
   useEffect(() => {
     if (messagesRef.current) messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
