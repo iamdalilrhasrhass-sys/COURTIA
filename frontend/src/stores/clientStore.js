@@ -24,7 +24,12 @@ export const useClientStore = create((set, get) => ({
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      set({ clients: data.clients || [], loading: false })
+      // L'API renvoie { data: [...], total, page, pages, ... } et non { clients: [...] } :
+      // lire la mauvaise clé laissait la liste VIDE alors que l'appel aboutissait (HTTP 200).
+      // Défaut mesuré le 23/09/2026 dans l'application de production, sur la liste déroulante
+      // « Choisir le dossier client concerné » de la bulle ARK.
+      const liste = Array.isArray(data) ? data : (data.clients || data.data || [])
+      set({ clients: liste, loading: false })
     } catch (_err) {
       set({ error: 'Impossible de charger la liste des clients.', loading: false })
     }
