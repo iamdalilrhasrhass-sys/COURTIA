@@ -646,7 +646,16 @@ app.use('/api/voice',        verifyToken, voiceRouter)
 app.use('/api/compose',      verifyToken, composeRouter)
 
 // LOT 10 — Document Vision (extraction automatique RIB, carte grise, etc., protected)
-app.use('/api/docvision',    verifyToken, docvisionRouter)
+// ── /api/docvision N'EST PLUS MONTÉ (23/09/2026) ──────────────────────────────
+// DÉFAUT MESURÉ : ce chemin était monté et son service applyExtractionToClient
+// écrivait dans clients.payment_method / vehicles / identity_info / insurance_history /
+// address_info / current_insurance — SIX colonnes qui n'existent PAS en production :
+// toute application levait « column does not exist ». Aucun écran du frontend ne
+// l'appelait, et la table document_extractions restait à 0 ligne. Laisser une route
+// qui promet une écriture impossible est un piège pour le prochain appelant :
+// elle est donc RETIRÉE du serveur (le fichier reste au dépôt, avec sa garde).
+// Le parcours réel vit désormais dans /api/ark/documents/* (arkDocumentIntake).
+// app.use('/api/docvision',    verifyToken, docvisionRouter)
 
 // LOT 11 — Quote Intelligence (briefs personnalisés par compagnie, protected)
 app.use('/api/quote-intel',  verifyToken, quoteIntelRouter)

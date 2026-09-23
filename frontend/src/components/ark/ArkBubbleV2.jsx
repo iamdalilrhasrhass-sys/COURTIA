@@ -220,16 +220,30 @@ export function ArkBubbleV2() {
         resultats.push(data);
       }
       setApplication(resultats);
-      setFichiers([]);
-      setAnalyse(null);
-      setSelections({});
       const total = resultats.reduce((acc, r) => acc + (r.champs_appliques || []).length, 0);
-      setMessages((prev) => [...prev, {
-        role: 'assistant',
-        content: total
-          ? `${total} information(s) enregistrée(s) dans la fiche client, avec traçabilité.`
-          : 'Aucune information enregistrée.',
-      }]);
+      // DÉFAUT CORRIGÉ (revue adverse JEV, passe 4) : sur un échec PARTIEL, l'ancien code
+      // vidait la liste des fichiers et n'annonçait que le total réussi — le courtier
+      // pouvait croire que TOUT avait été enregistré. On distingue désormais ce qui a
+      // été écrit de ce qui ne l'a PAS été, et l'analyse reste à l'écran tant que des
+      // documents ne sont pas appliqués.
+      const documentsEnEchec = lots.length - resultats.length;
+      if (documentsEnEchec > 0) {
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: `${total} information(s) enregistrée(s). ATTENTION : ${documentsEnEchec} document(s) NON appliqué(s) — `
+            + "aucune donnée de ces documents n'a été écrite. Corrigez puis relancez.",
+        }]);
+      } else {
+        setFichiers([]);
+        setAnalyse(null);
+        setSelections({});
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: total
+            ? `${total} information(s) enregistrée(s) dans la fiche client, avec traçabilité.`
+            : 'Aucune information enregistrée.',
+        }]);
+      }
     } catch (e) {
       setErreur("L'enregistrement a échoué. Aucune donnée n'a été modifiée.");
     } finally {

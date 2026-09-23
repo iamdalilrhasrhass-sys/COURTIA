@@ -265,6 +265,19 @@ async function processDocument({ brokerId, clientDocumentId, documentType, autoA
  * @returns {Promise<Object>}
  */
 async function applyExtractionToClient({ extractionId, brokerId, overrides = {} }) {
+  // ── GARDE (23/09/2026) ─────────────────────────────────────────────────────
+  // Cette fonction écrivait dans six colonnes INEXISTANTES de la table clients
+  // (payment_method, vehicles, identity_info, insurance_history, address_info,
+  // current_insurance) : l'appel échouait systématiquement avec
+  // « column does not exist ». Aucune donnée n'a jamais pu être appliquée par ce
+  // chemin. Elle refuse maintenant explicitement au lieu de laisser croire à une
+  // écriture possible. Le chemin réel est services/docvision/arkDocumentIntake.js
+  // (appliquerDiff), qui écrit dans les colonnes vérifiées de la base.
+  throw new Error(
+    'application_obsolete : ce chemin écrit dans des colonnes inexistantes et ne doit plus être utilisé. '
+    + 'Utilisez services/docvision/arkDocumentIntake.appliquerDiff (routes /api/ark/documents).'
+  )
+
   // 1. Charger l'extraction
   const extResult = await pool.query(
     `SELECT * FROM document_extractions WHERE id = $1 AND broker_id = $2`,
