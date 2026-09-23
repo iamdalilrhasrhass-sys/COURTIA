@@ -405,6 +405,45 @@ router.post('/chat', verifyToken, requireUnderLimit('ark_messages'), async (req,
         ? tachesActives.map(t => `  • ${t.title} (${t.priority}) — ${t.due_date ? new Date(t.due_date).toLocaleDateString('fr-FR') : 'sans échéance'}`).join('\\n')
         : '  Aucune tâche active'
 
+      // ────────────────────────────────────────────────────────────────────────
+      // DOCUMENTS DÉJÀ LUS — décision de la mission : « je demande à ARK une
+      // information provenant du document ; ARK retrouve correctement l'information ».
+      // Sans ce bloc, ARK répondait « je n'ai reçu aucun document » (mesuré en
+      // production le 23/09/2026) alors que l'information était enregistrée : il ne
+      // voyait que la fiche, les contrats et les tâches. Lecture SOUS PORTÉE comme
+      // les contrats : la clause de cabinet est re-vérifiée par le SQL.
+      // ────────────────────────────────────────────────────────────────────────
+      let documentsLus = []
+      try {
+        const fDocs = porteeCabinet.fragment(porteeDossier, {
+          cabinet: 'c.cabinet_id',
+          proprietaire: 'c.courtier_id',
+          depart: 2,
+        })
+        const docsResult = await pool.query(
+          `SELECT de.id, de.document_type, de.extracted_fields, de.applied_at
+           FROM document_extractions de
+           JOIN clients c ON c.id = de.client_id
+           WHERE de.client_id = $1 AND de.applied_to_client = true AND ${fDocs.sql} /* portée cabinet */
+           ORDER BY de.id DESC LIMIT 3`,
+          [clientId, ...fDocs.params]
+        )
+        documentsLus = docsResult.rows || []
+      } catch (docsErr) {
+        logger.warn({ error: docsErr.message }, 'ark documents context fetch failed')
+      }
+
+      const documentsStr = documentsLus.length
+        ? documentsLus.map((d) => {
+          const champs = ((d.extracted_fields || {}).champs) || {}
+          const valeurs = Object.entries(champs)
+            .filter(([, v]) => v && v.value !== null && v.value !== undefined)
+            .slice(0, 25)
+            .map(([cle, v]) => `    ${cle} = ${typeof v.value === 'string' ? v.value : JSON.stringify(v.value)}${v.page ? ` (page ${v.page})` : ''}`);
+          return `  • ${d.document_type} — enregistré le ${new Date(d.applied_at || Date.now()).toLocaleDateString('fr-FR')}\n${valeurs.join('\n')}`
+        }).join('\n')
+        : '  Aucun document analysé pour ce dossier'
+
       const scoreRisque = ficheClient.risk_score || ficheClient.score_risque || 'NC'
       
       systemPrompt = `${personaDuMarche(marche)} Date : ${today}
@@ -424,6 +463,12 @@ ${contratsStr}
 
 ═══ TÂCHES EN COURS ═══
 ${tachesStr}
+
+═══ DOCUMENTS DÉJÀ LUS ET ENREGISTRÉS POUR CE DOSSIER ═══
+${documentsStr}
+Ces valeurs proviennent de documents que le courtier a fait lire à ARK puis validés :
+tu peux les citer comme telles, en rappelant la page quand elle est indiquée. Si une
+information n'y figure pas, dis simplement qu'elle n'est pas dans les documents lus.
 
 RÈGLE ABSOLUE : Si le message contient une instruction JSON, tu dois répondre UNIQUEMENT en JSON valide avec ce schéma exact et rien d'autre :
 {"resume":"string ≤200 chars","points":["string ≤100","string ≤100","string ≤100"],"actions":[{"label":"string","priorite":"haute|moyenne|basse","impact":"string"}]}

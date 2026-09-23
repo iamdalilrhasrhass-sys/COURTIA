@@ -196,29 +196,55 @@ async function appelerDeepseek({ system, user }) {
   const modele = (process.env.ARK_DOC_DEEPSEEK_MODEL || 'deepseek-flash').trim()
   const base = (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/$/, '')
   const debut = Date.now()
+  const corps = JSON.stringify({
+    model: modele,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+    temperature: 0,
+    max_tokens: 4096,
+    response_format: { type: 'json_object' },
+    stream: false,
+  })
+
+  // Reprise automatique : mesuré le 23/09/2026, le fournisseur renvoie par intermittence
+  // une erreur passagère (saturation / limitation de débit). Sans réessai, le courtier
+  // voyait « Lecture IA indisponible » alors qu'une seconde tentative suffisait.
+  const TENTATIVES = 3
+  const PASSAGER = [408, 425, 429, 500, 502, 503, 504]
+  let reponse = null
+  let dernierStatut = null
+  for (let tentative = 1; tentative <= TENTATIVES; tentative += 1) {
+    try {
+      reponse = await fetch(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + cle, 'Content-Type': 'application/json' },
+        body: corps,
+      })
+    } catch (err) {
+      logger.warn({ err: err.message, tentative }, 'appel DeepSeek interrompu')
+      reponse = null
+    }
+    dernierStatut = reponse ? reponse.status : 'reseau'
+    if (reponse && reponse.ok) break
+    if (tentative < TENTATIVES && (reponse === null || PASSAGER.includes(reponse.status))) {
+      await new Promise((r) => setTimeout(r, 700 * tentative))
+      continue
+    }
+    break
+  }
+
   try {
-    const reponse = await fetch(`${base}/chat/completions`, {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + cle, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: modele,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        temperature: 0,
-        max_tokens: 4096,
-        response_format: { type: 'json_object' },
-        stream: false,
-      }),
-    })
-    if (!reponse.ok) {
-      const detail = await reponse.text().catch(() => '')
+    if (!reponse || !reponse.ok) {
+      const detail = reponse ? await reponse.text().catch(() => '') : 'réseau'
+      logger.warn({ statut: dernierStatut, detail: String(detail).slice(0, 200) }, 'lecture DeepSeek impossible')
       return {
         error: 'provider_unavailable',
-        message: `DeepSeek HTTP ${reponse.status}`,
+        message: `DeepSeek HTTP ${dernierStatut}`,
         provider: 'deepseek',
-        detail: detail.slice(0, 200),
+        providerStatus: dernierStatut,
+        detail: String(detail).slice(0, 200),
       }
     }
     const donnees = await reponse.json()
@@ -325,14 +351,20 @@ function compterPagesPdf(buffer) {
 // `jsonb`   : chemin dans clients.documents (jsonb), pour tout le détail sans colonne.
 // ────────────────────────────────────────────────────────────────────────────────
 const MAPPING_COLONNES = {
-  nom: { colonne: 'nom', libelle: 'Nom', groupe: 'identite' },
-  prenom: { colonne: 'prenom', libelle: 'Prénom', groupe: 'identite' },
+  // La table `clients` porte DEUX jeux de colonnes historiques (first_name/last_name ET
+  // nom/prenom). Mesuré en production le 23/09/2026 : la fiche client renvoyée par
+  // /api/clients lit « first_name as prenom, last_name as nom » et la création écrit
+  // first_name/last_name. Écrire seulement nom/prenom rendait donc le document invisible
+  // dans l'interface. On écrit la paire LUE par le produit et on recopie dans l'autre paire
+  // (`liees`) pour ne laisser aucun écran aveugle.
+  nom: { colonne: 'last_name', liees: ['nom'], libelle: 'Nom', groupe: 'identite' },
+  prenom: { colonne: 'first_name', liees: ['prenom'], libelle: 'Prénom', groupe: 'identite' },
   date_naissance: { colonne: 'date_naissance', libelle: 'Date de naissance', groupe: 'identite', type: 'date' },
   email: { colonne: 'email', libelle: 'E-mail', groupe: 'contact' },
   telephone: { colonne: 'telephone', libelle: 'Téléphone', groupe: 'contact' },
-  adresse: { colonne: 'adresse', libelle: 'Adresse', groupe: 'contact' },
-  code_postal: { colonne: 'code_postal', libelle: 'Code postal', groupe: 'contact' },
-  ville: { colonne: 'ville', libelle: 'Ville', groupe: 'contact' },
+  adresse: { colonne: 'address', liees: ['adresse'], libelle: 'Adresse', groupe: 'contact' },
+  code_postal: { colonne: 'postal_code', liees: ['code_postal'], libelle: 'Code postal', groupe: 'contact' },
+  ville: { colonne: 'city', liees: ['ville'], libelle: 'Ville', groupe: 'contact' },
   pays: { colonne: 'country', libelle: 'Pays', groupe: 'contact' },
   raison_sociale: { colonne: 'company_name', libelle: 'Raison sociale', groupe: 'entreprise' },
   siren_siret: { colonne: 'siret', libelle: 'SIREN / SIRET', groupe: 'entreprise' },
@@ -926,6 +958,17 @@ async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, s
       // Ne jamais écraser une valeur existante sans décision explicite : la sélection EST cette décision.
       anciennes[def.colonne] = client[def.colonne] === undefined ? null : client[def.colonne]
       colonnes[def.colonne] = valeur
+      for (const liee of def.liees || []) {
+        // Règle « ne remplace jamais silencieusement » : la colonne jumelle n'est
+        // mise à jour que si elle est vide ou porte déjà la même valeur. Une valeur
+        // différente y reste donc intacte — sinon le document écraserait une donnée
+        // saisie par le courtier dans l'autre paire de colonnes.
+        const actuelleLiee = client[liee] === undefined ? null : client[liee]
+        anciennes[liee] = actuelleLiee
+        if (actuelleLiee === null || actuelleLiee === undefined || actuelleLiee === '' || String(actuelleLiee) === String(valeur)) {
+          colonnes[liee] = valeur
+        }
+      }
     } else {
       const [groupe, sousCle] = def.jsonb.split('.')
       jsonb[groupe] = jsonb[groupe] || {}
@@ -952,15 +995,25 @@ async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, s
   })
 
   const clientApi = await pool.connect()
+  let sqlEcriture = null
   try {
     await clientApi.query('BEGIN')
 
     const cles = Object.keys(colonnes)
     const valeurs = Object.values(colonnes)
     const setClauses = cles.map((k, i) => `${k} = $${i + 2}`)
+    // DÉFAUT MESURÉ le 23/09/2026 : quand la sélection ne portait QUE des champs sans
+    // colonne (véhicule, assurance, banque…), la liste de colonnes était vide et l'ordre
+    // SQL produit commençait par une virgule — PostgreSQL refusait alors TOUTE écriture
+    // (« syntax error at or near "," ») et le courtier voyait un échec sur une fiche dont
+    // l'identité était déjà remplie. L'ordre est maintenant construit selon les cas.
+    const morceaux = [...setClauses]
+    if (morceaux.length) morceaux.push(`documents = $${cles.length + 2}`)
+    else morceaux.push('documents = $2')
+    morceaux.push('updated_at = NOW()')
+    sqlEcriture = morceaux.join(', ')
     await clientApi.query(
-      `UPDATE clients SET ${setClauses.join(', ')}, documents = $${cles.length + 2}, updated_at = NOW()
-       WHERE id = $1`,
+      `UPDATE clients SET ${morceaux.join(', ')} WHERE id = $1`,
       [clientId, ...valeurs, JSON.stringify(jsonb)]
     )
 
@@ -981,7 +1034,9 @@ async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, s
     await clientApi.query('COMMIT')
   } catch (err) {
     await clientApi.query('ROLLBACK').catch(() => {})
-    logger.error({ err: err.message, extractionId }, 'ark document apply failed')
+    // La liste des colonnes visées est journalisée (sans aucune valeur) : sans elle, un SQL
+    // refusé par PostgreSQL est indiagnosticable en production.
+    logger.error({ err: err.message, extractionId, clauses: sqlEcriture }, 'ark document apply failed')
     return { ok: false, code: 'ecriture_impossible', erreur: err.message }
   } finally {
     clientApi.release()
