@@ -114,7 +114,10 @@ function getAnthropicClient() {
 // ── Fallback DeepSeek (compatible OpenAI SDK) ────────────────────────────────
 // Utilisé quand Anthropic est indisponible (crédits épuisés / clé absente).
 // Conforme à la décision Obsidian "migré DeepSeek".
-const DEEPSEEK_MODEL = process.env.ARK_DEEPSEEK_MODEL || 'deepseek-chat'
+// Modèle vérifié le 23/09/2026 sur la clé de production : l'API expose `deepseek-flash`
+// et `deepseek-v4-pro` — PAS `deepseek-chat`. L'ancien défaut faisait donc échouer le
+// basculement avec « model not found ».
+const DEEPSEEK_MODEL = process.env.ARK_DEEPSEEK_MODEL || 'deepseek-flash'
 let _deepseekClient = null
 function getDeepseekClient() {
   if (!process.env.DEEPSEEK_API_KEY) return null
