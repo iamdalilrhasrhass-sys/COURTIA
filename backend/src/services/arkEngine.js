@@ -404,12 +404,31 @@ async function callArkVision(options) {
   // Construire le contenu multimodal
   const content = []
 
-  // Ajouter les images
+  // Ajouter les pièces jointes (images ET documents PDF)
   for (const img of images) {
     if (!img.buffer) continue
 
     const base64 = img.buffer.toString('base64')
     const mediaType = img.mediaType || 'image/png'
+
+    // ── CORRECTIF 23/09/2026 — LE PDF ÉTAIT IMPOSSIBLE ──────────────────────
+    // Avant : tout était envoyé en {type:'image'}. Un PDF partait donc avec
+    // media_type 'application/pdf', que l'API Anthropic REFUSE (400) : aucun PDF
+    // ne pouvait être lu, et aucun format de repli n'existait (pdf-poppler et
+    // canvas sont absents du projet). L'API accepte nativement un PDF en bloc
+    // « document » (jusqu'à 32 Mo, 100 pages), ce qui couvre le multipage, le
+    // texte ET les scans sans dépendance supplémentaire.
+    if (mediaType === 'application/pdf') {
+      content.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: base64
+        }
+      })
+      continue
+    }
 
     content.push({
       type: 'image',

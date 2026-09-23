@@ -1608,4 +1608,277 @@ router.get('/clients/:id/insight', verifyToken, async (req, res) => {
   }
 })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ARK DOCUMENTS — pièces jointes dans la bulle ARK (23/09/2026)
+//
+// La bulle ARK n'acceptait que du texte. Ces routes lui permettent de recevoir un
+// PDF ou une image, de le LIRE réellement, de proposer un diff champ par champ et
+// — seulement après validation du courtier — d'écrire dans la fiche client.
+//
+// Aucune écriture dans la fiche client en dehors de POST /documents/extractions/:id/appliquer.
+// Tout est résolu dans la portée du cabinet (lib/porteeCabinet), jamais par le corps de requête.
+// ═══════════════════════════════════════════════════════════════════════════
+const multer = require('multer')
+const intake = require('../services/docvision/arkDocumentIntake')
+const { detectType } = require('../services/docvision/typeDetector')
+
+const depotMemoire = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: intake.LIMITE_OCTETS, files: intake.MAX_FICHIERS },
+}).array('files', intake.MAX_FICHIERS)
+
+function recevoirFichiers(req, res, next) {
+  depotMemoire(req, res, (err) => {
+    if (err) {
+      const trop = err.code === 'LIMIT_FILE_SIZE'
+      return res.status(413).json({
+        error: trop ? 'fichier_trop_volumineux' : 'depot_refuse',
+        message: trop
+          ? `Fichier trop volumineux. Limite : ${intake.LIMITE_OCTETS / 1024 / 1024} Mo par fichier, ${intake.MAX_FICHIERS} fichiers.`
+          : 'Dépôt refusé.',
+      })
+    }
+    return next()
+  })
+}
+
+// POST /api/ark/documents/analyse — joindre un ou plusieurs documents à analyser
+router.post('/documents/analyse', verifyToken, recevoirFichiers, async (req, res) => {
+  try {
+    const userId = Number(req.user?.userId || req.user?.id || 0)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'analyser un document')) return undefined
+
+    const fichiers = Array.isArray(req.files) ? req.files : []
+    if (!fichiers.length) {
+      return res.status(400).json({ error: 'aucun_fichier', message: 'Aucun fichier reçu.' })
+    }
+
+    // Le client cible vient du corps, mais il est VÉRIFIÉ dans la portée (jamais fait confiance).
+    const clientId = Number.parseInt(req.body.clientId, 10)
+    if (!Number.isFinite(clientId) || clientId <= 0) {
+      return res.status(400).json({ error: 'client_requis', message: 'Précisez le dossier client concerné.' })
+    }
+    const client = await intake.chargerClient(portee, clientId)
+    if (!client) {
+      return res.status(404).json({ error: 'client_introuvable', message: "Ce client n'appartient pas à votre cabinet." })
+    }
+
+    const documents = []
+    const extractions = []
+    for (const fichier of fichiers) {
+      const validation = intake.validerFichier({ buffer: fichier.buffer, filename: fichier.originalname })
+      if (!validation.ok) {
+        documents.push({
+          fichier: intake.nomSain(fichier.originalname),
+          ok: false,
+          code: validation.code,
+          erreur: validation.erreur,
+        })
+        continue
+      }
+
+      const typeDetecte = detectType({
+        filename: fichier.originalname,
+        mimeType: validation.mimeReel,
+      }).type
+
+      const stocke = await intake.stockerDocument({
+        portee,
+        userId,
+        clientId,
+        buffer: fichier.buffer,
+        mimeReel: validation.mimeReel,
+        filename: fichier.originalname,
+        typeDetecte,
+      })
+
+      const analyse = await intake.analyserDocumentStocke({
+        portee,
+        userId,
+        clientDocumentId: stocke.documentId,
+        clientId,
+        documentType: typeDetecte,
+      })
+
+      if (!analyse.ok) {
+        documents.push({
+          fichier: intake.nomSain(fichier.originalname),
+          ok: false,
+          code: analyse.code,
+          erreur: analyse.erreur,
+          extractionId: analyse.extractionId,
+        })
+        continue
+      }
+
+      extractions.push(analyse.extractionId)
+      documents.push({
+        fichier: analyse.champs ? intake.nomSain(fichier.originalname) : intake.nomSain(fichier.originalname),
+        ok: true,
+        extractionId: analyse.extractionId,
+        documentId: stocke.documentId,
+        typeDocument: analyse.typeDocument,
+        typeLibelle: analyse.typeLibelle,
+        resume: analyse.resume,
+        champsDetectes: analyse.champsDetectes,
+        champsSurs: analyse.champsSurs,
+        confiance: analyse.confiance,
+        avertissements: analyse.avertissements,
+      })
+    }
+
+    // Diff unique regroupant tous les documents : à confiance égale, le premier document
+    // gagne ; à confiance supérieure, le champ le mieux lu remplace sa proposition.
+    const parChamp = new Map()
+    let clientResume = null
+    for (const extractionId of extractions) {
+      const diff = await intake.construireDiff({ portee, extractionId })
+      if (!diff.ok) continue
+      clientResume = diff.client
+      for (const ligne of diff.lignes) {
+        const cle = `${ligne.champ}::${ligne.valeur_extraite}`
+        const existante = parChamp.get(ligne.champ)
+        const ligneEtiquetee = { ...ligne, extraction_id: extractionId }
+        if (!existante || ligne.confiance > existante.confiance) {
+          if (existante) parChamp.set(`${existante.champ}::conflit`, existante)
+          parChamp.set(ligne.champ, ligneEtiquetee)
+        } else {
+          parChamp.set(cle, ligneEtiquetee)
+        }
+      }
+    }
+
+    return res.json({
+      ok: true,
+      client: clientResume,
+      fichiers: documents,
+      seuil_sur: intake.SEUIL_SUR,
+      resume_globale: {
+        documents: documents.length,
+        analyses: extractions.length,
+        champs_proposes: [...parChamp.keys()].filter((k) => !k.endsWith('::conflit')).length,
+      },
+      diff: { lignes: [...parChamp.entries()].filter(([k]) => !k.endsWith('::conflit')).map(([, v]) => v) },
+    })
+  } catch (err) {
+    logger.error({ err: err.message }, 'ark documents analyse failed')
+    return res.status(500).json({ error: 'analyse_indisponible', message: "L'analyse documentaire est momentanément indisponible." })
+  }
+})
+
+// GET /api/ark/documents/extractions — historique des documents analysés (traçabilité)
+router.get('/documents/extractions', verifyToken, async (req, res) => {
+  try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const clientId = Number.parseInt(req.query.clientId, 10)
+    const params = []
+    let filtreClient = ''
+    if (Number.isFinite(clientId) && clientId > 0) {
+      const client = await intake.chargerClient(portee, clientId)
+      if (!client) return res.status(404).json({ error: 'client_introuvable' })
+      params.push(clientId)
+      filtreClient = `AND de.client_id = $${params.length}`
+    }
+    const f = porteeCabinet.fragment(portee, { cabinet: 'c.cabinet_id', proprietaire: 'c.courtier_id', depart: params.length + 1 })
+    const result = await pool.query(
+      `SELECT de.id, de.client_id, de.client_document_id, de.document_type, de.extraction_status,
+              de.confidence, de.ai_model, de.applied_to_client, de.applied_at, de.created_at,
+              de.extracted_fields->>'resume' AS resume, de.warnings,
+              cd.original_filename
+         FROM document_extractions de
+         LEFT JOIN client_documents cd ON cd.id = de.client_document_id
+         JOIN clients c ON c.id = de.client_id
+        WHERE TRUE ${filtreClient} AND ${f.sql}
+        ORDER BY de.created_at DESC
+        LIMIT 100`,
+      [...params, ...f.params]
+    )
+    return res.json({ ok: true, extractions: result.rows })
+  } catch (err) {
+    logger.error({ err: err.message }, 'ark documents extractions list failed')
+    return res.status(500).json({ error: 'historique_indisponible' })
+  }
+})
+
+// GET /api/ark/documents/extractions/:id — détail + diff champ par champ
+router.get('/documents/extractions/:id', verifyToken, async (req, res) => {
+  try {
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    const extractionId = Number.parseInt(req.params.id, 10)
+    if (!Number.isFinite(extractionId)) return res.status(400).json({ error: 'identifiant_invalide' })
+    const diff = await intake.construireDiff({ portee, extractionId })
+    if (!diff.ok) {
+      const code = diff.code === 'client_hors_portee' ? 403 : 404
+      return res.status(code).json({ error: diff.code })
+    }
+    return res.json(diff)
+  } catch (err) {
+    logger.error({ err: err.message }, 'ark documents extraction detail failed')
+    return res.status(500).json({ error: 'detail_indisponible' })
+  }
+})
+
+// POST /api/ark/documents/extractions/:id/appliquer — écriture RÉELLE après validation
+router.post('/documents/extractions/:id/appliquer', verifyToken, async (req, res) => {
+  try {
+    const userId = Number(req.user?.userId || req.user?.id || 0)
+    if (!userId) return res.status(401).json({ error: 'auth_required' })
+
+    const portee = await porteeCabinet.resoudrePortee(pool, req)
+    if (porteeCabinet.refuserEcriture(portee, res, 'appliquer une extraction')) return undefined
+
+    const extractionId = Number.parseInt(req.params.id, 10)
+    const clientId = Number.parseInt(req.body.clientId, 10)
+    if (!Number.isFinite(extractionId) || !Number.isFinite(clientId)) {
+      return res.status(400).json({ error: 'parametres_invalides' })
+    }
+    const selections = Array.isArray(req.body.selections) ? req.body.selections : []
+
+    const resultat = await intake.appliquerDiff({
+      portee,
+      extractionId,
+      clientId,
+      selections,
+      userId,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    })
+
+    if (!resultat.ok) {
+      const statut = resultat.code === 'client_hors_portee' ? 403
+        : resultat.code === 'extraction_introuvable' ? 404
+          : resultat.code === 'deja_appliquee' ? 409 : 400
+      return res.status(statut).json({ error: resultat.code, message: resultat.erreur })
+    }
+
+    // ARK relit ce qui est RÉELLEMENT enregistré (preuve de l'écriture, pas du projet d'écriture).
+    const clientApres = await intake.chargerClient(portee, clientId)
+    const champsRelus = {}
+    for (const champ of resultat.champsAppliques) {
+      const def = intake.MAPPING_COLONNES[champ]
+      if (def.colonne) champsRelus[def.colonne] = clientApres[def.colonne]
+      else {
+        const [groupe, sousCle] = def.jsonb.split('.')
+        const doc = typeof clientApres.documents === 'string' ? JSON.parse(clientApres.documents || '{}') : (clientApres.documents || {})
+        champsRelus[def.jsonb] = doc[groupe] ? doc[groupe][sousCle] : null
+      }
+    }
+
+    return res.json({
+      ok: true,
+      extractionId,
+      clientId,
+      champs_appliques: resultat.champsAppliques,
+      valeurs_relues: champsRelus,
+      trace: { audit_logs: true, extraction_marquee_appliquee: true },
+    })
+  } catch (err) {
+    logger.error({ err: err.message }, 'ark documents apply failed')
+    return res.status(500).json({ error: 'application_indisponible' })
+  }
+})
+
 module.exports = router
