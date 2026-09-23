@@ -203,7 +203,9 @@ async function appelerDeepseek({ system, user }) {
       { role: 'user', content: user },
     ],
     temperature: 0,
-    max_tokens: 4096,
+    // 4096 suffisait pour un document d'une page, pas pour un relevé de plusieurs pages :
+    // la réponse était TRONQUÉE et le JSON devenait illisible (mesuré le 23/09/2026).
+    max_tokens: Number(process.env.ARK_DOC_MAX_TOKENS || 8192),
     response_format: { type: 'json_object' },
     stream: false,
   })
@@ -250,9 +252,72 @@ async function appelerDeepseek({ system, user }) {
     const donnees = await reponse.json()
     const choix = (donnees.choices || [])[0] || {}
     const brut = (choix.message || {}).content || ''
+    const analyse = analyserJson(brut)
+
+    // Réponse illisible (tronquée par la limite de sortie, ou texte parasite autour du JSON) :
+    // une relance coûte bien moins qu'un échec affiché au courtier. Même si la seconde tentative
+    // échoue, la CAUSE réelle remonte (troncature ou JSON invalide), jamais un message vague.
+    if (!analyse) {
+      logger.warn({ finishReason: choix.finish_reason, longueur: brut.length }, 'réponse du modèle illisible, relance')
+      try {
+        const relance = await fetch(`${base}/chat/completions`, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + cle, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: modele,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: `${user}\n\nIMPORTANT : réponds UNIQUEMENT avec l'objet JSON complet, sans texte avant ni après, sans balise de code.` },
+            ],
+            temperature: 0,
+            max_tokens: Number(process.env.ARK_DOC_MAX_TOKENS || 8192),
+            response_format: { type: 'json_object' },
+            stream: false,
+          }),
+        })
+        if (relance.ok) {
+          const donnees2 = await relance.json()
+          const choix2 = (donnees2.choices || [])[0] || {}
+          const brut2 = (choix2.message || {}).content || ''
+          const analyse2 = analyserJson(brut2)
+          if (analyse2) {
+            return {
+              text: brut2,
+              structured: analyse2,
+              usage: donnees2.usage || {},
+              model: donnees2.model || modele,
+              finishReason: choix2.finish_reason,
+              costUsd: 0,
+              latencyMs: Date.now() - debut,
+              provider: 'deepseek',
+              relance: true,
+            }
+          }
+          return {
+            error: 'reponse_illisible',
+            message: choix2.finish_reason === 'length'
+              ? 'La réponse du modèle a été tronquée : le document est très volumineux.'
+              : "La réponse du modèle n'était pas exploitable.",
+            provider: 'deepseek',
+            finishReason: choix2.finish_reason,
+          }
+        }
+      } catch (err) {
+        logger.warn({ err: err.message }, 'relance DeepSeek impossible')
+      }
+      return {
+        error: 'reponse_illisible',
+        message: choix.finish_reason === 'length'
+          ? 'La réponse du modèle a été tronquée : le document est très volumineux.'
+          : "La réponse du modèle n'était pas exploitable.",
+        provider: 'deepseek',
+        finishReason: choix.finish_reason,
+      }
+    }
+
     return {
       text: brut,
-      structured: analyserJson(brut),
+      structured: analyse,
       usage: donnees.usage || {},
       model: donnees.model || modele,
       finishReason: choix.finish_reason,
@@ -549,20 +614,35 @@ Pour le champ "page" de chaque information, indique la page réelle du bloc où 
       // n'est disponible, on refuse EXPLICITEMENT au lieu de laisser le modèle improviser.
       logger.warn({ documentId: contenu.documentId }, 'PDF sans couche texte : lecture visuelle demandée')
     }
-    const vision = await appelerModele({
-      system: PROMPT_SYSTEME,
-      user: promptUtilisateurFinal,
-      texte: null,
-      images: pdfSansTexte ? [{ buffer: contenu.buffer, mediaType: contenu.mimeType }] : [],
-      userId,
-      clientId,
-      route: 'ark/documents',
-    })
-
-    if (vision.error === 'configuration_required' || !vision.structured) {
+    // L'appel au fournisseur est encadré : une panne ou une clé refusée doit produire un
+    // refus EXPLICITE et exploitable, jamais une exception brute remontée en « analyse
+    // échouée » sans cause (constaté en production sur un PDF scanné le 23/09/2026).
+    let vision
+    try {
+      vision = await appelerModele({
+        system: PROMPT_SYSTEME,
+        user: promptUtilisateurFinal,
+        texte: null,
+        images: pdfSansTexte ? [{ buffer: contenu.buffer, mediaType: contenu.mimeType }] : [],
+        userId,
+        clientId,
+        route: 'ark/documents',
+      })
+    } catch (err) {
       const message = pdfSansTexte
         ? "Ce PDF ne contient pas de texte : c'est un document scanné (image seule). Les modèles de lecture actuellement configurés ne lisent que du texte, aucun n'a donc pu le lire. Aucune donnée n'a été tirée de ce fichier. Joignez plutôt une photo (JPG ou PNG) de ce document : elle sera lue par OCR."
-        : (vision.message || 'Lecture IA indisponible.')
+        : `Lecture IA indisponible : ${err && err.message ? err.message : 'erreur inconnue'}`
+      await pool.query(
+        `UPDATE document_extractions SET extraction_status = 'failed', warnings = $2, processed_at = NOW() WHERE id = $1`,
+        [extractionId, JSON.stringify([message])]
+      )
+      return { ok: false, extractionId, code: pdfSansTexte ? 'pdf_sans_texte' : 'ia_indisponible', erreur: message }
+    }
+
+    if (vision.error === 'configuration_required' || vision.error === 'reponse_illisible' || !vision.structured) {
+      const message = pdfSansTexte
+        ? "Ce PDF ne contient pas de texte : c'est un document scanné (image seule). Les modèles de lecture actuellement configurés ne lisent que du texte, aucun n'a donc pu le lire. Aucune donnée n'a été tirée de ce fichier. Joignez plutôt une photo (JPG ou PNG) de ce document : elle sera lue par OCR."
+        : (vision.message || 'Lecture IA indisponible. Réessayez : un document très long peut demander une seconde tentative.')
       await pool.query(
         `UPDATE document_extractions SET extraction_status = 'failed', warnings = $2, processed_at = NOW() WHERE id = $1`,
         [extractionId, JSON.stringify([message])]
