@@ -220,6 +220,17 @@ async function appliquer(token, extractionId, clientId, selections, options = {}
   const sansJeton = await fetch(`${BASE}/api/ark/documents/analyse`, { method: 'POST', body: formSansJeton })
   verifier('TEST sécurité — analyse sans jeton refusée (401)', sansJeton.status === 401, `HTTP ${sansJeton.status}`)
 
+  // ── TEST 4b : PDF SCANNÉ (image seule) — refus explicite, aucune invention ────
+  const tScanne = await analyser(ctx.tokenA, ctx.clientA, ['pdf_scanne.pdf'])
+  const fScanne = (tScanne.data && tScanne.data.fichiers && tScanne.data.fichiers[0]) || {}
+  const lignesScanne = (tScanne.data && tScanne.data.diff && tScanne.data.diff.lignes) || []
+  verifier('TEST 4b — un PDF scanné (aucune couche texte) est REFUSÉ explicitement',
+    tScanne.statut === 200 && fScanne.ok === false && fScanne.code === 'pdf_sans_texte',
+    `code=${fScanne.code} erreur="${String(fScanne.erreur || '').slice(0, 120)}"`)
+  verifier('TEST 4b — aucune valeur n\'est proposée pour un PDF scanné (pas d\'invention)',
+    lignesScanne.length === 0,
+    `${lignesScanne.length} ligne(s) proposée(s)`)
+
   // ── TEST MULTI-DOCUMENT : deux documents en un seul envoi ─────────────────
   const tMulti = await analyser(ctx.tokenA, ctx.clientA, ['releve_information_simple.pdf', 'contrat_auto.pdf'])
   const fichiersMulti = (tMulti.data && tMulti.data.fichiers) || []

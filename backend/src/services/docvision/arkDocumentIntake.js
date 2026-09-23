@@ -272,7 +272,12 @@ async function appelerModele({ system, user, images = [], texte = null, userId, 
   //   3. Claude vision (ANTHROPIC_API_KEY valide) — utile pour un PDF scanné, que
   //      DeepSeek ne peut pas voir puisqu'il est texte.
   const fournisseurForce = (process.env.ARK_DOC_PROVIDER || '').trim().toLowerCase()
-  if (fournisseurForce === 'deepseek' || (!fournisseurForce && (process.env.DEEPSEEK_API_KEY || '').trim() && !(process.env.ARK_DOC_LOCAL_BASE_URL || '').trim())) {
+  // REVUE ADVERSE JEV (23/09/2026) : un modèle TEXTE ne voit pas une image. Router une image
+  // vers DeepSeek revenait à appeler le modèle SANS AUCUN contenu — donc à risquer des valeurs
+  // inventées présentées comme extraites. DeepSeek n'est retenu que si du texte existe.
+  const contenuTexte = Boolean((texte || '').trim())
+  if ((fournisseurForce === 'deepseek' || (!fournisseurForce && (process.env.DEEPSEEK_API_KEY || '').trim() && !(process.env.ARK_DOC_LOCAL_BASE_URL || '').trim()))
+      && (images.length === 0 || contenuTexte)) {
     const texteComplet = texte ? `${user}\n\n=== TEXTE DU DOCUMENT ===\n${texte}` : user
     return appelerDeepseek({ system, user: texteComplet })
   }
@@ -538,6 +543,12 @@ Pour le champ "page" de chaque information, indique la page réelle du bloc où 
     // Un PDF sans couche texte et sans OCR possible ne peut pas être lu par un modèle
     // texte : on le DIT au courtier au lieu de renvoyer un résultat vide.
     const pdfSansTexte = contenu.mimeType === 'application/pdf' && !textePdf
+    if (pdfSansTexte) {
+      // Aucun texte n'a pu être extrait de ce PDF : il n'y a rien à donner au modèle.
+      // On tente la lecture VISUELLE (seul un modèle de vision peut le faire) ; si aucun
+      // n'est disponible, on refuse EXPLICITEMENT au lieu de laisser le modèle improviser.
+      logger.warn({ documentId: contenu.documentId }, 'PDF sans couche texte : lecture visuelle demandée')
+    }
     const vision = await appelerModele({
       system: PROMPT_SYSTEME,
       user: promptUtilisateurFinal,
@@ -549,12 +560,14 @@ Pour le champ "page" de chaque information, indique la page réelle du bloc où 
     })
 
     if (vision.error === 'configuration_required' || !vision.structured) {
-      const message = vision.message || 'Lecture IA indisponible.'
+      const message = pdfSansTexte
+        ? "Ce PDF ne contient pas de texte : c'est un document scanné (image seule). Les modèles de lecture actuellement configurés ne lisent que du texte, aucun n'a donc pu le lire. Aucune donnée n'a été tirée de ce fichier. Joignez plutôt une photo (JPG ou PNG) de ce document : elle sera lue par OCR."
+        : (vision.message || 'Lecture IA indisponible.')
       await pool.query(
         `UPDATE document_extractions SET extraction_status = 'failed', warnings = $2, processed_at = NOW() WHERE id = $1`,
         [extractionId, JSON.stringify([message])]
       )
-      return { ok: false, extractionId, code: 'ia_indisponible', erreur: message }
+      return { ok: false, extractionId, code: pdfSansTexte ? 'pdf_sans_texte' : 'ia_indisponible', erreur: message }
     }
 
     const brut = vision.structured || {}
