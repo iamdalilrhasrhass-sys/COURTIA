@@ -107,7 +107,15 @@ export function ArkBubbleV2() {
       const res = await fetch(`${API_BASE}/ark/chat`, {
         method: 'POST',
         headers: { Authorization: enteteAuth(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: messages }),
+        // Le dossier ciblé doit être transmis : sans lui, ARK répondait « je n'ai aucune
+        // donnée client » alors que la fiche était ouverte devant le courtier (défaut
+        // mesuré en production le 23/09/2026). Seul l'IDENTIFIANT est envoyé ; le serveur
+        // relit le dossier sous la portée du cabinet (aucune donnée fournie par le client).
+        body: JSON.stringify({
+          message: text,
+          history: messages,
+          ...(clientCible && clientCible.id ? { clientData: { id: clientCible.id } } : {}),
+        }),
         signal: controleur.signal,
       });
       // Contrat de la réponse : figé et testé dans src/lib/reponseArk.js
