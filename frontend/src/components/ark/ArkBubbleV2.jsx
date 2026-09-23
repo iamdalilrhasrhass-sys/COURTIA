@@ -62,6 +62,7 @@ export function ArkBubbleV2() {
   const [erreur, setErreur] = useState(null);
   const [application, setApplication] = useState(null);
   const [clientForce, setClientForce] = useState(null);
+  const [creerContrat, setCreerContrat] = useState(false);
 
   const selectedClient = useClientStore((s) => s.selectedClient);
   const clients = useClientStore((s) => s.clients);
@@ -210,7 +211,7 @@ export function ArkBubbleV2() {
         const res = await fetch(`${API_BASE}/ark/documents/extractions/${extractionId}/appliquer`, {
           method: 'POST',
           headers: { Authorization: enteteAuth(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId: clientCible.id, selections: listSelections }),
+          body: JSON.stringify({ clientId: clientCible.id, selections: listSelections, creer_contrat: creerContrat === true }),
         });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data || data.ok === false) {
@@ -385,6 +386,24 @@ export function ArkBubbleV2() {
                     <div style={{ marginTop: 8, fontSize: 11, color: 'var(--aurora-text-secondary)' }}>
                       Rien n'est enregistré avant votre validation. Les champs non cochés ne sont pas écrits.
                     </div>
+                    {analyse.contrat_propose && analyse.contrat_propose.possible && (
+                      <label style={{ display: 'flex', gap: 6, alignItems: 'flex-start', marginTop: 10, fontSize: 11, cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={creerContrat}
+                          onChange={(e) => setCreerContrat(e.target.checked)}
+                        />
+                        <span>
+                          <strong>Créer le contrat dans COURTIA</strong> à partir de ce document —
+                          {' '}{analyse.contrat_propose.apercu.numero_contrat || 'sans numéro'}
+                          {analyse.contrat_propose.apercu.compagnie ? ` · ${analyse.contrat_propose.apercu.compagnie}` : ''}
+                          {analyse.contrat_propose.apercu.date_echeance ? ` · échéance ${analyse.contrat_propose.apercu.date_echeance}` : ''}
+                          <span style={{ display: 'block', color: 'var(--aurora-text-secondary)' }}>
+                            Le contrat sera créé marqué « à vérifier », avec la référence du document lu.
+                          </span>
+                        </span>
+                      </label>
+                    )}
                     <motion.button
                       onClick={appliquer}
                       disabled={enApplication}
@@ -408,6 +427,13 @@ export function ArkBubbleV2() {
             {application && application.length > 0 && (
               <div data-testid="ark-application" style={{ border: '1px solid var(--aurora-border-subtle)', borderRadius: 'var(--aurora-radius-lg)', padding: 'var(--aurora-space-3)', fontSize: 12, background: 'var(--aurora-bg-subtle)' }}>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>Enregistré dans la fiche client</div>
+                {application.some((r) => r.contrat && r.contrat.id) && (
+                  <div style={{ marginBottom: 6, color: 'var(--aurora-text-secondary)' }}>
+                    Contrat créé : <strong style={{ color: 'var(--aurora-text-primary)' }}>
+                      #{application.filter((r) => r.contrat && r.contrat.id).map((r) => r.contrat.id).join(', #')}
+                    </strong>
+                  </div>
+                )}
                 {application.map((r, i) => (
                   <div key={i} style={{ marginBottom: 4 }}>
                     {Object.entries(r.valeurs_relues || {}).map(([k, v]) => (

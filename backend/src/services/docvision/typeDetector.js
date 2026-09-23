@@ -38,8 +38,11 @@ const TYPE_PATTERNS = {
     content: ['RELEVÉ D\'INFORMATION', 'BONUS', 'MALUS', 'COEFFICIENT', 'CRM', 'SINISTRES', 'RESPONSABILITÉ']
   },
   [DOCUMENT_TYPES.ATTESTATION_ASSURANCE]: {
-    filename: [/attestation/i, /assurance/i, /carte.*verte/i],
-    content: ['ATTESTATION D\'ASSURANCE', 'CARTE VERTE', 'GARANTIES', 'RESPONSABILITÉ CIVILE', 'PÉRIODE DE VALIDITÉ', 'COMPAGNIE D\'ASSURANCE']
+    // Un CONTRAT et une POLICE relèvent de la même famille que l'attestation : sans ces
+    // motifs, « contrat_auto.pdf » tombait dans « autre » et la création du contrat
+    // n'était jamais proposée (défaut mesuré le 23/09/2026 par le test E2E).
+    filename: [/attestation/i, /assurance/i, /carte.*verte/i, /contrat/i, /police/i],
+    content: ['ATTESTATION D\'ASSURANCE', 'CARTE VERTE', 'GARANTIES', 'RESPONSABILITÉ CIVILE', 'PÉRIODE DE VALIDITÉ', 'COMPAGNIE D\'ASSURANCE', 'CONTRAT D\'ASSURANCE', 'NUMÉRO DE POLICE', 'NUMERO DE POLICE']
   },
   [DOCUMENT_TYPES.PIECE_IDENTITE]: {
     // Pièces SUISSES ajoutées (défaut P2 CH-028/CH-029) : carte d'identité

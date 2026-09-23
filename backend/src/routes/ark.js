@@ -1734,10 +1734,17 @@ router.post('/documents/analyse', verifyToken, recevoirFichiers, async (req, res
     // gagne ; à confiance supérieure, le champ le mieux lu remplace sa proposition.
     const parChamp = new Map()
     let clientResume = null
+    const contratsProposes = []
     for (const extractionId of extractions) {
       const diff = await intake.construireDiff({ portee, extractionId })
       if (!diff.ok) continue
       clientResume = diff.client
+      // La PROPOSITION de contrat doit remonter jusqu'à l'écran : sans elle, la case
+      // « créer le contrat » ne s'afficherait jamais et le courtier ne pourrait pas
+      // compléter son dossier d'assurance (défaut mesuré par le test E2E du 23/09/2026).
+      if (diff.contrat_propose && diff.contrat_propose.possible) {
+        contratsProposes.push({ ...diff.contrat_propose, extraction_id: extractionId })
+      }
       for (const ligne of diff.lignes) {
         const cle = `${ligne.champ}::${ligne.valeur_extraite}`
         const existante = parChamp.get(ligne.champ)
@@ -1762,6 +1769,8 @@ router.post('/documents/analyse', verifyToken, recevoirFichiers, async (req, res
         champs_proposes: [...parChamp.keys()].filter((k) => !k.endsWith('::conflit')).length,
       },
       diff: { lignes: [...parChamp.entries()].filter(([k]) => !k.endsWith('::conflit')).map(([, v]) => v) },
+      contrat_propose: contratsProposes[0] || null,
+      contrats_proposes: contratsProposes,
     })
   } catch (err) {
     logger.error({ err: err.message }, 'ark documents analyse failed')
@@ -1867,12 +1876,28 @@ router.post('/documents/extractions/:id/appliquer', verifyToken, async (req, res
       }
     }
 
+    // Création du CONTRAT (table quotes) — uniquement si le courtier l'a demandée.
+    // Le document atteste un contrat ; sans cette étape, le courtier voyait les
+    // informations sans que le dossier d'assurance se complète.
+    let contrat = null
+    if (req.body.creer_contrat === true) {
+      contrat = await intake.creerContratDepuisExtraction({
+        portee,
+        extractionId,
+        clientId,
+        userId,
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+      })
+    }
+
     return res.json({
       ok: true,
       extractionId,
       clientId,
       champs_appliques: resultat.champsAppliques,
       valeurs_relues: champsRelus,
+      contrat: contrat && contrat.ok ? { id: contrat.contratId, donnees: contrat.quoteData } : contrat,
       trace: { audit_logs: true, extraction_marquee_appliquee: true },
     })
   } catch (err) {

@@ -158,7 +158,99 @@ async function extraireTextePdf(buffer) {
  * disposer d'un fournisseur auto-hébergeable évite qu'une clé absente rende la
  * lecture documentaire définitivement impossible.
  */
+/**
+ * Lit le TEXTE d'une image (photo, scan) par OCR local.
+ * tesseract.js est DÉJÀ une dépendance du projet : aucune clé, aucun appel externe,
+ * aucun coût. Retourne null si la lecture échoue, jamais un texte inventé.
+ * @returns {Promise<{texte: string, confiance: number}|null>}
+ */
+async function extraireTexteImage(buffer) {
+  try {
+    const Tesseract = require('tesseract.js')
+    // Les données de langue française (~14 Mo) sont téléchargées une fois puis mises en
+    // cache : on ne les versionne pas. ARK_DOC_TESSDATA_PATH permet de les auto-héberger.
+    const options = { logger: () => {} }
+    if ((process.env.ARK_DOC_TESSDATA_PATH || '').trim()) {
+      options.langPath = process.env.ARK_DOC_TESSDATA_PATH.trim()
+      options.cachePath = process.env.ARK_DOC_TESSDATA_PATH.trim()
+    }
+    const { data } = await Tesseract.recognize(buffer, 'fra', options)
+    const texte = String((data && data.text) || '').replace(/[ \t]+\n/g, '\n').trim()
+    return { texte, confiance: Number((data && data.confidence) || 0) }
+  } catch (err) {
+    logger.warn({ err: err.message }, 'OCR image impossible')
+    return null
+  }
+}
+
+/**
+ * Fournisseur DEEPSEEK — moteur de lecture par défaut.
+ * VÉRIFIÉ LE 23/09/2026 : les modèles réellement accessibles avec la clé du produit sont
+ * `deepseek-flash` et `deepseek-v4-pro` (il n'y a PAS de `deepseek-chat`, et ces modèles
+ * sont TEXTE : ils ne voient pas une image). Le pipeline leur donne donc du texte :
+ * PDF → texte page par page (pdfjs), image → OCR (tesseract). Aucun faux support multimodal.
+ */
+async function appelerDeepseek({ system, user }) {
+  const cle = (process.env.DEEPSEEK_API_KEY || '').trim()
+  if (!cle) return { error: 'configuration_required', message: 'DEEPSEEK_API_KEY absente.' }
+  const modele = (process.env.ARK_DOC_DEEPSEEK_MODEL || 'deepseek-flash').trim()
+  const base = (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/$/, '')
+  const debut = Date.now()
+  try {
+    const reponse = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + cle, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: modele,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+        temperature: 0,
+        max_tokens: 4096,
+        response_format: { type: 'json_object' },
+        stream: false,
+      }),
+    })
+    if (!reponse.ok) {
+      const detail = await reponse.text().catch(() => '')
+      return {
+        error: 'provider_unavailable',
+        message: `DeepSeek HTTP ${reponse.status}`,
+        provider: 'deepseek',
+        detail: detail.slice(0, 200),
+      }
+    }
+    const donnees = await reponse.json()
+    const choix = (donnees.choices || [])[0] || {}
+    const brut = (choix.message || {}).content || ''
+    return {
+      text: brut,
+      structured: analyserJson(brut),
+      usage: donnees.usage || {},
+      model: donnees.model || modele,
+      finishReason: choix.finish_reason,
+      costUsd: 0,
+      latencyMs: Date.now() - debut,
+      provider: 'deepseek',
+    }
+  } catch (err) {
+    return { error: 'provider_unavailable', message: err.message, provider: 'deepseek' }
+  }
+}
+
 async function appelerModele({ system, user, images = [], texte = null, userId, clientId, route }) {
+  // Ordre de sélection explicite et documenté :
+  //   1. fournisseur local (ARK_DOC_LOCAL_BASE_URL) — tests et repli auto-hébergé ;
+  //   2. DEEPSEEK (DEEPSEEK_API_KEY) — moteur demandé pour la production ;
+  //   3. Claude vision (ANTHROPIC_API_KEY valide) — utile pour un PDF scanné, que
+  //      DeepSeek ne peut pas voir puisqu'il est texte.
+  const fournisseurForce = (process.env.ARK_DOC_PROVIDER || '').trim().toLowerCase()
+  if (fournisseurForce === 'deepseek' || (!fournisseurForce && (process.env.DEEPSEEK_API_KEY || '').trim() && !(process.env.ARK_DOC_LOCAL_BASE_URL || '').trim())) {
+    const texteComplet = texte ? `${user}\n\n=== TEXTE DU DOCUMENT ===\n${texte}` : user
+    return appelerDeepseek({ system, user: texteComplet })
+  }
+
   const base = (process.env.ARK_DOC_LOCAL_BASE_URL || '').trim()
   if (base) {
     const modele = process.env.ARK_DOC_LOCAL_MODEL || 'qwen3.5:9b'
@@ -296,7 +388,7 @@ function promptUtilisateur(typeDetecte, nomFichier) {
 
 Retourne EXACTEMENT ce JSON :
 {
-  "type_document": "${Object.values(DOCUMENT_TYPES).join('|')}",
+  "type_document": "${[...Object.values(DOCUMENT_TYPES), 'contrat'].join('|')}",
   "resume": "résumé factuel en une phrase",
   "emetteur": "organisme émetteur si présent, sinon null",
   "date_document": "AAAA-MM-JJ si présent, sinon null",
@@ -387,10 +479,19 @@ async function analyserDocumentStocke({ portee, userId, clientDocumentId, client
     // Un PDF avec couche texte est lu page par page (moins de tokens, page conservée).
     // Un PDF sans texte (scan) ou une image passe par la lecture visuelle.
     let textePdf = null
+    let texteImage = null
     if (contenu.mimeType === 'application/pdf') {
       const extraction = await extraireTextePdf(contenu.buffer)
       if (extraction && extraction.texteTotal.length >= 200 && extraction.pages.some((p) => p.texte.length > 40)) {
         textePdf = extraction
+      }
+    } else if (contenu.mimeType.startsWith('image/')) {
+      // Les modèles actuellement accessibles côté DeepSeek sont TEXTE : une image est
+      // donc d'abord LUE (OCR local, tesseract.js, déjà au projet), puis le texte obtenu
+      // est confié au modèle. Aucun faux support multimodal.
+      const ocr = await extraireTexteImage(contenu.buffer)
+      if (ocr && ocr.texte.length >= 20) {
+        texteImage = ocr
       }
     }
 
@@ -398,13 +499,18 @@ async function analyserDocumentStocke({ portee, userId, clientDocumentId, client
       ? `${promptUtilisateur(typeDetecte, contenu.filename || 'document')}\n\nLe texte ci-dessous est découpé par page : chaque bloc commence par « --- PAGE n --- ».
 Pour le champ "page" de chaque information, indique la page réelle du bloc où tu l'as lue.\n\n`
         + textePdf.pages.map((p) => `--- PAGE ${p.page} ---\n${p.texte}`).join('\n')
-      : promptUtilisateur(typeDetecte, contenu.filename || 'document')
+      : (texteImage
+        ? `${promptUtilisateur(typeDetecte, contenu.filename || 'document')}\n\nLe texte ci-dessous provient de la LECTURE OCR d'une image (page 1) : les erreurs de reconnaissance sont possibles, abaisse la confiance des valeurs ambiguës.\n\n--- PAGE 1 ---\n${texteImage.texte}`
+        : promptUtilisateur(typeDetecte, contenu.filename || 'document'))
 
+    // Un PDF sans couche texte et sans OCR possible ne peut pas être lu par un modèle
+    // texte : on le DIT au courtier au lieu de renvoyer un résultat vide.
+    const pdfSansTexte = contenu.mimeType === 'application/pdf' && !textePdf
     const vision = await appelerModele({
       system: PROMPT_SYSTEME,
       user: promptUtilisateurFinal,
-      texte: textePdf ? '' : null,
-      images: textePdf ? [] : [{ buffer: contenu.buffer, mediaType: contenu.mimeType }],
+      texte: null,
+      images: pdfSansTexte ? [{ buffer: contenu.buffer, mediaType: contenu.mimeType }] : [],
       userId,
       clientId,
       route: 'ark/documents',
@@ -439,7 +545,9 @@ Pour le champ "page" de chaque information, indique la page réelle du bloc où 
         avertissements.push(`PDF de ${pages} pages : au-delà de ${PAGES_MAX} pages, un découpage manuel est nécessaire.`)
       }
       if (!textePdf) {
-        avertissements.push('PDF sans couche texte exploitable : lecture visuelle utilisée (résultat à vérifier plus attentivement).')
+        avertissements.push((vision && vision.provider === 'deepseek')
+          ? 'PDF sans couche texte (document scanné) : les modèles DeepSeek accessibles sont texte et ne peuvent pas lire une image. Aucune donnée n\'en a été tirée. Un modèle de vision reste nécessaire pour ce cas.'
+          : 'PDF sans couche texte exploitable : lecture visuelle utilisée (résultat à vérifier plus attentivement).')
       }
     }
 
@@ -627,6 +735,7 @@ async function construireDiff({ portee, extractionId }) {
     },
     client: { id: client.id, nom: `${client.prenom || ''} ${client.nom || ''}`.trim() || client.company_name || `Client ${client.id}` },
     seuil_sur: SEUIL_SUR,
+    contrat_propose: construireContratPropose(extraction.document_type, champs),
     lignes,
   }
 }
@@ -652,6 +761,123 @@ function normaliserDocuments(valeur) {
   }
   if (!brut || typeof brut !== 'object') return {}
   return JSON.parse(JSON.stringify(brut))
+}
+
+/**
+ * Prépare la CRÉATION d'un contrat (table `quotes`) à partir d'un document.
+ * POURQUOI : jusqu'ici le pipeline savait écrire une fiche client, mais pas créer
+ * l'élément d'assurance que le document atteste réellement (attestation, contrat,
+ * police). Le courtier voyait donc les informations sans que le dossier se complète.
+ *
+ * RÈGLE : on ne propose la création que si le document porte de quoi identifier un
+ * contrat (au moins un numéro de contrat ou une compagnie). Sinon, rien n'est proposé —
+ * on n'invente pas un contrat à partir d'un simple justificatif de domicile.
+ */
+function construireContratPropose(documentType, champs) {
+  const valeur = (cle) => (champs[cle] && champs[cle].value !== undefined ? champs[cle].value : null)
+  const typesAcceptes = ['attestation_assurance', 'contrat', 'releve_information']
+  const numero = valeur('numero_contrat')
+  const compagnie = valeur('compagnie')
+  // Repli mesuré : un contrat classé « autre » par le modèle reste créable s'il porte À LA FOIS
+  // une compagnie ET un numéro de contrat — deux marques qu'un simple justificatif n'a pas.
+  const contratEvident = documentType === 'autre' && Boolean(numero) && Boolean(compagnie)
+  const possible = (typesAcceptes.includes(documentType) && Boolean(numero || compagnie)) || contratEvident
+
+  return {
+    possible,
+    type_document: documentType,
+    apercu: {
+      compagnie,
+      numero_contrat: numero,
+      produit: valeur('produit'),
+      date_effet: valeur('date_effet'),
+      date_echeance: valeur('date_echeance'),
+      prime: valeur('prime'),
+      franchise: valeur('franchise'),
+      garanties: valeur('garanties'),
+    },
+    raison: possible
+      ? 'Ce document atteste un contrat : COURTIA peut créer le contrat correspondant.'
+      : (typesAcceptes.includes(documentType)
+        ? 'Aucun numéro de contrat ni compagnie exploitable : aucun contrat ne sera créé.'
+        : 'Type de document ne servant pas à créer un contrat.'),
+  }
+}
+
+/**
+ * Crée RÉELLEMENT une ligne de contrat (`quotes`) à partir d'une extraction validée.
+ * Convention reprise de src/routes/contrats.js (mêmes colonnes), statut du produit,
+ * et marquage `a_verifier` dans quote_data : le contrat vient d'un document lu par un
+ * modèle, il doit rester identifiable comme tel.
+ */
+async function creerContratDepuisExtraction({ portee, extractionId, clientId, userId, ip, userAgent }) {
+  const ext = await pool.query('SELECT * FROM document_extractions WHERE id = $1', [extractionId])
+  if (!ext.rows.length) return { ok: false, code: 'extraction_introuvable' }
+  const extraction = ext.rows[0]
+
+  const client = await chargerClient(portee, Number(clientId))
+  if (!client || Number(client.id) !== Number(extraction.client_id)) {
+    return { ok: false, code: 'client_hors_portee' }
+  }
+  if (extraction.applied_to_client !== true) {
+    return { ok: false, code: 'non_appliquee', erreur: "L'extraction doit d'abord être appliquée à la fiche client." }
+  }
+
+  const champs = (extraction.extracted_fields && extraction.extracted_fields.champs) || {}
+  const proposition = construireContratPropose(extraction.document_type, champs)
+  if (!proposition.possible) {
+    return { ok: false, code: 'contrat_non_identifiable', erreur: proposition.raison }
+  }
+
+  const valeur = (cle) => (champs[cle] && champs[cle].value !== undefined ? champs[cle].value : null)
+  const primeBrute = valeur('prime')
+  const prime = typeof primeBrute === 'number' ? primeBrute : (primeBrute ? Number(String(primeBrute).replace(',', '.')) : null)
+  const echeance = /^\d{4}-\d{2}-\d{2}$/.test(String(valeur('date_echeance') || '')) ? valeur('date_echeance') : null
+
+  const quoteData = {
+    type_contrat: valeur('produit') || extraction.document_type,
+    compagnie: valeur('compagnie'),
+    numero_contrat: valeur('numero_contrat'),
+    date_effet: valeur('date_effet'),
+    date_echeance: valeur('date_echeance'),
+    prime_annuelle: Number.isFinite(prime) ? prime : null,
+    franchise: valeur('franchise'),
+    garanties: valeur('garanties'),
+    a_verifier: true,
+    source_document: {
+      extraction_id: extractionId,
+      document_id: extraction.client_document_id,
+      fichier: (extraction.extracted_fields || {}).fichier || null,
+      modele: extraction.ai_model || null,
+      lu_le: new Date().toISOString(),
+    },
+  }
+
+  const clientApi = await pool.connect()
+  try {
+    await clientApi.query('BEGIN')
+    const insertion = await clientApi.query(
+      `INSERT INTO quotes (client_id, quote_data, status, prime_annuelle, date_echeance, broker_id, created_at)
+       VALUES ($1, $2, 'actif', $3, $4, $5, NOW()) RETURNING id`,
+      [client.id, JSON.stringify(quoteData), Number.isFinite(prime) ? prime : null, echeance, userId]
+    )
+    const contratId = insertion.rows[0].id
+    await clientApi.query(
+      `INSERT INTO audit_logs (user_id, entity_type, entity_id, action, changes, new_values,
+                               resource_type, resource_id, ip_address, user_agent)
+       VALUES ($1, 'contract', $2, 'document_contract_create', $3, $4, 'document_extraction', $5, $6, $7)`,
+      [userId, contratId, JSON.stringify({ extraction_id: extractionId, champs: Object.keys(quoteData) }),
+       JSON.stringify(quoteData), extractionId, ip || null, userAgent || null]
+    )
+    await clientApi.query('COMMIT')
+    return { ok: true, contratId, quoteData }
+  } catch (err) {
+    await clientApi.query('ROLLBACK').catch(() => {})
+    logger.error({ err: err.message, extractionId }, 'creation de contrat impossible')
+    return { ok: false, code: 'ecriture_impossible', erreur: err.message }
+  } finally {
+    clientApi.release()
+  }
 }
 
 function valeursIdentiques(a, b) {
@@ -786,9 +1012,13 @@ module.exports = {
   lireContenuDocument,
   analyserDocumentStocke,
   extraireTextePdf,
+  extraireTexteImage,
+  appelerDeepseek,
   appelerModele,
   analyserJson,
   construireDiff,
+  construireContratPropose,
+  creerContratDepuisExtraction,
   appliquerDiff,
   normaliserChamps,
   chargerClient,
