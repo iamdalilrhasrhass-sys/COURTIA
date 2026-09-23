@@ -227,11 +227,19 @@ export function ArkBubbleV2() {
       parExtraction[ligne.extraction_id].push({ champ: ligne.champ, appliquer: true, valeur: ligne.valeur_extraite });
     }
     const lots = Object.entries(parExtraction);
-    if (!lots.length) {
+    // Défaut mesuré en production le 23/09/2026 : un courtier qui voulait SEULEMENT créer le
+    // contrat (cas normal quand l'identité de la fiche est déjà remplie) était arrêté par
+    // « Aucun champ sélectionné. » — la case contrôlait l'affichage, pas l'action.
+    if (!lots.length && !creerContrat) {
       setErreur('Aucun champ sélectionné.');
       return;
     }
     setEnApplication(true);
+    // Aucun champ coché mais contrat demandé : on cible la première extraction pour porter
+    // la création du contrat (le serveur n'écrira aucune donnée de fiche).
+    if (!lots.length && creerContrat && analyse.fichiers && analyse.fichiers[0] && analyse.fichiers[0].extractionId) {
+      lots.push([String(analyse.fichiers[0].extractionId), []]);
+    }
     setErreur(null);
     try {
       const resultats = [];

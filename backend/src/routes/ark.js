@@ -1899,6 +1899,9 @@ router.post('/documents/extractions/:id/appliquer', verifyToken, async (req, res
       userId,
       ip: req.ip,
       userAgent: req.get('user-agent'),
+      // Créer le contrat SANS reprendre de champ est un cas normal : on le transmet au
+      // service, sinon la case cochée seule était refusée (défaut mesuré le 23/09/2026).
+      creerContrat: req.body.creer_contrat === true,
     })
 
     if (!resultat.ok) {

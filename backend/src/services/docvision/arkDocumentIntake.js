@@ -1017,7 +1017,8 @@ function valeursIdentiques(a, b) {
  * @param {Object} params
  * @param {Array} params.selections - [{ champ, appliquer: boolean, valeur }]
  */
-async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, selections, userId, ip, userAgent }) {
+async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, selections, userId, ip,
+  creerContrat = false, userAgent }) {
   const diff = await construireDiff({ portee, extractionId })
   if (!diff.ok) return diff
   if (diff.extraction.deja_appliquee) {
@@ -1028,7 +1029,11 @@ async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, s
   }
 
   const retenues = (selections || []).filter((s) => s && s.appliquer === true && MAPPING_COLONNES[s.champ])
-  if (!retenues.length) {
+  // Une sélection vide est légitime quand le courtier ne demande QUE la création du contrat
+  // (cas normal d'une fiche déjà remplie) : le document est consigné, aucun champ n'est écrit.
+  // Défaut mesuré en production le 23/09/2026 : la case « Créer le contrat » cochée seule
+  // répondait « Aucun champ sélectionné. » et le contrat n'était jamais créé.
+  if (!retenues.length && !creerContrat) {
     return { ok: false, code: 'aucune_selection', erreur: 'Aucun champ sélectionné.' }
   }
 
@@ -1071,9 +1076,11 @@ async function appliquerDiff({ portee, porteeEcriture, extractionId, clientId, s
     appliquees.push(sel.champ)
   }
 
-  if (!appliquees.length) {
-    return { ok: false, code: 'aucune_valeur', erreur: 'Aucune valeur exploitable dans la sélection.' }
-  }
+  // Une sélection VIDE n'est plus un échec : le courtier peut valider un document sans
+  // reprendre de champ (fiche déjà remplie) et ne demander que la création du contrat.
+  // L'analyse est alors simplement consignée dans la fiche (documents.analyses_documentaires)
+  // et l'extraction marquée comme traitée, avec une ligne d'audit — sans aucune écriture de champ.
+  const sansChamp = appliquees.length === 0
 
   // Traçabilité du document lui-même dans la fiche (sans écraser les autres analyses).
   jsonb.analyses_documentaires = jsonb.analyses_documentaires || []
