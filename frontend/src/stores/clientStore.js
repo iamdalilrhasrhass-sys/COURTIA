@@ -1,7 +1,14 @@
 import { create } from 'zustand'
 import { useAuthStore } from './authStore'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+// VITE_API_URL contient DÉJÀ le préfixe `/api` dans le build de production : le retirer
+// ici évite de construire des URL en double.
+// DÉFAUT MESURÉ LE 23/09/2026 dans l'application de production : la bulle ARK appelait
+// `/api/api/clients` (404) ; la liste des dossiers restait donc vide et aucun document ne
+// pouvait être rattaché à un client depuis la bulle. Les appels ci-dessous, écrits
+// `${API_URL}/api/...`, redeviennent corrects dans les deux configurations
+// (`/api` comme base, ou URL complète du backend).
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '')
 
 export const useClientStore = create((set, get) => ({
   clients: [],
