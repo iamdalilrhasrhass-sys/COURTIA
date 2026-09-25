@@ -88,12 +88,36 @@ router.post('/trials/invite', async (req, res) => {
     const jours = Number.isFinite(joursDemandes)
       ? Math.min(90, Math.max(1, Math.trunc(joursDemandes)))
       : billingService.TRIAL_DAYS;
+    // Fin d'essai ABSOLUE, facultative : « 2026-10-02T17:00:00+02:00 ».
+    // Elle prime sur la durée ; le fuseau est porté par la chaîne, donc aucune
+    // conversion dépendante du serveur n'est faite ici.
+    const finEssaiAt = typeof req.body?.fin_essai_at === 'string' ? req.body.fin_essai_at.trim() : '';
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, error: 'email_invalide' });
     }
     if (!cabinet) {
       return res.status(400).json({ success: false, error: 'cabinet_requis', message: 'Le nom du cabinet est requis.' });
+    }
+    // La fin d'essai imposée est VALIDÉE AVANT toute création de compte : un
+    // appel refusé ne doit pas laisser de compte fantôme derrière lui (mesuré
+    // le 25/09/2026 : le compte était créé puis l'appel répondait 400).
+    if (finEssaiAt) {
+      const finEssaiDate = new Date(finEssaiAt);
+      if (Number.isNaN(finEssaiDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'fin_essai_illisible',
+          message: "La fin d'essai demandée n'est pas une date lisible (attendu : ISO 8601 avec fuseau, ex. 2026-10-02T17:00:00+02:00).",
+        });
+      }
+      if (finEssaiDate.getTime() <= Date.now()) {
+        return res.status(400).json({
+          success: false,
+          error: 'fin_essai_dans_le_passe',
+          message: "La fin d'essai demandée est déjà passée : le compte se connecterait aussitôt en lecture seule.",
+        });
+      }
     }
 
     // Jamais d'écrasement silencieux d'un compte existant : on adapte le compte
@@ -130,8 +154,30 @@ router.post('/trials/invite', async (req, res) => {
       user = await User.create(email, motDePasseScelle, firstName || cabinet, lastName || '', 'broker');
     }
 
-    // Accès direct : mot de passe posé, essai ouvert maintenant, essai de N jours.
-    const acces = await User.definirAccesDirect(user.id, motDePasseInitial, { jours });
+    // Accès direct : mot de passe posé, essai ouvert maintenant.
+    // `fin_essai_at` (ISO 8601, fuseau dans la chaîne) est ABSOLU et prime sur
+    // la durée : c'est ce qui permet d'annoncer au cabinet une fin à l'heure
+    // près, identique quel que soit le fuseau du serveur.
+    const acces = await User.definirAccesDirect(user.id, motDePasseInitial, { jours, finEssai: finEssaiAt });
+    if (acces && acces.ok === false) {
+      // Filet de sécurité : la date a été validée plus haut, mais si le modèle
+      // refuse quand même (date devenue passée entre-temps), on retire le compte
+      // créé par CET appel — aucun accès n'existe, donc aucun compte ne doit
+      // rester. Un compte préexistant n'est jamais supprimé.
+      if (!existant && user && user.id) {
+        await pool.query('DELETE FROM users WHERE id = $1', [user.id]).catch(() => {});
+      }
+      return res.status(400).json({
+        success: false,
+        error: acces.raison,
+        message: acces.raison === 'fin_essai_dans_le_passe'
+          ? "La fin d'essai demandée est déjà passée : le compte se connecterait en lecture seule."
+          : "La fin d'essai demandée n'est pas une date lisible (attendu : ISO 8601 avec fuseau).",
+      });
+    }
+    if (!acces) {
+      return res.status(500).json({ success: false, error: 'acces_non_pose', message: 'Le compte n’a pas pu être mis en essai.' });
+    }
     if (cabinet) {
       await pool.query('UPDATE users SET cabinet_name = $1 WHERE id = $2', [cabinet, user.id]);
     }
@@ -169,6 +215,8 @@ router.post('/trials/invite', async (req, res) => {
         essai_demarre_a_lactivation: false,
         statut_compte: etat.subscription_status || 'trialing',
         duree_essai_jours: Number(etat.trial_days || jours),
+        fin_essai_imposee: Boolean(finEssaiAt),
+        fin_essai_demandee: finEssaiAt || null,
         compte_cree_le: etat.invited_at || null,
         compte_existant_reutilise: Boolean(existant),
         // Aucun envoi ici, et on ne prétend pas le contraire.

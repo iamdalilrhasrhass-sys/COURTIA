@@ -287,7 +287,18 @@ function assainirErreursInternes(req, res, next) {
 
   res.json = (corps) => traiter(corps, jsonOrigine)
   res.send = (corps) => {
-    if (typeof corps === 'string' && res.statusCode >= 400) {
+    // Une charge JSON est DÉJÀ passée par res.json (et par son filtre de
+    // champs) : sa sérialisation dépasse presque toujours le plafond du
+    // filtre texte (300 caractères) et, relue comme du « texte brut », elle
+    // était REMPLACÉE EN ENTIER par le message générique. Défaut mesuré le
+    // 25/09/2026 : le 402 `trial_expired` (349 caractères) arrivait sans son
+    // code, donc plus de paywall à l'écran ; le 403
+    // `changement_mot_de_passe_requis` subissait le même sort. Le filtre
+    // « texte brut » ne s'applique donc qu'aux corps NON JSON.
+    const typeCourant = String(
+      (typeof res.getHeader === 'function' ? res.getHeader('content-type') : '') || ''
+    ).toLowerCase()
+    if (typeof corps === 'string' && res.statusCode >= 400 && !typeCourant.includes('json')) {
       const { interne } = estTexteInterne(corps)
       if (interne) {
         logger.warn({
@@ -298,6 +309,11 @@ function assainirErreursInternes(req, res, next) {
         return sendOrigine(messagePublic(corps))
       }
     }
+    // Une chaîne est déjà sérialisée : le filtre de champs (`assainirCorps`)
+    // ne s'applique qu'aux objets. On la transmet telle quelle (elle a été
+    // assainie par res.json si elle vient de là) ; les objets, eux, passent
+    // toujours par le filtre.
+    if (typeof corps === 'string') return sendOrigine(corps)
     return traiter(corps, sendOrigine)
   }
 

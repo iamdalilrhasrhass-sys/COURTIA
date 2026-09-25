@@ -216,6 +216,72 @@ describe('assainirErreursInternes (middleware)', () => {
     res.send(brut)
     expect(res.corps).toBe(MESSAGE_INTERNE)
   })
+
+  // ── RÉGRESSION MESURÉE LE 25/09/2026 (production et recette locale) ────────
+  // `res.json(corps)` appelle `res.send(<chaîne JSON>)`. Le filtre « texte brut »
+  // relisait donc la sérialisation JSON comme un texte d'infrastructure dès
+  // qu'elle dépassait 300 caractères (plafond de `estTexteInterne`) et
+  // REMPLAÇAIT TOUT le corps par le message générique. Conséquence mesurée : le
+  // 402 `trial_expired` (349 caractères) arrivait sans son code, donc l'écran ne
+  // pouvait plus ouvrir le paywall ; le 403 `changement_mot_de_passe_requis`
+  // subissait le même sort, donc plus de redirection vers Paramètres > Sécurité.
+  // Ces tests figent l'invariant : une charge JSON déjà assainie arrive intacte.
+  function fauxResJson(statusCode) {
+    const res = fauxRes(statusCode)
+    res.getHeader = () => res.typeCourant
+    res.json = (corps) => {
+      res.typeCourant = 'application/json; charset=utf-8'
+      res.corps = corps
+      return res.send(JSON.stringify(corps))
+    }
+    return res
+  }
+
+  it('NE remplace PAS un corps d’erreur JSON de plus de 300 caractères (402 trial_expired)', () => {
+    const res = fauxResJson(402)
+    assainirErreursInternes(req, res, () => {})
+    const charge = {
+      error: 'trial_expired',
+      trial_state: 'TRIAL_EXPIRED',
+      trial_end_at: '2026-10-02T15:00:00.000Z',
+      raison: 'essai_expire',
+      lecture_seule: true,
+      impaye_depuis: null,
+      delai_grace_jours: null,
+      message: "Votre essai COURTIA de 7 jours est terminé. Vos données sont conservées et restent consultables : choisissez un abonnement pour reprendre les modifications.",
+    }
+    expect(JSON.stringify(charge).length).toBeGreaterThan(300)
+    res.json(charge)
+    expect(JSON.parse(res.corps).error).toBe('trial_expired')
+    expect(JSON.parse(res.corps).lecture_seule).toBe(true)
+  })
+
+  it('NE remplace PAS un corps d’erreur JSON long (403 changement_mot_de_passe_requis)', () => {
+    const res = fauxResJson(403)
+    assainirErreursInternes(req, res, () => {})
+    const charge = {
+      success: false,
+      error: 'changement_mot_de_passe_requis',
+      code: 'changement_mot_de_passe_requis',
+      must_change_password: true,
+      message: 'Votre mot de passe temporaire doit être remplacé avant d’utiliser l’application. Rendez-vous dans Paramètres → Sécurité (aucune donnée n’est perdue).',
+    }
+    res.json(charge)
+    expect(JSON.parse(res.corps).code).toBe('changement_mot_de_passe_requis')
+  })
+
+  it('nettoie TOUJOURS un message d’infrastructure glissé dans un corps long', () => {
+    const res = fauxResJson(500)
+    assainirErreursInternes(req, res, () => {})
+    res.json({
+      error: 'internal_error',
+      message: 'relation "quotes" does not exist',
+      details: 'x'.repeat(320),
+    })
+    const corps = JSON.parse(res.corps)
+    expect(corps.message).toBe(MESSAGE_INTERNE)
+    expect(corps.details).toBe(MESSAGE_INTERNE)
+  })
 })
 
 describe('repondreErreur', () => {

@@ -60,7 +60,7 @@ describe('accès direct : mot de passe initial temporaire', () => {
     const sql = pool.query.mock.calls[0][0];
     expect(sql).toContain("subscription_status = 'trialing'");
     expect(sql).toContain('trial_started_at = NOW()');
-    expect(sql).toContain("trial_ends_at = NOW() + ($3::int || ' days')::interval");
+    expect(sql).toContain("trial_ends_at = COALESCE($4::timestamptz, NOW() + ($3::int || ' days')::interval)");
     expect(sql).not.toContain('pending_activation');
     expect(acces.jours).toBe(7);
     expect(acces.debut).toBeTruthy();
@@ -124,5 +124,55 @@ describe('changement de mot de passe par le titulaire', () => {
     const resultat = await User.changerMotDePasse(999, 'a', 'b');
     expect(resultat).toEqual({ ok: false, raison: 'compte_introuvable' });
     expect(pool.query).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("essai : la fin peut être un INSTANT absolu, pas seulement une durée", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("finEssai prime sur la durée et devient un timestamptz (fuseau porté par la chaîne)", async () => {
+    pool.query.mockResolvedValue({
+      rows: [{
+        id: 200,
+        email: 'contact@exemple.fr',
+        trial_started_at: '2026-09-25T08:00:00.000Z',
+        trial_ends_at: '2026-10-02T15:00:00.000Z',
+        trial_days: 8,
+      }],
+    });
+
+    const acces = await User.definirAccesDirect(200, 'LcCourtierEnAssurances', {
+      jours: 7,
+      finEssai: '2026-10-02T17:00:00+02:00', // 17:00 heure de Paris
+    });
+
+    const [sql, params] = pool.query.mock.calls[0];
+    expect(sql).toContain('COALESCE($4::timestamptz');
+    expect(sql).toContain('CEIL(EXTRACT(EPOCH FROM ($4::timestamptz - NOW()))');
+    // La conversion en UTC est faite AVANT la base : 17:00+02:00 = 15:00Z.
+    expect(params[3]).toBe('2026-10-02T15:00:00.000Z');
+    expect(acces.fin_imposee).toBe(true);
+  });
+
+  test("sans fin imposée, le comportement historique est inchangé (4e paramètre nul)", async () => {
+    pool.query.mockResolvedValue({
+      rows: [{ id: 11, email: 'a@b.fr', trial_started_at: 'x', trial_ends_at: 'y', trial_days: 7 }],
+    });
+    const acces = await User.definirAccesDirect(11, 'Xyzabcd', { jours: 7 });
+    expect(pool.query.mock.calls[0][1][3]).toBeNull();
+    expect(acces.fin_imposee).toBe(false);
+    expect(acces.jours).toBe(7);
+  });
+
+  test('une fin illisible est REFUSÉE, et rien n’est écrit', async () => {
+    const resultat = await User.definirAccesDirect(1, 'Xyzabcd', { finEssai: 'pas une date' });
+    expect(resultat).toEqual({ ok: false, raison: 'fin_essai_illisible' });
+    expect(pool.query).not.toHaveBeenCalled();
+  });
+
+  test('une fin déjà passée est REFUSÉE, et rien n’est écrit', async () => {
+    const resultat = await User.definirAccesDirect(1, 'Xyzabcd', { finEssai: '2026-01-01T00:00:00Z' });
+    expect(resultat).toEqual({ ok: false, raison: 'fin_essai_dans_le_passe' });
+    expect(pool.query).not.toHaveBeenCalled();
   });
 });

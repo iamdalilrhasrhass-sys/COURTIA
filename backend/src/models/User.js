@@ -182,9 +182,29 @@ class User {
 
   /**
    * Pose un mot de passe utilisable tout de suite et ouvre l'essai.
-   * @returns {Promise<{id: number, email: string, debut: Date, fin: Date, jours: number}|null>}
+   *
+   * DEUX FAÇONS DE FIXER LA FIN D'ESSAI, jamais mélangées :
+   *   - `jours`  : durée relative, la fin vaut `NOW() + jours` (comportement
+   *                historique, celui de l'essai libre-service) ;
+   *   - `finEssai` : INSTANT ABSOLU (ISO 8601, fuseau porté par la chaîne). Il
+   *                PRIME sur `jours` : c'est le seul moyen d'annoncer au cabinet
+   *                une fin à l'heure près (« vendredi 2 octobre 2026 à 17:00
+   *                heure de Paris »), sans dépendre de l'heure d'exécution ni du
+   *                fuseau du serveur. Le nombre de jours stocké est alors le
+   *                PLAFOND des jours restants : il ne doit jamais annoncer une
+   *                durée plus courte que la réalité.
+   * Une date illisible ou déjà passée est REFUSÉE (jamais ignorée en silence :
+   * un essai qui se termine à la seconde de sa création passerait inaperçu).
+   *
+   * @returns {Promise<{id: number, email: string, debut: Date, fin: Date, jours: number, fin_imposee: boolean}|{ok: false, raison: string}|null>}
    */
-  static async definirAccesDirect(userId, motDePasse, { jours } = {}) {
+  static async definirAccesDirect(userId, motDePasse, { jours, finEssai } = {}) {
+    let finDate = null;
+    if (finEssai !== undefined && finEssai !== null && String(finEssai).trim() !== '') {
+      finDate = new Date(finEssai);
+      if (Number.isNaN(finDate.getTime())) return { ok: false, raison: 'fin_essai_illisible' };
+      if (finDate.getTime() <= Date.now()) return { ok: false, raison: 'fin_essai_dans_le_passe' };
+    }
     const hashedPassword = await bcrypt.hash(motDePasse, 10);
     const joursValides = Number.isFinite(Number(jours)) && Number(jours) > 0
       ? Math.trunc(Number(jours))
@@ -195,16 +215,19 @@ class User {
               must_change_password = TRUE,
               plan = 'trial',
               subscription_status = 'trialing',
-              trial_days = $3::int,
+              trial_days = CASE
+                             WHEN $4::timestamptz IS NULL THEN $3::int
+                             ELSE GREATEST(1, CEIL(EXTRACT(EPOCH FROM ($4::timestamptz - NOW())) / 86400)::int)
+                           END,
               trial_started_at = NOW(),
-              trial_ends_at = NOW() + ($3::int || ' days')::interval,
+              trial_ends_at = COALESCE($4::timestamptz, NOW() + ($3::int || ' days')::interval),
               invited_at = COALESCE(invited_at, NOW()),
               password_reset_token = NULL,
               password_reset_expires = NULL,
               updated_at = NOW()
         WHERE id = $2
         RETURNING id, email, trial_started_at, trial_ends_at, trial_days`,
-      [hashedPassword, userId, String(joursValides)]
+      [hashedPassword, userId, String(joursValides), finDate ? finDate.toISOString() : null]
     );
     const ligne = result.rows[0];
     if (!ligne) return null;
@@ -214,6 +237,7 @@ class User {
       debut: ligne.trial_started_at,
       fin: ligne.trial_ends_at,
       jours: Number(ligne.trial_days),
+      fin_imposee: Boolean(finDate),
     };
   }
 

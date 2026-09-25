@@ -42,11 +42,27 @@ function echapper(valeur) {
     .replace(/'/g, '&#39;');
 }
 
-function dateLisible(valeur) {
+/**
+ * Date ET heure de fin, à l'heure de Paris.
+ *
+ * POURQUOI LE FUSEAU EST ÉCRIT DANS LE GABARIT : un essai qui se termine à
+ * « 02/10/2026 17:00 Europe/Paris » est un instant absolu. L'écrire sans heure
+ * (« jusqu'au 2 octobre 2026 ») fait perdre au cabinet la moitié de
+ * l'information, et le rendre dans le fuseau du poste de l'expéditeur produit
+ * une heure fausse pour un lecteur situé ailleurs. On fige donc la règle :
+ * heure de Paris, explicitement annoncée.
+ */
+function dateHeureLisible(valeur) {
   if (!valeur) return '';
   const d = new Date(valeur);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const date = d.toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris',
+  });
+  const heure = d.toLocaleTimeString('fr-FR', {
+    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris',
+  });
+  return `${date} à ${heure}`;
 }
 
 /**
@@ -73,7 +89,14 @@ function buildAccessTemplate({
   const cabinetSur = echapper(cabinet || '');
   const contactSur = echapper((contact || '').trim() || 'Bonjour');
   const jours = Number(joursEssai) > 0 ? Math.trunc(Number(joursEssai)) : 7;
-  const fin = dateLisible(finEssai);
+  const finPrecise = dateHeureLisible(finEssai);
+  // Phrase d'essai : quand la fin est connue à l'instant près, c'est ELLE qui
+  // fait foi (« jusqu'au vendredi 2 octobre 2026 à 17:00 »), et aucun nombre de
+  // jours n'est annoncé — un compte à rebours arrondi dirait tantôt 7, tantôt 8.
+  const phraseEssai = finPrecise
+    ? `Votre essai gratuit COURTIA est en cours jusqu'au ${echapper(finPrecise)} (heure de Paris).`
+    : `Votre essai gratuit COURTIA de ${jours} jours est en cours.`;
+  const phraseEssaiTexte = phraseEssai;
 
   const subject = 'COURTIA — Votre espace est prêt';
 
@@ -176,7 +199,7 @@ function buildAccessTemplate({
           <tr>
             <td style="padding:20px 34px 0 34px;">
               <p style="margin:0;font-size:13px;line-height:21px;color:${COULEURS.texteDoux};">
-                Votre essai COURTIA de ${jours} jours est en cours${fin ? ` jusqu'au ${echapper(fin)}` : ''}.
+                ${phraseEssai}
                 Aucun paiement n'est demandé pendant l'essai ; vos données restent conservées à son issue.
               </p>
             </td>
@@ -217,7 +240,7 @@ function buildAccessTemplate({
     '',
     'Vous pourrez modifier votre mot de passe à tout moment depuis Paramètres > Sécurité dans votre espace COURTIA.',
     '',
-    `Votre essai COURTIA de ${jours} jours est en cours${fin ? ` jusqu'au ${fin}` : ''}.`,
+    phraseEssaiTexte,
     '',
     "L'équipe COURTIA",
     'arkcourtia@gmail.com',

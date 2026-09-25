@@ -69,9 +69,33 @@ describe("e-mail d'accès client", () => {
     expect(t.text).toContain("L'équipe COURTIA");
   });
 
-  test('la durée et la fin d essai sont annoncées quand elles sont fournies', () => {
-    expect(t.html).toContain('essai COURTIA de 7 jours');
-    expect(t.html).toContain('27 septembre 2026');
+  test('la fin exacte de l essai est annoncée, à l heure de Paris', () => {
+    // 2026-09-27T10:24:00Z = 12:24 heure de Paris (CEST).
+    expect(t.html).toContain('dimanche 27 septembre 2026 à 12:24');
+    expect(t.html).toContain('(heure de Paris)');
+    expect(t.html).toContain('essai gratuit COURTIA');
+    expect(t.text).toContain('dimanche 27 septembre 2026 à 12:24');
+    expect(t.text).toContain('(heure de Paris)');
+  });
+
+  test('une échéance à l instant près est rendue telle quelle (02/10/2026 17:00 Paris)', () => {
+    const t2 = buildAccessTemplate({
+      email: 'contact@exemple.fr',
+      motDePasse: 'LcCourtierEnAssurances',
+      cabinet: 'LC COURTIER EN ASSURANCES',
+      contact: 'Lalia',
+      finEssai: '2026-10-02T15:00:00.000Z', // 17:00 à Paris
+    });
+    expect(t2.html).toContain('vendredi 2 octobre 2026 à 17:00');
+    expect(t2.text).toContain('vendredi 2 octobre 2026 à 17:00');
+    // Aucun nombre de jours trompeur quand l'instant fait foi.
+    expect(t2.html).not.toContain('essai gratuit COURTIA de');
+  });
+
+  test('sans fin connue, la durée annoncée reste exprimée en jours', () => {
+    const t3 = buildAccessTemplate({ email: 'a@b.fr', motDePasse: 'Xyzabcd', joursEssai: 7 });
+    expect(t3.html).toContain('essai gratuit COURTIA de 7 jours');
+    expect(t3.text).toContain('essai gratuit COURTIA de 7 jours');
   });
 
   test('identité visuelle Aurora Dark : fond sombre, CTA violet → magenta', () => {

@@ -208,8 +208,10 @@ def main():
             st6 = st6 if isinstance(st6, dict) else {}
             verifier("essai actif dès la création", st6.get("trial_state") == "TRIAL_ACTIVE", str(st6.get("trial_state")))
             verifier("6 ou 7 jours restants", st6.get("jours_restants") in (6, 7), str(st6.get("jours_restants")))
-            code7, _ = appel("POST", "/api/clients", {"nom": "Acces", "prenom": "Direct", "email": f"acces.{H}@courtia.invalid"}, jeton_cabinet)
-            verifier("écriture autorisée immédiatement -> 201", code7 == 201, f"HTTP {code7}")
+            code7, corps7 = appel("POST", "/api/clients", {"nom": "Acces", "prenom": "Direct", "email": f"acces.{H}@courtia.invalid"}, jeton_cabinet)
+            verifier("mot de passe temporaire : écriture métier refusée -> 403 changement_mot_de_passe_requis",
+                     code7 == 403 and (corps7 or {}).get("code") == "changement_mot_de_passe_requis",
+                     f"HTTP {code7} {str(corps7)[:120]}")
 
             code_me, corps_me = appel("GET", "/api/auth/me", None, jeton_cabinet)
             verifier("le compte signale son mot de passe temporaire (must_change_password)",
@@ -235,10 +237,72 @@ def main():
             verifier("le caractère temporaire est levé",
                      psql(f"SELECT NOT must_change_password FROM users WHERE email = '{email_invite}'") == "t",
                      "must_change_password encore vrai")
+            jeton_apres = (corps_e or {}).get("token")
+            code_g, corps_g = appel("POST", "/api/clients",
+                                    {"nom": "Apres", "prenom": "Changement", "email": f"apres.{H}@courtia.invalid"},
+                                    jeton_apres)
+            verifier("après le changement du mot de passe : écriture métier autorisée -> 201",
+                     code_g == 201, f"HTTP {code_g} {str(corps_g)[:120]}")
 
         code2, corps2 = appel("POST", "/api/admin/super/trials/invite", {
             "email": email_invite, "cabinet_name": "Doublon"}, jeton_admin)
         verifier("doublon refusé -> 409 (pas de compte en double)", code2 == 409, f"HTTP {code2}")
+
+        print("\n9. essai dont la fin est IMPOSÉE à l'instant près (02/10/2026 17:00 Europe/Paris)")
+        email_fin = f"cabinet.fin.{H}@courtia.invalid"
+        fin_paris = "2026-10-02T17:00:00+02:00"
+        fin_utc = "2026-10-02T15:00:00.000Z"
+        code_f, corps_f = appel("POST", "/api/admin/super/trials/invite", {
+            "email": email_fin, "cabinet_name": "Cabinet QA Fin", "first_name": "Lalia",
+            "mot_de_passe_initial": "CabinetQaFin2026", "fin_essai_at": fin_paris}, jeton_admin)
+        inv_f = (corps_f or {}).get("invitation") or {}
+        verifier("compte créé avec une fin imposée -> 201", code_f == 201, f"HTTP {code_f} {str(corps_f)[:120]}")
+        verifier("la réponse dit que la fin a été imposée",
+                 inv_f.get("fin_essai_imposee") is True and inv_f.get("fin_essai_demandee") == fin_paris,
+                 f"imposée={inv_f.get('fin_essai_imposee')} demandée={inv_f.get('fin_essai_demandee')}")
+        verifier("fin d'essai enregistrée = 17:00 Europe/Paris (15:00 UTC)",
+                 str(inv_f.get("essai_finit_le")).replace("+00:00", "Z") == fin_utc,
+                 str(inv_f.get("essai_finit_le")))
+        verifier("en base : l'instant est EXACTEMENT celui demandé (aucun décalage de fuseau)",
+                 psql(f"SELECT EXTRACT(EPOCH FROM trial_ends_at) = EXTRACT(EPOCH FROM '{fin_paris}'::timestamptz) "
+                      f"FROM users WHERE email = '{email_fin}'") == "t",
+                 psql(f"SELECT trial_ends_at::text FROM users WHERE email = '{email_fin}'"))
+        verifier("en base : heure de Paris = 02/10/2026 17:00",
+                 psql(f"SELECT to_char(trial_ends_at AT TIME ZONE 'Europe/Paris', 'YYYY-MM-DD HH24:MI') "
+                      f"FROM users WHERE email = '{email_fin}'") == "2026-10-02 17:00",
+                 psql(f"SELECT to_char(trial_ends_at AT TIME ZONE 'Europe/Paris', 'YYYY-MM-DD HH24:MI') FROM users WHERE email = '{email_fin}'"))
+        verifier("la durée stockée ne sous-estime pas l'essai (jours restants en plafond)",
+                 int(psql(f"SELECT trial_days FROM users WHERE email = '{email_fin}'")) >= 7,
+                 psql(f"SELECT trial_days || ' jour(s)' FROM users WHERE email = '{email_fin}'"))
+        code_fl, corps_fl = appel("POST", "/api/auth/login", {"email": email_fin, "password": "CabinetQaFin2026"})
+        verifier("le cabinet se connecte avec ses identifiants", code_fl == 200 and bool((corps_fl or {}).get("token")),
+                 f"HTTP {code_fl}")
+        jeton_fin = (corps_fl or {}).get("token")
+        if jeton_fin:
+            code_fs, corps_fs = appel("GET", "/api/billing/status", None, jeton_fin)
+            st_f = ((corps_fs or {}).get("status") or {}) if isinstance(corps_fs, dict) else {}
+            verifier("état = TRIAL_ACTIVE (l'essai court jusqu'à l'échéance imposée)",
+                     st_f.get("trial_state") == "TRIAL_ACTIVE", str(st_f.get("trial_state")))
+            verifier("la date de fin annoncée par l'API est celle imposée",
+                     str(st_f.get("trial_end_at") or "").replace("+00:00", "Z") == fin_utc,
+                     str(st_f.get("trial_end_at")))
+        email_f = inv_f.get("email_acces") or {}
+        verifier("e-mail : échéance annoncée à l'heure de Paris",
+                 "vendredi 2 octobre 2026 à 17:00" in str(email_f.get("html"))
+                 and "vendredi 2 octobre 2026 à 17:00" in str(email_f.get("text")),
+                 "heure absente de l'e-mail")
+        code_fi, _ = appel("POST", "/api/admin/super/trials/invite", {
+            "email": f"cabinet.fin2.{H}@courtia.invalid", "cabinet_name": "Cabinet QA Fin 2",
+            "fin_essai_at": "vendredi prochain"}, jeton_admin)
+        verifier("fin illisible refusée -> 400 (jamais ignorée en silence)", code_fi == 400, f"HTTP {code_fi}")
+        verifier("aucun compte créé par un appel refusé",
+                 psql(f"SELECT COUNT(*) FROM users WHERE email = 'cabinet.fin2.{H}@courtia.invalid'") == "0")
+        code_fp, _ = appel("POST", "/api/admin/super/trials/invite", {
+            "email": f"cabinet.fin3.{H}@courtia.invalid", "cabinet_name": "Cabinet QA Fin 3",
+            "fin_essai_at": "2020-01-01T00:00:00Z"}, jeton_admin)
+        verifier("fin déjà passée refusée -> 400", code_fp == 400, f"HTTP {code_fp}")
+        verifier("aucun compte créé avec une échéance passée",
+                 psql(f"SELECT COUNT(*) FROM users WHERE email = 'cabinet.fin3.{H}@courtia.invalid'") == "0")
 
         code5, corps5 = appel("GET", "/api/admin/super/trials", None, jeton_admin)
         ligne = next((e for e in (corps5.get("essais") or []) if e.get("email") == email_invite), None)
