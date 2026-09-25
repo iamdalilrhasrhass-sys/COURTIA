@@ -69,6 +69,18 @@ describe("e-mail d'accès client", () => {
     expect(t.text).toContain("L'équipe COURTIA");
   });
 
+  // Le remplacement du mot de passe temporaire n'est PAS une option : tant qu'il
+  // n'est pas fait, la garde produit refuse TOUTES les routes métier (même les
+  // lectures). Un e-mail qui dirait « vous pourrez le modifier à tout moment »
+  // laisserait le cabinet devant un écran qui refuse tout, sans explication.
+  test('le remplacement du mot de passe est annoncé comme la PREMIÈRE étape, dans les deux versions', () => {
+    expect(t.html).toContain('Première étape');
+    expect(t.html).toContain('fonctions métier');
+    expect(t.text).toContain('PREMIÈRE ÉTAPE');
+    expect(t.text).toContain('fonctions métier');
+    expect(t.html).not.toContain('Vous pourrez modifier votre mot de passe à tout moment');
+  });
+
   test('la fin exacte de l essai est annoncée, à l heure de Paris', () => {
     // 2026-09-27T10:24:00Z = 12:24 heure de Paris (CEST).
     expect(t.html).toContain('dimanche 27 septembre 2026 à 12:24');

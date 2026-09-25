@@ -188,7 +188,7 @@ function buildAccessTemplate({
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(124,58,237,0.10);border:1px solid ${COULEURS.bordure};border-radius:12px;">
                 <tr>
                   <td style="padding:16px 18px;font-size:13px;line-height:21px;color:${COULEURS.texte};">
-                    Vous pourrez modifier votre mot de passe à tout moment depuis <strong>Paramètres &gt; Sécurité</strong> dans votre espace COURTIA.
+                    <strong>Première étape :</strong> remplacez ce mot de passe temporaire depuis <strong>Paramètres &gt; Sécurité</strong> — c'est ce que l'application vous propose à la première connexion, et les fonctions métier s'ouvrent immédiatement après.
                   </td>
                 </tr>
               </table>
@@ -238,7 +238,9 @@ function buildAccessTemplate({
     'CONNEXION',
     LOGIN_URL,
     '',
-    'Vous pourrez modifier votre mot de passe à tout moment depuis Paramètres > Sécurité dans votre espace COURTIA.',
+    'PREMIÈRE ÉTAPE : remplacez ce mot de passe temporaire depuis Paramètres > Sécurité —',
+    "c'est ce que l'application vous propose à la première connexion, et les fonctions métier",
+    "s'ouvrent immédiatement après.",
     '',
     phraseEssaiTexte,
     '',
