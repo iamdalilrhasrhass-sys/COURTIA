@@ -271,6 +271,19 @@ def main():
             continue
         cfg.setdefault('redirects', []).append({'source': source, 'destination': cible, 'permanent': True})
 
+    # Redirections heritees : source unique seo/legacy_redirects.json (generee depuis la
+    # classification des URL de l'ancien plan de site). Aucun second mecanisme.
+    chemin_heritees = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'legacy_redirects.json')
+    if os.path.exists(chemin_heritees):
+        with open(chemin_heritees, encoding='utf-8') as fh:
+            for entree in json.load(fh):
+                if entree['source'] in existantes:
+                    continue
+                cfg['redirects'].append({'source': entree['source'],
+                                         'destination': entree['destination'],
+                                         'permanent': bool(entree.get('permanent', True))})
+                existantes.add(entree['source'])
+
     # Ancien cluster de glossaire : toutes les entrees pointent vers le glossaire unique
     for joker in [{'source': '/fr/glossaire/:chemin*', 'destination': '/glossaire', 'permanent': True}]:
         if joker['source'] not in existantes:

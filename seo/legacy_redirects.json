@@ -1,0 +1,954 @@
+[
+ {
+  "source": "/ch",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "ancien hub",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/automatisation-courtier-assurance-suisse",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/conformite-intermediaire-assurance-lsa-finma",
+  "destination": "/guides/devoir-de-conseil-suivi-dossier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/crm-courtier-assurance-suisse",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/gestion-cabinet-courtage-suisse",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/gestion-commissions-courtier-assurance-suisse",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/gestion-documentaire-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/gestion-documents-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/gestion-portefeuille-assurance-suisse",
+  "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/glossaire",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/ia-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/assistant-ark",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/import-portefeuille-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/logiciel-courtier-assurance-suisse",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/logiciel-devis-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/logiciel-intermediaire-assurance-suisse",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/logiciel-prospection-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/prospection-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/nlpd-courtier-assurance",
+  "destination": "/guides/donnees-clients-assurance-france-suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/outils/calculateur-temps-administratif-suisse",
+  "destination": "/outils/calculateur-productivite-courtier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/partenaires-apporteurs-courtier-assurance-suisse",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/ch/portail-client-assurance-suisse",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/relances-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/reporting-pilotage-courtier-assurance-suisse",
+  "destination": "/fonctionnalites/reporting-courtier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/sinistres-courtier-assurance-suisse",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "faible"
+ },
+ {
+  "source": "/ch/tarifs-logiciel-courtier-chf",
+  "destination": "/tarifs",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/ch/workflows-courtier-assurance-suisse",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr",
+  "destination": "/france",
+  "permanent": true,
+  "reason": "ancien hub",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/alternative-courtigo",
+  "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/alternative-kase",
+  "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/alternative-lya",
+  "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/alternative-oggo-data",
+  "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/automatisation-courtier-assurance",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/cartographie-courtiers-assurance-france",
+  "destination": "/france",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/checklists",
+  "destination": "/outils/checklist-dossier-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/checklists/collecte-documentaire",
+  "destination": "/fonctionnalites/gestion-documents-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/checklists/onboarding-client",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/checklists/organisation-cabinet",
+  "destination": "/outils/checklist-dossier-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/checklists/preparation-audit",
+  "destination": "/outils/checklist-dossier-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/checklists/renouvellement",
+  "destination": "/fonctionnalites/renouvellements-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/checklists/suivi-sinistre",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/comparatif/automatisation-vs-gestion-manuelle",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/comparatif/crm-courtier-vs-excel",
+  "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/comparatif/crm-specialise-vs-crm-generaliste",
+  "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/conformite-courtier-assurance",
+  "destination": "/guides/devoir-de-conseil-suivi-dossier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/courtia-logiciel-courtage-assurance",
+  "destination": "/fonctionnalites/assistant-ark",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/crm-courtier-assurance",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/dicter-compte-rendu-appel-assurance",
+  "destination": "/fonctionnalites/compte-rendu-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/evaluer-crm-courtier-assurance",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gagner-du-temps-courtier-assurance",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/gain-de-temps/commissions-et-pilotage",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/gain-de-temps/documents-et-pieces",
+  "destination": "/fonctionnalites/gestion-documents-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gain-de-temps/relances-et-suivi-client",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gain-de-temps/renouvellements-et-echeances",
+  "destination": "/fonctionnalites/renouvellements-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gain-de-temps/sinistres-et-conformite",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/gain-de-temps/temps-administratif-et-double-saisie",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/gestion-commissions-courtier-assurance",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/gestion-documentaire-courtier-assurance",
+  "destination": "/fonctionnalites/gestion-documents-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gestion-portefeuille-courtier",
+  "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gestion-prospects-clients-courtier-assurance",
+  "destination": "/fonctionnalites/prospection-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/gestion-taches-cabinet-courtage",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/glossaire",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/commissions",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/glossaire/courtier-assurance",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/dda",
+  "destination": "/guides/devoir-de-conseil-suivi-dossier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/devoir-de-conseil",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/echeance-contrat",
+  "destination": "/fonctionnalites/renouvellements-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/glossaire/finma",
+  "destination": "/suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/intermediaire-assurance",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/logiciel-courtier",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/nlpd",
+  "destination": "/guides/donnees-clients-assurance-france-suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/onboarding-client",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/pipeline",
+  "destination": "/glossaire",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/portefeuille",
+  "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/prospect",
+  "destination": "/fonctionnalites/prospection-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/relance",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/glossaire/sinistre",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/guide/automatiser-relances-courtier",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/centraliser-dossiers-clients",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/choisir-crm-cabinet-courtage",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/guide/conformite-2026",
+  "destination": "/guides/devoir-de-conseil-suivi-dossier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/guide/dda-15h",
+  "destination": "/guides/devoir-de-conseil-suivi-dossier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/integrer-ia-cabinet-courtage",
+  "destination": "/fonctionnalites/assistant-ark",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/guide/onboarding-client-courtier",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/organiser-renouvellements-courtier",
+  "destination": "/fonctionnalites/renouvellements-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/rgpd-courtier",
+  "destination": "/guides/donnees-clients-assurance-france-suisse",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/suivre-prospects-courtier",
+  "destination": "/fonctionnalites/prospection-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/verification-orias",
+  "destination": "/france",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/ia-courtier-assurance",
+  "destination": "/fonctionnalites/assistant-ark",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/ia-gestion-documentaire-assurance",
+  "destination": "/fonctionnalites/gestion-documents-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/import-portefeuille-courtier-assurance",
+  "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-bordeaux",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-lille",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-lyon",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-marseille",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-montpellier",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-nantes",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-nice",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-paris",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-strasbourg",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-assurance-toulouse",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-auto",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-decennale",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-emprunteur",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-entreprise",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-equipe",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-grossiste",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-habitation",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-iard",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-mandataire",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-multi-agences",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-mutuelle",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-prevoyance",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-renouvellements",
+  "destination": "/fonctionnalites/renouvellements-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-courtier-sante",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-tns",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-courtier-transport-flotte",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/logiciel-devis-courtier-assurance",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/logiciel-gestion-cabinet-courtage",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/outil-courtier-assurance",
+  "destination": "/outils",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/outils",
+  "destination": "/outils",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/outils/calculateur-manipulations-administratives",
+  "destination": "/outils/calculateur-productivite-courtier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/outils/calculateur-roi-courtia",
+  "destination": "/outils/calculateur-productivite-courtier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/outils/calculateur-temps-administratif",
+  "destination": "/outils/calculateur-productivite-courtier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/outils/diagnostic-automatisation-cabinet",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/portail-client-courtier-assurance",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/relance-client-assurance",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/reporting-pilotage-cabinet-courtage",
+  "destination": "/fonctionnalites/reporting-courtier",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/sante-portefeuille-courtier-assurance",
+  "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/sinistres-courtier-assurance",
+  "destination": "/crm-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/tarifs-logiciel-courtier",
+  "destination": "/tarifs",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/workflows-courtier-assurance",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/workflows/collecte-de-pieces",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/workflows/mandat-et-kyc",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/workflows/nouveau-prospect",
+  "destination": "/fonctionnalites/prospection-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/workflows/relance-de-devis",
+  "destination": "/fonctionnalites/relance-devis-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/workflows/renouvellement",
+  "destination": "/fonctionnalites/renouvellements-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "haute"
+ },
+ {
+  "source": "/fr/workflows/sinistre",
+  "destination": "/automatisation-courtier-assurance",
+  "permanent": true,
+  "reason": "doublon semantique de l'ancien plan",
+  "confidence": "moyenne"
+ }
+]
