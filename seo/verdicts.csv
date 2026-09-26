@@ -13,7 +13,7 @@ slug;fichier;octets;schema;erreurs;alertes
 /fonctionnalites/reporting-courtier;frontend/public/fonctionnalites/reporting-courtier/index.html;14734;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /fonctionnalites/prospection-assurance;frontend/public/fonctionnalites/prospection-assurance/index.html;14858;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /fonctionnalites/compte-rendu-clients;frontend/public/fonctionnalites/compte-rendu-clients/index.html;14271;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
-/france/;frontend/public/france/index.html;18709;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/france/densite-courtage-grandes-villes-france
+/france/;frontend/public/france/index.html;18709;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/france/densite-courtage-grandes-villes-france | lien_interne_inconnu:/demo/dashboard
 /suisse/;frontend/public/suisse/index.html;18618;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /suisse/crm-courtier-assurance;frontend/public/suisse/crm-courtier-assurance/index.html;17744;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /suisse/geneve;frontend/public/suisse/geneve/index.html;17238;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
@@ -70,7 +70,7 @@ slug;fichier;octets;schema;erreurs;alertes
 /comparatifs/crm-assurance-vs-crm-generaliste;frontend/public/comparatifs/crm-assurance-vs-crm-generaliste/index.html;15582;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /comparatifs/excel-vs-crm-courtier-assurance;frontend/public/comparatifs/excel-vs-crm-courtier-assurance/index.html;15191;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /comparatifs/logiciel-metier-vs-crm-generaliste;frontend/public/comparatifs/logiciel-metier-vs-crm-generaliste/index.html;14914;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
-/outils/;frontend/public/outils/index.html;13830;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/ressources/checklist-dossier-courtier-assurance.pdf | lien_interne_inconnu:/ressources/checklist-renouvellement-assurance.pdf | lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf
+/outils/;frontend/public/outils/index.html;13830;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/ressources/checklist-renouvellement-assurance.pdf | lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf | lien_interne_inconnu:/ressources/checklist-dossier-courtier-assurance.pdf
 /outils/calculateur-productivite-courtier;frontend/public/outils/calculateur-productivite-courtier/index.html;15809;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /securite;frontend/public/securite/index.html;14853;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /a-propos;frontend/public/a-propos/index.html;13390;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
@@ -85,9 +85,9 @@ slug;fichier;octets;schema;erreurs;alertes
 /conformite/lcb-ft-courtier;frontend/public/conformite/lcb-ft-courtier/index.html;13678;Organization,BreadcrumbList,FAQPage;;title_84_caracteres | lien_interne_inconnu:/demo/dashboard
 /conformite/ipid-document-information;frontend/public/conformite/ipid-document-information/index.html;13637;Organization,BreadcrumbList,FAQPage;;title_90_caracteres | lien_interne_inconnu:/demo/dashboard
 /etudes;frontend/public/etudes/index.html;13888;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
-/etudes/courtage-assurance-france-2026;frontend/public/etudes/courtage-assurance-france-2026/index.html;35622;Organization,Article,Dataset,BreadcrumbList,FAQPage;;description_192_caracteres | lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/donnees/courtage-france-2026.csv
+/etudes/courtage-assurance-france-2026;frontend/public/etudes/courtage-assurance-france-2026/index.html;35622;Organization,Article,Dataset,BreadcrumbList,FAQPage;;description_192_caracteres | lien_interne_inconnu:/donnees/courtage-france-2026.csv | lien_interne_inconnu:/demo/dashboard
 /etudes/methodologie-cartographie-courtage-france;frontend/public/etudes/methodologie-cartographie-courtage-france/index.html;15336;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
-/presse;frontend/public/presse/index.html;15288;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/donnees/courtage-france-2026.csv
+/presse;frontend/public/presse/index.html;15288;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/donnees/courtage-france-2026.csv | lien_interne_inconnu:/demo/dashboard
 /politique-editoriale;frontend/public/politique-editoriale/index.html;14810;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /sources;frontend/public/sources/index.html;14815;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
 /ressources/reglementation-courtier-assurance-france;frontend/public/ressources/reglementation-courtier-assurance-france/index.html;16382;Organization,Article,BreadcrumbList,FAQPage;;description_182_caracteres | lien_interne_inconnu:/demo/dashboard

@@ -1,0 +1,14 @@
+asset,url,type,statut,distribution_prevue,citable
+Cartographie du courtage en France 2026,/etudes/courtage-assurance-france-2026,etude,publiee,"presse professionnelle, syndicats, LinkedIn, annuaires",oui
+Methodologie de l etude,/etudes/methodologie-cartographie-courtage-france,methodologie,publiee,citee avec l etude,oui
+Jeu de donnees agrege (CSV/JSON),/donnees/courtage-france-2026.csv,dataset,publie,telechargement libre avec mention de source,oui
+Kit presse,/presse,page entite,publiee,relations presse,oui
+Politique editoriale,/politique-editoriale,page entite,publiee,transparence,non
+Sources,/sources,page entite,publiee,transparence,non
+Hub reglementation France,/ressources/reglementation-courtier-assurance-france,hub,publie,maillage interne + presse specialisee,oui
+Hub reglementation Suisse,/ressources/reglementation-intermediaire-assurance-suisse,hub,publie,presse suisse,oui
+Calculateur de productivite,/outils/calculateur-productivite-courtier,outil,publie,"formations, partenaires",oui
+Calculateur de taux de transformation,/outils/calculateur-taux-transformation-assurance,outil,publie,medias courtage,oui
+Checklist dossier courtier (27 points),/outils/checklist-dossier-courtier-assurance,outil,publie,formations,oui
+Checklist renouvellement (16 points),/outils/checklist-renouvellement-assurance,outil,publie,"associations, formations",oui
+7 captures produit,/img/produit/courtiark-cockpit.webp,visuel,publie,"kit presse, annuaires",oui

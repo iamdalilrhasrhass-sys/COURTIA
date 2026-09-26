@@ -8,8 +8,11 @@ import subprocess
 import sys
 
 PAGES = ['/', '/logiciel-courtier-assurance', '/suisse', '/suisse/geneve', '/assurances',
-         '/etudes/courtage-assurance-france-2026', '/conformite/controle-acpr-courtier',
-         '/fonctionnalites/assistant-ark', '/france/densite-courtage', '/demo']
+         '/etudes/courtage-assurance-france-2026', '/etudes/methodologie-cartographie-courtage-france',
+         '/conformite/controle-acpr-courtier', '/fonctionnalites/assistant-ark', '/france/densite-courtage',
+         '/demo', '/presse', '/sources', '/politique-editoriale',
+         '/ressources/reglementation-courtier-assurance-france',
+         '/ressources/reglementation-intermediaire-assurance-suisse']
 SORTIE = '/srv/courtia/docs/seo/authority100/25_HTML_SANS_JS.md'
 
 

@@ -1,0 +1,18 @@
+query,clicks,impressions,ctr,position,intent,product_fit,target_url,page_type,business_value,opportunity_group,action
+courtia,8,250,3.2,5.6,BRAND,0,/,accueil,35,4-7,defendre : renforcer l entite
+logiciel pour courtier en assurance,0,1,0.0,13.0,COMMERCIAL_SOFTWARE,100,/logiciel-courtier-assurance,money,85,8-20,"viser le top 10 : contenu, maillage, backlink"
+courtier mulhouse,0,1,0.0,22.0,LOCAL_BROKER,25,,aucune,45,21-40,ne pas optimiser : intention non servie par le produit
+logiciel pour courtier,0,1,0.0,26.0,COMMERCIAL_SOFTWARE,100,/logiciel-courtier-assurance,money,75,21-40,"viser le top 10 : contenu, maillage, backlink"
+wintimenow,0,1,0.0,30.0,INFORMATIONAL_SOFTWARE,50,,aucune,55,21-40,soutenir si une page existe
+logiciel courtier en assurance,0,1,0.0,32.0,COMMERCIAL_SOFTWARE,100,/logiciel-courtier-assurance,money,75,21-40,"viser le top 10 : contenu, maillage, backlink"
+courtier lannion,0,1,0.0,40.0,LOCAL_BROKER,25,,aucune,45,21-40,ne pas optimiser : intention non servie par le produit
+"entre descartes underwriting et swiss re corporate solutions, pour traditional insurance, qui propose les meilleures solutions axées sur les courtiers pour les entreprises ? lequel devrais-je choisir ? <context> company url: https://descartesunderwriting.com/ market: france </context>",0,5,0.0,48.6,LOCAL_BROKER,25,,aucune,45,>40,ne pas optimiser : intention non servie par le produit
+courtier cahors,0,2,0.0,49.5,LOCAL_BROKER,25,,aucune,45,>40,ne pas optimiser : intention non servie par le produit
+courtisia,0,1,0.0,53.0,BRAND,0,/,accueil,35,>40,defendre : renforcer l entite
+courtier haguenau,0,1,0.0,57.0,LOCAL_BROKER,25,,aucune,45,>40,ne pas optimiser : intention non servie par le produit
+courtier assurance lausanne,0,9,0.0,58.2,LOCAL_BROKER,25,,aucune,45,>40,ne pas optimiser : intention non servie par le produit
+courtier libourne,0,1,0.0,59.0,LOCAL_BROKER,25,,aucune,45,>40,ne pas optimiser : intention non servie par le produit
+logiciel courtier iard,0,10,0.0,59.3,COMMERCIAL_SOFTWARE,100,/logiciel-courtier-assurance,money,75,>40,"viser le top 10 : contenu, maillage, backlink"
+courtier geneve,0,1,0.0,76.0,LOCAL_BROKER,25,,aucune,45,>40,ne pas optimiser : intention non servie par le produit
+courtpilot,0,1,0.0,82.0,INFORMATIONAL_SOFTWARE,50,,aucune,55,>40,soutenir si une page existe
+cortia,0,3,0.0,82.7,BRAND,0,/,accueil,35,>40,defendre : renforcer l entite
