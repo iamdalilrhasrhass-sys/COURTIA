@@ -55,7 +55,7 @@
    ]
   ],
   "slug": "",
-  "_octets": 22250,
+  "_octets": 20194,
   "_section": "core"
  },
  {
@@ -123,7 +123,7 @@
    ]
   ],
   "slug": "/crm-courtier-assurance",
-  "_octets": 20683,
+  "_octets": 18627,
   "_section": "core"
  },
  {
@@ -157,7 +157,7 @@
    ]
   ],
   "slug": "/fonctionnalites/",
-  "_octets": 15073,
+  "_octets": 13017,
   "_section": "features"
  },
  {
@@ -213,7 +213,7 @@
    ]
   ],
   "slug": "/fonctionnalites/assistant-ark",
-  "_octets": 18047,
+  "_octets": 15991,
   "_section": "features"
  },
  {
@@ -265,7 +265,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-portefeuille-assurance",
-  "_octets": 16674,
+  "_octets": 14618,
   "_section": "features"
  },
  {
@@ -313,7 +313,7 @@
    ]
   ],
   "slug": "/fonctionnalites/relance-devis-assurance",
-  "_octets": 16937,
+  "_octets": 14881,
   "_section": "features"
  },
  {
@@ -361,7 +361,7 @@
    ]
   ],
   "slug": "/fonctionnalites/renouvellements-assurance",
-  "_octets": 16761,
+  "_octets": 14705,
   "_section": "features"
  },
  {
@@ -409,7 +409,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-documents-assurance",
-  "_octets": 16607,
+  "_octets": 14551,
   "_section": "features"
  },
  {
@@ -457,7 +457,7 @@
    ]
   ],
   "slug": "/fonctionnalites/automatisation-relances",
-  "_octets": 17018,
+  "_octets": 14962,
   "_section": "features"
  },
  {
@@ -505,7 +505,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-clients",
-  "_octets": 16240,
+  "_octets": 14184,
   "_section": "features"
  },
  {
@@ -553,7 +553,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-contrats",
-  "_octets": 16117,
+  "_octets": 14061,
   "_section": "features"
  },
  {
@@ -601,7 +601,7 @@
    ]
   ],
   "slug": "/fonctionnalites/reporting-courtier",
-  "_octets": 16147,
+  "_octets": 14091,
   "_section": "features"
  },
  {
@@ -649,7 +649,7 @@
    ]
   ],
   "slug": "/fonctionnalites/prospection-assurance",
-  "_octets": 16271,
+  "_octets": 14215,
   "_section": "features"
  },
  {
@@ -697,7 +697,7 @@
    ]
   ],
   "slug": "/fonctionnalites/compte-rendu-clients",
-  "_octets": 15684,
+  "_octets": 13628,
   "_section": "features"
  },
  {
@@ -746,7 +746,7 @@
    ]
   ],
   "slug": "/france/",
-  "_octets": 19073,
+  "_octets": 17017,
   "_section": "france"
  },
  {
@@ -799,7 +799,7 @@
    ]
   ],
   "slug": "/suisse/",
-  "_octets": 19325,
+  "_octets": 17269,
   "_section": "switzerland"
  },
  {
@@ -860,7 +860,7 @@
    ]
   ],
   "slug": "/suisse/crm-courtier-assurance",
-  "_octets": 19158,
+  "_octets": 17102,
   "_section": "switzerland"
  },
  {
@@ -913,7 +913,7 @@
    ]
   ],
   "slug": "/suisse/geneve",
-  "_octets": 18474,
+  "_octets": 16418,
   "_section": "switzerland"
  },
  {
@@ -966,7 +966,7 @@
    ]
   ],
   "slug": "/suisse/lausanne",
-  "_octets": 17964,
+  "_octets": 15908,
   "_section": "switzerland"
  },
  {
@@ -997,7 +997,7 @@
    ]
   ],
   "slug": "/solutions/",
-  "_octets": 14205,
+  "_octets": 12149,
   "_section": "solutions"
  },
  {
@@ -1044,7 +1044,7 @@
    ]
   ],
   "slug": "/solutions/courtier-assurance-independant",
-  "_octets": 16995,
+  "_octets": 14939,
   "_section": "solutions"
  },
  {
@@ -1091,7 +1091,7 @@
    ]
   ],
   "slug": "/solutions/cabinet-courtage-assurance",
-  "_octets": 16910,
+  "_octets": 14854,
   "_section": "solutions"
  },
  {
@@ -1138,7 +1138,7 @@
    ]
   ],
   "slug": "/solutions/equipe-commerciale-assurance",
-  "_octets": 16477,
+  "_octets": 14421,
   "_section": "solutions"
  },
  {
@@ -1185,7 +1185,7 @@
    ]
   ],
   "slug": "/solutions/reseau-courtage",
-  "_octets": 16651,
+  "_octets": 14595,
   "_section": "solutions"
  },
  {
@@ -1221,7 +1221,7 @@
    ]
   ],
   "slug": "/assurances/",
-  "_octets": 15396,
+  "_octets": 13340,
   "_section": "assurances"
  },
  {
@@ -1268,7 +1268,7 @@
    ]
   ],
   "slug": "/assurances/mutuelle-sante",
-  "_octets": 16621,
+  "_octets": 14565,
   "_section": "assurances"
  },
  {
@@ -1315,7 +1315,7 @@
    ]
   ],
   "slug": "/assurances/prevoyance",
-  "_octets": 16212,
+  "_octets": 14156,
   "_section": "assurances"
  },
  {
@@ -1362,7 +1362,7 @@
    ]
   ],
   "slug": "/assurances/assurance-auto",
-  "_octets": 15653,
+  "_octets": 13597,
   "_section": "assurances"
  },
  {
@@ -1409,7 +1409,7 @@
    ]
   ],
   "slug": "/assurances/rc-pro",
-  "_octets": 15738,
+  "_octets": 13682,
   "_section": "assurances"
  },
  {
@@ -1456,7 +1456,7 @@
    ]
   ],
   "slug": "/assurances/multirisque-professionnelle",
-  "_octets": 15567,
+  "_octets": 13511,
   "_section": "assurances"
  },
  {
@@ -1491,7 +1491,7 @@
    ]
   ],
   "slug": "/guides/",
-  "_octets": 14491,
+  "_octets": 12435,
   "_section": "resources"
  },
  {
@@ -1538,7 +1538,7 @@
    ]
   ],
   "slug": "/guides/comment-ne-plus-oublier-relances-courtier",
-  "_octets": 16433,
+  "_octets": 14377,
   "_section": "resources"
  },
  {
@@ -1585,7 +1585,7 @@
    ]
   ],
   "slug": "/guides/automatiser-renouvellements-assurance",
-  "_octets": 16745,
+  "_octets": 14689,
   "_section": "resources"
  },
  {
@@ -1632,7 +1632,7 @@
    ]
   ],
   "slug": "/guides/centraliser-documents-clients-assurance",
-  "_octets": 15932,
+  "_octets": 13876,
   "_section": "resources"
  },
  {
@@ -1679,7 +1679,7 @@
    ]
   ],
   "slug": "/guides/organiser-portefeuille-assurance",
-  "_octets": 15980,
+  "_octets": 13924,
   "_section": "resources"
  },
  {
@@ -1726,7 +1726,7 @@
    ]
   ],
   "slug": "/guides/reduire-saisie-manuelle-courtier",
-  "_octets": 15763,
+  "_octets": 13707,
   "_section": "resources"
  },
  {
@@ -1773,7 +1773,7 @@
    ]
   ],
   "slug": "/guides/automatiser-suivi-prospects-assurance",
-  "_octets": 16226,
+  "_octets": 14170,
   "_section": "resources"
  },
  {
@@ -1820,7 +1820,7 @@
    ]
   ],
   "slug": "/guides/devoir-de-conseil-suivi-dossier",
-  "_octets": 17015,
+  "_octets": 14959,
   "_section": "resources"
  },
  {
@@ -1871,7 +1871,7 @@
    ]
   ],
   "slug": "/guides/donnees-clients-assurance-france-suisse",
-  "_octets": 17424,
+  "_octets": 15368,
   "_section": "resources"
  },
  {
@@ -1902,7 +1902,7 @@
    ]
   ],
   "slug": "/comparatifs/",
-  "_octets": 14305,
+  "_octets": 12249,
   "_section": "comparatifs"
  },
  {
@@ -1949,7 +1949,7 @@
    ]
   ],
   "slug": "/comparatifs/crm-assurance-vs-crm-generaliste",
-  "_octets": 16802,
+  "_octets": 14746,
   "_section": "comparatifs"
  },
  {
@@ -1996,7 +1996,7 @@
    ]
   ],
   "slug": "/comparatifs/excel-vs-crm-courtier-assurance",
-  "_octets": 16604,
+  "_octets": 14548,
   "_section": "comparatifs"
  },
  {
@@ -2043,7 +2043,7 @@
    ]
   ],
   "slug": "/comparatifs/logiciel-metier-vs-crm-generaliste",
-  "_octets": 16328,
+  "_octets": 14272,
   "_section": "comparatifs"
  },
  {
@@ -2074,7 +2074,7 @@
    ]
   ],
   "slug": "/outils/",
-  "_octets": 14057,
+  "_octets": 12001,
   "_section": "tools"
  },
  {
@@ -2096,7 +2096,7 @@
     null
    ]
   ],
-  "corps": "\n<div class=\"section\">\n  <div class=\"champ\"><label for=\"o-collab\">Nombre de collaborateurs qui saisissent</label><input id=\"o-collab\" type=\"number\" min=\"1\" max=\"50\" value=\"3\"></div>\n  <div class=\"champ\"><label for=\"o-dossiers\">Nouveaux dossiers par mois</label><input id=\"o-dossiers\" type=\"number\" min=\"1\" max=\"500\" value=\"40\"></div>\n  <div class=\"champ\"><label for=\"o-saisie\">Minutes de saisie par dossier (création + mise à jour)</label><input id=\"o-saisie\" type=\"number\" min=\"1\" max=\"120\" value=\"18\"></div>\n  <div class=\"champ\"><label for=\"o-relance\">Minutes par relance (rédaction + suivi)</label><input id=\"o-relance\" type=\"number\" min=\"1\" max=\"60\" value=\"7\"></div>\n  <div class=\"champ\"><label for=\"o-nbrel\">Relances par mois</label><input id=\"o-nbrel\" type=\"number\" min=\"0\" max=\"2000\" value=\"90\"></div>\n  <div class=\"champ\"><label for=\"o-docs\">Minutes de recherche de documents par dossier</label><input id=\"o-docs\" type=\"number\" min=\"0\" max=\"120\" value=\"12\"></div>\n  <div class=\"champ\"><label for=\"o-cout\">Coût horaire chargé estimé (devise de votre marché)</label><input id=\"o-cout\" type=\"number\" min=\"0\" max=\"500\" value=\"45\"></div>\n  <button class=\"principal\" type=\"button\" id=\"o-calc\">Calculer</button>\n  <div class=\"resultat\" id=\"o-resultat\" aria-live=\"polite\"><p class=\"note\">Renseignez vos valeurs puis lancez le calcul.</p></div>\n</div>\n<script>\n(function(){\n  var b = document.getElementById('o-calc'); if(!b) return;\n  function val(id){ return parseFloat(document.getElementById(id).value)||0; }\n  b.addEventListener('click', function(){\n    var collab = val('o-collab'), doss = val('o-dossiers'), saisie = val('o-saisie'),\n        relance = val('o-relance'), nbrel = val('o-nbrel'), docs = val('o-docs'), cout = val('o-cout');\n    var hSaisie = doss*saisie/60, hRelance = nbrel*relance/60, hDocs = doss*docs/60;\n    var total = hSaisie+hRelance+hDocs;\n    var coutMois = total*cout;\n    function f(x){ return (Math.round(x*10)/10).toFixed(1).replace('.',','); }\n    function m(x){ return Math.round(x).toLocaleString('fr-FR'); }\n    document.getElementById('o-resultat').innerHTML =\n      '<p><b>Charge administrative estimée : ' + f(total) + ' h par mois</b> (' + f(total/collab) + ' h par collaborateur).</p>' +\n      '<ul><li>Saisie et mise à jour des dossiers : ' + f(hSaisie) + ' h</li>' +\n      '<li>Relances (rédaction et suivi) : ' + f(hRelance) + ' h</li>' +\n      '<li>Recherche de documents : ' + f(hDocs) + ' h</li></ul>' +\n      '<p>Coût humain estimé : <b>' + m(coutMois) + '</b> par mois, soit <b>' + m(coutMois*12) + '</b> par an (hypothèse : coût horaire chargé de ' + m(cout) + ').</p>' +\n      '<p class=\"note\">Ce calcul est une estimation arithmétique à partir de vos propres valeurs : il ne constitue pas une promesse de gain. ' +\n      'La part réellement automatisable dépend de votre organisation et des décisions qui restent humaines.</p>' +\n      '<p><a class=\"principal\" href=\"/register\">Voir comment COURTIARK réduit cette charge</a></p>';\n  });\n})();\n</script>\n<h2>Les formules utilisées</h2><div class=\"section\"><table><thead><tr><th>Poste</th><th>Calcul</th></tr></thead><tbody><tr><td>Saisie et mise à jour</td><td>dossiers par mois × minutes de saisie ÷ 60</td></tr><tr><td>Relances</td><td>relances par mois × minutes par relance ÷ 60</td></tr><tr><td>Recherche de documents</td><td>dossiers par mois × minutes de recherche ÷ 60</td></tr><tr><td>Coût estimé</td><td>heures totales × coût horaire chargé saisi</td></tr></tbody></table><p>Le coût horaire chargé est une valeur que vous saisissez : salaire, charges et temps indirect inclus. Nous ne l'estimons pas à votre place.</p><p>Ce calcul ne prétend pas que la totalité de cette charge est automatisable. Une partie des tâches reste humaine : décider, conseiller, négocier.</p><p>Aucune donnée saisie n'est envoyée : le calcul s'exécute dans votre navigateur.</p></div>",
+  "corps": "\n<div class=\"section\">\n  <div class=\"champ\"><label for=\"o-collab\">Nombre de collaborateurs qui saisissent</label><input id=\"o-collab\" type=\"number\" min=\"1\" max=\"50\" value=\"3\"></div>\n  <div class=\"champ\"><label for=\"o-dossiers\">Nouveaux dossiers par mois</label><input id=\"o-dossiers\" type=\"number\" min=\"1\" max=\"500\" value=\"40\"></div>\n  <div class=\"champ\"><label for=\"o-saisie\">Minutes de saisie par dossier (création + mise à jour)</label><input id=\"o-saisie\" type=\"number\" min=\"1\" max=\"120\" value=\"18\"></div>\n  <div class=\"champ\"><label for=\"o-relance\">Minutes par relance (rédaction + suivi)</label><input id=\"o-relance\" type=\"number\" min=\"1\" max=\"60\" value=\"7\"></div>\n  <div class=\"champ\"><label for=\"o-nbrel\">Relances par mois</label><input id=\"o-nbrel\" type=\"number\" min=\"0\" max=\"2000\" value=\"90\"></div>\n  <div class=\"champ\"><label for=\"o-docs\">Minutes de recherche de documents par dossier</label><input id=\"o-docs\" type=\"number\" min=\"0\" max=\"120\" value=\"12\"></div>\n  <div class=\"champ\"><label for=\"o-cout\">Coût horaire chargé estimé (devise de votre marché)</label><input id=\"o-cout\" type=\"number\" min=\"0\" max=\"500\" value=\"45\"></div>\n  <button class=\"principal\" type=\"button\" id=\"o-calc\">Calculer</button>\n  <div class=\"resultat\" id=\"o-resultat\" aria-live=\"polite\"><p class=\"note\">Renseignez vos valeurs puis lancez le calcul.</p></div>\n</div>\n<script src=\"/js/outil-calculateur.js\" defer></script>\n\n<h2>Les formules utilisées</h2><div class=\"section\"><table><thead><tr><th>Poste</th><th>Calcul</th></tr></thead><tbody><tr><td>Saisie et mise à jour</td><td>dossiers par mois × minutes de saisie ÷ 60</td></tr><tr><td>Relances</td><td>relances par mois × minutes par relance ÷ 60</td></tr><tr><td>Recherche de documents</td><td>dossiers par mois × minutes de recherche ÷ 60</td></tr><tr><td>Coût estimé</td><td>heures totales × coût horaire chargé saisi</td></tr></tbody></table><p>Le coût horaire chargé est une valeur que vous saisissez : salaire, charges et temps indirect inclus. Nous ne l'estimons pas à votre place.</p><p>Ce calcul ne prétend pas que la totalité de cette charge est automatisable. Une partie des tâches reste humaine : décider, conseiller, négocier.</p><p>Aucune donnée saisie n'est envoyée : le calcul s'exécute dans votre navigateur.</p></div>",
   "faq": [
    [
     "Ce calculateur envoie-t-il mes chiffres ?",
@@ -2122,7 +2122,7 @@
    ]
   ],
   "slug": "/outils/calculateur-productivite-courtier",
-  "_octets": 18838,
+  "_octets": 15168,
   "_section": "tools"
  },
  {
@@ -2174,7 +2174,7 @@
    ]
   ],
   "slug": "/securite",
-  "_octets": 16404,
+  "_octets": 14348,
   "_section": "trust"
  },
  {
@@ -2218,7 +2218,7 @@
    ]
   ],
   "slug": "/a-propos",
-  "_octets": 14942,
+  "_octets": 12886,
   "_section": "trust"
  },
  {
@@ -2253,7 +2253,7 @@
    ]
   ],
   "slug": "/mentions-legales",
-  "_octets": 13598,
+  "_octets": 11542,
   "_section": "trust"
  },
  {
@@ -2293,7 +2293,7 @@
    ]
   ],
   "slug": "/confidentialite",
-  "_octets": 14503,
+  "_octets": 12447,
   "_section": "trust"
  },
  {
@@ -2311,7 +2311,7 @@
     null
    ]
   ],
-  "corps": "<h2>Votre demande</h2><div class=\"section\">\n<form id=\"form-demo\" novalidate>\n  <div class=\"champ\"><label for=\"f-prenom\">Prénom *</label><input id=\"f-prenom\" name=\"first_name\" autocomplete=\"given-name\" required></div>\n  <div class=\"champ\"><label for=\"f-nom\">Nom *</label><input id=\"f-nom\" name=\"last_name\" autocomplete=\"family-name\" required></div>\n  <div class=\"champ\"><label for=\"f-cabinet\">Cabinet *</label><input id=\"f-cabinet\" name=\"company_name\" autocomplete=\"organization\" required></div>\n  <div class=\"champ\"><label for=\"f-email\">E-mail professionnel *</label><input id=\"f-email\" name=\"email\" type=\"email\" autocomplete=\"email\" required></div>\n  <div class=\"champ\"><label for=\"f-tel\">Téléphone</label><input id=\"f-tel\" name=\"phone\" inputmode=\"tel\" autocomplete=\"tel\"></div>\n  <div class=\"champ\"><label for=\"f-ville\">Ville</label><input id=\"f-ville\" name=\"city\" autocomplete=\"address-level2\"></div>\n  <div class=\"champ\"><label for=\"f-collab\">Nombre de collaborateurs</label>\n    <select id=\"f-collab\" name=\"team_size\"><option>1</option><option>2-5</option><option>6-10</option><option>11+</option></select></div>\n  <div class=\"champ\"><label for=\"f-message\">Ce que vous cherchez à organiser</label><textarea id=\"f-message\" name=\"message\" rows=\"4\"></textarea></div>\n  <div class=\"champ\"><label><input type=\"checkbox\" id=\"f-consent\" name=\"consent\" required> J'accepte d'être recontacté au sujet de ma demande. *</label></div>\n  <button class=\"principal\" type=\"submit\" id=\"btn-demo\">Demander une démonstration</button>\n  <p id=\"msg-demo\" role=\"status\" aria-live=\"polite\" class=\"note\"></p>\n</form>\n<script>\n(function(){\n  var f = document.getElementById('form-demo'); if (!f) return;\n  var msg = document.getElementById('msg-demo'), btn = document.getElementById('btn-demo');\n  var q = new URLSearchParams(location.search);\n  var utm = {};\n  ['utm_source','utm_medium','utm_campaign','utm_content','ref'].forEach(function(k){ if (q.get(k)) utm[k] = q.get(k); });\n  if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_view'); } catch(e){} }\n  f.addEventListener('submit', function(ev){\n    ev.preventDefault();\n    var d = {};\n    new FormData(f).forEach(function(v,k){ d[k] = v; });\n    if (!d.first_name || !d.last_name || !d.company_name || !d.email) { msg.textContent = 'Merci de compléter les champs obligatoires.'; return; }\n    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]{2,}$/.test(d.email)) { msg.textContent = \"Cette adresse e-mail ne semble pas valide.\"; return; }\n    if (d.phone && !/^[+0-9 ().-]{6,}$/.test(d.phone)) { msg.textContent = 'Le numéro de téléphone ne semble pas valide.'; return; }\n    if (!document.getElementById('f-consent').checked) { msg.textContent = 'Merci de cocher la case pour que nous puissions vous répondre.'; return; }\n    d.consent = true;\n    d.source = utm.utm_source || 'site-courtiark';\n    d.city = d.city || (d.pays === 'CH' ? 'Suisse' : 'France');\n    d.message = (d.message || '') + ' [page: ' + location.pathname + ']' + (Object.keys(utm).length ? ' [utm: ' + JSON.stringify(utm) + ']' : '');\n    if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_submit'); } catch(e){} }\n    if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }\n    fetch('/api/leads/demo-request', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d)})\n      .then(function(r){ return r.json().then(function(j){ return {statut:r.status, corps:j}; }); })\n      .then(function(res){\n        var b = res.corps || {};\n        var id = (b.lead_id !== undefined && b.lead_id !== null) ? b.lead_id : (b.lead ? b.lead.id : undefined);\n        var ok = (b.ok === true) || (b.success === true && id);\n        if (ok) {\n          msg.textContent = \"Demande enregistrée. Nous revenons vers vous avec une proposition de créneau.\";\n          if (window.courtiaTrack) { try { window.courtiaTrack('demo_request_success', {identifiant: id}); } catch(e){} }\n          f.reset();\n        } else {\n          msg.textContent = \"La demande n'a pas pu être enregistrée. Écrivez-nous directement à contact@courtiark.fr.\";\n          if (window.courtiaTrack) { try { window.courtiaTrack('demo_request_failure', {code: res.statut}); } catch(e){} }\n        }\n        if (btn) { btn.disabled = false; btn.textContent = 'Demander une démonstration'; }\n      })\n      .catch(function(){\n        msg.textContent = \"L'envoi a échoué (réseau). Écrivez-nous à contact@courtiark.fr.\";\n        if (btn) { btn.disabled = false; btn.textContent = 'Demander une démonstration'; }\n      });\n  });\n})();\n</script>\n</div><h2>Ce que nous ne ferons pas</h2><div class=\"section\"><ul><li>Vous inscrire à une liste de diffusion sans votre accord.</li><li>Vous appeler de façon répétée.</li><li>Vous promettre un gain chiffré que nous ne pouvons pas prouver.</li></ul></div>",
+  "corps": "<h2>Votre demande</h2><div class=\"section\">\n<form id=\"form-demo\" novalidate>\n  <div class=\"champ\"><label for=\"f-prenom\">Prénom *</label><input id=\"f-prenom\" name=\"first_name\" autocomplete=\"given-name\" required></div>\n  <div class=\"champ\"><label for=\"f-nom\">Nom *</label><input id=\"f-nom\" name=\"last_name\" autocomplete=\"family-name\" required></div>\n  <div class=\"champ\"><label for=\"f-cabinet\">Cabinet *</label><input id=\"f-cabinet\" name=\"company_name\" autocomplete=\"organization\" required></div>\n  <div class=\"champ\"><label for=\"f-email\">E-mail professionnel *</label><input id=\"f-email\" name=\"email\" type=\"email\" autocomplete=\"email\" required></div>\n  <div class=\"champ\"><label for=\"f-tel\">Téléphone</label><input id=\"f-tel\" name=\"phone\" inputmode=\"tel\" autocomplete=\"tel\"></div>\n  <div class=\"champ\"><label for=\"f-ville\">Ville</label><input id=\"f-ville\" name=\"city\" autocomplete=\"address-level2\"></div>\n  <div class=\"champ\"><label for=\"f-collab\">Nombre de collaborateurs</label>\n    <select id=\"f-collab\" name=\"team_size\"><option>1</option><option>2-5</option><option>6-10</option><option>11+</option></select></div>\n  <div class=\"champ\"><label for=\"f-message\">Ce que vous cherchez à organiser</label><textarea id=\"f-message\" name=\"message\" rows=\"4\"></textarea></div>\n  <div class=\"champ\"><label><input type=\"checkbox\" id=\"f-consent\" name=\"consent\" required> J'accepte d'être recontacté au sujet de ma demande. *</label></div>\n  <button class=\"principal\" type=\"submit\" id=\"btn-demo\">Demander une démonstration</button>\n  <p id=\"msg-demo\" role=\"status\" aria-live=\"polite\" class=\"note\"></p>\n</form>\n<script src=\"/js/formulaire-demo.js\" defer></script>\n\n</div><h2>Ce que nous ne ferons pas</h2><div class=\"section\"><ul><li>Vous inscrire à une liste de diffusion sans votre accord.</li><li>Vous appeler de façon répétée.</li><li>Vous promettre un gain chiffré que nous ne pouvons pas prouver.</li></ul></div>",
   "faq": [
    [
     "Combien de temps dure une démonstration ?",
@@ -2333,7 +2333,7 @@
    ]
   ],
   "slug": "/demo/",
-  "_octets": 17949,
+  "_octets": 12981,
   "_section": "trust"
  },
  {
@@ -2351,7 +2351,7 @@
     null
    ]
   ],
-  "corps": "<h2>Nous écrire</h2><div class=\"section\"><p>Par e-mail : <a href=\"mailto:contact@courtiark.fr\">contact@courtiark.fr</a> — c'est le canal le plus direct pour une question technique ou un signalement de sécurité.</p></div><h2>Demander une démonstration</h2><div class=\"section\">\n<form id=\"form-demo\" novalidate>\n  <div class=\"champ\"><label for=\"f-prenom\">Prénom *</label><input id=\"f-prenom\" name=\"first_name\" autocomplete=\"given-name\" required></div>\n  <div class=\"champ\"><label for=\"f-nom\">Nom *</label><input id=\"f-nom\" name=\"last_name\" autocomplete=\"family-name\" required></div>\n  <div class=\"champ\"><label for=\"f-cabinet\">Cabinet *</label><input id=\"f-cabinet\" name=\"company_name\" autocomplete=\"organization\" required></div>\n  <div class=\"champ\"><label for=\"f-email\">E-mail professionnel *</label><input id=\"f-email\" name=\"email\" type=\"email\" autocomplete=\"email\" required></div>\n  <div class=\"champ\"><label for=\"f-tel\">Téléphone</label><input id=\"f-tel\" name=\"phone\" inputmode=\"tel\" autocomplete=\"tel\"></div>\n  <div class=\"champ\"><label for=\"f-ville\">Ville</label><input id=\"f-ville\" name=\"city\" autocomplete=\"address-level2\"></div>\n  <div class=\"champ\"><label for=\"f-collab\">Nombre de collaborateurs</label>\n    <select id=\"f-collab\" name=\"team_size\"><option>1</option><option>2-5</option><option>6-10</option><option>11+</option></select></div>\n  <div class=\"champ\"><label for=\"f-message\">Ce que vous cherchez à organiser</label><textarea id=\"f-message\" name=\"message\" rows=\"4\"></textarea></div>\n  <div class=\"champ\"><label><input type=\"checkbox\" id=\"f-consent\" name=\"consent\" required> J'accepte d'être recontacté au sujet de ma demande. *</label></div>\n  <button class=\"principal\" type=\"submit\" id=\"btn-demo\">Demander une démonstration</button>\n  <p id=\"msg-demo\" role=\"status\" aria-live=\"polite\" class=\"note\"></p>\n</form>\n<script>\n(function(){\n  var f = document.getElementById('form-demo'); if (!f) return;\n  var msg = document.getElementById('msg-demo'), btn = document.getElementById('btn-demo');\n  var q = new URLSearchParams(location.search);\n  var utm = {};\n  ['utm_source','utm_medium','utm_campaign','utm_content','ref'].forEach(function(k){ if (q.get(k)) utm[k] = q.get(k); });\n  if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_view'); } catch(e){} }\n  f.addEventListener('submit', function(ev){\n    ev.preventDefault();\n    var d = {};\n    new FormData(f).forEach(function(v,k){ d[k] = v; });\n    if (!d.first_name || !d.last_name || !d.company_name || !d.email) { msg.textContent = 'Merci de compléter les champs obligatoires.'; return; }\n    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]{2,}$/.test(d.email)) { msg.textContent = \"Cette adresse e-mail ne semble pas valide.\"; return; }\n    if (d.phone && !/^[+0-9 ().-]{6,}$/.test(d.phone)) { msg.textContent = 'Le numéro de téléphone ne semble pas valide.'; return; }\n    if (!document.getElementById('f-consent').checked) { msg.textContent = 'Merci de cocher la case pour que nous puissions vous répondre.'; return; }\n    d.consent = true;\n    d.source = utm.utm_source || 'site-courtiark';\n    d.city = d.city || (d.pays === 'CH' ? 'Suisse' : 'France');\n    d.message = (d.message || '') + ' [page: ' + location.pathname + ']' + (Object.keys(utm).length ? ' [utm: ' + JSON.stringify(utm) + ']' : '');\n    if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_submit'); } catch(e){} }\n    if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }\n    fetch('/api/leads/demo-request', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d)})\n      .then(function(r){ return r.json().then(function(j){ return {statut:r.status, corps:j}; }); })\n      .then(function(res){\n        var b = res.corps || {};\n        var id = (b.lead_id !== undefined && b.lead_id !== null) ? b.lead_id : (b.lead ? b.lead.id : undefined);\n        var ok = (b.ok === true) || (b.success === true && id);\n        if (ok) {\n          msg.textContent = \"Demande enregistrée. Nous revenons vers vous avec une proposition de créneau.\";\n          if (window.courtiaTrack) { try { window.courtiaTrack('demo_request_success', {identifiant: id}); } catch(e){} }\n          f.reset();\n        } else {\n          msg.textContent = \"La demande n'a pas pu être enregistrée. Écrivez-nous directement à contact@courtiark.fr.\";\n          if (window.courtiaTrack) { try { window.courtiaTrack('demo_request_failure', {code: res.statut}); } catch(e){} }\n        }\n        if (btn) { btn.disabled = false; btn.textContent = 'Demander une démonstration'; }\n      })\n      .catch(function(){\n        msg.textContent = \"L'envoi a échoué (réseau). Écrivez-nous à contact@courtiark.fr.\";\n        if (btn) { btn.disabled = false; btn.textContent = 'Demander une démonstration'; }\n      });\n  });\n})();\n</script>\n</div>",
+  "corps": "<h2>Nous écrire</h2><div class=\"section\"><p>Par e-mail : <a href=\"mailto:contact@courtiark.fr\">contact@courtiark.fr</a> — c'est le canal le plus direct pour une question technique ou un signalement de sécurité.</p></div><h2>Demander une démonstration</h2><div class=\"section\">\n<form id=\"form-demo\" novalidate>\n  <div class=\"champ\"><label for=\"f-prenom\">Prénom *</label><input id=\"f-prenom\" name=\"first_name\" autocomplete=\"given-name\" required></div>\n  <div class=\"champ\"><label for=\"f-nom\">Nom *</label><input id=\"f-nom\" name=\"last_name\" autocomplete=\"family-name\" required></div>\n  <div class=\"champ\"><label for=\"f-cabinet\">Cabinet *</label><input id=\"f-cabinet\" name=\"company_name\" autocomplete=\"organization\" required></div>\n  <div class=\"champ\"><label for=\"f-email\">E-mail professionnel *</label><input id=\"f-email\" name=\"email\" type=\"email\" autocomplete=\"email\" required></div>\n  <div class=\"champ\"><label for=\"f-tel\">Téléphone</label><input id=\"f-tel\" name=\"phone\" inputmode=\"tel\" autocomplete=\"tel\"></div>\n  <div class=\"champ\"><label for=\"f-ville\">Ville</label><input id=\"f-ville\" name=\"city\" autocomplete=\"address-level2\"></div>\n  <div class=\"champ\"><label for=\"f-collab\">Nombre de collaborateurs</label>\n    <select id=\"f-collab\" name=\"team_size\"><option>1</option><option>2-5</option><option>6-10</option><option>11+</option></select></div>\n  <div class=\"champ\"><label for=\"f-message\">Ce que vous cherchez à organiser</label><textarea id=\"f-message\" name=\"message\" rows=\"4\"></textarea></div>\n  <div class=\"champ\"><label><input type=\"checkbox\" id=\"f-consent\" name=\"consent\" required> J'accepte d'être recontacté au sujet de ma demande. *</label></div>\n  <button class=\"principal\" type=\"submit\" id=\"btn-demo\">Demander une démonstration</button>\n  <p id=\"msg-demo\" role=\"status\" aria-live=\"polite\" class=\"note\"></p>\n</form>\n<script src=\"/js/formulaire-demo.js\" defer></script>\n\n</div>",
   "faq": [],
   "lire": [
    [
@@ -2368,7 +2368,7 @@
    ]
   ],
   "slug": "/contact",
-  "_octets": 17044,
+  "_octets": 12076,
   "_section": "trust"
  },
  {
@@ -2386,7 +2386,7 @@
     null
    ]
   ],
-  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr><tr><td>22/09/2026</td><td>SEO: artefacts regeneres apres la vague 4 (suivi des pages, maillage, intentions)</td><td>f568b1de</td></tr><tr><td>22/09/2026</td><td>SEO: le sitemap suisse est régénéré depuis les fichiers (défaut réel corrigé)</td><td>07bf2995</td></tr><tr><td>22/09/2026</td><td>SEO vague 4 (suite): deux pages suisses de fonctions + pages sous 460 mots completees</td><td>251b5c3e</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr><tr><td>22/09/2026</td><td>SEO: artefacts regeneres apres la vague 4 (suivi des pages, maillage, intentions)</td><td>f568b1de</td></tr><tr><td>22/09/2026</td><td>SEO: le sitemap suisse est régénéré depuis les fichiers (défaut réel corrigé)</td><td>07bf2995</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -2399,7 +2399,7 @@
    ]
   ],
   "slug": "/changelog",
-  "_octets": 16115,
+  "_octets": 14055,
   "_section": "core"
  }
 ]

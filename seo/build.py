@@ -19,6 +19,7 @@ from moteur import SITE, rendre, url_of  # noqa: E402
 from contenu_core import pages_core  # noqa: E402
 from contenu_geo import pages_geo  # noqa: E402
 from contenu_ressources import pages_ressources, TRACK_JS  # noqa: E402
+from scripts_js import MESURE_JS, FORMULAIRE_JS, OUTIL_JS  # noqa: E402
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC = os.path.join(RACINE, 'frontend', 'public')
@@ -73,6 +74,15 @@ def main():
         page['_octets'] = len(html.encode('utf-8'))
         page['_section'] = section_de(page['path'])
         ecrits.append((page['path'], os.path.relpath(dest, RACINE), page['_octets']))
+
+    # ---------------------------------------------------------------- scripts externes
+    # La politique de securite du site interdit le script en ligne (script-src 'self') :
+    # chaque script est donc un fichier, ce qui le rend aussi cacheable.
+    os.makedirs(os.path.join(PUBLIC, 'js'), exist_ok=True)
+    for nom, contenu in (('mesure.js', MESURE_JS), ('formulaire-demo.js', FORMULAIRE_JS),
+                         ('outil-calculateur.js', OUTIL_JS)):
+        io.open(os.path.join(PUBLIC, 'js', nom), 'w', encoding='utf-8').write(contenu.strip() + '\n')
+    print('scripts externes ecrits : mesure.js, formulaire-demo.js, outil-calculateur.js')
 
     # ---------------------------------------------------------------- sitemaps
     par_section = {}
