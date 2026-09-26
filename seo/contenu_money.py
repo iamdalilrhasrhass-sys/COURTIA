@@ -7,7 +7,7 @@ Structure imposee par la mission : hero, 10 sections H2, comparatif Excel / CRM 
 COURTIARK, FAQ orientee intention, CTA final. Aucune fonctionnalite inventee : chaque ligne du
 comparatif correspond a une fonction presente dans l'application.
 """
-from contenu_core import section, ul, p, tableau, etapes
+from contenu_core import section, ul, p, tableau, etapes, figure
 
 TITRE = "Logiciel pour courtier en assurance | CRM IA COURTIARK"
 DESCRIPTION = ("COURTIARK centralise clients, contrats, documents, renouvellements et relances dans un "
@@ -47,9 +47,17 @@ def pages_money():
                                ["Contrats", "Contrats rattachés au client, avec leur échéance et leur statut."],
                                ["Dossiers", "Tout ce qui concerne un client au même endroit, y compris les pièces."],
                                ["Portefeuille", "Vue d'ensemble, santé du portefeuille et brief du matin."]])
+                    + figure('/img/produit/courtiark-cockpit.webp',
+                             "Tableau de bord COURTIARK : clients actifs, contrats, primes annuelles, score de "
+                             "santé du portefeuille, tâches prioritaires et échéances à 30 jours",
+                             "Le tableau de bord : ce qui est actif, ce qui arrive, ce qui est urgent. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.")
                     + p("Le vocabulaire employé est celui du courtage, pas celui d'un CRM de vente générique.")),
 
             section("Suivez chaque opportunité, du prospect au contrat",
+                    figure('/img/produit/courtiark-pipeline.webp',
+                           "Écran des opportunités COURTIARK : étapes du pipeline commercial d'un cabinet de "
+                           "courtage, montants et prochaine action",
+                           "Les opportunités, avec leur étape et la prochaine action. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques."),
                     etapes([("1. Prospect", "Le contact entre dans le suivi, avec sa source."),
                             ("2. Qualification", "Le besoin est consigné, la suite est décidée."),
                             ("3. Devis", "Le devis est enregistré et son étape est tenue à jour."),
@@ -59,8 +67,12 @@ def pages_money():
                     + p('Le détail de cette mécanique est décrit sur la page '
                         '<a href="/fonctionnalites/relance-devis-assurance">relance des devis</a>.')),
 
-            section("Ne perdez plus vos relances ni vos renouvellements",
-                    p("Une relance oubliée est une affaire perdue, pas un simple retard administratif. "
+            section("Ne laissez plus vos relances se perdre dans les fichiers et les boîtes mail",
+                    figure('/img/produit/courtiark-relances.webp',
+                           "Écran des relances COURTIARK : devis sans réponse, dates de relance et état de chaque "
+                           "demande dans un cabinet de courtage fictif",
+                           "Les relances, rattachées au dossier concerné. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.")
+                    + p("Une relance oubliée est une affaire perdue, pas un simple retard administratif. "
                       "COURTIARK organise les relances dans le dossier concerné et fait remonter les échéances "
                       "avant l'avis de l'assureur, sans envoyer de message à votre place.")
                     + ul(['Relances rattachées au dossier, avec la date et la trace de chaque demande.',
@@ -68,11 +80,27 @@ def pages_money():
                           'Échéances visibles plusieurs semaines à l’avance.',
                           'Aucun envoi automatique au client : le cabinet garde la main.'])
                     + p('<a href="/fonctionnalites/relance-devis-assurance">Relance des devis</a> · '
-                        '<a href="/fonctionnalites/renouvellements-assurance">Renouvellements</a> · '
                         '<a href="/fonctionnalites/automatisation-relances">Automatisation des relances</a>')),
 
-            section("Centralisez les documents de vos clients",
-                    p("Les pièces arrivent par e-mail, en photo, à moitié lisibles, et se perdent. "
+            section("Gardez les renouvellements visibles avant l'échéance",
+                    figure('/img/produit/courtiark-contrats.webp',
+                           "Écran des contrats COURTIARK : échéances à venir, primes et statut de chaque contrat",
+                           "Les contrats et leurs échéances, visibles en amont. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.")
+                    + p("Un renouvellement se prépare des semaines avant la date, surtout quand le client doit "
+                        "comparer une nouvelle proposition. COURTIARK remonte les échéances à venir et laisse le "
+                        "temps de préparer l'appel.")
+                    + ul(["Échéances à 30 jours visibles depuis le tableau de bord.",
+                          "Contrats rattachés au client, avec prime et statut.",
+                          "Préparation du renouvellement suivie comme une action du jour.",
+                          "Aucune résiliation ni avenant déclenché automatiquement."])
+                    + p('<a href="/fonctionnalites/renouvellements-assurance">Renouvellements</a>')),
+
+            section("Centralisez les documents de chaque dossier",
+                    figure('/img/produit/courtiark-documents.webp',
+                           "Écran des documents COURTIARK : documents validés, pièces à vérifier, pièces "
+                           "manquantes et documents expirés d'un cabinet de courtage",
+                           "Les documents : reçus, classés, avec ce qui manque. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.")
+                    + p("Les pièces arrivent par e-mail, en photo, à moitié lisibles, et se perdent. "
                       "COURTIARK fournit un lien de dépôt : le client envoie ses documents sans créer de compte, "
                       "et chaque pièce est classée dans son dossier.")
                     + ul(['Dépôt par lien, sans compte client à créer.',
@@ -81,8 +109,12 @@ def pages_money():
                           'Lecture assistée par ARK, avec validation avant écriture.'])
                     + p('<a href="/fonctionnalites/gestion-documents-assurance">Gestion des documents</a>')),
 
-            section("ARK vous aide à prioriser le travail du jour",
-                    p("ARK n’est pas un chatbot décoratif : il travaille sur les données du cabinet. Il lit un "
+            section("ARK vous aide à identifier les actions prioritaires",
+                    figure('/img/produit/courtiark-ark-brief.webp',
+                           "Brief du matin COURTIARK : actions utiles identifiées par ARK sur un portefeuille de "
+                           "courtage fictif, avec le détail de chaque recommandation",
+                           "Le brief du matin : ce qu'ARK propose de traiter. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.")
+                    + p("ARK n’est pas un chatbot décoratif : il travaille sur les données du cabinet. Il lit un "
                       "document déposé, propose les informations qu’il y trouve avec leur origine, et n’écrit "
                       "rien sans votre accord.")
                     + tableau(["Ce qu'ARK fait", "Ce qu'ARK ne fait pas"],

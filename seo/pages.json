@@ -9,7 +9,7 @@
   "h1": "Le cockpit IA des courtiers en assurance",
   "chapeau": "COURTIARK centralise votre portefeuille, vos contrats, vos dossiers, vos documents et vos relances dans un CRM conçu spécifiquement pour les cabinets de courtage — en France et en Suisse.",
   "fil": [],
-  "corps": "<h2>Le problème que COURTIARK règle</h2><div class=\"section\"><p>Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, des devis à suivre, des pièces à récupérer et des renouvellements à ne pas manquer. Quand ces éléments vivent dans un tableur, une boîte e-mail et un agenda, le suivi dépend de la mémoire de chacun — et les occasions de revenir vers un client se perdent.</p><ul><li>Les dossiers sont dispersés entre plusieurs outils et plusieurs personnes.</li><li>Les relances se font quand on y pense, pas quand l'échéance l'exige.</li><li>Les pièces manquantes (RIB, attestation, carte verte) sont redemandées trois fois.</li><li>Les renouvellements arrivent sans préparation.</li><li>Le temps administratif passe avant le temps commercial.</li></ul></div><h2>Ce que fait COURTIARK</h2><div class=\"section\"><table><thead><tr><th>Besoin métier</th><th>Ce que COURTIARK fait</th></tr></thead><tbody><tr><td>Portefeuille</td><td>Fiche client complète : coordonnées, contrats, échéances, documents, historique d'échanges.</td></tr><tr><td>Contrats</td><td>Contrats et échéances de renouvellement, avec les statuts du dossier.</td></tr><tr><td>Devis</td><td>Registre des devis, suivi de l'étape en cours et actions de relance à mener.</td></tr><tr><td>Documents</td><td>Collecte par lien : le client dépose ses pièces lui-même, sans compte à créer.</td></tr><tr><td>Relances</td><td>Relances organisées, rattachées au dossier concerné, avec la trace des demandes.</td></tr><tr><td>Commissions</td><td>Suivi des commissions et rétrocessions, avec un calculateur d'appoint.</td></tr><tr><td>Conformité</td><td>Repères France (DDA, ORIAS, RGPD) et Suisse (LSA, FINMA, nLPD) dans le suivi du dossier.</td></tr><tr><td>Priorités</td><td>Un brief du matin et une santé de portefeuille pour trier ce qui mérite votre attention.</td></tr><tr><td>Assistant ARK</td><td>ARK lit un document, en propose les informations, vous validez : rien n'est écrit sans votre accord.</td></tr><tr><td>Prospection</td><td>Recherche de prospects, campagnes, séquences et suivi des réponses dans le même outil.</td></tr></tbody></table><p><a href=\"/crm-courtier-assurance\">Voir le détail du CRM courtier assurance</a> · <a href=\"/fonctionnalites/\">Toutes les fonctionnalités</a></p><p><a href=\"/logiciel-courtier-assurance\">Choisir un logiciel de courtier</a> · <a href=\"/automatisation-courtier-assurance\">Ce qui peut être automatisé</a> · <a href=\"/tarifs\">Tarifs France et Suisse</a> · <a href=\"/outils/calculateur-taux-transformation-assurance\">Calculateur de taux de transformation</a> · <a href=\"/glossaire\">Glossaire du courtage</a></p></div><h2>ARK, l'assistant du cabinet</h2><div class=\"section\"><p>ARK n'est pas un chatbot décoratif. Il travaille sur les données de votre cabinet : lecture d'un document déposé (facture, RIB, attestation), proposition des informations détectées avec la page source, comparaison avec la fiche client, puis écriture uniquement après votre validation.</p><div class=\"etape\"><b>Entrée</b><span>Un document, une question, ou la situation d'un dossier.</span></div><div class=\"etape\"><b>Analyse</b><span>ARK lit le document et propose des valeurs avec leur origine.</span></div><div class=\"etape\"><b>Validation</b><span>Vous confirmez, corrigez ou refusez chaque ligne.</span></div><div class=\"etape\"><b>Résultat</b><span>La fiche client est à jour, l'action d'audit est enregistrée.</span></div><p><a href=\"/fonctionnalites/assistant-ark\">Comment fonctionne ARK</a></p></div><h2>Avant / après</h2><div class=\"section\"><div class=\"bascule\"><div><h3>Sans COURTIARK</h3><ul><li>Classeur par client mis à jour à la main</li><li>Relances sur mémoire et post-it</li><li>Pièces redemandées par téléphone</li><li>Échéances découvertes au moment du renouvellement</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Fiche client unique, mise à jour au fil de l'eau</li><li>Relances rattachées au dossier et suivies</li><li>Lien de dépôt : le client envoie ses pièces</li><li>Renouvellements visibles en amont</li></ul></div></div></div><h2>France et Suisse, deux marchés traités séparément</h2><div class=\"section\"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France on parle d'intermédiaire d'assurance, de DDA et d'ORIAS ; en Suisse, d'intermédiaire au sens de la LSA, de surveillance FINMA et de protection des données (LPD). COURTIARK intègre ces repères et facture en euros comme en francs suisses.</p><p><a href=\"/france/\">COURTIARK en France</a> · <a href=\"/suisse/\">COURTIARK en Suisse</a> · <a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/lausanne\">Lausanne</a></p></div><h2>Sécurité et confidentialité</h2><div class=\"section\"><p>Les données d'un cabinet sont cloisonnées : un cabinet ne voit que ses propres dossiers, ce cloisonnement est vérifié par des tests d'isolation exécutés sur la production. Les données clients ne sont ni revendues ni utilisées pour alimenter un autre cabinet.</p><p><a href=\"/securite\">Sécurité</a> · <a href=\"/confidentialite\">Confidentialité</a></p></div><h2>Essayer COURTIARK</h2><div class=\"section\"><p>L'essai dure 7 jours et ne demande pas de carte bancaire. À la fin de l'essai, un compte expiré reste consultable : aucune donnée n'est supprimée, les écritures sont simplement suspendues jusqu'à la souscription.</p><p>France : Starter 89 € HT/mois, Pro 159 € HT/mois. Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div><h2>Questions fréquentes</h2><div class=\"section\"><p>Les réponses détaillées se trouvent sur la page <a href=\"/crm-courtier-assurance\">CRM courtier assurance</a>.</p></div>",
+  "corps": "<h2>Le problème que COURTIARK règle</h2><div class=\"section\"><figure class=\"produit\"><img src=\"/img/produit/courtiark-cockpit.webp\" alt=\"Tableau de bord COURTIARK : clients actifs, contrats, primes annuelles, score de santé du portefeuille, tâches prioritaires et échéances\" width=\"1440\" height=\"900\" fetchpriority=\"high\" decoding=\"async\"><figcaption>Le cockpit COURTIARK. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure><p>Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, des devis à suivre, des pièces à récupérer et des renouvellements à ne pas manquer. Quand ces éléments vivent dans un tableur, une boîte e-mail et un agenda, le suivi dépend de la mémoire de chacun — et les occasions de revenir vers un client se perdent.</p><ul><li>Les dossiers sont dispersés entre plusieurs outils et plusieurs personnes.</li><li>Les relances se font quand on y pense, pas quand l'échéance l'exige.</li><li>Les pièces manquantes (RIB, attestation, carte verte) sont redemandées trois fois.</li><li>Les renouvellements arrivent sans préparation.</li><li>Le temps administratif passe avant le temps commercial.</li></ul></div><h2>Ce que fait COURTIARK</h2><div class=\"section\"><table><thead><tr><th>Besoin métier</th><th>Ce que COURTIARK fait</th></tr></thead><tbody><tr><td>Portefeuille</td><td>Fiche client complète : coordonnées, contrats, échéances, documents, historique d'échanges.</td></tr><tr><td>Contrats</td><td>Contrats et échéances de renouvellement, avec les statuts du dossier.</td></tr><tr><td>Devis</td><td>Registre des devis, suivi de l'étape en cours et actions de relance à mener.</td></tr><tr><td>Documents</td><td>Collecte par lien : le client dépose ses pièces lui-même, sans compte à créer.</td></tr><tr><td>Relances</td><td>Relances organisées, rattachées au dossier concerné, avec la trace des demandes.</td></tr><tr><td>Commissions</td><td>Suivi des commissions et rétrocessions, avec un calculateur d'appoint.</td></tr><tr><td>Conformité</td><td>Repères France (DDA, ORIAS, RGPD) et Suisse (LSA, FINMA, nLPD) dans le suivi du dossier.</td></tr><tr><td>Priorités</td><td>Un brief du matin et une santé de portefeuille pour trier ce qui mérite votre attention.</td></tr><tr><td>Assistant ARK</td><td>ARK lit un document, en propose les informations, vous validez : rien n'est écrit sans votre accord.</td></tr><tr><td>Prospection</td><td>Recherche de prospects, campagnes, séquences et suivi des réponses dans le même outil.</td></tr></tbody></table><p><a href=\"/crm-courtier-assurance\">Voir le détail du CRM courtier assurance</a> · <a href=\"/fonctionnalites/\">Toutes les fonctionnalités</a></p><p><a href=\"/logiciel-courtier-assurance\">Choisir un logiciel de courtier</a> · <a href=\"/automatisation-courtier-assurance\">Ce qui peut être automatisé</a> · <a href=\"/tarifs\">Tarifs France et Suisse</a> · <a href=\"/outils/calculateur-taux-transformation-assurance\">Calculateur de taux de transformation</a> · <a href=\"/glossaire\">Glossaire du courtage</a></p></div><h2>ARK, l'assistant du cabinet</h2><div class=\"section\"><p>ARK n'est pas un chatbot décoratif. Il travaille sur les données de votre cabinet : lecture d'un document déposé (facture, RIB, attestation), proposition des informations détectées avec la page source, comparaison avec la fiche client, puis écriture uniquement après votre validation.</p><div class=\"etape\"><b>Entrée</b><span>Un document, une question, ou la situation d'un dossier.</span></div><div class=\"etape\"><b>Analyse</b><span>ARK lit le document et propose des valeurs avec leur origine.</span></div><div class=\"etape\"><b>Validation</b><span>Vous confirmez, corrigez ou refusez chaque ligne.</span></div><div class=\"etape\"><b>Résultat</b><span>La fiche client est à jour, l'action d'audit est enregistrée.</span></div><p><a href=\"/fonctionnalites/assistant-ark\">Comment fonctionne ARK</a></p></div><h2>Avant / après</h2><div class=\"section\"><div class=\"bascule\"><div><h3>Sans COURTIARK</h3><ul><li>Classeur par client mis à jour à la main</li><li>Relances sur mémoire et post-it</li><li>Pièces redemandées par téléphone</li><li>Échéances découvertes au moment du renouvellement</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Fiche client unique, mise à jour au fil de l'eau</li><li>Relances rattachées au dossier et suivies</li><li>Lien de dépôt : le client envoie ses pièces</li><li>Renouvellements visibles en amont</li></ul></div></div></div><h2>France et Suisse, deux marchés traités séparément</h2><div class=\"section\"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France on parle d'intermédiaire d'assurance, de DDA et d'ORIAS ; en Suisse, d'intermédiaire au sens de la LSA, de surveillance FINMA et de protection des données (LPD). COURTIARK intègre ces repères et facture en euros comme en francs suisses.</p><p><a href=\"/france/\">COURTIARK en France</a> · <a href=\"/suisse/\">COURTIARK en Suisse</a> · <a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/lausanne\">Lausanne</a></p></div><h2>Sécurité et confidentialité</h2><div class=\"section\"><p>Les données d'un cabinet sont cloisonnées : un cabinet ne voit que ses propres dossiers, ce cloisonnement est vérifié par des tests d'isolation exécutés sur la production. Les données clients ne sont ni revendues ni utilisées pour alimenter un autre cabinet.</p><p><a href=\"/securite\">Sécurité</a> · <a href=\"/confidentialite\">Confidentialité</a></p></div><h2>Essayer COURTIARK</h2><div class=\"section\"><p>L'essai dure 7 jours et ne demande pas de carte bancaire. À la fin de l'essai, un compte expiré reste consultable : aucune donnée n'est supprimée, les écritures sont simplement suspendues jusqu'à la souscription.</p><p>France : Starter 89 € HT/mois, Pro 159 € HT/mois. Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div><h2>Questions fréquentes</h2><div class=\"section\"><p>Les réponses détaillées se trouvent sur la page <a href=\"/crm-courtier-assurance\">CRM courtier assurance</a>.</p></div>",
   "faq": [
    [
     "Qu'est-ce qu'un CRM pour courtier en assurance ?",
@@ -55,7 +55,7 @@
    ]
   ],
   "slug": "",
-  "_octets": 20842,
+  "_octets": 21535,
   "_section": "core"
  },
  {
@@ -123,7 +123,7 @@
    ]
   ],
   "slug": "/crm-courtier-assurance",
-  "_octets": 19178,
+  "_octets": 19398,
   "_section": "core"
  },
  {
@@ -161,7 +161,7 @@
    ]
   ],
   "slug": "/fonctionnalites/",
-  "_octets": 14017,
+  "_octets": 14237,
   "_section": "features"
  },
  {
@@ -217,7 +217,7 @@
    ]
   ],
   "slug": "/fonctionnalites/assistant-ark",
-  "_octets": 16452,
+  "_octets": 16672,
   "_section": "features"
  },
  {
@@ -273,7 +273,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-portefeuille-assurance",
-  "_octets": 15169,
+  "_octets": 15389,
   "_section": "features"
  },
  {
@@ -321,7 +321,7 @@
    ]
   ],
   "slug": "/fonctionnalites/relance-devis-assurance",
-  "_octets": 15353,
+  "_octets": 15573,
   "_section": "features"
  },
  {
@@ -369,7 +369,7 @@
    ]
   ],
   "slug": "/fonctionnalites/renouvellements-assurance",
-  "_octets": 14988,
+  "_octets": 15208,
   "_section": "features"
  },
  {
@@ -417,7 +417,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-documents-assurance",
-  "_octets": 14835,
+  "_octets": 15055,
   "_section": "features"
  },
  {
@@ -465,7 +465,7 @@
    ]
   ],
   "slug": "/fonctionnalites/automatisation-relances",
-  "_octets": 15246,
+  "_octets": 15466,
   "_section": "features"
  },
  {
@@ -513,7 +513,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-clients",
-  "_octets": 14468,
+  "_octets": 14688,
   "_section": "features"
  },
  {
@@ -561,7 +561,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-contrats",
-  "_octets": 14345,
+  "_octets": 14565,
   "_section": "features"
  },
  {
@@ -609,7 +609,7 @@
    ]
   ],
   "slug": "/fonctionnalites/reporting-courtier",
-  "_octets": 14375,
+  "_octets": 14595,
   "_section": "features"
  },
  {
@@ -657,7 +657,7 @@
    ]
   ],
   "slug": "/fonctionnalites/prospection-assurance",
-  "_octets": 14499,
+  "_octets": 14719,
   "_section": "features"
  },
  {
@@ -705,7 +705,7 @@
    ]
   ],
   "slug": "/fonctionnalites/compte-rendu-clients",
-  "_octets": 13912,
+  "_octets": 14132,
   "_section": "features"
  },
  {
@@ -754,7 +754,7 @@
    ]
   ],
   "slug": "/france/",
-  "_octets": 18350,
+  "_octets": 18570,
   "_section": "france"
  },
  {
@@ -807,7 +807,7 @@
    ]
   ],
   "slug": "/suisse/",
-  "_octets": 18259,
+  "_octets": 18479,
   "_section": "switzerland"
  },
  {
@@ -868,7 +868,7 @@
    ]
   ],
   "slug": "/suisse/crm-courtier-assurance",
-  "_octets": 17385,
+  "_octets": 17605,
   "_section": "switzerland"
  },
  {
@@ -921,7 +921,7 @@
    ]
   ],
   "slug": "/suisse/geneve",
-  "_octets": 16879,
+  "_octets": 17099,
   "_section": "switzerland"
  },
  {
@@ -974,7 +974,7 @@
    ]
   ],
   "slug": "/suisse/lausanne",
-  "_octets": 16371,
+  "_octets": 16591,
   "_section": "switzerland"
  },
  {
@@ -1005,7 +1005,7 @@
    ]
   ],
   "slug": "/solutions/",
-  "_octets": 12433,
+  "_octets": 12653,
   "_section": "solutions"
  },
  {
@@ -1052,7 +1052,7 @@
    ]
   ],
   "slug": "/solutions/courtier-assurance-independant",
-  "_octets": 15223,
+  "_octets": 15443,
   "_section": "solutions"
  },
  {
@@ -1099,7 +1099,7 @@
    ]
   ],
   "slug": "/solutions/cabinet-courtage-assurance",
-  "_octets": 15138,
+  "_octets": 15358,
   "_section": "solutions"
  },
  {
@@ -1146,7 +1146,7 @@
    ]
   ],
   "slug": "/solutions/equipe-commerciale-assurance",
-  "_octets": 14705,
+  "_octets": 14925,
   "_section": "solutions"
  },
  {
@@ -1193,7 +1193,7 @@
    ]
   ],
   "slug": "/solutions/reseau-courtage",
-  "_octets": 14879,
+  "_octets": 15099,
   "_section": "solutions"
  },
  {
@@ -1229,7 +1229,7 @@
    ]
   ],
   "slug": "/assurances/",
-  "_octets": 13624,
+  "_octets": 13844,
   "_section": "assurances"
  },
  {
@@ -1276,7 +1276,7 @@
    ]
   ],
   "slug": "/assurances/mutuelle-sante",
-  "_octets": 14849,
+  "_octets": 15069,
   "_section": "assurances"
  },
  {
@@ -1323,7 +1323,7 @@
    ]
   ],
   "slug": "/assurances/prevoyance",
-  "_octets": 14439,
+  "_octets": 14659,
   "_section": "assurances"
  },
  {
@@ -1370,7 +1370,7 @@
    ]
   ],
   "slug": "/assurances/assurance-auto",
-  "_octets": 13881,
+  "_octets": 14101,
   "_section": "assurances"
  },
  {
@@ -1417,7 +1417,7 @@
    ]
   ],
   "slug": "/assurances/rc-pro",
-  "_octets": 13966,
+  "_octets": 14186,
   "_section": "assurances"
  },
  {
@@ -1464,7 +1464,7 @@
    ]
   ],
   "slug": "/assurances/multirisque-professionnelle",
-  "_octets": 13795,
+  "_octets": 14015,
   "_section": "assurances"
  },
  {
@@ -1525,7 +1525,7 @@
    ]
   ],
   "slug": "/france/paris",
-  "_octets": 17987,
+  "_octets": 18207,
   "_section": "france"
  },
  {
@@ -1586,7 +1586,7 @@
    ]
   ],
   "slug": "/france/lyon",
-  "_octets": 17677,
+  "_octets": 17897,
   "_section": "france"
  },
  {
@@ -1647,7 +1647,7 @@
    ]
   ],
   "slug": "/france/marseille",
-  "_octets": 17930,
+  "_octets": 18150,
   "_section": "france"
  },
  {
@@ -1708,7 +1708,7 @@
    ]
   ],
   "slug": "/france/toulouse",
-  "_octets": 17578,
+  "_octets": 17798,
   "_section": "france"
  },
  {
@@ -1769,7 +1769,7 @@
    ]
   ],
   "slug": "/france/bordeaux",
-  "_octets": 17840,
+  "_octets": 18060,
   "_section": "france"
  },
  {
@@ -1830,7 +1830,7 @@
    ]
   ],
   "slug": "/france/lille",
-  "_octets": 17503,
+  "_octets": 17723,
   "_section": "france"
  },
  {
@@ -1891,7 +1891,7 @@
    ]
   ],
   "slug": "/france/nantes",
-  "_octets": 17453,
+  "_octets": 17673,
   "_section": "france"
  },
  {
@@ -1952,7 +1952,7 @@
    ]
   ],
   "slug": "/france/strasbourg",
-  "_octets": 17532,
+  "_octets": 17752,
   "_section": "france"
  },
  {
@@ -2013,7 +2013,7 @@
    ]
   ],
   "slug": "/france/montpellier",
-  "_octets": 17517,
+  "_octets": 17737,
   "_section": "france"
  },
  {
@@ -2074,7 +2074,7 @@
    ]
   ],
   "slug": "/france/nice",
-  "_octets": 17515,
+  "_octets": 17735,
   "_section": "france"
  },
  {
@@ -2131,7 +2131,7 @@
    ]
   ],
   "slug": "/suisse/nyon",
-  "_octets": 16324,
+  "_octets": 16544,
   "_section": "switzerland"
  },
  {
@@ -2188,7 +2188,7 @@
    ]
   ],
   "slug": "/suisse/vevey",
-  "_octets": 16244,
+  "_octets": 16464,
   "_section": "switzerland"
  },
  {
@@ -2245,7 +2245,7 @@
    ]
   ],
   "slug": "/suisse/montreux",
-  "_octets": 16359,
+  "_octets": 16579,
   "_section": "switzerland"
  },
  {
@@ -2302,7 +2302,7 @@
    ]
   ],
   "slug": "/suisse/sion",
-  "_octets": 16278,
+  "_octets": 16498,
   "_section": "switzerland"
  },
  {
@@ -2359,7 +2359,7 @@
    ]
   ],
   "slug": "/suisse/neuchatel",
-  "_octets": 16329,
+  "_octets": 16549,
   "_section": "switzerland"
  },
  {
@@ -2416,7 +2416,7 @@
    ]
   ],
   "slug": "/suisse/fribourg",
-  "_octets": 16272,
+  "_octets": 16492,
   "_section": "switzerland"
  },
  {
@@ -2473,7 +2473,7 @@
    ]
   ],
   "slug": "/suisse/vaud",
-  "_octets": 16468,
+  "_octets": 16688,
   "_section": "switzerland"
  },
  {
@@ -2530,7 +2530,7 @@
    ]
   ],
   "slug": "/suisse/valais",
-  "_octets": 16488,
+  "_octets": 16708,
   "_section": "switzerland"
  },
  {
@@ -2587,7 +2587,7 @@
    ]
   ],
   "slug": "/suisse/suisse-romande",
-  "_octets": 16569,
+  "_octets": 16789,
   "_section": "switzerland"
  },
  {
@@ -2606,7 +2606,7 @@
    ]
   ],
   "alternate": "/suisse/crm-courtier-assurance",
-  "corps": "<h2>Un CRM métier pour piloter votre cabinet de courtage</h2><div class=\"section\"><p>Un logiciel généraliste sait gérer des contacts. Un cabinet de courtage a besoin de gérer des dossiers d'assurance : un client, une situation, des contrats, des échéances, des pièces, des devis à suivre et des renouvellements à préparer.</p><table><thead><tr><th>Ce que votre cabinet gère</th><th>Ce que COURTIARK en fait</th></tr></thead><tbody><tr><td>Clients</td><td>Fiche unique : coordonnées, situation, contrats, documents, historique.</td></tr><tr><td>Prospects</td><td>Recherche, campagnes, suivi des réponses, conversion en client.</td></tr><tr><td>Contrats</td><td>Contrats rattachés au client, avec leur échéance et leur statut.</td></tr><tr><td>Dossiers</td><td>Tout ce qui concerne un client au même endroit, y compris les pièces.</td></tr><tr><td>Portefeuille</td><td>Vue d'ensemble, santé du portefeuille et brief du matin.</td></tr></tbody></table><p>Le vocabulaire employé est celui du courtage, pas celui d'un CRM de vente générique.</p></div><h2>Suivez chaque opportunité, du prospect au contrat</h2><div class=\"section\"><div class=\"etape\"><b>1. Prospect</b><span>Le contact entre dans le suivi, avec sa source.</span></div><div class=\"etape\"><b>2. Qualification</b><span>Le besoin est consigné, la suite est décidée.</span></div><div class=\"etape\"><b>3. Devis</b><span>Le devis est enregistré et son étape est tenue à jour.</span></div><div class=\"etape\"><b>4. Relance</b><span>Les devis sans suite remontent dans les actions du jour.</span></div><div class=\"etape\"><b>5. Signature</b><span>La décision du client est consignée, le contrat est rattaché.</span></div><div class=\"etape\"><b>6. Renouvellement</b><span>L'échéance est enregistrée et préparée en amont.</span></div><p>Le détail de cette mécanique est décrit sur la page <a href=\"/fonctionnalites/relance-devis-assurance\">relance des devis</a>.</p></div><h2>Ne perdez plus vos relances ni vos renouvellements</h2><div class=\"section\"><p>Une relance oubliée est une affaire perdue, pas un simple retard administratif. COURTIARK organise les relances dans le dossier concerné et fait remonter les échéances avant l'avis de l'assureur, sans envoyer de message à votre place.</p><ul><li>Relances rattachées au dossier, avec la date et la trace de chaque demande.</li><li>Devis sans suite repérés dans les actions du jour.</li><li>Échéances visibles plusieurs semaines à l’avance.</li><li>Aucun envoi automatique au client : le cabinet garde la main.</li></ul><p><a href=\"/fonctionnalites/relance-devis-assurance\">Relance des devis</a> · <a href=\"/fonctionnalites/renouvellements-assurance\">Renouvellements</a> · <a href=\"/fonctionnalites/automatisation-relances\">Automatisation des relances</a></p></div><h2>Centralisez les documents de vos clients</h2><div class=\"section\"><p>Les pièces arrivent par e-mail, en photo, à moitié lisibles, et se perdent. COURTIARK fournit un lien de dépôt : le client envoie ses documents sans créer de compte, et chaque pièce est classée dans son dossier.</p><ul><li>Dépôt par lien, sans compte client à créer.</li><li>Pièces classées par dossier, avec la date de réception.</li><li>Pièces manquantes identifiables d’un coup d’œil.</li><li>Lecture assistée par ARK, avec validation avant écriture.</li></ul><p><a href=\"/fonctionnalites/gestion-documents-assurance\">Gestion des documents</a></p></div><h2>ARK vous aide à prioriser le travail du jour</h2><div class=\"section\"><p>ARK n’est pas un chatbot décoratif : il travaille sur les données du cabinet. Il lit un document déposé, propose les informations qu’il y trouve avec leur origine, et n’écrit rien sans votre accord.</p><table><thead><tr><th>Ce qu'ARK fait</th><th>Ce qu'ARK ne fait pas</th></tr></thead><tbody><tr><td>Lire une facture, une attestation ou un RIB et proposer les valeurs détectées</td><td>Décider d’un conseil ou d’une garantie</td></tr><tr><td>Comparer une pièce avec la fiche client et signaler un écart</td><td>Envoyer un message au client à votre place</td></tr><tr><td>Faire remonter les dossiers incomplets et les actions en attente</td><td>Modifier un contrat sans validation</td></tr></tbody></table><p><a href=\"/fonctionnalites/assistant-ark\">Comment fonctionne ARK</a></p></div><h2>Excel, CRM généraliste ou logiciel métier pour courtier ?</h2><div class=\"section\"><p>Les trois peuvent coexister dans un cabinet. La question est de savoir ce que vous acceptez de reconstruire à la main chaque semaine.</p><table><thead><tr><th>Besoin du cabinet</th><th>Excel</th><th>CRM généraliste</th><th>COURTIARK</th></tr></thead><tbody><tr><td>Gestion clients</td><td>Manuel</td><td>Configuration nécessaire</td><td>Fiche client métier : situation, contrats, historique</td></tr><tr><td>Gestion du portefeuille</td><td>Manuel</td><td>Vue générique</td><td>Vue portefeuille, santé du portefeuille, brief du matin</td></tr><tr><td>Contrats d’assurance</td><td>Manuel</td><td>Objets génériques à créer</td><td>Contrats, échéances et statuts du dossier</td></tr><tr><td>Documents</td><td>Dossiers partagés</td><td>Stockage à configurer</td><td>Collecte par lien, classement par dossier, lecture assistée</td></tr><tr><td>Relances</td><td>Rappels manuels</td><td>Tâches à paramétrer</td><td>Relances rattachées au dossier, avec trace</td></tr><tr><td>Renouvellements</td><td>Manuel</td><td>Rappel générique</td><td>Échéances visibles en amont, préparation guidée</td></tr><tr><td>Priorisation métier</td><td>Aucune</td><td>Tableaux de bord génériques</td><td>Brief du matin, dossiers à traiter, actions du jour</td></tr><tr><td>Assistant ARK</td><td>Aucun</td><td>Extension IA à intégrer</td><td>Lecture de document, proposition avec origine, validation humaine</td></tr><tr><td>France et Suisse</td><td>Non</td><td>Non</td><td>Repères DDA et ORIAS en France, LSA et surveillance FINMA côté suisse</td></tr><tr><td>Devis et commissions</td><td>Manuel</td><td>Objets à créer</td><td>Registre des devis, suivi des commissions et rétrocessions</td></tr></tbody></table><p>Les mentions « manuel » et « configuration nécessaire » décrivent un usage courant : un tableur ou un CRM généraliste peuvent couvrir un besoin, avec un paramétrage ou une saisie de votre côté. Nous ne prétendons pas qu’aucun autre outil ne sait le faire.</p><p><a href=\"/comparatifs/crm-assurance-vs-crm-generaliste\">Comparatif détaillé CRM assurance ou CRM généraliste</a> · <a href=\"/comparatifs/excel-vs-crm-courtier-assurance\">Excel ou CRM courtier</a></p></div><h2>À qui s’adresse COURTIARK ?</h2><div class=\"section\"><table><thead><tr><th>Profil</th><th>Ce que COURTIARK change</th><th>Page dédiée</th></tr></thead><tbody><tr><td>Courtier indépendant</td><td>Un portefeuille tenu sans tableur, avec des priorités claires.</td><td><a href=\"/solutions/courtier-assurance-independant\">Courtier indépendant</a></td></tr><tr><td>Cabinet de courtage</td><td>Plusieurs collaborateurs sur les mêmes dossiers, sans doublon.</td><td><a href=\"/solutions/cabinet-courtage-assurance\">Cabinet de courtage</a></td></tr><tr><td>Équipe commerciale</td><td>Devis, relances et objectifs suivis dans le même outil.</td><td><a href=\"/solutions/equipe-commerciale-assurance\">Équipe commerciale</a></td></tr><tr><td>Réseau et structure multi-utilisateurs</td><td>Rôles, cloisonnement par cabinet, reporting d’activité.</td><td><a href=\"/solutions/reseau-courtage\">Réseau de courtage</a></td></tr></tbody></table></div><h2>COURTIARK en France et en Suisse</h2><div class=\"section\"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France, l’activité d’intermédiaire s’exerce sous un cadre européen transposé (DDA) avec immatriculation au registre unique (ORIAS) ; en Suisse, elle relève de la loi sur le contrat d’assurance et d’exigences propres à l’intermédiaire, sous surveillance prudentielle. Ce sont deux cadres réglementaires distincts, pas deux labels du même produit.</p><p><a href=\"/france\">COURTIARK en France</a> · <a href=\"/suisse\">COURTIARK en Suisse</a> · <a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/lausanne\">Lausanne</a></p></div><h2>Voir le produit</h2><div class=\"section\"><p>Plutôt qu’une promesse, la démonstration publique : elle utilise des données de démonstration, sans aucun client réel.</p><ul><li><a href=\"/demo-public\">Ouvrir la démonstration publique</a> — tableau de bord, portefeuille, dossier client.</li><li><a href=\"/fonctionnalites/gestion-portefeuille-assurance\">Voir la page portefeuille</a> — ce que montre la vue d’ensemble.</li><li><a href=\"/outils\">Outils gratuits</a> — calculs et checklists utilisables sans compte.</li></ul></div>",
+  "corps": "<h2>Un CRM métier pour piloter votre cabinet de courtage</h2><div class=\"section\"><p>Un logiciel généraliste sait gérer des contacts. Un cabinet de courtage a besoin de gérer des dossiers d'assurance : un client, une situation, des contrats, des échéances, des pièces, des devis à suivre et des renouvellements à préparer.</p><table><thead><tr><th>Ce que votre cabinet gère</th><th>Ce que COURTIARK en fait</th></tr></thead><tbody><tr><td>Clients</td><td>Fiche unique : coordonnées, situation, contrats, documents, historique.</td></tr><tr><td>Prospects</td><td>Recherche, campagnes, suivi des réponses, conversion en client.</td></tr><tr><td>Contrats</td><td>Contrats rattachés au client, avec leur échéance et leur statut.</td></tr><tr><td>Dossiers</td><td>Tout ce qui concerne un client au même endroit, y compris les pièces.</td></tr><tr><td>Portefeuille</td><td>Vue d'ensemble, santé du portefeuille et brief du matin.</td></tr></tbody></table><figure class=\"produit\"><img src=\"/img/produit/courtiark-cockpit.webp\" alt=\"Tableau de bord COURTIARK : clients actifs, contrats, primes annuelles, score de santé du portefeuille, tâches prioritaires et échéances à 30 jours\" width=\"1440\" height=\"900\" loading=\"lazy\" decoding=\"async\"><figcaption>Le tableau de bord : ce qui est actif, ce qui arrive, ce qui est urgent. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure><p>Le vocabulaire employé est celui du courtage, pas celui d'un CRM de vente générique.</p></div><h2 id=\"<div class=\"etape\"><b>1. Prospect</b><span>Le contact entre dans le suivi, avec sa source.</span></div><div class=\"etape\"><b>2. Qualification</b><span>Le besoin est consigné, la suite est décidée.</span></div><div class=\"etape\"><b>3. Devis</b><span>Le devis est enregistré et son étape est tenue à jour.</span></div><div class=\"etape\"><b>4. Relance</b><span>Les devis sans suite remontent dans les actions du jour.</span></div><div class=\"etape\"><b>5. Signature</b><span>La décision du client est consignée, le contrat est rattaché.</span></div><div class=\"etape\"><b>6. Renouvellement</b><span>L'échéance est enregistrée et préparée en amont.</span></div><p>Le détail de cette mécanique est décrit sur la page <a href=\"/fonctionnalites/relance-devis-assurance\">relance des devis</a>.</p>\">Suivez chaque opportunité, du prospect au contrat</h2><div class=\"section\"><figure class=\"produit\"><img src=\"/img/produit/courtiark-pipeline.webp\" alt=\"Écran des opportunités COURTIARK : étapes du pipeline commercial d'un cabinet de courtage, montants et prochaine action\" width=\"1440\" height=\"900\" loading=\"lazy\" decoding=\"async\"><figcaption>Les opportunités, avec leur étape et la prochaine action. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure></div><h2>Ne laissez plus vos relances se perdre dans les fichiers et les boîtes mail</h2><div class=\"section\"><figure class=\"produit\"><img src=\"/img/produit/courtiark-relances.webp\" alt=\"Écran des relances COURTIARK : devis sans réponse, dates de relance et état de chaque demande dans un cabinet de courtage fictif\" width=\"1440\" height=\"900\" loading=\"lazy\" decoding=\"async\"><figcaption>Les relances, rattachées au dossier concerné. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure><p>Une relance oubliée est une affaire perdue, pas un simple retard administratif. COURTIARK organise les relances dans le dossier concerné et fait remonter les échéances avant l'avis de l'assureur, sans envoyer de message à votre place.</p><ul><li>Relances rattachées au dossier, avec la date et la trace de chaque demande.</li><li>Devis sans suite repérés dans les actions du jour.</li><li>Échéances visibles plusieurs semaines à l’avance.</li><li>Aucun envoi automatique au client : le cabinet garde la main.</li></ul><p><a href=\"/fonctionnalites/relance-devis-assurance\">Relance des devis</a> · <a href=\"/fonctionnalites/automatisation-relances\">Automatisation des relances</a></p></div><h2>Gardez les renouvellements visibles avant l'échéance</h2><div class=\"section\"><figure class=\"produit\"><img src=\"/img/produit/courtiark-contrats.webp\" alt=\"Écran des contrats COURTIARK : échéances à venir, primes et statut de chaque contrat\" width=\"1440\" height=\"900\" loading=\"lazy\" decoding=\"async\"><figcaption>Les contrats et leurs échéances, visibles en amont. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure><p>Un renouvellement se prépare des semaines avant la date, surtout quand le client doit comparer une nouvelle proposition. COURTIARK remonte les échéances à venir et laisse le temps de préparer l'appel.</p><ul><li>Échéances à 30 jours visibles depuis le tableau de bord.</li><li>Contrats rattachés au client, avec prime et statut.</li><li>Préparation du renouvellement suivie comme une action du jour.</li><li>Aucune résiliation ni avenant déclenché automatiquement.</li></ul><p><a href=\"/fonctionnalites/renouvellements-assurance\">Renouvellements</a></p></div><h2>Centralisez les documents de chaque dossier</h2><div class=\"section\"><figure class=\"produit\"><img src=\"/img/produit/courtiark-documents.webp\" alt=\"Écran des documents COURTIARK : documents validés, pièces à vérifier, pièces manquantes et documents expirés d'un cabinet de courtage\" width=\"1440\" height=\"900\" loading=\"lazy\" decoding=\"async\"><figcaption>Les documents : reçus, classés, avec ce qui manque. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure><p>Les pièces arrivent par e-mail, en photo, à moitié lisibles, et se perdent. COURTIARK fournit un lien de dépôt : le client envoie ses documents sans créer de compte, et chaque pièce est classée dans son dossier.</p><ul><li>Dépôt par lien, sans compte client à créer.</li><li>Pièces classées par dossier, avec la date de réception.</li><li>Pièces manquantes identifiables d’un coup d’œil.</li><li>Lecture assistée par ARK, avec validation avant écriture.</li></ul><p><a href=\"/fonctionnalites/gestion-documents-assurance\">Gestion des documents</a></p></div><h2>ARK vous aide à identifier les actions prioritaires</h2><div class=\"section\"><figure class=\"produit\"><img src=\"/img/produit/courtiark-ark-brief.webp\" alt=\"Brief du matin COURTIARK : actions utiles identifiées par ARK sur un portefeuille de courtage fictif, avec le détail de chaque recommandation\" width=\"1440\" height=\"900\" loading=\"lazy\" decoding=\"async\"><figcaption>Le brief du matin : ce qu'ARK propose de traiter. Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.</figcaption></figure><p>ARK n’est pas un chatbot décoratif : il travaille sur les données du cabinet. Il lit un document déposé, propose les informations qu’il y trouve avec leur origine, et n’écrit rien sans votre accord.</p><table><thead><tr><th>Ce qu'ARK fait</th><th>Ce qu'ARK ne fait pas</th></tr></thead><tbody><tr><td>Lire une facture, une attestation ou un RIB et proposer les valeurs détectées</td><td>Décider d’un conseil ou d’une garantie</td></tr><tr><td>Comparer une pièce avec la fiche client et signaler un écart</td><td>Envoyer un message au client à votre place</td></tr><tr><td>Faire remonter les dossiers incomplets et les actions en attente</td><td>Modifier un contrat sans validation</td></tr></tbody></table><p><a href=\"/fonctionnalites/assistant-ark\">Comment fonctionne ARK</a></p></div><h2>Excel, CRM généraliste ou logiciel métier pour courtier ?</h2><div class=\"section\"><p>Les trois peuvent coexister dans un cabinet. La question est de savoir ce que vous acceptez de reconstruire à la main chaque semaine.</p><table><thead><tr><th>Besoin du cabinet</th><th>Excel</th><th>CRM généraliste</th><th>COURTIARK</th></tr></thead><tbody><tr><td>Gestion clients</td><td>Manuel</td><td>Configuration nécessaire</td><td>Fiche client métier : situation, contrats, historique</td></tr><tr><td>Gestion du portefeuille</td><td>Manuel</td><td>Vue générique</td><td>Vue portefeuille, santé du portefeuille, brief du matin</td></tr><tr><td>Contrats d’assurance</td><td>Manuel</td><td>Objets génériques à créer</td><td>Contrats, échéances et statuts du dossier</td></tr><tr><td>Documents</td><td>Dossiers partagés</td><td>Stockage à configurer</td><td>Collecte par lien, classement par dossier, lecture assistée</td></tr><tr><td>Relances</td><td>Rappels manuels</td><td>Tâches à paramétrer</td><td>Relances rattachées au dossier, avec trace</td></tr><tr><td>Renouvellements</td><td>Manuel</td><td>Rappel générique</td><td>Échéances visibles en amont, préparation guidée</td></tr><tr><td>Priorisation métier</td><td>Aucune</td><td>Tableaux de bord génériques</td><td>Brief du matin, dossiers à traiter, actions du jour</td></tr><tr><td>Assistant ARK</td><td>Aucun</td><td>Extension IA à intégrer</td><td>Lecture de document, proposition avec origine, validation humaine</td></tr><tr><td>France et Suisse</td><td>Non</td><td>Non</td><td>Repères DDA et ORIAS en France, LSA et surveillance FINMA côté suisse</td></tr><tr><td>Devis et commissions</td><td>Manuel</td><td>Objets à créer</td><td>Registre des devis, suivi des commissions et rétrocessions</td></tr></tbody></table><p>Les mentions « manuel » et « configuration nécessaire » décrivent un usage courant : un tableur ou un CRM généraliste peuvent couvrir un besoin, avec un paramétrage ou une saisie de votre côté. Nous ne prétendons pas qu’aucun autre outil ne sait le faire.</p><p><a href=\"/comparatifs/crm-assurance-vs-crm-generaliste\">Comparatif détaillé CRM assurance ou CRM généraliste</a> · <a href=\"/comparatifs/excel-vs-crm-courtier-assurance\">Excel ou CRM courtier</a></p></div><h2>À qui s’adresse COURTIARK ?</h2><div class=\"section\"><table><thead><tr><th>Profil</th><th>Ce que COURTIARK change</th><th>Page dédiée</th></tr></thead><tbody><tr><td>Courtier indépendant</td><td>Un portefeuille tenu sans tableur, avec des priorités claires.</td><td><a href=\"/solutions/courtier-assurance-independant\">Courtier indépendant</a></td></tr><tr><td>Cabinet de courtage</td><td>Plusieurs collaborateurs sur les mêmes dossiers, sans doublon.</td><td><a href=\"/solutions/cabinet-courtage-assurance\">Cabinet de courtage</a></td></tr><tr><td>Équipe commerciale</td><td>Devis, relances et objectifs suivis dans le même outil.</td><td><a href=\"/solutions/equipe-commerciale-assurance\">Équipe commerciale</a></td></tr><tr><td>Réseau et structure multi-utilisateurs</td><td>Rôles, cloisonnement par cabinet, reporting d’activité.</td><td><a href=\"/solutions/reseau-courtage\">Réseau de courtage</a></td></tr></tbody></table></div><h2>COURTIARK en France et en Suisse</h2><div class=\"section\"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France, l’activité d’intermédiaire s’exerce sous un cadre européen transposé (DDA) avec immatriculation au registre unique (ORIAS) ; en Suisse, elle relève de la loi sur le contrat d’assurance et d’exigences propres à l’intermédiaire, sous surveillance prudentielle. Ce sont deux cadres réglementaires distincts, pas deux labels du même produit.</p><p><a href=\"/france\">COURTIARK en France</a> · <a href=\"/suisse\">COURTIARK en Suisse</a> · <a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/lausanne\">Lausanne</a></p></div><h2>Voir le produit</h2><div class=\"section\"><p>Plutôt qu’une promesse, la démonstration publique : elle utilise des données de démonstration, sans aucun client réel.</p><ul><li><a href=\"/demo-public\">Ouvrir la démonstration publique</a> — tableau de bord, portefeuille, dossier client.</li><li><a href=\"/fonctionnalites/gestion-portefeuille-assurance\">Voir la page portefeuille</a> — ce que montre la vue d’ensemble.</li><li><a href=\"/outils\">Outils gratuits</a> — calculs et checklists utilisables sans compte.</li></ul></div>",
   "faq": [
    [
     "Qu’est-ce qu’un logiciel pour courtier en assurance ?",
@@ -2656,7 +2656,7 @@
    "Demander une démonstration"
   ],
   "slug": "/logiciel-courtier-assurance",
-  "_octets": 25965,
+  "_octets": 29762,
   "_section": "core"
  },
  {
@@ -2708,7 +2708,7 @@
    ]
   ],
   "slug": "/logiciel-courtage-assurance",
-  "_octets": 16349,
+  "_octets": 16569,
   "_section": "core"
  },
  {
@@ -2768,7 +2768,7 @@
    ]
   ],
   "slug": "/automatisation-courtier-assurance",
-  "_octets": 16468,
+  "_octets": 16688,
   "_section": "core"
  },
  {
@@ -2828,7 +2828,7 @@
    "Démarrer l'essai de 7 jours"
   ],
   "slug": "/tarifs",
-  "_octets": 15777,
+  "_octets": 15997,
   "_section": "core"
  },
  {
@@ -2880,7 +2880,7 @@
    "Piloter mes opportunités avec COURTIARK"
   ],
   "slug": "/outils/calculateur-taux-transformation-assurance",
-  "_octets": 14997,
+  "_octets": 15217,
   "_section": "tools"
  },
  {
@@ -2932,7 +2932,7 @@
    "Centraliser mes dossiers dans COURTIARK"
   ],
   "slug": "/outils/checklist-dossier-courtier-assurance",
-  "_octets": 18438,
+  "_octets": 18658,
   "_section": "tools"
  },
  {
@@ -2984,7 +2984,7 @@
    "Suivre mes échéances dans COURTIARK"
   ],
   "slug": "/outils/checklist-renouvellement-assurance",
-  "_octets": 17279,
+  "_octets": 17499,
   "_section": "tools"
  },
  {
@@ -3032,7 +3032,7 @@
    ]
   ],
   "slug": "/guides/organiser-cabinet-courtage-25-points",
-  "_octets": 15510,
+  "_octets": 15730,
   "_section": "resources"
  },
  {
@@ -3076,7 +3076,7 @@
    ]
   ],
   "slug": "/glossaire",
-  "_octets": 22390,
+  "_octets": 22610,
   "_section": "resources"
  },
  {
@@ -3111,7 +3111,7 @@
    ]
   ],
   "slug": "/guides/",
-  "_octets": 12990,
+  "_octets": 13210,
   "_section": "resources"
  },
  {
@@ -3158,7 +3158,7 @@
    ]
   ],
   "slug": "/guides/comment-ne-plus-oublier-relances-courtier",
-  "_octets": 14843,
+  "_octets": 15063,
   "_section": "resources"
  },
  {
@@ -3205,7 +3205,7 @@
    ]
   ],
   "slug": "/guides/automatiser-renouvellements-assurance",
-  "_octets": 14973,
+  "_octets": 15193,
   "_section": "resources"
  },
  {
@@ -3252,7 +3252,7 @@
    ]
   ],
   "slug": "/guides/centraliser-documents-clients-assurance",
-  "_octets": 14160,
+  "_octets": 14380,
   "_section": "resources"
  },
  {
@@ -3299,7 +3299,7 @@
    ]
   ],
   "slug": "/guides/organiser-portefeuille-assurance",
-  "_octets": 14375,
+  "_octets": 14595,
   "_section": "resources"
  },
  {
@@ -3354,7 +3354,7 @@
    ]
   ],
   "slug": "/guides/reduire-saisie-manuelle-courtier",
-  "_octets": 14171,
+  "_octets": 14391,
   "_section": "resources"
  },
  {
@@ -3401,7 +3401,7 @@
    ]
   ],
   "slug": "/guides/automatiser-suivi-prospects-assurance",
-  "_octets": 14454,
+  "_octets": 14674,
   "_section": "resources"
  },
  {
@@ -3448,7 +3448,7 @@
    ]
   ],
   "slug": "/guides/devoir-de-conseil-suivi-dossier",
-  "_octets": 15243,
+  "_octets": 15463,
   "_section": "resources"
  },
  {
@@ -3499,7 +3499,7 @@
    ]
   ],
   "slug": "/guides/donnees-clients-assurance-france-suisse",
-  "_octets": 15652,
+  "_octets": 15872,
   "_section": "resources"
  },
  {
@@ -3530,7 +3530,7 @@
    ]
   ],
   "slug": "/comparatifs/",
-  "_octets": 12533,
+  "_octets": 12753,
   "_section": "comparatifs"
  },
  {
@@ -3577,7 +3577,7 @@
    ]
   ],
   "slug": "/comparatifs/crm-assurance-vs-crm-generaliste",
-  "_octets": 15223,
+  "_octets": 15443,
   "_section": "comparatifs"
  },
  {
@@ -3624,7 +3624,7 @@
    ]
   ],
   "slug": "/comparatifs/excel-vs-crm-courtier-assurance",
-  "_octets": 14832,
+  "_octets": 15052,
   "_section": "comparatifs"
  },
  {
@@ -3671,7 +3671,7 @@
    ]
   ],
   "slug": "/comparatifs/logiciel-metier-vs-crm-generaliste",
-  "_octets": 14555,
+  "_octets": 14775,
   "_section": "comparatifs"
  },
  {
@@ -3702,7 +3702,7 @@
    ]
   ],
   "slug": "/outils/",
-  "_octets": 13471,
+  "_octets": 13691,
   "_section": "tools"
  },
  {
@@ -3750,7 +3750,7 @@
    ]
   ],
   "slug": "/outils/calculateur-productivite-courtier",
-  "_octets": 15450,
+  "_octets": 15670,
   "_section": "tools"
  },
  {
@@ -3802,7 +3802,7 @@
    ]
   ],
   "slug": "/securite",
-  "_octets": 14633,
+  "_octets": 14853,
   "_section": "trust"
  },
  {
@@ -3846,7 +3846,7 @@
    ]
   ],
   "slug": "/a-propos",
-  "_octets": 13170,
+  "_octets": 13390,
   "_section": "trust"
  },
  {
@@ -3881,7 +3881,7 @@
    ]
   ],
   "slug": "/mentions-legales",
-  "_octets": 11827,
+  "_octets": 12047,
   "_section": "trust"
  },
  {
@@ -3921,7 +3921,7 @@
    ]
   ],
   "slug": "/confidentialite",
-  "_octets": 12732,
+  "_octets": 12952,
   "_section": "trust"
  },
  {
@@ -3961,7 +3961,7 @@
    ]
   ],
   "slug": "/demo/",
-  "_octets": 13265,
+  "_octets": 13485,
   "_section": "trust"
  },
  {
@@ -3996,7 +3996,7 @@
    ]
   ],
   "slug": "/contact",
-  "_octets": 12360,
+  "_octets": 12580,
   "_section": "trust"
  },
  {
@@ -4014,7 +4014,7 @@
     null
    ]
   ],
-  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>fix(seo): resolve remaining legacy investigate urls (5 pages restaurees, 16 redirections permanentes)</td><td>9565b970</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuve finale apres restauration des redirections de glossaire (164/164)</td><td>d0db5de6</td></tr><tr><td>26/09/2026</td><td>fix(seo): restaurer les 15 redirections de glossaire specifiques et aligner la variante accentuee courtier-sante</td><td>1426c4d4</td></tr><tr><td>26/09/2026</td><td>docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation</td><td>348869fc</td></tr><tr><td>26/09/2026</td><td>fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)</td><td>135c4199</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)</td><td>1a291997</td></tr><tr><td>26/09/2026</td><td>fix(seo): dedupliquer les redirections et supprimer les auto-redirections</td><td>5d36e567</td></tr><tr><td>26/09/2026</td><td>fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)</td><td>34091ed0</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues</td><td>1b594a00</td></tr><tr><td>26/09/2026</td><td>fix(seo): corriger les deux redirections accentuees pour supprimer la chaine</td><td>6caf9bdb</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)</td><td>7f78d93c</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer le doublon de section FAQ sur la money page</td><td>5a4702e0</td></tr><tr><td>26/09/2026</td><td>feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click</td><td>88045ad1</td></tr><tr><td>26/09/2026</td><td>fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)</td><td>08547af1</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)</td><td>8d1f69ad</td></tr><tr><td>26/09/2026</td><td>feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)</td><td>fb23a3f5</td></tr><tr><td>26/09/2026</td><td>feat(seo): connexion Search Console, baseline T0, tableau de bord 4 blocs, releve periodique et corrections issues de l'indexation</td><td>ff71df6b</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolider les URL heritees signalees par Search Console (soft 404, canoniques, doublons)</td><td>c21701b7</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : notation d'autorite (44 domaines, Top 10/Top 5 avec contacts reels), brouillons d'approche, tableau de bord acquisition, controles maillage et cannibalisation, preuves</td><td>063befde</td></tr><tr><td>26/09/2026</td><td>robots.txt reecrit depuis le build, retrait des sitemaps obsoletes, redirections /sitemap-seo.xml et /sitemap-ch.xml</td><td>5358a1b0</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : vague geo FR+CH, 3 outils, lead magnet, glossaire, tarifs, consolidation des doublons legacy</td><td>3ca813bd</td></tr><tr><td>26/09/2026</td><td>fix(seo): liens internes sans slash final et sitemap aligne sur les URL servies</td><td>f8171df6</td></tr><tr><td>26/09/2026</td><td>perf(web): sortir les scripts du HTML pour respecter la CSP</td><td>3f172969</td></tr><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>fix(demo): la navigation du cockpit de demonstration reste dans /demo (Sidebar, palette, navigation mobile)</td><td>28c1addc</td></tr><tr><td>26/09/2026</td><td>feat(cro): add real product proof to commercial pages — demo interactive rendue utilisable (navigation /demo), marque COURTIARK unifiee, CTA Voir COURTIARK en action</td><td>c96e32a3</td></tr><tr><td>26/09/2026</td><td>fix(seo): resolve remaining legacy investigate urls (5 pages restaurees, 16 redirections permanentes)</td><td>9565b970</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuve finale apres restauration des redirections de glossaire (164/164)</td><td>d0db5de6</td></tr><tr><td>26/09/2026</td><td>fix(seo): restaurer les 15 redirections de glossaire specifiques et aligner la variante accentuee courtier-sante</td><td>1426c4d4</td></tr><tr><td>26/09/2026</td><td>docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation</td><td>348869fc</td></tr><tr><td>26/09/2026</td><td>fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)</td><td>135c4199</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)</td><td>1a291997</td></tr><tr><td>26/09/2026</td><td>fix(seo): dedupliquer les redirections et supprimer les auto-redirections</td><td>5d36e567</td></tr><tr><td>26/09/2026</td><td>fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)</td><td>34091ed0</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues</td><td>1b594a00</td></tr><tr><td>26/09/2026</td><td>fix(seo): corriger les deux redirections accentuees pour supprimer la chaine</td><td>6caf9bdb</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)</td><td>7f78d93c</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer le doublon de section FAQ sur la money page</td><td>5a4702e0</td></tr><tr><td>26/09/2026</td><td>feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click</td><td>88045ad1</td></tr><tr><td>26/09/2026</td><td>fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)</td><td>08547af1</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)</td><td>8d1f69ad</td></tr><tr><td>26/09/2026</td><td>feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)</td><td>fb23a3f5</td></tr><tr><td>26/09/2026</td><td>feat(seo): connexion Search Console, baseline T0, tableau de bord 4 blocs, releve periodique et corrections issues de l'indexation</td><td>ff71df6b</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolider les URL heritees signalees par Search Console (soft 404, canoniques, doublons)</td><td>c21701b7</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : notation d'autorite (44 domaines, Top 10/Top 5 avec contacts reels), brouillons d'approche, tableau de bord acquisition, controles maillage et cannibalisation, preuves</td><td>063befde</td></tr><tr><td>26/09/2026</td><td>robots.txt reecrit depuis le build, retrait des sitemaps obsoletes, redirections /sitemap-seo.xml et /sitemap-ch.xml</td><td>5358a1b0</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : vague geo FR+CH, 3 outils, lead magnet, glossaire, tarifs, consolidation des doublons legacy</td><td>3ca813bd</td></tr><tr><td>26/09/2026</td><td>fix(seo): liens internes sans slash final et sitemap aligne sur les URL servies</td><td>f8171df6</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -4027,7 +4027,7 @@
    ]
   ],
   "slug": "/changelog",
-  "_octets": 14676,
+  "_octets": 15030,
   "_section": "core"
  },
  {
@@ -4075,7 +4075,7 @@
    ]
   ],
   "slug": "/france/densite-courtage",
-  "_octets": 15857,
+  "_octets": 16077,
   "_section": "france"
  },
  {
@@ -4124,7 +4124,7 @@
    ]
   ],
   "slug": "/fonctionnalites/comparateur-devis-assurance",
-  "_octets": 14998,
+  "_octets": 15218,
   "_section": "features"
  },
  {
@@ -4176,7 +4176,7 @@
    ]
   ],
   "slug": "/conformite/controle-acpr-courtier",
-  "_octets": 14827,
+  "_octets": 15047,
   "_section": "resources"
  },
  {
@@ -4224,7 +4224,7 @@
    ]
   ],
   "slug": "/conformite/lcb-ft-courtier",
-  "_octets": 13458,
+  "_octets": 13678,
   "_section": "resources"
  },
  {
@@ -4272,7 +4272,7 @@
    ]
   ],
   "slug": "/conformite/ipid-document-information",
-  "_octets": 13417,
+  "_octets": 13637,
   "_section": "resources"
  }
 ]

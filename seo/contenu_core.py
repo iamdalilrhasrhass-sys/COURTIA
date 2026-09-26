@@ -33,6 +33,15 @@ def bascule(gauche, droite, titre_g='Sans COURTIARK', titre_d='Avec COURTIARK'):
 
 FEATURES_HUB = '/fonctionnalites/'
 
+def figure(source, alt, legende='', largeur=1440, hauteur=900, prioritaire=False):
+    """Image produit reelle : dimensions declarees (pas de saut de mise en page), lazy sauf LCP."""
+    return ('<figure class="produit">'
+            '<img src="%s" alt="%s" width="%d" height="%d"%s decoding="async">'
+            '%s</figure>' % (source, alt, largeur, hauteur,
+                             ' fetchpriority="high"' if prioritaire else ' loading="lazy"',
+                             ('<figcaption>%s</figcaption>' % legende) if legende else ''))
+
+
 def pages_core():
     P = []
 
@@ -46,7 +55,11 @@ def pages_core():
         fil=[],
         corps=''.join([
             section("Le problème que COURTIARK règle",
-                    p("Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, "
+                    figure('/img/produit/courtiark-cockpit.webp',
+                           "Tableau de bord COURTIARK : clients actifs, contrats, primes annuelles, score de "
+                           "santé du portefeuille, tâches prioritaires et échéances",
+                           "Le cockpit COURTIARK. " + "Capture réelle de l'environnement de démonstration COURTIARK — cabinet fictif (Cabinet Horizon Assurances), données synthétiques.", prioritaire=True)
+                    + p("Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, "
                       "des devis à suivre, des pièces à récupérer et des renouvellements à ne pas manquer. "
                       "Quand ces éléments vivent dans un tableur, une boîte e-mail et un agenda, le suivi dépend "
                       "de la mémoire de chacun — et les occasions de revenir vers un client se perdent.")
