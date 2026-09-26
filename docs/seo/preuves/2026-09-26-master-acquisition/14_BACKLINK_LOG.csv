@@ -1,0 +1,6 @@
+domain,contact,status,sent_date,followup1,followup2,reply,link_url,link_attribute,target_page,notes
+courtage-magazine.fr,Laurent Lemonnier (bienvenue@isoluce.net),READY,,non envoye,non envoye,,,,/guides/organiser-cabinet-courtage-25-points,guide 25 points ; email source : mentions legales
+digital-et-assurance.com,Alexandre Pengloan,READY,,non envoye,non envoye,,,,/guides/automatiser-renouvellements-assurance,retour d experience mesure ; email public sur le site
+aca-courtiers.ch,Secretariat ACA,READY,,non envoye,non envoye,,,,/outils/checklist-renouvellement-assurance,checklist pour les membres ; formule suisse
+orica.fr,Equipe Orica (contact@orica.fr),READY,,non envoye,non envoye,,,,/outils/checklist-dossier-courtier-assurance,support pedagogique
+ascourtage.fr,formulaire du site,READY,,non envoye,non envoye,,,,/outils/calculateur-taux-transformation-assurance,aucun email public : canal formulaire

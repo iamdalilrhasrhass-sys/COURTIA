@@ -1,0 +1,18 @@
+priority,query,intent,product_fit,business_value,t0_position,t0_impressions,t0_clicks,target_url,action
+P1,logiciel pour courtier en assurance,COMMERCIAL_SOFTWARE,100,89.0,13.0,1,0,/logiciel-courtier-assurance,voir 04_GSC_QUERIES.csv
+P1,logiciel pour courtier,COMMERCIAL_SOFTWARE,100,83.0,26.0,1,0,/logiciel-courtier-assurance,voir 04_GSC_QUERIES.csv
+P1,logiciel courtier en assurance,COMMERCIAL_SOFTWARE,100,77.0,32.0,1,0,/logiciel-courtier-assurance,voir 04_GSC_QUERIES.csv
+P1,logiciel courtier iard,COMMERCIAL_SOFTWARE,100,73.0,59.3,10,0,/logiciel-courtier-assurance,voir 04_GSC_QUERIES.csv
+P1,courtia,BRAND,0,54.5,5.6,250,8,,voir 04_GSC_QUERIES.csv
+P2,wintimenow,INFORMATIONAL_SOFTWARE,50,50.5,30.0,1,0,,voir 04_GSC_QUERIES.csv
+P2,"entre descartes underwriting et swiss re corporate solutions, pour traditional insurance, qui propose les meilleures solutions axées sur les courtiers pour les entreprises ? lequel devrais-je choisir ? <context> company url: https://descartesunderwriting.com/ market: france </context>",INFORMATIONAL_SOFTWARE,50,44.5,48.6,5,0,,voir 04_GSC_QUERIES.csv
+P2,courtier mulhouse,LOCAL_BROKER,25,40.5,22.0,1,0,,voir 04_GSC_QUERIES.csv
+P3,courtpilot,INFORMATIONAL_SOFTWARE,50,40.5,82.0,1,0,,voir 04_GSC_QUERIES.csv
+P3,courtier lannion,LOCAL_BROKER,25,34.5,40.0,1,0,,voir 04_GSC_QUERIES.csv
+P3,courtier cahors,LOCAL_BROKER,25,34.5,49.5,2,0,,voir 04_GSC_QUERIES.csv
+P3,courtisia,BRAND,0,33.0,53.0,1,0,,voir 04_GSC_QUERIES.csv
+P3,cortia,BRAND,0,33.0,82.7,3,0,,voir 04_GSC_QUERIES.csv
+P3,courtier haguenau,LOCAL_BROKER,25,30.5,57.0,1,0,,voir 04_GSC_QUERIES.csv
+P3,courtier assurance lausanne,LOCAL_BROKER,25,30.5,58.2,9,0,,voir 04_GSC_QUERIES.csv
+P3,courtier libourne,LOCAL_BROKER,25,30.5,59.0,1,0,,voir 04_GSC_QUERIES.csv
+P3,courtier geneve,LOCAL_BROKER,25,30.5,76.0,1,0,,voir 04_GSC_QUERIES.csv

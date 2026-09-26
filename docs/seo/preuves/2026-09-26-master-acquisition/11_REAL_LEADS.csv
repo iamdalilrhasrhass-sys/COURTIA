@@ -1,0 +1,6 @@
+date,source,medium,landing,country,cabinet,is_test,lead_status,trial_status,customer_status,revenue_status,notes
+2026-09-21,audit-ark,,,Lausanne,AUDIT ARK (test),non,new,aucun,aucun,aucun,demande reelle
+2026-09-21,direct,,,Lausanne,AUDIT ARK (test),non,new,aucun,aucun,aucun,demande reelle
+2026-09-26,test_ark_seo_20260926,,,Lausanne,Cabinet test ARK (ne pas contacter),oui,new,aucun,aucun,aucun,demande de recette
+2026-09-26,test_master_acquisition_20260926,,,Paris,Cabinet Recette ARK,oui,new,aucun,aucun,aucun,demande de recette
+2026-09-26,test_master_acquisition_20260926,organic,/demo,Lyon,Cabinet Recette ARK 2,oui,new,aucun,aucun,aucun,demande de recette

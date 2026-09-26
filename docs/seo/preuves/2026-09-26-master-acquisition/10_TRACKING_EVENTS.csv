@@ -1,0 +1,21 @@
+event_name,count,table,received
+site_visit,207,marketing_events (production),oui
+seo_page_view,65,marketing_events (production),oui
+demo_chapter_view,51,marketing_events (production),oui
+demo_started,37,marketing_events (production),oui
+demo_form_view,6,marketing_events (production),oui
+demo_take_control,6,marketing_events (production),oui
+tool_start,4,marketing_events (production),oui
+tool_complete,4,marketing_events (production),oui
+demo_form_submit,3,marketing_events (production),oui
+demo_page_view,2,marketing_events (production),oui
+demo_request_success,2,marketing_events (production),oui
+pricing_view,2,marketing_events (production),oui
+demo_request_failure,1,marketing_events (production),oui
+demo_form_start,1,marketing_events (production),oui
+demo_cta_click,1,marketing_events (production),oui
+tool_cta_click,1,marketing_events (production),oui
+cta_demo_click,1,marketing_events (production),oui
+cta_demo_interactive_click,1,marketing_events (production),oui
+cta_trial_click,1,marketing_events (production),oui
+ark_demo_view,1,marketing_events (production),oui
