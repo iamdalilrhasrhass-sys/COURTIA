@@ -1,0 +1,6 @@
+platform,profile_exists,signup_url,free,verification,profile_status,public_url,reviews,notes
+Capterra,non,https://www.capterra.com/vendors/sign-up,oui,email professionnel + validation editeur,NOT_STARTED,,0,creation possible avec une adresse officielle COURTIARK ; aucun avis interne ne sera sollicite ni publie
+GetApp,non,https://www.getapp.com/get-listed/,oui,email professionnel,NOT_STARTED,,0,creation possible avec une adresse officielle COURTIARK ; aucun avis interne ne sera sollicite ni publie
+G2,non,https://www.g2.com/products/new,oui,email professionnel + validation,NOT_STARTED,,0,creation possible avec une adresse officielle COURTIARK ; aucun avis interne ne sera sollicite ni publie
+Appvizer,non,https://www.appvizer.fr/,oui,email professionnel,NOT_STARTED,,0,creation possible avec une adresse officielle COURTIARK ; aucun avis interne ne sera sollicite ni publie
+Trustpilot,non,https://fr.trustpilot.com/,oui,email professionnel,NOT_STARTED,,0,creation possible avec une adresse officielle COURTIARK ; aucun avis interne ne sera sollicite ni publie

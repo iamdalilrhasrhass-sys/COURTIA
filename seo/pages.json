@@ -55,7 +55,7 @@
    ]
   ],
   "slug": "",
-  "_octets": 21535,
+  "_octets": 21674,
   "_section": "core"
  },
  {
@@ -123,7 +123,7 @@
    ]
   ],
   "slug": "/crm-courtier-assurance",
-  "_octets": 19398,
+  "_octets": 19537,
   "_section": "core"
  },
  {
@@ -161,7 +161,7 @@
    ]
   ],
   "slug": "/fonctionnalites/",
-  "_octets": 14237,
+  "_octets": 14376,
   "_section": "features"
  },
  {
@@ -217,7 +217,7 @@
    ]
   ],
   "slug": "/fonctionnalites/assistant-ark",
-  "_octets": 16672,
+  "_octets": 16811,
   "_section": "features"
  },
  {
@@ -273,7 +273,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-portefeuille-assurance",
-  "_octets": 15389,
+  "_octets": 15528,
   "_section": "features"
  },
  {
@@ -321,7 +321,7 @@
    ]
   ],
   "slug": "/fonctionnalites/relance-devis-assurance",
-  "_octets": 15573,
+  "_octets": 15712,
   "_section": "features"
  },
  {
@@ -369,7 +369,7 @@
    ]
   ],
   "slug": "/fonctionnalites/renouvellements-assurance",
-  "_octets": 15208,
+  "_octets": 15347,
   "_section": "features"
  },
  {
@@ -417,7 +417,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-documents-assurance",
-  "_octets": 15055,
+  "_octets": 15194,
   "_section": "features"
  },
  {
@@ -465,7 +465,7 @@
    ]
   ],
   "slug": "/fonctionnalites/automatisation-relances",
-  "_octets": 15466,
+  "_octets": 15605,
   "_section": "features"
  },
  {
@@ -513,7 +513,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-clients",
-  "_octets": 14688,
+  "_octets": 14827,
   "_section": "features"
  },
  {
@@ -561,7 +561,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-contrats",
-  "_octets": 14565,
+  "_octets": 14704,
   "_section": "features"
  },
  {
@@ -609,7 +609,7 @@
    ]
   ],
   "slug": "/fonctionnalites/reporting-courtier",
-  "_octets": 14595,
+  "_octets": 14734,
   "_section": "features"
  },
  {
@@ -657,7 +657,7 @@
    ]
   ],
   "slug": "/fonctionnalites/prospection-assurance",
-  "_octets": 14719,
+  "_octets": 14858,
   "_section": "features"
  },
  {
@@ -705,7 +705,7 @@
    ]
   ],
   "slug": "/fonctionnalites/compte-rendu-clients",
-  "_octets": 14132,
+  "_octets": 14271,
   "_section": "features"
  },
  {
@@ -754,7 +754,7 @@
    ]
   ],
   "slug": "/france/",
-  "_octets": 18570,
+  "_octets": 18709,
   "_section": "france"
  },
  {
@@ -807,7 +807,7 @@
    ]
   ],
   "slug": "/suisse/",
-  "_octets": 18479,
+  "_octets": 18618,
   "_section": "switzerland"
  },
  {
@@ -868,7 +868,7 @@
    ]
   ],
   "slug": "/suisse/crm-courtier-assurance",
-  "_octets": 17605,
+  "_octets": 17744,
   "_section": "switzerland"
  },
  {
@@ -921,7 +921,7 @@
    ]
   ],
   "slug": "/suisse/geneve",
-  "_octets": 17099,
+  "_octets": 17238,
   "_section": "switzerland"
  },
  {
@@ -974,7 +974,7 @@
    ]
   ],
   "slug": "/suisse/lausanne",
-  "_octets": 16591,
+  "_octets": 16730,
   "_section": "switzerland"
  },
  {
@@ -1005,7 +1005,7 @@
    ]
   ],
   "slug": "/solutions/",
-  "_octets": 12653,
+  "_octets": 12792,
   "_section": "solutions"
  },
  {
@@ -1052,7 +1052,7 @@
    ]
   ],
   "slug": "/solutions/courtier-assurance-independant",
-  "_octets": 15443,
+  "_octets": 15582,
   "_section": "solutions"
  },
  {
@@ -1099,7 +1099,7 @@
    ]
   ],
   "slug": "/solutions/cabinet-courtage-assurance",
-  "_octets": 15358,
+  "_octets": 15497,
   "_section": "solutions"
  },
  {
@@ -1146,7 +1146,7 @@
    ]
   ],
   "slug": "/solutions/equipe-commerciale-assurance",
-  "_octets": 14925,
+  "_octets": 15064,
   "_section": "solutions"
  },
  {
@@ -1193,7 +1193,7 @@
    ]
   ],
   "slug": "/solutions/reseau-courtage",
-  "_octets": 15099,
+  "_octets": 15238,
   "_section": "solutions"
  },
  {
@@ -1229,7 +1229,7 @@
    ]
   ],
   "slug": "/assurances/",
-  "_octets": 13844,
+  "_octets": 13983,
   "_section": "assurances"
  },
  {
@@ -1276,7 +1276,7 @@
    ]
   ],
   "slug": "/assurances/mutuelle-sante",
-  "_octets": 15069,
+  "_octets": 15208,
   "_section": "assurances"
  },
  {
@@ -1323,7 +1323,7 @@
    ]
   ],
   "slug": "/assurances/prevoyance",
-  "_octets": 14659,
+  "_octets": 14798,
   "_section": "assurances"
  },
  {
@@ -1370,7 +1370,7 @@
    ]
   ],
   "slug": "/assurances/assurance-auto",
-  "_octets": 14101,
+  "_octets": 14240,
   "_section": "assurances"
  },
  {
@@ -1417,7 +1417,7 @@
    ]
   ],
   "slug": "/assurances/rc-pro",
-  "_octets": 14186,
+  "_octets": 14325,
   "_section": "assurances"
  },
  {
@@ -1464,7 +1464,7 @@
    ]
   ],
   "slug": "/assurances/multirisque-professionnelle",
-  "_octets": 14015,
+  "_octets": 14154,
   "_section": "assurances"
  },
  {
@@ -1525,7 +1525,7 @@
    ]
   ],
   "slug": "/france/paris",
-  "_octets": 18167,
+  "_octets": 18306,
   "_section": "france"
  },
  {
@@ -1586,7 +1586,7 @@
    ]
   ],
   "slug": "/france/lyon",
-  "_octets": 17853,
+  "_octets": 17992,
   "_section": "france"
  },
  {
@@ -1647,7 +1647,7 @@
    ]
   ],
   "slug": "/france/marseille",
-  "_octets": 18114,
+  "_octets": 18253,
   "_section": "france"
  },
  {
@@ -1708,7 +1708,7 @@
    ]
   ],
   "slug": "/france/toulouse",
-  "_octets": 17754,
+  "_octets": 17893,
   "_section": "france"
  },
  {
@@ -1769,7 +1769,7 @@
    ]
   ],
   "slug": "/france/bordeaux",
-  "_octets": 18020,
+  "_octets": 18159,
   "_section": "france"
  },
  {
@@ -1830,7 +1830,7 @@
    ]
   ],
   "slug": "/france/lille",
-  "_octets": 17679,
+  "_octets": 17818,
   "_section": "france"
  },
  {
@@ -1891,7 +1891,7 @@
    ]
   ],
   "slug": "/france/nantes",
-  "_octets": 17629,
+  "_octets": 17768,
   "_section": "france"
  },
  {
@@ -1952,7 +1952,7 @@
    ]
   ],
   "slug": "/france/strasbourg",
-  "_octets": 17708,
+  "_octets": 17847,
   "_section": "france"
  },
  {
@@ -2013,7 +2013,7 @@
    ]
   ],
   "slug": "/france/montpellier",
-  "_octets": 17693,
+  "_octets": 17832,
   "_section": "france"
  },
  {
@@ -2074,7 +2074,7 @@
    ]
   ],
   "slug": "/france/nice",
-  "_octets": 17691,
+  "_octets": 17830,
   "_section": "france"
  },
  {
@@ -2131,7 +2131,7 @@
    ]
   ],
   "slug": "/suisse/nyon",
-  "_octets": 16544,
+  "_octets": 16683,
   "_section": "switzerland"
  },
  {
@@ -2188,7 +2188,7 @@
    ]
   ],
   "slug": "/suisse/vevey",
-  "_octets": 16464,
+  "_octets": 16603,
   "_section": "switzerland"
  },
  {
@@ -2245,7 +2245,7 @@
    ]
   ],
   "slug": "/suisse/montreux",
-  "_octets": 16579,
+  "_octets": 16718,
   "_section": "switzerland"
  },
  {
@@ -2302,7 +2302,7 @@
    ]
   ],
   "slug": "/suisse/sion",
-  "_octets": 16498,
+  "_octets": 16637,
   "_section": "switzerland"
  },
  {
@@ -2359,7 +2359,7 @@
    ]
   ],
   "slug": "/suisse/neuchatel",
-  "_octets": 16549,
+  "_octets": 16688,
   "_section": "switzerland"
  },
  {
@@ -2416,7 +2416,7 @@
    ]
   ],
   "slug": "/suisse/fribourg",
-  "_octets": 16492,
+  "_octets": 16631,
   "_section": "switzerland"
  },
  {
@@ -2473,7 +2473,7 @@
    ]
   ],
   "slug": "/suisse/vaud",
-  "_octets": 16688,
+  "_octets": 16827,
   "_section": "switzerland"
  },
  {
@@ -2530,7 +2530,7 @@
    ]
   ],
   "slug": "/suisse/valais",
-  "_octets": 16708,
+  "_octets": 16847,
   "_section": "switzerland"
  },
  {
@@ -2587,7 +2587,7 @@
    ]
   ],
   "slug": "/suisse/suisse-romande",
-  "_octets": 16789,
+  "_octets": 16928,
   "_section": "switzerland"
  },
  {
@@ -2656,7 +2656,7 @@
    "Demander une démonstration"
   ],
   "slug": "/logiciel-courtier-assurance",
-  "_octets": 29762,
+  "_octets": 29901,
   "_section": "core"
  },
  {
@@ -2708,7 +2708,7 @@
    ]
   ],
   "slug": "/logiciel-courtage-assurance",
-  "_octets": 16569,
+  "_octets": 16708,
   "_section": "core"
  },
  {
@@ -2768,7 +2768,7 @@
    ]
   ],
   "slug": "/automatisation-courtier-assurance",
-  "_octets": 16688,
+  "_octets": 16827,
   "_section": "core"
  },
  {
@@ -2828,7 +2828,7 @@
    "Démarrer l'essai de 7 jours"
   ],
   "slug": "/tarifs",
-  "_octets": 15997,
+  "_octets": 16136,
   "_section": "core"
  },
  {
@@ -2880,7 +2880,7 @@
    "Piloter mes opportunités avec COURTIARK"
   ],
   "slug": "/outils/calculateur-taux-transformation-assurance",
-  "_octets": 15217,
+  "_octets": 15356,
   "_section": "tools"
  },
  {
@@ -2932,7 +2932,7 @@
    "Centraliser mes dossiers dans COURTIARK"
   ],
   "slug": "/outils/checklist-dossier-courtier-assurance",
-  "_octets": 18658,
+  "_octets": 18797,
   "_section": "tools"
  },
  {
@@ -2984,7 +2984,7 @@
    "Suivre mes échéances dans COURTIARK"
   ],
   "slug": "/outils/checklist-renouvellement-assurance",
-  "_octets": 17499,
+  "_octets": 17638,
   "_section": "tools"
  },
  {
@@ -3111,7 +3111,7 @@
    ]
   ],
   "slug": "/guides/",
-  "_octets": 13210,
+  "_octets": 13349,
   "_section": "resources"
  },
  {
@@ -3530,7 +3530,7 @@
    ]
   ],
   "slug": "/comparatifs/",
-  "_octets": 12753,
+  "_octets": 12892,
   "_section": "comparatifs"
  },
  {
@@ -3577,7 +3577,7 @@
    ]
   ],
   "slug": "/comparatifs/crm-assurance-vs-crm-generaliste",
-  "_octets": 15443,
+  "_octets": 15582,
   "_section": "comparatifs"
  },
  {
@@ -3624,7 +3624,7 @@
    ]
   ],
   "slug": "/comparatifs/excel-vs-crm-courtier-assurance",
-  "_octets": 15052,
+  "_octets": 15191,
   "_section": "comparatifs"
  },
  {
@@ -3671,7 +3671,7 @@
    ]
   ],
   "slug": "/comparatifs/logiciel-metier-vs-crm-generaliste",
-  "_octets": 14775,
+  "_octets": 14914,
   "_section": "comparatifs"
  },
  {
@@ -3702,7 +3702,7 @@
    ]
   ],
   "slug": "/outils/",
-  "_octets": 13691,
+  "_octets": 13830,
   "_section": "tools"
  },
  {
@@ -3750,7 +3750,7 @@
    ]
   ],
   "slug": "/outils/calculateur-productivite-courtier",
-  "_octets": 15670,
+  "_octets": 15809,
   "_section": "tools"
  },
  {
@@ -4014,7 +4014,7 @@
     null
    ]
   ],
-  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>fix(analytics): marquer les essais internes anterieurs comme tests (sinon 2 faux leads reels au dashboard)</td><td>dad30b92</td></tr><tr><td>26/09/2026</td><td>docs(seo): record acquisition acceptance proofs (21 URL resolues, preuve produit, CRO, attribution, recette finale)</td><td>e93e2d76</td></tr><tr><td>26/09/2026</td><td>fix(analytics): le service de demande de demo conserve l attribution (session, premier et dernier contact)</td><td>8efa2c26</td></tr><tr><td>26/09/2026</td><td>feat(analytics): complete organic lead attribution (session, premier et dernier contact, CTA positionnes, demo_page_view et demo_form_start, marquage des tests)</td><td>11f97c7f</td></tr><tr><td>26/09/2026</td><td>feat(cro): preuves produit reelles (7 captures de la demonstration, webp optimisees) integrees a l accueil et a la money page</td><td>3b2f5550</td></tr><tr><td>26/09/2026</td><td>fix(demo): la navigation du cockpit de demonstration reste dans /demo (Sidebar, palette, navigation mobile)</td><td>28c1addc</td></tr><tr><td>26/09/2026</td><td>feat(cro): add real product proof to commercial pages — demo interactive rendue utilisable (navigation /demo), marque COURTIARK unifiee, CTA Voir COURTIARK en action</td><td>c96e32a3</td></tr><tr><td>26/09/2026</td><td>fix(seo): resolve remaining legacy investigate urls (5 pages restaurees, 16 redirections permanentes)</td><td>9565b970</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuve finale apres restauration des redirections de glossaire (164/164)</td><td>d0db5de6</td></tr><tr><td>26/09/2026</td><td>fix(seo): restaurer les 15 redirections de glossaire specifiques et aligner la variante accentuee courtier-sante</td><td>1426c4d4</td></tr><tr><td>26/09/2026</td><td>docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation</td><td>348869fc</td></tr><tr><td>26/09/2026</td><td>fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)</td><td>135c4199</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)</td><td>1a291997</td></tr><tr><td>26/09/2026</td><td>fix(seo): dedupliquer les redirections et supprimer les auto-redirections</td><td>5d36e567</td></tr><tr><td>26/09/2026</td><td>fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)</td><td>34091ed0</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues</td><td>1b594a00</td></tr><tr><td>26/09/2026</td><td>fix(seo): corriger les deux redirections accentuees pour supprimer la chaine</td><td>6caf9bdb</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)</td><td>7f78d93c</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer le doublon de section FAQ sur la money page</td><td>5a4702e0</td></tr><tr><td>26/09/2026</td><td>feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click</td><td>88045ad1</td></tr><tr><td>26/09/2026</td><td>fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)</td><td>08547af1</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)</td><td>8d1f69ad</td></tr><tr><td>26/09/2026</td><td>feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)</td><td>fb23a3f5</td></tr><tr><td>26/09/2026</td><td>feat(seo): connexion Search Console, baseline T0, tableau de bord 4 blocs, releve periodique et corrections issues de l'indexation</td><td>ff71df6b</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>feat(research): publish 2026 brokerage density study (script reproductible, verification independante a 0 ecart, hub etudes, graphiques accessibles) + harmonisation du grain entreprise/etablissement</td><td>0f745d65</td></tr><tr><td>26/09/2026</td><td>fix(analytics): marquer les essais internes anterieurs comme tests (sinon 2 faux leads reels au dashboard)</td><td>dad30b92</td></tr><tr><td>26/09/2026</td><td>docs(seo): record acquisition acceptance proofs (21 URL resolues, preuve produit, CRO, attribution, recette finale)</td><td>e93e2d76</td></tr><tr><td>26/09/2026</td><td>fix(analytics): le service de demande de demo conserve l attribution (session, premier et dernier contact)</td><td>8efa2c26</td></tr><tr><td>26/09/2026</td><td>feat(analytics): complete organic lead attribution (session, premier et dernier contact, CTA positionnes, demo_page_view et demo_form_start, marquage des tests)</td><td>11f97c7f</td></tr><tr><td>26/09/2026</td><td>feat(cro): preuves produit reelles (7 captures de la demonstration, webp optimisees) integrees a l accueil et a la money page</td><td>3b2f5550</td></tr><tr><td>26/09/2026</td><td>fix(demo): la navigation du cockpit de demonstration reste dans /demo (Sidebar, palette, navigation mobile)</td><td>28c1addc</td></tr><tr><td>26/09/2026</td><td>feat(cro): add real product proof to commercial pages — demo interactive rendue utilisable (navigation /demo), marque COURTIARK unifiee, CTA Voir COURTIARK en action</td><td>c96e32a3</td></tr><tr><td>26/09/2026</td><td>fix(seo): resolve remaining legacy investigate urls (5 pages restaurees, 16 redirections permanentes)</td><td>9565b970</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuve finale apres restauration des redirections de glossaire (164/164)</td><td>d0db5de6</td></tr><tr><td>26/09/2026</td><td>fix(seo): restaurer les 15 redirections de glossaire specifiques et aligner la variante accentuee courtier-sante</td><td>1426c4d4</td></tr><tr><td>26/09/2026</td><td>docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation</td><td>348869fc</td></tr><tr><td>26/09/2026</td><td>fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)</td><td>135c4199</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)</td><td>1a291997</td></tr><tr><td>26/09/2026</td><td>fix(seo): dedupliquer les redirections et supprimer les auto-redirections</td><td>5d36e567</td></tr><tr><td>26/09/2026</td><td>fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)</td><td>34091ed0</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues</td><td>1b594a00</td></tr><tr><td>26/09/2026</td><td>fix(seo): corriger les deux redirections accentuees pour supprimer la chaine</td><td>6caf9bdb</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)</td><td>7f78d93c</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer le doublon de section FAQ sur la money page</td><td>5a4702e0</td></tr><tr><td>26/09/2026</td><td>feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click</td><td>88045ad1</td></tr><tr><td>26/09/2026</td><td>fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)</td><td>08547af1</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)</td><td>8d1f69ad</td></tr><tr><td>26/09/2026</td><td>feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)</td><td>fb23a3f5</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -4027,7 +4027,7 @@
    ]
   ],
   "slug": "/changelog",
-  "_octets": 15061,
+  "_octets": 15129,
   "_section": "core"
  },
  {
@@ -4316,7 +4316,7 @@
    ]
   ],
   "slug": "/etudes",
-  "_octets": 13191,
+  "_octets": 13888,
   "_section": "core"
  },
  {
@@ -4372,7 +4372,7 @@
    ]
   ],
   "slug": "/etudes/courtage-assurance-france-2026",
-  "_octets": 33938,
+  "_octets": 35622,
   "_section": "resources"
  },
  {
@@ -4412,7 +4412,139 @@
    ]
   ],
   "slug": "/etudes/methodologie-cartographie-courtage-france",
-  "_octets": 14628,
+  "_octets": 15336,
   "_section": "resources"
+ },
+ {
+  "path": "/presse",
+  "type": "trust",
+  "country": "FR",
+  "indexable": true,
+  "title": "Kit presse COURTIARK — logos, chiffres et contact | COURTIARK",
+  "description": "Kit presse COURTIARK : description de l'entreprise, chiffres cles de l'etude 2026 sur le courtage, captures produit, contact presse.",
+  "h1": "Kit presse",
+  "chapeau": "Tout ce qu'il faut pour parler de COURTIARK correctement : description, chiffres vérifiables, visuels, et un contact qui répond.",
+  "fil": [
+   [
+    "Presse",
+    null
+   ]
+  ],
+  "corps": "<h2>Description courte (50 mots)</h2><div class=\"section\"><p>COURTIARK est un CRM et cockpit IA pour les courtiers en assurance : portefeuille, contrats, documents, relances et renouvellements dans un seul outil, en France et en Suisse.</p></div><h2>Description longue (150 mots)</h2><div class=\"section\"><p>COURTIARK est un logiciel de gestion conçu pour les cabinets de courtage en assurance. Il centralise le portefeuille (clients, prospects, contrats, échéances), organise les documents de chaque dossier, suit les relances et les renouvellements, et documente la trace du conseil donné. Un assistant, ARK, lit les pièces déposées et propose les informations qu'il y trouve avec leur origine : rien n'est écrit sans validation du cabinet. COURTIARK est conçu pour les usages des cabinets en France et en Suisse. Démonstration publique accessible sans inscription, essai de 7 jours sans carte bancaire.</p></div><h2>Chiffres clés, avec leur source</h2><div class=\"section\"><table><thead><tr><th>Chiffre</th><th>Valeur</th><th>Source et date</th></tr></thead><tbody><tr><td>Entreprises de courtage d'assurance en France</td><td>43 240</td><td>SIRENE (DINUM), code 66.22Z, extraction du 18/09/2026</td></tr><tr><td>Part de l'Île-de-France</td><td>23,2 % du total</td><td>calcul COURTIARK sur la même extraction</td></tr><tr><td>Entreprises déclarant plus d'un établissement</td><td>6 157</td><td>même extraction SIRENE</td></tr><tr><td>Essai gratuit</td><td>7 jours, sans carte bancaire</td><td>conditions affichées sur la page des tarifs</td></tr><tr><td>Marches servis</td><td>France et Suisse</td><td>pages marché du site</td></tr></tbody></table></div><h2>Visuels disponibles</h2><div class=\"section\"><table><thead><tr><th>Fichier</th><th>Usage</th><th>Format</th></tr></thead><tbody><tr><td>/og-courtiark.png</td><td>image de partage et illustration d'article</td><td>PNG, 1200x630</td></tr><tr><td>/icon-512.png</td><td>logo pour les annuaires et les fiches produit</td><td>PNG 512x512</td></tr><tr><td>/favicon.svg</td><td>logo vectoriel</td><td>SVG</td></tr><tr><td>/img/produit/courtiark-*.webp</td><td>captures produit (7 écrans, environnement de démonstration)</td><td>WebP 1440x900</td></tr></tbody></table><p>Les captures proviennent de l'environnement de démonstration public : cabinet fictif, données synthétiques, aucun client réel visible. Si vous avez besoin d'un format ou d'un recadrage précis, demandez-le.</p></div><h2>Études publiées</h2><div class=\"section\"><ul><li>Cartographie du courtage en assurance en France — édition 2026 : <a href=\"/etudes/courtage-assurance-france-2026\">l'étude</a>, sa <a href=\"/etudes/methodologie-cartographie-courtage-france\">méthodologie</a> et le <a href=\"/donnees/courtage-france-2026.csv\">jeu de données agrégé</a>.</li><li>Réutilisation autorisée avec la mention : « Source : COURTIARK, calculs à partir des données SIRENE du 18/09/2026 ».</li></ul></div><h2>Comment nous nous décrivons (et ce que nous ne dirons pas)</h2><div class=\"section\"><ul><li>Nous ne nous présentons pas comme leader, numéro un ou meilleur logiciel : nous n'avons aucune mesure indépendante qui le démontre.</li><li>Nous ne publions aucun témoignage client : aucun client n'a encore autorisé de citation.</li><li>Nous n'affichons aucune note d'avis : il n'existe pas encore d'avis vérifiable.</li></ul><p>Si un jour ces éléments existent, ils figureront ici avec leur source.</p></div><h2>Contact presse</h2><div class=\"section\"><p>Écrire à <b>contact@courtiark.fr</b> en indiquant le média, votre échéance et l'angle souhaité. Les demandes de chiffres par région ou par département sont traitées à partir du jeu de données public.</p></div>",
+  "faq": [
+   [
+    "Puis-je citer vos chiffres ?",
+    "Oui, avec la mention de source et la date d'extraction (18/09/2026)."
+   ],
+   [
+    "Avez-vous des visuels de marque ?",
+    "Oui : image de partage PNG, icône 512x512 et logo SVG, listés ci-dessus."
+   ]
+  ],
+  "lire": [
+   [
+    "Études",
+    "/etudes"
+   ],
+   [
+    "À propos",
+    "/a-propos"
+   ],
+   [
+    "Contact",
+    "/contact"
+   ]
+  ],
+  "slug": "/presse",
+  "_octets": 15288,
+  "_section": "trust"
+ },
+ {
+  "path": "/politique-editoriale",
+  "type": "trust",
+  "country": "FR",
+  "indexable": true,
+  "title": "Politique éditoriale de COURTIARK — sources, dates, corrections | COURTIARK",
+  "description": "Comment nous écrivons, ce que nous citons, comment nous corrigeons et comment l'IA est utilisée dans la production de nos contenus.",
+  "h1": "Politique éditoriale",
+  "chapeau": "Nos règles d'écriture, nos sources, nos corrections — et la place exacte de l'outil dans la production de nos contenus.",
+  "fil": [
+   [
+    "Politique éditoriale",
+    null
+   ]
+  ],
+  "corps": "<h2>Ce que nous publions</h2><div class=\"section\"><ul><li>Des contenus qui répondent à une question réelle d'un cabinet de courtage : organisation, suivi des dossiers, conformité, outillage.</li><li>Des données que nous pouvons recalculer : chaque chiffre publié est produit par un script reproductible, et non recopié.</li><li>Des limites explicites : ce qu'un chiffre ne dit pas est écrit dans la page qui le publie.</li></ul></div><h2>Nos sources</h2><div class=\"section\"><ul><li>Réglementation : sources officielles uniquement (ACPR, ORIAS, CNIL, Légifrance, EUR-Lex ; FINMA, Fedlex, PFPDT côté suisse), citées et vérifiées périodiquement.</li><li>Données de marché : base SIRENE (annuaire des entreprises, DINUM), avec code d'activité, date d'extraction et méthode.</li><li>Produit : nos pages fonctionnalités ne décrivent que des fonctions présentes dans le logiciel, vérifiées dans le code avant publication.</li></ul><p><a href=\"/sources\">Voir la liste complète de nos sources</a></p></div><h2>Dates et mises à jour</h2><div class=\"section\"><ul><li>Chaque page réglementaire porte la date de dernière vérification de ses sources.</li><li>Une étude publiée n'est pas réécrite : une nouvelle édition est publiée séparément, l'ancienne reste archivée en l'état.</li><li>Une date n'est mise à jour que si le contenu a réellement été revu.</li></ul></div><h2>Corrections</h2><div class=\"section\"><ul><li>Une erreur signalée est vérifiée puis corrigée, et la correction est décrite dans le journal des versions.</li><li>Si une correction change un chiffre publié, nous l'indiquons explicitement : nous ne modifions pas silencieusement une donnée historique.</li></ul><p><a href=\"/changelog\">Journal des corrections</a></p></div><h2>Place de l'outil dans nos contenus</h2><div class=\"section\"><ul><li>Les contenus sont écrits par l'équipe COURTIARK ; aucun texte n'est publié sans relecture humaine.</li><li>Un assistant peut être utilisé pour la préparation ; aucune publication automatique n'existe sur ce site.</li><li>Aucun contenu n'est commandé à un tiers, aucun lien n'est acheté, aucun avis n'est sollicité contre contrepartie.</li></ul></div><h2>Ce que nous ne faisons pas</h2><div class=\"section\"><ul><li>Nous ne publions pas de chiffres de gain (« X heures gagnées ») sans mesure réelle chez un client.</li><li>Nous ne publions aucun témoignage, logo client ou note d'avis sans autorisation.</li><li>Nous ne reproduisons pas de texte réglementaire à la place d'une source officielle : nous renvoyons à la source.</li></ul></div>",
+  "faq": [
+   [
+    "Vos contenus sont-ils écrits par une IA ?",
+    "L'équipe prépare et relit les contenus ; un assistant peut aider à la préparation, mais rien n'est publié sans relecture humaine, et aucun contenu n'est généré puis mis en ligne automatiquement."
+   ],
+   [
+    "Comment signaler une erreur ?",
+    "Par e-mail à contact@courtiark.fr, en indiquant la page et l'élément concerné. Une correction est décrite dans le journal des versions quand elle change un chiffre ou une affirmation."
+   ]
+  ],
+  "lire": [
+   [
+    "Nos sources",
+    "/sources"
+   ],
+   [
+    "Journal des versions",
+    "/changelog"
+   ],
+   [
+    "À propos",
+    "/a-propos"
+   ]
+  ],
+  "slug": "/politique-editoriale",
+  "_octets": 14810,
+  "_section": "trust"
+ },
+ {
+  "path": "/sources",
+  "type": "trust",
+  "country": "FR",
+  "indexable": true,
+  "title": "Nos sources — réglementation assurance France et Suisse | COURTIARK",
+  "description": "Les sources officielles que nous citons pour la France et la Suisse, avec leur état de vérification.",
+  "h1": "Nos sources",
+  "chapeau": "Nous ne reformulons pas les textes réglementaires : nous renvoyons aux sources officielles, et nous notons quand nous les avons vérifiées pour la dernière fois.",
+  "fil": [
+   [
+    "Sources",
+    null
+   ]
+  ],
+  "corps": "<h2>France</h2><div class=\"section\"><table><thead><tr><th>Sujet</th><th>Autorité</th><th>Source</th><th>Vérification</th></tr></thead><tbody><tr><td>Devoir de conseil et distribution</td><td>ACPR</td><td><a href=\"https://acpr.banque-france.fr/\" rel=\"noopener\">acpr.banque-france.fr</a></td><td>accessible (26/09/2026)</td></tr><tr><td>Registre des intermédiaires</td><td>ORIAS</td><td><a href=\"https://www.orias.fr/\" rel=\"noopener\">orias.fr</a></td><td>accessible (26/09/2026)</td></tr><tr><td>Textes législatifs et réglementaires</td><td>Légifrance</td><td><a href=\"https://www.legifrance.gouv.fr/\" rel=\"noopener\">legifrance.gouv.fr</a></td><td>refus aux robots (403) : vérifié en navigateur</td></tr><tr><td>Textes européens</td><td>EUR-Lex</td><td><a href=\"https://eur-lex.europa.eu/\" rel=\"noopener\">eur-lex.europa.eu</a></td><td>réponse 202 (contrôle anti-robot)</td></tr><tr><td>Données personnelles</td><td>CNIL</td><td><a href=\"https://www.cnil.fr/\" rel=\"noopener\">cnil.fr</a></td><td>accessible (26/09/2026)</td></tr></tbody></table></div><h2>Suisse</h2><div class=\"section\"><table><thead><tr><th>Sujet</th><th>Autorité</th><th>Source</th><th>Vérification</th></tr></thead><tbody><tr><td>Surveillance des marchés financiers</td><td>FINMA</td><td><a href=\"https://www.finma.ch/\" rel=\"noopener\">finma.ch</a></td><td>refus au serveur (400) depuis notre infrastructure : site accessible en navigateur</td></tr><tr><td>Loi sur le contrat d'assurance</td><td>Fedlex</td><td><a href=\"https://www.fedlex.admin.ch/\" rel=\"noopener\">fedlex.admin.ch</a></td><td>accessible (26/09/2026)</td></tr><tr><td>Protection des données</td><td>PFPDT</td><td><a href=\"https://www.edoeb.admin.ch/\" rel=\"noopener\">edoeb.admin.ch</a></td><td>accessible (26/09/2026)</td></tr></tbody></table><p>Deux sources (Légifrance, FINMA) refusent les requêtes automatisées venant de notre infrastructure : nous l'écrivons plutôt que d'afficher une vérification que nous n'avons pas pu faire.</p></div><h2>Données de marché</h2><div class=\"section\"><table><thead><tr><th>Jeu de données</th><th>Source</th><th>Date</th><th>Usage</th></tr></thead><tbody><tr><td>Établissements et entreprises de courtage (code 66.22Z)</td><td>SIRENE — annuaire des entreprises (DINUM)</td><td>18/09/2026</td><td><a href=\"/etudes/courtage-assurance-france-2026\">étude 2026</a> et <a href=\"/france/densite-courtage\">densité du courtage</a></td></tr></tbody></table><p>Réutilisation de nos agrégats : possible avec la mention « Source : COURTIARK, calculs à partir des données SIRENE du 18/09/2026 ». Les données brutes restent soumises aux conditions de la source.</p></div><h2>Ce que nous ne faisons pas</h2><div class=\"section\"><p>Nous ne publions aucune affirmation réglementaire sans source officielle, et nous ne présentons aucune certification : COURTIARK est un logiciel de gestion, il n'est certifié par aucun régulateur et ne remplace pas l'analyse adaptée à votre cabinet.</p></div>",
+  "faq": [
+   [
+    "Pourquoi citer les sources au lieu de recopier les textes ?",
+    "Parce qu'un texte réglementaire se lit à sa source, dans sa version en vigueur. Recopier introduit un risque d'erreur et de désuétude."
+   ],
+   [
+    "Vérifiez-vous ces liens ?",
+    "Oui, par requête HTTP, et nous notons le résultat réel — y compris quand un site refuse les requêtes automatisées."
+   ]
+  ],
+  "lire": [
+   [
+    "Politique éditoriale",
+    "/politique-editoriale"
+   ],
+   [
+    "Conformité",
+    "/conformite/controle-acpr-courtier"
+   ],
+   [
+    "Sécurité",
+    "/securite"
+   ]
+  ],
+  "slug": "/sources",
+  "_octets": 14815,
+  "_section": "trust"
  }
 ]

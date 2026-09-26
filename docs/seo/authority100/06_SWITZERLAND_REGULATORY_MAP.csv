@@ -1,0 +1,5 @@
+topic,official_source,source_url,source_http,existing_url,coverage,missing,action,review_date
+Loi sur le contrat d assurance (LSA),Fedlex,https://www.fedlex.admin.ch/,200,/conformite/ipid-document-information,oui,non,accessible (verifie par requete),
+Surveillance des intermediaires,FINMA,https://www.finma.ch/fr/,400,/suisse,oui,non,refus au serveur (code 400) : acces depuis un navigateur a confirmer,
+Registre des intermediaires,FINMA,https://www.finma.ch/fr/authorisation/assurance/,400,/suisse/crm-courtier-assurance,oui,non,refus au serveur (code 400) : acces depuis un navigateur a confirmer,
+Protection des donnees (LPD),PFPDT,https://www.edoeb.admin.ch/,200,/guides/donnees-clients-assurance-france-suisse,oui,non,accessible (verifie par requete),

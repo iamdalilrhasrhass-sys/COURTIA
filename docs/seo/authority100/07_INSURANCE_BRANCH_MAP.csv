@@ -1,0 +1,8 @@
+branche,existing_url,page_existe,cas_usage_logiciel,fonction_verifiee,action
+Sante / mutuelle,/assurances/mutuelle-sante,oui,oui,contrats=True documents=True renouvellements=True,renforcer la page en cas d usage cabinet
+Prevoyance,/assurances/prevoyance,oui,oui,contrats=True documents=True renouvellements=True,renforcer la page en cas d usage cabinet
+Auto,/assurances/assurance-auto,oui,oui,contrats=True documents=True renouvellements=True,renforcer la page en cas d usage cabinet
+IARD / multirisque professionnelle,/assurances/multirisque-professionnelle,oui,oui,contrats=True documents=True renouvellements=True,renforcer la page en cas d usage cabinet
+RC professionnelle,/assurances/rc-pro,oui,oui,contrats=True documents=True renouvellements=True,renforcer la page en cas d usage cabinet
+Habitation,,non,non,contrats=True documents=True renouvellements=True,ne pas creer sans besoin produit verifie
+Decennale / construction,,non,non,contrats=True documents=True renouvellements=True,ne pas creer sans besoin produit verifie

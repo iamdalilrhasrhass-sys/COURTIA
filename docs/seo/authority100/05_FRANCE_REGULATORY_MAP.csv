@@ -1,0 +1,8 @@
+topic,official_source,source_url,source_http,existing_url,coverage,missing,action,review_date
+DDA — directive distribution assurance,ACPR,https://acpr.banque-france.fr/,200,/guides/devoir-de-conseil-suivi-dossier,oui,non,accessible (verifie par requete),
+Intermediation — registre unique,ORIAS,https://www.orias.fr/,200,/conformite/controle-acpr-courtier,oui,non,accessible (verifie par requete),
+Controle et sanctions,ACPR,https://acpr.banque-france.fr/,200,/conformite/controle-acpr-courtier,oui,non,accessible (verifie par requete),
+LCB-FT — vigilance client,ACPR,https://acpr.banque-france.fr/,200,/conformite/lcb-ft-courtier,oui,non,accessible (verifie par requete),
+Protection des donnees,CNIL,https://www.cnil.fr/,200,/guides/donnees-clients-assurance-france-suisse,oui,non,accessible (verifie par requete),
+Information produit (IPID/DDA),EUR-Lex,https://eur-lex.europa.eu/,202,/conformite/ipid-document-information,oui,non,refus au serveur (code 202) : acces depuis un navigateur a confirmer,
+Textes assurance (Legifrance),Legifrance,https://www.legifrance.gouv.fr/,403,/guides/devoir-de-conseil-suivi-dossier,oui,non,refus au serveur (code 403) : acces depuis un navigateur a confirmer,

@@ -1376,6 +1376,14 @@
       "destination": "/suisse/suisse-romande/index.html"
     },
     {
+      "source": "/politique-editoriale",
+      "destination": "/politique-editoriale/index.html"
+    },
+    {
+      "source": "/politique-editoriale/",
+      "destination": "/politique-editoriale/index.html"
+    },
+    {
       "source": "/france/montpellier",
       "destination": "/france/montpellier/index.html"
     },
@@ -1664,6 +1672,14 @@
       "destination": "/contact/index.html"
     },
     {
+      "source": "/sources",
+      "destination": "/sources/index.html"
+    },
+    {
+      "source": "/sources/",
+      "destination": "/sources/index.html"
+    },
+    {
       "source": "/tarifs",
       "destination": "/tarifs/index.html"
     },
@@ -1678,6 +1694,14 @@
     {
       "source": "/etudes/",
       "destination": "/etudes/index.html"
+    },
+    {
+      "source": "/presse",
+      "destination": "/presse/index.html"
+    },
+    {
+      "source": "/presse/",
+      "destination": "/presse/index.html"
     },
     {
       "source": "/demo",

@@ -194,10 +194,35 @@ def jsonld_logiciel(description: str) -> dict:
             "featureList": ["Fiche client et portefeuille", "Contrats et échéances", "Devis et relances",
                             "Dépôt de documents par lien", "Commissions", "Conformité France et Suisse",
                             "Assistant IA ARK", "Prospection et suivi commercial"],
+            "screenshot": [SITE + "/img/produit/courtiark-cockpit.webp",
+                           SITE + "/img/produit/courtiark-portefeuille.webp"],
             "offers": [{"@type": "Offer", "name": n, "price": str(p), "priceCurrency": "EUR",
                         "description": f"{n} — par mois, hors taxes (France)"} for n, p in PRIX_FR]
                       + [{"@type": "Offer", "name": n, "price": str(p), "priceCurrency": "CHF",
                           "description": f"{n} — par mois, hors taxes (Suisse)"} for n, p in PRIX_CH]}
+
+def jsonld_dataset(page: dict) -> dict:
+    """Description du jeu de donnees de l'etude (exigence §92). Champs limites a ce qui est verifiable."""
+    import io as _io
+    import json as _json
+    chemin = '/srv/courtia/frontend/public/donnees/courtage-france-2026.json'
+    try:
+        d = _json.loads(_io.open(chemin, encoding='utf-8').read())
+    except Exception:
+        return {}
+    return {"@context": "https://schema.org", "@type": "Dataset",
+            "name": "Cartographie du courtage en assurance en France — édition 2026",
+            "description": ("Répartition des entreprises de courtage d'assurance (code d'activité 66.22Z) "
+                            "par région, département et ville, calculée à partir de la base SIRENE."),
+            "url": SITE + page['path'],
+            "distribution": [{"@type": "DataDownload", "contentUrl": SITE + "/donnees/courtage-france-2026.csv",
+                              "encodingFormat": "text/csv"},
+                             {"@type": "DataDownload", "contentUrl": SITE + "/donnees/courtage-france-2026.json",
+                              "encodingFormat": "application/json"}],
+            "creator": {"@type": "Organization", "name": "COURTIARK", "url": SITE},
+            "datePublished": "2026-09-26", "inLanguage": "fr-FR",
+            "temporalCoverage": "2026", "spatialCoverage": "France"}
+
 
 def jsonld_faq(faq: list) -> dict:
     return {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -359,8 +384,13 @@ def rendre(page: dict) -> str:
         jl.append(f'<script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@type":"WebSite","name":BRAND,"url":SITE+"/","inLanguage":["fr-FR","fr-CH"]}, ensure_ascii=False)}</script>')
     if page.get('type') in ('home', 'money', 'feature', 'solution', 'geo', 'vertical', 'hub', 'tool', 'comparatif'):
         jl.append(f'<script type="application/ld+json">{json.dumps(jsonld_logiciel(page["description"]), ensure_ascii=False)}</script>')
-    if page.get('type') == 'guide':
+    if page.get('type') in ('guide', 'etude'):
         jl.append(f'<script type="application/ld+json">{json.dumps(jsonld_article(page), ensure_ascii=False)}</script>')
+    # Jeu de donnees : uniquement sur l'etude qui publie reellement un dataset telechargeable.
+    if page.get('path') == '/etudes/courtage-assurance-france-2026':
+        _ds = jsonld_dataset(page)
+        if _ds:
+            jl.append(f'<script type="application/ld+json">{json.dumps(_ds, ensure_ascii=False)}</script>')
     if page.get('type') in ('geo', 'solution'):
         jl.append('<script type="application/ld+json">' + json.dumps(
             jsonld_service(page['h1'], page['description'], page.get('zone')), ensure_ascii=False) + '</script>')

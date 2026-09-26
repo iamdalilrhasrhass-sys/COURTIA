@@ -26,6 +26,7 @@ from contenu_outils import pages_outils  # noqa: E402
 from contenu_glossaire import pages_glossaire  # noqa: E402
 from contenu_restaure import pages_restaurees  # noqa: E402
 from contenu_etudes import pages_etudes  # noqa: E402
+from contenu_presse import pages_entite  # noqa: E402
 from scripts_js import (MESURE_JS, FORMULAIRE_JS, OUTIL_JS, TRANSFORMATION_JS,  # noqa: E402
                         CHECKLIST_DOSSIER_JS, CHECKLIST_RENOUV_JS)
 
@@ -142,6 +143,8 @@ TRUST = ('/securite', '/a-propos', '/contact', '/mentions-legales', '/confidenti
 def section_de(path: str) -> str:
     if path == '' or path == '/crm-courtier-assurance':
         return 'core'
+    if path in TRUST or path in ('/presse', '/politique-editoriale', '/sources'):
+        return 'trust'
     if path in TRUST:
         return 'trust'
     if path == '/glossaire':
@@ -159,7 +162,7 @@ def section_de(path: str) -> str:
 
 def main():
     pages = (pages_core() + pages_geo() + pages_villes() + pages_money() + pages_intentions() + pages_outils()
-             + pages_glossaire() + pages_ressources() + pages_restaurees() + pages_etudes())
+             + pages_glossaire() + pages_ressources() + pages_restaurees() + pages_etudes() + pages_entite())
     chemins = [p['path'] for p in pages]
     doublons = [c for c, n in Counter(chemins).items() if n > 1]
     if doublons:

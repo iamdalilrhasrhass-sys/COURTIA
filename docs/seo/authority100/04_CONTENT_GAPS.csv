@@ -1,0 +1,20 @@
+topic,cluster,existing_url,quality_score,search_value,business_value,authority_value,missing_sections,source_required,action,priority
+Commissions,commissions,,,3,4,3,page absente,non,creer seulement sur signal (GSC/business),P2
+CRM courtier assurance,CRM,/crm-courtier-assurance,4,4,5,3,renforcer la preuve et le maillage,non,renforcer,P1
+Logiciel courtier assurance,CRM,/logiciel-courtier-assurance,4,4,5,3,renforcer la preuve et le maillage,non,renforcer,P1
+Logiciel de courtage,CRM,/logiciel-courtage-assurance,4,4,5,3,renforcer la preuve et le maillage,non,renforcer,P1
+Automatisation cabinet,productivite,/automatisation-courtier-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Gestion du portefeuille,portefeuille,/fonctionnalites/gestion-portefeuille-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Fiche client 360,client,/fonctionnalites/gestion-clients,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Prospection,prospection,/fonctionnalites/prospection-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Devis et relances,devis,/fonctionnalites/relance-devis-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Comparaison de devis,comparaison devis,/fonctionnalites/comparateur-devis-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Documents clients,documents,/fonctionnalites/gestion-documents-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Relances clients,relances,/fonctionnalites/automatisation-relances,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Renouvellements,renouvellements,/fonctionnalites/renouvellements-assurance,4,4,5,3,renforcer la preuve et le maillage,non,renforcer,P1
+Assistant IA metier,ARK/IA,/fonctionnalites/assistant-ark,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Marche Suisse romande,Suisse,/suisse,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+CRM Suisse,Suisse,/suisse/crm-courtier-assurance,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Devoir de conseil,conformite,/guides/devoir-de-conseil-suivi-dossier,4,4,4,5,renforcer la preuve et le maillage,oui,renforcer,P1
+RC professionnelle,assurances,/assurances/rc-pro,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
+Multirisque professionnelle,assurances,/assurances/multirisque-professionnelle,4,4,4,3,renforcer la preuve et le maillage,non,renforcer,P1
