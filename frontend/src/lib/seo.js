@@ -113,8 +113,10 @@ export function applySeo({
   ensureMeta('meta[property="og:locale"]', { property: 'og:locale' }).setAttribute('content', locale)
   ensureMeta('meta[name="twitter:card"]', { name: 'twitter:card' }).setAttribute('content', 'summary_large_image')
 
-  // Directives robots : par défaut on réaffirme la consigne indexable du shell.
-  ensureMeta('meta[name="robots"]', { name: 'robots' }).setAttribute('content', robots || 'index, follow')
+  // Directives robots : le shell ne sert plus que les routes privées de l'application et les
+  // URLs inconnues. Le défaut est donc « noindex, follow » : une route publique qui doit être
+  // indexée le déclare explicitement (les pages publiques sont servies en HTML statique).
+  ensureMeta('meta[name="robots"]', { name: 'robots' }).setAttribute('content', robots || 'noindex, follow')
 
   ensureLink('link[rel="canonical"]', { rel: 'canonical' }).setAttribute('href', canonical)
 

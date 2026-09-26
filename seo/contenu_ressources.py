@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Contenu : guides, comparatifs, outils, pages de confiance, conversion (démo, contact)."""
+import os
+import subprocess
+
 from contenu_core import section, ul, p, tableau, etapes, bascule, cta_direct
 
 SRC_FR = ('<p class="note">Sources : <a href="https://www.orias.fr/" rel="nofollow noopener" target="_blank">orias.fr</a> · '
@@ -11,7 +14,7 @@ SRC_CH = ('<p class="note">Sources : <a href="https://www.finma.ch/fr/" rel="nof
           '<a href="https://www.fedlex.admin.ch/fr/cc/internal-law" rel="nofollow noopener" target="_blank">fedlex.admin.ch</a>. '
           'Contenu documentaire, sans valeur de conseil juridique.</p>')
 
-FORM_DEMO = """
+FORM_DEMO = r"""
 <form id="form-demo" novalidate>
   <div class="champ"><label for="f-prenom">Prénom *</label><input id="f-prenom" name="first_name" autocomplete="given-name" required></div>
   <div class="champ"><label for="f-nom">Nom *</label><input id="f-nom" name="last_name" autocomplete="family-name" required></div>
@@ -73,7 +76,7 @@ FORM_DEMO = """
 </script>
 """
 
-OUTIL_JS = """
+OUTIL_JS = r"""
 <div class="section">
   <div class="champ"><label for="o-collab">Nombre de collaborateurs qui saisissent</label><input id="o-collab" type="number" min="1" max="50" value="3"></div>
   <div class="champ"><label for="o-dossiers">Nouveaux dossiers par mois</label><input id="o-dossiers" type="number" min="1" max="500" value="40"></div>
@@ -743,5 +746,36 @@ def pages_ressources():
         + section("Demander une démonstration", FORM_DEMO),
         faq=[],
         lire=[("Démonstration", "/demo/"), ("Sécurité", "/securite"), ("À propos", "/a-propos")]))
+
+    # --- Journal des modifications : contenu construit depuis l'historique Git reel
+    import subprocess as _sp
+    try:
+        _log = _sp.run(['git', 'log', '-24', '--pretty=format:%h|%ad|%s', '--date=format:%d/%m/%Y'],
+                       cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       capture_output=True, text=True, timeout=20).stdout.strip().split('\n')
+    except Exception:
+        _log = []
+    _lignes = []
+    for _l in _log:
+        _p = _l.split('|')
+        if len(_p) == 3:
+            _lignes.append([_p[1], _p[2], _p[0]])
+    P.append(dict(
+        path='/changelog', type='trust', country='FR', indexable=bool(_lignes),
+        title="Journal des modifications de COURTIARK | COURTIARK",
+        description="Les changements publiés sur COURTIARK : corrections, nouvelles fonctions et évolutions du site public, avec leur date et leur identifiant de version.",
+        h1="Journal des modifications",
+        chapeau="Ce que nous publions, quand, et sous quel identifiant de version. Les entrées proviennent de "
+                "l'historique réel du produit.",
+        fil=[("Journal des modifications", None)],
+        corps=section("Changements publiés",
+                      tableau(["Date", "Changement", "Version"], _lignes) if _lignes
+                      else p("L'historique n'est pas disponible pour cette génération."))
+        + section("Comment lire ce journal",
+                  ul(["Chaque ligne correspond à une modification réellement publiée sur la production.",
+                      "La colonne « version » est l'identifiant du commit correspondant.",
+                      "Les corrections de contenu de ce site y figurent aussi."])),
+        faq=[],
+        lire=[("À propos", "/a-propos"), ("Sécurité", "/securite")]))
 
     return P

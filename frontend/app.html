@@ -10,21 +10,22 @@
          les remplace côté client via applySeo (src/lib/seo.js). Sans ce
          mécanisme, /tarifs, /contact, /login… héritaient tous du même
          title/canonical — duplication constatée en production. -->
-    <title>COURTIA — Le cockpit IA des courtiers d’assurance</title>
-    <meta name="description" content="COURTIA centralise clients, contrats, relances, commissions et conformité des courtiers d’assurance, en France (DDA · ORIAS · RGPD) comme en Suisse (LSA · FINMA · nLPD).">
-    <meta name="author" content="COURTIA">
-    <meta name="robots" content="index, follow">
+    <title>COURTIARK — Application | CRM et cockpit IA pour courtiers en assurance</title>
+    <meta name="description" content="Application COURTIARK : portefeuille, contrats, documents et relances des cabinets de courtage en assurance.">
+    <meta name="author" content="COURTIARK">
+    <meta name="robots" content="noindex, follow">
+    <!-- Ce shell ne sert plus que les routes privees de l'application et les URLs inconnues :
+         les pages publiques sont des fichiers HTML statiques servis avant toute reecriture. -->
     <meta name="theme-color" content="#050510" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#050510">
     <meta name="background-color" content="#050510">
-    <link rel="canonical" href="https://courtiark.fr/">
 
     <!-- PWA iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="COURTIA">
+    <meta name="apple-mobile-web-app-title" content="COURTIARK">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="COURTIA">
+    <meta name="application-name" content="COURTIARK">
     <meta name="format-detection" content="telephone=no">
 
     <!-- Favicon -->
@@ -33,29 +34,29 @@
     <link rel="manifest" href="/manifest.json">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="COURTIA — Le cockpit IA des courtiers d’assurance">
+    <meta property="og:title" content="COURTIARK — Application | CRM et cockpit IA pour courtiers en assurance">
     <meta property="og:description" content="Clients, contrats, échéances, commissions et conformité des courtiers d’assurance, en France (DDA · ORIAS · RGPD) et en Suisse (LSA · FINMA · nLPD).">
     <meta property="og:image" content="https://courtiark.fr/og-courtia.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="COURTIA — Le cockpit IA des courtiers d’assurance">
+    <meta property="og:image:alt" content="COURTIARK — Application | CRM et cockpit IA pour courtiers en assurance">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://courtiark.fr/">
     <meta property="og:locale" content="fr_FR">
-    <meta property="og:site_name" content="COURTIA">
+    <meta property="og:site_name" content="COURTIARK">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="COURTIA — Le cockpit IA des courtiers d’assurance">
+    <meta name="twitter:title" content="COURTIARK — Application | CRM et cockpit IA pour courtiers en assurance">
     <meta name="twitter:description" content="Clients, contrats, échéances, commissions et conformité des courtiers d’assurance, en France et en Suisse.">
     <meta name="twitter:image" content="https://courtiark.fr/og-courtia.png">
-    <meta name="twitter:image:alt" content="COURTIA — Le cockpit IA des courtiers d’assurance">
+    <meta name="twitter:image:alt" content="COURTIARK — Application | CRM et cockpit IA pour courtiers en assurance">
 
     <!-- Données structurées d'identité (valables sur toutes les routes du shell) :
-         éditeur et site. Aucune adresse, aucun avis, aucune note : COURTIA
+         éditeur et site. Aucune adresse, aucun avis, aucune note : COURTIARK
          n'expose pas d'établissement public et nous n'inventons pas d'avis. -->
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"COURTIA","url":"https://courtiark.fr","logo":"https://courtiark.fr/og-courtia.png","email":"contact@courtiark.fr","description":"COURTIA est un logiciel de gestion et cockpit d'assistance IA destiné aux courtiers d'assurance.","areaServed":[{"@type":"Country","name":"France"},{"@type":"Country","name":"Suisse"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"COURTIA","url":"https://courtiark.fr","inLanguage":"fr"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"COURTIARK","url":"https://courtiark.fr","logo":"https://courtiark.fr/og-courtia.png","email":"contact@courtiark.fr","description":"COURTIARK est un logiciel de gestion et cockpit d'assistance IA destiné aux courtiers d'assurance.","areaServed":[{"@type":"Country","name":"France"},{"@type":"Country","name":"Suisse"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"COURTIARK","url":"https://courtiark.fr","inLanguage":"fr"}</script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

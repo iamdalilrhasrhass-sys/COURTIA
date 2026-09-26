@@ -2370,5 +2370,36 @@
   "slug": "/contact",
   "_octets": 17044,
   "_section": "trust"
+ },
+ {
+  "path": "/changelog",
+  "type": "trust",
+  "country": "FR",
+  "indexable": true,
+  "title": "Journal des modifications de COURTIARK | COURTIARK",
+  "description": "Les changements publiés sur COURTIARK : corrections, nouvelles fonctions et évolutions du site public, avec leur date et leur identifiant de version.",
+  "h1": "Journal des modifications",
+  "chapeau": "Ce que nous publions, quand, et sous quel identifiant de version. Les entrées proviennent de l'historique réel du produit.",
+  "fil": [
+   [
+    "Journal des modifications",
+    null
+   ]
+  ],
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr><tr><td>22/09/2026</td><td>SEO: artefacts regeneres apres la vague 4 (suivi des pages, maillage, intentions)</td><td>f568b1de</td></tr><tr><td>22/09/2026</td><td>SEO: le sitemap suisse est régénéré depuis les fichiers (défaut réel corrigé)</td><td>07bf2995</td></tr><tr><td>22/09/2026</td><td>SEO vague 4 (suite): deux pages suisses de fonctions + pages sous 460 mots completees</td><td>251b5c3e</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "faq": [],
+  "lire": [
+   [
+    "À propos",
+    "/a-propos"
+   ],
+   [
+    "Sécurité",
+    "/securite"
+   ]
+  ],
+  "slug": "/changelog",
+  "_octets": 16115,
+  "_section": "core"
  }
 ]

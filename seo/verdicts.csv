@@ -50,3 +50,4 @@ slug;fichier;octets;schema;erreurs;alertes
 /confidentialite;frontend/public/confidentialite/index.html;14503;Organization,BreadcrumbList,FAQPage;;
 /demo/;frontend/public/demo/index.html;17949;Organization,BreadcrumbList,FAQPage;;
 /contact;frontend/public/contact/index.html;17044;Organization,BreadcrumbList;;
+/changelog;frontend/public/changelog/index.html;16115;Organization,BreadcrumbList;;
