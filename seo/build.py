@@ -313,6 +313,17 @@ def main():
     for joker in [{'source': '/fr/glossaire/:chemin*', 'destination': '/glossaire', 'permanent': True}]:
         if joker['source'] not in existantes:
             cfg['redirects'].append(joker)
+
+    # Menage final : une source ne doit apparaitre qu'une fois, et aucune redirection ne doit
+    # pointer vers elle-meme (une telle regle ne fait que retarder la reponse).
+    vues, propres = set(), []
+    for r in cfg['redirects']:
+        source = r.get('source', '')
+        if not source or source in vues or r.get('destination') == source:
+            continue
+        vues.add(source)
+        propres.append(r)
+    cfg['redirects'] = propres
     io.open(VERCEL, 'w', encoding='utf-8').write(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n')
 
     # ---------------------------------------------------------------- rapport
