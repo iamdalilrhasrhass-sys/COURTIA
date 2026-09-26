@@ -377,6 +377,41 @@
       "source": "/sitemap-ch.xml",
       "destination": "/sitemap.xml",
       "permanent": true
+    },
+    {
+      "source": "/fr/relance-client-assurance",
+      "destination": "/guides/comment-ne-plus-oublier-relances-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-gestion-cabinet-courtage",
+      "destination": "/solutions/cabinet-courtage-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/ia-courtier-assurance",
+      "destination": "/fonctionnalites/assistant-ark",
+      "permanent": true
+    },
+    {
+      "source": "/fr/comparateur-assurance-courtier",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-portefeuille-assurance",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/legal/confidentialite",
+      "destination": "/confidentialite",
+      "permanent": true
+    },
+    {
+      "source": "/legal/mentions-legales",
+      "destination": "/mentions-legales",
+      "permanent": true
     }
   ],
   "rewrites": [

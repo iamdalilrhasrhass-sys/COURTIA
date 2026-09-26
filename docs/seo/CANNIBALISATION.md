@@ -2,7 +2,7 @@
 
 Seuil de recouvrement des termes du title + H1 : 0.72
 
-- pages analysees : 186
+- pages analysees : 182
 - paires suspectes : 1
 
 ## Paires a traiter
@@ -43,6 +43,13 @@ Seuil de recouvrement des termes du title + H1 : 0.72
 - /ch -> /suisse
 - /fr/evaluer-crm-courtier-assurance -> /comparatifs/crm-assurance-vs-crm-generaliste
 - /fr/guide/choisir-crm-cabinet-courtage -> /logiciel-courtier-assurance
+- /fr/relance-client-assurance -> /guides/comment-ne-plus-oublier-relances-courtier
+- /fr/logiciel-gestion-cabinet-courtage -> /solutions/cabinet-courtage-assurance
+- /fr/ia-courtier-assurance -> /fonctionnalites/assistant-ark
+- /fr/comparateur-assurance-courtier -> /comparatifs/crm-assurance-vs-crm-generaliste
+- /fr/gestion-portefeuille-assurance -> /fonctionnalites/gestion-portefeuille-assurance
+- /legal/confidentialite -> /confidentialite
+- /legal/mentions-legales -> /mentions-legales
 - /landing -> /
 - /ch/glossaire -> /glossaire
 - /ch/crm-courtier-assurance-suisse -> /suisse/crm-courtier-assurance

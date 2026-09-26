@@ -70,6 +70,17 @@ ALIAS = {
     '/ch': '/suisse',
     '/fr/evaluer-crm-courtier-assurance': '/comparatifs/crm-assurance-vs-crm-generaliste',
     '/fr/guide/choisir-crm-cabinet-courtage': '/logiciel-courtier-assurance',
+    # Corrige le 2026-09-26 d'apres le rapport d'indexation Search Console :
+    #   - « Soft 404 » (2 URL) : pages heritees devenues vides
+    #   - « Exploree, actuellement non indexee » (3 URL) : doublons des pages canoniques
+    #   - « Autre page avec balise canonique correcte » : anciens chemins /legal/*
+    '/fr/relance-client-assurance': '/guides/comment-ne-plus-oublier-relances-courtier',
+    '/fr/logiciel-gestion-cabinet-courtage': '/solutions/cabinet-courtage-assurance',
+    '/fr/ia-courtier-assurance': '/fonctionnalites/assistant-ark',
+    '/fr/comparateur-assurance-courtier': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    '/fr/gestion-portefeuille-assurance': '/fonctionnalites/gestion-portefeuille-assurance',
+    '/legal/confidentialite': '/confidentialite',
+    '/legal/mentions-legales': '/mentions-legales',
     # page d'atterrissage historique : meme intention que l'accueil, marque anterieure
     '/landing': '/',
     # consolidation : anciens clusters et doublons /fr et /ch
