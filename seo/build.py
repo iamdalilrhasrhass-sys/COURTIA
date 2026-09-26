@@ -62,6 +62,9 @@ ALIAS = {
     '/fr/logiciel-courtier-mandataire': '/assurances',
     '/fr/demo-et-essai-gratuit': '/demo',
     '/fr/outil-courtier-assurance': '/outils',
+    # anciens fichiers de sitemap (plan de site /fr et /ch abandonne)
+    '/sitemap-seo.xml': '/sitemap.xml',
+    '/sitemap-ch.xml': '/sitemap.xml',
     # hubs historiques : consolidation vers les hubs de marque COURTIARK
     '/fr': '/france',
     '/ch': '/suisse',
@@ -204,13 +207,26 @@ def main():
     io.open(os.path.join(PUBLIC, 'sitemap.xml'), 'w', encoding='utf-8').write(index)
 
     # ---------------------------------------------------------------- robots.txt
-    robots = io.open(os.path.join(PUBLIC, 'robots.txt'), encoding='utf-8').read()
-    robots = re.sub(r'# robots\.txt — .*', '# robots.txt — courtiark.fr (COURTIARK) — CRM et cockpit IA pour courtiers en assurance', robots, count=1)
-    robots = re.sub(r'(?m)^#\s*Mise à jour\s*:.*$', '# Mise à jour : 2026-09-26 (refonte SEO : marque COURTIARK, site public statique).', robots, count=1)
-    deja = re.findall(r'(?m)^Sitemap: (.*)$', robots)
+    # Fichier reecrit entierement : un robots.txt qui decrit un plan de site obsolete
+    # envoie les moteurs vers des URL mortes ou redirigees.
     nouveaux = [f'{SITE}/sitemap.xml'] + [f'{SITE}/sitemaps/{s}.xml' for s in sorted(par_section)]
-    bloc = '\n'.join(f'Sitemap: {u}' for u in nouveaux)
-    robots = re.sub(r'(?m)^Sitemap: .*$', '', robots).rstrip() + '\n\n' + bloc + '\n'
+    robots = (
+        '# robots.txt - courtiark.fr (COURTIARK) - CRM et cockpit IA pour courtiers en assurance\n'
+        '# Fichier genere par seo/build.py - ne pas modifier a la main.\n'
+        '\n'
+        'User-agent: *\n'
+        'Allow: /\n'
+        '\n'
+        '# Espace public indexable : pages HTML statiques de frontend/public/ (accueil, produit,\n'
+        '# fonctionnalites, solutions, branches, France, Suisse, guides, comparatifs, outils,\n'
+        '# glossaire, tarifs, pages de confiance).\n'
+        '# Application connectee (/dashboard et routes privees) : servie par la coquille SPA en\n'
+        '# noindex, follow - elle ne doit pas apparaitre dans les resultats de recherche.\n'
+        '\n'
+        '# Ancien plan de site (/fr/*, /ch/*) : consolide par redirections permanentes vers les\n'
+        '# pages canoniques. Les URL correspondantes ne sont plus listees ici.\n'
+        '\n'
+        + '\n'.join(f'Sitemap: {u}' for u in nouveaux) + '\n')
     io.open(os.path.join(PUBLIC, 'robots.txt'), 'w', encoding='utf-8').write(robots)
 
     # ---------------------------------------------------------------- llms.txt

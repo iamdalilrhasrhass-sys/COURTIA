@@ -1,92 +1,17 @@
-# robots.txt — courtiark.fr (COURTIARK) — CRM et cockpit IA pour courtiers en assurance
-# Mise à jour 2026-09-22.
+# robots.txt - courtiark.fr (COURTIARK) - CRM et cockpit IA pour courtiers en assurance
+# Fichier genere par seo/build.py - ne pas modifier a la main.
 
 User-agent: *
 Allow: /
 
-# ── Espace public indexable ──────────────────────────────────────────────────
-# Routes marketing de l'application (SPA) : /, /fonctionnalites, /tarifs, /demo,
-# /demo-public, /contact, /securite, /rgpd, /changelog, /roadmap, /status,
-# /legal/*.
-# Pages SEO statiques servies telles quelles : /fr/* et /ch/* (piliers, pages
-# métier, alternatives, guide, 10 villes retenues, univers suisse).
+# Espace public indexable : pages HTML statiques de frontend/public/ (accueil, produit,
+# fonctionnalites, solutions, branches, France, Suisse, guides, comparatifs, outils,
+# glossaire, tarifs, pages de confiance).
+# Application connectee (/dashboard et routes privees) : servie par la coquille SPA en
+# noindex, follow - elle ne doit pas apparaitre dans les resultats de recherche.
 
-# ── Routes privées : jamais indexables ───────────────────────────────────────
-# Elles répondent 200 dans le HTML initial (coquille SPA vide) et n'ont rien à
-# faire dans un index : le noindex côté JavaScript n'agit qu'après exécution du
-# JavaScript, donc un crawler les verrait comme des pages vides indexables.
-Disallow: /dashboard
-Disallow: /login
-Disallow: /connexion
-Disallow: /register
-Disallow: /onboarding
-Disallow: /parametres
-Disallow: /abonnement
-Disallow: /billing
-Disallow: /paiement-succes
-Disallow: /paiement-annule
-Disallow: /reset-password
-Disallow: /forgot-password
-Disallow: /invite/
-Disallow: /upload/
-Disallow: /admin
-Disallow: /equipe
-Disallow: /clients
-Disallow: /contrats
-Disallow: /devis
-Disallow: /documents
-Disallow: /commissions
-Disallow: /taches
-Disallow: /objectifs
-Disallow: /opportunites
-Disallow: /rapports
-Disallow: /analyses
-Disallow: /analytics
-Disallow: /ark-intelligence
-Disallow: /assistant-ark
-Disallow: /morning-brief
-Disallow: /reach
-Disallow: /prospection
-Disallow: /relances
-Disallow: /partenaires
-Disallow: /sante-portefeuille
-Disallow: /rendez-vous
-Disallow: /import
-Disallow: /academy
-Disallow: /acquisition
-Disallow: /capitia
-Disallow: /browser-pilot
-Disallow: /design-system
-Disallow: /prise-en-main
-Disallow: /api/
-
-# ── Sitemaps ─────────────────────────────────────────────────────────────────
-# sitemap.xml      : routes publiques de l'application (servies par le SPA)
-# sitemap-seo.xml  : pages SEO statiques indexables de /fr (piliers, métiers,
-#                    alternatives, guide, 10 villes retenues)
-# sitemap-ch.xml   : univers suisse (/ch)
-# Les ~1 075 pages locales `logiciel-courtier-<métier>-<ville>` sont désormais en
-# `noindex, follow` et ne figurent plus dans aucun sitemap : elles partageaient un
-# bloc de contenu commun et n'avaient pas de valeur propre suffisante.
-
-
-
-
-# ── Robots IA (citations et réponses génératives) ────────────────────────────
-User-agent: GPTBot
-Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
+# Ancien plan de site (/fr/*, /ch/*) : consolide par redirections permanentes vers les
+# pages canoniques. Les URL correspondantes ne sont plus listees ici.
 
 Sitemap: https://courtiark.fr/sitemap.xml
 Sitemap: https://courtiark.fr/sitemaps/assurances.xml

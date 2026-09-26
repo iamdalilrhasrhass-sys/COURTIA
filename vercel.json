@@ -367,6 +367,16 @@
       "source": "/ch",
       "destination": "/suisse",
       "permanent": true
+    },
+    {
+      "source": "/sitemap-seo.xml",
+      "destination": "/sitemap.xml",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap-ch.xml",
+      "destination": "/sitemap.xml",
+      "permanent": true
     }
   ],
   "rewrites": [
