@@ -275,6 +275,11 @@ def main():
     cfg['rewrites'] = rewrites
 
     # Redirections : on conserve celles deja declarees et on ajoute les alias
+    # Redirections regenerees de zero a chaque build : on ne conserve du fichier precedent que les
+    # regles de normalisation de barre oblique finale (destination == source sans slash). Sans cela,
+    # une redirection retiree de la source resterait indefiniment dans vercel.json.
+    cfg['redirects'] = [r for r in cfg.get('redirects', [])
+                        if r.get('destination') == r.get('source', '').rstrip('/')]
     existantes = {r['source'] for r in cfg.get('redirects', [])}
     for source, cible in ALIAS.items():
         if source in existantes:

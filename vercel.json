@@ -79,16 +79,6 @@
       "permanent": true
     },
     {
-      "source": "/fr/logiciel-courtier-santé",
-      "destination": "/crm-courtier-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/logiciel-courtier-sant%C3%A9",
-      "destination": "/crm-courtier-assurance",
-      "permanent": true
-    },
-    {
       "source": "/crm-assurance",
       "destination": "/crm-courtier-assurance",
       "permanent": true
@@ -174,33 +164,118 @@
       "permanent": true
     },
     {
-      "source": "/fr/crm-courtier-assurance",
-      "destination": "/crm-courtier-assurance",
+      "source": "/fr/alternative-courtigo",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
       "permanent": true
     },
     {
-      "source": "/fr/logiciel-courtier-assurance",
+      "source": "/fr/alternative-kase",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/alternative-lya",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/alternative-oggo-data",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-habitation",
+      "destination": "/assurances",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-grossiste",
+      "destination": "/assurances",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-mandataire",
+      "destination": "/assurances",
+      "permanent": true
+    },
+    {
+      "source": "/fr/demo-et-essai-gratuit",
+      "destination": "/demo",
+      "permanent": true
+    },
+    {
+      "source": "/fr/outil-courtier-assurance",
+      "destination": "/outils",
+      "permanent": true
+    },
+    {
+      "source": "/sitemaps/features.xml",
+      "destination": "/sitemaps/features-v2.xml",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap-seo.xml",
+      "destination": "/sitemap.xml",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap-ch.xml",
+      "destination": "/sitemap.xml",
+      "permanent": true
+    },
+    {
+      "source": "/fr",
+      "destination": "/france",
+      "permanent": true
+    },
+    {
+      "source": "/ch",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/fr/evaluer-crm-courtier-assurance",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/choisir-crm-cabinet-courtage",
       "destination": "/logiciel-courtier-assurance",
       "permanent": true
     },
     {
-      "source": "/fr/automatisation-courtier-assurance",
-      "destination": "/automatisation-courtier-assurance",
+      "source": "/fr/relance-client-assurance",
+      "destination": "/guides/comment-ne-plus-oublier-relances-courtier",
       "permanent": true
     },
     {
-      "source": "/fr/courtia-logiciel-courtage-assurance",
-      "destination": "/logiciel-courtage-assurance",
+      "source": "/fr/logiciel-gestion-cabinet-courtage",
+      "destination": "/solutions/cabinet-courtage-assurance",
       "permanent": true
     },
     {
-      "source": "/fr/gestion-portefeuille-courtier",
+      "source": "/fr/ia-courtier-assurance",
+      "destination": "/fonctionnalites/assistant-ark",
+      "permanent": true
+    },
+    {
+      "source": "/fr/comparateur-assurance-courtier",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-portefeuille-assurance",
       "destination": "/fonctionnalites/gestion-portefeuille-assurance",
       "permanent": true
     },
     {
-      "source": "/fr/glossaire",
-      "destination": "/glossaire",
+      "source": "/legal/confidentialite",
+      "destination": "/confidentialite",
+      "permanent": true
+    },
+    {
+      "source": "/legal/mentions-legales",
+      "destination": "/mentions-legales",
       "permanent": true
     },
     {
@@ -299,8 +374,158 @@
       "permanent": true
     },
     {
-      "source": "/fr/glossaire/:chemin*",
+      "source": "/fr/crm-courtier-assurance",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-assurance",
+      "destination": "/logiciel-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/automatisation-courtier-assurance",
+      "destination": "/automatisation-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/courtia-logiciel-courtage-assurance",
+      "destination": "/logiciel-courtage-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-portefeuille-courtier",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire",
       "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/ch",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/automatisation-courtier-assurance-suisse",
+      "destination": "/automatisation-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/conformite-intermediaire-assurance-lsa-finma",
+      "destination": "/guides/devoir-de-conseil-suivi-dossier",
+      "permanent": true
+    },
+    {
+      "source": "/ch/crm-courtier-assurance-suisse",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/gestion-cabinet-courtage-suisse",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/gestion-commissions-courtier-assurance-suisse",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/gestion-documentaire-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/gestion-documents-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/gestion-portefeuille-assurance-suisse",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/glossaire",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/ch/ia-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/assistant-ark",
+      "permanent": true
+    },
+    {
+      "source": "/ch/import-portefeuille-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-courtier-assurance-suisse",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-devis-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-intermediaire-assurance-suisse",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-prospection-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/prospection-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/nlpd-courtier-assurance",
+      "destination": "/guides/donnees-clients-assurance-france-suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/outils/calculateur-temps-administratif-suisse",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/ch/partenaires-apporteurs-courtier-assurance-suisse",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/ch/portail-client-assurance-suisse",
+      "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/ch/relances-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/reporting-pilotage-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/reporting-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/ch/sinistres-courtier-assurance-suisse",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/tarifs-logiciel-courtier-chf",
+      "destination": "/tarifs",
+      "permanent": true
+    },
+    {
+      "source": "/ch/workflows-courtier-assurance-suisse",
+      "destination": "/automatisation-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr",
+      "destination": "/france",
       "permanent": true
     },
     {
@@ -324,157 +549,7 @@
       "permanent": true
     },
     {
-      "source": "/fr/logiciel-courtier-habitation",
-      "destination": "/assurances",
-      "permanent": true
-    },
-    {
-      "source": "/fr/logiciel-courtier-grossiste",
-      "destination": "/assurances",
-      "permanent": true
-    },
-    {
-      "source": "/fr/logiciel-courtier-mandataire",
-      "destination": "/assurances",
-      "permanent": true
-    },
-    {
-      "source": "/fr/demo-et-essai-gratuit",
-      "destination": "/demo",
-      "permanent": true
-    },
-    {
-      "source": "/fr/evaluer-crm-courtier-assurance",
-      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
-      "permanent": true
-    },
-    {
-      "source": "/fr/guide/choisir-crm-cabinet-courtage",
-      "destination": "/logiciel-courtier-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/outil-courtier-assurance",
-      "destination": "/outils",
-      "permanent": true
-    },
-    {
-      "source": "/fr",
-      "destination": "/france",
-      "permanent": true
-    },
-    {
-      "source": "/ch",
-      "destination": "/suisse",
-      "permanent": true
-    },
-    {
-      "source": "/sitemap-seo.xml",
-      "destination": "/sitemap.xml",
-      "permanent": true
-    },
-    {
-      "source": "/sitemap-ch.xml",
-      "destination": "/sitemap.xml",
-      "permanent": true
-    },
-    {
-      "source": "/fr/relance-client-assurance",
-      "destination": "/guides/comment-ne-plus-oublier-relances-courtier",
-      "permanent": true
-    },
-    {
-      "source": "/fr/logiciel-gestion-cabinet-courtage",
-      "destination": "/solutions/cabinet-courtage-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/ia-courtier-assurance",
-      "destination": "/fonctionnalites/assistant-ark",
-      "permanent": true
-    },
-    {
-      "source": "/fr/comparateur-assurance-courtier",
-      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
-      "permanent": true
-    },
-    {
-      "source": "/fr/gestion-portefeuille-assurance",
-      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/legal/confidentialite",
-      "destination": "/confidentialite",
-      "permanent": true
-    },
-    {
-      "source": "/legal/mentions-legales",
-      "destination": "/mentions-legales",
-      "permanent": true
-    },
-    {
-      "source": "/ch/automatisation-courtier-assurance-suisse",
-      "destination": "/automatisation-courtier-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/ch/conformite-intermediaire-assurance-lsa-finma",
-      "destination": "/guides/devoir-de-conseil-suivi-dossier",
-      "permanent": true
-    },
-    {
-      "source": "/ch/gestion-cabinet-courtage-suisse",
-      "destination": "/suisse",
-      "permanent": true
-    },
-    {
-      "source": "/ch/gestion-commissions-courtier-assurance-suisse",
-      "destination": "/crm-courtier-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/ch/ia-courtier-assurance-suisse",
-      "destination": "/fonctionnalites/assistant-ark",
-      "permanent": true
-    },
-    {
-      "source": "/ch/import-portefeuille-courtier-assurance-suisse",
-      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/ch/logiciel-prospection-courtier-assurance-suisse",
-      "destination": "/fonctionnalites/prospection-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/ch/nlpd-courtier-assurance",
-      "destination": "/guides/donnees-clients-assurance-france-suisse",
-      "permanent": true
-    },
-    {
-      "source": "/ch/partenaires-apporteurs-courtier-assurance-suisse",
-      "destination": "/suisse",
-      "permanent": true
-    },
-    {
-      "source": "/ch/portail-client-assurance-suisse",
-      "destination": "/fonctionnalites/gestion-clients",
-      "permanent": true
-    },
-    {
-      "source": "/ch/reporting-pilotage-courtier-assurance-suisse",
-      "destination": "/fonctionnalites/reporting-courtier",
-      "permanent": true
-    },
-    {
-      "source": "/ch/sinistres-courtier-assurance-suisse",
-      "destination": "/crm-courtier-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/ch/workflows-courtier-assurance-suisse",
+      "source": "/fr/automatisation-courtier-assurance",
       "destination": "/automatisation-courtier-assurance",
       "permanent": true
     },
@@ -524,13 +599,38 @@
       "permanent": true
     },
     {
+      "source": "/fr/comparatif/crm-courtier-vs-excel",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/comparatif/crm-specialise-vs-crm-generaliste",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
       "source": "/fr/conformite-courtier-assurance",
       "destination": "/guides/devoir-de-conseil-suivi-dossier",
       "permanent": true
     },
     {
+      "source": "/fr/courtia-logiciel-courtage-assurance",
+      "destination": "/fonctionnalites/assistant-ark",
+      "permanent": true
+    },
+    {
+      "source": "/fr/crm-courtier-assurance",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
       "source": "/fr/dicter-compte-rendu-appel-assurance",
       "destination": "/fonctionnalites/compte-rendu-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/evaluer-crm-courtier-assurance",
+      "destination": "/crm-courtier-assurance",
       "permanent": true
     },
     {
@@ -569,6 +669,21 @@
       "permanent": true
     },
     {
+      "source": "/fr/gestion-commissions-courtier-assurance",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-documentaire-courtier-assurance",
+      "destination": "/fonctionnalites/gestion-documents-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-portefeuille-courtier",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
       "source": "/fr/gestion-prospects-clients-courtier-assurance",
       "destination": "/fonctionnalites/prospection-assurance",
       "permanent": true
@@ -579,83 +694,23 @@
       "permanent": true
     },
     {
-      "source": "/fr/glossaire/commissions",
-      "destination": "/crm-courtier-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/courtier-assurance",
+      "source": "/fr/glossaire",
       "destination": "/glossaire",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/dda",
-      "destination": "/guides/devoir-de-conseil-suivi-dossier",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/devoir-de-conseil",
-      "destination": "/glossaire",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/echeance-contrat",
-      "destination": "/fonctionnalites/renouvellements-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/finma",
-      "destination": "/suisse",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/intermediaire-assurance",
-      "destination": "/glossaire",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/logiciel-courtier",
-      "destination": "/glossaire",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/nlpd",
-      "destination": "/guides/donnees-clients-assurance-france-suisse",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/onboarding-client",
-      "destination": "/fonctionnalites/gestion-clients",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/pipeline",
-      "destination": "/glossaire",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/portefeuille",
-      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/prospect",
-      "destination": "/fonctionnalites/prospection-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/relance",
-      "destination": "/fonctionnalites/relance-devis-assurance",
-      "permanent": true
-    },
-    {
-      "source": "/fr/glossaire/sinistre",
-      "destination": "/crm-courtier-assurance",
       "permanent": true
     },
     {
       "source": "/fr/guide/automatiser-relances-courtier",
       "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/centraliser-dossiers-clients",
+      "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/choisir-crm-cabinet-courtage",
+      "destination": "/crm-courtier-assurance",
       "permanent": true
     },
     {
@@ -699,6 +754,11 @@
       "permanent": true
     },
     {
+      "source": "/fr/ia-courtier-assurance",
+      "destination": "/fonctionnalites/assistant-ark",
+      "permanent": true
+    },
+    {
       "source": "/fr/ia-gestion-documentaire-assurance",
       "destination": "/fonctionnalites/gestion-documents-assurance",
       "permanent": true
@@ -706,6 +766,11 @@
     {
       "source": "/fr/import-portefeuille-courtier-assurance",
       "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-assurance",
+      "destination": "/crm-courtier-assurance",
       "permanent": true
     },
     {
@@ -784,7 +849,22 @@
       "permanent": true
     },
     {
+      "source": "/fr/logiciel-courtier-grossiste",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-habitation",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
       "source": "/fr/logiciel-courtier-iard",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-mandataire",
       "destination": "/crm-courtier-assurance",
       "permanent": true
     },
@@ -829,12 +909,32 @@
       "permanent": true
     },
     {
+      "source": "/fr/logiciel-gestion-cabinet-courtage",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/outil-courtier-assurance",
+      "destination": "/outils",
+      "permanent": true
+    },
+    {
       "source": "/fr/outils",
       "destination": "/outils",
       "permanent": true
     },
     {
+      "source": "/fr/outils/calculateur-manipulations-administratives",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
       "source": "/fr/outils/calculateur-roi-courtia",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/outils/calculateur-temps-administratif",
       "destination": "/outils/calculateur-productivite-courtier",
       "permanent": true
     },
@@ -846,6 +946,11 @@
     {
       "source": "/fr/portail-client-courtier-assurance",
       "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/relance-client-assurance",
+      "destination": "/fonctionnalites/relance-devis-assurance",
       "permanent": true
     },
     {
@@ -861,6 +966,11 @@
     {
       "source": "/fr/sinistres-courtier-assurance",
       "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/tarifs-logiciel-courtier",
+      "destination": "/tarifs",
       "permanent": true
     },
     {
@@ -899,8 +1009,8 @@
       "permanent": true
     },
     {
-      "source": "/sitemaps/features.xml",
-      "destination": "/sitemaps/features-v2.xml",
+      "source": "/fr/glossaire/:chemin*",
+      "destination": "/glossaire",
       "permanent": true
     }
   ],
