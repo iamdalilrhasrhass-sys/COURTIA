@@ -34,6 +34,18 @@ function sanitizeDemoRequestPayload(body = {}) {
     message: normalizeString(body.message, 2000),
     consent: normalizeBoolean(body.consent),
     source: normalizeString(body.source || 'landing', 120) || 'landing',
+    // Attribution : identifiant de visite, premier et dernier contact (calculés côté site par
+    // /js/mesure.js, sans cookie tiers). Sans ces champs, une demande de démo ne peut pas être
+    // rattachée à son origine — c'était le cas avant le 26/09/2026.
+    session_id: normalizeString(body.session_id, 64),
+    first_touch_source: normalizeString(body.first_touch_source, 120),
+    first_touch_medium: normalizeString(body.first_touch_medium, 120),
+    first_touch_campaign: normalizeString(body.first_touch_campaign, 160),
+    first_touch_landing: normalizeString(body.first_touch_landing, 255),
+    first_touch_referrer: normalizeString(body.first_touch_referrer, 255),
+    last_touch_source: normalizeString(body.last_touch_source, 120),
+    last_touch_medium: normalizeString(body.last_touch_medium, 120),
+    last_touch_landing: normalizeString(body.last_touch_landing, 255),
   }
 }
 
