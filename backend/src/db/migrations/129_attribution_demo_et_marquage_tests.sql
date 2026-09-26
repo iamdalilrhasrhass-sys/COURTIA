@@ -24,3 +24,12 @@ CREATE INDEX IF NOT EXISTS idx_demo_requests_session ON demo_requests (session_i
 
 COMMENT ON COLUMN demo_requests.is_test IS
   'Vrai pour les demandes issues de nos propres tests de recette : exclues des comptages business.';
+
+-- Les essais internes anterieurs au marquage explicite doivent aussi etre exclus : ils portent
+-- la mention « ne pas contacter » ou un nom de cabinet de test.
+UPDATE demo_requests
+   SET is_test = TRUE
+ WHERE is_test = FALSE
+   AND (company_name ILIKE '%(test)%'
+        OR message ILIKE '%ne pas contacter%'
+        OR message ILIKE '%Test technique%');
