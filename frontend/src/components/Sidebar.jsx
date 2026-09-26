@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+// Mode demonstration : le cockpit est monte sous /demo. Sans ce prefixe, le premier clic
+// quitte la demonstration et renvoie le visiteur sur le mur de connexion.
+import { estModeDemo } from '../demo/modeDemo'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, FileText, CheckSquare, TrendingUp,
@@ -235,7 +238,7 @@ export default function Sidebar() {
       <button
         key={item.path}
         className={`courtia-sidebar-item ${active ? 'is-active' : ''}`}
-        onClick={() => { setMobileOpen(false); navigate(item.path) }}
+        onClick={() => { setMobileOpen(false); navigate(estModeDemo() ? '/demo' + item.path : item.path) }}
         style={{
           width: '100%',
           display: 'flex',
@@ -408,7 +411,7 @@ export default function Sidebar() {
         gap: 8,
         cursor: 'pointer',
       }}
-      onClick={() => { setMobileOpen(false); navigate('/morning-brief') }}>
+      onClick={() => { setMobileOpen(false); navigate(estModeDemo() ? '/demo/morning-brief' : '/morning-brief') }}>
         <div style={{
           width: 26, height: 26, borderRadius: 8,
           background: 'rgba(139,92,246,0.15)',
