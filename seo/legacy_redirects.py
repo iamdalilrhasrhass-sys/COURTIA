@@ -26,6 +26,9 @@ def main():
             destination = ligne['closest_current_url'].replace('https://courtiark.fr', '')
             if not source or not destination or source == destination:
                 continue
+            # couvert par le joker /fr/glossaire/:chemin* deja present dans vercel.json
+            if source.startswith('/fr/glossaire/'):
+                continue
             entrees.append({
                 'source': source,
                 'destination': destination,

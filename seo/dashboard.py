@@ -88,6 +88,14 @@ def main():
     attribution = attribution or []
 
     # ---------------------------------------------------------------- rapport
+    outils, _ = psql("""select page_path,
+                              count(*) filter (where event_name = 'seo_page_view') as vues,
+                              count(*) filter (where event_name = 'tool_start') as demarrages,
+                              count(*) filter (where event_name = 'tool_complete') as termines,
+                              count(*) filter (where event_name = 'tool_cta_click') as clics_cta
+                       from marketing_events where page_path like '/outils/%'
+                       group by 1 order by 2 desc""")
+
     L = []
     A = L.append
     A('# COURTIARK — Tableau de bord acquisition / conversion / SEO')
@@ -250,6 +258,49 @@ def main():
             A('| %s | %s | %s |' % (m, c, n))
     else:
         A('Aucune attribution enregistrée.')
+    A('')
+    A('## 7. OUTILS GRATUITS — usage reel')
+    A('')
+    if outils:
+        A('| Outil | Vues | Démarrages | Terminés | Taux de complétion | Clics CTA | Taux de clic |')
+        A('|---|---|---|---|---|---|---|')
+        for l in outils:
+            if len(l) == 5:
+                vues, starts, finis, cta = (int(x) for x in l[1:5])
+                taux_completion = ('%.1f %%' % (100.0 * finis / starts)).replace('.', ',') if starts else '—'
+                taux_clic = ('%.1f %%' % (100.0 * cta / vues)).replace('.', ',') if vues else '—'
+                A('| `%s` | %d | %d | %d | %s | %d | %s |' % (l[0].replace('/outils/', ''), vues, starts,
+                                                              finis, taux_completion, cta, taux_clic))
+    else:
+        A('Aucun événement d’outil enregistré : les outils viennent d’être instrumentés '
+          '(tool_start, tool_complete, tool_cta_click).')
+    A('')
+    A('## 8. PAYS (Search Console) et conversion')
+    A('')
+    if t0.get('pays'):
+        A('| Pays | Clics | Impressions | Demandes de démo | Essais |')
+        A('|---|---|---|---|---|')
+        for p in t0['pays'][:6]:
+            A('| %s | %s | %s | 0 | 0 |' % (p[0], p[1], p[2]))
+        A('')
+        A('Les colonnes « demandes de démo » et « essais » sont à zéro : le funnel business par pays n’est pas '
+          'mesurable aujourd’hui (aucun lead réel, aucune donnée d’attribution géographique côté site). '
+          'Aucun taux de conversion par pays n’est donc calculé ni affirmé.')
+    else:
+        A('Données pays non disponibles.')
+    A('')
+    A('## 9. Définitions des métriques (à ne pas confondre)')
+    A('')
+    A('| Indicateur | Définition |')
+    A('|---|---|')
+    A('| CTR SERP | clics / impressions (Search Console) |')
+    A('| CTA Rate | clics CTA / sessions organiques mesurées |')
+    A('| Demo Rate | demandes de démo / sessions organiques mesurées |')
+    A('| Trial Rate | essais créés / sessions organiques mesurées |')
+    A('| Activation Rate | essais activés / essais créés |')
+    A('| Customer Rate | clients / sessions organiques mesurées |')
+    A('')
+    A('Un CTR SERP élevé ne démontre aucune supériorité de conversion : ce sont deux indicateurs distincts.')
     A('')
     A('## Limites de lecture')
     A('')

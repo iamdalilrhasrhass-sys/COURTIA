@@ -70,7 +70,7 @@ slug;fichier;octets;schema;erreurs;alertes
 /comparatifs/crm-assurance-vs-crm-generaliste;frontend/public/comparatifs/crm-assurance-vs-crm-generaliste/index.html;14922;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
 /comparatifs/excel-vs-crm-courtier-assurance;frontend/public/comparatifs/excel-vs-crm-courtier-assurance/index.html;14531;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
 /comparatifs/logiciel-metier-vs-crm-generaliste;frontend/public/comparatifs/logiciel-metier-vs-crm-generaliste/index.html;14254;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/outils/;frontend/public/outils/index.html;13170;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf | lien_interne_inconnu:/ressources/checklist-renouvellement-assurance.pdf | lien_interne_inconnu:/ressources/checklist-dossier-courtier-assurance.pdf
+/outils/;frontend/public/outils/index.html;13170;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf | lien_interne_inconnu:/ressources/checklist-dossier-courtier-assurance.pdf | lien_interne_inconnu:/ressources/checklist-renouvellement-assurance.pdf
 /outils/calculateur-productivite-courtier;frontend/public/outils/calculateur-productivite-courtier/index.html;15149;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
 /securite;frontend/public/securite/index.html;14332;Organization,BreadcrumbList,FAQPage;;
 /a-propos;frontend/public/a-propos/index.html;12869;Organization,BreadcrumbList,FAQPage;;
@@ -78,4 +78,4 @@ slug;fichier;octets;schema;erreurs;alertes
 /confidentialite;frontend/public/confidentialite/index.html;12431;Organization,BreadcrumbList,FAQPage;;
 /demo/;frontend/public/demo/index.html;12964;Organization,BreadcrumbList,FAQPage;;
 /contact;frontend/public/contact/index.html;12059;Organization,BreadcrumbList;;
-/changelog;frontend/public/changelog/index.html;14186;Organization,BreadcrumbList;;
+/changelog;frontend/public/changelog/index.html;14173;Organization,BreadcrumbList;;
