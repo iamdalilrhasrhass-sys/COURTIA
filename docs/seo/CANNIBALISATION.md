@@ -37,6 +37,8 @@ Seuil de recouvrement des termes du title + H1 : 0.72
 - /fr/logiciel-courtier-mandataire -> /assurances
 - /fr/demo-et-essai-gratuit -> /demo
 - /fr/outil-courtier-assurance -> /outils
+- /sitemap-seo.xml -> /sitemap.xml
+- /sitemap-ch.xml -> /sitemap.xml
 - /fr -> /france
 - /ch -> /suisse
 - /fr/evaluer-crm-courtier-assurance -> /comparatifs/crm-assurance-vs-crm-generaliste

@@ -1,0 +1,26 @@
+# robots.txt - courtiark.fr (COURTIARK) - CRM et cockpit IA pour courtiers en assurance
+# Fichier genere par seo/build.py - ne pas modifier a la main.
+
+User-agent: *
+Allow: /
+
+# Espace public indexable : pages HTML statiques de frontend/public/ (accueil, produit,
+# fonctionnalites, solutions, branches, France, Suisse, guides, comparatifs, outils,
+# glossaire, tarifs, pages de confiance).
+# Application connectee (/dashboard et routes privees) : servie par la coquille SPA en
+# noindex, follow - elle ne doit pas apparaitre dans les resultats de recherche.
+
+# Ancien plan de site (/fr/*, /ch/*) : consolide par redirections permanentes vers les
+# pages canoniques. Les URL correspondantes ne sont plus listees ici.
+
+Sitemap: https://courtiark.fr/sitemap.xml
+Sitemap: https://courtiark.fr/sitemaps/assurances.xml
+Sitemap: https://courtiark.fr/sitemaps/comparatifs.xml
+Sitemap: https://courtiark.fr/sitemaps/core.xml
+Sitemap: https://courtiark.fr/sitemaps/features.xml
+Sitemap: https://courtiark.fr/sitemaps/france.xml
+Sitemap: https://courtiark.fr/sitemaps/resources.xml
+Sitemap: https://courtiark.fr/sitemaps/solutions.xml
+Sitemap: https://courtiark.fr/sitemaps/switzerland.xml
+Sitemap: https://courtiark.fr/sitemaps/tools.xml
+Sitemap: https://courtiark.fr/sitemaps/trust.xml

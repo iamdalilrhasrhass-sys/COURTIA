@@ -1,0 +1,20 @@
+{
+ "pages_analysees": 186,
+ "seuil": 0.72,
+ "paires_suspectes": 1,
+ "detail": [
+  [
+   0.75,
+   "/ch/import-portefeuille-courtier-assurance-suisse",
+   "/fr/import-portefeuille-courtier-assurance",
+   [
+    "changer",
+    "courtage",
+    "courtia",
+    "logiciel",
+    "portefeuille",
+    "reprendre"
+   ]
+  ]
+ ]
+}
