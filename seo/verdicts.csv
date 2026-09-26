@@ -48,7 +48,7 @@ slug;fichier;octets;schema;erreurs;alertes
 /suisse/vaud;frontend/public/suisse/vaud/index.html;16167;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_182_caracteres
 /suisse/valais;frontend/public/suisse/valais/index.html;16187;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres
 /suisse/suisse-romande;frontend/public/suisse/suisse-romande/index.html;16268;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres
-/logiciel-courtier-assurance;frontend/public/logiciel-courtier-assurance/index.html;25884;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
+/logiciel-courtier-assurance;frontend/public/logiciel-courtier-assurance/index.html;25679;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
 /logiciel-courtage-assurance;frontend/public/logiciel-courtage-assurance/index.html;16048;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;description_189_caracteres
 /automatisation-courtier-assurance;frontend/public/automatisation-courtier-assurance/index.html;16167;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;title_94_caracteres | description_186_caracteres
 /tarifs;frontend/public/tarifs/index.html;15491;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
@@ -78,4 +78,4 @@ slug;fichier;octets;schema;erreurs;alertes
 /confidentialite;frontend/public/confidentialite/index.html;12431;Organization,BreadcrumbList,FAQPage;;
 /demo/;frontend/public/demo/index.html;12964;Organization,BreadcrumbList,FAQPage;;
 /contact;frontend/public/contact/index.html;12059;Organization,BreadcrumbList;;
-/changelog;frontend/public/changelog/index.html;14125;Organization,BreadcrumbList;;
+/changelog;frontend/public/changelog/index.html;14186;Organization,BreadcrumbList;;

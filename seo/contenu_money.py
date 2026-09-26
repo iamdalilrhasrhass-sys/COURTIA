@@ -130,10 +130,6 @@ def pages_money():
                     + ul(['<a href="/demo-public">Ouvrir la démonstration publique</a> — tableau de bord, portefeuille, dossier client.',
                           '<a href="/fonctionnalites/gestion-portefeuille-assurance">Voir la page portefeuille</a> — ce que montre la vue d’ensemble.',
                           '<a href="/outils">Outils gratuits</a> — calculs et checklists utilisables sans compte.'])),
-
-            section("Questions fréquentes",
-                    p("Les six questions que posent les courtiers avant de choisir un outil sont traitées "
-                      "ci-dessous, avec les réponses courtes puis les détails.")),
         ]),
         faq=[("Qu’est-ce qu’un logiciel pour courtier en assurance ?",
               "C’est un outil de gestion métier qui centralise les clients, les contrats, les échéances, les documents "
