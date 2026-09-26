@@ -294,6 +294,16 @@ def main():
                                          'permanent': bool(entree.get('permanent', True))})
                 existantes.add(entree['source'])
 
+    # Corrections de redirections deja declarees dans vercel.json : une source qui pointe vers une
+    # URL elle-meme redirigee cree une chaine a deux sauts. On la fait pointer directement.
+    CORRECTIONS = {
+        '/fr/logiciel-courtier-santé': '/crm-courtier-assurance',
+        '/fr/logiciel-courtier-sant%C3%A9': '/crm-courtier-assurance',
+    }
+    for r in cfg.get('redirects', []):
+        if r['source'] in CORRECTIONS:
+            r['destination'] = CORRECTIONS[r['source']]
+
     # Ancien cluster de glossaire : toutes les entrees pointent vers le glossaire unique
     for joker in [{'source': '/fr/glossaire/:chemin*', 'destination': '/glossaire', 'permanent': True}]:
         if joker['source'] not in existantes:
