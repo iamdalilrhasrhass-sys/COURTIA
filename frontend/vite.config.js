@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { resolve } from 'path'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -16,6 +17,9 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     rollupOptions: {
+      // Le shell de l'application est app.html : index.html est reserve au site public
+      // (page d'accueil statique servie aux moteurs, cf. seo/build.py).
+      input: { app: resolve(__dirname, 'app.html') },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {

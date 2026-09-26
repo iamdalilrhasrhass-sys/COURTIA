@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COURTIARK — CRM et cockpit IA pour courtiers en assurance</title>
+<meta name="description" content="COURTIARK centralise portefeuille, contrats, documents et relances des cabinets de courtage en assurance. Conçu pour la France (DDA) et la Suisse (FINMA). Essai 7 jours.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="canonical" href="https://courtiark.fr/">
+<meta name="author" content="COURTIARK">
+<meta property="og:type" content="website">
+<meta property="og:title" content="COURTIARK — CRM et cockpit IA pour courtiers en assurance">
+<meta property="og:description" content="COURTIARK centralise portefeuille, contrats, documents et relances des cabinets de courtage en assurance. Conçu pour la France (DDA) et la Suisse (FINMA). Essai 7 jours.">
+<meta property="og:url" content="https://courtiark.fr/">
+<meta property="og:image" content="https://courtiark.fr/og-courtiark.png">
+<meta property="og:site_name" content="COURTIARK">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="COURTIARK — CRM et cockpit IA pour courtiers en assurance">
+<meta name="twitter:description" content="COURTIARK centralise portefeuille, contrats, documents et relances des cabinets de courtage en assurance. Conçu pour la France (DDA) et la Suisse (FINMA). Essai 7 jours.">
+<meta name="twitter:image" content="https://courtiark.fr/og-courtiark.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="manifest" href="/manifest.json">
+<style>
+:root{--fond:#050510;--carte:#0d0d1f;--carte2:#11112a;--bord:rgba(255,255,255,.10);--texte:#eef0ff;
+--doux:#a8adcb;--accent:#5eead4;--accent2:#8b5cf6;--ok:#34d399;--warn:#fbbf24;--max:1080px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--fond);color:var(--texte);
+font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.saut{position:absolute;left:-9999px;top:0;background:var(--accent);color:#04211c;padding:10px 16px;border-radius:0 0 8px 0;z-index:99}
+.saut:focus{left:0}
+header.entete,main,footer.pied{max-width:var(--max);margin:0 auto;padding:22px 20px}
+header.entete{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+header.entete a.marque{color:var(--texte);text-decoration:none;font-weight:800;letter-spacing:.06em;font-size:17px}
+nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
+nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
+nav.principal a:hover{color:var(--texte)}
+.actions-entete{display:flex;gap:10px;align-items:center}
+h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
+h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p,li{color:var(--texte)}
+.doux{color:var(--doux)}
+.chapeau{font-size:clamp(17px,2.1vw,20px);color:var(--doux);max-width:62ch}
+.section{border:1px solid var(--bord);background:var(--carte);border-radius:16px;padding:22px;margin:18px 0}
+.grille{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bord);font-size:15px;vertical-align:top}
+th{color:var(--doux);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+.cta a{display:inline-block;padding:12px 20px;border-radius:999px;border:1px solid var(--bord);text-decoration:none;font-weight:700}
+.cta a.principal{background:var(--accent);color:#04211c;border-color:transparent}
+.cta a.secondaire:hover{border-color:var(--accent)}
+ul{padding-left:20px}
+.fil{font-size:14px;color:var(--doux);margin:10px 0 0}
+.fil a{color:var(--doux)}
+.badge{display:inline-block;font-size:13px;color:var(--doux);border:1px solid var(--bord);border-radius:999px;padding:4px 12px;margin:0 6px 6px 0}
+footer.pied{border-top:1px solid var(--bord);margin-top:44px;font-size:14px}
+footer.pied .colonnes{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:18px}
+footer.pied h3{font-size:14px;color:var(--doux);margin:0 0 6px;text-transform:uppercase;letter-spacing:.08em}
+footer.pied a{color:var(--doux);text-decoration:none;display:block;padding:2px 0}
+footer.pied a:hover{color:var(--texte)}
+.quisuis{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline}
+.etape{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+.etape b{color:var(--accent);min-width:88px}
+.bascule{display:flex;gap:14px;flex-wrap:wrap}
+.bascule>div{flex:1 1 280px;border:1px solid var(--bord);border-radius:14px;padding:16px;background:var(--carte2)}
+.note{font-size:14px;color:var(--doux)}
+input,select,button{font:inherit}
+.champ{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+.champ label{font-size:14px;color:var(--doux)}
+.champ input,.champ select,.champ textarea{background:#0a0a1a;color:var(--texte);border:1px solid var(--bord);border-radius:10px;padding:11px 12px}
+button.principal{background:var(--accent);color:#04211c;border:0;border-radius:999px;padding:13px 22px;font-weight:800;cursor:pointer}
+.resultat{border:1px solid var(--bord);border-radius:14px;padding:16px;background:var(--carte2);margin-top:14px}
+@media (max-width:640px){header.entete{gap:10px}nav.principal{order:3;width:100%}}
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "COURTIARK", "alternateName": "COURTIA", "url": "https://courtiark.fr/", "logo": "https://courtiark.fr/og-courtiark.png", "email": "contact@courtiark.fr", "areaServed": [{"@type": "Country", "name": "France"}, {"@type": "Country", "name": "Suisse"}], "description": "COURTIARK est un CRM et cockpit IA pour cabinets de courtage en assurance, en France et en Suisse.", "knowsAbout": ["CRM courtier assurance", "logiciel de courtage", "gestion de portefeuille d'assurance", "conformité DDA", "conformité LSA/FINMA"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "COURTIARK", "url": "https://courtiark.fr/", "inLanguage": ["fr-FR", "fr-CH"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "COURTIARK", "applicationCategory": "BusinessApplication", "operatingSystem": "Web (navigateur)", "url": "https://courtiark.fr/", "description": "COURTIARK centralise portefeuille, contrats, documents et relances des cabinets de courtage en assurance. Conçu pour la France (DDA) et la Suisse (FINMA). Essai 7 jours.", "inLanguage": ["fr-FR", "fr-CH"], "featureList": ["Fiche client et portefeuille", "Contrats et échéances", "Devis et relances", "Dépôt de documents par lien", "Commissions", "Conformité France et Suisse", "Assistant IA ARK", "Prospection et suivi commercial"], "offers": [{"@type": "Offer", "name": "Starter", "price": "89", "priceCurrency": "EUR", "description": "Starter — par mois, hors taxes (France)"}, {"@type": "Offer", "name": "Pro", "price": "159", "priceCurrency": "EUR", "description": "Pro — par mois, hors taxes (France)"}, {"@type": "Offer", "name": "Indépendant", "price": "199", "priceCurrency": "CHF", "description": "Indépendant — par mois, hors taxes (Suisse)"}, {"@type": "Offer", "name": "Cabinet", "price": "349", "priceCurrency": "CHF", "description": "Cabinet — par mois, hors taxes (Suisse)"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Qu'est-ce qu'un CRM pour courtier en assurance ?", "acceptedAnswer": {"@type": "Answer", "text": "Un outil qui réunit les clients d'un cabinet, leurs contrats, leurs échéances et les actions à mener, au lieu de les répartir entre un tableur, une boîte e-mail et un agenda. La différence avec un CRM généraliste tient aux objets métier : contrats, sinistres, devis, commissions, obligations d'information."}}, {"@type": "Question", "name": "À quoi sert ARK dans COURTIARK ?", "acceptedAnswer": {"@type": "Answer", "text": "ARK est l'assistant du cabinet : il lit un document, propose les informations détectées avec leur page d'origine, les compare à la fiche client et n'enregistre que ce que vous validez."}}, {"@type": "Question", "name": "COURTIARK fonctionne-t-il en Suisse ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui. Les repères suisses (LSA, surveillance FINMA, LPD) sont intégrés au suivi, et la facturation existe en francs suisses (199 CHF et 349 CHF HT par mois)."}}, {"@type": "Question", "name": "Combien de temps dure l'essai ?", "acceptedAnswer": {"@type": "Answer", "text": "Sept jours, sans carte bancaire. À l'expiration, les données restent consultables et aucune suppression n'est effectuée."}}, {"@type": "Question", "name": "COURTIARK remplace-t-il mon logiciel de conformité ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. COURTIARK organise le suivi du dossier et les repères réglementaires courants. Il ne remplace ni un conseil juridique, ni un audit de conformité."}}]}</script>
+</head>
+<body>
+<a class="saut" href="#contenu">Aller au contenu</a>
+<header class="entete">
+  <a class="marque" href="/">COURTIARK</a>
+  <nav class="principal" aria-label="Navigation principale">
+    <a href="/crm-courtier-assurance">CRM courtier</a>
+    <a href="/fonctionnalites/">Fonctionnalités</a>
+    <a href="/solutions/">Solutions</a>
+    <a href="/france/">France</a>
+    <a href="/suisse/">Suisse</a>
+    <a href="/guides/">Guides</a>
+    <a href="/outils/">Outils</a>
+    <a href="/comparatifs/">Comparatifs</a>
+  </nav>
+  <div class="actions-entete">
+    <a class="secondaire" href="/demo/">Voir une démo</a>
+    <a class="principal" href="/register">Essayer 7 jours</a>
+  </div>
+</header>
+<main id="contenu">
+
+<h1>Le cockpit IA des courtiers en assurance</h1>
+<p class="chapeau">COURTIARK centralise votre portefeuille, vos contrats, vos dossiers, vos documents et vos relances dans un CRM conçu spécifiquement pour les cabinets de courtage — en France et en Suisse.</p>
+<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo/">Demander une démonstration</a></div>
+<h2>Le problème que COURTIARK règle</h2><div class="section"><p>Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, des devis à suivre, des pièces à récupérer et des renouvellements à ne pas manquer. Quand ces éléments vivent dans un tableur, une boîte e-mail et un agenda, le suivi dépend de la mémoire de chacun — et les occasions de revenir vers un client se perdent.</p><ul><li>Les dossiers sont dispersés entre plusieurs outils et plusieurs personnes.</li><li>Les relances se font quand on y pense, pas quand l'échéance l'exige.</li><li>Les pièces manquantes (RIB, attestation, carte verte) sont redemandées trois fois.</li><li>Les renouvellements arrivent sans préparation.</li><li>Le temps administratif passe avant le temps commercial.</li></ul></div><h2>Ce que fait COURTIARK</h2><div class="section"><table><thead><tr><th>Besoin métier</th><th>Ce que COURTIARK fait</th></tr></thead><tbody><tr><td>Portefeuille</td><td>Fiche client complète : coordonnées, contrats, échéances, documents, historique d'échanges.</td></tr><tr><td>Contrats</td><td>Contrats et échéances de renouvellement, avec les statuts du dossier.</td></tr><tr><td>Devis</td><td>Registre des devis, suivi de l'étape en cours et actions de relance à mener.</td></tr><tr><td>Documents</td><td>Collecte par lien : le client dépose ses pièces lui-même, sans compte à créer.</td></tr><tr><td>Relances</td><td>Relances organisées, rattachées au dossier concerné, avec la trace des demandes.</td></tr><tr><td>Commissions</td><td>Suivi des commissions et rétrocessions, avec un calculateur d'appoint.</td></tr><tr><td>Conformité</td><td>Repères France (DDA, ORIAS, RGPD) et Suisse (LSA, FINMA, nLPD) dans le suivi du dossier.</td></tr><tr><td>Priorités</td><td>Un brief du matin et une santé de portefeuille pour trier ce qui mérite votre attention.</td></tr><tr><td>Assistant ARK</td><td>ARK lit un document, en propose les informations, vous validez : rien n'est écrit sans votre accord.</td></tr><tr><td>Prospection</td><td>Recherche de prospects, campagnes, séquences et suivi des réponses dans le même outil.</td></tr></tbody></table><p><a href="/crm-courtier-assurance">Voir le détail du CRM courtier assurance</a> · <a href="/fonctionnalites/">Toutes les fonctionnalités</a></p></div><h2>ARK, l'assistant du cabinet</h2><div class="section"><p>ARK n'est pas un chatbot décoratif. Il travaille sur les données de votre cabinet : lecture d'un document déposé (facture, RIB, attestation), proposition des informations détectées avec la page source, comparaison avec la fiche client, puis écriture uniquement après votre validation.</p><div class="etape"><b>Entrée</b><span>Un document, une question, ou la situation d'un dossier.</span></div><div class="etape"><b>Analyse</b><span>ARK lit le document et propose des valeurs avec leur origine.</span></div><div class="etape"><b>Validation</b><span>Vous confirmez, corrigez ou refusez chaque ligne.</span></div><div class="etape"><b>Résultat</b><span>La fiche client est à jour, l'action d'audit est enregistrée.</span></div><p><a href="/fonctionnalites/assistant-ark">Comment fonctionne ARK</a></p></div><h2>Avant / après</h2><div class="section"><div class="bascule"><div><h3>Sans COURTIARK</h3><ul><li>Classeur par client mis à jour à la main</li><li>Relances sur mémoire et post-it</li><li>Pièces redemandées par téléphone</li><li>Échéances découvertes au moment du renouvellement</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Fiche client unique, mise à jour au fil de l'eau</li><li>Relances rattachées au dossier et suivies</li><li>Lien de dépôt : le client envoie ses pièces</li><li>Renouvellements visibles en amont</li></ul></div></div></div><h2>France et Suisse, deux marchés traités séparément</h2><div class="section"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France on parle d'intermédiaire d'assurance, de DDA et d'ORIAS ; en Suisse, d'intermédiaire au sens de la LSA, de surveillance FINMA et de protection des données (LPD). COURTIARK intègre ces repères et facture en euros comme en francs suisses.</p><p><a href="/france/">COURTIARK en France</a> · <a href="/suisse/">COURTIARK en Suisse</a> · <a href="/suisse/geneve">Genève</a> · <a href="/suisse/lausanne">Lausanne</a></p></div><h2>Sécurité et confidentialité</h2><div class="section"><p>Les données d'un cabinet sont cloisonnées : un cabinet ne voit que ses propres dossiers, ce cloisonnement est vérifié par des tests d'isolation exécutés sur la production. Les données clients ne sont ni revendues ni utilisées pour alimenter un autre cabinet.</p><p><a href="/securite">Sécurité</a> · <a href="/confidentialite">Confidentialité</a></p></div><h2>Essayer COURTIARK</h2><div class="section"><p>L'essai dure 7 jours et ne demande pas de carte bancaire. À la fin de l'essai, un compte expiré reste consultable : aucune donnée n'est supprimée, les écritures sont simplement suspendues jusqu'à la souscription.</p><p>France : Starter 89 € HT/mois, Pro 159 € HT/mois. Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div><h2>Questions fréquentes</h2><div class="section"><p>Les réponses détaillées se trouvent sur la page <a href="/crm-courtier-assurance">CRM courtier assurance</a>.</p></div>
+<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo/">Demander une démonstration</a></div>
+<h2>Questions fréquentes</h2><div class="section"><h3>Qu&#x27;est-ce qu&#x27;un CRM pour courtier en assurance ?</h3><p>Un outil qui réunit les clients d&#x27;un cabinet, leurs contrats, leurs échéances et les actions à mener, au lieu de les répartir entre un tableur, une boîte e-mail et un agenda. La différence avec un CRM généraliste tient aux objets métier : contrats, sinistres, devis, commissions, obligations d&#x27;information.</p><h3>À quoi sert ARK dans COURTIARK ?</h3><p>ARK est l&#x27;assistant du cabinet : il lit un document, propose les informations détectées avec leur page d&#x27;origine, les compare à la fiche client et n&#x27;enregistre que ce que vous validez.</p><h3>COURTIARK fonctionne-t-il en Suisse ?</h3><p>Oui. Les repères suisses (LSA, surveillance FINMA, LPD) sont intégrés au suivi, et la facturation existe en francs suisses (199 CHF et 349 CHF HT par mois).</p><h3>Combien de temps dure l&#x27;essai ?</h3><p>Sept jours, sans carte bancaire. À l&#x27;expiration, les données restent consultables et aucune suppression n&#x27;est effectuée.</p><h3>COURTIARK remplace-t-il mon logiciel de conformité ?</h3><p>Non. COURTIARK organise le suivi du dossier et les repères réglementaires courants. Il ne remplace ni un conseil juridique, ni un audit de conformité.</p></div>
+<h2>À lire ensuite</h2><div class="section"><ul><li><a href="/crm-courtier-assurance">Le CRM courtier assurance</a></li><li><a href="/fonctionnalites/assistant-ark">Assistant ARK</a></li><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille assurance</a></li><li><a href="/fonctionnalites/relance-devis-assurance">Relance de devis assurance</a></li><li><a href="/guides/">Guides pratiques</a></li></ul></div>
+</main>
+<footer class="pied">
+  <div class="colonnes">
+    <div>
+      <h3>Produit</h3>
+      <a href="/crm-courtier-assurance">CRM courtier assurance</a>
+      <a href="/fonctionnalites/assistant-ark">Assistant ARK</a>
+      <a href="/fonctionnalites/gestion-portefeuille-assurance">Portefeuille</a>
+      <a href="/fonctionnalites/relance-devis-assurance">Relances</a>
+      <a href="/fonctionnalites/gestion-documents-assurance">Documents</a>
+      <a href="/fonctionnalites/renouvellements-assurance">Renouvellements</a>
+    </div>
+    <div>
+      <h3>Solutions</h3>
+      <a href="/solutions/courtier-assurance-independant">Courtier indépendant</a>
+      <a href="/solutions/cabinet-courtage-assurance">Cabinet de courtage</a>
+      <a href="/solutions/equipe-commerciale-assurance">Équipe commerciale</a>
+      <a href="/solutions/reseau-courtage">Réseau de courtage</a>
+      <a href="/assurances/">Branches d'assurance</a>
+    </div>
+    <div>
+      <h3>Marchés</h3>
+      <a href="/france/">France</a>
+      <a href="/suisse/">Suisse</a>
+      <a href="/suisse/geneve">Genève</a>
+      <a href="/suisse/lausanne">Lausanne</a>
+    </div>
+    <div>
+      <h3>Ressources</h3>
+      <a href="/guides/">Guides</a>
+      <a href="/outils/">Outils gratuits</a>
+      <a href="/comparatifs/">Comparatifs</a>
+    </div>
+    <div>
+      <h3>Entreprise</h3>
+      <a href="/a-propos">À propos</a>
+      <a href="/securite">Sécurité</a>
+      <a href="/confidentialite">Confidentialité</a>
+      <a href="/mentions-legales">Mentions légales</a>
+      <a href="/contact">Contact</a>
+    </div>
+  </div>
+  <p class="note">COURTIARK — CRM et cockpit IA pour courtiers en assurance. France (DDA · ORIAS · RGPD) et
+  Suisse (LSA · FINMA · nLPD). Essai de 7 jours, sans engagement.
+  France : Starter 89 € HT/mois · Pro 159 € HT/mois · Suisse : Indépendant 199 CHF HT/mois · Cabinet 349 CHF HT/mois.</p>
+  <p class="note"><a href="/contact">contact@courtiark.fr</a></p>
+</footer>
+
+<script>
+/* Mesure de l'acquisition : événements autorisés par l'API, aucune donnée personnelle, aucun traceur tiers. */
+(function(){
+  var d = document, w = window;
+  function poser(k, v){ try { sessionStorage.setItem('ck_' + k, v); } catch(e){} }
+  function lire(k){ try { return sessionStorage.getItem('ck_' + k) || ''; } catch(e){ return ''; } }
+  var q = new URLSearchParams(location.search);
+  ['utm_source','utm_medium','utm_campaign','utm_content','ref'].forEach(function(k){ if (q.get(k)) poser(k, q.get(k)); });
+  poser('landing', location.pathname);
+  if (d.referrer) poser('referrer', d.referrer);
+  if (d.referrer && d.referrer.indexOf('courtiark.fr') === -1) poser('referrer_externe', d.referrer);
+  function envoyer(nom, charge){
+    try {
+      var corps = { event_name: nom, source: lire('utm_source') || lire('referrer_externe') || 'organique',
+        page_path: location.pathname,
+        payload: { medium: lire('utm_medium'), campagne: lire('utm_campaign'), contenu: lire('utm_content'),
+                   landing: lire('landing'), referrer: lire('referrer'), langue: d.documentElement.lang, charge: charge || null } };
+      var blob = new Blob([JSON.stringify(corps)], {type:'application/json'});
+      if (navigator.sendBeacon) navigator.sendBeacon('/api/leads/events', blob);
+      else fetch('/api/leads/events', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(corps), keepalive:true});
+    } catch(e){}
+  }
+  w.courtiaTrack = envoyer;
+  if (!w.__ckVue) { w.__ckVue = 1; envoyer('seo_page_view'); }
+  d.addEventListener('click', function(ev){
+    var a = ev.target.closest ? ev.target.closest('a') : null; if (!a) return;
+    var h = a.getAttribute('href') || '';
+    if (h.indexOf('/register') === 0) envoyer('cta_trial_click');
+    else if (h.indexOf('/demo') === 0) envoyer('cta_demo_click');
+    else if (h.indexOf('/tarifs') === 0) envoyer('pricing_view');
+    else if (h.indexOf('/assistant-ark') > -1) envoyer('ark_demo_view');
+    else if (h.indexOf('/contact') === 0) envoyer('contact_submit');
+  }, true);
+})();
+</script>
+</body>
+</html>

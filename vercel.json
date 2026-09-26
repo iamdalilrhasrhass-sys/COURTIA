@@ -107,16 +107,408 @@
       "destination": "https://courtia.onrender.com/api/$1"
     },
     {
+      "source": "/guides/comment-ne-plus-oublier-relances-courtier",
+      "destination": "/guides/comment-ne-plus-oublier-relances-courtier/index.html"
+    },
+    {
+      "source": "/guides/comment-ne-plus-oublier-relances-courtier/",
+      "destination": "/guides/comment-ne-plus-oublier-relances-courtier/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-portefeuille-assurance",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-portefeuille-assurance/",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance/index.html"
+    },
+    {
+      "source": "/guides/centraliser-documents-clients-assurance",
+      "destination": "/guides/centraliser-documents-clients-assurance/index.html"
+    },
+    {
+      "source": "/guides/centraliser-documents-clients-assurance/",
+      "destination": "/guides/centraliser-documents-clients-assurance/index.html"
+    },
+    {
+      "source": "/guides/donnees-clients-assurance-france-suisse",
+      "destination": "/guides/donnees-clients-assurance-france-suisse/index.html"
+    },
+    {
+      "source": "/guides/donnees-clients-assurance-france-suisse/",
+      "destination": "/guides/donnees-clients-assurance-france-suisse/index.html"
+    },
+    {
+      "source": "/comparatifs/logiciel-metier-vs-crm-generaliste",
+      "destination": "/comparatifs/logiciel-metier-vs-crm-generaliste/index.html"
+    },
+    {
+      "source": "/comparatifs/logiciel-metier-vs-crm-generaliste/",
+      "destination": "/comparatifs/logiciel-metier-vs-crm-generaliste/index.html"
+    },
+    {
+      "source": "/guides/automatiser-renouvellements-assurance",
+      "destination": "/guides/automatiser-renouvellements-assurance/index.html"
+    },
+    {
+      "source": "/guides/automatiser-renouvellements-assurance/",
+      "destination": "/guides/automatiser-renouvellements-assurance/index.html"
+    },
+    {
+      "source": "/guides/automatiser-suivi-prospects-assurance",
+      "destination": "/guides/automatiser-suivi-prospects-assurance/index.html"
+    },
+    {
+      "source": "/guides/automatiser-suivi-prospects-assurance/",
+      "destination": "/guides/automatiser-suivi-prospects-assurance/index.html"
+    },
+    {
+      "source": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste/index.html"
+    },
+    {
+      "source": "/comparatifs/crm-assurance-vs-crm-generaliste/",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-documents-assurance",
+      "destination": "/fonctionnalites/gestion-documents-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-documents-assurance/",
+      "destination": "/fonctionnalites/gestion-documents-assurance/index.html"
+    },
+    {
+      "source": "/comparatifs/excel-vs-crm-courtier-assurance",
+      "destination": "/comparatifs/excel-vs-crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/comparatifs/excel-vs-crm-courtier-assurance/",
+      "destination": "/comparatifs/excel-vs-crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/renouvellements-assurance",
+      "destination": "/fonctionnalites/renouvellements-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/renouvellements-assurance/",
+      "destination": "/fonctionnalites/renouvellements-assurance/index.html"
+    },
+    {
+      "source": "/solutions/courtier-assurance-independant",
+      "destination": "/solutions/courtier-assurance-independant/index.html"
+    },
+    {
+      "source": "/solutions/courtier-assurance-independant/",
+      "destination": "/solutions/courtier-assurance-independant/index.html"
+    },
+    {
+      "source": "/outils/calculateur-productivite-courtier",
+      "destination": "/outils/calculateur-productivite-courtier/index.html"
+    },
+    {
+      "source": "/outils/calculateur-productivite-courtier/",
+      "destination": "/outils/calculateur-productivite-courtier/index.html"
+    },
+    {
+      "source": "/fonctionnalites/relance-devis-assurance",
+      "destination": "/fonctionnalites/relance-devis-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/relance-devis-assurance/",
+      "destination": "/fonctionnalites/relance-devis-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/automatisation-relances",
+      "destination": "/fonctionnalites/automatisation-relances/index.html"
+    },
+    {
+      "source": "/fonctionnalites/automatisation-relances/",
+      "destination": "/fonctionnalites/automatisation-relances/index.html"
+    },
+    {
+      "source": "/guides/organiser-portefeuille-assurance",
+      "destination": "/guides/organiser-portefeuille-assurance/index.html"
+    },
+    {
+      "source": "/guides/organiser-portefeuille-assurance/",
+      "destination": "/guides/organiser-portefeuille-assurance/index.html"
+    },
+    {
+      "source": "/guides/reduire-saisie-manuelle-courtier",
+      "destination": "/guides/reduire-saisie-manuelle-courtier/index.html"
+    },
+    {
+      "source": "/guides/reduire-saisie-manuelle-courtier/",
+      "destination": "/guides/reduire-saisie-manuelle-courtier/index.html"
+    },
+    {
+      "source": "/solutions/equipe-commerciale-assurance",
+      "destination": "/solutions/equipe-commerciale-assurance/index.html"
+    },
+    {
+      "source": "/solutions/equipe-commerciale-assurance/",
+      "destination": "/solutions/equipe-commerciale-assurance/index.html"
+    },
+    {
+      "source": "/assurances/multirisque-professionnelle",
+      "destination": "/assurances/multirisque-professionnelle/index.html"
+    },
+    {
+      "source": "/assurances/multirisque-professionnelle/",
+      "destination": "/assurances/multirisque-professionnelle/index.html"
+    },
+    {
+      "source": "/guides/devoir-de-conseil-suivi-dossier",
+      "destination": "/guides/devoir-de-conseil-suivi-dossier/index.html"
+    },
+    {
+      "source": "/guides/devoir-de-conseil-suivi-dossier/",
+      "destination": "/guides/devoir-de-conseil-suivi-dossier/index.html"
+    },
+    {
+      "source": "/fonctionnalites/prospection-assurance",
+      "destination": "/fonctionnalites/prospection-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/prospection-assurance/",
+      "destination": "/fonctionnalites/prospection-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/compte-rendu-clients",
+      "destination": "/fonctionnalites/compte-rendu-clients/index.html"
+    },
+    {
+      "source": "/fonctionnalites/compte-rendu-clients/",
+      "destination": "/fonctionnalites/compte-rendu-clients/index.html"
+    },
+    {
+      "source": "/solutions/cabinet-courtage-assurance",
+      "destination": "/solutions/cabinet-courtage-assurance/index.html"
+    },
+    {
+      "source": "/solutions/cabinet-courtage-assurance/",
+      "destination": "/solutions/cabinet-courtage-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/reporting-courtier",
+      "destination": "/fonctionnalites/reporting-courtier/index.html"
+    },
+    {
+      "source": "/fonctionnalites/reporting-courtier/",
+      "destination": "/fonctionnalites/reporting-courtier/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-contrats",
+      "destination": "/fonctionnalites/gestion-contrats/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-contrats/",
+      "destination": "/fonctionnalites/gestion-contrats/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-clients",
+      "destination": "/fonctionnalites/gestion-clients/index.html"
+    },
+    {
+      "source": "/fonctionnalites/gestion-clients/",
+      "destination": "/fonctionnalites/gestion-clients/index.html"
+    },
+    {
+      "source": "/fonctionnalites/assistant-ark",
+      "destination": "/fonctionnalites/assistant-ark/index.html"
+    },
+    {
+      "source": "/fonctionnalites/assistant-ark/",
+      "destination": "/fonctionnalites/assistant-ark/index.html"
+    },
+    {
+      "source": "/suisse/crm-courtier-assurance",
+      "destination": "/suisse/crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/suisse/crm-courtier-assurance/",
+      "destination": "/suisse/crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/solutions/reseau-courtage",
+      "destination": "/solutions/reseau-courtage/index.html"
+    },
+    {
+      "source": "/solutions/reseau-courtage/",
+      "destination": "/solutions/reseau-courtage/index.html"
+    },
+    {
+      "source": "/assurances/mutuelle-sante",
+      "destination": "/assurances/mutuelle-sante/index.html"
+    },
+    {
+      "source": "/assurances/mutuelle-sante/",
+      "destination": "/assurances/mutuelle-sante/index.html"
+    },
+    {
+      "source": "/assurances/assurance-auto",
+      "destination": "/assurances/assurance-auto/index.html"
+    },
+    {
+      "source": "/assurances/assurance-auto/",
+      "destination": "/assurances/assurance-auto/index.html"
+    },
+    {
+      "source": "/crm-courtier-assurance",
+      "destination": "/crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/crm-courtier-assurance/",
+      "destination": "/crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/assurances/prevoyance",
+      "destination": "/assurances/prevoyance/index.html"
+    },
+    {
+      "source": "/assurances/prevoyance/",
+      "destination": "/assurances/prevoyance/index.html"
+    },
+    {
+      "source": "/assurances/rc-pro",
+      "destination": "/assurances/rc-pro/index.html"
+    },
+    {
+      "source": "/assurances/rc-pro/",
+      "destination": "/assurances/rc-pro/index.html"
+    },
+    {
+      "source": "/fonctionnalites",
+      "destination": "/fonctionnalites/index.html"
+    },
+    {
+      "source": "/fonctionnalites/",
+      "destination": "/fonctionnalites/index.html"
+    },
+    {
+      "source": "/mentions-legales",
+      "destination": "/mentions-legales/index.html"
+    },
+    {
+      "source": "/mentions-legales/",
+      "destination": "/mentions-legales/index.html"
+    },
+    {
+      "source": "/suisse/lausanne",
+      "destination": "/suisse/lausanne/index.html"
+    },
+    {
+      "source": "/suisse/lausanne/",
+      "destination": "/suisse/lausanne/index.html"
+    },
+    {
+      "source": "/confidentialite",
+      "destination": "/confidentialite/index.html"
+    },
+    {
+      "source": "/confidentialite/",
+      "destination": "/confidentialite/index.html"
+    },
+    {
+      "source": "/suisse/geneve",
+      "destination": "/suisse/geneve/index.html"
+    },
+    {
+      "source": "/suisse/geneve/",
+      "destination": "/suisse/geneve/index.html"
+    },
+    {
+      "source": "/comparatifs",
+      "destination": "/comparatifs/index.html"
+    },
+    {
+      "source": "/comparatifs/",
+      "destination": "/comparatifs/index.html"
+    },
+    {
+      "source": "/assurances",
+      "destination": "/assurances/index.html"
+    },
+    {
+      "source": "/assurances/",
+      "destination": "/assurances/index.html"
+    },
+    {
+      "source": "/solutions",
+      "destination": "/solutions/index.html"
+    },
+    {
+      "source": "/solutions/",
+      "destination": "/solutions/index.html"
+    },
+    {
+      "source": "/securite",
+      "destination": "/securite/index.html"
+    },
+    {
+      "source": "/securite/",
+      "destination": "/securite/index.html"
+    },
+    {
+      "source": "/a-propos",
+      "destination": "/a-propos/index.html"
+    },
+    {
+      "source": "/a-propos/",
+      "destination": "/a-propos/index.html"
+    },
+    {
+      "source": "/france",
+      "destination": "/france/index.html"
+    },
+    {
+      "source": "/france/",
+      "destination": "/france/index.html"
+    },
+    {
+      "source": "/suisse",
+      "destination": "/suisse/index.html"
+    },
+    {
+      "source": "/suisse/",
+      "destination": "/suisse/index.html"
+    },
+    {
+      "source": "/guides",
+      "destination": "/guides/index.html"
+    },
+    {
+      "source": "/guides/",
+      "destination": "/guides/index.html"
+    },
+    {
+      "source": "/outils",
+      "destination": "/outils/index.html"
+    },
+    {
+      "source": "/outils/",
+      "destination": "/outils/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/contact/",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/demo",
+      "destination": "/demo/index.html"
+    },
+    {
+      "source": "/demo/",
+      "destination": "/demo/index.html"
+    },
+    {
       "source": "/ch",
       "destination": "/ch/index.html"
-    },
-    {
-      "source": "/ch/tarifs-logiciel-courtier-chf",
-      "destination": "/ch/tarifs-logiciel-courtier-chf/index.html"
-    },
-    {
-      "source": "/ch/conformite-intermediaire-assurance-lsa-finma",
-      "destination": "/ch/conformite-intermediaire-assurance-lsa-finma/index.html"
     },
     {
       "source": "/fr",
@@ -124,7 +516,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/app.html"
     }
   ],
   "headers": [
@@ -135,11 +527,26 @@
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests"
         },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=()" },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        }
       ]
     }
   ]
