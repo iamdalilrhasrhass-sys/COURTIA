@@ -13,14 +13,15 @@
   } catch(e){}
   var commence = 0;
   function outil(nom){ if (window.courtiaTrack) { try { window.courtiaTrack(nom); } catch(e){} } }
+  var fini = 0;
   f.addEventListener('change', function(){
-    if (!commence) { commence = 1; outil('tool_start'); }
+  if (!commence) { commence = 1; outil('tool_start'); }
     var etat = {};
     cases().forEach(function(c){ if (c.checked) etat[c.id] = 1; });
     try { localStorage.setItem(cle, JSON.stringify(etat)); } catch(e){}
     var total = cases().length, faits = 0;
     cases().forEach(function(c){ if (c.checked) faits++; });
-    if (total && faits === total) outil('tool_complete');
+    if (total && faits === total && !fini) { fini = 1; outil('tool_complete'); }
     resume();
   });
   resume();

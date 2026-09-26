@@ -10,8 +10,10 @@
       if (!commence) { commence = 1; outil('tool_start'); }
     });
   });
+  var fini = 0;
   b.addEventListener('click', function(){
-    outil('tool_complete');
+    // un seul tool_complete par visite : sinon chaque recalcul gonfle le taux de completion
+    if (!fini) { fini = 1; outil('tool_complete'); }
     var leads = v('t-leads'), devis = v('t-devis'), contrats = v('t-contrats');
     var r = document.getElementById('t-resultat');
     if (!leads) { r.innerHTML = '<p class="note">Indiquez au moins un nombre de leads entrants.</p>'; return; }

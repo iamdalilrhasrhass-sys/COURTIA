@@ -143,8 +143,10 @@ TRANSFORMATION_JS = r"""
       if (!commence) { commence = 1; outil('tool_start'); }
     });
   });
+  var fini = 0;
   b.addEventListener('click', function(){
-    outil('tool_complete');
+    // un seul tool_complete par visite : sinon chaque recalcul gonfle le taux de completion
+    if (!fini) { fini = 1; outil('tool_complete'); }
     var leads = v('t-leads'), devis = v('t-devis'), contrats = v('t-contrats');
     var r = document.getElementById('t-resultat');
     if (!leads) { r.innerHTML = '<p class="note">Indiquez au moins un nombre de leads entrants.</p>'; return; }
@@ -189,11 +191,12 @@ CHECKLIST_DOSSIER_JS = r"""
   }
   var commence = 0;
   function outil(nom){ if (window.courtiaTrack) { try { window.courtiaTrack(nom); } catch(e){} } }
+  var fini = 0;
   f.addEventListener('change', function(){
-    if (!commence) { commence = 1; outil('tool_start'); }
+  if (!commence) { commence = 1; outil('tool_start'); }
     var total = cases().length, faits = 0;
     cases().forEach(function(c){ if (c.checked) faits++; });
-    if (total && faits === total) outil('tool_complete');
+    if (total && faits === total && !fini) { fini = 1; outil('tool_complete'); }
   });
   f.addEventListener('change', sauver);
   resume();
@@ -220,14 +223,15 @@ CHECKLIST_RENOUV_JS = r"""
   } catch(e){}
   var commence = 0;
   function outil(nom){ if (window.courtiaTrack) { try { window.courtiaTrack(nom); } catch(e){} } }
+  var fini = 0;
   f.addEventListener('change', function(){
-    if (!commence) { commence = 1; outil('tool_start'); }
+  if (!commence) { commence = 1; outil('tool_start'); }
     var etat = {};
     cases().forEach(function(c){ if (c.checked) etat[c.id] = 1; });
     try { localStorage.setItem(cle, JSON.stringify(etat)); } catch(e){}
     var total = cases().length, faits = 0;
     cases().forEach(function(c){ if (c.checked) faits++; });
-    if (total && faits === total) outil('tool_complete');
+    if (total && faits === total && !fini) { fini = 1; outil('tool_complete'); }
     resume();
   });
   resume();
