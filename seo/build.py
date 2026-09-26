@@ -64,10 +64,15 @@ def main():
     if doublons:
         raise SystemExit(f'Chemins dupliques : {doublons}')
 
+    HUBS = ('/fonctionnalites', '/solutions', '/assurances', '/france', '/suisse', '/guides', '/outils',
+            '/comparatifs', '/demo', '/contact')
     ecrits = []
     for page in pages:
         html = rendre(page)
         html = html.replace('</body>', TRACK_JS + '</body>')
+        # Les hubs sont servis sans slash final : on evite les redirections 308 dans les liens internes.
+        for h in HUBS:
+            html = html.replace(f'href="{h}/"', f'href="{h}"')
         dest = fichier_de(page['path'])
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         io.open(dest, 'w', encoding='utf-8').write(html)

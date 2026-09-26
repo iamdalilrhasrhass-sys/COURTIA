@@ -443,6 +443,14 @@
       "destination": "/solutions/index.html"
     },
     {
+      "source": "/changelog",
+      "destination": "/changelog/index.html"
+    },
+    {
+      "source": "/changelog/",
+      "destination": "/changelog/index.html"
+    },
+    {
       "source": "/securite",
       "destination": "/securite/index.html"
     },

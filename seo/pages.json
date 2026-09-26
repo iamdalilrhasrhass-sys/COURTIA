@@ -55,7 +55,7 @@
    ]
   ],
   "slug": "",
-  "_octets": 20194,
+  "_octets": 20174,
   "_section": "core"
  },
  {
@@ -123,7 +123,7 @@
    ]
   ],
   "slug": "/crm-courtier-assurance",
-  "_octets": 18627,
+  "_octets": 18609,
   "_section": "core"
  },
  {
@@ -157,7 +157,7 @@
    ]
   ],
   "slug": "/fonctionnalites/",
-  "_octets": 13017,
+  "_octets": 12999,
   "_section": "features"
  },
  {
@@ -213,7 +213,7 @@
    ]
   ],
   "slug": "/fonctionnalites/assistant-ark",
-  "_octets": 15991,
+  "_octets": 15974,
   "_section": "features"
  },
  {
@@ -265,7 +265,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-portefeuille-assurance",
-  "_octets": 14618,
+  "_octets": 14601,
   "_section": "features"
  },
  {
@@ -313,7 +313,7 @@
    ]
   ],
   "slug": "/fonctionnalites/relance-devis-assurance",
-  "_octets": 14881,
+  "_octets": 14864,
   "_section": "features"
  },
  {
@@ -361,7 +361,7 @@
    ]
   ],
   "slug": "/fonctionnalites/renouvellements-assurance",
-  "_octets": 14705,
+  "_octets": 14687,
   "_section": "features"
  },
  {
@@ -409,7 +409,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-documents-assurance",
-  "_octets": 14551,
+  "_octets": 14534,
   "_section": "features"
  },
  {
@@ -457,7 +457,7 @@
    ]
   ],
   "slug": "/fonctionnalites/automatisation-relances",
-  "_octets": 14962,
+  "_octets": 14945,
   "_section": "features"
  },
  {
@@ -505,7 +505,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-clients",
-  "_octets": 14184,
+  "_octets": 14167,
   "_section": "features"
  },
  {
@@ -553,7 +553,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-contrats",
-  "_octets": 14061,
+  "_octets": 14044,
   "_section": "features"
  },
  {
@@ -601,7 +601,7 @@
    ]
   ],
   "slug": "/fonctionnalites/reporting-courtier",
-  "_octets": 14091,
+  "_octets": 14074,
   "_section": "features"
  },
  {
@@ -649,7 +649,7 @@
    ]
   ],
   "slug": "/fonctionnalites/prospection-assurance",
-  "_octets": 14215,
+  "_octets": 14198,
   "_section": "features"
  },
  {
@@ -697,7 +697,7 @@
    ]
   ],
   "slug": "/fonctionnalites/compte-rendu-clients",
-  "_octets": 13628,
+  "_octets": 13611,
   "_section": "features"
  },
  {
@@ -746,7 +746,7 @@
    ]
   ],
   "slug": "/france/",
-  "_octets": 17017,
+  "_octets": 16999,
   "_section": "france"
  },
  {
@@ -799,7 +799,7 @@
    ]
   ],
   "slug": "/suisse/",
-  "_octets": 17269,
+  "_octets": 17252,
   "_section": "switzerland"
  },
  {
@@ -860,7 +860,7 @@
    ]
   ],
   "slug": "/suisse/crm-courtier-assurance",
-  "_octets": 17102,
+  "_octets": 17084,
   "_section": "switzerland"
  },
  {
@@ -913,7 +913,7 @@
    ]
   ],
   "slug": "/suisse/geneve",
-  "_octets": 16418,
+  "_octets": 16400,
   "_section": "switzerland"
  },
  {
@@ -966,7 +966,7 @@
    ]
   ],
   "slug": "/suisse/lausanne",
-  "_octets": 15908,
+  "_octets": 15890,
   "_section": "switzerland"
  },
  {
@@ -997,7 +997,7 @@
    ]
   ],
   "slug": "/solutions/",
-  "_octets": 12149,
+  "_octets": 12132,
   "_section": "solutions"
  },
  {
@@ -1044,7 +1044,7 @@
    ]
   ],
   "slug": "/solutions/courtier-assurance-independant",
-  "_octets": 14939,
+  "_octets": 14922,
   "_section": "solutions"
  },
  {
@@ -1091,7 +1091,7 @@
    ]
   ],
   "slug": "/solutions/cabinet-courtage-assurance",
-  "_octets": 14854,
+  "_octets": 14837,
   "_section": "solutions"
  },
  {
@@ -1138,7 +1138,7 @@
    ]
   ],
   "slug": "/solutions/equipe-commerciale-assurance",
-  "_octets": 14421,
+  "_octets": 14404,
   "_section": "solutions"
  },
  {
@@ -1185,7 +1185,7 @@
    ]
   ],
   "slug": "/solutions/reseau-courtage",
-  "_octets": 14595,
+  "_octets": 14578,
   "_section": "solutions"
  },
  {
@@ -1221,7 +1221,7 @@
    ]
   ],
   "slug": "/assurances/",
-  "_octets": 13340,
+  "_octets": 13323,
   "_section": "assurances"
  },
  {
@@ -1268,7 +1268,7 @@
    ]
   ],
   "slug": "/assurances/mutuelle-sante",
-  "_octets": 14565,
+  "_octets": 14548,
   "_section": "assurances"
  },
  {
@@ -1315,7 +1315,7 @@
    ]
   ],
   "slug": "/assurances/prevoyance",
-  "_octets": 14156,
+  "_octets": 14138,
   "_section": "assurances"
  },
  {
@@ -1362,7 +1362,7 @@
    ]
   ],
   "slug": "/assurances/assurance-auto",
-  "_octets": 13597,
+  "_octets": 13580,
   "_section": "assurances"
  },
  {
@@ -1409,7 +1409,7 @@
    ]
   ],
   "slug": "/assurances/rc-pro",
-  "_octets": 13682,
+  "_octets": 13665,
   "_section": "assurances"
  },
  {
@@ -1456,7 +1456,7 @@
    ]
   ],
   "slug": "/assurances/multirisque-professionnelle",
-  "_octets": 13511,
+  "_octets": 13494,
   "_section": "assurances"
  },
  {
@@ -1491,7 +1491,7 @@
    ]
   ],
   "slug": "/guides/",
-  "_octets": 12435,
+  "_octets": 12416,
   "_section": "resources"
  },
  {
@@ -1538,7 +1538,7 @@
    ]
   ],
   "slug": "/guides/comment-ne-plus-oublier-relances-courtier",
-  "_octets": 14377,
+  "_octets": 14360,
   "_section": "resources"
  },
  {
@@ -1585,7 +1585,7 @@
    ]
   ],
   "slug": "/guides/automatiser-renouvellements-assurance",
-  "_octets": 14689,
+  "_octets": 14672,
   "_section": "resources"
  },
  {
@@ -1632,7 +1632,7 @@
    ]
   ],
   "slug": "/guides/centraliser-documents-clients-assurance",
-  "_octets": 13876,
+  "_octets": 13859,
   "_section": "resources"
  },
  {
@@ -1679,7 +1679,7 @@
    ]
   ],
   "slug": "/guides/organiser-portefeuille-assurance",
-  "_octets": 13924,
+  "_octets": 13906,
   "_section": "resources"
  },
  {
@@ -1726,7 +1726,7 @@
    ]
   ],
   "slug": "/guides/reduire-saisie-manuelle-courtier",
-  "_octets": 13707,
+  "_octets": 13690,
   "_section": "resources"
  },
  {
@@ -1773,7 +1773,7 @@
    ]
   ],
   "slug": "/guides/automatiser-suivi-prospects-assurance",
-  "_octets": 14170,
+  "_octets": 14153,
   "_section": "resources"
  },
  {
@@ -1820,7 +1820,7 @@
    ]
   ],
   "slug": "/guides/devoir-de-conseil-suivi-dossier",
-  "_octets": 14959,
+  "_octets": 14942,
   "_section": "resources"
  },
  {
@@ -1871,7 +1871,7 @@
    ]
   ],
   "slug": "/guides/donnees-clients-assurance-france-suisse",
-  "_octets": 15368,
+  "_octets": 15351,
   "_section": "resources"
  },
  {
@@ -1902,7 +1902,7 @@
    ]
   ],
   "slug": "/comparatifs/",
-  "_octets": 12249,
+  "_octets": 12232,
   "_section": "comparatifs"
  },
  {
@@ -1949,7 +1949,7 @@
    ]
   ],
   "slug": "/comparatifs/crm-assurance-vs-crm-generaliste",
-  "_octets": 14746,
+  "_octets": 14728,
   "_section": "comparatifs"
  },
  {
@@ -1996,7 +1996,7 @@
    ]
   ],
   "slug": "/comparatifs/excel-vs-crm-courtier-assurance",
-  "_octets": 14548,
+  "_octets": 14531,
   "_section": "comparatifs"
  },
  {
@@ -2043,7 +2043,7 @@
    ]
   ],
   "slug": "/comparatifs/logiciel-metier-vs-crm-generaliste",
-  "_octets": 14272,
+  "_octets": 14254,
   "_section": "comparatifs"
  },
  {
@@ -2074,7 +2074,7 @@
    ]
   ],
   "slug": "/outils/",
-  "_octets": 12001,
+  "_octets": 11984,
   "_section": "tools"
  },
  {
@@ -2122,7 +2122,7 @@
    ]
   ],
   "slug": "/outils/calculateur-productivite-courtier",
-  "_octets": 15168,
+  "_octets": 15149,
   "_section": "tools"
  },
  {
@@ -2174,7 +2174,7 @@
    ]
   ],
   "slug": "/securite",
-  "_octets": 14348,
+  "_octets": 14332,
   "_section": "trust"
  },
  {
@@ -2218,7 +2218,7 @@
    ]
   ],
   "slug": "/a-propos",
-  "_octets": 12886,
+  "_octets": 12869,
   "_section": "trust"
  },
  {
@@ -2253,7 +2253,7 @@
    ]
   ],
   "slug": "/mentions-legales",
-  "_octets": 11542,
+  "_octets": 11526,
   "_section": "trust"
  },
  {
@@ -2293,7 +2293,7 @@
    ]
   ],
   "slug": "/confidentialite",
-  "_octets": 12447,
+  "_octets": 12431,
   "_section": "trust"
  },
  {
@@ -2333,7 +2333,7 @@
    ]
   ],
   "slug": "/demo/",
-  "_octets": 12981,
+  "_octets": 12964,
   "_section": "trust"
  },
  {
@@ -2368,7 +2368,7 @@
    ]
   ],
   "slug": "/contact",
-  "_octets": 12076,
+  "_octets": 12059,
   "_section": "trust"
  },
  {
@@ -2386,7 +2386,7 @@
     null
    ]
   ],
-  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr><tr><td>22/09/2026</td><td>SEO: artefacts regeneres apres la vague 4 (suivi des pages, maillage, intentions)</td><td>f568b1de</td></tr><tr><td>22/09/2026</td><td>SEO: le sitemap suisse est régénéré depuis les fichiers (défaut réel corrigé)</td><td>07bf2995</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>perf(web): sortir les scripts du HTML pour respecter la CSP</td><td>3f172969</td></tr><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr><tr><td>22/09/2026</td><td>SEO: artefacts regeneres apres la vague 4 (suivi des pages, maillage, intentions)</td><td>f568b1de</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -2399,7 +2399,7 @@
    ]
   ],
   "slug": "/changelog",
-  "_octets": 14055,
+  "_octets": 14014,
   "_section": "core"
  }
 ]
