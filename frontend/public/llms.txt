@@ -1,22 +1,59 @@
-# COURTIA
-> Le cockpit IA des courtiers d'assurance. Première plateforme où une IA (ARK) exécute l'administratif, la conformité (DDA, RGPD, LCB-FT) et la prospection à la place du courtier ORIAS. Catégorie : cockpit IA du courtier — au-delà du simple CRM.
+# courtiark.fr
 
-## Ce que fait COURTIA
-- Morning Brief ARK : 5 actions chiffrées chaque matin
-- Relances automatisées, scoring prédictif, cross-sell, forecast de commissions
-- Conformité DDA/RGPD/LCB-FT, registre Art.30, IPID, attestations
-- Comparateur de devis, widget IA embarquable, signature électronique
+> COURTIARK — CRM et cockpit IA pour cabinets de courtage en assurance (France et Suisse).
 
-## Pour qui
-Courtiers ORIAS en France (~26 953 courtiers, dont >90% de TPE). Extension Suisse romande (FINMA).
+Categorie produit : CRM courtier assurance, logiciel de courtage, gestion de portefeuille d'assurance.
+Essai : 7 jours. France : 89 EUR HT/mois (Starter), 159 EUR HT/mois (Pro). Suisse : 199 CHF HT/mois (Independant), 349 CHF HT/mois (Cabinet).
 
-## Offres
-Starter 89 € HT/mois · Pro 159 € HT/mois (offre centrale) · Cabinet sur devis. (Les 199/349 CHF concernent la Suisse : voir https://courtiark.fr/ch)
-
-## Pages clés
-- Logiciel courtier : https://courtiark.fr/fr/logiciel-courtier-assurance
-- Courtier IARD : https://courtiark.fr/fr/logiciel-courtier-iard
-- Courtier sante : https://courtiark.fr/fr/logiciel-courtier-sante
-- Courtier emprunteur : https://courtiark.fr/fr/logiciel-courtier-emprunteur
-
-Généré le 2026-06-29.
+## Pages principales
+- [Le cockpit IA des courtiers en assurance](https://courtiark.fr/): COURTIARK centralise portefeuille, contrats, documents et relances des cabinets de courtage en assurance. Conçu pour la France (DDA) et la Suisse (FINMA). Essai 7 jours.
+- [À propos de COURTIARK](https://courtiark.fr/a-propos): COURTIARK est un CRM et cockpit IA pour cabinets de courtage en assurance, en France et en Suisse. Ce que nous faisons, ce que nous ne faisons pas.
+- [Branches d'assurance couvertes](https://courtiark.fr/assurances): COURTIARK suit les dossiers clients et contrats, quelle que soit la branche : santé et prévoyance, auto, responsabilité civile professionnelle, multirisque.
+- [Assurance auto](https://courtiark.fr/assurances/assurance-auto): Assurance auto : suivez véhicules, contrats, échéances et sinistres déclarés dans le dossier client, avec les pièces rattachées.
+- [Multirisque professionnelle](https://courtiark.fr/assurances/multirisque-professionnelle): Multirisque professionnelle : suivez les dossiers PME, leurs contrats, leurs échéances et leurs documents dans un même suivi.
+- [Mutuelle et complémentaire santé](https://courtiark.fr/assurances/mutuelle-sante): Suivez les dossiers de complémentaire santé : contrats, échéances, documents, changements de situation, sans mélanger les données de santé avec la prospection.
+- [Prévoyance](https://courtiark.fr/assurances/prevoyance): Prévoyance : suivez contrats, échéances et documents clients, avec l'historique des échanges pour préparer les points de situation.
+- [Responsabilité civile professionnelle](https://courtiark.fr/assurances/rc-pro): RC professionnelle : suivez les dossiers entreprises, les échéances et les pièces, avec un historique exploitable pour les renouvellements.
+- [Comparatifs](https://courtiark.fr/comparatifs): Comparatifs honnêtes : CRM assurance face à un CRM généraliste, tableur face à un outil dédié, logiciel métier face à un CRM générique.
+- [CRM assurance ou CRM généraliste](https://courtiark.fr/comparatifs/crm-assurance-vs-crm-generaliste): Un CRM généraliste gère des contacts. Un CRM d'assurance gère des contrats, des échéances et des commissions. Comparaison par objet métier.
+- [Tableur ou CRM courtier](https://courtiark.fr/comparatifs/excel-vs-crm-courtier-assurance): Le tableur est gratuit et vous connaissez vos fichiers. Voici ce qu'il ne sait pas faire pour un portefeuille d'assurance.
+- [Logiciel métier ou CRM générique](https://courtiark.fr/comparatifs/logiciel-metier-vs-crm-generaliste): Beaucoup de cabinets hésitent entre un logiciel métier lourd et un CRM souple. Voici les questions qui tranchent réellement.
+- [Confidentialité](https://courtiark.fr/confidentialite): Quelles données COURTIARK traite, pour quoi, et quels sont vos droits. En clair, sans engagement que nous ne pouvons pas tenir.
+- [Contacter COURTIARK](https://courtiark.fr/contact): Contacter COURTIARK : question sur le produit, demande de démonstration, sujet de sécurité ou de confidentialité.
+- [CRM courtier assurance : un seul endroit pour tout votre portefeuille](https://courtiark.fr/crm-courtier-assurance): Le CRM des cabinets de courtage en assurance : portefeuille, contrats, échéances, devis, documents, commissions et conformité au même endroit. Essai 7 jours.
+- [Demander une démonstration](https://courtiark.fr/demo): Demandez une démonstration de COURTIARK : nous regardons votre organisation et montrons ce que l'outil traite concrètement. Essai 7 jours possible.
+- [Fonctionnalités de COURTIARK](https://courtiark.fr/fonctionnalites): Les fonctionnalités de COURTIARK, détaillées : portefeuille, contrats, devis et relances, documents, renouvellements, commissions, ARK, prospection.
+- [ARK : l'assistant qui prépare, vous validez](https://courtiark.fr/fonctionnalites/assistant-ark): ARK lit un document du dossier (facture, RIB, attestation), propose les informations détectées avec leur origine, puis écrit seulement après votre validation.
+- [Automatisation des relances](https://courtiark.fr/fonctionnalites/automatisation-relances): Organisez les relances récurrentes d'un cabinet de courtage : pièces manquantes, devis en attente, échéances. Rien n'est envoyé sans une action humaine.
+- [Suivi des rendez-vous et des échanges](https://courtiark.fr/fonctionnalites/compte-rendu-clients): Rendez-vous, visites et échanges clients consignés dans le dossier : le suivi commercial reste lisible pour tout le cabinet.
+- [Gestion des clients](https://courtiark.fr/fonctionnalites/gestion-clients): Une fiche client complète : coordonnées, contrats, échéances, documents, historique des échanges et des relances, au même endroit.
+- [Gestion des contrats](https://courtiark.fr/fonctionnalites/gestion-contrats): Suivez les contrats de vos clients : assureur, échéance, statut, documents liés. Les renouvellements ne se découvrent plus au dernier moment.
+- [Gestion des documents clients](https://courtiark.fr/fonctionnalites/gestion-documents-assurance): Le client dépose ses pièces (RIB, attestation, carte verte) par un lien, sans créer de compte. Les documents restent rattachés à son dossier.
+- [Gestion de portefeuille d'assurance](https://courtiark.fr/fonctionnalites/gestion-portefeuille-assurance): Suivez votre portefeuille d'assurance dans un seul écran : dossiers, échéances, pièces manquantes, contrats qui décrochent, actions du jour.
+- [Prospection et suivi commercial](https://courtiark.fr/fonctionnalites/prospection-assurance): Recherche de prospects, campagnes, séquences et boîte de réception des réponses : la prospection se suit dans le même outil que le portefeuille.
+- [Relance de devis assurance](https://courtiark.fr/fonctionnalites/relance-devis-assurance): Un devis sans relance est un devis perdu. COURTIARK rattache les devis à un dossier, suit leur étape et organise les relances à mener.
+- [Gestion des renouvellements d'assurance](https://courtiark.fr/fonctionnalites/renouvellements-assurance): Les échéances de contrats sont visibles à l'avance : COURTIARK permet de préparer le renouvellement avant que le client ne reçoive l'avis de son assureur.
+- [Reporting et pilotage](https://courtiark.fr/fonctionnalites/reporting-courtier): Rapports et analyses du cabinet : portefeuille, devis, commissions, activité commerciale. Des chiffres issus de vos données, pas d'estimations.
+- [COURTIARK en France](https://courtiark.fr/france): COURTIARK en France : CRM et cockpit IA pour courtiers et intermédiaires en assurance. Repères DDA, ORIAS, RGPD, facturation en euros. Essai 7 jours.
+- [Guides pratiques pour cabinets de courtage](https://courtiark.fr/guides): Des guides concrets pour organiser un cabinet de courtage : relances, renouvellements, documents clients, portefeuille, saisie manuelle.
+- [Automatiser les renouvellements d'assurance](https://courtiark.fr/guides/automatiser-renouvellements-assurance): Comment anticiper les échéances de contrats : repérer à l'avance, préparer le dossier, décider avec le client, consigner la décision.
+- [Automatiser le suivi des prospects](https://courtiark.fr/guides/automatiser-suivi-prospects-assurance): Suivre les prospects sans harceler : séquences d'étapes, traçabilité des contacts, gestion des oppositions, passage au CRM.
+- [Centraliser les documents clients](https://courtiark.fr/guides/centraliser-documents-clients-assurance): Comment arrêter de redemander trois fois la même pièce : liste des documents attendus, lien de dépôt, classement dans le dossier.
+- [Comment ne plus oublier une relance](https://courtiark.fr/guides/comment-ne-plus-oublier-relances-courtier): Méthode pratique pour qu'aucune relance ne dépende de la mémoire : où placer l'information, qui agit, à quelle fréquence, et comment le vérifier.
+- [Devoir de conseil : ce qu'il faut pouvoir montrer](https://courtiark.fr/guides/devoir-de-conseil-suivi-dossier): Comment documenter le suivi d'un dossier pour pouvoir expliquer, plus tard, ce qui a été conseillé et quand. Repères France (DDA) et Suisse (LSA).
+- [Données clients : repères France et Suisse](https://courtiark.fr/guides/donnees-clients-assurance-france-suisse): Ce qu'un cabinet doit garder en tête sur les données clients selon le marché : principes, données sensibles, hébergement, sous-traitants.
+- [Organiser un portefeuille d'assurance](https://courtiark.fr/guides/organiser-portefeuille-assurance): Comment structurer un portefeuille : inventaire, segmentation, échéances, dossiers incomplets, rythme de revue.
+- [Réduire la saisie manuelle](https://courtiark.fr/guides/reduire-saisie-manuelle-courtier): Où part le temps de saisie, ce qu'on peut éviter sans risque, et ce qu'il ne faut surtout pas automatiser.
+- [Mentions légales](https://courtiark.fr/mentions-legales): Mentions légales du service COURTIARK : éditeur, hébergement, sous-traitants techniques et conditions d'utilisation.
+- [Outils gratuits](https://courtiark.fr/outils): Des outils de calcul honnêtes pour un cabinet de courtage : charge administrative, hypothèses affichées, aucune donnée transmise.
+- [Calculateur de charge administrative](https://courtiark.fr/outils/calculateur-productivite-courtier): Estimez les heures mensuelles de saisie, de relances et de recherche de documents de votre cabinet, à partir de vos propres valeurs. Formules affichées.
+- [Sécurité des données](https://courtiark.fr/securite): Ce que COURTIARK met en place pour protéger les données d'un cabinet : cloisonnement vérifié en production, accès limités, sous-traitants documentés.
+- [Solutions selon votre structure](https://courtiark.fr/solutions): COURTIARK selon votre structure : courtier indépendant, cabinet de courtage, équipe commerciale ou réseau. Le même socle, des usages différents.
+- [Cabinet de courtage assurance](https://courtiark.fr/solutions/cabinet-courtage-assurance): Un cabinet de courtage doit rendre le suivi partageable : dossiers, devis, documents et commissions accessibles à l'équipe, sans mélange entre clients.
+- [Courtier en assurance indépendant](https://courtiark.fr/solutions/courtier-assurance-independant): Un courtier seul n'a pas de marge administrative. COURTIARK organise portefeuille, échéances, documents et relances pour une personne.
+- [Équipe commerciale](https://courtiark.fr/solutions/equipe-commerciale-assurance): Donnez à l'équipe une liste d'actions claire : devis en attente, relances à faire, prospects à travailler, résultats suivis.
+- [Réseau de courtage](https://courtiark.fr/solutions/reseau-courtage): Un réseau a besoin d'un cadre commun sans mélanger les portefeuilles : structuration des dossiers, suivi des actions, remontée d'activité.
+- [COURTIARK en Suisse](https://courtiark.fr/suisse): COURTIARK en Suisse romande : CRM et cockpit IA pour intermédiaires d'assurance. Repères LSA, surveillance FINMA, protection des données (LPD). Facturation en CHF.
+- [CRM courtier assurance en Suisse](https://courtiark.fr/suisse/crm-courtier-assurance): CRM pour courtiers en assurance en Suisse : clients, contrats, échéances, documents, commissions et repères LSA. Facturation en CHF, essai 7 jours.
+- [Logiciel de courtage assurance à Genève](https://courtiark.fr/suisse/geneve): COURTIARK à Genève : CRM pour cabinets de courtage en assurance. Portefeuille, contrats, documents, commissions, repères LSA. Facturation CHF, essai 7 jours.
+- [Logiciel de courtage assurance à Lausanne](https://courtiark.fr/suisse/lausanne): COURTIARK à Lausanne : CRM et cockpit IA pour cabinets de courtage en assurance du canton de Vaud. Portefeuille, échéances, documents, commissions. Essai 7 jours.

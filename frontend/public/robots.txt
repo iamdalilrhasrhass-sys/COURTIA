@@ -1,4 +1,4 @@
-# robots.txt — courtiark.fr (COURTIA)
+# robots.txt — courtiark.fr (COURTIARK) — CRM et cockpit IA pour courtiers en assurance
 # Mise à jour 2026-09-22.
 
 User-agent: *
@@ -68,9 +68,9 @@ Disallow: /api/
 # Les ~1 075 pages locales `logiciel-courtier-<métier>-<ville>` sont désormais en
 # `noindex, follow` et ne figurent plus dans aucun sitemap : elles partageaient un
 # bloc de contenu commun et n'avaient pas de valeur propre suffisante.
-Sitemap: https://courtiark.fr/sitemap.xml
-Sitemap: https://courtiark.fr/sitemap-ch.xml
-Sitemap: https://courtiark.fr/sitemap-seo.xml
+
+
+
 
 # ── Robots IA (citations et réponses génératives) ────────────────────────────
 User-agent: GPTBot
@@ -87,3 +87,15 @@ Allow: /
 
 User-agent: Google-Extended
 Allow: /
+
+Sitemap: https://courtiark.fr/sitemap.xml
+Sitemap: https://courtiark.fr/sitemaps/assurances.xml
+Sitemap: https://courtiark.fr/sitemaps/comparatifs.xml
+Sitemap: https://courtiark.fr/sitemaps/core.xml
+Sitemap: https://courtiark.fr/sitemaps/features.xml
+Sitemap: https://courtiark.fr/sitemaps/france.xml
+Sitemap: https://courtiark.fr/sitemaps/resources.xml
+Sitemap: https://courtiark.fr/sitemaps/solutions.xml
+Sitemap: https://courtiark.fr/sitemaps/switzerland.xml
+Sitemap: https://courtiark.fr/sitemaps/tools.xml
+Sitemap: https://courtiark.fr/sitemaps/trust.xml
