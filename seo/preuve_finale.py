@@ -35,8 +35,8 @@ def main():
     alias = sh('curl -s -o /dev/null -w "%{http_code}" https://courtiark.fr/logiciel-courtier-assurance')
     xvercel = [l.strip() for l in entete.splitlines() if l.lower().startswith('x-vercel-id')][:1]
     db = io.open('/root/.hermes/secrets/render_database_url').read().strip()
-    events = sh('psql "%s" -Atc "select event_name||\'|\'||count(*) from marketing_events group by 1 order by 2 desc"' % db)
-    outils = sh('psql "%s" -Atc "select page_path||\'|\'||count(*) filter (where event_name=\'seo_page_view\')||\'|\'||count(*) filter (where event_name=\'tool_start\')||\'|\'||count(*) filter (where event_name=\'tool_complete\')||\'|\'||count(*) filter (where event_name=\'tool_cta_click\') from marketing_events where page_path like \'/outils/%%\' group by 1 order by 2 desc"' % db)
+    events = sh('psql "%s" -At -F"|" -c "select event_name, count(*) from marketing_events group by 1 order by 2 desc"' % db)
+    outils = sh('psql "%s" -At -F"|" -c "select page_path, count(*) filter (where event_name = \'seo_page_view\'), count(*) filter (where event_name = \'tool_start\'), count(*) filter (where event_name = \'tool_complete\'), count(*) filter (where event_name = \'tool_cta_click\') from marketing_events where page_path like \'/outils/%%\' group by 1 order by 2 desc"' % db)
     vercel_json = json.load(io.open(os.path.join(RACINE, 'vercel.json'), encoding='utf-8'))
     L = ['# Production apres travaux (26/09/2026)', '',
          '## Deploiement', '',
