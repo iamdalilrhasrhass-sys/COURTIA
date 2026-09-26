@@ -42,6 +42,10 @@ const ALLOWED_EVENT_NAMES = new Set([
   'contact_submit',
   'trial_start',
   'trial_activation',
+  /* Mesure des outils gratuits (26/09/2026) : ce que fait vraiment le visiteur
+     sur un calculateur ou une checklist, et non seulement qu'il a vu la page. */
+  'tool_start',
+  'tool_complete',
 ])
 
 function requireAdmin(req, res, next) {

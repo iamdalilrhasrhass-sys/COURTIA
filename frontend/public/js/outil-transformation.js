@@ -2,7 +2,16 @@
   var b = document.getElementById('t-calc'); if (!b) return;
   function v(id){ return parseFloat(document.getElementById(id).value) || 0; }
   function pc(x){ return (Math.round(x*10)/10).toFixed(1).replace('.', ','); }
+  var commence = 0;
+  function outil(nom){ if (window.courtiaTrack) { try { window.courtiaTrack(nom); } catch(e){} } }
+  ['t-leads','t-devis','t-contrats'].forEach(function(id){
+    var champ = document.getElementById(id);
+    if (champ) champ.addEventListener('input', function(){
+      if (!commence) { commence = 1; outil('tool_start'); }
+    });
+  });
   b.addEventListener('click', function(){
+    outil('tool_complete');
     var leads = v('t-leads'), devis = v('t-devis'), contrats = v('t-contrats');
     var r = document.getElementById('t-resultat');
     if (!leads) { r.innerHTML = '<p class="note">Indiquez au moins un nombre de leads entrants.</p>'; return; }

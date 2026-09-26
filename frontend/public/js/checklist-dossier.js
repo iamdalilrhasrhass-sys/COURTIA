@@ -18,6 +18,14 @@
     try { localStorage.setItem(cle, JSON.stringify(etat)); } catch(e){}
     resume();
   }
+  var commence = 0;
+  function outil(nom){ if (window.courtiaTrack) { try { window.courtiaTrack(nom); } catch(e){} } }
+  f.addEventListener('change', function(){
+    if (!commence) { commence = 1; outil('tool_start'); }
+    var total = cases().length, faits = 0;
+    cases().forEach(function(c){ if (c.checked) faits++; });
+    if (total && faits === total) outil('tool_complete');
+  });
   f.addEventListener('change', sauver);
   resume();
   var r = document.getElementById('chk-reset');
