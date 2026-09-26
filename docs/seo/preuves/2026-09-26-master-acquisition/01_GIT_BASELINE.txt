@@ -1,0 +1,36 @@
+== git status --short ==
+?? docs/seo/preuves/2026-09-26-master-acquisition/
+
+== branche ==
+main
+
+== HEAD ==
+d0db5de62a62d7f3626571ac2e02859ec6607def
+
+== log -15 ==
+d0db5de6 docs(seo): preuve finale apres restauration des redirections de glossaire (164/164)
+1426c4d4 fix(seo): restaurer les 15 redirections de glossaire specifiques et aligner la variante accentuee courtier-sante
+348869fc docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation
+135c4199 fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)
+1a291997 docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)
+5d36e567 fix(seo): dedupliquer les redirections et supprimer les auto-redirections
+34091ed0 fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)
+1b594a00 fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues
+6caf9bdb fix(seo): corriger les deux redirections accentuees pour supprimer la chaine
+7f78d93c fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)
+5a4702e0 fix(seo): supprimer le doublon de section FAQ sur la money page
+88045ad1 feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click
+08547af1 fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)
+8d1f69ad fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)
+fb23a3f5 feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)
+
+== remotes ==
+origin	github.com-courtia-ark:iamdalilrhasrhass-sys/COURTIA.git (fetch)
+origin	github.com-courtia-ark:iamdalilrhasrhass-sys/COURTIA.git (push)
+
+== tags ==
+v1.0.0
+v1.0.1-closure
+v1.0.2-closure
+v1.0.3-demo-ready
+v1.1.0-stable

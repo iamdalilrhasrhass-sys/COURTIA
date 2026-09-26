@@ -16,6 +16,13 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://courtiark.fr/fonctionnalites/comparateur-devis-assurance</loc>
+    <xhtml:link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/fonctionnalites/comparateur-devis-assurance"/>
+    <xhtml:link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/suisse/crm-courtier-assurance"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://courtiark.fr/fonctionnalites/compte-rendu-clients</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

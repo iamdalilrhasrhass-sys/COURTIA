@@ -11,6 +11,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://courtiark.fr/france/densite-courtage</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://courtiark.fr/france/lille</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

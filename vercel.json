@@ -669,6 +669,11 @@
       "permanent": true
     },
     {
+      "source": "/fr/guide/devoir-de-conseil",
+      "destination": "/guides/devoir-de-conseil-suivi-dossier",
+      "permanent": true
+    },
+    {
       "source": "/fr/guide/integrer-ia-cabinet-courtage",
       "destination": "/fonctionnalites/assistant-ark",
       "permanent": true
@@ -684,8 +689,23 @@
       "permanent": true
     },
     {
+      "source": "/fr/guide/reforme-courtage",
+      "destination": "/conformite/controle-acpr-courtier",
+      "permanent": true
+    },
+    {
       "source": "/fr/guide/rgpd-courtier",
       "destination": "/guides/donnees-clients-assurance-france-suisse",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/sanctions-acpr",
+      "destination": "/conformite/controle-acpr-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/structurer-pipeline-courtier",
+      "destination": "/guides/automatiser-suivi-prospects-assurance",
       "permanent": true
     },
     {
@@ -696,6 +716,11 @@
     {
       "source": "/fr/guide/verification-orias",
       "destination": "/france",
+      "permanent": true
+    },
+    {
+      "source": "/fr/historique-corrections-courtia",
+      "destination": "/changelog",
       "permanent": true
     },
     {
@@ -829,6 +854,21 @@
       "permanent": true
     },
     {
+      "source": "/fr/mesurer-temps-administratif-cabinet",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/methode-editoriale-courtia",
+      "destination": "/a-propos",
+      "permanent": true
+    },
+    {
+      "source": "/fr/organisation-cabinet-courtage",
+      "destination": "/guides/organiser-cabinet-courtage-25-points",
+      "permanent": true
+    },
+    {
       "source": "/fr/outils",
       "destination": "/outils",
       "permanent": true
@@ -844,7 +884,32 @@
       "permanent": true
     },
     {
+      "source": "/fr/partenaires-apporteurs-courtier-assurance",
+      "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/pipeline-kanban-courtier-assurance",
+      "destination": "/fonctionnalites/prospection-assurance",
+      "permanent": true
+    },
+    {
       "source": "/fr/portail-client-courtier-assurance",
+      "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/prioriser-dossiers-courtier-assurance",
+      "destination": "/fonctionnalites/assistant-ark",
+      "permanent": true
+    },
+    {
+      "source": "/fr/reduire-double-saisie-cabinet-courtage",
+      "destination": "/guides/reduire-saisie-manuelle-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/rendez-vous-courtier-assurance",
       "destination": "/fonctionnalites/gestion-clients",
       "permanent": true
     },
@@ -861,6 +926,11 @@
     {
       "source": "/fr/sinistres-courtier-assurance",
       "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/sources-courtia",
+      "destination": "/a-propos",
       "permanent": true
     },
     {
@@ -1026,6 +1096,14 @@
       "destination": "/comparatifs/excel-vs-crm-courtier-assurance/index.html"
     },
     {
+      "source": "/fonctionnalites/comparateur-devis-assurance",
+      "destination": "/fonctionnalites/comparateur-devis-assurance/index.html"
+    },
+    {
+      "source": "/fonctionnalites/comparateur-devis-assurance/",
+      "destination": "/fonctionnalites/comparateur-devis-assurance/index.html"
+    },
+    {
       "source": "/fonctionnalites/renouvellements-assurance",
       "destination": "/fonctionnalites/renouvellements-assurance/index.html"
     },
@@ -1138,6 +1216,14 @@
       "destination": "/solutions/cabinet-courtage-assurance/index.html"
     },
     {
+      "source": "/conformite/ipid-document-information",
+      "destination": "/conformite/ipid-document-information/index.html"
+    },
+    {
+      "source": "/conformite/ipid-document-information/",
+      "destination": "/conformite/ipid-document-information/index.html"
+    },
+    {
       "source": "/fonctionnalites/reporting-courtier",
       "destination": "/fonctionnalites/reporting-courtier/index.html"
     },
@@ -1152,6 +1238,14 @@
     {
       "source": "/automatisation-courtier-assurance/",
       "destination": "/automatisation-courtier-assurance/index.html"
+    },
+    {
+      "source": "/conformite/controle-acpr-courtier",
+      "destination": "/conformite/controle-acpr-courtier/index.html"
+    },
+    {
+      "source": "/conformite/controle-acpr-courtier/",
+      "destination": "/conformite/controle-acpr-courtier/index.html"
     },
     {
       "source": "/fonctionnalites/gestion-contrats",
@@ -1202,6 +1296,14 @@
       "destination": "/logiciel-courtage-assurance/index.html"
     },
     {
+      "source": "/conformite/lcb-ft-courtier",
+      "destination": "/conformite/lcb-ft-courtier/index.html"
+    },
+    {
+      "source": "/conformite/lcb-ft-courtier/",
+      "destination": "/conformite/lcb-ft-courtier/index.html"
+    },
+    {
       "source": "/solutions/reseau-courtage",
       "destination": "/solutions/reseau-courtage/index.html"
     },
@@ -1224,6 +1326,14 @@
     {
       "source": "/assurances/assurance-auto/",
       "destination": "/assurances/assurance-auto/index.html"
+    },
+    {
+      "source": "/france/densite-courtage",
+      "destination": "/france/densite-courtage/index.html"
+    },
+    {
+      "source": "/france/densite-courtage/",
+      "destination": "/france/densite-courtage/index.html"
     },
     {
       "source": "/crm-courtier-assurance",

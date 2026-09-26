@@ -4014,7 +4014,7 @@
     null
    ]
   ],
-  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation</td><td>348869fc</td></tr><tr><td>26/09/2026</td><td>fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)</td><td>135c4199</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)</td><td>1a291997</td></tr><tr><td>26/09/2026</td><td>fix(seo): dedupliquer les redirections et supprimer les auto-redirections</td><td>5d36e567</td></tr><tr><td>26/09/2026</td><td>fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)</td><td>34091ed0</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues</td><td>1b594a00</td></tr><tr><td>26/09/2026</td><td>fix(seo): corriger les deux redirections accentuees pour supprimer la chaine</td><td>6caf9bdb</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)</td><td>7f78d93c</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer le doublon de section FAQ sur la money page</td><td>5a4702e0</td></tr><tr><td>26/09/2026</td><td>feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click</td><td>88045ad1</td></tr><tr><td>26/09/2026</td><td>fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)</td><td>08547af1</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)</td><td>8d1f69ad</td></tr><tr><td>26/09/2026</td><td>feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)</td><td>fb23a3f5</td></tr><tr><td>26/09/2026</td><td>feat(seo): connexion Search Console, baseline T0, tableau de bord 4 blocs, releve periodique et corrections issues de l'indexation</td><td>ff71df6b</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolider les URL heritees signalees par Search Console (soft 404, canoniques, doublons)</td><td>c21701b7</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : notation d'autorite (44 domaines, Top 10/Top 5 avec contacts reels), brouillons d'approche, tableau de bord acquisition, controles maillage et cannibalisation, preuves</td><td>063befde</td></tr><tr><td>26/09/2026</td><td>robots.txt reecrit depuis le build, retrait des sitemaps obsoletes, redirections /sitemap-seo.xml et /sitemap-ch.xml</td><td>5358a1b0</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : vague geo FR+CH, 3 outils, lead magnet, glossaire, tarifs, consolidation des doublons legacy</td><td>3ca813bd</td></tr><tr><td>26/09/2026</td><td>fix(seo): liens internes sans slash final et sitemap aligne sur les URL servies</td><td>f8171df6</td></tr><tr><td>26/09/2026</td><td>perf(web): sortir les scripts du HTML pour respecter la CSP</td><td>3f172969</td></tr><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>docs(seo): preuve finale apres restauration des redirections de glossaire (164/164)</td><td>d0db5de6</td></tr><tr><td>26/09/2026</td><td>fix(seo): restaurer les 15 redirections de glossaire specifiques et aligner la variante accentuee courtier-sante</td><td>1426c4d4</td></tr><tr><td>26/09/2026</td><td>docs(seo): lecture honnete du funnel des outils apres correction de l'instrumentation</td><td>348869fc</td></tr><tr><td>26/09/2026</td><td>fix(analytics): un seul tool_complete par visite (le recalcul gonflait le taux de completion)</td><td>135c4199</td></tr><tr><td>26/09/2026</td><td>docs(seo): preuves de la phase index-cleanup (inventaire, classification, redirections, sitemaps, money page, tracking, controles)</td><td>1a291997</td></tr><tr><td>26/09/2026</td><td>fix(seo): dedupliquer les redirections et supprimer les auto-redirections</td><td>5d36e567</td></tr><tr><td>26/09/2026</td><td>fix(seo): regenerer les redirections de zero a chaque build (une regle retiree ne doit plus persister)</td><td>34091ed0</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer la chaine de redirection sur les anciens slugs accentues</td><td>1b594a00</td></tr><tr><td>26/09/2026</td><td>fix(seo): corriger les deux redirections accentuees pour supprimer la chaine</td><td>6caf9bdb</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer les chaines de redirection detectees (sante -> crm direct, glossaire couvert par le joker)</td><td>7f78d93c</td></tr><tr><td>26/09/2026</td><td>fix(seo): supprimer le doublon de section FAQ sur la money page</td><td>5a4702e0</td></tr><tr><td>26/09/2026</td><td>feat(seo): renforcer la money page logiciel pour courtier en assurance (structure complete, comparatif, 18 liens contextuels) et ajouter tool_cta_click</td><td>88045ad1</td></tr><tr><td>26/09/2026</td><td>fix(seo): replace failed features sitemap (features-v2.xml, ancien fichier redirige)</td><td>08547af1</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolidate legacy indexed routes (136 redirections heritees issues de la classification)</td><td>8d1f69ad</td></tr><tr><td>26/09/2026</td><td>feat(tracking): mesurer l'usage reel des outils gratuits (tool_start, tool_complete)</td><td>fb23a3f5</td></tr><tr><td>26/09/2026</td><td>feat(seo): connexion Search Console, baseline T0, tableau de bord 4 blocs, releve periodique et corrections issues de l'indexation</td><td>ff71df6b</td></tr><tr><td>26/09/2026</td><td>fix(seo): consolider les URL heritees signalees par Search Console (soft 404, canoniques, doublons)</td><td>c21701b7</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : notation d'autorite (44 domaines, Top 10/Top 5 avec contacts reels), brouillons d'approche, tableau de bord acquisition, controles maillage et cannibalisation, preuves</td><td>063befde</td></tr><tr><td>26/09/2026</td><td>robots.txt reecrit depuis le build, retrait des sitemaps obsoletes, redirections /sitemap-seo.xml et /sitemap-ch.xml</td><td>5358a1b0</td></tr><tr><td>26/09/2026</td><td>SEO phase 2 : vague geo FR+CH, 3 outils, lead magnet, glossaire, tarifs, consolidation des doublons legacy</td><td>3ca813bd</td></tr><tr><td>26/09/2026</td><td>fix(seo): liens internes sans slash final et sitemap aligne sur les URL servies</td><td>f8171df6</td></tr><tr><td>26/09/2026</td><td>perf(web): sortir les scripts du HTML pour respecter la CSP</td><td>3f172969</td></tr><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -4027,7 +4027,252 @@
    ]
   ],
   "slug": "/changelog",
-  "_octets": 14279,
+  "_octets": 14331,
   "_section": "core"
+ },
+ {
+  "path": "/france/densite-courtage",
+  "type": "donnees",
+  "country": "FR",
+  "indexable": true,
+  "title": "Où sont les courtiers en assurance en France ? Densité et répartition | COURTIARK",
+  "description": "Répartition réelle des établissements de courtage d'assurance (NAF 66.22Z) par ville et par département, à partir de la base SIRENE. Méthode, chiffres et limites de lecture.",
+  "h1": "Où le courtage en assurance est concentré en France",
+  "chapeau": "Combien de cabinets et d'agents généraux exercent réellement autour de chez vous ? Voici la répartition calculée depuis la base publique SIRENE, sans estimation.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Densité du courtage",
+    null
+   ]
+  ],
+  "corps": "<h2>La répartition réelle, ville par ville</h2><div class=\"section\"><p>Sur les 43 240 établissements dont l'activité déclarée est le courtage d'assurance, voici la répartition dans les dix villes où nous avons publié une page locale.</p><table><thead><tr><th>Ville</th><th>Établissements 66.22Z</th><th>Part du total France</th></tr></thead><tbody><tr><td>Paris</td><td>4347</td><td>10.1 %</td></tr><tr><td>Lyon</td><td>634</td><td>1.5 %</td></tr><tr><td>Marseille</td><td>632</td><td>1.5 %</td></tr><tr><td>Nice</td><td>505</td><td>1.2 %</td></tr><tr><td>Toulouse</td><td>477</td><td>1.1 %</td></tr><tr><td>Bordeaux</td><td>398</td><td>0.9 %</td></tr><tr><td>Nantes</td><td>282</td><td>0.7 %</td></tr><tr><td>Strasbourg</td><td>209</td><td>0.5 %</td></tr><tr><td>Montpellier</td><td>233</td><td>0.5 %</td></tr><tr><td>Lille</td><td>190</td><td>0.4 %</td></tr></tbody></table><p>Les huit départements les plus denses concentrent l'essentiel de l'activité :</p><table><thead><tr><th>Département</th><th>Établissements</th></tr></thead><tbody><tr><td>75</td><td>4498</td></tr><tr><td>92</td><td>1631</td></tr><tr><td>69</td><td>1494</td></tr><tr><td>13</td><td>1432</td></tr><tr><td>33</td><td>1369</td></tr><tr><td>06</td><td>1322</td></tr><tr><td>59</td><td>1273</td></tr><tr><td>31</td><td>997</td></tr></tbody></table><p>Données : base SIRENE (annuaire des entreprises, DINUM) filtrée sur le code d'activité 66.22Z — agents et courtiers d'assurances, extraction du 18/09/2026.</p></div><h2>Comment ce relevé est construit</h2><div class=\"section\"><ul><li>Source : base SIRENE diffusée par l'annuaire des entreprises (DINUM), interrogation sur le code d'activité 66.22Z — agents et courtiers d'assurances.</li><li>Extraction du 18/09/2026 : 43 240 établissements au total en France.</li><li>Les comptages ci-dessus sont recalculés à chaque génération de la page depuis le fichier source : aucun nombre n'est écrit à la main dans nos modèles.</li><li>Aucune donnée personnelle n'est publiée : uniquement des comptages agrégés.</li></ul><p>Trois limites de lecture, énoncées pour éviter de surinterpréter ces chiffres :</p></div><h2>Limites de lecture</h2><div class=\"section\"><ul><li>Un établissement déclaré n'est pas une entreprise : un cabinet peut avoir plusieurs établissements, et un établissement peut être une simple adresse de domiciliation.</li><li>Le code d'activité est déclaratif : il ne prouve pas l'activité réelle du mois.</li><li>Une inscription à l'ORIAS (courtier, agent général, mandataire) n'est pas vérifiée dans ce relevé : le comptage porte sur l'activité déclarée, pas sur un statut régulé.</li><li>La date de l'extraction compte : ces chiffres bougent chaque trimestre.</li></ul><p>Ces chiffres servent à situer un marché, pas à qualifier une entreprise. Pour un usage commercial, la qualification se fait au cas par cas, sur des sources à jour.</p></div>",
+  "faq": [
+   [
+    "Combien de courtiers en assurance exerce en France ?",
+    "Le relevé SIRENE du 18/09/2026 recense 43 240 établissements dont l'activité déclarée est le courtage d'assurance (code 66.22Z). C'est un nombre d'établissements, pas d'entreprises."
+   ],
+   [
+    "Où le courtage est-il le plus dense ?",
+    "Paris et les Hauts-de-Seine concentrent la plus forte densité, suivis par le Rhône, les Bouches-du-Rhône, la Gironde et les Alpes-Maritimes. Le détail figure dans le tableau ci-dessus."
+   ],
+   [
+    "Ces données sont-elles utilisables pour ma prospection ?",
+    "Elles donnent une photographie publique du marché, utilisable pour situer une zone. Elles ne remplacent pas une vérification individuelle des cabinets que vous voulez approcher."
+   ]
+  ],
+  "lire": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Logiciel pour courtier en assurance",
+    "/logiciel-courtier-assurance"
+   ]
+  ],
+  "slug": "/france/densite-courtage",
+  "_octets": 15556,
+  "_section": "france"
+ },
+ {
+  "path": "/fonctionnalites/comparateur-devis-assurance",
+  "type": "fonctionnalite",
+  "country": "FR",
+  "indexable": true,
+  "title": "Comparateur de devis d'assurance pour courtiers | COURTIARK",
+  "description": "Demandez, suivez et comparez les propositions d'assurance reçues pour un client, avec la trace du choix. Conçu pour les courtiers en assurance.",
+  "h1": "Comparez les propositions d'assurance reçues dans un seul écran",
+  "chapeau": "Le comparateur de COURTIARK sert à suivre une demande de devis d'un bout à l'autre : ce qui a été demandé, à qui, les résultats reçus, la comparaison et la décision conservée.",
+  "fil": [
+   [
+    "Fonctionnalités",
+    "/fonctionnalites"
+   ],
+   [
+    "Comparateur de devis",
+    null
+   ]
+  ],
+  "alternate": "/suisse/crm-courtier-assurance",
+  "corps": "<h2>Le circuit réel, étape par étape</h2><div class=\"section\"><div class=\"etape\"><b>1. Demande</b><span>Le besoin est enregistré pour un client ou un prospect : produit concerné et informations utiles au devis.</span></div><div class=\"etape\"><b>2. Envoi</b><span>La demande est transmise aux compagnies ou partenaires concernés.</span></div><div class=\"etape\"><b>3. Résultats reçus</b><span>Chaque proposition reçue est saisie dans la demande : COURTIARK ne se connecte pas automatiquement aux compagnies.</span></div><div class=\"etape\"><b>4. Comparaison</b><span>Les propositions sont mises côte à côte pour être comparées critère par critère.</span></div><div class=\"etape\"><b>5. Décision conservée</b><span>La proposition retenue reste rattachée au dossier, ce qui laisse une trace du conseil donné.</span></div><p>Point important, dit clairement : il n'existe pas de connexion automatique aux systèmes des compagnies d'assurance. Les résultats reçus sont enregistrés dans l'outil, ce qui évite le tableau de comparaison tenu à part.</p></div><h2>Ce que la comparaison conserve</h2><div class=\"section\"><table><thead><tr><th>Élément</th><th>Ce qui en est fait dans COURTIARK</th></tr></thead><tbody><tr><td>Demande initiale</td><td>Conservée avec son périmètre, sa date et son destinataire.</td></tr><tr><td>Propositions reçues</td><td>Rattachées à la demande, comparables entre elles.</td></tr><tr><td>Décision</td><td>La proposition retenue reste liée au dossier du client.</td></tr><tr><td>Historique</td><td>Un devis non retenu reste consultable, avec son motif.</td></tr><tr><td>Devoir de conseil</td><td>La trace de la comparaison alimente le dossier de conformité du client.</td></tr></tbody></table></div><h2>Pour aller plus loin</h2><div class=\"section\"><p>La façon de tracer une comparaison de propositions fait partie du dossier de devoir de conseil : voir le guide sur le devoir de conseil et le suivi du dossier, ainsi que la page du logiciel pour courtier en assurance pour le périmètre complet du cockpit.</p></div>",
+  "faq": [
+   [
+    "COURTIARK interroge-t-il les compagnies automatiquement ?",
+    "Non. Les propositions reçues sont saisies dans la demande de devis. Aucune connexion automatique aux systèmes des compagnies n'est annoncée, parce qu'elle n'existe pas."
+   ],
+   [
+    "Peut-on comparer des propositions de plusieurs compagnies ?",
+    "Oui : les résultats reçus sont rattachés à la même demande et comparés entre eux."
+   ],
+   [
+    "La comparaison est-elle conservée après la signature ?",
+    "Oui, elle reste attachée au dossier du client, ce qui permet de retrouver sur quoi le conseil a été fondé."
+   ]
+  ],
+  "lire": [
+   [
+    "Devoir de conseil et suivi du dossier",
+    "/guides/devoir-de-conseil-suivi-dossier"
+   ],
+   [
+    "Logiciel pour courtier en assurance",
+    "/logiciel-courtier-assurance"
+   ]
+  ],
+  "slug": "/fonctionnalites/comparateur-devis-assurance",
+  "_octets": 14697,
+  "_section": "features"
+ },
+ {
+  "path": "/conformite/controle-acpr-courtier",
+  "type": "conformite",
+  "country": "FR",
+  "indexable": true,
+  "title": "Se préparer à un contrôle : pièces et preuves d'un cabinet de courtage | COURTIARK",
+  "description": "Les preuves qu'un cabinet de courtage doit pouvoir présenter, et comment COURTIARK les conserve et les exporte depuis le dossier client. Sources officielles citées.",
+  "h1": "Les preuves à présenter, et où elles sont conservées",
+  "chapeau": "Un contrôle se prépare en amont : ce qui compte est de retrouver rapidement la trace du conseil, des vérifications et des documents de chaque dossier.",
+  "fil": [
+   [
+    "Conformité",
+    null
+   ],
+   [
+    "Contrôle",
+    null
+   ]
+  ],
+  "corps": "<h2>Ce qu'un contrôle vient chercher</h2><div class=\"section\"><p>Nous ne reproduisons pas ici le détail des textes : les obligations elles-mêmes se lisent aux sources officielles, citées plus bas. Ce que nous documentons, c'est la partie sur laquelle un logiciel peut aider : retrouver et présenter les preuves.</p><table><thead><tr><th>Preuve attendue</th><th>Où la chercher dans COURTIARK</th></tr></thead><tbody><tr><td>Trace du conseil donné</td><td>Dossier client : propositions comparées, décision retenue, échanges rattachés.</td></tr><tr><td>Vérifications du client</td><td>Fiche KYC du client, avec la date et le résultat de la vérification.</td></tr><tr><td>Checklist réglementaire</td><td>Checklist par client : les points cochés et leur date.</td></tr><tr><td>Mandats et documents signés</td><td>Mandats et documents générés, rattachés au dossier.</td></tr><tr><td>Journal des actions</td><td>Journal d'audit : qui a fait quoi, et quand.</td></tr></tbody></table></div><h2>Comment le module conformité fonctionne</h2><div class=\"section\"><ul><li>Tableau de bord de conformité : l'état des dossiers du cabinet, pas une note de conformité.</li><li>Checklist par client : les points sont cochés au dossier, avec la date.</li><li>KYC : la vérification du client est enregistrée sur sa fiche, avec son résultat.</li><li>Mandats et documents : consulter les mandats du cabinet et les documents signés.</li><li>Journal d'audit : les actions tracées, consultables pour reconstituer un dossier.</li><li>Quiz DDA : les parcours de formation et leur progression, pour l'obligation de compétence.</li></ul><p>Ce que COURTIARK n'est pas : un outil de conseil juridique. Il ne certifie rien et n'est certifié par aucun régulateur. C'est un outil de gestion qui conserve et présente les preuves que le cabinet produit lui-même.</p></div><h2>Sources officielles</h2><div class=\"section\"><ul><li>France — ACPR, autorité de contrôle prudentiel et de résolution : acpr.banque-france.fr</li><li>France — ORIAS, registre unique des intermédiaires en assurance : orias.fr</li><li>Suisse — FINMA, autorité fédérale de surveillance des marchés financiers : finma.ch</li></ul></div>",
+  "faq": [
+   [
+    "COURTIARK est-il conforme DDA ou certifié ?",
+    "Non. COURTIARK est un outil de gestion : il conserve et présente les preuves, mais il ne fournit pas de conseil juridique et n'est certifié par aucun régulateur."
+   ],
+   [
+    "Que retrouve-t-on dans le journal d'audit ?",
+    "Les actions tracées dans l'application, avec leur date, ce qui permet de reconstituer ce qui s'est passé sur un dossier."
+   ],
+   [
+    "Où lire les obligations qui s'appliquent à mon cabinet ?",
+    "Aux sources officielles : ACPR et ORIAS en France, FINMA en Suisse. Nous ne reformulons pas les textes réglementaires."
+   ]
+  ],
+  "lire": [
+   [
+    "LCB-FT",
+    "/conformite/lcb-ft-courtier"
+   ],
+   [
+    "IPID",
+    "/conformite/ipid-document-information"
+   ],
+   [
+    "Logiciel pour courtier en assurance",
+    "/logiciel-courtier-assurance"
+   ]
+  ],
+  "slug": "/conformite/controle-acpr-courtier",
+  "_octets": 14526,
+  "_section": "resources"
+ },
+ {
+  "path": "/conformite/lcb-ft-courtier",
+  "type": "conformite",
+  "country": "FR",
+  "indexable": true,
+  "title": "LCB-FT : vérifications client et traçabilité dans un cabinet de courtage | COURTIARK",
+  "description": "Vérification du client, conservation des pièces et traçabilité des actions : ce que COURTIARK tient à jour dans le dossier. Sources officielles citées.",
+  "h1": "LCB-FT : ce qui doit rester traçable dans le dossier client",
+  "chapeau": "Les obligations de vigilance portent sur la connaissance du client et la conservation des éléments : voici la partie que le dossier client d'un logiciel de courtage peut porter.",
+  "fil": [
+   [
+    "Conformité",
+    null
+   ],
+   [
+    "LCB-FT",
+    null
+   ]
+  ],
+  "corps": "<h2>Ce qui est conservé dans le dossier</h2><div class=\"section\"><table><thead><tr><th>Élément</th><th>Dans COURTIARK</th></tr></thead><tbody><tr><td>Identité et vérification</td><td>Fiche KYC du client, avec le résultat de la vérification enregistré.</td></tr><tr><td>Pièces justificatives</td><td>Documents rattachés au client, collectés par lien sécurisé et classés au dossier.</td></tr><tr><td>Historique des actions</td><td>Journal d'audit et activité du dossier.</td></tr><tr><td>Documents signés</td><td>Mandats et documents générés, conservés au dossier.</td></tr><tr><td>Checklist</td><td>Points de contrôle par client, avec leur date.</td></tr></tbody></table></div><h2>Une règle simple pour un cabinet</h2><div class=\"section\"><p>La difficulté opérationnelle n'est presque jamais de connaître la règle : c'est de retrouver la pièce trois ans plus tard, quand le dossier a changé de mains. C'est exactement ce que règle un dossier client centralisé : une seule fiche, avec ses pièces, ses dates et son historique.</p></div><h2>Sources officielles</h2><div class=\"section\"><ul><li>France — ACPR : acpr.banque-france.fr</li><li>France — ORIAS (registre des intermédiaires) : orias.fr</li><li>Suisse — FINMA : finma.ch</li></ul></div>",
+  "faq": [
+   [
+    "COURTIARK effectue-t-il la vérification d'identité à ma place ?",
+    "Non. La vérification est enregistrée sur la fiche du client avec son résultat et sa date : c'est le cabinet qui l'effectue."
+   ],
+   [
+    "Combien de temps les pièces sont-elles conservées ?",
+    "La durée de conservation relève des textes applicables à votre activité ; nous ne la reproduisons pas ici et renvoyons aux sources officielles."
+   ]
+  ],
+  "lire": [
+   [
+    "Contrôle : les preuves à présenter",
+    "/conformite/controle-acpr-courtier"
+   ],
+   [
+    "IPID",
+    "/conformite/ipid-document-information"
+   ],
+   [
+    "Logiciel pour courtier en assurance",
+    "/logiciel-courtier-assurance"
+   ]
+  ],
+  "slug": "/conformite/lcb-ft-courtier",
+  "_octets": 13157,
+  "_section": "resources"
+ },
+ {
+  "path": "/conformite/ipid-document-information",
+  "type": "conformite",
+  "country": "CH",
+  "indexable": true,
+  "title": "IPID et documents d'information produit : les rattacher au dossier client | COURTIARK",
+  "description": "Le document d'information produit fait partie du dossier de conseil : comment le rattacher au client, le retrouver et le présenter. Sources officielles citées.",
+  "h1": "Rattacher les documents d'information au dossier du client",
+  "chapeau": "Un document d'information produit n'a de valeur probante que s'il est retrouvable : au bon dossier, à la bonne date, rattaché au bon contrat.",
+  "fil": [
+   [
+    "Conformité",
+    null
+   ],
+   [
+    "Documents d'information",
+    null
+   ]
+  ],
+  "corps": "<h2>Le problème n'est pas le document, c'est de le retrouver</h2><div class=\"section\"><p>Un IPID vient de la compagnie, circule par e-mail et finit dans un dossier partagé, souvent sans lien avec le client concerné. Le jour où l'on cherche la version remise un jour précis, il faut fouiller les boîtes mail.</p></div><h2>Ce que COURTIARK permet</h2><div class=\"section\"><table><thead><tr><th>Besoin</th><th>Fonction</th></tr></thead><tbody><tr><td>Recevoir les pièces du client</td><td>Collecte par lien sécurisé, sans compte à créer pour le client.</td></tr><tr><td>Classer</td><td>Documents rattachés au dossier, avec leur type et leur date.</td></tr><tr><td>Retrouver</td><td>Recherche dans les documents et l'historique du dossier.</td></tr><tr><td>Lire un document</td><td>Lecture assistée : le contenu est proposé, puis validé par le cabinet avant écriture.</td></tr><tr><td>Transmettre</td><td>Documents générés et envoyés depuis le dossier, avec trace.</td></tr></tbody></table></div><h2>Sources officielles</h2><div class=\"section\"><ul><li>France — ACPR : acpr.banque-france.fr</li><li>Suisse — FINMA : finma.ch</li><li>Suisse — loi sur le contrat d'assurance (LCA) : fedlex.admin.ch</li></ul></div>",
+  "faq": [
+   [
+    "COURTIARK lit-il les documents à ma place ?",
+    "La lecture assistée propose une extraction (par exemple les montants ou les dates d'un document). Le cabinet valide ou corrige avant que quoi que ce soit soit écrit au dossier."
+   ],
+   [
+    "Un client doit-il créer un compte pour envoyer ses pièces ?",
+    "Non : la collecte se fait par un lien sécurisé transmis au client."
+   ]
+  ],
+  "lire": [
+   [
+    "Gestion des documents",
+    "/fonctionnalites/gestion-documents-assurance"
+   ],
+   [
+    "Contrôle : les preuves à présenter",
+    "/conformite/controle-acpr-courtier"
+   ],
+   [
+    "Logiciel pour courtier en assurance",
+    "/logiciel-courtier-assurance"
+   ]
+  ],
+  "slug": "/conformite/ipid-document-information",
+  "_octets": 13116,
+  "_section": "resources"
  }
 ]

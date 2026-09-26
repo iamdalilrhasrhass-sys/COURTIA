@@ -308,6 +308,13 @@
   "confidence": "haute"
  },
  {
+  "source": "/fr/demo-et-essai-gratuit",
+  "destination": "/demo",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
   "source": "/fr/dicter-compte-rendu-appel-assurance",
   "destination": "/fonctionnalites/compte-rendu-clients",
   "permanent": true,
@@ -553,6 +560,13 @@
   "confidence": "haute"
  },
  {
+  "source": "/fr/guide/devoir-de-conseil",
+  "destination": "/guides/devoir-de-conseil-suivi-dossier",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
   "source": "/fr/guide/integrer-ia-cabinet-courtage",
   "destination": "/fonctionnalites/assistant-ark",
   "permanent": true,
@@ -574,11 +588,32 @@
   "confidence": "haute"
  },
  {
+  "source": "/fr/guide/reforme-courtage",
+  "destination": "/conformite/controle-acpr-courtier",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
   "source": "/fr/guide/rgpd-courtier",
   "destination": "/guides/donnees-clients-assurance-france-suisse",
   "permanent": true,
   "reason": "doublon semantique de l'ancien plan",
   "confidence": "haute"
+ },
+ {
+  "source": "/fr/guide/sanctions-acpr",
+  "destination": "/conformite/controle-acpr-courtier",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/guide/structurer-pipeline-courtier",
+  "destination": "/guides/automatiser-suivi-prospects-assurance",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
  },
  {
   "source": "/fr/guide/suivre-prospects-courtier",
@@ -593,6 +628,13 @@
   "permanent": true,
   "reason": "doublon semantique de l'ancien plan",
   "confidence": "moyenne"
+ },
+ {
+  "source": "/fr/historique-corrections-courtia",
+  "destination": "/changelog",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
  },
  {
   "source": "/fr/ia-courtier-assurance",
@@ -819,6 +861,27 @@
   "confidence": "moyenne"
  },
  {
+  "source": "/fr/mesurer-temps-administratif-cabinet",
+  "destination": "/outils/calculateur-productivite-courtier",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/methode-editoriale-courtia",
+  "destination": "/a-propos",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/organisation-cabinet-courtage",
+  "destination": "/guides/organiser-cabinet-courtage-25-points",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
   "source": "/fr/outil-courtier-assurance",
   "destination": "/outils",
   "permanent": true,
@@ -861,6 +924,20 @@
   "confidence": "haute"
  },
  {
+  "source": "/fr/partenaires-apporteurs-courtier-assurance",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/pipeline-kanban-courtier-assurance",
+  "destination": "/fonctionnalites/prospection-assurance",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
   "source": "/fr/portail-client-courtier-assurance",
   "destination": "/fonctionnalites/gestion-clients",
   "permanent": true,
@@ -868,11 +945,32 @@
   "confidence": "haute"
  },
  {
+  "source": "/fr/prioriser-dossiers-courtier-assurance",
+  "destination": "/fonctionnalites/assistant-ark",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/reduire-double-saisie-cabinet-courtage",
+  "destination": "/guides/reduire-saisie-manuelle-courtier",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
+ },
+ {
   "source": "/fr/relance-client-assurance",
   "destination": "/fonctionnalites/relance-devis-assurance",
   "permanent": true,
   "reason": "doublon semantique de l'ancien plan",
   "confidence": "haute"
+ },
+ {
+  "source": "/fr/rendez-vous-courtier-assurance",
+  "destination": "/fonctionnalites/gestion-clients",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
  },
  {
   "source": "/fr/reporting-pilotage-cabinet-courtage",
@@ -893,6 +991,13 @@
   "destination": "/crm-courtier-assurance",
   "permanent": true,
   "reason": "doublon semantique de l'ancien plan",
+  "confidence": "faible"
+ },
+ {
+  "source": "/fr/sources-courtia",
+  "destination": "/a-propos",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
   "confidence": "faible"
  },
  {
@@ -950,5 +1055,12 @@
   "permanent": true,
   "reason": "doublon semantique de l'ancien plan",
   "confidence": "moyenne"
+ },
+ {
+  "source": "/landing",
+  "destination": "/",
+  "permanent": true,
+  "reason": "page heritee sans correspondance identifiable",
+  "confidence": "faible"
  }
 ]
