@@ -65,6 +65,10 @@ ALIAS = {
     '/fr/outil-courtier-assurance': '/outils',
     # ancien fichier sitemap refuse par Google : renvoie vers la version regeneree
     '/sitemaps/features.xml': '/sitemaps/features-v2.xml',
+    # Variante accentuee de la page pSEO « courtier santé » : meme contenu que la variante sans
+    # accent, qui est desormais redirigee -> destination directe identique, sans second saut.
+    '/fr/logiciel-courtier-santé': '/crm-courtier-assurance',
+    '/fr/logiciel-courtier-sant%C3%A9': '/crm-courtier-assurance',
     # anciens fichiers de sitemap (plan de site /fr et /ch abandonne)
     '/sitemap-seo.xml': '/sitemap.xml',
     '/sitemap-ch.xml': '/sitemap.xml',

@@ -214,6 +214,16 @@
       "permanent": true
     },
     {
+      "source": "/fr/logiciel-courtier-santé",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-sant%C3%A9",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
       "source": "/sitemap-seo.xml",
       "destination": "/sitemap.xml",
       "permanent": true
@@ -566,6 +576,81 @@
     {
       "source": "/fr/gestion-taches-cabinet-courtage",
       "destination": "/automatisation-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/commissions",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/courtier-assurance",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/dda",
+      "destination": "/guides/devoir-de-conseil-suivi-dossier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/devoir-de-conseil",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/echeance-contrat",
+      "destination": "/fonctionnalites/renouvellements-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/finma",
+      "destination": "/suisse",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/intermediaire-assurance",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/logiciel-courtier",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/nlpd",
+      "destination": "/guides/donnees-clients-assurance-france-suisse",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/onboarding-client",
+      "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/pipeline",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/portefeuille",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/prospect",
+      "destination": "/fonctionnalites/prospection-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/relance",
+      "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/sinistre",
+      "destination": "/crm-courtier-assurance",
       "permanent": true
     },
     {
