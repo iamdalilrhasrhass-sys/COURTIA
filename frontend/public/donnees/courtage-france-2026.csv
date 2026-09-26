@@ -1,0 +1,265 @@
+grain,cle,libelle,etablissements,part_pct
+region,11,Île-de-France,10050,23.24
+region,84,Auvergne-Rhône-Alpes,4666,10.79
+region,75,Nouvelle-Aquitaine,4396,10.17
+region,93,Provence-Alpes-Côte d'Azur,4062,9.39
+region,76,Occitanie,4053,9.37
+region,44,Grand Est,2926,6.77
+region,32,Hauts-de-France,2860,6.61
+region,52,Pays de la Loire,2078,4.81
+region,28,Normandie,1970,4.56
+region,53,Bretagne,1753,4.05
+region,27,Bourgogne-Franche-Comté,1684,3.89
+region,24,Centre-Val de Loire,1394,3.22
+region,04,La Réunion,336,0.78
+region,01,Guadeloupe,291,0.67
+region,94,Corse,199,0.46
+region,02,Martinique,192,0.44
+region,03,Guyane,84,0.19
+region,06,Mayotte,43,0.10
+departement,75,,4498,10.40
+departement,92,,1631,3.77
+departement,69,,1494,3.46
+departement,13,,1432,3.31
+departement,33,,1369,3.17
+departement,06,,1322,3.06
+departement,59,,1273,2.94
+departement,31,,997,2.31
+departement,78,,855,1.98
+departement,34,,843,1.95
+departement,76,,839,1.94
+departement,44,,799,1.85
+departement,83,,795,1.84
+departement,94,,775,1.79
+departement,93,,691,1.60
+departement,95,,660,1.53
+departement,67,,643,1.49
+departement,35,,625,1.45
+departement,62,,612,1.42
+departement,38,,573,1.33
+departement,77,,563,1.30
+departement,64,,552,1.28
+departement,57,,532,1.23
+departement,91,,509,1.18
+departement,74,,496,1.15
+departement,14,,479,1.11
+departement,29,,461,1.07
+departement,30,,450,1.04
+departement,49,,437,1.01
+departement,17,,419,0.97
+departement,85,,418,0.97
+departement,21,,405,0.94
+departement,56,,395,0.91
+departement,42,,392,0.91
+departement,60,,384,0.89
+departement,63,,374,0.86
+departement,66,,370,0.86
+departement,84,,365,0.84
+departement,54,,363,0.84
+departement,37,,344,0.80
+departement,25,,343,0.79
+departement,68,,339,0.78
+departement,974,,337,0.78
+departement,45,,326,0.75
+departement,80,,324,0.75
+departement,51,,324,0.75
+departement,01,,320,0.74
+departement,71,,298,0.69
+departement,27,,293,0.68
+departement,971,,291,0.67
+departement,40,,286,0.66
+departement,24,,275,0.64
+departement,22,,273,0.63
+departement,02,,269,0.62
+departement,86,,262,0.61
+departement,47,,260,0.60
+departement,73,,259,0.60
+departement,72,,250,0.58
+departement,79,,243,0.56
+departement,26,,241,0.56
+departement,87,,226,0.52
+departement,50,,224,0.52
+departement,88,,222,0.51
+departement,11,,221,0.51
+departement,32,,215,0.50
+departement,19,,206,0.48
+departement,81,,202,0.47
+departement,89,,202,0.47
+departement,16,,200,0.46
+departement,972,,192,0.44
+departement,28,,191,0.44
+departement,18,,188,0.43
+departement,12,,182,0.42
+departement,41,,181,0.42
+departement,03,,176,0.41
+departement,53,,176,0.41
+departement,82,,168,0.39
+departement,10,,165,0.38
+departement,36,,165,0.38
+departement,65,,148,0.34
+departement,08,,146,0.34
+departement,39,,146,0.34
+departement,07,,144,0.33
+departement,61,,136,0.31
+departement,43,,135,0.31
+departement,70,,117,0.27
+departement,46,,116,0.27
+departement,58,,116,0.27
+departement,2B,,113,0.26
+departement,55,,108,0.25
+departement,23,,101,0.23
+departement,09,,97,0.22
+departement,04,,94,0.22
+departement,52,,89,0.21
+departement,2A,,86,0.20
+departement,973,,84,0.19
+departement,05,,80,0.19
+departement,15,,74,0.17
+departement,90,,57,0.13
+departement,48,,49,0.11
+departement,976,,43,0.10
+departement,978,,6,0.01
+departement,977,,5,0.01
+departement,986,,1,0.00
+ville,Paris,dep 75,4347,10.05
+ville,Lyon,dep 69,634,1.47
+ville,Marseille,dep 13,632,1.46
+ville,Nice,dep 06,505,1.17
+ville,Toulouse,dep 31,477,1.10
+ville,Bordeaux,dep 33,398,0.92
+ville,Nantes,dep 44,282,0.65
+ville,Boulogne-Billancourt,dep 92,237,0.55
+ville,Montpellier,dep 34,233,0.54
+ville,Strasbourg,dep 67,209,0.48
+ville,Neuilly-Sur-Seine,dep 92,199,0.46
+ville,Lille,dep 59,190,0.44
+ville,Dijon,dep 21,173,0.40
+ville,Nimes,dep 30,169,0.39
+ville,Rennes,dep 35,169,0.39
+ville,Perpignan,dep 66,165,0.38
+ville,Aix-En-Provence,dep 13,162,0.37
+ville,Rouen,dep 76,151,0.35
+ville,Saint-Denis,dep 974,144,0.33
+ville,Levallois-Perret,dep 92,143,0.33
+ville,Toulon,dep 83,137,0.32
+ville,Cannes,dep 06,136,0.31
+ville,Caen,dep 14,131,0.30
+ville,Annecy,dep 74,129,0.30
+ville,Reims,dep 51,127,0.29
+ville,Nancy,dep 54,126,0.29
+ville,Angers,dep 49,125,0.29
+ville,Saint-Etienne,dep 42,121,0.28
+ville,Metz,dep 57,119,0.28
+ville,Tours,dep 37,118,0.27
+ville,Versailles,dep 78,118,0.27
+ville,Besancon,dep 25,113,0.26
+ville,Asnieres-Sur-Seine,dep 92,112,0.26
+ville,Courbevoie,dep 92,111,0.26
+ville,Le Havre,dep 76,111,0.26
+ville,Amiens,dep 80,111,0.26
+ville,Antibes,dep 06,105,0.24
+ville,Grenoble,dep 38,105,0.24
+ville,La Rochelle,dep 17,102,0.24
+ville,Limoges,dep 87,101,0.23
+ville,Orleans,dep 45,101,0.23
+ville,Clermont-Ferrand,dep 63,100,0.23
+ville,Villeurbanne,dep 69,99,0.23
+ville,Le Mans,dep 72,94,0.22
+ville,Pau,dep 64,89,0.21
+ville,Avignon,dep 84,89,0.21
+ville,Saint-Maur-Des-Fosses,dep 94,85,0.20
+ville,Quimper,dep 29,81,0.19
+ville,Bayonne,dep 64,80,0.19
+ville,Brest,dep 29,76,0.18
+ville,Beziers,dep 34,76,0.18
+ville,Bourges,dep 18,73,0.17
+ville,Cagnes-Sur-Mer,dep 06,72,0.17
+ville,Montauban,dep 82,72,0.17
+ville,Merignac,dep 33,70,0.16
+ville,Mulhouse,dep 68,69,0.16
+ville,Dunkerque,dep 59,68,0.16
+ville,Sarcelles,dep 95,65,0.15
+ville,Fort-De-France,dep 972,64,0.15
+ville,Rueil-Malmaison,dep 92,64,0.15
+categorie_entreprise,PME,,32280,74.65
+categorie_entreprise,ETI,,381,0.88
+categorie_entreprise,GE,,167,0.39
+annee_creation,1900,,369,0.85
+annee_creation,1901,,1,0.00
+annee_creation,1908,,1,0.00
+annee_creation,1920,,1,0.00
+annee_creation,1936,,1,0.00
+annee_creation,1950,,1,0.00
+annee_creation,1954,,9,0.02
+annee_creation,1955,,6,0.01
+annee_creation,1956,,7,0.02
+annee_creation,1957,,23,0.05
+annee_creation,1958,,18,0.04
+annee_creation,1959,,4,0.01
+annee_creation,1960,,4,0.01
+annee_creation,1961,,5,0.01
+annee_creation,1962,,7,0.02
+annee_creation,1963,,8,0.02
+annee_creation,1964,,16,0.04
+annee_creation,1965,,11,0.03
+annee_creation,1966,,7,0.02
+annee_creation,1967,,13,0.03
+annee_creation,1968,,12,0.03
+annee_creation,1969,,9,0.02
+annee_creation,1970,,19,0.04
+annee_creation,1971,,18,0.04
+annee_creation,1972,,22,0.05
+annee_creation,1973,,25,0.06
+annee_creation,1974,,31,0.07
+annee_creation,1975,,27,0.06
+annee_creation,1976,,51,0.12
+annee_creation,1977,,49,0.11
+annee_creation,1978,,130,0.30
+annee_creation,1979,,221,0.51
+annee_creation,1980,,191,0.44
+annee_creation,1981,,179,0.41
+annee_creation,1982,,174,0.40
+annee_creation,1983,,154,0.36
+annee_creation,1984,,211,0.49
+annee_creation,1985,,242,0.56
+annee_creation,1986,,321,0.74
+annee_creation,1987,,313,0.72
+annee_creation,1988,,367,0.85
+annee_creation,1989,,438,1.01
+annee_creation,1990,,498,1.15
+annee_creation,1991,,404,0.93
+annee_creation,1992,,470,1.09
+annee_creation,1993,,544,1.26
+annee_creation,1994,,567,1.31
+annee_creation,1995,,550,1.27
+annee_creation,1996,,526,1.22
+annee_creation,1997,,555,1.28
+annee_creation,1998,,538,1.24
+annee_creation,1999,,560,1.30
+annee_creation,2000,,594,1.37
+annee_creation,2001,,533,1.23
+annee_creation,2002,,539,1.25
+annee_creation,2003,,656,1.52
+annee_creation,2004,,827,1.91
+annee_creation,2005,,891,2.06
+annee_creation,2006,,912,2.11
+annee_creation,2007,,1017,2.35
+annee_creation,2008,,962,2.22
+annee_creation,2009,,1180,2.73
+annee_creation,2010,,1226,2.84
+annee_creation,2011,,1109,2.56
+annee_creation,2012,,1196,2.77
+annee_creation,2013,,1109,2.56
+annee_creation,2014,,1107,2.56
+annee_creation,2015,,1180,2.73
+annee_creation,2016,,1168,2.70
+annee_creation,2017,,1151,2.66
+annee_creation,2018,,1285,2.97
+annee_creation,2019,,1562,3.61
+annee_creation,2020,,1581,3.66
+annee_creation,2021,,1826,4.22
+annee_creation,2022,,1962,4.54
+annee_creation,2023,,1985,4.59
+annee_creation,2024,,2284,5.28
+annee_creation,2025,,2583,5.97
+annee_creation,2026,,1883,4.35

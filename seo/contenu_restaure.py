@@ -50,11 +50,14 @@ def bloc_densite():
     lignes = [[nom, '%.0f' % communes.get(cle, 0), '%.1f %%' % (100.0 * communes.get(cle, 0) / total)]
               for nom, cle in VILLES]
     top = sorted(departements.items(), key=lambda x: -x[1])[:8]
-    return (p("Sur les 43 240 établissements dont l'activité déclarée est le courtage d'assurance, voici la "
+    return (p("Sur les 43 240 entreprises (numéros SIREN) dont l'activité déclarée est le courtage d'assurance, voici la "
+              "répartition dans les dix villes où nous avons publié une page locale. Le détail complet, la méthode et "
+              "les limites sont publiés dans l'étude <a href=\"/etudes/courtage-assurance-france-2026\">Cartographie "
+              "du courtage en assurance en France — 2026</a>. Détail : "
               "répartition dans les dix villes où nous avons publié une page locale.")
-            + tableau(["Ville", "Établissements 66.22Z", "Part du total France"], lignes)
+            + tableau(["Ville", "Entreprises 66.22Z", "Part du total France"], lignes)
             + p("Les huit départements les plus denses concentrent l'essentiel de l'activité :")
-            + tableau(["Département", "Établissements"], [[d, '%.0f' % n] for d, n in top])
+            + tableau(["Département", "Entreprises"], [[d, '%.0f' % n] for d, n in top])
             + p(SOURCE_SIRENE))
 
 
@@ -75,7 +78,7 @@ def pages_restaurees():
                 section("Comment ce relevé est construit",
                         ul(["Source : base SIRENE diffusée par l'annuaire des entreprises (DINUM), interrogation "
                             "sur le code d'activité 66.22Z — agents et courtiers d'assurances.",
-                            "Extraction du 18/09/2026 : 43 240 établissements au total en France.",
+                            "Extraction du 18/09/2026 : 43 240 entreprises (numéros SIREN) au total en France.",
                             "Les comptages ci-dessus sont recalculés à chaque génération de la page depuis le "
                             "fichier source : aucun nombre n'est écrit à la main dans nos modèles.",
                             "Aucune donnée personnelle n'est publiée : uniquement des comptages agrégés."])
@@ -91,7 +94,7 @@ def pages_restaurees():
                             "usage commercial, la qualification se fait au cas par cas, sur des sources à jour.")),
             ]),
             faq=[("Combien de courtiers en assurance exerce en France ?",
-                  "Le relevé SIRENE du 18/09/2026 recense 43 240 établissements dont l'activité déclarée est "
+                  "Le relevé SIRENE du 18/09/2026 recense 43 240 entreprises (numéros SIREN) dont l'activité déclarée est "
                   "le courtage d'assurance (code 66.22Z). C'est un nombre d'établissements, pas d'entreprises."),
                  ("Où le courtage est-il le plus dense ?",
                   "Paris et les Hauts-de-Seine concentrent la plus forte densité, suivis par le Rhône, les "

@@ -1008,6 +1008,14 @@
       "destination": "/guides/comment-ne-plus-oublier-relances-courtier/index.html"
     },
     {
+      "source": "/etudes/methodologie-cartographie-courtage-france",
+      "destination": "/etudes/methodologie-cartographie-courtage-france/index.html"
+    },
+    {
+      "source": "/etudes/methodologie-cartographie-courtage-france/",
+      "destination": "/etudes/methodologie-cartographie-courtage-france/index.html"
+    },
+    {
       "source": "/fonctionnalites/gestion-portefeuille-assurance",
       "destination": "/fonctionnalites/gestion-portefeuille-assurance/index.html"
     },
@@ -1198,6 +1206,14 @@
     {
       "source": "/fonctionnalites/prospection-assurance/",
       "destination": "/fonctionnalites/prospection-assurance/index.html"
+    },
+    {
+      "source": "/etudes/courtage-assurance-france-2026",
+      "destination": "/etudes/courtage-assurance-france-2026/index.html"
+    },
+    {
+      "source": "/etudes/courtage-assurance-france-2026/",
+      "destination": "/etudes/courtage-assurance-france-2026/index.html"
     },
     {
       "source": "/fonctionnalites/compte-rendu-clients",
@@ -1654,6 +1670,14 @@
     {
       "source": "/tarifs/",
       "destination": "/tarifs/index.html"
+    },
+    {
+      "source": "/etudes",
+      "destination": "/etudes/index.html"
+    },
+    {
+      "source": "/etudes/",
+      "destination": "/etudes/index.html"
     },
     {
       "source": "/demo",

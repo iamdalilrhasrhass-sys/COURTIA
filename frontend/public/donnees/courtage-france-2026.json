@@ -1,0 +1,448 @@
+{
+ "titre": "Cartographie du courtage en assurance en France",
+ "edition": "2026",
+ "source": "base SIRENE (annuaire des entreprises, DINUM), code d'activité 66.22Z",
+ "date_extraction": "18/09/2026",
+ "grain": "établissement (une entreprise peut avoir plusieurs établissements)",
+ "total_etablissements": 43240,
+ "total_siren_distincts": 43240,
+ "regions": [
+  {
+   "code": "11",
+   "nom": "Île-de-France",
+   "etablissements": 10050
+  },
+  {
+   "code": "84",
+   "nom": "Auvergne-Rhône-Alpes",
+   "etablissements": 4666
+  },
+  {
+   "code": "75",
+   "nom": "Nouvelle-Aquitaine",
+   "etablissements": 4396
+  },
+  {
+   "code": "93",
+   "nom": "Provence-Alpes-Côte d'Azur",
+   "etablissements": 4062
+  },
+  {
+   "code": "76",
+   "nom": "Occitanie",
+   "etablissements": 4053
+  },
+  {
+   "code": "44",
+   "nom": "Grand Est",
+   "etablissements": 2926
+  },
+  {
+   "code": "32",
+   "nom": "Hauts-de-France",
+   "etablissements": 2860
+  },
+  {
+   "code": "52",
+   "nom": "Pays de la Loire",
+   "etablissements": 2078
+  },
+  {
+   "code": "28",
+   "nom": "Normandie",
+   "etablissements": 1970
+  },
+  {
+   "code": "53",
+   "nom": "Bretagne",
+   "etablissements": 1753
+  },
+  {
+   "code": "27",
+   "nom": "Bourgogne-Franche-Comté",
+   "etablissements": 1684
+  },
+  {
+   "code": "24",
+   "nom": "Centre-Val de Loire",
+   "etablissements": 1394
+  },
+  {
+   "code": "04",
+   "nom": "La Réunion",
+   "etablissements": 336
+  },
+  {
+   "code": "01",
+   "nom": "Guadeloupe",
+   "etablissements": 291
+  },
+  {
+   "code": "94",
+   "nom": "Corse",
+   "etablissements": 199
+  },
+  {
+   "code": "02",
+   "nom": "Martinique",
+   "etablissements": 192
+  },
+  {
+   "code": "03",
+   "nom": "Guyane",
+   "etablissements": 84
+  },
+  {
+   "code": "06",
+   "nom": "Mayotte",
+   "etablissements": 43
+  }
+ ],
+ "departements": [
+  {
+   "code": "75",
+   "etablissements": 4498
+  },
+  {
+   "code": "92",
+   "etablissements": 1631
+  },
+  {
+   "code": "69",
+   "etablissements": 1494
+  },
+  {
+   "code": "13",
+   "etablissements": 1432
+  },
+  {
+   "code": "33",
+   "etablissements": 1369
+  },
+  {
+   "code": "06",
+   "etablissements": 1322
+  },
+  {
+   "code": "59",
+   "etablissements": 1273
+  },
+  {
+   "code": "31",
+   "etablissements": 997
+  },
+  {
+   "code": "78",
+   "etablissements": 855
+  },
+  {
+   "code": "34",
+   "etablissements": 843
+  },
+  {
+   "code": "76",
+   "etablissements": 839
+  },
+  {
+   "code": "44",
+   "etablissements": 799
+  },
+  {
+   "code": "83",
+   "etablissements": 795
+  },
+  {
+   "code": "94",
+   "etablissements": 775
+  },
+  {
+   "code": "93",
+   "etablissements": 691
+  },
+  {
+   "code": "95",
+   "etablissements": 660
+  },
+  {
+   "code": "67",
+   "etablissements": 643
+  },
+  {
+   "code": "35",
+   "etablissements": 625
+  },
+  {
+   "code": "62",
+   "etablissements": 612
+  },
+  {
+   "code": "38",
+   "etablissements": 573
+  }
+ ],
+ "villes": [
+  {
+   "nom": "Paris",
+   "departement": "75",
+   "etablissements": 4347
+  },
+  {
+   "nom": "Lyon",
+   "departement": "69",
+   "etablissements": 634
+  },
+  {
+   "nom": "Marseille",
+   "departement": "13",
+   "etablissements": 632
+  },
+  {
+   "nom": "Nice",
+   "departement": "06",
+   "etablissements": 505
+  },
+  {
+   "nom": "Toulouse",
+   "departement": "31",
+   "etablissements": 477
+  },
+  {
+   "nom": "Bordeaux",
+   "departement": "33",
+   "etablissements": 398
+  },
+  {
+   "nom": "Nantes",
+   "departement": "44",
+   "etablissements": 282
+  },
+  {
+   "nom": "Boulogne-Billancourt",
+   "departement": "92",
+   "etablissements": 237
+  },
+  {
+   "nom": "Montpellier",
+   "departement": "34",
+   "etablissements": 233
+  },
+  {
+   "nom": "Strasbourg",
+   "departement": "67",
+   "etablissements": 209
+  },
+  {
+   "nom": "Neuilly-Sur-Seine",
+   "departement": "92",
+   "etablissements": 199
+  },
+  {
+   "nom": "Lille",
+   "departement": "59",
+   "etablissements": 190
+  },
+  {
+   "nom": "Dijon",
+   "departement": "21",
+   "etablissements": 173
+  },
+  {
+   "nom": "Nimes",
+   "departement": "30",
+   "etablissements": 169
+  },
+  {
+   "nom": "Rennes",
+   "departement": "35",
+   "etablissements": 169
+  },
+  {
+   "nom": "Perpignan",
+   "departement": "66",
+   "etablissements": 165
+  },
+  {
+   "nom": "Aix-En-Provence",
+   "departement": "13",
+   "etablissements": 162
+  },
+  {
+   "nom": "Rouen",
+   "departement": "76",
+   "etablissements": 151
+  },
+  {
+   "nom": "Saint-Denis",
+   "departement": "974",
+   "etablissements": 144
+  },
+  {
+   "nom": "Levallois-Perret",
+   "departement": "92",
+   "etablissements": 143
+  },
+  {
+   "nom": "Toulon",
+   "departement": "83",
+   "etablissements": 137
+  },
+  {
+   "nom": "Cannes",
+   "departement": "06",
+   "etablissements": 136
+  },
+  {
+   "nom": "Caen",
+   "departement": "14",
+   "etablissements": 131
+  },
+  {
+   "nom": "Annecy",
+   "departement": "74",
+   "etablissements": 129
+  },
+  {
+   "nom": "Reims",
+   "departement": "51",
+   "etablissements": 127
+  }
+ ],
+ "categories": [
+  {
+   "code": "PME",
+   "etablissements": 32280
+  },
+  {
+   "code": "ETI",
+   "etablissements": 381
+  },
+  {
+   "code": "GE",
+   "etablissements": 167
+  }
+ ],
+ "tranches_effectif": [
+  {
+   "code": "NN",
+   "etablissements": 32513
+  },
+  {
+   "code": "01",
+   "etablissements": 5186
+  },
+  {
+   "code": "02",
+   "etablissements": 3191
+  },
+  {
+   "code": "03",
+   "etablissements": 1079
+  },
+  {
+   "code": "11",
+   "etablissements": 568
+  },
+  {
+   "code": "00",
+   "etablissements": 320
+  },
+  {
+   "code": "12",
+   "etablissements": 234
+  },
+  {
+   "code": "21",
+   "etablissements": 65
+  },
+  {
+   "code": "22",
+   "etablissements": 37
+  },
+  {
+   "code": "32",
+   "etablissements": 22
+  },
+  {
+   "code": "41",
+   "etablissements": 15
+  },
+  {
+   "code": "31",
+   "etablissements": 5
+  },
+  {
+   "code": "42",
+   "etablissements": 3
+  },
+  {
+   "code": "51",
+   "etablissements": 2
+  }
+ ],
+ "creations_par_annee": [
+  {
+   "annee": "2011",
+   "etablissements": 1109
+  },
+  {
+   "annee": "2012",
+   "etablissements": 1196
+  },
+  {
+   "annee": "2013",
+   "etablissements": 1109
+  },
+  {
+   "annee": "2014",
+   "etablissements": 1107
+  },
+  {
+   "annee": "2015",
+   "etablissements": 1180
+  },
+  {
+   "annee": "2016",
+   "etablissements": 1168
+  },
+  {
+   "annee": "2017",
+   "etablissements": 1151
+  },
+  {
+   "annee": "2018",
+   "etablissements": 1285
+  },
+  {
+   "annee": "2019",
+   "etablissements": 1562
+  },
+  {
+   "annee": "2020",
+   "etablissements": 1581
+  },
+  {
+   "annee": "2021",
+   "etablissements": 1826
+  },
+  {
+   "annee": "2022",
+   "etablissements": 1962
+  },
+  {
+   "annee": "2023",
+   "etablissements": 1985
+  },
+  {
+   "annee": "2024",
+   "etablissements": 2284
+  },
+  {
+   "annee": "2025",
+   "etablissements": 2583
+  },
+  {
+   "annee": "2026",
+   "etablissements": 1883
+  }
+ ]
+}

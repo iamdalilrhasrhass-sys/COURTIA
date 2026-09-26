@@ -25,6 +25,7 @@ from contenu_money import pages_money  # noqa: E402
 from contenu_outils import pages_outils  # noqa: E402
 from contenu_glossaire import pages_glossaire  # noqa: E402
 from contenu_restaure import pages_restaurees  # noqa: E402
+from contenu_etudes import pages_etudes  # noqa: E402
 from scripts_js import (MESURE_JS, FORMULAIRE_JS, OUTIL_JS, TRANSFORMATION_JS,  # noqa: E402
                         CHECKLIST_DOSSIER_JS, CHECKLIST_RENOUV_JS)
 
@@ -150,7 +151,7 @@ def section_de(path: str) -> str:
     for nom, motif in [('features', '/fonctionnalites/'), ('solutions', '/solutions/'), ('assurances', '/assurances/'),
                        ('france', '/france/'), ('switzerland', '/suisse/'), ('resources', '/guides/'),
                        ('tools', '/outils/'), ('comparatifs', '/comparatifs/'),
-                       ('resources', '/conformite/')]:
+                       ('resources', '/conformite/'), ('resources', '/etudes/')]:
         if path.startswith(motif):
             return nom
     return 'core'
@@ -158,7 +159,7 @@ def section_de(path: str) -> str:
 
 def main():
     pages = (pages_core() + pages_geo() + pages_villes() + pages_money() + pages_intentions() + pages_outils()
-             + pages_glossaire() + pages_ressources() + pages_restaurees())
+             + pages_glossaire() + pages_ressources() + pages_restaurees() + pages_etudes())
     chemins = [p['path'] for p in pages]
     doublons = [c for c, n in Counter(chemins).items() if n > 1]
     if doublons:

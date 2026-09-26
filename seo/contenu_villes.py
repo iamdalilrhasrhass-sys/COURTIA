@@ -342,4 +342,24 @@ def pages_villes():
                   ("Genève", "/suisse/geneve"), ("Lausanne", "/suisse/lausanne"),
                   ("Suisse romande", "/suisse/suisse-romande")],
         ))
-    return P
+    return harmoniser(P)
+
+def harmoniser(pages):
+    """Aligne le vocabulaire et la date sur l'etude (source SIRENE du 18/09/2026).
+
+    Les pages villes disaient « etablissements » alors que le comptage porte sur des numeros SIREN,
+    donc des ENTREPRISES, et citaient une extraction du 19/09. Une page d'etude qui compte la meme
+    chose autrement ne doit pas contredire les pages locales : on aligne sur la source unique.
+    """
+    remplacements = [('établissements', 'entreprises'), ('Etablissements', 'Entreprises'),
+                     ('etablissements', 'entreprises'), ('19/09/2026', '18/09/2026')]
+    for page in pages:
+        for cle in ('corps', 'chapeau', 'description', 'angle'):
+            if isinstance(page.get(cle), str):
+                for avant, apres in remplacements:
+                    page[cle] = page[cle].replace(avant, apres)
+        if page.get('faq'):
+            page['faq'] = [(q.replace('établissements', 'entreprises').replace('19/09/2026', '18/09/2026'),
+                            r.replace('établissements', 'entreprises').replace('19/09/2026', '18/09/2026'))
+                           for q, r in page['faq']]
+    return pages

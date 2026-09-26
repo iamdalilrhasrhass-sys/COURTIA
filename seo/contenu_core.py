@@ -17,7 +17,10 @@ def ul(items):
     return '<ul>' + ''.join(f'<li>{x}</li>' for x in items) + '</ul>'
 
 def p(txt):
-    return f'<p>{txt}</p>'
+    # Le gras markdown (**texte**) est converti : les textes longs (etudes, guides) restent lisibles
+    # a l'ecrit sans melanger les balises HTML dans le contenu editorial.
+    import re as _re
+    return '<p>%s</p>' % _re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', txt)
 
 def tableau(entetes, lignes):
     th = ''.join(f'<th>{c}</th>' for c in entetes)
