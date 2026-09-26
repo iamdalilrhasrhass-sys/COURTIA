@@ -33,6 +33,15 @@ const ALLOWED_EVENT_NAMES = new Set([
   'trial_requested',
   'meeting_requested',
   'contact_requested',
+  /* Mesure SEO / acquisition (refonte publique du 26/09/2026) :
+     attribue chaque visite et chaque clic de conversion a sa source. */
+  'seo_page_view',
+  'cta_trial_click',
+  'cta_demo_click',
+  'ark_demo_view',
+  'contact_submit',
+  'trial_start',
+  'trial_activation',
 ])
 
 function requireAdmin(req, res, next) {
