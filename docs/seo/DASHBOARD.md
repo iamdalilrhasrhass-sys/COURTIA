@@ -1,13 +1,13 @@
 # COURTIARK — Tableau de bord acquisition / conversion / SEO
 
-Généré le 2026-09-26 12:53 UTC par `seo/dashboard.py` (lecture seule, base de production).
+Généré le 2026-09-26 12:59 UTC par `seo/dashboard.py` (lecture seule, base de production).
 
 ## Acquisition
 
 | Indicateur | Valeur | Source |
 |---|---|---|
 | Événements de visite (site_visit) | 179 | marketing_events |
-| Pages publiques vues (seo_page_view) | 53 | marketing_events |
+| Pages publiques vues (seo_page_view) | 59 | marketing_events |
 | Demandes de démo (toutes) | 3 | demo_requests |
 | Demandes de démo réelles (hors adresses de test) | 0 | demo_requests |
 | Demandes de démo sur 30 jours | 0 | demo_requests |
@@ -19,13 +19,13 @@ Généré le 2026-09-26 12:53 UTC par `seo/dashboard.py` (lecture seule, base de
 
 | Étape | Volume | Taux |
 |---|---|---|
-| Visite → clic CTA | 2 clics pour 232 visites | 0,9 % |
+| Visite → clic CTA | 2 clics pour 238 visites | 0,8 % |
 | Affichage du formulaire → envoi | 2 envois pour 5 affichages | 40,0 % |
 | Envoi → demande enregistrée | 1 pour 2 envois | 50,0 % |
 | Demande → essai créé | 0 essais pour 0 demandes réelles | non calculable |
 | Essai → abonnement payant | 0 payants pour 0 essais | non calculable |
 
-Détail des événements mesurés : site_visit 179, seo_page_view 53, demo_chapter_view 22, demo_started 12, demo_form_view 5, demo_take_control 3, demo_form_submit 2, pricing_view 2, demo_request_success 1, cta_demo_click 1, cta_trial_click 1, tool_complete 1, tool_start 1, ark_demo_view 1, demo_request_failure 1.
+Détail des événements mesurés : site_visit 179, seo_page_view 59, demo_chapter_view 22, demo_started 12, demo_form_view 5, demo_take_control 3, tool_start 3, tool_complete 3, pricing_view 2, demo_form_submit 2, demo_request_success 1, cta_demo_click 1, ark_demo_view 1, tool_cta_click 1, cta_trial_click 1, demo_request_failure 1.
 
 ## Conversion par page d’atterrissage
 
@@ -43,29 +43,30 @@ Détail des événements mesurés : site_visit 179, seo_page_view 53, demo_chapt
 | `/crm-courtier-assurancehttps:/courtiark.fr/crm-courtier-assurance` | 7 | 0 | 0 | 0 |
 | `/demo/dashboard` | 6 | 0 | 0 | 0 |
 | `/morning-brief` | 5 | 0 | 0 | 0 |
+| `/outils/calculateur-taux-transformation-assurance` | 5 | 0 | 0 | 0 |
+| `/demo-public` | 4 | 0 | 5 | 1 |
 | `/register` | 4 | 0 | 0 | 0 |
 | `/tarifs` | 4 | 0 | 0 | 0 |
-| `/demo-public` | 4 | 0 | 5 | 1 |
-| `/import` | 3 | 0 | 0 | 0 |
 | `/equipe` | 3 | 0 | 0 | 0 |
-| `/outils/calculateur-taux-transformation-assurance` | 3 | 0 | 0 | 0 |
-| `/abonnement` | 3 | 0 | 0 | 0 |
-| `/clients/new` | 3 | 0 | 0 | 0 |
-| `/parametres` | 3 | 0 | 0 | 0 |
 | `/conformite` | 3 | 0 | 0 | 0 |
+| `/outils/checklist-renouvellement-assurance` | 3 | 0 | 0 | 0 |
+| `/abonnement` | 3 | 0 | 0 | 0 |
+| `/parametres` | 3 | 0 | 0 | 0 |
+| `/clients/new` | 3 | 0 | 0 | 0 |
 | `/onboarding` | 3 | 0 | 0 | 0 |
 | `/contrats` | 3 | 0 | 0 | 0 |
-| `/documents` | 3 | 0 | 0 | 0 |
+| `/import` | 3 | 0 | 0 | 0 |
 
 ## Attribution
 
 | Medium | Campagne | Visites |
 |---|---|---|
-| direct | aucune | 193 |
+| direct | aucune | 197 |
 | verification | aucune | 24 |
 | test | mesure-ark | 7 |
 | test | phase2 | 5 |
 | verification | gsc_t0 | 3 |
+| outil | aucune | 2 |
 
 ## 1. SEARCH — Search Console (2026-09-26)
 
@@ -110,8 +111,8 @@ Traitement : 7 redirections permanentes ajoutées le 26/09/2026 (commit `c21701b
 
 | Étape | Volume | Taux |
 |---|---|---|
-| Visites mesurées | 232 | — |
-| Clics CTA | 2 | 0,9 % |
+| Visites mesurées | 238 | — |
+| Clics CTA | 2 | 0,8 % |
 | Affichages du formulaire | 5 | — |
 | Envois du formulaire | 2 | 40,0 % |
 | Demandes enregistrées | 1 | — |
@@ -119,7 +120,7 @@ Traitement : 7 redirections permanentes ajoutées le 26/09/2026 (commit `c21701b
 | Essais en cours | 0 | — |
 | Abonnements payants actifs | 0 | — |
 
-Détail des événements mesurés : site_visit 179, seo_page_view 53, demo_chapter_view 22, demo_started 12, demo_form_view 5, demo_take_control 3, demo_form_submit 2, pricing_view 2, demo_request_success 1, cta_demo_click 1, cta_trial_click 1, tool_complete 1, tool_start 1, ark_demo_view 1, demo_request_failure 1.
+Détail des événements mesurés : site_visit 179, seo_page_view 59, demo_chapter_view 22, demo_started 12, demo_form_view 5, demo_take_control 3, tool_start 3, tool_complete 3, pricing_view 2, demo_form_submit 2, demo_request_success 1, cta_demo_click 1, ark_demo_view 1, tool_cta_click 1, cta_trial_click 1, demo_request_failure 1.
 
 ## 4. BUSINESS
 
@@ -147,19 +148,19 @@ Détail des événements mesurés : site_visit 179, seo_page_view 53, demo_chapt
 | `/crm-courtier-assurancehttps:/courtiark.fr/crm-courtier-assurance` | 7 | 0 | 0 | 0 |
 | `/demo/dashboard` | 6 | 0 | 0 | 0 |
 | `/morning-brief` | 5 | 0 | 0 | 0 |
+| `/outils/calculateur-taux-transformation-assurance` | 5 | 0 | 0 | 0 |
+| `/demo-public` | 4 | 0 | 5 | 1 |
 | `/register` | 4 | 0 | 0 | 0 |
 | `/tarifs` | 4 | 0 | 0 | 0 |
-| `/demo-public` | 4 | 0 | 5 | 1 |
-| `/import` | 3 | 0 | 0 | 0 |
 | `/equipe` | 3 | 0 | 0 | 0 |
-| `/outils/calculateur-taux-transformation-assurance` | 3 | 0 | 0 | 0 |
-| `/abonnement` | 3 | 0 | 0 | 0 |
-| `/clients/new` | 3 | 0 | 0 | 0 |
-| `/parametres` | 3 | 0 | 0 | 0 |
 | `/conformite` | 3 | 0 | 0 | 0 |
+| `/outils/checklist-renouvellement-assurance` | 3 | 0 | 0 | 0 |
+| `/abonnement` | 3 | 0 | 0 | 0 |
+| `/parametres` | 3 | 0 | 0 | 0 |
+| `/clients/new` | 3 | 0 | 0 | 0 |
 | `/onboarding` | 3 | 0 | 0 | 0 |
 | `/contrats` | 3 | 0 | 0 | 0 |
-| `/documents` | 3 | 0 | 0 | 0 |
+| `/import` | 3 | 0 | 0 | 0 |
 
 ## 6. KPI par requête (Search Console) et groupe d’action
 
@@ -187,20 +188,21 @@ Détail des événements mesurés : site_visit 179, seo_page_view 53, demo_chapt
 
 | Medium | Campagne | Visites |
 |---|---|---|
-| direct | aucune | 193 |
+| direct | aucune | 197 |
 | verification | aucune | 24 |
 | test | mesure-ark | 7 |
 | test | phase2 | 5 |
 | verification | gsc_t0 | 3 |
+| outil | aucune | 2 |
 
 ## 7. OUTILS GRATUITS — usage reel
 
 | Outil | Vues | Démarrages | Terminés | Taux de complétion | Clics CTA | Taux de clic |
 |---|---|---|---|---|---|---|
 | `checklist-dossier-courtier-assurance` | 7 | 0 | 0 | — | 0 | 0,0 % |
-| `calculateur-taux-transformation-assurance` | 3 | 0 | 1 | — | 0 | 0,0 % |
+| `calculateur-taux-transformation-assurance` | 5 | 1 | 2 | 200,0 % | 1 | 20,0 % |
+| `checklist-renouvellement-assurance` | 3 | 2 | 1 | 50,0 % | 0 | 0,0 % |
 | `calculateur-productivite-courtier` | 2 | 0 | 0 | — | 0 | 0,0 % |
-| `checklist-renouvellement-assurance` | 2 | 1 | 0 | 0,0 % | 0 | 0,0 % |
 
 ## 8. PAYS (Search Console) et conversion
 
