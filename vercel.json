@@ -992,6 +992,22 @@
       "destination": "https://courtia.onrender.com/api/$1"
     },
     {
+      "source": "/ressources/reglementation-intermediaire-assurance-suisse",
+      "destination": "/ressources/reglementation-intermediaire-assurance-suisse/index.html"
+    },
+    {
+      "source": "/ressources/reglementation-intermediaire-assurance-suisse/",
+      "destination": "/ressources/reglementation-intermediaire-assurance-suisse/index.html"
+    },
+    {
+      "source": "/ressources/reglementation-courtier-assurance-france",
+      "destination": "/ressources/reglementation-courtier-assurance-france/index.html"
+    },
+    {
+      "source": "/ressources/reglementation-courtier-assurance-france/",
+      "destination": "/ressources/reglementation-courtier-assurance-france/index.html"
+    },
+    {
       "source": "/outils/calculateur-taux-transformation-assurance",
       "destination": "/outils/calculateur-taux-transformation-assurance/index.html"
     },
